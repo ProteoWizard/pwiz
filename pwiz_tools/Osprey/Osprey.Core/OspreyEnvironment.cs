@@ -1105,11 +1105,13 @@ namespace pwiz.Osprey.Core
             @"subsample; its fold models score every best-per-precursor candidate, and round 2 retrains on " +
             @"the N rows of the best-scoring peptide groups. Changes the validity key. Loads the features of every candidate " +
             @"during training (about double the resident features). Ignored, with a warning, by the " +
-            @"projection path. 0 or unset is off.")
+            @"projection path. 0 is off. Unset, it is " + PROTEIN_BEST_PREFILTER_SIZE.ToString(CultureInfo.InvariantCulture) + @" with " +
+            OspreyArgNames.PREFIX + OspreyArgNames.PROTEIN_BEST + @" on (the default), whose column needs round 2, and off with it off.")
             { ValueExample = @"<N>" };
 
         /// <summary>
-        /// OSPREY_GBT_PREFILTER_SIZE=N (experiment): two-round first-pass training. Round 1 trains as usual
+        /// OSPREY_GBT_PREFILTER_SIZE=N: two-round first-pass training, as set (0 when unset; the size a
+        /// run trains with is <see cref="PrefilterSizeFor"/>, which defaults it for --protein-best). Round 1 trains as usual
         /// on the random MaxTrainSize subsample; its fold models then score every best-per-precursor candidate, and
         /// round 2 retrains on the N rows of the peptide groups that score best. Either classifier, the name
         /// notwithstanding; 0 when unset. Keyed through the classifier validity-key term
@@ -1184,24 +1186,22 @@ namespace pwiz.Osprey.Core
         public static readonly bool GbtPrefilterSample = ParseIntOrNull(ENV_GBT_PREFILTER_SAMPLE) == 1;
 
         /// <summary>
-        /// True when OSPREY_GBT_PREFILTER_Q, _LFDR or _SAMPLE is set without OSPREY_GBT_PREFILTER_SIZE; startup
-        /// aborts. They only shape round 2 of the two-round training, which runs only with a size, so without
-        /// one the run would be the one-round baseline under the baseline's validity key.
+        /// True when OSPREY_GBT_PREFILTER_Q, _LFDR or _SAMPLE is set while the run trains one round
+        /// (<paramref name="size"/>, from <see cref="PrefilterSizeFor"/>, is 0); startup aborts. They only
+        /// shape round 2 of the two-round training, so the run would be the one-round baseline under the
+        /// baseline's validity key.
         /// </summary>
-        public static readonly bool GbtPrefilterSwitchesWithoutSize = PrefilterSwitchesWithoutSize(
-            GbtPrefilterQSetting, GbtPrefilterLocalFdrSetting, GbtPrefilterSample, GbtPrefilterSize);
-
-        /// <summary><see cref="GbtPrefilterSwitchesWithoutSize"/> for explicitly supplied settings.</summary>
-        internal static bool PrefilterSwitchesWithoutSize(string qSetting, string localFdrSetting, bool sample, int size)
+        public static bool PrefilterSwitchesWithoutSize(string qSetting, string localFdrSetting, bool sample, int size)
         {
             return size <= 0 && (!string.IsNullOrEmpty(qSetting) || !string.IsNullOrEmpty(localFdrSetting) || sample);
         }
 
-        /// <summary>The OSPREY_PROTEIN_BEST spelling of the top sibling only.</summary>
-        public const string PROTEIN_BEST_MAX = @"max";
-
-        /// <summary>The prefix of the OSPREY_PROTEIN_BEST spelling of a top-N mean.</summary>
-        public const string PROTEIN_BEST_MEAN_PREFIX = @"mean-";
+        /// <summary>
+        /// The round-2 row count of the two-round first-pass training with <c>--protein-best on</c> and
+        /// OSPREY_GBT_PREFILTER_SIZE unset: the column reaches the model only through round 2, and this
+        /// is the size every protein-best experiment trained with.
+        /// </summary>
+        public const int PROTEIN_BEST_PREFILTER_SIZE = 200000;
 
         /// <summary>The <see cref="ProteinBestDecoyOwn"/> spelling of the default decoy arm.</summary>
         public const string PROTEIN_BEST_DECOY_PAIRED = @"paired";
@@ -1209,41 +1209,26 @@ namespace pwiz.Osprey.Core
         /// <summary>The <see cref="ProteinBestDecoyOwn"/> spelling of the decoy-sibling arm.</summary>
         public const string PROTEIN_BEST_DECOY_OWN = @"own";
 
-        private const string PROTEIN_BEST_OFF = @"off";
-        private const int PROTEIN_BEST_MEAN_MIN = 2;
-        private const int PROTEIN_BEST_MEAN_MAX = 16;
+        /// <summary>The validity-key and log spelling of the column's reduction: the top sibling.</summary>
+        private const string PROTEIN_BEST_MAX = @"max";
 
-        private static readonly EnvVar ENV_PROTEIN_BEST = new EnvVar(@"OSPREY_PROTEIN_BEST", EnvVarGroup.behavior,
-            @"Experiment, two-round first pass only (either classifier): appends a column to round 2 and the score pass: what " +
-            @"the other peptides on the candidate's protein scored in round 1 in that run, their maximum or the " +
-            @"mean of the top N (2 to 16) padded with the run's decoy median. Needs " +
-            @"OSPREY_GBT_PREFILTER_SIZE. A run with it stops after FirstPassFDR: pass 2 cannot supply the column. " +
-            @"Changes the validity key.")
-            {
-                Values = new[] { PROTEIN_BEST_OFF, PROTEIN_BEST_MAX, PROTEIN_BEST_MEAN_PREFIX + @"<N>" },
-                DefaultValue = PROTEIN_BEST_OFF,
-                AcceptsValue = v => ParseProteinBestTopN(v).HasValue
-            };
+        /// <summary>
+        /// How many top sibling peptides the column reduces. Always the maximum: the mean-of-top-N
+        /// arms the experiment also tried remain in <c>ProteinBestFeature.ComputeColumn</c>, but no
+        /// setting selects them.
+        /// </summary>
+        public const int PROTEIN_BEST_TOP_N = 1;
 
         private static readonly EnvVar ENV_PROTEIN_BEST_DECOY = new EnvVar(@"OSPREY_PROTEIN_BEST_DECOY", EnvVarGroup.behavior,
-            @"With OSPREY_PROTEIN_BEST: paired has a decoy read the value of its paired target's protein, from " +
-            @"target siblings, so it sees what a false target would; own has it read decoy siblings only. Changes the validity key.")
+            @"With " + OspreyArgNames.PREFIX + OspreyArgNames.PROTEIN_BEST + @" on: paired has a decoy read the value of its " +
+            @"paired target's protein, from target siblings, so it sees what a false target would; own has it read decoy " +
+            @"siblings only. Changes the validity key.")
             { Values = new[] { PROTEIN_BEST_DECOY_PAIRED, PROTEIN_BEST_DECOY_OWN }, DefaultValue = PROTEIN_BEST_DECOY_PAIRED };
 
         private static readonly EnvVar ENV_PROTEIN_BEST_SHUFFLE = new EnvVar(@"OSPREY_PROTEIN_BEST_SHUFFLE", EnvVarGroup.behavior,
-            @"With OSPREY_PROTEIN_BEST, the negative control: 1 permutes which peptide has which accessions, " +
-            @"seeded, keeping every protein's peptide count. Changes the validity key.")
+            @"With " + OspreyArgNames.PREFIX + OspreyArgNames.PROTEIN_BEST + @" on, the negative control: 1 permutes which " +
+            @"peptide has which accessions, seeded, keeping every protein's peptide count. Changes the validity key.")
             { Values = new[] { @"0", @"1" }, DefaultValue = @"0" };
-
-        /// <summary>
-        /// OSPREY_PROTEIN_BEST (experiment, issue #4580): how many top sibling peptides the protein-aware
-        /// column reduces: 0 off (the default, or a value startup refuses), 1 their maximum, N &gt;= 2 the mean
-        /// of the top N. Re-read on each access so a command-line test can vary it; read it once outside any loop.
-        /// </summary>
-        public static int ProteinBestTopN => ParseProteinBestTopN(ENV_PROTEIN_BEST.Value) ?? 0;
-
-        /// <summary>True when the protein-aware column is requested.</summary>
-        public static bool ProteinBestEnabled => ProteinBestTopN > 0;
 
         /// <summary>OSPREY_PROTEIN_BEST_DECOY=own: decoys read decoy siblings, not their paired target's value.</summary>
         public static bool ProteinBestDecoyOwn => string.Equals(ENV_PROTEIN_BEST_DECOY.Value?.Trim(),
@@ -1253,37 +1238,31 @@ namespace pwiz.Osprey.Core
         public static bool ProteinBestShuffle => ParseIntOrNull(ENV_PROTEIN_BEST_SHUFFLE) == 1;
 
         /// <summary>
-        /// The top-N count an OSPREY_PROTEIN_BEST value selects (0 for off, 1 for max), or null for a value
-        /// startup refuses. Null or empty is off.
+        /// The round-2 row count of the two-round first-pass training: OSPREY_GBT_PREFILTER_SIZE when it
+        /// is set (0 then trains one round), else <see cref="PROTEIN_BEST_PREFILTER_SIZE"/> with the
+        /// protein-best column on, which needs round 2, and 0 - one round, the default before the
+        /// column - with it off. Re-read on each access, like the size itself.
         /// </summary>
-        public static int? ParseProteinBestTopN(string raw)
+        public static int PrefilterSizeFor(bool proteinBest)
         {
-            string value = raw?.Trim();
-            if (string.IsNullOrEmpty(value) || string.Equals(value, PROTEIN_BEST_OFF, StringComparison.OrdinalIgnoreCase))
-                return 0;
-            if (string.Equals(value, PROTEIN_BEST_MAX, StringComparison.OrdinalIgnoreCase))
-                return 1;
-            if (value.StartsWith(PROTEIN_BEST_MEAN_PREFIX, StringComparison.OrdinalIgnoreCase) &&
-                int.TryParse(value.Substring(PROTEIN_BEST_MEAN_PREFIX.Length), NumberStyles.None, CultureInfo.InvariantCulture, out int n) &&
-                n >= PROTEIN_BEST_MEAN_MIN && n <= PROTEIN_BEST_MEAN_MAX)
-            {
-                return n;
-            }
-            return null;
+            if (ENV_GBT_PREFILTER_SIZE.IsSet)
+                return GbtPrefilterSize;
+            return proteinBest ? PROTEIN_BEST_PREFILTER_SIZE : 0;
         }
 
         /// <summary>
-        /// The FDR validity-key term for the protein-aware column: EMPTY when off, so no directory is
-        /// invalidated. The model it trains has another feature and different scores, so a directory
-        /// written with one arm must never be adopted by another. Normalized, so two spellings of one
-        /// arm share a directory.
+        /// The FDR validity-key term for the protein-aware column: EMPTY when off, so no directory
+        /// written without it is invalidated. The model it trains has another feature and different
+        /// scores, so a directory written with one arm must never be adopted by another. The terms
+        /// are those the OSPREY_PROTEIN_BEST=max experiment wrote, so its directories stay current.
         /// </summary>
-        public static string ProteinBestValidityKeySuffix()
+        public static string ProteinBestValidityKeySuffix(OspreyConfig config)
         {
-            return ProteinBestValidityKeySuffix(ProteinBestTopN, ProteinBestDecoyOwn, ProteinBestShuffle);
+            return ProteinBestValidityKeySuffix(config.ProteinBest ? PROTEIN_BEST_TOP_N : 0,
+                ProteinBestDecoyOwn, ProteinBestShuffle);
         }
 
-        /// <summary><see cref="ProteinBestValidityKeySuffix()"/> for explicitly supplied settings.</summary>
+        /// <summary><see cref="ProteinBestValidityKeySuffix(OspreyConfig)"/> for explicitly supplied settings.</summary>
         public static string ProteinBestValidityKeySuffix(int topN, bool decoyOwn, bool shuffle)
         {
             if (topN <= 0)
@@ -1295,40 +1274,40 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// The line a run with the protein-aware column logs, or null when it is off, so an ordinary
-        /// run's log is unchanged.
+        /// The run-log line for the protein-best setting, on or off, with the developer switches that
+        /// shape it when they are set, and the round-2 size it trains with.
         /// </summary>
-        public static string DescribeProteinBest()
+        public static string DescribeProteinBest(OspreyConfig config)
         {
-            int topN = ProteinBestTopN;
-            if (topN <= 0)
-                return null;
-            return string.Format(
-                @"Protein-best training column (EXPERIMENTAL, OSPREY_PROTEIN_BEST): {0}, decoys {1}{2}. " +
-                @"This run stops after FirstPassFDR: the frozen first-pass model cannot score a second pass " +
-                @"without the column, so it writes no output library.",
-                DescribeProteinBestTopN(topN),
-                ProteinBestDecoyOwn ? PROTEIN_BEST_DECOY_OWN : PROTEIN_BEST_DECOY_PAIRED,
-                ProteinBestShuffle ? @", accessions shuffled (negative control)" : string.Empty);
+            if (!config.ProteinBest)
+                return string.Format(@"Protein-best training column: {0}", OspreyArgNames.VALUE_OFF);
+            return string.Format(CultureInfo.InvariantCulture,
+                @"Protein-best training column: {0} (two-round first pass, round 2 at {1} rows{2}{3})",
+                OspreyArgNames.VALUE_ON, PrefilterSizeFor(true),
+                ProteinBestDecoyOwn ? @", OSPREY_PROTEIN_BEST_DECOY=" + PROTEIN_BEST_DECOY_OWN : string.Empty,
+                ProteinBestShuffle ? @", OSPREY_PROTEIN_BEST_SHUFFLE=1 (negative control)" : string.Empty);
         }
 
         /// <summary>
-        /// The startup refusal for this environment's protein-best settings, or null when they hold.
-        /// Either classifier can train with the column, through the two-round training. Off, the
-        /// sub-switches must be unset too: they would do nothing while the run kept the baseline's key.
+        /// The startup refusal for this run's protein-best settings, or null when they hold. Either
+        /// classifier can train with the column, through the two-round training. Off, the developer
+        /// switches must be unset too: they would do nothing while the run kept the baseline's key.
         /// </summary>
-        public static string ValidateProteinBestSettings()
+        public static string ValidateProteinBestSettings(OspreyConfig config)
         {
-            if (!ProteinBestEnabled)
+            string argText = OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST);
+            if (!config.ProteinBest)
             {
                 return ENV_PROTEIN_BEST_DECOY.IsSet || ENV_PROTEIN_BEST_SHUFFLE.IsSet
-                    ? @"OSPREY_PROTEIN_BEST_DECOY and OSPREY_PROTEIN_BEST_SHUFFLE shape the column OSPREY_PROTEIN_BEST adds and need it set as well."
+                    ? string.Format(@"OSPREY_PROTEIN_BEST_DECOY and OSPREY_PROTEIN_BEST_SHUFFLE shape the column {0} adds " +
+                                    @"and cannot be set with {1}.", argText, OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST, OspreyArgNames.VALUE_OFF))
                     : null;
             }
-            if (GbtPrefilterSize <= 0)
+            if (PrefilterSizeFor(true) <= 0)
             {
-                return @"OSPREY_PROTEIN_BEST reaches the model through round 2 of the two-round training: " +
-                       @"it needs OSPREY_GBT_PREFILTER_SIZE set as well.";
+                return string.Format(@"{0} reaches the model through round 2 of the two-round training: " +
+                                     @"OSPREY_GBT_PREFILTER_SIZE=0 turns that off. Unset it, or use {1}.",
+                    argText, OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST, OspreyArgNames.VALUE_OFF));
             }
             return null;
         }
@@ -1337,7 +1316,7 @@ namespace pwiz.Osprey.Core
         {
             return topN == 1
                 ? PROTEIN_BEST_MAX
-                : PROTEIN_BEST_MEAN_PREFIX + topN.ToString(CultureInfo.InvariantCulture);
+                : @"mean-" + topN.ToString(CultureInfo.InvariantCulture);
         }
 
         private static readonly EnvVar ENV_DETERMINISTIC_MATH = new EnvVar(@"OSPREY_DETERMINISTIC_MATH", EnvVarGroup.behavior,

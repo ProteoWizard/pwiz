@@ -1763,7 +1763,7 @@ namespace pwiz.Osprey.Test
             out PercolatorResults model, PercolatorResults pretrained = null);
 
         /// <summary>
-        /// <c>OSPREY_PROTEIN_BEST</c> through the streamed first pass: the model trains on one more
+        /// <c>--protein-best</c> through the streamed first pass: the model trains on one more
         /// feature and names it, the scores move, they are the same bits at any thread count and with
         /// <c>OSPREY_GBT_OOF</c>'s held-out final scoring they still score at the model's width. A saved
         /// model is retrained around, not adopted, whatever its width, and the two-round training is required.
@@ -1811,7 +1811,7 @@ namespace pwiz.Osprey.Test
             {
                 var resumeLog = new CapturingLog();
                 var sinkResumed = runArm(MakeOn(4), resumeLog, out _, saved);
-                StringAssert.Contains(resumeLog.Text, "OSPREY_PROTEIN_BEST is set: retraining the first-pass model");
+                StringAssert.Contains(resumeLog.Text, "--protein-best is on: retraining the first-pass model");
                 Assert.AreEqual(fixture.Sum(kv => kv.Value.Count), AssertSinksIdentical(fixture, sinkOn, sinkResumed));
             }
 

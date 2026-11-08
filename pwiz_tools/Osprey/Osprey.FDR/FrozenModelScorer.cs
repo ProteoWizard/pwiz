@@ -80,7 +80,7 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>
         /// True when the model was trained with the protein-best column
-        /// (<c>OSPREY_PROTEIN_BEST</c>) appended to the feature vectors: its last feature name is
+        /// (<c>--protein-best</c>) appended to the feature vectors: its last feature name is
         /// <see cref="ProteinBestFeature.FEATURE_NAME"/>. Such a model scores a vector only through
         /// <see cref="Score(double[], double)"/>, which appends the column.
         /// </summary>

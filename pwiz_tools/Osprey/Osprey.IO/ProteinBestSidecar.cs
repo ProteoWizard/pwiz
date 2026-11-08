@@ -29,7 +29,7 @@ namespace pwiz.Osprey.IO
 {
     /// <summary>
     /// Reader / writer for the per-input-file <c>&lt;stem&gt;.1st-pass.protein_best.bin</c>
-    /// artifact: the protein-best column (<c>OSPREY_PROTEIN_BEST</c>) one run's first-pass score
+    /// artifact: the protein-best column (<c>--protein-best</c>) one run's first-pass score
     /// pass scored with, one value per entry_id, and the run's floor.
     ///
     /// <para><b>Why it exists.</b> The first-pass model of a protein-best run was trained on the

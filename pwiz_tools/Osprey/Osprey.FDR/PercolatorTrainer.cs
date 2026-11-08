@@ -531,7 +531,7 @@ namespace pwiz.Osprey.FDR
         /// training rows from here on (the held-out folds of <c>OSPREY_GBT_OOF</c> are keyed by
         /// them).</param>
         /// <param name="appendRound2Column">Optional: the protein-aware column
-        /// (<c>OSPREY_PROTEIN_BEST</c>). Handed round 1's model, each round-1 training precursor's
+        /// (<c>--protein-best</c>). Handed round 1's model, each round-1 training precursor's
         /// held-out fold by base_id, and the round-2 rows, whose feature vectors it extends by the
         /// column, once round 2 is selected and before it trains. Null (the default) leaves round
         /// 2's feature vectors as they are.</param>

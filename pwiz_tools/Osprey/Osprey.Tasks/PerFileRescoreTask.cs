@@ -242,8 +242,8 @@ namespace pwiz.Osprey.Tasks
                 yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
                 yield return FdrScoresSidecar.Pass1Path(input);
                 // The column the pass-2 worker scores the run's rescored rows with, under
-                // OSPREY_PROTEIN_BEST: the frozen model was trained with it.
-                if (OspreyEnvironment.ProteinBestEnabled)
+                // --protein-best: the frozen model was trained with it.
+                if (config.ProteinBest)
                     yield return ProteinBestSidecar.PathFor(input);
             }
             string siblingPath = ScoringTaskShared.ArtifactSiblingPath(config);
@@ -1329,10 +1329,10 @@ namespace pwiz.Osprey.Tasks
                 FdrScoresSidecar.Write(FdrScoresSidecar.Pass2Path(inputFile), records,
                     FdrScoresSidecar.Pass.SecondPass, stamp);
             }
-            // OSPREY_PROTEIN_BEST: a model with the column scores only with each run's column,
+            // --protein-best: a model with the column scores only with each run's column,
             // and one without cannot use it. The validity key already keeps the two arms apart, so
             // a disagreement here is a model from another arm, which no run may score with.
-            if (scorer.ScoresProteinBest != OspreyEnvironment.ProteinBestEnabled)
+            if (scorer.ScoresProteinBest != config.ProteinBest)
             {
                 throw new InvalidOperationException(string.Format(
                     OspreyTasksResources.Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__,

@@ -2181,7 +2181,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// One run's protein-best column (<c>OSPREY_PROTEIN_BEST</c>), read from beside its
+        /// One run's protein-best column (<c>--protein-best</c>), read from beside its
         /// first-pass FDR scores file, for a frozen model that scores with it; null for a model
         /// that does not, which is every run with the column off.
         ///

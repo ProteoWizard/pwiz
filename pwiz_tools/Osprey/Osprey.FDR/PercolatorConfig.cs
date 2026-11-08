@@ -100,7 +100,7 @@ namespace pwiz.Osprey.FDR
         public bool PrefilterTrainSample { get; set; }
 
         /// <summary>
-        /// The protein-aware column (<c>OSPREY_PROTEIN_BEST</c>), or null (the default) for none. Read
+        /// The protein-aware column (<c>--protein-best</c>), or null (the default) for none. Read
         /// only by the streamed first pass, whose two-round training computes it from round 1's
         /// scores for round 2 and the score pass. Deliberately not copied by
         /// <see cref="CloneForTrainOnly"/>: the trainer sees the column as an already appended

@@ -27,7 +27,7 @@ using pwiz.Osprey.ML;
 namespace pwiz.Osprey.FDR
 {
     /// <summary>
-    /// The protein-aware training column (<c>OSPREY_PROTEIN_BEST</c>, issue #4580): for one run and
+    /// The protein-aware training column (<c>--protein-best</c>, issue #4580): for one run and
     /// a round of prior scores, what the OTHER peptides on a candidate's protein scored. A pure
     /// function of its inputs, independent of row order, so that it can be tested alone and two
     /// runs of it are the same bits at any thread count.

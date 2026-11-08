@@ -59,7 +59,7 @@ namespace pwiz.Osprey.Test
             AssertFloorIsExactMedianOfDecoyPrecursors();
             AssertShuffleKeepsGroupSizes();
             AssertOrderIndependentBits();
-            AssertSettingsParse();
+            AssertSettingsKey();
         }
 
         /// <summary>A run: rows of (base_id, is decoy, prior score).</summary>
@@ -263,17 +263,11 @@ namespace pwiz.Osprey.Test
             }
         }
 
-        private static void AssertSettingsParse()
+        private static void AssertSettingsKey()
         {
-            Assert.AreEqual(0, OspreyEnvironment.ParseProteinBestTopN(null));
-            Assert.AreEqual(0, OspreyEnvironment.ParseProteinBestTopN(string.Empty));
-            Assert.AreEqual(0, OspreyEnvironment.ParseProteinBestTopN(@"off"));
-            Assert.AreEqual(1, OspreyEnvironment.ParseProteinBestTopN(@"max"));
-            Assert.AreEqual(1, OspreyEnvironment.ParseProteinBestTopN(@" MAX "));
-            Assert.AreEqual(2, OspreyEnvironment.ParseProteinBestTopN(@"mean-2"));
-            Assert.AreEqual(16, OspreyEnvironment.ParseProteinBestTopN(@"mean-16"));
-            foreach (string refused in new[] { @"mean-1", @"mean-17", @"mean-", @"mean-x", @"mean-best-2", @"on", @"2" })
-                Assert.IsNull(OspreyEnvironment.ParseProteinBestTopN(refused), refused);
+            // --protein-best on is the maximum, the arm the OSPREY_PROTEIN_BEST=max experiment ran.
+            Assert.AreEqual(1, OspreyEnvironment.PROTEIN_BEST_TOP_N);
+            Assert.AreEqual(string.Empty, OspreyEnvironment.ProteinBestValidityKeySuffix(new OspreyConfig { ProteinBest = false }));
 
             // The key: empty when off, so no existing directory moves; every setting otherwise.
             Assert.AreEqual(string.Empty, OspreyEnvironment.ProteinBestValidityKeySuffix(0, true, true));
