@@ -120,9 +120,10 @@ The MS2 sigma serves two goals, and they want different values:
 | **Measurement**: each fragment's m/z, its M+1 isotope resolved | about 2 point spacings | 0.38 Th | `--centrix-sigma-ms2 0.38`; DemuxTool `--peak-sigma-th 0.38` |
 
 A wide sigma merges a fragment and its M+1 isotope (1 Th away at charge 1, 0.5 Th at charge 2)
-into one centroid between them. Osprey's unit-resolution search tolerates that (fragment
-tolerance 0.5 Th here): the merged centroid still matches the fragment. A measurement does not:
-the isotope is lost and the fragment's m/z moves toward it. A narrow sigma keeps them apart,
+into one centroid between them. Osprey's unit-resolution search tolerates that: its m/z-dependent
+offset curve takes out the average shift, and the merged centroid still matches the fragment
+(sensitivity against selectivity, below). A measurement does not: the isotope is lost and the
+fragment's m/z moves toward it. A narrow sigma keeps them apart,
 and below about 1.7 spacings it also splits single peaks: 0.22 Th splits 84% of clean
 single-species peaks on the Stellar's MS2, and every centroid's m/z scatters.
 
@@ -138,7 +139,8 @@ Both were measured on the Stellar's 2026-10-09 HeLa runs: three replicates each 
 demultiplexed by the joint solve at the same sigma ([23](23-demultiplexing.md#stellar-profile-data-linear-ion-trap):
 its Gaussian and Centrix share it). Osprey searched them with the scoring of #4950 (gradient-boosted
 trees on every feature) and the MS2 offset curve of #4997, a library fine-tuned on the 2 Th TR02
-run with 1:1 natural Arabidopsis entrapment, and fragment tolerance 0.5 Th.
+run with 1:1 natural Arabidopsis entrapment, and the fragment tolerance Osprey calibrates per run
+from a starting 0.5 Th (below).
 
 **Detection.** Precursors at Osprey's experiment-scope entrapment FDP (second pass, combined), at
 0.5% / 1%:
@@ -174,9 +176,10 @@ identifications within 2% at either sigma, and 0.6 Th leads 0.38 Th by 5-7% with
 apex between 8.53 and 11.48 min, and their library b/y fragments at 20% or more of the base peak,
 m/z 250 to 1150, neutral mass 500 Da or more (so the M+1 is at least a quarter of the M+0), and no
 other fragment within 0.6 Th of the M+1. Each centroid is moved by that search's MS2 offset curve;
-a fragment's isotope counts the centroid nearest its m/z within half the isotope spacing. Accuracy
-is the median error, precision 1.4826 times the median absolute deviation. Singly charged
-fragments, Th; "M+1 found" against the same test with each fragment moved by whole Th (chance):
+a fragment's isotope counts the centroid nearest its m/z within half the isotope spacing. Mass
+accuracy is the median m/z error, mass precision 1.4826 times its median absolute deviation.
+Singly charged fragments, Th; "M+1 found" against the same test with each fragment moved by whole
+Th (chance):
 
 | MS2 sigma | M+0 precision | M+1 accuracy | M+1 precision | M+1 found (chance) |
 |---|---|---|---|---|
@@ -197,6 +200,23 @@ fragments, Th; "M+1 found" against the same test with each fragment moved by who
 0.38 Th, 1.9 spacings, measures best in every acquisition: the most precise M+0 and M+1, and a
 median M+1 error within 0.01 Th. It is also the sigma of the Stellar's clean single-species MS2 peaks of ten ions
 or more (0.39 to 0.44 Th), where peaks of fewer ions read 0.23 Th.
+
+**Sensitivity against selectivity.** Detection prefers 0.6 Th although 0.38 Th has the better mass
+precision, and the search uses both sides of that tradeoff. Osprey calibrates its fragment tolerance
+per run: it fits an m/z-dependent offset curve to the fragment m/z errors and searches at three
+standard deviations of the residuals around it, so better mass precision earns a narrower
+tolerance. In the three 2 Th runs the residual SD is 0.094 to 0.098 Th at 0.38 Th and 0.124 to
+0.126 Th at 0.6 Th, 22% to 25% less, and the tolerance ±0.28 to 0.29 Th against ±0.37 to 0.38 Th:
+0.38 Th is the more selective. The merged M+1 behind 0.6 Th's wider scatter also moves its centroids
+up, more at higher fragment m/z, where the M+1 is larger: 0.6 Th's offset curve lies 0.03 to 0.05 Th
+above 0.38 Th's at m/z 200, 0.12 to 0.14 from 450 to 700, and 0.15 to 0.17 at 1,200. The curve
+removes that shift and leaves the scatter. 0.6 Th is the more sensitive: the 45,829 precursors both
+sigmas identify at q 1% (entrapment removed) carry a median 32% more fragment signal at 0.6 Th
+(Osprey's peak area), and more for 88% of them. The gain is 37% at charge 3, whose fragments are
+more often doubly charged with an M+1 0.5 Th away, and 31% at charge 2. The signal wins. At q 1%,
+0.6 Th identifies 51,239 precursors and 0.38 Th 49,370; the 5,410 only 0.6 Th finds are faint, at
+the 36th percentile of the shared precursors' signal, and the 3,541 only 0.38 Th finds fainter
+still, at about the 30th.
 
 The old rule, 1.1 spacings (0.22 Th), came from a sweep of the same 2 Th runs before #4997's MS2 offset
 curve, judged at q 1% rather than at a matched entrapment FDP. It splits most single peaks, gives
