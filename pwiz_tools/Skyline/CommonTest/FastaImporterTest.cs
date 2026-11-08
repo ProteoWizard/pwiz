@@ -1232,6 +1232,7 @@ namespace CommonTest
             Assert.AreEqual(WebEnabledFastaImporter.MAX_RATE_LIMIT_DELAY, cappedWaits.Single());
             RunRateLimitedLookup(longRetryAfter, giveUpOnUnresponsiveWebService: true, out _, out var testWaits);
             Assert.AreEqual(WebEnabledFastaImporter.MAX_TEST_RATE_LIMIT_DELAY, testWaits.Single());
+            TestRateLimitOutlastsPass(longRetryAfter);
 
             // Retry-After of zero (or a time already past) still waits, or the next pass asks again at once
             RunRateLimitedLookup(TimeSpan.Zero, giveUpOnUnresponsiveWebService: false, out _, out var zeroWaits);
@@ -1277,6 +1278,26 @@ namespace CommonTest
                 var gap = times[i] - times[i - 1];
                 Assert.IsTrue(gap >= shortestGap, $"Entrez request {i + 1} came {gap.TotalMilliseconds}ms after the one before");
             }
+        }
+
+        /// <summary>
+        /// A service may ask for a longer wait than one pass will spend. The passes that follow - from
+        /// any importer, as the metadata and digest loaders each have their own - keep waiting until
+        /// the time it asked for has passed, and do not ask again before then.
+        /// </summary>
+        private static void TestRateLimitOutlastsPass(TimeSpan retryAfter)
+        {
+            using var helper = new HttpClientTestHelper(CreateTooManyRequestsException(retryAfter));
+            var provider = new RateLimitRecordingWebSearchProvider();
+            RunUniprotLookup(provider, false, out _);
+            // A new importer, as each loader has its own
+            var proteins = RunUniprotLookup(provider, false, out var completed);
+
+            Assert.AreEqual(1, provider.RequestCount, "A pass must not ask again before the time the service asked for");
+            Assert.AreEqual(2, provider.Waits.Count);
+            Assert.IsTrue(provider.Waits.All(wait => wait == WebEnabledFastaImporter.MAX_RATE_LIMIT_DELAY));
+            Assert.AreEqual(0, completed.Count);
+            Assert.IsTrue(proteins.All(p => p.GetProteinMetadata().NeedsSearch()));
         }
 
         /// <summary>
@@ -1881,14 +1902,25 @@ namespace CommonTest
             {
                 return 1; // try only once
             }
+
+            // A refusal faked for one test must not hold up the next
+            public override WebEnabledFastaImporter.RateLimitGate RateLimits { get; } = new WebEnabledFastaImporter.RateLimitGate();
         }
 
         /// <summary>
-        /// Records each wait a rate limit asks for, instead of sleeping through it.
+        /// Records each wait a rate limit asks for, instead of sleeping through it, and counts the
+        /// requests made.
         /// </summary>
         private class RateLimitRecordingWebSearchProvider : QuickFailWebSearchProvider
         {
             public List<TimeSpan> Waits { get; } = new List<TimeSpan>();
+            public int RequestCount { get; private set; }
+
+            public override Stream GetWebResponseStream(string url, IProgressMonitor progressMonitor, int timeout)
+            {
+                RequestCount++;
+                return base.GetWebResponseStream(url, progressMonitor, timeout);
+            }
 
             public override void WaitForRateLimit(TimeSpan delay, IProgressMonitor progressMonitor)
             {
