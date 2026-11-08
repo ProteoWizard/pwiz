@@ -278,6 +278,10 @@ namespace pwiz.ProteomeDatabase.Fasta
     /// </summary>
     public class WebEnabledFastaImporter
     {
+        // NCBI counts every request from this client, whichever importer sent it
+        private static readonly object _entrezRequestLock = new object();
+        private static readonly Stopwatch _entrezRequestClock = new Stopwatch(); // Since the last Entrez request began
+
         private DbProtein _curProtein;
         private StringBuilder _curSequence;
         private readonly WebSearchProvider _webSearchProvider;
@@ -290,9 +294,6 @@ namespace pwiz.ProteomeDatabase.Fasta
         private List<ProteinSearchInfo> _activeUniprotRequeueList;
         private TimeSpan _rateLimitDelay; // How long the web service last asked us to wait
         private bool _probingWebAccess; // True during the uncancelable HasWebAccess check
-        // NCBI counts every request from this client, whichever importer sent it
-        private static readonly object _entrezRequestLock = new object();
-        private static readonly Stopwatch _entrezRequestClock = new Stopwatch(); // Since the last Entrez request began
 
         /// <summary>
         /// Test seam: when true, a web service that repeatedly fails to return usable data - whether
@@ -654,9 +655,12 @@ namespace pwiz.ProteomeDatabase.Fasta
         /// classes derived from this to spoof various aspects of
         /// web access and failure.
         /// </summary>
-        public class WebSearchProvider 
+        public class WebSearchProvider
         {
             private const string SKYLINE_USER_AGENT = @"Skyline";
+
+            // A web service counts every request from this client, whichever importer sent it
+            private static readonly RateLimitGate SHARED_RATE_LIMITS = new RateLimitGate();
 
             protected virtual HttpClientWithProgress CreateHttpClient(IProgressMonitor progressMonitor, int timeout)
             {
@@ -714,6 +718,13 @@ namespace pwiz.ProteomeDatabase.Fasta
                 }
             }
 
+            /// <summary>
+            /// When each web service will next accept a request, after refusing one for coming too
+            /// soon. Shared by every importer that goes to the real services. Tests that fake a
+            /// refusal override this, so the wait it asks for stays within the test.
+            /// </summary>
+            public virtual RateLimitGate RateLimits => SHARED_RATE_LIMITS;
+
             public virtual string ConstructEntrezURL(IEnumerable<string> searches, bool summary)
             {
                 // Yes, that's Brian's email address there - entrez wants a point of contact with the developer of the tool hitting their service
@@ -763,6 +774,44 @@ namespace pwiz.ProteomeDatabase.Fasta
             public virtual int GetTimeoutMsec(int searchTermCount)
             {
                 return (1000) * (10 + (searchTermCount / 5)); // 10 secs + 1 more for every 5 search terms
+            }
+        }
+
+        /// <summary>
+        /// When each web service will next accept a request, after it refused one for coming too
+        /// soon and said how long to stay away.
+        /// </summary>
+        public class RateLimitGate
+        {
+            private readonly object _lock = new object();
+            private readonly Stopwatch _clock = Stopwatch.StartNew();
+            private readonly Dictionary<char, TimeSpan> _closedUntil = new Dictionary<char, TimeSpan>(); // By service, on _clock
+
+            /// <summary>
+            /// Notes that the service will accept nothing more until the given wait has passed.
+            /// </summary>
+            public void Close(char service, TimeSpan wait)
+            {
+                lock (_lock)
+                {
+                    var until = _clock.Elapsed + wait;
+                    if (!_closedUntil.TryGetValue(service, out var current) || current < until)
+                        _closedUntil[service] = until;
+                }
+            }
+
+            /// <summary>
+            /// How long until the service will accept a request, or zero if it will now.
+            /// </summary>
+            public TimeSpan GetRemaining(char service)
+            {
+                lock (_lock)
+                {
+                    if (!_closedUntil.TryGetValue(service, out var until))
+                        return TimeSpan.Zero;
+                    var remaining = until - _clock.Elapsed;
+                    return remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero;
+                }
             }
         }
 
@@ -1036,6 +1085,18 @@ namespace pwiz.ProteomeDatabase.Fasta
                     cancelled |= progressMonitor.IsCanceled;
                     if (cancelled)
                         break;
+                    // In normal use, a rate limit is honored even when it outlasts the wait the pass
+                    // that met it could spend, and whichever importer met it. The access check
+                    // cannot be cancelled, so it does not wait, and the give-up seam keeps its own
+                    // bounded wait-and-retry.
+                    if (!GiveUpOnUnresponsiveWebService && !_probingWebAccess &&
+                        !WaitForRateLimitToLift(searchType, progressMonitor))
+                    {
+                        // Still refused for asking too often: send nothing, and leave it to a later pass
+                        cancelled |= progressMonitor.IsCanceled;
+                        abort = true;
+                        break;
+                    }
                     WebserviceLookupOutcome lookupResult;
                     try
                     {
@@ -1750,7 +1811,8 @@ namespace pwiz.ProteomeDatabase.Fasta
         /// Longest wait before a pass ends in normal use. The wait runs while the protein metadata
         /// loader holds a lock the UI thread can need (closing Skyline clears that loader's cache),
         /// so it is kept to the order of the request timeouts already held under that lock. A
-        /// service wanting longer gets a few requests a minute until it relents, not one per second.
+        /// service wanting longer is waited out over several passes, none of which asks again
+        /// before the time it asked for.
         /// </summary>
         public static readonly TimeSpan MAX_RATE_LIMIT_DELAY = TimeSpan.FromSeconds(15);
 
@@ -1787,6 +1849,31 @@ namespace pwiz.ProteomeDatabase.Fasta
             if (_rateLimitDelay < MIN_RATE_LIMIT_DELAY)
                 return MIN_RATE_LIMIT_DELAY;
             return _rateLimitDelay < max ? _rateLimitDelay : max;
+        }
+
+        /// <summary>
+        /// The service whose rate limit applies to a search type: GenInfo searches go to Entrez.
+        /// </summary>
+        private static char GetRateLimitedService(char searchType)
+        {
+            return searchType == GENINFO_TAG ? ENTREZ_TAG : searchType;
+        }
+
+        /// <summary>
+        /// If the service refused an earlier request, from this importer or another, for coming too
+        /// soon, waits until the time it asked for - but no longer than <see cref="MAX_RATE_LIMIT_DELAY"/>.
+        /// Returns false if that time has still not come, or the wait was cancelled.
+        /// </summary>
+        private bool WaitForRateLimitToLift(char searchType, IProgressMonitor progressMonitor)
+        {
+            if (!_webSearchProvider.IsPolite)
+                return true;
+            var service = GetRateLimitedService(searchType);
+            var remaining = _webSearchProvider.RateLimits.GetRemaining(service);
+            if (remaining <= TimeSpan.Zero)
+                return true;
+            _webSearchProvider.WaitForRateLimit(remaining < MAX_RATE_LIMIT_DELAY ? remaining : MAX_RATE_LIMIT_DELAY, progressMonitor);
+            return !progressMonitor.IsCanceled && _webSearchProvider.RateLimits.GetRemaining(service) <= TimeSpan.Zero;
         }
 
         private static WebSearchFailureReason GetUnresponsiveReason(WebserviceLookupOutcome outcome)
@@ -1901,6 +1988,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                 {
                     RecordFailure(proteins, WebSearchFailureReason.rate_limited, ex);
                     _rateLimitDelay = ex.RetryAfter ?? DEFAULT_RATE_LIMIT_DELAY;
+                    _webSearchProvider.RateLimits.Close(GetRateLimitedService(searchType), GetRateLimitWait(TimeSpan.MaxValue));
                     return WebserviceLookupOutcome.rate_limited;
                 }
 
