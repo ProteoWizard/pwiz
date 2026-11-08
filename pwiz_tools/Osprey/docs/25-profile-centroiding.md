@@ -79,7 +79,8 @@ Per spectrum, in `CentrixCentroider` (`Osprey.Centroid`):
 6. **Centroids.** Every coefficient above zero is a centroid, moved between grid points to the
    vertex of the parabola through the logarithms of it and its neighbors when both are above zero.
    Its intensity is the coefficient times `sigma sqrt(2 pi) / spacing`, the sum of its peak's
-   samples. Centroids closer than sigma merge, intensity-weighted.
+   samples. Centroids closer than `MinCentroidSeparationTh` merge, intensity-weighted; by default
+   that distance is the sigma, 0.6 Th on the Stellar's MS2.
 
 | File | Role |
 |---|---|
@@ -95,7 +96,8 @@ Per spectrum, in `CentrixCentroider` (`Osprey.Centroid`):
 **On a linear ion trap the MS2 sigma is three point spacings and the MS1 sigma 1.1**
 (`CentrixCalibration.MS2_SIGMA_PER_SPACING`, `MS1_SIGMA_PER_SPACING`): MS2 is searched, so it takes
 the sigma that detects the most peptides; MS1 is measured, so it takes the one that measures
-precursors best ([MS1: measuring precursors](#ms1-measuring-precursors)). The firmware fixes the profile point spacing per scan rate, so the spacing identifies the rate
+precursors best ([MS1: measuring precursors](#ms1-measuring-precursors)). The firmware fixes the
+profile point spacing per scan rate, so the spacing identifies the rate
 (`LinearIonTrapScanRate.FromSpacing`), and the level's first profile spectrum settles its sigma.
 
 | Scan rate | Point spacing | MS1 sigma (1.1 spacings) | MS2 sigma (3 spacings) | Broadest peak (FWHM) | Measured on the Stellar (FWHM lower quartile) |
@@ -123,6 +125,13 @@ tolerance 0.5 Th here): the merged centroid still matches the fragment. A measur
 the isotope is lost and the fragment's m/z moves toward it. A narrow sigma keeps them apart,
 and below about 1.7 spacings it also splits single peaks: 0.22 Th splits 84% of clean
 single-species peaks on the Stellar's MS2, and every centroid's m/z scatters.
+
+Not all of a wide sigma's merging is the fit's. After it, centroids closer than
+`MinCentroidSeparationTh` merge, and that distance defaults to the sigma. At 0.6 Th, then, no two
+centroids come out closer than 0.6 Th: a doubly charged fragment's M+0 and M+1 become one, and so
+do two different fragments 0.5 Th apart. The detection results below were measured with this
+default. Setting `--centrix-param MinCentroidSeparationTh=<Th>` below the sigma keeps pairs the
+fit separates, but that combination has not been searched.
 
 Both were measured on the Stellar's 2026-10-09 HeLa runs: three replicates each of 2 Th windows,
 4 Th windows overlapped by half, and SuperOverlap, MS2 at 200 kTh/s. The overlapped runs were
@@ -232,8 +241,9 @@ a cell holds a centroid by chance 17% to 30% of the time:
 At 1.1 spacings the M+1 and M+2 of every triply charged precursor here, and the M+1 of every doubly
 charged one, are found in their isotope cells, with a median M+1 error within 0.01 Th and a precision
 of about 0.05 Th. Wider sigmas merge triply charged isotopes and move the median errors by up to
-0.07 Th. Narrower sigmas were not tried. In spacings, measurement's optimum is not the same at the two rates (1.1 at 67 kTh/s, about
-1.9 at 200 kTh/s), so a scan rate other than these needs its own check.
+0.07 Th. Narrower sigmas were not tried. In spacings, measurement's optimum is not the same at the
+two rates (1.1 at 67 kTh/s, about 1.9 at 200 kTh/s), so a scan rate other than these needs its own
+check.
 
 ### Off a linear ion trap
 

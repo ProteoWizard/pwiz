@@ -342,8 +342,12 @@ namespace pwiz.Osprey.Test
             var many = Enumerable.Range(0, 100).Select(i => 0.6 + 0.01 * i).ToList();
             Assert.AreEqual(CentrixCalibration.MS2_SIGMA_PER_SPACING * 0.2, CentrixCalibration.EstimateSigma(many, rate, 2), 1e-12);
             Assert.AreEqual(CentrixCalibration.MS2_SIGMA_PER_SPACING * 0.2, CentrixCalibration.EstimateSigma(new List<double>(), rate, 2), 1e-12);
-            Assert.AreEqual(many[(int)(CentrixCalibration.WIDTH_QUANTILE * 99)] / CentrixCalibration.FWHM_PER_SIGMA,
-                CentrixCalibration.EstimateSigma(many, null, 2), 1e-12);
+            // MS1 takes its own number of spacings: the measurement rule, narrower than MS2's detection rule.
+            Assert.AreEqual(CentrixCalibration.MS1_SIGMA_PER_SPACING * 0.2, CentrixCalibration.EstimateSigma(many, rate, 1), 1e-12);
+            Assert.IsTrue(CentrixCalibration.MS1_SIGMA_PER_SPACING < CentrixCalibration.MS2_SIGMA_PER_SPACING);
+            var widthSigma = many[(int)(CentrixCalibration.WIDTH_QUANTILE * 99)] / CentrixCalibration.FWHM_PER_SIGMA;
+            Assert.AreEqual(widthSigma, CentrixCalibration.EstimateSigma(many, null, 2), 1e-12);
+            Assert.AreEqual(widthSigma, CentrixCalibration.EstimateSigma(many, null, 1), 1e-12);
             Assert.AreEqual(CentrixCalibration.FALLBACK_SIGMA_TH, CentrixCalibration.EstimateSigma(new List<double> { 0.7 }, null, 2));
 
             // The calibrator settles a linear ion trap's level from its first spectrum; any other level takes every sample.

@@ -108,7 +108,10 @@ namespace pwiz.Osprey.Centroid
         /// <summary>The step, in Th, between the noise windows.</summary>
         public double NoiseStepTh { get; set; } = 5;
 
-        /// <summary>Centroids closer than this, in Th, merge into one. Zero: the peak sigma.</summary>
+        /// <summary>
+        /// Centroids closer than this, in Th, merge into one. Zero: the peak sigma, which on a linear ion trap's MS2
+        /// is three point spacings (0.6 Th at 200 kTh/s), so a doubly charged fragment's M+0 and M+1 merge.
+        /// </summary>
         public double MinCentroidSeparationTh { get; set; }
 
         /// <summary>
