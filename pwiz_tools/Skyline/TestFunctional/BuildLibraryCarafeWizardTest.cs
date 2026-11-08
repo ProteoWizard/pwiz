@@ -607,7 +607,6 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
-        /// <summary>Next refuses with <paramref name="message"/> and stays on <paramref name="page"/>.</summary>
         /// <summary>The accession of a db|accession|entry label, or the label itself when it is not one.</summary>
         private static string Accession(string label)
         {
@@ -615,6 +614,7 @@ namespace pwiz.SkylineTestFunctional
             return parts.Length > 1 ? parts[1] : label;
         }
 
+        /// <summary>Next refuses with <paramref name="message"/> and stays on <paramref name="page"/>.</summary>
         private static void ShowAndDismissMessage(BuildLibraryDlg buildLibraryDlg, string message, BuildLibraryDlg.Pages page)
         {
             var messageDlg = ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage);
