@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.Pipeline;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
@@ -70,6 +71,12 @@ namespace pwiz.Osprey.Tasks
         private readonly int _nFeatures;
         private readonly HashSet<uint> _stratumBaseIds;
         private readonly Action<string> _logWarning;
+
+        /// <summary>
+        /// The stamp of the first pass whose model this worker scores with, which each run's
+        /// protein-best column must carry when the model scores with one; null when it does not.
+        /// </summary>
+        private readonly ArtifactStamp _firstPassStamp;
 
         /// <summary>
         /// True under <c>OSPREY_PASS2_QVALUE=transfer</c>: re-map run q through the file's own
@@ -130,16 +137,19 @@ namespace pwiz.Osprey.Tasks
         /// <param name="writeAnswer">Persists one file's records, and its competition decoys
         /// when there was a competition (null under transfer).</param>
         /// <param name="logWarning">Where a per-file warning goes.</param>
+        /// <param name="firstPassStamp">The frozen model's stamp, which every run's protein-best
+        /// column must carry when the model scores with one (<c>OSPREY_PROTEIN_BEST</c>).</param>
         public Pass2PerFileWorker(
             FrozenModelScorer scorer, bool transfer, HashSet<uint> stratumBaseIds,
             IReadOnlyDictionary<uint, FdrExperimentRecord> pass1Experiment,
             Action<string, IReadOnlyList<FdrScoreRecord>,
                 IReadOnlyDictionary<uint, (double score, uint entryId)>> writeAnswer,
-            Action<string> logWarning)
+            Action<string> logWarning, ArtifactStamp firstPassStamp = null)
         {
+            _firstPassStamp = firstPassStamp;
             _writeAnswer = writeAnswer ?? throw new ArgumentNullException(nameof(writeAnswer));
             _scorer = scorer ?? throw new ArgumentNullException(nameof(scorer));
-            _nFeatures = scorer.NumFeatures;
+            _nFeatures = scorer.InputFeatures;
             _transfer = transfer;
             _stratumBaseIds = stratumBaseIds;
             _pass1Experiment = pass1Experiment ?? throw new ArgumentNullException(nameof(pass1Experiment));
@@ -203,7 +213,7 @@ namespace pwiz.Osprey.Tasks
 
             Pass2FdrSidecar.ReadOneFilePass2Inputs(
                 pass1SidecarPath, effectiveParquetPath, survivors,
-                _scorer, _nFeatures, _seeders.Value, _logWarning,
+                _scorer, _nFeatures, ProteinBestFor(fileName, pass1SidecarPath), _seeders.Value, _logWarning,
                 survivorIds, pass1Records,
                 out uint[] entryIds, out double[] scores, out var survivorScores);
 
@@ -281,7 +291,7 @@ namespace pwiz.Osprey.Tasks
                         fileName, survivors.Count - nMapped, survivors.Count, effectiveParquetPath));
                 }
                 Pass2FdrSidecar.TransferOneFile(fileName, pass1SidecarPath, survivors, _scorer,
-                    _pass1Experiment, _logWarning, ref tally);
+                    ProteinBestFor(fileName, pass1SidecarPath), _pass1Experiment, _logWarning, ref tally);
             }
             finally
             {
@@ -305,6 +315,17 @@ namespace pwiz.Osprey.Tasks
                 _transferTally.GapFill += tally.GapFill;
             }
             return new Pass2FileResult(null, BuildRecords(survivors, fileName, effectiveParquetPath));
+        }
+
+        /// <summary>
+        /// This run's protein-best column when the frozen model scores with one, else null. Its
+        /// rescored rows - moved, gap-filled, CWT - read their entry's first-pass value: the
+        /// column is what the entry's siblings scored, which a move of its own peak does not
+        /// change.
+        /// </summary>
+        private ProteinBestRunValues ProteinBestFor(string fileName, string pass1SidecarPath)
+        {
+            return Pass2FdrSidecar.LoadProteinBestForRun(_scorer, pass1SidecarPath, fileName, _firstPassStamp);
         }
 
         /// <summary>

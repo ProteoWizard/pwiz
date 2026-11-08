@@ -219,7 +219,13 @@ namespace pwiz.Osprey.Tasks
         {
             if (ctx.Config.InputFiles == null) yield break;
             foreach (var input in ctx.Config.InputFiles)
+            {
                 yield return FdrScoresSidecar.Pass1Path(input);
+                // OSPREY_PROTEIN_BEST: the column each run was scored with, which the second
+                // pass scores that run's rescored rows with and cannot recompute.
+                if (OspreyEnvironment.ProteinBestEnabled)
+                    yield return ProteinBestSidecar.PathFor(input);
+            }
 
             // The analysis-wide cross-run consensus every run's Stage 6 plan reads. Each run's
             // .reconciliation.json is PerFileRescoring's output now: that task plans the run
@@ -407,8 +413,12 @@ namespace pwiz.Osprey.Tasks
                     ? null
                     : FdrScoresSidecar.ReadFeatureSums(FdrScoresSidecar.Pass1Path(sidecarBase));
             });
+            // A model trained with the protein-best column reports it as its last feature.
+            var featureInfos = ScoringTaskShared.FdrFeatureInfos();
+            if (ProteinBestFeature.IsAppendedTo(saved.Model.FeatureNames))
+                featureInfos = ProteinBestFeature.WithColumnInfo(featureInfos);
             var contributions = PercolatorEngine.FirstPassContributionsFromShares(saved.Model, shares,
-                ScoringTaskShared.FdrFeatureInfos());
+                featureInfos);
             return ModelDiagnosticsData.ModelView.From(contributions);
         }
 
@@ -1696,9 +1706,15 @@ namespace pwiz.Osprey.Tasks
                     kv.Key, perFileParquetPaths, config);
                 if (string.IsNullOrEmpty(resumeBase))
                     continue;
+                // Under OSPREY_PROTEIN_BEST a file is resumable only beside a current column: the
+                // score pass writes the column only for the files it scores.
                 if (PerFileResumeDriver.IsCurrent(
-                        FdrScoresSidecar.Pass1Path(resumeBase), Name, sidecarValidityKey))
+                        FdrScoresSidecar.Pass1Path(resumeBase), Name, sidecarValidityKey) &&
+                    (!OspreyEnvironment.ProteinBestEnabled ||
+                     PerFileResumeDriver.IsCurrent(ProteinBestSidecar.PathFor(resumeBase), Name, sidecarValidityKey)))
+                {
                     resumableFiles.Add(kv.Key);
+                }
             }
             if (resumableFiles.Count > 0)
             {
@@ -1885,6 +1901,19 @@ namespace pwiz.Osprey.Tasks
                     throw new IOException(string.Format(
                         OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Could_not_write_the_first_pass_intermediate_file_for___0____and_the_analysis_cannot_, fileName));
                 };
+            // OSPREY_PROTEIN_BEST: each scored run's column, beside its first-pass scores and
+            // under the same stamp. Fatal on failure, for the reason the scores write is.
+            void PersistProteinBest(string fileName, ProteinBestRunValues column)
+            {
+                string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
+                if (string.IsNullOrEmpty(sidecarBase))
+                {
+                    throw new IOException(string.Format(
+                        OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Cannot_write_the_first_pass_intermediate_file_for___0____no_location_could_be_derived_, fileName));
+                }
+                ProteinBestSidecar.Write(ProteinBestSidecar.PathFor(sidecarBase), column.EntryIds, column.Values,
+                    column.Floor, sidecarStamp);
+            }
             var featureInfos = ScoringTaskShared.FdrFeatureInfos();
             var swFdr = Stopwatch.StartNew();
             bool aborted;
@@ -1961,7 +1990,7 @@ namespace pwiz.Osprey.Tasks
                 config, featureInfos, ctx, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
                 @"First-pass", captureContributions, captureModel, tryStreamCompletedScores,
                 pretrainedModel, flushFileRunScope, ctx.RunPlan.FirstPassFdrLanes, tryLoadFeatureSums,
-                BuildProteinBestRequest(fullLibrary));
+                BuildProteinBestRequest(fullLibrary, PersistProteinBest));
             // How many files' 1st-pass sidecars are on disk after the score pass - written by it
             // or adopted from an earlier run. flushFileRunScope is the only writer of these files
             // on this path, so a shortfall here is a file the compaction gate will fail to read.
@@ -2089,7 +2118,8 @@ namespace pwiz.Osprey.Tasks
         /// The accessions are already free of the Carafe per-peptide suffix
         /// (<see cref="CarafeProteinIdNormalizer"/>).
         /// </summary>
-        private static ProteinBestRequest BuildProteinBestRequest(List<LibraryEntry> library)
+        private static ProteinBestRequest BuildProteinBestRequest(List<LibraryEntry> library,
+            Action<string, ProteinBestRunValues> persistRun)
         {
             if (!OspreyEnvironment.ProteinBestEnabled)
                 return null;
@@ -2097,7 +2127,7 @@ namespace pwiz.Osprey.Tasks
                 new ProteinBestMembership.Precursor(entry.Id, entry.ModifiedSequence, entry.ProteinIds));
             ulong? shuffleSeed = OspreyEnvironment.ProteinBestShuffle ? OspreyEnvironment.FdrSeed ?? 42UL : null;
             return new ProteinBestRequest(ProteinBestMembership.Build(precursors, shuffleSeed),
-                OspreyEnvironment.ProteinBestTopN, OspreyEnvironment.ProteinBestDecoyOwn);
+                OspreyEnvironment.ProteinBestTopN, OspreyEnvironment.ProteinBestDecoyOwn, persistRun);
         }
 
         /// <summary>

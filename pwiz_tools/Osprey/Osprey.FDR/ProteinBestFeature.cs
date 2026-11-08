@@ -59,10 +59,22 @@ namespace pwiz.Osprey.FDR
         public static double[] ComputeColumn(ProteinBestMembership membership, int topN, bool decoyOwn,
             IReadOnlyList<uint> baseIds, IReadOnlyList<bool> isDecoys, IReadOnlyList<double> priorScores)
         {
+            return ComputeColumn(membership, topN, decoyOwn, baseIds, isDecoys, priorScores, out _);
+        }
+
+        /// <summary>
+        /// <see cref="ComputeColumn(ProteinBestMembership,int,bool,IReadOnlyList{uint},IReadOnlyList{bool},IReadOnlyList{double})"/>,
+        /// also returning the run's <paramref name="floor"/>, which the second pass gives a row the
+        /// first pass had no value for.
+        /// </summary>
+        public static double[] ComputeColumn(ProteinBestMembership membership, int topN, bool decoyOwn,
+            IReadOnlyList<uint> baseIds, IReadOnlyList<bool> isDecoys, IReadOnlyList<double> priorScores,
+            out double floor)
+        {
             if (topN < 1)
                 throw new ArgumentOutOfRangeException(nameof(topN), @"The protein-best column needs at least the top sibling.");
             int count = baseIds.Count;
-            double floor = DecoyMedianFloor(baseIds, isDecoys, priorScores);
+            floor = DecoyMedianFloor(baseIds, isDecoys, priorScores);
             var targets = new SideValues(membership, topN, floor, BestByPeptide(membership, baseIds, isDecoys, priorScores, false));
             var decoys = decoyOwn
                 ? new SideValues(membership, topN, floor, BestByPeptide(membership, baseIds, isDecoys, priorScores, true))
@@ -76,6 +88,16 @@ namespace pwiz.Osprey.FDR
                     : (isDecoys[r] ? decoys : targets).ValueFor(peptide);
             }
             return column;
+        }
+
+        /// <summary>
+        /// Whether <paramref name="featureNames"/>, a trained model's feature names in order, end
+        /// in this column: the model then scores a vector only with the column appended.
+        /// </summary>
+        public static bool IsAppendedTo(IReadOnlyList<string> featureNames)
+        {
+            return featureNames != null && featureNames.Count > 0 &&
+                   string.Equals(featureNames[featureNames.Count - 1], FEATURE_NAME, StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -243,12 +265,23 @@ namespace pwiz.Osprey.FDR
     /// <summary>What a first pass asked of the protein-aware column.</summary>
     public sealed class ProteinBestRequest
     {
-        public ProteinBestRequest(ProteinBestMembership membership, int topN, bool decoyOwn)
+        /// <param name="membership">Which peptides sit on which proteins.</param>
+        /// <param name="topN">1 for the top sibling, N for the mean of the top N.</param>
+        /// <param name="decoyOwn">Decoys read decoy siblings.</param>
+        /// <param name="persistRun">Optional: given each run the score pass scores, with the
+        /// run's column, so the second pass can score that run's rescored rows with it. Called
+        /// from the score pass's file lanes, one call per run.</param>
+        public ProteinBestRequest(ProteinBestMembership membership, int topN, bool decoyOwn,
+            Action<string, ProteinBestRunValues> persistRun = null)
         {
             Membership = membership;
             TopN = topN;
             DecoyOwn = decoyOwn;
+            PersistRun = persistRun;
         }
+
+        /// <summary>Receives each scored run's column; null to keep none.</summary>
+        public Action<string, ProteinBestRunValues> PersistRun { get; }
 
         public ProteinBestMembership Membership { get; }
 
@@ -257,6 +290,96 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>A decoy reads decoy siblings, not its paired target's value.</summary>
         public bool DecoyOwn { get; }
+    }
+
+    /// <summary>
+    /// One run's protein-best column as the first pass computed it: a value per entry_id the run
+    /// scored, and the run's floor. The second pass scores a rescored row with it. The column of a
+    /// row is what its siblings scored in round 1 of the first pass, so moving the row's own peak
+    /// does not change it, and a moved, gap-filled or CWT row reads its entry's first-pass value.
+    /// An entry the run had no first-pass row for reads the floor - the value the first pass
+    /// gives a candidate with no sibling evidence.
+    ///
+    /// <para>The value of a row is a function of its peptide and side alone, so every row of an
+    /// entry_id has the same one, and one value per entry_id is the whole column. Entries are
+    /// held in ascending entry_id order, a function of the contents.</para>
+    /// </summary>
+    public sealed class ProteinBestRunValues
+    {
+        private readonly uint[] _entryIds;
+        private readonly double[] _values;
+
+        /// <summary>
+        /// The values of <paramref name="entryIds"/>, which must be strictly ascending, with the
+        /// run's <paramref name="floor"/>.
+        /// </summary>
+        public ProteinBestRunValues(uint[] entryIds, double[] values, double floor)
+        {
+            if (entryIds == null)
+                throw new ArgumentNullException(nameof(entryIds));
+            if (values == null)
+                throw new ArgumentNullException(nameof(values));
+            if (entryIds.Length != values.Length)
+                throw new ArgumentException(@"One value per entry_id.", nameof(values));
+            for (int i = 1; i < entryIds.Length; i++)
+            {
+                if (entryIds[i] <= entryIds[i - 1])
+                    throw new ArgumentException(@"The entry_ids must be strictly ascending.", nameof(entryIds));
+            }
+            _entryIds = entryIds;
+            _values = values;
+            Floor = floor;
+        }
+
+        /// <summary>
+        /// One run's values from its first-pass rows, in any order, as
+        /// <see cref="ProteinBestFeature.ComputeColumn(ProteinBestMembership,int,bool,IReadOnlyList{uint},IReadOnlyList{bool},IReadOnlyList{double},out double)"/>
+        /// computed them. Rows of one entry_id must agree, which the column guarantees; a
+        /// disagreement is a defect, not a choice between them.
+        /// </summary>
+        public static ProteinBestRunValues FromRows(IReadOnlyList<uint> rowEntryIds, IReadOnlyList<double> rowValues,
+            double floor)
+        {
+            var byEntryId = new Dictionary<uint, double>(rowEntryIds.Count);
+            for (int r = 0; r < rowEntryIds.Count; r++)
+            {
+                uint entryId = rowEntryIds[r];
+                if (byEntryId.TryGetValue(entryId, out double known))
+                {
+                    if (BitConverter.DoubleToInt64Bits(known) != BitConverter.DoubleToInt64Bits(rowValues[r]))
+                    {
+                        // Exception text for internal diagnostics, not displayed to user
+                        throw new InvalidOperationException(string.Format(
+                            @"The protein-best column gave entry_id {0} two values in one run ({1} and {2}).",
+                            entryId, known, rowValues[r]));
+                    }
+                    continue;
+                }
+                byEntryId.Add(entryId, rowValues[r]);
+            }
+            var entryIds = byEntryId.Keys.ToArray();
+            Array.Sort(entryIds); // Array.Sort OK: distinct dictionary keys, so the sort never ties
+            var values = new double[entryIds.Length];
+            for (int i = 0; i < entryIds.Length; i++)
+                values[i] = byEntryId[entryIds[i]];
+            return new ProteinBestRunValues(entryIds, values, floor);
+        }
+
+        /// <summary>The floor of the run: the value of an entry it holds no value for.</summary>
+        public double Floor { get; }
+
+        /// <summary>The entry_ids with a value, ascending.</summary>
+        public IReadOnlyList<uint> EntryIds => _entryIds;
+
+        /// <summary>The values, in <see cref="EntryIds"/> order.</summary>
+        public IReadOnlyList<double> Values => _values;
+
+        /// <summary>The column of a row of <paramref name="entryId"/> in this run.</summary>
+        public double ValueFor(uint entryId)
+        {
+            int i = Array.BinarySearch(_entryIds, entryId);
+            return i >= 0 ? _values[i] : Floor;
+        }
     }
 
     /// <summary>

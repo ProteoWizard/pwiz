@@ -576,7 +576,7 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// One scorer serves every per-file second-pass worker of a --parallel-files run, so
-        /// concurrent <see cref="FrozenModelScorer.Score"/> calls must each score their own
+        /// concurrent <see cref="FrozenModelScorer.Score(double[])"/> calls must each score their own
         /// features. A shared standardization buffer once let one file's entries be scored with
         /// another's features, silently changing the second-pass answer.
         /// </summary>

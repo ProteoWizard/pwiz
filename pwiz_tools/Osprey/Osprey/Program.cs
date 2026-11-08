@@ -330,15 +330,6 @@ namespace pwiz.Osprey
                 // which is what let the input KIND retire: it was the OTHER seam saying the
                 // same thing.
                 var pipeline = tasks.PipelineFor(selectedTask);
-                // OSPREY_PROTEIN_BEST: the frozen first-pass model cannot score a second pass without
-                // its column, so the full pipeline ends at the stage that can supply it. A --task run
-                // is checked in ValidateArgs instead. A shorter pipeline rather than a flag every
-                // later stage would have to read.
-                if (selectedTask == null && OspreyEnvironment.ProteinBestEnabled)
-                {
-                    pipeline = pipeline.TakeWhile(stage => stage.Name != OspreyTaskNames.FIRST_PASS_FDR)
-                        .Concat(pipeline.Where(stage => stage.Name == OspreyTaskNames.FIRST_PASS_FDR)).ToList();
-                }
                 config.SelectTask(selectedTask, pipeline);
                 config.LibraryBuild.Phase = libraryPhase;
 
@@ -1205,10 +1196,11 @@ namespace pwiz.Osprey
         }
 
         /// <summary>
-        /// The refusal for an OSPREY_PROTEIN_BEST request that cannot be honored, or null. The column
-        /// exists only in FirstPassFDR: a task past it would apply a model of another width to raw
-        /// vectors, the second-pass FDRBench table has no second pass to read, and the one command's
-        /// tuning search runs its own analyses. A full-pipeline run ends at FirstPassFDR on its own.
+        /// The refusal for an OSPREY_PROTEIN_BEST request that cannot be honored, or null. The second
+        /// pass scores each run's rescored rows with the column FirstPassFDR persisted for that run,
+        /// so every search task can run. Still refused: the one command's library build, whose
+        /// tuning search runs its own analyses, and the stand-alone model diagnostics, whose model
+        /// views read the raw feature layout.
         /// </summary>
         private static string ProteinBestError(OspreyConfig config)
         {
@@ -1217,19 +1209,14 @@ namespace pwiz.Osprey
                 return settingsErr;
             if (BuildsLibrary(config))
             {
-                return string.Format(@"OSPREY_PROTEIN_BEST cannot run with the library build ({0}): its searches go on past the first pass.",
+                return string.Format(@"OSPREY_PROTEIN_BEST cannot run with the library build ({0}): its tuning search runs analyses of its own.",
                     OspreyCommandArgs.ARG_FASTA.ArgumentText);
             }
             var selected = config.SelectedTask;
-            if (selected != null && selected.Name != OspreyTaskNames.PER_FILE_SCORING && selected.Name != OspreyTaskNames.FIRST_PASS_FDR)
+            if (selected != null && selected.Name == OspreyTaskNames.MODEL_DIAGNOSTICS)
             {
-                return string.Format(@"OSPREY_PROTEIN_BEST cannot run {0}: the first-pass model needs its column, which exists only in {1}.",
-                    OspreyArgNames.TaskText(selected.Name), OspreyTaskNames.FIRST_PASS_FDR);
-            }
-            if (!string.IsNullOrEmpty(config.OutputFdrBench) && (config.FdrBenchPass & OspreyConfig.FDRBENCH_PASS_2) != 0)
-            {
-                return string.Format(@"OSPREY_PROTEIN_BEST stops after the first pass, so {0} needs {1} 1: there is no second pass to report.",
-                    OspreyCommandArgs.ARG_FDRBENCH.ArgumentText, OspreyCommandArgs.ARG_FDRBENCH_PASS.ArgumentText);
+                return string.Format(@"OSPREY_PROTEIN_BEST cannot run {0}: its model views read the features without the column.",
+                    OspreyArgNames.TaskText(selected.Name));
             }
             return null;
         }

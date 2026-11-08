@@ -1540,8 +1540,10 @@ namespace pwiz.Osprey.FDR
                     if (scoredHere)
                     {
                         IReadOnlyList<double[]> featureRows = loadFileFeatures(fileName);
+                        // Persisted for the second pass only where the file is scored: a resumed
+                        // file's run-scope sidecar is current only beside a current column.
                         if (proteinBestColumn != null)
-                            featureRows = proteinBestColumn.AppendTo(rows, featureRows);
+                            featureRows = proteinBestColumn.PersistAndAppend(fileName, rows, featureRows);
                         t = lane1.Stop(LANE1_FEATURES, t);
                         scores = ScoreRows(file, featureRows, gbtModels, avgWeights, avgBias, standardizer, scoreFeatures,
                             percConfig.NThreads, HeldOutFoldsOf(heldOutFolds, fileName));
@@ -2088,6 +2090,23 @@ namespace pwiz.Osprey.FDR
             /// <summary>The column of one file, a value per row, from its raw feature rows.</summary>
             public double[] ValuesFor(RowBuffer rows, IReadOnlyList<double[]> rawRows)
             {
+                return ValuesFor(rows, rawRows, out _);
+            }
+
+            /// <summary>
+            /// The score pass's form: one file's raw feature rows extended by the column, after
+            /// handing the file's column to the request's persister when it has one, so the second
+            /// pass reads the values this pass scored with.
+            /// </summary>
+            public IReadOnlyList<double[]> PersistAndAppend(string fileName, RowBuffer rows, IReadOnlyList<double[]> rawRows)
+            {
+                double[] values = ValuesFor(rows, rawRows, out double floor);
+                _request.PersistRun?.Invoke(fileName, ProteinBestRunValues.FromRows(rows.EntryIds, values, floor));
+                return Append(rows, rawRows, values);
+            }
+
+            private double[] ValuesFor(RowBuffer rows, IReadOnlyList<double[]> rawRows, out double floor)
+            {
                 int count = rows.Count;
                 var baseIds = new uint[count];
                 var heldOut = new Dictionary<int, int>();
@@ -2102,13 +2121,17 @@ namespace pwiz.Osprey.FDR
                     r => PercolatorScorer.ResolveFeatureRow(rawRows, (uint)r, rows.CoelutionSums[r], _rawFeatures),
                     _models, _standardizer, _rawFeatures, priorScores, 0, _threads, heldOut);
                 return ProteinBestFeature.ComputeColumn(_request.Membership, _request.TopN, _request.DecoyOwn,
-                    baseIds, rows.IsDecoys, priorScores);
+                    baseIds, rows.IsDecoys, priorScores, out floor);
             }
 
             /// <summary>One file's raw feature rows, each extended by its column value.</summary>
             public IReadOnlyList<double[]> AppendTo(RowBuffer rows, IReadOnlyList<double[]> rawRows)
             {
-                double[] values = ValuesFor(rows, rawRows);
+                return Append(rows, rawRows, ValuesFor(rows, rawRows));
+            }
+
+            private IReadOnlyList<double[]> Append(RowBuffer rows, IReadOnlyList<double[]> rawRows, double[] values)
+            {
                 var extended = new double[rows.Count][];
                 for (int r = 0; r < extended.Length; r++)
                 {

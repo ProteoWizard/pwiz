@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
@@ -302,7 +303,7 @@ namespace pwiz.Osprey.Test
                 FdrScoresSidecar.Write(pass1Path, records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
 
                 var tally = new Pass2FdrSidecar.TransferTally();
-                Pass2FdrSidecar.TransferOneFile(@"run1", pass1Path, survivors, scorer,
+                Pass2FdrSidecar.TransferOneFile(@"run1", pass1Path, survivors, scorer, null,
                     new Dictionary<uint, FdrExperimentRecord>(), message => Assert.Fail(message), ref tally);
 
                 Assert.AreEqual(1, tally.FilesDone);
@@ -322,6 +323,122 @@ namespace pwiz.Osprey.Test
             {
                 if (File.Exists(pass1Path))
                     File.Delete(pass1Path);
+                Directory.Delete(dir, true);
+            }
+        }
+
+        /// <summary>
+        /// OSPREY_PROTEIN_BEST in the second pass: a model trained with the column scores a
+        /// rescored row with the value the first pass persisted for its run and entry, and a row
+        /// the first pass had no value for with the run's floor. The transfer then classifies a
+        /// row it reproduces as UNCHANGED bit for bit, a moved row as MOVED on its new raw
+        /// features and the same column, and a precursor with no first-pass row as a gap fill
+        /// scored at the floor. The column file is refused when absent or written by another
+        /// first pass.
+        /// </summary>
+        [TestMethod]
+        public void TestPass2ProteinBestColumn()
+        {
+            var model = FirstPassModelIoTest.MakeTreeModel();
+            model.FeatureNames = new[] { @"f0", @"f1", @"f2", @"f3", ProteinBestFeature.FEATURE_NAME };
+            var scorer = FrozenModelScorer.TryCreate(model);
+            Assert.IsNotNull(scorer);
+            Assert.IsTrue(scorer.ScoresProteinBest);
+            Assert.AreEqual(scorer.NumFeatures - 1, scorer.InputFeatures);
+            var scorerWithout = FrozenModelScorer.TryCreate(FirstPassModelIoTest.MakeTreeModel());
+            Assert.IsNotNull(scorerWithout);
+            Assert.IsFalse(scorerWithout.ScoresProteinBest);
+
+            string dir = Path.Combine(Path.GetTempPath(),
+                @"osprey_transfer_protein_best_" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(dir);
+            string inputFile = Path.Combine(dir, @"run1.mzML");
+            string pass1Path = FdrScoresSidecar.Pass1Path(inputFile);
+            try
+            {
+                const uint movedId = 7;
+                const uint gapFillId = 20;
+                const uint decoyId = 0x80000003;
+                const double floor = -0.25;
+                // The first pass's column: a value for every entry it scored in this run - a
+                // decoy included - and none for the gap fill.
+                var rowIds = new List<uint>();
+                var rowValues = new List<double>();
+                for (uint id = 1; id < gapFillId; id++)
+                {
+                    rowIds.Add(id);
+                    rowValues.Add(0.1 * id);
+                }
+                rowIds.Add(decoyId);
+                rowValues.Add(0.05);
+                // A second row of one entry, as a run's first-pass rows can hold several peaks.
+                rowIds.Add(4);
+                rowValues.Add(0.4);
+                var persisted = ProteinBestRunValues.FromRows(rowIds, rowValues, floor);
+                Assert.AreEqual(rowIds.Count - 1, persisted.EntryIds.Count);
+                ProteinBestSidecar.Write(ProteinBestSidecar.PathFor(inputFile), persisted.EntryIds, persisted.Values,
+                    persisted.Floor, TestStamps.Any);
+                var column = Pass2FdrSidecar.LoadProteinBestForRun(scorer, pass1Path, @"run1", TestStamps.Any);
+                Assert.IsNotNull(column);
+                CollectionAssert.AreEqual(persisted.EntryIds.ToArray(), column.EntryIds.ToArray());
+                CollectionAssert.AreEqual(persisted.Values.ToArray(), column.Values.ToArray());
+                Assert.AreEqual(floor, column.Floor);
+                Assert.AreEqual(0.05, column.ValueFor(decoyId));
+
+                var rng = new Random(5);
+                var survivors = new List<FdrEntry>();
+                var records = new List<FdrScoreRecord>();
+                for (uint id = 1; id <= gapFillId; id++)
+                {
+                    var raw = new double[scorer.InputFeatures];
+                    for (int j = 0; j < raw.Length; j++)
+                        raw[j] = rng.NextDouble();
+                    if (id != gapFillId)
+                    {
+                        // The score the first pass wrote: this model, the raw features at its own
+                        // peak and the column it computed.
+                        records.Add(new FdrScoreRecord(id, scorer.Score(raw, 0.1 * id), 0.001 * id, 0.002 * id, 10.0 + id));
+                    }
+                    // Reconciliation moved one peak: new raw features, the same column.
+                    var features = id == movedId ? raw.Select(v => v + 0.5).ToArray() : raw;
+                    survivors.Add(new FdrEntry { EntryId = id, Features = features });
+                }
+                FdrScoresSidecar.Write(pass1Path, records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
+
+                // The column of a moved row is the persisted value; of a row with none, the floor.
+                var moved = survivors.Single(e => e.EntryId == movedId);
+                Assert.AreEqual(scorer.Score(moved.Features, 0.1 * movedId), scorer.Score(moved.Features, movedId, column));
+                var gapFill = survivors.Single(e => e.EntryId == gapFillId);
+                Assert.AreEqual(scorer.Score(gapFill.Features, floor), scorer.Score(gapFill.Features, gapFillId, column));
+
+                var tally = new Pass2FdrSidecar.TransferTally();
+                Pass2FdrSidecar.TransferOneFile(@"run1", pass1Path, survivors, scorer, column,
+                    new Dictionary<uint, FdrExperimentRecord>(), message => Assert.Fail(message), ref tally);
+                Assert.AreEqual(1, tally.FilesDone);
+                Assert.AreEqual(0, tally.Skipped);
+                Assert.AreEqual(1, tally.Moved);
+                Assert.AreEqual(1, tally.GapFill);
+                Assert.AreEqual(survivors.Count - 2, tally.Unchanged);
+
+                // A model with the column never scores a vector without it.
+                Assert.ThrowsException<ArgumentNullException>(() => scorer.Score(moved.Features, movedId, null));
+
+                // The column file of another first pass, and a missing one, stop the run.
+                var otherStamp = OspreyVersion.Stamp(TestStamps.TASK, TestStamps.KEY + @";other");
+                Assert.ThrowsException<InvalidDataException>(() =>
+                    Pass2FdrSidecar.LoadProteinBestForRun(scorer, pass1Path, @"run1", otherStamp));
+                File.Delete(ProteinBestSidecar.PathFor(inputFile));
+                Assert.ThrowsException<InvalidDataException>(() =>
+                    Pass2FdrSidecar.LoadProteinBestForRun(scorer, pass1Path, @"run1", TestStamps.Any));
+                // A model without the column reads no column file at all.
+                Assert.IsNull(Pass2FdrSidecar.LoadProteinBestForRun(scorerWithout, pass1Path, @"run1", TestStamps.Any));
+
+                // One value per entry_id: rows of one entry that disagree are a defect.
+                Assert.ThrowsException<InvalidOperationException>(() =>
+                    ProteinBestRunValues.FromRows(new uint[] { 4, 4 }, new[] { 1.0, 2.0 }, floor));
+            }
+            finally
+            {
                 Directory.Delete(dir, true);
             }
         }

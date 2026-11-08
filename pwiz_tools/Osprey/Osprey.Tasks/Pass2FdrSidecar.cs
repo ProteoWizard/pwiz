@@ -1202,7 +1202,7 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
             var sw = Stopwatch.StartNew();
-            int nFeatures = scorer.NumFeatures;
+            int nFeatures = scorer.InputFeatures;
 
             // 1. The one genuinely global set: every survivor entry_id. The best-of-runs floor is
             //    a per-entry_id minimum across files, so that set has to span the run - but it is
@@ -1492,7 +1492,8 @@ namespace pwiz.Osprey.Tasks
                     // above puts the refusal.
                     ReadOneFilePass2Inputs(
                         sidecarByKey[fileKey], effectiveParquetPath, currentEntries,
-                        scorer, nFeatures, seeder, ctx.LogWarning,
+                        scorer, nFeatures, LoadProteinBestForRun(scorer, sidecarByKey[fileKey], fileKey, null),
+                        seeder, ctx.LogWarning,
                         survivorIds, pass1Records,
                         out uint[] eids, out double[] scs, out var fileScores);
                     nScored += fileScores.Count;
@@ -2027,7 +2028,7 @@ namespace pwiz.Osprey.Tasks
 
         internal static void ReadOneFilePass2Inputs(
             string pass1SidecarPath, string effectiveParquetPath, List<FdrEntry> survivors,
-            FrozenModelScorer scorer, int nFeatures, Pass1ScalarSeeder seeder,
+            FrozenModelScorer scorer, int nFeatures, ProteinBestRunValues proteinBest, Pass1ScalarSeeder seeder,
             Action<string> logWarning,
             HashSet<uint> survivorIds, List<FdrScoreRecord> pass1Records,
             out uint[] entryIds, out double[] scores, out Dictionary<uint, double> survivorScores)
@@ -2064,7 +2065,7 @@ namespace pwiz.Osprey.Tasks
                     featByScoreIndex.TryGetValue(e.ParquetIndex.Value, out double[] feats) &&
                     feats != null && feats.Length == nFeatures)
                 {
-                    double frozenScore = scorer.Score(feats);
+                    double frozenScore = scorer.Score(feats, e.EntryId, proteinBest);
                     survivorScores[e.EntryId] = frozenScore;
                     // This is the score the entry COMPETES on, so it is the one the 2nd-pass
                     // sidecar must carry. The seed above supplied the 1st-pass value, which is
@@ -2179,6 +2180,38 @@ namespace pwiz.Osprey.Tasks
             return new StreamingFdr.FileCompetition(runQ, bestTarget, bestDecoy);
         }
 
+        /// <summary>
+        /// One run's protein-best column (<c>OSPREY_PROTEIN_BEST</c>), read from beside its
+        /// first-pass FDR scores file, for a frozen model that scores with it; null for a model
+        /// that does not, which is every run with the column off.
+        ///
+        /// <para>Absence is a stop: a model with the column cannot score a vector without it, and
+        /// a run scored at the floor everywhere would be a plausible, wrong second pass. With
+        /// <paramref name="expectedStamp"/> (the frozen model's), a column written by another
+        /// first pass is refused as well.</para>
+        /// </summary>
+        internal static ProteinBestRunValues LoadProteinBestForRun(FrozenModelScorer scorer,
+            string pass1SidecarPath, string fileName, ArtifactStamp expectedStamp)
+        {
+            if (!scorer.ScoresProteinBest)
+                return null;
+            string path = ProteinBestSidecar.PathBesidePass1(pass1SidecarPath);
+            var column = ProteinBestSidecar.Read(path);
+            bool current = column != null;
+            if (current && expectedStamp != null)
+            {
+                var stamp = ProteinBestSidecar.ReadStamp(path);
+                current = stamp != null && string.Equals(stamp.ToString(), expectedStamp.ToString(), StringComparison.Ordinal);
+            }
+            if (!current)
+            {
+                throw new InvalidDataException(string.Format(
+                    OspreyTasksResources.Pass2FdrSidecar_LoadProteinBestForRun_The_protein_best_column_file__0__of__1__is_missing_or_was_not_written_by_this_analysis_s_first_pass__Run__2__again_,
+                    path, fileName, OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME)));
+            }
+            return new ProteinBestRunValues(column.EntryIds, column.Values, column.Floor);
+        }
+
         internal static Dictionary<uint, double[]> LoadReconciledFeaturesByScoreIndex(
             string reconciledPath)
         {
@@ -2245,7 +2278,7 @@ namespace pwiz.Osprey.Tasks
         /// (re-map run q through this file's tables) or GAP-FILL (no record: run q from the
         /// tables) - and gives each the precursor's pass-1 experiment values; see
         /// <see cref="AssignPerRunQ"/>. The sidecar Score is the averaged-model score, the SAME
-        /// scale <see cref="FrozenModelScorer.Score"/> produces, so each table is
+        /// scale <see cref="FrozenModelScorer.Score(double[])"/> produces, so each table is
         /// scale-consistent by construction.</para>
         ///
         /// <para>Scores through <see cref="FrozenModelScorer"/>, so it applies whichever
@@ -2256,11 +2289,11 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static void TransferOneFile(
             string fileName, string pass1Path, List<FdrEntry> survivors,
-            FrozenModelScorer scorer,
+            FrozenModelScorer scorer, ProteinBestRunValues proteinBest,
             IReadOnlyDictionary<uint, FdrExperimentRecord> globalExperiment,
             Action<string> logWarning, ref TransferTally tally)
         {
-            int nFeatures = scorer.NumFeatures;
+            int nFeatures = scorer.InputFeatures;
 
             // Build this file's per-run tables + record map from its own 1st-pass sidecar.
             var firstPassByEntryId = new Dictionary<uint, FdrScoreRecord>();
@@ -2304,7 +2337,7 @@ namespace pwiz.Osprey.Tasks
                     tally.Skipped++;
                     continue;
                 }
-                double newScore = scorer.Score(entry.Features);
+                double newScore = scorer.Score(entry.Features, entry.EntryId, proteinBest);
 
                 FdrScoreRecord? rec1 = null;
                 if (firstPassByEntryId.TryGetValue(entry.EntryId, out FdrScoreRecord recFound))

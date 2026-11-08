@@ -871,6 +871,7 @@ node running that task needs a copy, whatever batch it was handed.
 | `<blib-stem>.1st-pass.stratum.json` | experiment product, protein-compact only | `FirstPassFDR` (first-pass protein FDR) | as the model, paired with it by stamp | **every node** |
 | `<stem>.scores-reconciled.parquet` | per-run product, written for **every** run | `PerFileRescoring` (Stage 6) | `SecondPassFDR` - the join's only row source, one parquet per run; and `PerFileRescoring` itself on its per-run resume arm and for its training export | with the run |
 | `<stem>.2nd-pass.fdr_decoys.bin` | per-run product, protein-compact only | `PerFileRescoring` (pass-2 worker) | `SecondPassFDR` | with the run |
+| `<stem>.1st-pass.protein_best.bin` | per-run product, `OSPREY_PROTEIN_BEST` only | `FirstPassFDR` (pass 1, beside the run's scores) | `PerFileRescoring` (pass-2 worker); `SecondPassFDR` only under `OSPREY_PASS2_VERIFY_WORKER` | with the run |
 | `<stem>.2nd-pass.fdr_scores.bin` | per-run product, written for **every** run | `PerFileRescoring` (pass-2 worker), in every pass-2 mode | `SecondPassFDR`; `PerFileRescoring`'s training export | with the run |
 | `<stem>.training.parquet` | per-run product (`--training-export`) | `PerFileRescoring` (Stage 6), in flight or on its export-only arm | terminal: the consumer that trains on it (CarafeSharp) | n/a |
 | `<stem>.fragment-mass-errors.json` | per-run product (`--model-diagnostics`) | `PerFileRescoring` (Stage 6), in flight or on its optional-products arm | the report render (`SecondPassFDR`, `--task ModelDiagnostics`), when present and stamped for this analysis | **every node** rendering the report - the JSON alone |
@@ -1254,6 +1255,7 @@ Each rescore node needs its own runs' artifacts plus the experiment-wide set:
 Per run, for each run in the node's batch:
 - `<stem>.scores.parquet`
 - `<stem>.1st-pass.fdr_scores.bin`
+- `<stem>.1st-pass.protein_best.bin`, under `OSPREY_PROTEIN_BEST` only
 - `<stem>.calibration.json`
 - `<stem>.spectra.bin`, with no data file beside it
 

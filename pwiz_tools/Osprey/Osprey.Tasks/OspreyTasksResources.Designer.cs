@@ -1876,6 +1876,16 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The protein-best column file {0} of {1} is missing or was not written by this analysis&apos;s first pass. Run {2} again..
+        /// </summary>
+        public static string Pass2FdrSidecar_LoadProteinBestForRun_The_protein_best_column_file__0__of__1__is_missing_or_was_not_written_by_this_analysis_s_first_pass__Run__2__again_ {
+            get {
+                return ResourceManager.GetString("Pass2FdrSidecar_LoadProteinBestForRun_The_protein_best_column_file__0__of__1__is" +
+                        "_missing_or_was_not_written_by_this_analysis_s_first_pass__Run__2__again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to reload the second-pass intermediate file for &apos;{0}&apos; ({1}); protein FDR will use its first-pass q-values..
         /// </summary>
         public static string Pass2FdrSidecar_OverlayPass2SidecarOntoFile_Failed_to_reload_the_second_pass_intermediate_file_for___0_____1____protein_FDR_will_use_ {
