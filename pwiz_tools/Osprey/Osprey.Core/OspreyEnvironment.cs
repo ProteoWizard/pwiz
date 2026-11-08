@@ -999,6 +999,30 @@ namespace pwiz.Osprey.Core
                 @"OSPREY_RECONCILIATION", RECONCILIATION_SYMMETRIC_DECOYS, value));
         }
 
+        private static readonly EnvVar ENV_RECON_REFIT = new EnvVar(@"OSPREY_RECON_REFIT", EnvVarGroup.behavior,
+            @"Experiment: off plans cross-run reconciliation and gap-fill with each run's first-pass RT " +
+            @"calibration instead of refitting it on the consensus. Not in the validity key: run it into its own output directory.")
+            { Values = new[] { RECON_REFIT_OFF } };
+
+        /// <summary>
+        /// OSPREY_RECON_REFIT (experiment): <c>off</c> skips the Stage 6 consensus refit, so each run is
+        /// planned with its own first-pass RT calibration. Unset refits as before. Any other value throws.
+        /// </summary>
+        public static readonly bool ReconciliationRefitOff = ParseReconRefit(ENV_RECON_REFIT.Value);
+
+        private const string RECON_REFIT_OFF = @"off";
+
+        private static bool ParseReconRefit(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+            if (value.Trim().ToLowerInvariant() == RECON_REFIT_OFF)
+                return true;
+            throw new InvalidOperationException(string.Format(
+                OspreyCoreResources.OspreyEnvironment_ParseSingleValueSwitch__0__must_be___1___or_unset__not___2___,
+                @"OSPREY_RECON_REFIT", RECON_REFIT_OFF, value));
+        }
+
         private static readonly EnvVar ENV_DUMP_RUN_PEP = new EnvVar(@"OSPREY_DUMP_RUN_PEP", EnvVarGroup.diagnostic,
             @"Experiment: a folder. The transfer second pass fits each run's PEP from its " +
             @"first-pass target-vs-paired-decoy winners and writes every survivor's class, " +

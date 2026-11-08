@@ -108,7 +108,9 @@ namespace pwiz.Osprey.Tasks
             var state = _state.Value;
             var entries = new List<FdrEntry>(survivors);
             FdrEntry.SortCanonicalResolved(entries, fileName);
-            var refined = CalibrationRefit.Refit(state.Consensus.Consensus, entries, _consensusFdr, _refitBandwidth);
+            // A null refit plans the run with its first-pass calibration (OSPREY_RECON_REFIT=off)
+            var refined = OspreyEnvironment.ReconciliationRefitOff ? null
+                : CalibrationRefit.Refit(state.Consensus.Consensus, entries, _consensusFdr, _refitBandwidth);
 
             List<KeyValuePair<int, ReconcileAction>> actions = null;
             IReadOnlyList<GapFillTarget> gapFill = Array.Empty<GapFillTarget>();
