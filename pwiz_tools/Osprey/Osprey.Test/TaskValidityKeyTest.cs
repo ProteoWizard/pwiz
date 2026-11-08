@@ -442,15 +442,21 @@ namespace pwiz.Osprey.Test
         private static void AssertTreeClassifierKeysTheModelTasks()
         {
             var tasks = OspreyTasks.Create().Pipeline;
-            var linearCtx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
-            var treeCtx = new PipelineContext(new OspreyConfig { FdrClassifier = FdrClassifier.Gbdt }, tasks, null, null, null);
+            // The protein-best column off in both, so the classifier is the only difference.
+            var linearCtx = new PipelineContext(new OspreyConfig { ProteinBest = false }, tasks, null, null, null);
+            var treeCtx = new PipelineContext(new OspreyConfig { FdrClassifier = FdrClassifier.Gbdt, ProteinBest = false }, tasks, null, null, null);
             string treeTerm = PercolatorEngine.GbdtValidityKeySuffix(treeCtx.Config);
             Assert.AreNotEqual(string.Empty, treeTerm, @"gbdt must emit a term");
-            // The linear SVM emits NOTHING, through both overloads and whatever the tree settings
-            // say, so moving the choice from --fdr-method to OSPREY_FDR_MODEL invalidates no
-            // existing SVM output directory.
-            Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig()),
+            // The linear SVM with the protein-best column off emits NOTHING, through both overloads
+            // and whatever the tree settings say, so moving the choice from --fdr-method to
+            // OSPREY_FDR_MODEL invalidates no existing SVM output directory.
+            Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig { ProteinBest = false }),
                 @"the linear SVM must emit nothing, or every existing output directory is invalidated");
+            // On, the default, it emits the two-round training and the column, spelled as the
+            // OSPREY_GBT_PREFILTER_SIZE=200000 OSPREY_PROTEIN_BEST=max experiment spelled them, so
+            // that experiment's directories stay current and no other arm's are adopted.
+            Assert.AreEqual(@";gbtprefilter=200000;proteinbest=max;proteinbestdecoy=paired",
+                PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig()));
             Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(FdrClassifier.LinearSvm,
                     new GbtParams { NTrees = 7 }, OspreyEnvironment.GBT_MAX_ITERATIONS_DEFAULT + 1, 1),
                 @"tree settings must not reach a linear-SVM key");
@@ -482,6 +488,18 @@ namespace pwiz.Osprey.Test
                 string linearKey = task.ValidityKey(linearCtx);
                 Assert.AreEqual(expectTerm ? linearKey + treeTerm : linearKey, task.ValidityKey(treeCtx),
                     string.Format(@"{0} must {1}key on the classifier", task.Name, expectTerm ? string.Empty : @"NOT "));
+            }
+
+            // --protein-best keys the same three tasks, so a resume with the other setting retrains.
+            var proteinBestCtx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
+            foreach (var task in tasks)
+            {
+                bool expectTerm = task.Name == FirstPassFdrTask.TASK_NAME ||
+                                  task.Name == PerFileRescoreTask.TASK_NAME ||
+                                  task.Name == SecondPassFdrTask.TASK_NAME;
+                Assert.AreEqual(expectTerm, task.ValidityKey(linearCtx) != task.ValidityKey(proteinBestCtx),
+                    string.Format(@"{0} must {1}key on {2}", task.Name, expectTerm ? string.Empty : @"NOT ",
+                        OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST)));
             }
 
             AssertEveryTreeSettingKeysDifferently();

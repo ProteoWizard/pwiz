@@ -1260,8 +1260,9 @@ namespace pwiz.Osprey.FDR
             // model the saved scores came from.
             if (percConfig.ProteinBest != null && pretrainedModel != null)
             {
-                log.LogInfo(@"--protein-best is on: retraining the first-pass model, because " +
-                            @"the column needs round 1's models, which are not saved.");
+                log.LogInfo(string.Format(@"{0} is on: retraining the first-pass model, because " +
+                                          @"the column needs round 1's models, which are not saved.",
+                    OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST)));
                 pretrainedModel = null;
             }
             if (pretrainedModel != null)

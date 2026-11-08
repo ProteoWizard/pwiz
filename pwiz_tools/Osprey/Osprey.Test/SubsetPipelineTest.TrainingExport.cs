@@ -148,6 +148,7 @@ namespace pwiz.Osprey.Test
                 string nodeDir = CreateDir(withDataFile ? @"rescore-node" : @"rescore-node-no-data");
                 ShipFiles(straightName, nodeDir, run + SPECTRA_CACHE_EXTENSION, run + @".scores.parquet",
                     run + @".calibration.json", run + @".1st-pass.fdr_scores.bin",
+                    run + @"." + FdrScoresSidecar.LABEL_FIRST_PASS + ProteinBestSidecar.EXT,
                     @"output.1st-pass.retained_base_ids.bin", @"output.1st-pass.model.json",
                     @"output.1st-pass.consensus.json");
                 ShipFilesIfPresent(straightName, nodeDir, @"output.1st-pass.stratum.json",

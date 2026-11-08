@@ -443,10 +443,12 @@ namespace pwiz.Osprey
 
         // The protein-best training column (issue #4580), on by default. Off is the one-round first
         // pass that preceded it, bit for bit; the developer switches that shape it stay environment
-        // variables (OSPREY_PROTEIN_BEST_DECOY, OSPREY_PROTEIN_BEST_SHUFFLE).
+        // variables (OSPREY_PROTEIN_BEST_DECOY, OSPREY_PROTEIN_BEST_SHUFFLE). A block body, so the
+        // handler is an Action: an assignment of a bool would bind to the Func overload, whose false
+        // (off) ends the parse and drops every argument after it.
         public static readonly OspreyArgument ARG_PROTEIN_BEST = new OspreyArgument(OspreyArgNames.PROTEIN_BEST,
             new[] { OspreyArgNames.VALUE_ON, OspreyArgNames.VALUE_OFF },
-            (c, p) => c._config.ProteinBest = string.Equals(p.Value, OspreyArgNames.VALUE_ON, StringComparison.OrdinalIgnoreCase))
+            (c, p) => { c._config.ProteinBest = string.Equals(p.Value, OspreyArgNames.VALUE_ON, StringComparison.OrdinalIgnoreCase); })
             {
                 Scope = OspreyPropertyScope.search,
                 DefaultValue = Default(() => new OspreyConfig().ProteinBest ? OspreyArgNames.VALUE_ON : OspreyArgNames.VALUE_OFF),

@@ -1811,7 +1811,7 @@ namespace pwiz.Osprey.Test
             {
                 var resumeLog = new CapturingLog();
                 var sinkResumed = runArm(MakeOn(4), resumeLog, out _, saved);
-                StringAssert.Contains(resumeLog.Text, "--protein-best is on: retraining the first-pass model");
+                StringAssert.Contains(resumeLog.Text, OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST) + " is on: retraining the first-pass model");
                 Assert.AreEqual(fixture.Sum(kv => kv.Value.Count), AssertSinksIdentical(fixture, sinkOn, sinkResumed));
             }
 

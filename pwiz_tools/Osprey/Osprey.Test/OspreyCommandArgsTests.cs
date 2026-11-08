@@ -213,6 +213,10 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(io.ProteinBest, @"the protein-best column is on by default");
             Assert.AreEqual(OspreyArgNames.VALUE_ON, OspreyCommandArgs.ARG_PROTEIN_BEST.DefaultValue());
             Assert.IsFalse(Parse(OspreyCommandArgs.ARG_PROTEIN_BEST + OspreyArgNames.VALUE_OFF).ProteinBest);
+            // Off must not end the parse: the arguments after it still apply.
+            var offThenThreads = Parse(OspreyCommandArgs.ARG_PROTEIN_BEST + OspreyArgNames.VALUE_OFF, OspreyCommandArgs.ARG_THREADS + 8);
+            Assert.IsFalse(offThenThreads.ProteinBest);
+            Assert.AreEqual(8, offThenThreads.NThreads);
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_PROTEIN_BEST + OspreyArgNames.VALUE_ON).ProteinBest);
             Assert.ThrowsException<ValueInvalidException>(() => OspreyCommandArgs.ARG_PROTEIN_BEST + @"max");
 
