@@ -183,9 +183,8 @@ namespace pwiz.Osprey.IO
                     // Per-spectrum rather than per-byte progress (a vendor reader exposes
                     // no byte position), on the same throttled interval the mzML read used
                     // - a large file is minutes of otherwise silent work.
-                    using (var progress = new ProgressReporter(
-                               string.Format(OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Reading__0_, Path.GetFileName(path)), count,
-                               string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                    ProgressReporter.Run(
+                        string.Format(OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Reading__0_, Path.GetFileName(path)), count, progress =>
                     {
                         if (centroiding == null)
                         {
@@ -218,8 +217,7 @@ namespace pwiz.Osprey.IO
                                 progress.Report(start + size);
                             }
                         }
-                        progress.Complete();
-                    }
+                    }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
                 }
             }
             catch (Exception ex) when (ReadErrorMessage(path, ex) != null)

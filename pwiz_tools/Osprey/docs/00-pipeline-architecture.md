@@ -875,6 +875,7 @@ node running that task needs a copy, whatever batch it was handed.
 | `<stem>.2nd-pass.fdr_scores.bin` | per-run product, written for **every** run | `PerFileRescoring` (pass-2 worker), in every pass-2 mode | `SecondPassFDR`; `PerFileRescoring`'s training export | with the run |
 | `<stem>.training.parquet` | per-run product (`--training-export`) | `PerFileRescoring` (Stage 6), in flight or on its export-only arm | terminal: the consumer that trains on it (CarafeSharp) | n/a |
 | `<blib-stem>.2nd-pass.fdr_experiment.bin` | experiment product | `SecondPassFDR` | `SecondPassFDR` on a resume | n/a |
+| `<blib-stem>.2nd-pass.protein-entrapment.json` | experiment product, written for **every** run whose library has entrapment proteins (removed otherwise) | `SecondPassFDR` (after protein FDR) | `--task ModelDiagnostics` and the pay-later report: the pass-2 protein-group entrapment card, the one diagnostics input made from the protein FDR result, which nothing else stores | n/a |
 | `<blib-stem>.1st-pass.model-diagnostics.json` | experiment product (`--model-diagnostics`) | `FirstPassFDR` (pass 1) | `SecondPassFDR`, `--task ModelDiagnostics` | **every node** running `SecondPassFDR` |
 | `<blib-stem>.2nd-pass.model-diagnostics.json` | experiment product (`--model-diagnostics`) | `SecondPassFDR` (pass 2) | `--task ModelDiagnostics` | n/a |
 | `<blib-stem>.model-diagnostics.html` | experiment **cache** (`--model-diagnostics`) | the render step, at the end of whichever phase or task last wrote a diagnostics JSON | terminal | n/a |
@@ -1115,12 +1116,11 @@ the version and is the deliberate developer escape hatch for reusing artifacts a
 ### What the key is made of, and why it decides correctness
 
 Each task composes its own key: a base of search parameters, library identity and the
-peak-pick arm, plus per-task additions - `FirstPassFDR` adds six, `PerFileRescoring`
-seven, `SecondPassFDR` seven. `PerFileRescoring`'s seventh is the one to know about:
-`LibraryFragmentRelease.ValidityKeySuffix` branches on the per-leg flags, which is exactly
-why a `SecondPassFDR` process and a `PerFileRescoring` process compute different keys for
-the same task - the asymmetry the who-wrote-it rule above (task and version, not key)
-exists to work around.
+peak-pick arm, plus per-task additions. A key may fold in a per-leg term, and then a
+`SecondPassFDR` process and a `PerFileRescoring` process compute different keys for the
+same task - the asymmetry the who-wrote-it rule above (task and version, not key) exists
+to work around. (The library-fragment release term was the one that did, until its
+`OSPREY_RELEASE_LIBRARY_FRAGMENTS=0` opt-out was retired.)
 **The exact composition, and the defect each component was added to prevent, is
 invalidation mechanics and lives in [14-intermediate-files](14-intermediate-files.md).**
 

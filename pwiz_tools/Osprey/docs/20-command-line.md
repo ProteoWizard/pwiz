@@ -11,12 +11,12 @@ Osprey reads DIA mzML files plus a spectral library and writes a BiblioSpecLite
 runs as a standalone .NET 8 executable on Windows and Linux.
 
 ```
-Osprey -i path/to/file ... -l path/to/file.blib|.tsv -o path/to/file.blib [options]
+Osprey -i path/to/file ... -l path/to/file.blib|.tsv|.parquet -o path/to/file.blib [options]
 Osprey -i path/to/file ... --fasta path/to/file.fasta -o path/to/file.blib [options]
 ```
 
 The three required inputs are `-i`/`--input` (one or more mzML), a library - `-l`/`--library`
-(a DIA-NN TSV or `.blib`) or `--fasta` (a protein FASTA the library is predicted from, see
+(a `.blib`, a DIA-NN TSV, or a DIA-NN 2.x library `.parquet`) or `--fasta` (a protein FASTA the library is predicted from, see
 [Library build](#library-build)) - and `-o`/`--output` (the result `.blib`). Everything else
 has a sensible default, including the resolution: `--resolution auto`, the default, measures
 whether the data is unit resolution (an ion trap such as Stellar) or high resolution (Orbitrap,
@@ -27,6 +27,21 @@ column the library has (a fragment charge of `1.0` or `0`, an ion type other tha
 a/b/c/x/y/z, an unknown loss or decoy flag, an empty cell) or a modification with no known
 mass refuses the library, listing each line and column to fix, as Skyline's transition
 list import does. Nothing is guessed for a bad value.
+
+A DIA-NN 2.x library `.parquet` is searched directly, with no conversion: a search's
+`report-lib.parquet` (written with `--gen-spec-lib --out-lib report-lib.parquet`), or a
+predicted library, which DIA-NN 2.7 writes as a binary `.speclib` and converts with
+`diann --lib x.speclib --gen-spec-lib --out-lib x.parquet`. Osprey refuses a `.speclib` with
+that command; its format is undocumented. The `.parquet` is read row by row into the same
+library entries as a DIA-NN TSV of the same library (one row per fragment; `RT` is the
+retention time a TSV's `NormalizedRetentionTime` gives, DIA-NN's library scale in a predicted
+and an empirical library alike; `Modified.Sequence` carries UniMod ids such as `C(UniMod:4)`
+and a leading `(UniMod:1)`), each value checked as a TSV's is, and it is kept as a derived
+`.blib` the same way (`report-lib.parquet.blib`). `--decoys-in-library` takes the decoys its
+`Decoy` column marks, as for a TSV. An empty library - DIA-NN writes one, with no rows, when
+its search identifies nothing - loads as no entries and the search stops with the library
+reported empty. The column reading is shared with BiblioSpec's DIA-NN import
+(`BiblioSpec.IO`'s `DiannLibraryParquetReader`).
 
 ---
 
@@ -129,7 +144,7 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | Option | Value | Effect |
 |--------|-------|--------|
 | `-i`, `--input` | `path/to/file ...` | Mass spectrometry data files: mzML, or any format ProteoWizard reads, including instrument vendor files (.raw, .d, .wiff, .lcd). On Linux some vendor formats cannot be read. Variadic; also accepts positional paths. |
-| `-l`, `--library` | `path/to/file.blib\|.tsv` | Spectral library — DIA-NN TSV or BiblioSpec `.blib` (see [01-decoy-generation.md](01-decoy-generation.md), [14-intermediate-files.md](14-intermediate-files.md)). |
+| `-l`, `--library` | `path/to/file.blib\|.tsv\|.parquet` | Spectral library — BiblioSpec `.blib`, DIA-NN TSV, or DIA-NN 2.x library `.parquet` (see the library inputs at the top of this page, [01-decoy-generation.md](01-decoy-generation.md), [14-intermediate-files.md](14-intermediate-files.md)). |
 | `-o`, `--output` | `path/to/file.blib` | The search result, for Skyline (see [13-blib-output-schema.md](13-blib-output-schema.md)): an entry per precursor that passes FDR with the library spectrum it was searched with (the predicted one with `--fasta`), its best run's retention time and boundaries, its experiment-wide precursor q-value and PEP and peptide q-value, and a row per run it was detected in with that run's retention time, boundaries and q-value; its protein groups with their q-values. (`OSPREY_DIANN_REPORTS=1` also writes `<output>.protein_groups.tsv` and `<output>.stats.tsv`, the same results in the shape of DIA-NN's reports, for comparing the two tools.) |
 | `--work-dir` | `path/to/folder` | Write derived artifacts **and** the spectra cache here, so the input data dir can be read-only. Default: beside the input. |
 | `--output-dir` | `path/to/folder` | Directory for derived artifacts (overrides `--work-dir`). |
@@ -173,6 +188,7 @@ precursors, so the one download of Osprey serves both the wizard and the dialog.
 | `--install-cuda-runtime` | | Download the NVIDIA CUDA runtime from nuget.org (about 3 GB on Windows and 4 GB on Linux, more once installed; every package checked against the SHA-512 this build was tested with) into the `--torch-runtimes` folder and exit. Needs nothing else on the command line; a computer that cannot use the GPU still installs, with a note, so a cluster's login node can download for its GPU nodes. |
 | `--entrapment` | `[<ratio>]` | Add an entrapment peptide to every target (or to this fraction of them, 0.1 to 1), shuffled from the target or, with `--entrapment-fasta`, drawn mass-matched from a foreign proteome, each with a decoy of its own. The pairing manifest FDRBench reads is written beside the working files. |
 | `--entrapment-fasta` | `path/to/file.fasta` | With `--entrapment`: the foreign-species proteome to draw from. |
+| `--entrapment-in-targets` | `<ratio>` | With `--entrapment`: also add, for this fraction of the targets, an entrapment peptide placed on a random target protein (its label, no `_p_target` suffix; only the manifest's `peptide_type` and the `.blib`'s `DecoyPairs.IsEntrapment` mark it), so the protein evidence a protein-aware step gives false targets reaches entrapment too. Added to `--entrapment`'s ratio: `--entrapment 0.1 --entrapment-in-targets 0.1` is 20% entrapment; together at most 1 and at least 0.1. Seeded on its own (20261101), so a build without it is unchanged. See `protein-shuffled-entrapment.md`. |
 
 **The library-build parameters are CarafeSharp's.** The digest (`--enzyme`, `--miss-c`,
 `--min-length`, `--max-length`, `--clip-n-m`, `--i2l`), the modifications (`--fix-mod`,
@@ -270,6 +286,7 @@ Each is also a `--task` of its own on a cluster (see "The library build on a clu
 |--------|-------|--------|
 | `--decoys-in-library` | — | Trust decoys already in the library instead of generating reverse decoys (hard error if none recognised). See [01-decoy-generation.md](01-decoy-generation.md). |
 | `--decoy-pairing-manifest` | `path/to/file.tsv` | FDRBench 5-column pairing manifest, used with `--decoys-in-library`. |
+| `--strip-entrapment` | — | Leave the entrapment peptides, and the protein groups made only of them, out of the result (the `.blib` and the reports); the `--model-diagnostics` report still measures them. Default: they are reported like targets. |
 
 ### Training Export
 
@@ -497,7 +514,9 @@ and *diagnostics* (extra files or log lines). The list cannot drift from the cod
 - A switch that lists its values refuses any other value at startup (`OSPREY_PASS2_QVALUE`,
   `OSPREY_FDR_MODEL`, `OSPREY_EXPERIMENT_AGG`, `OSPREY_DETERMINISTIC_MATH`,
   `OSPREY_SERIAL_READ_SCOPE`, `OSPREY_STUB_IDENTITY`): a value typo would otherwise run the
-  default arm under the name of the one asked for.
+  default arm under the name of the one asked for. A retired arm is refused the same way:
+  `OSPREY_STUB_IDENTITY` lists only `1|2`, and `OSPREY_BLOCK_READ_MB` accepts only a positive
+  size, so the removed `=0` arms stop the run rather than time the default under their name.
 - The log names every set switch and its value on one `Environment switches:` line at startup,
   so a log records which arm it ran. A run that sets none logs nothing new.
 

@@ -639,9 +639,10 @@ namespace pwiz.Osprey.IO
         }
 
         // Full paths of every per-file sidecar written by this run. Cleared only when a new
-        // command line starts: the question it answers is "twice in one run".
+        // command line starts: the question it answers is "twice in one run". Keyed as the file
+        // system compares names: on Linux the sidecars of runs A and a are two files.
         private static readonly HashSet<string> WrittenThisRun =
-            new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            new HashSet<string>(PathComparison.Comparer);
 
         /// <summary>
         /// Start a new run for the write-once check: a sidecar a previous command line in this
@@ -878,6 +879,9 @@ namespace pwiz.Osprey.IO
                     e.ExperimentPeptideQvalue   = exp.ExperimentPeptideQvalue;
                     e.ExperimentAggregateScore  = exp.ExperimentAggregateScore;
                     e.Pep                       = exp.Pep;
+                    // The peptide PEP rides with the peptide q it comes from: the same
+                    // experiment-wide peptide competition gives both.
+                    e.ExperimentPeptidePep      = exp.PeptidePep;
                 }
                 return true;
             });

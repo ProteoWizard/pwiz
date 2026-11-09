@@ -45,7 +45,6 @@ namespace pwiz.Osprey.Test
     public partial class SubsetPipelineTest
     {
         private const string RUN_Q_PASS_FIRST = @"1";
-        private const string RUN_Q_PASS_SECOND = @"2";
         private const double EXPORT_MAX_Q = 0.01;
 
         /// <summary>
@@ -61,7 +60,7 @@ namespace pwiz.Osprey.Test
             string upFrontDir = CreateDir(@"export-up-front");
             string log = RunAnalysis(upFrontDir, DataInputs(), Verifier(false), ExportArgs());
             AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
-            var upFront = AssertExports(upFrontDir, RUN_NAMES, RUN_Q_PASS_SECOND);
+            var upFront = AssertExports(upFrontDir, RUN_NAMES, RUN_Q_PASS_FIRST);
 
             // Without the flag no export exists and the library is the same; with it added, every
             // other task skips, nothing is re-scored, and each export is the up-front one byte for byte.
@@ -115,7 +114,7 @@ namespace pwiz.Osprey.Test
             string upFrontDir = CreateDir(@"astral-export-up-front");
             string log = RunOsprey(AstralExportArgs(dataDir, upFrontDir, ExportArgs()), Verifier(false));
             AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
-            var upFront = AssertExports(upFrontDir, ASTRAL_RUN_NAMES, RUN_Q_PASS_SECOND);
+            var upFront = AssertExports(upFrontDir, ASTRAL_RUN_NAMES, RUN_Q_PASS_FIRST);
             foreach (string run in ASTRAL_RUN_NAMES)
             {
                 TrainingExportParquet.Read(ExportPath(upFrontDir, run), out var footer);
@@ -140,7 +139,7 @@ namespace pwiz.Osprey.Test
             const string straightName = @"export-straight";
             string straightDir = CreateDir(straightName);
             RunAnalysis(straightDir, DataInputs(), Verifier(false), ExportArgs());
-            var straight = AssertExports(straightDir, RUN_NAMES, RUN_Q_PASS_SECOND);
+            var straight = AssertExports(straightDir, RUN_NAMES, RUN_Q_PASS_FIRST);
 
             string run = RUN_NAMES[0];
             foreach (bool withDataFile in new[] { true, false })
@@ -187,7 +186,7 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, Path.Combine(_dataDir, LIBDECOY_PAIRING_FILE),
                 OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText,
                 OspreyCommandArgs.ARG_TRAINING_EXPORT_MAX_Q.ArgumentText, @"1");
-            AssertExports(workDir, RUN_NAMES, RUN_Q_PASS_SECOND, 1.0);
+            AssertExports(workDir, RUN_NAMES, RUN_Q_PASS_FIRST, 1.0);
             var records = RUN_NAMES.SelectMany(run => TrainingExportParquet.Read(ExportPath(workDir, run), out _)).ToList();
             Assert.IsTrue(records.Any(r => r.IsEntrapment), @"no entrapment precursor was exported");
             Assert.IsTrue(records.Any(r => !r.IsEntrapment), @"no target precursor was exported");
@@ -207,9 +206,9 @@ namespace pwiz.Osprey.Test
         /// worker answered only the runs it re-scored, and Stage 7 published nothing when nothing
         /// was re-scored anywhere. Now the worker answers every run, so the run's second pass
         /// comes from PerFileRescoring like any other: the analysis finishes, the run's
-        /// .2nd-pass.fdr_scores.bin names PerFileRescoring as its producer, and the export
-        /// selects on the second-pass run q. Two more invocations of the same command skip every
-        /// task and leave the export as it is.</para>
+        /// .2nd-pass.fdr_scores.bin names PerFileRescoring as its producer, and the export, which
+        /// selects on the first-pass run q, is written beside it. Two more invocations of the same
+        /// command skip every task and leave the export as it is.</para>
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetTrainingExportSingleRun()
@@ -232,7 +231,7 @@ namespace pwiz.Osprey.Test
                     mode + @": the run's second-pass sidecar was not written by re-scoring");
                 Assert.IsTrue(BlibComparer.CountRows(Path.Combine(workDir, BLIB_FILE), @"RefSpectra") > 0,
                     mode + @": the one-run analysis reported no precursors");
-                var hashes = AssertExports(workDir, new[] { run }, RUN_Q_PASS_SECOND);
+                var hashes = AssertExports(workDir, new[] { run }, RUN_Q_PASS_FIRST);
 
                 for (int invocation = 2; invocation <= 3; invocation++)
                 {

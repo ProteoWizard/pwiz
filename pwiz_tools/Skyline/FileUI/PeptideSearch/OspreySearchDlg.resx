@@ -288,6 +288,129 @@ Osprey predicts a spectral library for its peptides with Carafe, then searches t
   <data name="&gt;&gt;lblFasta.Parent" xml:space="preserve">
     <value>fastaPage</value>
   </data>
+  <data name="cbAddEntrapment.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="cbAddEntrapment.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbAddEntrapment.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 386</value>
+  </data>
+  <data name="cbAddEntrapment.Size" type="System.Drawing.Size, System.Drawing">
+    <value>258, 17</value>
+  </data>
+  <data name="cbAddEntrapment.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="cbAddEntrapment.Text" xml:space="preserve">
+    <value>Add &amp;entrapment peptides to the predicted library</value>
+  </data>
+  <data name="&gt;&gt;cbAddEntrapment.Name" xml:space="preserve">
+    <value>cbAddEntrapment</value>
+  </data>
+  <data name="&gt;&gt;cbAddEntrapment.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbAddEntrapment.Parent" xml:space="preserve">
+    <value>fastaPage</value>
+  </data>
+  <data name="labelEntrapmentPercent.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="labelEntrapmentPercent.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelEntrapmentPercent.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 412</value>
+  </data>
+  <data name="labelEntrapmentPercent.Size" type="System.Drawing.Size, System.Drawing">
+    <value>136, 13</value>
+  </data>
+  <data name="labelEntrapmentPercent.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="labelEntrapmentPercent.Text" xml:space="preserve">
+    <value>Entrapment (% of &amp;targets):</value>
+  </data>
+  <data name="&gt;&gt;labelEntrapmentPercent.Name" xml:space="preserve">
+    <value>labelEntrapmentPercent</value>
+  </data>
+  <data name="&gt;&gt;labelEntrapmentPercent.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelEntrapmentPercent.Parent" xml:space="preserve">
+    <value>fastaPage</value>
+  </data>
+  <data name="textEntrapmentPercent.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="textEntrapmentPercent.Location" type="System.Drawing.Point, System.Drawing">
+    <value>168, 409</value>
+  </data>
+  <data name="textEntrapmentPercent.Size" type="System.Drawing.Size, System.Drawing">
+    <value>50, 20</value>
+  </data>
+  <data name="textEntrapmentPercent.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;textEntrapmentPercent.Name" xml:space="preserve">
+    <value>textEntrapmentPercent</value>
+  </data>
+  <data name="&gt;&gt;textEntrapmentPercent.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textEntrapmentPercent.Parent" xml:space="preserve">
+    <value>fastaPage</value>
+  </data>
+  <data name="labelEntrapmentInTargetsPercent.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="labelEntrapmentInTargetsPercent.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelEntrapmentInTargetsPercent.Location" type="System.Drawing.Point, System.Drawing">
+    <value>230, 412</value>
+  </data>
+  <data name="labelEntrapmentInTargetsPercent.Size" type="System.Drawing.Size, System.Drawing">
+    <value>168, 13</value>
+  </data>
+  <data name="labelEntrapmentInTargetsPercent.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="labelEntrapmentInTargetsPercent.Text" xml:space="preserve">
+    <value>&amp;In target proteins (% of targets):</value>
+  </data>
+  <data name="&gt;&gt;labelEntrapmentInTargetsPercent.Name" xml:space="preserve">
+    <value>labelEntrapmentInTargetsPercent</value>
+  </data>
+  <data name="&gt;&gt;labelEntrapmentInTargetsPercent.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelEntrapmentInTargetsPercent.Parent" xml:space="preserve">
+    <value>fastaPage</value>
+  </data>
+  <data name="textEntrapmentInTargetsPercent.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="textEntrapmentInTargetsPercent.Location" type="System.Drawing.Point, System.Drawing">
+    <value>402, 409</value>
+  </data>
+  <data name="textEntrapmentInTargetsPercent.Size" type="System.Drawing.Size, System.Drawing">
+    <value>50, 20</value>
+  </data>
+  <data name="textEntrapmentInTargetsPercent.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;textEntrapmentInTargetsPercent.Name" xml:space="preserve">
+    <value>textEntrapmentInTargetsPercent</value>
+  </data>
+  <data name="&gt;&gt;textEntrapmentInTargetsPercent.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textEntrapmentInTargetsPercent.Parent" xml:space="preserve">
+    <value>fastaPage</value>
+  </data>
   <data name="cbUseExistingLibrary.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -301,7 +424,7 @@ Osprey predicts a spectral library for its peptides with Carafe, then searches t
     <value>380, 17</value>
   </data>
   <data name="cbUseExistingLibrary.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>6</value>
   </data>
   <data name="cbUseExistingLibrary.Text" xml:space="preserve">
     <value>Search an existing spectral &amp;library instead of predicting one from the FASTA:</value>
@@ -325,7 +448,7 @@ Osprey predicts a spectral library for its peptides with Carafe, then searches t
     <value>650, 20</value>
   </data>
   <data name="tbxLibraryPath.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>7</value>
   </data>
   <data name="&gt;&gt;tbxLibraryPath.Name" xml:space="preserve">
     <value>tbxLibraryPath</value>
@@ -346,7 +469,7 @@ Osprey predicts a spectral library for its peptides with Carafe, then searches t
     <value>75, 23</value>
   </data>
   <data name="btnBrowseLibrary.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>8</value>
   </data>
   <data name="btnBrowseLibrary.Text" xml:space="preserve">
     <value>&amp;Browse...</value>

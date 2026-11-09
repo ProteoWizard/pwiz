@@ -262,6 +262,15 @@ namespace pwiz.Osprey.Core
         public bool ModelDiagnostics { get; set; }
 
         /// <summary>
+        /// Leave the entrapment peptides, and the protein groups made only of entrapment
+        /// proteins, out of the result (<c>--strip-entrapment</c>): the .blib and the reports.
+        /// They still run through every stage as targets and are read by the FDRBench input and
+        /// the model diagnostics, so the audited run is the reported run. Output-only, so not
+        /// part of any identity hash.
+        /// </summary>
+        public bool StripEntrapment { get; set; }
+
+        /// <summary>
         /// --timestamp: prefix each output line with [yyyy/MM/dd HH:mm:ss]. Runtime
         /// output decoration only -- not part of any identity hash.
         /// </summary>
