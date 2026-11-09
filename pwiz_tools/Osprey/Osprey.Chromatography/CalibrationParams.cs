@@ -228,6 +228,13 @@ namespace pwiz.Osprey.Chromatography
         [JsonProperty(@"calibrated")]
         public bool Calibrated { get; set; }
 
+        /// <summary>
+        /// The m/z-dependent offset of a unit-resolution MS2 calibration (<see cref="Ms2OffsetCurve"/>);
+        /// absent when the calibration is the single mean, as every file before it was.
+        /// </summary>
+        [JsonProperty(@"offset_curve", NullValueHandling = NullValueHandling.Ignore)]
+        public MzOffsetCurveJson OffsetCurve { get; set; }
+
         /// <summary>Create uncalibrated parameters.</summary>
         public static MzCalibrationJson Uncalibrated()
         {
@@ -264,9 +271,48 @@ namespace pwiz.Osprey.Chromatography
                 AdjustedTolerance = r.AdjustedTolerance,
                 WindowHalfwidthMultiplier = 3.0,
                 Histogram = null,
-                Calibrated = true
+                Calibrated = true,
+                OffsetCurve = r.HasOffsetCurve
+                    ? new MzOffsetCurveJson { Mz = (double[])r.OffsetCurveMz.Clone(), Offset = (double[])r.OffsetCurve.Clone() }
+                    : null
             };
         }
+
+        /// <summary>The in-memory calibration these parameters describe; null when not calibrated.</summary>
+        public MzCalibrationResult ToResult()
+        {
+            if (!Calibrated)
+                return null;
+            bool curve = OffsetCurve?.Mz != null && OffsetCurve.Offset != null &&
+                         OffsetCurve.Mz.Length > 0 && OffsetCurve.Mz.Length == OffsetCurve.Offset.Length;
+            return new MzCalibrationResult
+            {
+                Mean = Mean,
+                Median = Median,
+                SD = SD,
+                Count = Count,
+                Unit = Unit,
+                AdjustedTolerance = AdjustedTolerance,
+                Calibrated = true,
+                OffsetCurveMz = curve ? (double[])OffsetCurve.Mz.Clone() : null,
+                OffsetCurve = curve ? (double[])OffsetCurve.Offset.Clone() : null
+            };
+        }
+    }
+
+    /// <summary>
+    /// The m/z-dependent offset of a unit-resolution MS2 calibration: the offset (observed -
+    /// theoretical, in Th) at each m/z, interpolated linearly between them.
+    /// </summary>
+    public class MzOffsetCurveJson
+    {
+        /// <summary>The m/z values the offset is given at, ascending.</summary>
+        [JsonProperty(@"mz")]
+        public double[] Mz { get; set; }
+
+        /// <summary>The offset at each of <see cref="Mz"/>.</summary>
+        [JsonProperty(@"offset")]
+        public double[] Offset { get; set; }
     }
 
     /// <summary>

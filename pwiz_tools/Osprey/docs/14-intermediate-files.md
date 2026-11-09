@@ -150,6 +150,12 @@ by `ResolveCalibration` (`PerFileScoringTask.cs:1702`) populates
 the DIA `isolation_scheme` (so an HPC SecondPassFDR node with no mzML can rehydrate the gap-fill m/z
 filter, `PerFileScoringTask.cs:1758`).
 
+`ms2_calibration` may carry an `offset_curve` (C#-only): `mz` and `offset` arrays, the 21 knots
+of the MS2 m/z offset curve, in the calibration's unit. `mean`, `sd` and `adjusted_tolerance`
+are written either way (the curve's average, its SD, 3 SD), so a reader that ignores
+`offset_curve`, Rust among them, sees a mean calibration; a file without it loads as the mean.
+See [04-calibration.md](04-calibration.md#ms2-mz-offset-curve-ms2offsetcurvecs).
+
 **How calibration is reused in C#.** The Rust doc says the calibration file is reused when its
 `search_hash` matches, and deleted+recomputed when the hash is missing/stale. The C# port does
 **not** implement that per-calibration-file check:

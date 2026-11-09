@@ -94,11 +94,51 @@ namespace pwiz.Osprey.Chromatography
         /// </summary>
         public string Unit { get; set; }
 
-        /// <summary>Adjusted tolerance: |mean| + 3*SD.</summary>
+        /// <summary>
+        /// Adjusted tolerance: |mean| + 3*SD; 3*SD for a calibration with an
+        /// <see cref="OffsetCurve"/>, since the curve itself is subtracted.
+        /// </summary>
         public double? AdjustedTolerance { get; set; }
 
         /// <summary>Whether calibration was successfully performed.</summary>
         public bool Calibrated { get; set; }
+
+        /// <summary>
+        /// The m/z values <see cref="OffsetCurve"/> is given at, ascending; null when the calibration is
+        /// the single <see cref="Mean"/> (<see cref="Ms2OffsetCurve"/>).
+        /// </summary>
+        public double[] OffsetCurveMz { get; set; }
+
+        /// <summary>The m/z-dependent offset (observed - theoretical) at each of <see cref="OffsetCurveMz"/>.</summary>
+        public double[] OffsetCurve { get; set; }
+
+        /// <summary>Whether the calibration is an m/z-dependent curve rather than one mean.</summary>
+        public bool HasOffsetCurve
+        {
+            get { return OffsetCurveMz != null && OffsetCurve != null && OffsetCurveMz.Length > 0; }
+        }
+
+        /// <summary>
+        /// The offset at <paramref name="mz"/>: the curve interpolated linearly between its points, held
+        /// at its end values outside them; <see cref="Mean"/> without a curve.
+        /// </summary>
+        public double OffsetAt(double mz)
+        {
+            if (!HasOffsetCurve)
+                return Mean;
+            var x = OffsetCurveMz;
+            if (mz <= x[0])
+                return OffsetCurve[0];
+            int last = x.Length - 1;
+            if (mz >= x[last])
+                return OffsetCurve[last];
+            int hi = Array.BinarySearch(x, mz);
+            if (hi >= 0)
+                return OffsetCurve[hi];
+            hi = ~hi;
+            double t = (mz - x[hi - 1]) / (x[hi] - x[hi - 1]);
+            return OffsetCurve[hi - 1] + t * (OffsetCurve[hi] - OffsetCurve[hi - 1]);
+        }
 
         /// <summary>Create uncalibrated result.</summary>
         public static MzCalibrationResult Uncalibrated()
@@ -173,8 +213,9 @@ namespace pwiz.Osprey.Chromatography
 
         /// <summary>
         /// Apply m/z calibration to correct an observed m/z value.
-        /// For PPM: corrected = observed - observed * mean / 1e6.
-        /// For absolute m/z: corrected = observed - mean.
+        /// For PPM: corrected = observed - observed * offset / 1e6; for absolute m/z: corrected =
+        /// observed - offset. The offset is the curve's at the observed m/z when there is one
+        /// (<see cref="MzCalibrationResult.OffsetAt"/>), else the mean.
         /// </summary>
         public static double ApplyCalibration(double observedMz, MzCalibrationResult calibration)
         {
@@ -182,10 +223,10 @@ namespace pwiz.Osprey.Chromatography
                 return observedMz;
 
             if (calibration.Unit == UNIT_TH)
-                return observedMz - calibration.Mean;
+                return observedMz - calibration.OffsetAt(observedMz);
 
             // PPM correction
-            double correctionDa = observedMz * calibration.Mean / 1e6;
+            double correctionDa = observedMz * calibration.OffsetAt(observedMz) / 1e6;
             return observedMz - correctionDa;
         }
 

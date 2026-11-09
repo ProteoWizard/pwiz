@@ -277,6 +277,73 @@ namespace pwiz.Osprey.Core
             @"the configured size.")
             { ValueExample = @"<N>" };
 
+        private static readonly EnvVar ENV_MS2_CAL_MEAN = new EnvVar(@"OSPREY_MS2_CAL_MEAN", EnvVarGroup.behavior,
+            @"Calibrate unit-resolution MS2 m/z by one mean offset, as Rust osprey does, even where the " +
+            @"offset is beyond half the fragment tolerance. For cross-implementation parity runs.");
+
+        /// <summary>
+        /// OSPREY_MS2_CAL_MEAN: calibrate unit-resolution (Th) MS2 m/z as Rust osprey does - the mean
+        /// of each top fragment's closest peak within the fragment tolerance, one offset for every
+        /// m/z - even where the offset lies beyond half the fragment tolerance, which by default is
+        /// calibrated by the m/z-dependent curve of the shift that matches the most fragments
+        /// (<c>Ms2OffsetCurve</c>). For cross-implementation parity runs: the mean cannot see an
+        /// offset as wide as the tolerance, which some Stellar runs' MS2 have. An offset within half
+        /// the tolerance keeps the mean either way. It also overrides OSPREY_MS2_CAL_CURVE_PPM, so ppm
+        /// calibration is the mean too. Part of the validity key
+        /// (<see cref="Ms2CalValidityKeySuffix"/>).
+        /// </summary>
+        /// <remarks>
+        /// Read on each access, so an in-process test can set it (<see cref="EnvVar.OverrideVariables"/>);
+        /// the calibrator reads it once per file.
+        /// </remarks>
+        public static bool Ms2CalMean => IsSetAndNotZero(ENV_MS2_CAL_MEAN);
+
+        private static readonly EnvVar ENV_MS2_CAL_CURVE_PPM = new EnvVar(@"OSPREY_MS2_CAL_CURVE_PPM", EnvVarGroup.behavior,
+            @"Experimental, opt-in: calibrate MS2 m/z searched with a ppm fragment tolerance by an m/z-dependent " +
+            @"offset curve, centered on the bulk of the fragment errors, instead of one mean offset. HRAM data " +
+            @"(TOF, Orbitrap) only; OSPREY_MS2_CAL_MEAN overrides it. Gave 5.7% more precursors on one " +
+            @"demultiplexed ZenoTOF 8600 ZT Scan run. See docs/04-calibration.md.");
+
+        /// <summary>
+        /// OSPREY_MS2_CAL_CURVE_PPM: experimental. Calibrate MS2 m/z searched in ppm by the
+        /// m/z-dependent offset curve (<c>Ms2OffsetCurve</c> with its ppm widths) in place of the
+        /// mean, whatever the offset; off by default, where ppm calibration is the mean as before.
+        /// OSPREY_MS2_CAL_MEAN overrides it. Part of the validity key (<see cref="Ms2CalValidityKeySuffix"/>).
+        /// </summary>
+        public static bool Ms2CalCurvePpm => IsSetAndNotZero(ENV_MS2_CAL_CURVE_PPM);
+
+        /// <summary>
+        /// Whether a search may calibrate its MS2 m/z by the m/z offset curve (<c>Ms2OffsetCurve</c>):
+        /// unit-resolution data with a Th fragment tolerance, or a ppm tolerance with
+        /// <paramref name="ms2CalCurvePpm"/> (experimental), and <paramref name="ms2CalMean"/> not set.
+        /// Every other search calibrates by the mean, as before.
+        /// </summary>
+        public static bool UsesMs2OffsetCurve(ResolutionMode resolution, ToleranceUnit fragmentUnit, bool ms2CalMean,
+            bool ms2CalCurvePpm)
+        {
+            if (ms2CalMean)
+                return false;
+            if (fragmentUnit == ToleranceUnit.Ppm)
+                return ms2CalCurvePpm;
+            return resolution == ResolutionMode.UnitResolution;
+        }
+
+        /// <summary>
+        /// The validity-key term for the MS2 m/z calibration: empty where the calibration did not
+        /// change (ppm, and HRAM data with a Th tolerance), and the method for unit-resolution Th
+        /// searches, whose default moved from the mean to the curve where the offset is large, so a
+        /// run never adopts outputs scored under the other (<see cref="Ms2CalMean"/>).
+        /// </summary>
+        public static string Ms2CalValidityKeySuffix(ResolutionMode resolution, ToleranceUnit fragmentUnit)
+        {
+            // Experimental ppm curve: its own term; off, ppm searches key exactly as before.
+            if (fragmentUnit == ToleranceUnit.Ppm)
+                return Ms2CalCurvePpm && !Ms2CalMean ? @";ms2cal=curveppm" : string.Empty;
+            if (resolution != ResolutionMode.UnitResolution)
+                return string.Empty;
+            return Ms2CalMean ? @";ms2cal=mean" : @";ms2cal=curve";
+        }
+
         /// <summary>
         /// OSPREY_CAL_SAMPLE_SIZE: override the calibration library sample size (targets
         /// sampled per attempt). Default 0 = use the configured CalibrationSampleSize

@@ -435,6 +435,16 @@ namespace pwiz.Osprey.Scoring {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Applying MS2 calibration: an m/z-dependent offset of {0:F3} to {1:F3} {2}, subtracted from each MS2 m/z.
+        /// </summary>
+        public static string ScoringPipeline_RunCoelutionScoring_Applying_MS2_calibration__m_z_dependent_offset__0__to__1___2__ {
+            get {
+                return ResourceManager.GetString("ScoringPipeline_RunCoelutionScoring_Applying_MS2_calibration__m_z_dependent_offset" +
+                        "__0__to__1___2__", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Applying MS2 calibration: mean error = {0:F4} {1} -&gt; correcting by {2:+0.0000;-0.0000;0} {1}.
         /// </summary>
         public static string ScoringPipeline_RunCoelutionScoring_Applying_MS2_calibration__mean_error____0___1_____correcting_by__2___1_ {

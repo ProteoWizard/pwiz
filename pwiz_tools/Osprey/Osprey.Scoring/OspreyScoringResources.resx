@@ -217,6 +217,9 @@
   <data name="ScoringPipeline_DeduplicatePairs_Deduplicated_precursor_candidates___0______1____2__removed_" xml:space="preserve">
     <value>Deduplicated precursor candidates: {0:N0} -&gt; {1:N0} ({2:N0} removed)</value>
   </data>
+  <data name="ScoringPipeline_RunCoelutionScoring_Applying_MS2_calibration__m_z_dependent_offset__0__to__1___2__" xml:space="preserve">
+    <value>Applying MS2 calibration: an m/z-dependent offset of {0:F3} to {1:F3} {2}, subtracted from each MS2 m/z</value>
+  </data>
   <data name="ScoringPipeline_RunCoelutionScoring_Applying_MS2_calibration__mean_error____0___1_____correcting_by__2___1_" xml:space="preserve">
     <value>Applying MS2 calibration: mean error = {0:F4} {1} -&gt; correcting by {2:+0.0000;-0.0000;0} {1}</value>
   </data>
