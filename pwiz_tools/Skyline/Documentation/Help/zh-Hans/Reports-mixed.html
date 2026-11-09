@@ -111,6 +111,8 @@ td {
 </table>
 
 </td></tr>
+<tr><td class="ColumnCaption">Modification Localization Group</td><td class="ColumnDescription">A key identifying peptides that share the same unmodified sequence and the same set of ambiguously localized modifications.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Localization Isomer Count</td><td class="ColumnDescription">The number of positional isomers arising from ambiguously localized modifications on the peptide.</td><td class="ColumnType">Int64</td></tr>
 <tr><td class="ColumnCaption">分子名称</td><td class="ColumnDescription">可以以中性、未标记形式分配给分子的通用名称。</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">分子式</td><td class="ColumnDescription">用于在质谱仪中测量的中性未标记分子的原子化学式。</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">标准类型</td><td class="ColumnDescription">标准类型</td><td class="ColumnType">标准类型</td></tr>
@@ -455,6 +457,7 @@ td {
 肽段中的氨基酸的位置。（例如 8、10、7 等。）</td><td class="ColumnType">Int32</td></tr>
 <tr><td class="ColumnCaption">剪切 Aa</td><td class="ColumnDescription">在肽段断裂后（C-末端）肽段中的特异性
 氨基酸残基。（例如 P、M、S、T 等。）</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Uniquely Localizing</td><td class="ColumnDescription">True when this product ion is produced only by the current modification placement, uniquely localizing the modification.</td><td class="ColumnType">Boolean</td></tr>
 <tr><td class="ColumnCaption">丢失中性质量</td><td class="ColumnDescription">此片段中所有中性丢失的总质量。</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">损失</td><td class="ColumnDescription">此片段中所有中性丢失的逗号分隔清单</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">损失公式</td><td class="ColumnDescription">A comma separated list of the chemical formulas for all neutral losses from this fragment, or empty if not all losses have formulas</td><td class="ColumnType">String</td></tr>

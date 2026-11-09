@@ -142,6 +142,7 @@ namespace pwiz.Skyline.SettingsUI
                                            : string.Empty;
             cbExclusionUseDIAWindow.Checked = Filter.ExclusionUseDIAWindow;
             cbAutoSelect.Checked = Filter.AutoSelect;
+            cbLocalizingIons.Checked = Filter.IncludeLocalizingIons;
 
             _driverIons = new MeasuredIonListBoxDriver(listAlwaysAdd, Settings.Default.MeasuredIonList);
             _driverIons.LoadList(Filter.MeasuredIons);
@@ -452,11 +453,13 @@ namespace pwiz.Skyline.SettingsUI
            
             var measuredIons = _driverIons.Chosen;
             bool autoSelect = cbAutoSelect.Checked;
+            bool includeLocalizingIons = cbLocalizingIons.Checked;
             bool exclusionUseDIAWindow = FullScanSettingsControl.IsDIA() && cbExclusionUseDIAWindow.Checked;
             var filter = new TransitionFilter(peptidePrecursorCharges, peptideProductCharges, peptideIonTypes,
                 smallMoleculePrecursorAdducts, smallMoleculeProductCharges,smallMoleculeIonTypes,
                                               fragmentRangeFirst, fragmentRangeLast, measuredIons,
-                                              exclusionWindow, exclusionUseDIAWindow, autoSelect);
+                                              exclusionWindow, exclusionUseDIAWindow, autoSelect,
+                                              includeLocalizingIons);
             
             Helpers.AssignIfEquals(ref filter, Filter);
 
@@ -1015,6 +1018,12 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return cbAutoSelect.Checked; }
             set { cbAutoSelect.Checked = value; }
+        }
+
+        public bool IncludeLocalizingIons
+        {
+            get { return cbLocalizingIons.Checked; }
+            set { cbLocalizingIons.Checked = value; }
         }
 
         public bool SetDIAExclusionWindow

@@ -79,6 +79,7 @@ namespace pwiz.Skyline.SettingsUI
             this.lblSmallMoleculePrecursorAdducts = new System.Windows.Forms.Label();
             this.textExclusionWindow = new System.Windows.Forms.TextBox();
             this.cbAutoSelect = new System.Windows.Forms.CheckBox();
+            this.cbLocalizingIons = new System.Windows.Forms.CheckBox();
             this.lbPrecursorMzWindow = new System.Windows.Forms.Label();
             this.tabLibrary = new System.Windows.Forms.TabPage();
             this.label23 = new System.Windows.Forms.Label();
@@ -356,6 +357,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.cbLocalizingIons);
             this.groupBox1.Controls.Add(this.btnEditSpecialTransitions);
             this.groupBox1.Controls.Add(this.label18);
             this.groupBox1.Controls.Add(this.listAlwaysAdd);
@@ -511,6 +513,13 @@ namespace pwiz.Skyline.SettingsUI
             this.cbAutoSelect.Name = "cbAutoSelect";
             this.helpTip.SetToolTip(this.cbAutoSelect, resources.GetString("cbAutoSelect.ToolTip"));
             this.cbAutoSelect.UseVisualStyleBackColor = true;
+            // 
+            // cbLocalizingIons
+            // 
+            resources.ApplyResources(this.cbLocalizingIons, "cbLocalizingIons");
+            this.cbLocalizingIons.Name = "cbLocalizingIons";
+            this.helpTip.SetToolTip(this.cbLocalizingIons, resources.GetString("cbLocalizingIons.ToolTip"));
+            this.cbLocalizingIons.UseVisualStyleBackColor = true;
             // 
             // lbPrecursorMzWindow
             // 
@@ -893,6 +902,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.TextBox textPeptidePrecursorCharges;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.CheckBox cbAutoSelect;
+        private System.Windows.Forms.CheckBox cbLocalizingIons;
         private System.Windows.Forms.TabPage tabInstrument;
         private IonMobility.IonMobilityFilteringUserControl ionMobilityFilteringControl;
         private System.Windows.Forms.TabPage tabIonMobility;

@@ -28,6 +28,7 @@ using pwiz.MSGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Localization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -337,6 +338,40 @@ namespace pwiz.Skyline.Controls.Graphs
         protected override bool IsMatch(double predictedMz)
         {
             return ((TransitionNode != null) && (predictedMz == TransitionNode.Mz));
+        }
+
+        private SiteDeterminingIonAnalyzer _siteDeterminingAnalyzer;
+        private bool _siteDeterminingAnalyzerBuilt;
+
+        /// <summary>
+        /// The site-determining ion analyzer for the peptide, built on first use, or null when
+        /// the peptide carries no ambiguously placed modification (or is not a plain peptide).
+        /// </summary>
+        private SiteDeterminingIonAnalyzer SiteDeterminingAnalyzer
+        {
+            get
+            {
+                if (!_siteDeterminingAnalyzerBuilt)
+                {
+                    _siteDeterminingAnalyzerBuilt = true;
+                    if (RulersApplicable)
+                        _siteDeterminingAnalyzer = SiteDeterminingIonAnalyzer.CreateIfLocalizable(SrmSettings, PeptideDocNode);
+                }
+                return _siteDeterminingAnalyzer;
+            }
+        }
+
+        /// <summary>
+        /// The names of the modifications that a matched ion uniquely localizes, or null when it
+        /// localizes none (or the peptide has nothing to localize).
+        /// </summary>
+        public string GetLocalizedModificationName(MatchedFragmentIon mfi)
+        {
+            var analyzer = SiteDeterminingAnalyzer;
+            if (analyzer == null || Transition.IsPrecursor(mfi.IonType) || mfi.IonType == IonType.custom)
+                return null;
+            int offset = Transition.OrdinalToOffset(mfi.IonType, mfi.Ordinal, PeptideDocNode.Peptide.Sequence.Length);
+            return analyzer.GetUniquelyLocalizedModificationNames(mfi.IonType, offset, mfi.Losses);
         }
 
         protected override bool IsProteomic()

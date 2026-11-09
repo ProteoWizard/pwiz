@@ -23,6 +23,7 @@ using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Localization;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -233,6 +234,12 @@ namespace pwiz.Skyline.Model
             var pepMods = settings.PeptideSettings.Modifications;
             var potentialLosses = CalcPotentialLosses(sequence, pepMods, mods, massType);
 
+            // Product ions that uniquely localize an ambiguously placed modification may be
+            // selected outside the fragment range, when the filter asks for them.
+            var localizingAnalyzer = useFilter && filter.IncludeLocalizingIons && IsProteomic
+                ? SiteDeterminingIonAnalyzer.CreateIfLocalizable(settings, Peptide, mods)
+                : null;
+
             // A start m/z will need to be calculated if the start fragment
             // finder uses m/z and their are losses to consider.  If the filter
             // is set to only consider fragments with m/z greater than the
@@ -421,13 +428,13 @@ namespace pwiz.Skyline.Model
                                     }
                                     // If allowing library or filter, check the filter to decide whether to accept
                                     else if (pick == TransitionLibraryPick.all_plus &&
-                                                tranSettings.Accept(sequence, precursorMzAccept, type, i, ionMz, start, end, startMz))
+                                                tranSettings.Accept(sequence, precursorMzAccept, type, i, ionMz, start, end, startMz, localizingAnalyzer, losses))
                                     {
                                         nodeTranReturn = CreateTransitionNode(type, i, adduct, massH, losses, transitionRanks);
                                     }
                                 }
                             }
-                            else if (tranSettings.Accept(sequence, precursorMzAccept, type, i, ionMz, start, end, startMz))
+                            else if (tranSettings.Accept(sequence, precursorMzAccept, type, i, ionMz, start, end, startMz, localizingAnalyzer, losses))
                             {
                                 if (pick == TransitionLibraryPick.none)
                                     nodeTranReturn = CreateTransitionNode(type, i, adduct, massH, losses, transitionRanks);
@@ -440,7 +447,7 @@ namespace pwiz.Skyline.Model
                             if (nodeTranReturn != null)
                             {
                                 if (IsAvoidMismatchedIsotopeTransitions &&
-                                    !OtherLabelTypesAllowed(settings, minMz, maxMz, start, end, startMz, accept,
+                                    !OtherLabelTypesAllowed(settings, minMz, maxMz, start, end, startMz, accept, localizingAnalyzer,
                                         groupDocNode, nodeTranReturn, listOtherTypes))
                                 {
                                     continue;
@@ -454,7 +461,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private bool OtherLabelTypesAllowed(SrmSettings settings, double minMz, double maxMz, int start, int end, double startMz, bool accept,
+        private bool OtherLabelTypesAllowed(SrmSettings settings, double minMz, double maxMz, int start, int end, double startMz, bool accept, SiteDeterminingIonAnalyzer localizingAnalyzer,
                                             TransitionGroupDocNode nodeGroupMatching,
                                             TransitionDocNode nodeTran,
                                             IEnumerable<Tuple<TransitionGroupDocNode, IFragmentMassCalc>> listOtherTypes)
@@ -474,7 +481,9 @@ namespace pwiz.Skyline.Model
                     nodeTranMatching.Mz,
                     start,
                     end,
-                    startMz))
+                    startMz,
+                    localizingAnalyzer,
+                    nodeTranMatching.Losses))
                 {
                     return false;
                 }

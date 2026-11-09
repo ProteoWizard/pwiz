@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Localization;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -202,7 +203,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override Image GetPickTypeImage(DocNode child)
         {
-            return TransitionTreeNode.GetTypeImage((TransitionDocNode)child, SequenceTree);
+            return TransitionTreeNode.GetTypeImage((TransitionDocNode)child, SequenceTree, IsUniquelyLocalizing(child));
         }
 
         public override Image GetPickPeakImage(DocNode child)
@@ -213,24 +214,28 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override ITipProvider GetPickTip(DocNode child)
         {
-            return new PickTransitionTip((TransitionDocNode) child);
+            var nodeTran = (TransitionDocNode) child;
+            return new PickTransitionTip(nodeTran,
+                SiteDeterminingAnalyzer?.GetUniquelyLocalizedModificationNames(nodeTran));
         }
 
         private sealed class PickTransitionTip : ITipProvider
         {
             private readonly TransitionDocNode _nodeTran;
+            private readonly string _localizedModNames;
 
-            public PickTransitionTip(TransitionDocNode nodeTran)
+            public PickTransitionTip(TransitionDocNode nodeTran, string localizedModNames)
             {
                 _nodeTran = nodeTran;
+                _localizedModNames = localizedModNames;
             }
 
-            // Not enough useful information in this tip yet
-            public bool HasTip { get { return _nodeTran.HasLoss; } }
+            // Only losses and localization add information beyond the pick-list label itself
+            public bool HasTip { get { return _nodeTran.HasLoss || _localizedModNames != null; } }
 
             public Size RenderTip(Graphics g, Size sizeMax, bool draw)
             {
-                return TransitionTreeNode.RenderTip(_nodeTran, g, sizeMax, draw);
+                return TransitionTreeNode.RenderTip(_nodeTran, g, sizeMax, draw, _localizedModNames);
             }
         }
 
@@ -355,6 +360,26 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
         
         #endregion
+
+        /// <summary>
+        /// The analyzer of the parent peptide, or null when the peptide carries no ambiguously
+        /// placed modification. The peptide node owns and invalidates it.
+        /// </summary>
+        private SiteDeterminingIonAnalyzer SiteDeterminingAnalyzer
+        {
+            get { return ((PeptideTreeNode) Parent)?.SiteDeterminingAnalyzer; }
+        }
+
+        /// <summary>
+        /// True when the given choice is a product ion that <em>uniquely localizes</em> the
+        /// modification, i.e. no other positional placement produces it. Drives the badge on the
+        /// pick list icon, matching <see cref="TransitionTreeNode.IsUniquelyLocalizing"/> in the tree.
+        /// </summary>
+        public bool IsUniquelyLocalizing(DocNode choice)
+        {
+            var analyzer = SiteDeterminingAnalyzer;
+            return analyzer != null && choice is TransitionDocNode nodeTran && analyzer.IsUniqueToPrecursor(nodeTran);
+        }
 
         #region ITipProvider Members
 
