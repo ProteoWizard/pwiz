@@ -237,6 +237,11 @@ namespace pwiz.Skyline.Model.Lib
         public const string ARG_TRAINING_INPUT = @"--training-input";
         public const string ARG_LIBRARY = @"-l";
         public const string ARG_DECOYS_IN_LIBRARY = @"--decoys-in-library";
+        // Entrapment in the predicted library: the fraction of targets that get an entrapment
+        // peptide on an entrapment protein of its own, and the fraction that get one placed on a
+        // target protein, so a protein-aware FDR step is audited too.
+        public const string ARG_ENTRAPMENT = @"--entrapment";
+        public const string ARG_ENTRAPMENT_IN_TARGETS = @"--entrapment-in-targets";
         public const string ARG_OUTPUT = @"-o";
         public const string ARG_WORK_DIR = @"--work-dir";
         public const string ARG_TORCH_RUNTIMES = @"--torch-runtimes";
@@ -264,7 +269,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             ArgName(ARG_RESOLUTION), ArgName(ARG_FRAGMENT_TOLERANCE), ArgName(ARG_FRAGMENT_UNIT), ArgName(ARG_RUN_FDR),
             ArgName(ARG_EXPERIMENT_FDR), ArgName(ARG_PROTEIN_FDR), ArgName(ARG_THREADS), ArgName(ARG_DEVICE),
-            ArgName(ARG_DECOYS_IN_LIBRARY),
+            ArgName(ARG_DECOYS_IN_LIBRARY), ArgName(ARG_ENTRAPMENT), ArgName(ARG_ENTRAPMENT_IN_TARGETS),
             CarafeCommandLine.ARG_ENZYME.Name, CarafeCommandLine.ARG_MISS_C.Name, CarafeCommandLine.ARG_MIN_LENGTH.Name,
             CarafeCommandLine.ARG_MAX_LENGTH.Name, CarafeCommandLine.ARG_MIN_PEP_CHARGE.Name, CarafeCommandLine.ARG_MAX_PEP_CHARGE.Name,
             CarafeCommandLine.ARG_FIX_MOD.Name, CarafeCommandLine.ARG_VAR_MOD.Name, CarafeCommandLine.ARG_MAX_VAR.Name,
@@ -545,7 +550,7 @@ namespace pwiz.Skyline.Model.Lib
         /// <summary>
         /// The library-build options: the device and the runtimes folder Osprey finds the CUDA
         /// runtime in when Skyline has installed one, and, with a FASTA to digest, CarafeSharp's
-        /// digest options in Osprey's hyphenated spelling.
+        /// digest options in Osprey's hyphenated spelling, and the entrapment ratios when there are any.
         /// </summary>
         private static void AppendLibraryBuildArgs(StringBuilder sb, OspreyConfig config)
         {
@@ -554,6 +559,12 @@ namespace pwiz.Skyline.Model.Lib
                 sb.Append(ARG_TORCH_RUNTIMES).Append(' ').Append(config.TorchRuntimesDirectory.Quote()).Append(' ');
             if (string.IsNullOrEmpty(config.FastaPath))
                 return;
+            // Osprey takes the in-targets ratio only with --entrapment, whose own ratio may be 0
+            // when the in-targets ratio alone makes up the total it requires.
+            if (config.EntrapmentRatio.HasValue)
+                AppendNumber(sb, ARG_ENTRAPMENT, config.EntrapmentRatio.Value);
+            if (config.EntrapmentInTargetsRatio > 0)
+                AppendNumber(sb, ARG_ENTRAPMENT_IN_TARGETS, config.EntrapmentInTargetsRatio.Value);
             if (config.EnzymeIndex.HasValue)
                 AppendNumber(sb, CarafeCommandLine.ARG_ENZYME.ArgumentText, config.EnzymeIndex.Value);
             AppendNumber(sb, CarafeCommandLine.ARG_MISS_C.ArgumentText, config.MaxMissedCleavages);
@@ -738,6 +749,21 @@ namespace pwiz.Skyline.Model.Lib
         /// Osprey uses them in place of generating decoys, as it does for the library it predicts.
         /// </summary>
         public bool DecoysInLibrary { get; set; }
+
+        /// <summary>
+        /// The fraction of the FASTA's targets that get an entrapment peptide on an entrapment
+        /// protein of its own (<c>--entrapment</c>), for measuring the true FDR of the search;
+        /// null for no entrapment at all. Only a library predicted from <see cref="FastaPath"/>
+        /// can have them.
+        /// </summary>
+        public double? EntrapmentRatio { get; set; }
+
+        /// <summary>
+        /// The fraction of the targets that get an entrapment peptide placed on a target protein
+        /// chosen at random (<c>--entrapment-in-targets</c>), so a protein-aware scoring step is
+        /// audited by them; null or 0 for none. With <see cref="EntrapmentRatio"/> the total entrapment added.
+        /// </summary>
+        public double? EntrapmentInTargetsRatio { get; set; }
 
         public string OutputPath { get; set; }
         public string WorkDirectory { get; set; }

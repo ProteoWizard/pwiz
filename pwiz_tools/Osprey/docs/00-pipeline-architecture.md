@@ -874,6 +874,7 @@ node running that task needs a copy, whatever batch it was handed.
 | `<stem>.2nd-pass.fdr_scores.bin` | per-run product, written for **every** run | `PerFileRescoring` (pass-2 worker), in every pass-2 mode | `SecondPassFDR`; `PerFileRescoring`'s training export | with the run |
 | `<stem>.training.parquet` | per-run product (`--training-export`) | `PerFileRescoring` (Stage 6), in flight or on its export-only arm | terminal: the consumer that trains on it (CarafeSharp) | n/a |
 | `<blib-stem>.2nd-pass.fdr_experiment.bin` | experiment product | `SecondPassFDR` | `SecondPassFDR` on a resume | n/a |
+| `<blib-stem>.2nd-pass.protein-entrapment.json` | experiment product, written for **every** run whose library has entrapment proteins (removed otherwise) | `SecondPassFDR` (after protein FDR) | `--task ModelDiagnostics` and the pay-later report: the pass-2 protein-group entrapment card, the one diagnostics input made from the protein FDR result, which nothing else stores | n/a |
 | `<blib-stem>.1st-pass.model-diagnostics.json` | experiment product (`--model-diagnostics`) | `FirstPassFDR` (pass 1) | `SecondPassFDR`, `--task ModelDiagnostics` | **every node** running `SecondPassFDR` |
 | `<blib-stem>.2nd-pass.model-diagnostics.json` | experiment product (`--model-diagnostics`) | `SecondPassFDR` (pass 2) | `--task ModelDiagnostics` | n/a |
 | `<blib-stem>.model-diagnostics.html` | experiment **cache** (`--model-diagnostics`) | the render step, at the end of whichever phase or task last wrote a diagnostics JSON | terminal | n/a |

@@ -464,7 +464,7 @@ namespace pwiz.Osprey.Tasks
         private static void Complete(TrainingRecord record, LibraryEntry entry, string stem)
         {
             record.FileName = stem;
-            var kind = EntrapmentLibraryClassifier.Classify(entry.ProteinIds);
+            var kind = EntrapmentLibraryClassifier.Classify(entry);
             record.IsEntrapment = PeptideKinds.IsEntrapment(kind);
             record.PeptideKind = PeptideKinds.Name(kind);
         }

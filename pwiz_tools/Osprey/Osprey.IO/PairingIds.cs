@@ -205,7 +205,7 @@ namespace pwiz.Osprey.IO
             {
                 if (entry?.Sequence == null || IsDecoySide(entry))
                     continue;
-                if (!EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds))
+                if (!EntrapmentLibraryClassifier.IsEntrapment(entry))
                     originals.Add(entry.PairingId);
                 else if (!entrapmentIdBySeq.ContainsKey(entry.Sequence))
                     entrapmentIdBySeq[entry.Sequence] = entry.PairingId;

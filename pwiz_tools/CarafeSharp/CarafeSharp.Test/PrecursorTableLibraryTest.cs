@@ -55,12 +55,12 @@ namespace pwiz.CarafeSharp.Test
                 // a modification on a residue, and one on the N terminus, which Skyline places on residue 1
                 File.WriteAllLines(tablePath, new[]
                 {
-                    string.Join("\t", PrecursorTable.CHARGE, PrecursorTable.SEQUENCE, PrecursorTable.MODS, PrecursorTable.MOD_SITES),
-                    string.Join("\t", @"2", @"LGGNEQVTR", string.Empty, string.Empty),
-                    string.Join("\t", @"2", @"ACDEFGHIK", @"Carbamidomethyl@C", @"2"),
+                    string.Join("\t", PrecursorTable.CHARGE, PrecursorTable.SEQUENCE, PrecursorTable.MODS, PrecursorTable.MOD_SITES, PrecursorTable.PROTEIN_ID),
+                    string.Join("\t", @"2", @"LGGNEQVTR", string.Empty, string.Empty, @"sp|P00001|ONE_HUMAN"),
+                    string.Join("\t", @"2", @"ACDEFGHIK", @"Carbamidomethyl@C", @"2", string.Empty),
                     string.Empty,
-                    string.Join("\t", @"3", @"QPEPTIDEK", @"Gln->pyro-Glu@Q^Any_N-term", @"0"),
-                    string.Join("\t", @"2", @"SKYLINEPEPTIDER", @"Phospho@S", @"1"),
+                    string.Join("\t", @"3", @"QPEPTIDEK", @"Gln->pyro-Glu@Q^Any_N-term", @"0", @"sp|P00002|TWO_HUMAN;sp|P00003|THREE_HUMAN"),
+                    string.Join("\t", @"2", @"SKYLINEPEPTIDER", @"Phospho@S", @"1", string.Empty),
                 });
                 string outputPath = Path.Combine(folder, @"output_libs", @"predict.blib");
                 var log = new StringWriter();
@@ -77,7 +77,7 @@ namespace pwiz.CarafeSharp.Test
                 Assert.AreEqual(outputPath, generator.BlibPath);
                 Assert.IsNull(generator.TsvPath, @"a precursor table's library is a .blib alone");
                 Assert.IsTrue(File.Exists(outputPath), outputPath);
-                StringAssert.Contains(log.ToString(), @"Predicting 4 precursors (4 peptide forms)");
+                StringAssert.Contains(log.ToString(), @"Predicting 4 precursors (4 peptide forms, 2 with proteins)");
                 StringAssert.Contains(log.ToString(), @"Withheld the RT of 0 precursors and the CCS of 1");
                 StringAssert.Contains(log.ToString(), @"Library RT: iRT = ");
 
@@ -112,8 +112,13 @@ namespace pwiz.CarafeSharp.Test
                         Rows(connection, @"SELECT RefSpectraID || ':' || position FROM Modifications ORDER BY RefSpectraID").Select(r => (string)r[0]).ToArray());
                     Assert.AreEqual(57.0215, (double)Scalar(connection, @"SELECT mass FROM Modifications WHERE RefSpectraID = 2"), 1e-3);
                     Assert.AreEqual(-17.0265, (double)Scalar(connection, @"SELECT mass FROM Modifications WHERE RefSpectraID = 3"), 1e-3);
-                    // No proteins, which the table does not name; the source file is the library
-                    Assert.AreEqual(0L, Scalar(connection, @"SELECT COUNT(*) FROM Proteins"));
+                    // The proteins the table names, one accession per ;-separated label, linked to
+                    // their spectra; a blank protein_id is no protein. The source file is the library
+                    var accessions = Rows(connection, @"SELECT accession FROM Proteins ORDER BY id").Select(r => (string)r[0]).ToArray();
+                    CollectionAssert.AreEqual(new[] { @"sp|P00001|ONE_HUMAN", @"sp|P00002|TWO_HUMAN", @"sp|P00003|THREE_HUMAN" }, accessions,
+                        @"Proteins: " + string.Join(@", ", accessions));
+                    var links = Rows(connection, @"SELECT RefSpectraId || ':' || ProteinId FROM RefSpectraProteins ORDER BY RefSpectraId, ProteinId").Select(r => (string)r[0]).ToArray();
+                    CollectionAssert.AreEqual(new[] { @"1:1", @"3:2", @"3:3" }, links, @"RefSpectraProteins: " + string.Join(@", ", links));
                     Assert.AreEqual(@"predict", Scalar(connection, @"SELECT fileName FROM SpectrumSourceFiles"));
                 }
             }

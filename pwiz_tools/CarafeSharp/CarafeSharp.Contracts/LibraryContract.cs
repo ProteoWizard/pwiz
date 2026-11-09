@@ -39,8 +39,10 @@ namespace pwiz.CarafeSharp.Contracts
     /// <item>Decoys are marked, and only decoys: every accession of a decoy row carries a decoy
     /// prefix, no accession of a target row does, and a library's own decoy marking (DecoyPairs)
     /// agrees.</item>
-    /// <item>Entrapment is marked: every accession of an entrapment row carries
-    /// <see cref="ENTRAPMENT_MARKER"/>.</item>
+    /// <item>Entrapment is marked where it is on an entrapment protein: the accessions of an
+    /// entrapment row all carry <see cref="ENTRAPMENT_MARKER"/>, or, for an entrapment peptide
+    /// placed on a target protein, none does and the manifest's kind alone marks it; no
+    /// accession of a real-protein row carries the marker.</item>
     /// <item>The manifest is authoritative: every sequence is in it (a peptide clipped of its
     /// N-terminal methionine counts as its unclipped manifest peptide), with the kind and the
     /// accessions the manifest gives it.</item>
@@ -182,7 +184,9 @@ namespace pwiz.CarafeSharp.Contracts
             {
                 if (expectDecoy ? !marks.AnyDecoy : marks.AllDecoy)
                     kindAgrees = false;
-                if (expectEntrapment ? !marks.AnyEntrapment : marks.AllEntrapment)
+                // An entrapment row may carry no marker at all (an entrapment peptide placed on
+                // a target protein), so only a real-protein row marked throughout disagrees.
+                if (!expectEntrapment && marks.AllEntrapment)
                     kindAgrees = false;
             }
             else if (expectDecoy || expectEntrapment)
@@ -201,7 +205,7 @@ namespace pwiz.CarafeSharp.Contracts
                 HitAccessions(tallies, LibraryContractViolationClass.DecoyUnmarked, row, marks.DecoyMarked, false);
             else if (!expectDecoy && marks.AnyDecoy)
                 HitAccessions(tallies, LibraryContractViolationClass.TargetMarkedDecoy, row, marks.DecoyMarked, true);
-            if (expectEntrapment && !marks.AllEntrapment)
+            if (expectEntrapment && marks.AnyEntrapment && !marks.AllEntrapment)
                 HitAccessions(tallies, LibraryContractViolationClass.EntrapmentUnmarked, row, marks.EntrapmentMarked, false);
             if (!SameAccessions(row.Accessions, entry.Proteins))
             {
