@@ -1218,7 +1218,7 @@ namespace CommonTest
             Assert.IsTrue(pending.Any(p => p.FailureReason == WebSearchFailureReason.rate_limited));
             Assert.AreEqual(0, pendingCompleted.Count);
             Assert.AreEqual(1, pendingWaits.Count);
-            Assert.AreEqual(retryAfter, pendingWaits[0]);
+            AssertWaitNear(retryAfter, pendingWaits[0]);
 
             // A 429 that does not say how long to wait still gets a wait - the default, as far as
             // the seam's cap allows
@@ -1235,10 +1235,11 @@ namespace CommonTest
             Assert.AreEqual(WebEnabledFastaImporter.MAX_TEST_RATE_LIMIT_DELAY, testWaits.Single());
             TestRateLimitOutlastsPass(longRetryAfter);
             TestRateLimitIsPerService();
+            TestRateLimitNoWaitAfterProgress();
 
             // Retry-After of zero (or a time already past) still waits, or the next pass asks again at once
             RunRateLimitedLookup(TimeSpan.Zero, giveUpOnUnresponsiveWebService: false, out _, out var zeroWaits);
-            Assert.AreEqual(WebEnabledFastaImporter.MIN_RATE_LIMIT_DELAY, zeroWaits.Single());
+            AssertWaitNear(WebEnabledFastaImporter.MIN_RATE_LIMIT_DELAY, zeroWaits.Single());
 
             TestWebAccessProbeRateLimited(retryAfter);
             TestRateLimitWaitCancellation();
@@ -1339,6 +1340,44 @@ namespace CommonTest
             Assert.AreEqual(2, provider.RequestCount, "An Entrez refusal in this pass must not keep UniProt from being searched");
             Assert.IsTrue(proteins.All(p => p.GetProteinMetadata().NeedsSearch()));
             AssertWaitedOnceAfterRequests(provider, 2);
+
+            // Nothing could be asked: the pass waits only until the first service will take a request
+            var shortRetryAfter = TimeSpan.FromSeconds(3);
+            provider = new RateLimitRecordingWebSearchProvider();
+            provider.RateLimits.Close(WebEnabledFastaImporter.ENTREZ_TAG, retryAfter);
+            provider.RateLimits.Close(WebEnabledFastaImporter.UNIPROTKB_TAG, shortRetryAfter);
+            RunEntrezAndUniprotLookup(provider);
+            Assert.AreEqual(0, provider.RequestCount);
+            Assert.AreEqual(1, provider.Waits.Count);
+            AssertWaitNear(shortRetryAfter, provider.Waits[0]);
+        }
+
+        /// <summary>
+        /// A pass that resolved proteins returns them at once, with no wait for a service that is
+        /// still refusing: the next pass skips that service again, and the caller, which asks for
+        /// one batch at a time, would otherwise be slowed by it on every batch.
+        /// </summary>
+        private static void TestRateLimitNoWaitAfterProgress()
+        {
+            const string uniprotBody =
+                "Entry\tGene Names\tOrganism\tLength\tEntry Name\tProtein names\tReviewed\n" +
+                "Q96K55\tZNF664\tHomo sapiens (Human)\t200\tZN664_HUMAN\tZinc finger protein 664\treviewed\n";
+            using var helper = HttpClientTestHelper.SimulateSuccessfulDownload(uniprotBody);
+            var provider = new RateLimitRecordingWebSearchProvider();
+            provider.RateLimits.Close(WebEnabledFastaImporter.ENTREZ_TAG, TimeSpan.FromMinutes(5));
+            var proteins = RunEntrezAndUniprotLookup(provider);
+            Assert.AreEqual(ProteinSearchInfo.SearchStatus.success, proteins[1].Status);
+            Assert.IsTrue(proteins[0].GetProteinMetadata().NeedsSearch());
+            Assert.AreEqual(0, provider.Waits.Count, "A pass that made progress must not wait on a service still refusing requests");
+        }
+
+        /// <summary>
+        /// A wait read from a rate limit's remaining time, a little less than the time it was set for
+        /// </summary>
+        private static void AssertWaitNear(TimeSpan expected, TimeSpan actual)
+        {
+            Assert.IsTrue(actual <= expected && actual > expected - TimeSpan.FromSeconds(1),
+                $"Expected a wait of about {expected}, but saw {actual}");
         }
 
         private static IList<ProteinSearchInfo> RunEntrezAndUniprotLookup(WebEnabledFastaImporter.WebSearchProvider provider)
