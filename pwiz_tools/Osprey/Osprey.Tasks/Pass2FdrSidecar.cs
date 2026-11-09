@@ -31,6 +31,7 @@ using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
+using pwiz.Osprey.FDR.Reconciliation;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.ML;
 
@@ -1697,9 +1698,25 @@ namespace pwiz.Osprey.Tasks
             RequireTransferExperimentSidecar(config);
             var pass1Experiment = LoadExperimentRecords(config, FdrScoresSidecar.Pass.FirstPass);
             var floors = new ExperimentQFloors();
-            WalkSurvivors(rescored, floors, null);
+            // The precursors the blib reports, from the first-pass experiment q-values this
+            // fold carries forward: only they may set a reported peptide's floor.
+            var reported = new ExperimentOutputSet(config.FdrLevel, config.ExperimentFdr);
+            WalkSurvivors(rescored, floors, null, entries =>
+            {
+                foreach (var e in entries)
+                {
+                    if (!pass1Experiment.TryGetValue(e.EntryId, out var q1))
+                        continue;
+                    reported.Add(e.EntryId, e.IsDecoy, e.ModifiedSequence, e.Charge,
+                        q1.ExperimentPrecursorQvalue, q1.EffectiveExperimentQvalue(config.FdrLevel));
+                }
+            });
+            reported.Finish(out _, out var reportedBaseIds);
+            var reportedTargets = new HashSet<uint>();
+            foreach (var baseId in reportedBaseIds)
+                reportedTargets.Add(baseId.Item1);
             FoldAndPublishExperimentScope(ctx, writer, rescored.FileNames, floors,
-                rec => CarryPass1Experiment(rec.EntryId, pass1Experiment));
+                rec => CarryPass1Experiment(rec.EntryId, pass1Experiment), reportedTargets.Contains);
         }
 
         /// <summary>
@@ -1757,8 +1774,9 @@ namespace pwiz.Osprey.Tasks
         /// <param name="rescored">The survivor source.</param>
         /// <param name="floors">Receives the peptide identities.</param>
         /// <param name="survivorEntryIds">Receives every survivor entry_id, or null.</param>
+        /// <param name="observe">Sees each run's survivors as they are walked, or null.</param>
         private static long WalkSurvivors(RescoredEntries rescored, ExperimentQFloors floors,
-            HashSet<uint> survivorEntryIds)
+            HashSet<uint> survivorEntryIds, Action<IReadOnlyList<FdrEntry>> observe = null)
         {
             long survivorObservations = 0;
             int fileCount = rescored.FileCount;
@@ -1778,6 +1796,7 @@ namespace pwiz.Osprey.Tasks
                             survivorEntryIds.Add(e.EntryId);
                     }
                     floors.ObserveIdentities(kvp.Value);
+                    observe?.Invoke(kvp.Value);
                 }
             }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             return survivorObservations;
@@ -1803,10 +1822,14 @@ namespace pwiz.Osprey.Tasks
         /// take a fresh pass-2 experiment q - the stratum's from its own fold, the complement's
         /// from ComputeComplementExperimentQ (issue #4581) - and neither was clamped, so one rule
         /// floors both against the pass-2 run q.</para>
+        ///
+        /// <para><paramref name="reportedTarget"/>, when given, restricts which target entries set
+        /// a peptide's floor (<see cref="ExperimentQFloors.DerivePeptideFloors"/>).</para>
         /// </summary>
         private static int FoldAndPublishExperimentScope(
             PipelineContext ctx, Pass2SidecarWriter writer, IReadOnlyList<string> fileKeys,
-            ExperimentQFloors floors, Func<FdrScoreRecord, FdrExperimentRecord> finishRecord)
+            ExperimentQFloors floors, Func<FdrScoreRecord, FdrExperimentRecord> finishRecord,
+            Func<uint, bool> reportedTarget = null)
         {
             int nMapped = 0;
             var unpatched = new List<string>();
@@ -1848,7 +1871,7 @@ namespace pwiz.Osprey.Tasks
                     nMapped += staged.Count;
                 }
             }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
-            floors.DerivePeptideFloors();
+            floors.DerivePeptideFloors(reportedTarget);
             int raised = experiment.ApplyRunQFloors(entryId => floors.FloorsFor(entryId));
             ctx.LogInfo(string.Format(
                 OspreyTasksResources.Pass2FdrSidecar_ComputePass2TransferCompeteFull_Raised__0__of__1__experiment_level_precursor_candidate_q_values_to_their_best_run_level_,

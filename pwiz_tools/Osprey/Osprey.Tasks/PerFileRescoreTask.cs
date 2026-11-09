@@ -357,6 +357,7 @@ namespace pwiz.Osprey.Tasks
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                + OspreyEnvironment.TransferReconciliationValidityKeySuffix()
                 // The worker's competition now gives the stratum's complement its own run q.
                 + OspreyEnvironment.Pass2StrataValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
@@ -2076,6 +2077,9 @@ namespace pwiz.Osprey.Tasks
             // pure waste.
             var consensusTargets = MultiChargeConsensus.SelectRescoreTargets(
                 run.Survivors, inputs.Config.RunFdr);
+            if (OspreyEnvironment.Pass2TransferQ)
+                consensusTargets = MultiChargeConsensus.ReportedOnly(consensusTargets, run.Survivors,
+                    inputs.Config.FdrLevel, inputs.Config.ExperimentFdr);
             var reconTargets = ReconTargetsForRun(run);
             gapFillTargets = run.GapFill ?? new List<GapFillTarget>();
 
@@ -2106,6 +2110,7 @@ namespace pwiz.Osprey.Tasks
                 gapFillTargets.Count));
             return true;
         }
+
 
         /// <summary>
         /// PHASE 3 -- reconciled parquet write-back. Reads the original Stage 4

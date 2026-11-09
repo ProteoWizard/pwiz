@@ -1858,6 +1858,20 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
+        /// Validity-key suffix for what cross-run reconciliation moves under
+        /// <see cref="PASS2_QVALUE_TRANSFER"/>, which carries first-pass q-values forward and
+        /// re-competes nothing: only the precursors the blib reports (the Stage 6 consensus
+        /// FirstPassFDR writes), and none of their paired decoys (what PerFileRescoring
+        /// re-scores). Both differ from the builds that reconciled every precursor passing at any
+        /// level in any run, decoys included, so FirstPassFDR, PerFileRescoring and SecondPassFDR
+        /// carry it. Empty under protein-compact, whose outputs are unchanged.
+        /// </summary>
+        public static string TransferReconciliationValidityKeySuffix()
+        {
+            return Pass2TransferQ ? @";reconset=output;recondecoys=0;pepfloor=reported" : string.Empty;
+        }
+
+        /// <summary>
         /// Validity-key suffix for the FDR experiment switches <see cref="ReconciliationMode"/>
         /// and <see cref="PepRatioForm"/>: each changes the first-pass consensus or PEP and so
         /// every FDR output after it. Empty when both are unset, so default outputs keep their key.

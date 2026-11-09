@@ -4284,6 +4284,33 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The transfer second pass derives a peptide's floor from its REPORTED target charge
+        /// states only: an unreported charge state with a better run (here z3, re-scored at a
+        /// sibling's boundaries) does not lower the reported z2's peptide floor, which comes from
+        /// z2's own run. Decoys still contribute, and without the filter every charge does.
+        /// </summary>
+        [TestMethod]
+        public void TestPeptideFloorFromReportedChargeStatesOnly()
+        {
+            var floors = new ExperimentQFloors();
+            floors.ObserveIdentities(new[]
+            {
+                MakeEntry(1, "PEPTIDEA", runPrec: 1, runPept: 1, expPrec: 0.001, expPept: 0.001),
+                MakeEntry(2, "PEPTIDEA", runPrec: 1, runPept: 1, expPrec: 0.5, expPept: 0.001),
+            });
+            floors.Observe(1, 0.004, 0.003);   // reported z2: run-Both 0.004
+            floors.Observe(2, 0.0001, 0.0001); // unreported z3: run-Both 0.0001
+
+            floors.DerivePeptideFloors();
+            Assert.AreEqual(0.0001, floors.FloorsFor(1).Peptide, 1e-12, "every charge state sets the floor");
+
+            floors.DerivePeptideFloors(entryId => entryId == 1);
+            Assert.AreEqual(0.004, floors.FloorsFor(1).Peptide, 1e-12, "only the reported charge state sets it");
+            Assert.AreEqual(0.004, floors.FloorsFor(1).Entry, 1e-12);
+            Assert.AreEqual(0.0001, floors.FloorsFor(2).Entry, 1e-12, "entry floors are unchanged");
+        }
+
+        /// <summary>
         /// The whole-run experiment-q clamp, as <see cref="ExperimentQFloors"/> performs it:
         /// fold every file's floors first, then apply them per file. The resident
         /// <c>PercolatorEngine.ClampExperimentQToBestRun</c> wrapper these tests used to call

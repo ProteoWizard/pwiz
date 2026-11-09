@@ -543,6 +543,8 @@ namespace pwiz.Osprey.Tasks
                 // and invalidating FirstPassFDR costs a 5-hour Stage 5 re-run at 446 files.
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                // The Stage 6 consensus this task writes holds the reconciliation set.
+                + OspreyEnvironment.TransferReconciliationValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
                 + PinFeatureMask.ValidityKeySuffix()
                 + OspreyEnvironment.FdrExperimentValidityKeySuffix()

@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -783,6 +784,107 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(actions.ContainsKey((@"f1", 1)));
             Assert.IsInstanceOfType(
                 actions[(@"f1", 1)], typeof(ReconcileAction.ForcedIntegration));
+        }
+
+        /// <summary>
+        /// A planner told not to reconcile decoys (the transfer second pass, which carries every
+        /// decoy's first-pass values forward) moves a misplaced target but leaves its misplaced
+        /// paired decoy where the first pass put it; the default planner moves both.
+        /// </summary>
+        [TestMethod]
+        public void TestPlanLeavesDecoysWhenNotReconcilingThem()
+        {
+            var cal = IdentityCalibration();
+            var cals = new Dictionary<string, RTCalibration> { { @"f1", cal } };
+            var consensus = new[]
+            {
+                new PeptideConsensusRT
+                {
+                    ModifiedSequence = @"PEPTIDE1", IsDecoy = false,
+                    ConsensusLibraryRt = 10.0, MedianPeakWidth = 0.6,
+                    NRunsDetected = 3, ApexLibraryRtMad = 0.02,
+                },
+                new PeptideConsensusRT
+                {
+                    ModifiedSequence = @"DECOY_PEPTIDE1", IsDecoy = true,
+                    ConsensusLibraryRt = 10.0, MedianPeakWidth = 0.6,
+                    NRunsDetected = 3, ApexLibraryRtMad = 0.02,
+                },
+            };
+            var entries = new[]
+            {
+                MakeEntry(@"PEPTIDE1", apexRt: 20.0, score: 3.0, isDecoy: false, precursorQ: 0.0, peptideQ: 0.0),
+                MakeEntry(@"DECOY_PEPTIDE1", apexRt: 25.0, score: -1.0, isDecoy: true, precursorQ: 1.0, peptideQ: 1.0),
+            };
+            var passing = new HashSet<(uint, byte)>();
+            ReconciliationPlanner.CollectPassingBaseIds(entries, 0.01, passing);
+
+            foreach (bool reconcileDecoys in new[] { true, false })
+            {
+                var planner = new ReconciliationPlanner.FilePlanner(consensus, passing, cals, cals, reconcileDecoys);
+                var fileActions = new List<KeyValuePair<int, ReconcileAction>>();
+                planner.PlanFile(@"f1", entries, null, fileActions);
+                var moved = fileActions.Select(a => a.Key).ToArray();
+                if (reconcileDecoys)
+                    CollectionAssert.AreEqual(new[] { 0, 1 }, moved);
+                else
+                    CollectionAssert.AreEqual(new[] { 0 }, moved);
+            }
+        }
+
+        /// <summary>
+        /// The transfer reconciliation set is the blib's reported precursors from first-pass
+        /// experiment q-values: a precursor passing only at run level in some run is left out
+        /// (the any-level rule admitted it), a failing charge of a passing peptide is left out
+        /// when another charge passes, a peptide with no passing charge keeps its best one,
+        /// decoys never enter, and each precursor maps to its base id for decoy pairing.
+        /// </summary>
+        [TestMethod]
+        public void TestExperimentOutputSetIsTheBlibGate()
+        {
+            FdrEntry Target(string peptide, byte charge, uint entryId, double expPrecursorQ, double expPeptideQ,
+                double runQ = 1.0, bool isDecoy = false)
+            {
+                return new FdrEntry
+                {
+                    EntryId = isDecoy ? entryId | 0x80000000u : entryId,
+                    IsDecoy = isDecoy,
+                    Charge = charge,
+                    ModifiedSequence = peptide,
+                    RunPrecursorQvalue = runQ,
+                    RunPeptideQvalue = runQ,
+                    ExperimentPrecursorQvalue = expPrecursorQ,
+                    ExperimentPeptideQvalue = expPeptideQ,
+                };
+            }
+
+            var run1 = new[]
+            {
+                Target(@"PEPA", 2, 1, 0.005, 0.005),
+                Target(@"PEPA", 3, 2, 0.02, 0.005),
+                Target(@"PEPB", 2, 3, 0.03, 0.008),
+                Target(@"PEPC", 2, 5, 0.5, 0.5, runQ: 0.0),
+                Target(@"DECOYA", 2, 1, 0.0, 0.0, isDecoy: true),
+            };
+            var run2 = new[]
+            {
+                Target(@"PEPB", 3, 4, 0.02, 0.008),
+                Target(@"PEPD", 2, 6, 0.004, 0.02),
+            };
+
+            var set = new ExperimentOutputSet(FdrLevel.Peptide, 0.01);
+            set.AddFile(run1);
+            set.AddFile(run2);
+            set.Finish(out var precursors, out var baseIds);
+
+            CollectionAssert.AreEquivalent(new[] { (@"PEPA", (byte)2), (@"PEPB", (byte)3) }, precursors.ToArray());
+            CollectionAssert.AreEquivalent(new[] { (1u, (byte)2), (4u, (byte)3) }, baseIds.ToArray());
+
+            // The old rule admits the run-level passer PEPC and every passing peptide's charges.
+            var anyLevel = new HashSet<(string ModifiedSequence, byte Charge)>();
+            GapFillTargetIdentifier.CollectPassingPrecursors(run1, 0.01, anyLevel);
+            Assert.IsTrue(anyLevel.Contains((@"PEPC", 2)));
+            Assert.IsFalse(precursors.Contains((@"PEPC", 2)));
         }
 
         [TestMethod]

@@ -186,8 +186,12 @@ namespace pwiz.Osprey.Tasks
             // lookup they also take is empty and no call on this path reads it.
             IReadOnlyDictionary<string, RTCalibration> noRefitLookup = new Dictionary<string, RTCalibration>();
             BuildGapFillLibraryLookups(fullLibrary, out var libLookup, out var libPrecursorMz);
+            // Transfer carries every decoy's first-pass values forward and competes nothing, so
+            // its decoys stay where the first pass put them; protein-compact re-competes and needs
+            // them moved with their targets.
             state.Planner = new ReconciliationPlanner.FilePlanner(
-                state.Consensus.Consensus, state.Consensus.PassingBaseIds, noRefitLookup, perFileCalibrations);
+                state.Consensus.Consensus, state.Consensus.PassingBaseIds, noRefitLookup, perFileCalibrations,
+                reconcileDecoys: !OspreyEnvironment.Pass2TransferQ);
             state.GapFiller = new GapFillTargetIdentifier.FileIdentifier(
                 state.Consensus.Consensus, state.Consensus.PassingPrecursors, noRefitLookup, perFileCalibrations,
                 libLookup, libPrecursorMz, perFileIsolationMz);
