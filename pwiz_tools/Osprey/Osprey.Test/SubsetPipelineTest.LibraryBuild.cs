@@ -126,6 +126,11 @@ namespace pwiz.Osprey.Test
             AssertLibraryBuildRefused(fasta, workDir, OspreyCommandArgs.ARG_LIBRARY.ArgumentText, Path.Combine(_dataDir, LIBRARY_FILE));
             AssertLibraryBuildRefused(fasta, workDir, OspreyCommandArgs.ARG_ENTRAPMENT_FASTA.ArgumentText, fasta);
             AssertLibraryBuildRefused(fasta, workDir, OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText, @"0.05");
+            // Entrapment on target proteins needs --entrapment, is at most 1, and is added to its ratio (the default is 1).
+            AssertLibraryBuildRefused(fasta, workDir, OspreyCommandArgs.ARG_ENTRAPMENT_IN_TARGETS.ArgumentText, @"0.5");
+            AssertLibraryBuildRefused(fasta, workDir, OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText, OspreyCommandArgs.ARG_ENTRAPMENT_IN_TARGETS.ArgumentText, @"1.5");
+            AssertLibraryBuildRefused(fasta, workDir, OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText, OspreyCommandArgs.ARG_ENTRAPMENT_IN_TARGETS.ArgumentText, @"0.1");
+            AssertLibraryBuildRefused(fasta, workDir, OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText, @"0.04", OspreyCommandArgs.ARG_ENTRAPMENT_IN_TARGETS.ArgumentText, @"0.04");
             AssertLibraryBuildRefused(fasta, workDir, OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, pairing);
             AssertLibraryBuildRefused(Path.Combine(_testDir, @"missing.fasta"), workDir);
             // A library-build option without --fasta changes nothing, and says so rather than being ignored.

@@ -452,7 +452,7 @@ namespace pwiz.Osprey.Tasks
                     foreach (var kv in rows)
                     {
                         var lib = kv.Value;
-                        bool entrap = EntrapmentLibraryClassifier.IsEntrapment(lib.ProteinIds);
+                        bool entrap = EntrapmentLibraryClassifier.IsEntrapment(lib);
                         uint pair = pairing.PairIndexBySeq[lib.Sequence];
                         string protein = FormatProteinField(lib.ProteinIds, out _);
                         PairingManifest.WriteRow(writer, lib.Sequence, false, protein,

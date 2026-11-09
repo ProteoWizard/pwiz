@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="897de176-8864-4069-a11e-4045b453f068" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="897de176-8864-4069-a11e-4045b453f068" paused="true" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
   <name>ProteoWizard Website</name>
   <description>Updates the ProteoWizard website: www.proteowizard.org</description>
   <settings ref="ProteoWizard_GitHubReportingConfig">

@@ -150,6 +150,46 @@ namespace pwiz.Skyline.Model.Lib
             entrapment = ExecuteCount(connection, @"SELECT COUNT(*) FROM DecoyPairs WHERE IsEntrapment = 1 AND IsDecoy = 0");
         }
 
+        /// <summary>The unmodified sequences the table flags as entrapment targets (not decoys), for tests; empty when there is no table.</summary>
+        public static HashSet<string> ReadEntrapmentSequences(string blibPath)
+        {
+            var sequences = new HashSet<string>();
+            using var connection = SqliteOperations.OpenConnection(blibPath);
+            if (!SqliteOperations.TableExists(connection, BlibSchema.TABLE_DECOY_PAIRS))
+                return sequences;
+            using var command = connection.CreateCommand();
+            command.CommandText = @"SELECT DISTINCT r.peptideSeq FROM RefSpectra r JOIN DecoyPairs d ON d.RefSpectraID = r.id WHERE d.IsEntrapment = 1 AND d.IsDecoy = 0";
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+                sequences.Add(reader.GetString(0));
+            return sequences;
+        }
+
+        /// <summary>
+        /// The protein accessions of each unmodified sequence in a library's Proteins table, for
+        /// tests: every accession any of the sequence's spectra links to; empty when the library
+        /// has no Proteins table or no links.
+        /// </summary>
+        public static Dictionary<string, HashSet<string>> ReadProteins(string blibPath)
+        {
+            var proteins = new Dictionary<string, HashSet<string>>();
+            using var connection = SqliteOperations.OpenConnection(blibPath);
+            if (!SqliteOperations.TableExists(connection, BlibSchema.TABLE_REF_SPECTRA_PROTEINS))
+                return proteins;
+            using var command = connection.CreateCommand();
+            command.CommandText = @"SELECT r.peptideSeq, p.accession FROM RefSpectra r " +
+                                  @"JOIN RefSpectraProteins rp ON rp.RefSpectraId = r.id JOIN Proteins p ON p.id = rp.ProteinId";
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                string sequence = reader.GetString(0);
+                if (!proteins.TryGetValue(sequence, out var accessions))
+                    proteins.Add(sequence, accessions = new HashSet<string>());
+                accessions.Add(reader.GetString(1));
+            }
+            return proteins;
+        }
+
         /// <summary>One row's values, in the insert statement's parameter order.</summary>
         private static object[] FormatRow(long id, bool isDecoy, bool isEntrapment, int pairingId, long? targetId, string method)
         {

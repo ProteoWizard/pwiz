@@ -600,6 +600,7 @@ namespace pwiz.Osprey
                 MinMz = library.MinPrecursorMz,
                 MaxMz = library.MaxPrecursorMz,
                 EntrapmentRatio = build.EntrapmentRatio ?? 1.0,
+                EntrapmentInTargetsRatio = entrapment ? build.EntrapmentInTargetsRatio ?? 0.0 : 0.0,
                 EntrapmentSourceFasta = entrapment ? build.EntrapmentFastaPath : null,
                 DecoyPrefix = library.DecoyPrefix,
                 Digest = library.Digest,
