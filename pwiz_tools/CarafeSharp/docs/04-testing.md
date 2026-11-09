@@ -225,10 +225,13 @@ it pass on the CPU. It is a passing gate that pins today's GPU behavior (`GpuPar
 them bit for bit: libtorch versions and kernels round differently. CarafeSharp turns TF32 off on CUDA
 (`TorchDevice.DisableTf32`, the equivalent of `torch.backends.cuda.matmul.allow_tf32 = False` and
 `torch.backends.cudnn.allow_tf32 = False`), so the GPU computes in float32 as the CPU does and the two give
-about the same library; `NVIDIA_TF32_OVERRIDE=0` is no longer needed. Fine-tuning on the GPU keeps cuDNN's TF32
-(`TorchDevice.AllowTf32ForTraining`): with it off, two GPU fine-tunes of the same data gave different RT models
-(`TestRegressionSubsetRepeatsOnGpu` failed 4 of 4 times), and TorchSharp 0.106 has no way to ask cuDNN for its
-deterministic algorithms (`torch.backends.cudnn.deterministic`). Measured 2026-11-04 on an RTX 4000 Ada
+about the same library; `NVIDIA_TF32_OVERRIDE=0` is no longer needed. Fine-tuning on the GPU is in float32
+too, with cuDNN restricted to its deterministic convolution algorithms (`TorchDevice.DeterministicCuDnn`, the
+equivalent of `torch.backends.cudnn.deterministic = True`, which TorchSharp 0.106 lacks, so `LibTorchContext`
+sets it in libtorch's own context). Without it, two float32 GPU fine-tunes of the same data gave different RT
+models (`TestRegressionSubsetRepeatsOnGpu` failed 4 of 4 times, and 2 of 2 in the 2026-11-06 control); with
+it they repeat byte for byte, and fine-tuning was no slower than with TF32 (see "Reproducibility").
+Measured 2026-11-04 on an RTX 4000 Ada
 (driver 596.71) and an i9-14900, libtorch 2.10.0, largest difference from Carafe over the reference folders:
 
 | Comparison (CPU limit) | CPU | CUDA, TF32 off (CarafeSharp) | CUDA, TF32 on (libtorch's default, before) |
@@ -501,7 +504,12 @@ Measured on the subset (2026-10-13; the regression gates it, see "Regression"):
   sums in another order: the models differ slightly, within the tolerances.
 - **GPU fine-tuning** repeats byte for byte since its dropout is seeded: TorchSharp's `manual_seed` leaves the
   CUDA generator unseeded, so `FineTuneRun` seeds it too (`cuda.manual_seed_all`). Its models differ from the
-  CPU's, as its kernels do. It keeps cuDNN's TF32, which prediction turns off, because in float32 it did not
-  repeat (see "GPU parity"). `TestRegressionSubsetRepeatsOnGpu` checks it.
+  CPU's, as its kernels do. Like prediction it is in float32 (TF32 off), and it repeats because cuDNN is held to
+  its deterministic convolution algorithms while it trains (`TorchDevice.DeterministicCuDnn`; without them the
+  float32 RT models differed on every run). `TestRegressionSubsetRepeatsOnGpu` checks it on Chronologer, the
+  default RT model; the AlphaPeptDeep LSTM RT model (`-rt_model alphapeptdeep`), which the cuDNN setting does not
+  cover, gave the same bytes in 6 of 6 runs too. On an RTX 4000 Ada (2026-11-06) the subset fine-tune took 32 s
+  for Chronologer and 40-44 s for the LSTM, against
+  36-38 s and 43-44 s with TF32, so the deterministic algorithms cost nothing measurable there.
 - **Before the fine-tune:** digests, precursor sets and fragment m/z are identical across CPU and GPU,
   and between Windows and Linux on the CPU. Predicted intensities differ between devices by at most about 1e-5.
