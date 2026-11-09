@@ -1713,6 +1713,30 @@ namespace pwiz.Skyline.Properties {
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        public double LibraryEntrapmentPercent {
+            get {
+                return ((double)(this["LibraryEntrapmentPercent"]));
+            }
+            set {
+                this["LibraryEntrapmentPercent"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        public double LibraryEntrapmentInTargetsPercent {
+            get {
+                return ((double)(this["LibraryEntrapmentInTargetsPercent"]));
+            }
+            set {
+                this["LibraryEntrapmentInTargetsPercent"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool AlphaPeptDeepUseGpu {
             get {

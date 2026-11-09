@@ -188,6 +188,7 @@ precursors, so the one download of Osprey serves both the wizard and the dialog.
 | `--install-cuda-runtime` | | Download the NVIDIA CUDA runtime from nuget.org (about 3 GB on Windows and 4 GB on Linux, more once installed; every package checked against the SHA-512 this build was tested with) into the `--torch-runtimes` folder and exit. Needs nothing else on the command line; a computer that cannot use the GPU still installs, with a note, so a cluster's login node can download for its GPU nodes. |
 | `--entrapment` | `[<ratio>]` | Add an entrapment peptide to every target (or to this fraction of them, 0.1 to 1), shuffled from the target or, with `--entrapment-fasta`, drawn mass-matched from a foreign proteome, each with a decoy of its own. The pairing manifest FDRBench reads is written beside the working files. |
 | `--entrapment-fasta` | `path/to/file.fasta` | With `--entrapment`: the foreign-species proteome to draw from. |
+| `--entrapment-in-targets` | `<ratio>` | With `--entrapment`: also add, for this fraction of the targets, an entrapment peptide placed on a random target protein (its label, no `_p_target` suffix; only the manifest's `peptide_type` and the `.blib`'s `DecoyPairs.IsEntrapment` mark it), so the protein evidence a protein-aware step gives false targets reaches entrapment too. Added to `--entrapment`'s ratio: `--entrapment 0.1 --entrapment-in-targets 0.1` is 20% entrapment; together at most 1 and at least 0.1. Seeded on its own (20261101), so a build without it is unchanged. See `protein-shuffled-entrapment.md`. |
 
 **The library-build parameters are CarafeSharp's.** The digest (`--enzyme`, `--miss-c`,
 `--min-length`, `--max-length`, `--clip-n-m`, `--i2l`), the modifications (`--fix-mod`,
@@ -281,6 +282,7 @@ Each is also a `--task` of its own on a cluster (see "The library build on a clu
 |--------|-------|--------|
 | `--decoys-in-library` | — | Trust decoys already in the library instead of generating reverse decoys (hard error if none recognised). See [01-decoy-generation.md](01-decoy-generation.md). |
 | `--decoy-pairing-manifest` | `path/to/file.tsv` | FDRBench 5-column pairing manifest, used with `--decoys-in-library`. |
+| `--strip-entrapment` | — | Leave the entrapment peptides, and the protein groups made only of them, out of the result (the `.blib` and the reports); the `--model-diagnostics` report still measures them. Default: they are reported like targets. |
 
 ### Training Export
 

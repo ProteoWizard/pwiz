@@ -1,0 +1,113 @@
+<meta-runner name="Upload release metadata to S3">
+  <description>Uploads the download page's release metadata files to s3://mc-tca-01/releases/</description>
+  <settings>
+    <parameters>
+      <param name="release.metadata.files" value="" spec="text label='Release metadata files' description='Comma-separated globs of the .xml and .json files to upload' validationMode='not_empty' display='normal'" />
+    </parameters>
+    <build-runners>
+      <runner name="Upload release metadata to S3" type="python-runner">
+        <parameters>
+          <param name="command" value="script" />
+          <param name="coverageArgs" value="--omit=*lib*" />
+          <param name="envTool" value="none" />
+          <param name="installToolPackage" value="true" />
+          <param name="isCoverageEnabled" value="false" />
+          <param name="isTestReportingEnabled" value="true" />
+          <param name="poetryExecutable" value="poetry" />
+          <param name="pythonVersion" value="python3" />
+          <param name="scriptContent"><![CDATA[import datetime, glob, hashlib, hmac, os, ssl, time, urllib.error, urllib.parse, urllib.request
+
+# The credentials are the project's artifact storage key for this bucket
+access_key = r'''%release.metadata.aws.access.key.id%'''
+secret_key = r'''%release.metadata.aws.secret.access.key%'''
+file_patterns = r'''%release.metadata.files%'''
+bucket = "mc-tca-01"
+region = "us-west-2"
+host = bucket + ".s3." + region + ".amazonaws.com"
+content_types = {".xml": "text/xml", ".json": "application/json"}
+
+try:
+    import certifi
+    ssl_context = ssl.create_default_context(cafile=certifi.where())
+except ImportError:
+    ssl_context = None
+
+def hmac_sha256(key, message):
+    return hmac.new(key, message.encode("utf-8"), hashlib.sha256).digest()
+
+# PUTs one file under releases/ with an AWS Signature Version 4, using only the standard library
+# so no agent needs boto3. no-cache makes browsers revalidate, so the page sees each new build.
+def upload(path):
+    with open(path, "rb") as f:
+        body = f.read()
+    key = "releases/" + os.path.basename(path)
+    now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None, microsecond=0)
+    amz_date = now.isoformat().replace("-", "").replace(":", "") + "Z"
+    scope = amz_date[:8] + "/" + region + "/s3/aws4_request"
+    payload_hash = hashlib.sha256(body).hexdigest()
+    headers = {
+        "cache-control": "no-cache",
+        "content-type": content_types.get(os.path.splitext(path)[1].lower(), "application/octet-stream"),
+        "host": host,
+        "x-amz-content-sha256": payload_hash,
+        "x-amz-date": amz_date,
+    }
+    signed_headers = ";".join(sorted(headers))
+    canonical_request = "\n".join(["PUT", "/" + urllib.parse.quote(key), "",
+                                   "".join(name + ":" + headers[name] + "\n" for name in sorted(headers)),
+                                   signed_headers, payload_hash])
+    string_to_sign = "\n".join(["AWS4-HMAC-SHA256", amz_date, scope,
+                                hashlib.sha256(canonical_request.encode("utf-8")).hexdigest()])
+    signing_key = ("AWS4" + secret_key).encode("utf-8")
+    for scope_part in scope.split("/"):
+        signing_key = hmac_sha256(signing_key, scope_part)
+    signature = hmac.new(signing_key, string_to_sign.encode("utf-8"), hashlib.sha256).hexdigest()
+    headers["authorization"] = ("AWS4-HMAC-SHA256 Credential=" + access_key + "/" + scope +
+                                ", SignedHeaders=" + signed_headers + ", Signature=" + signature)
+    del headers["host"]  # urllib sends it from the URL
+    request = urllib.request.Request("https://" + host + "/" + urllib.parse.quote(key),
+                                     data=body, headers=headers, method="PUT")
+    # Network errors and 5xx responses are retried; a 4xx (bad credentials, access denied) is not
+    attempts = 3
+    for attempt in range(1, attempts + 1):
+        try:
+            with urllib.request.urlopen(request, context=ssl_context, timeout=60) as response:
+                print("Uploaded " + path + " to s3://" + bucket + "/" + key + " (HTTP " + str(response.status) + ")")
+                return
+        except urllib.error.HTTPError as e:
+            if e.code < 500 or attempt == attempts:
+                # S3's error body names the cause, e.g. AccessDenied, SignatureDoesNotMatch or RequestTimeTooSkewed
+                raise RuntimeError(str(e) + ": " + e.read().decode("utf-8", "replace").strip()) from e
+            print("Attempt " + str(attempt) + " to upload " + key + " failed: " + str(e))
+        except OSError as e:
+            if attempt == attempts:
+                raise
+            print("Attempt " + str(attempt) + " to upload " + key + " failed: " + str(e))
+        time.sleep(10 * attempt)
+
+paths = sorted(set(path for pattern in file_patterns.split(",") if pattern.strip()
+                   for path in glob.glob(pattern.strip()) if os.path.isfile(path)))
+failures = 0 if paths else 1
+if not paths:
+    print("No release metadata files match: " + file_patterns)
+for path in paths:
+    try:
+        upload(path)
+    except Exception as e:
+        failures += 1
+        print("Failed to upload " + path + ": " + str(e))
+
+# The download page still reads the SourceForge copy, so a failed S3 upload warns and marks the
+# build status instead of failing the build and skipping the steps after it
+if failures:
+    print("##teamcity[message text='Release metadata was not uploaded to S3; see the build log' status='WARNING']")
+    print("##teamcity[buildStatus text='{build.status.text}; release metadata not uploaded to S3']")]]></param>
+          <param name="teamcity.step.mode" value="default" />
+          <param name="virtualenvEnvName" value=".venv" />
+          <param name="virtualenvFile" value="requirements.txt" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>

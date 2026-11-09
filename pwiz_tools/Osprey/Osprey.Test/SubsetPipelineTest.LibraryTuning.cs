@@ -482,7 +482,7 @@ namespace pwiz.Osprey.Test
                 string path = Path.Combine(products.TrainingDirectory, Path.GetFileNameWithoutExtension(run) + TrainingExportParquet.EXT);
                 var export = TrainingExport.Read(path);
                 exported += export.Records.Count;
-                Assert.AreEqual(@"2", export.RunQPass, path + @": run q from the per-run second pass");
+                Assert.AreEqual(@"1", export.RunQPass, path + @": run q from the first pass");
             }
             Assert.IsTrue(exported >= MIN_EXPORTED_PRECURSORS, string.Format(@"{0} precursors exported", exported));
             string folder = products.ModelDirectory;

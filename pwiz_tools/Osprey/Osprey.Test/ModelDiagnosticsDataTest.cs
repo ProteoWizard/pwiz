@@ -49,6 +49,8 @@ namespace pwiz.Osprey.Test
             TestFdpMatchesFdrBenchFormula();
             TestPairedEstimator();
             TestPairedSuppressedForPartialEntrapment();
+            TestFdpViewPlacementSplit();
+            TestProteinEntrapmentView();
             TestClassCountsAndDegrade();
             TestWinFractionCoinVsSignal();
             TestFeatureTableContributions();
@@ -821,7 +823,7 @@ namespace pwiz.Osprey.Test
                 {
                     acc.Add(fi, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
                         new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
-                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0));
+                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0, 0.0));
                 }
             }
             var streamed = acc.Build(contrib);
@@ -857,7 +859,7 @@ namespace pwiz.Osprey.Test
                 foreach (var e in perFileEntries[fi].Value)
                     accNM.Add(fi, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
                         new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
-                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0));
+                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0, 0.0));
             Assert.AreEqual(
                 JsonConvert.SerializeObject(batchNM, settings),
                 JsonConvert.SerializeObject(accNM.Build(contrib), settings),
@@ -944,7 +946,7 @@ namespace pwiz.Osprey.Test
                 {
                     acc.Add(fi, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
                         new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
-                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0));
+                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0, 0.0));
                 }
                 ModelDiagnosticsData.ObserveCoAssignmentRun(coAssign, fi,
                     perFileEntries[fi].Value, cls, runFdr, level);
@@ -995,7 +997,7 @@ namespace pwiz.Osprey.Test
                 {
                     accT.Add(fi, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
                         new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
-                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0));
+                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0, 0.0));
                 }
                 ModelDiagnosticsData.ObserveCoAssignmentRun(coAssignT, fi,
                     perFileEntries[fi].Value, cls, runFdr, level);
@@ -1031,7 +1033,7 @@ namespace pwiz.Osprey.Test
                 {
                     accS.Add(fi, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
                         new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
-                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0));
+                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0, 0.0));
                 }
                 ModelDiagnosticsData.ObserveCoAssignmentRun(coAssignS, fi,
                     perFileEntries[fi].Value, cls, runFdr, level);
@@ -1933,6 +1935,201 @@ namespace pwiz.Osprey.Test
             int last = fdp.Combined.Length - 1;
             Assert.AreEqual((1.0 + 1.0 / r) * 2.0 / 6.0, fdp.Combined[last], 1e-9);
             Assert.AreEqual(2.0 / (r * 6.0), fdp.LowerBound[last], 1e-9);
+        }
+
+        // The protein-placement split of the FDP views: entrapment on real target proteins
+        // (the protein-aware audit) and entrapment on its own proteins are counted apart at
+        // every threshold, each half's combined estimate scaled by its own ratio, and the
+        // accepted entrapment count is read against what a calibrated q would let through.
+        // 8 targets (q 0.001..0.008), 4 entrapment (q 0.0015 / 0.0025 / 0.0045 / 0.0055), the
+        // 1st and 3rd on target proteins, so r = 0.5 and each half is 0.25.
+        private static void TestFdpViewPlacementSplit()
+        {
+            var entries = new List<FdrEntry>();
+            var cls = new Dictionary<uint, EntrapmentClass>();
+            for (int i = 0; i < 8; i++)
+            {
+                entries.Add(Entry((uint)(100 + i), false, 8 - i, 0.001 * (i + 1), "T" + i, 2));
+                cls[(uint)(100 + i)] = EntrapmentClass.Target;
+            }
+            for (int i = 0; i < 4; i++)
+                AddEntrap(entries, cls, (uint)(200 + i), 5.5 - i, 0.0015 + 0.001 * i + (i >= 2 ? 0.001 : 0), "P" + i);
+            const double r = 0.5, rOnTarget = 0.25, rOnOwn = 0.25;
+            var placement = new EntrapmentPlacement
+            {
+                RatioOnTargetProteins = rOnTarget,
+                RatioOnEntrapmentProteins = rOnOwn,
+            };
+            placement.OnTargetProteinBaseIds.Add(200);
+            placement.OnTargetProteinBaseIds.Add(202);
+            Assert.IsTrue(placement.HasEntrapmentOnTargetProteins);
+            Assert.IsTrue(placement.IsOnTargetProtein(202));
+            Assert.IsFalse(placement.IsOnTargetProtein(201));
+
+            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, r, 0.01, FdrLevel.Peptide,
+                null, placement);
+            Assert.AreEqual(2, data.FdpViews.Count);
+            foreach (var view in data.FdpViews)
+                AssertPlacementSplit(view, r, rOnTarget, rOnOwn);
+            var exp = data.FdpViews.Single(v => v.Scope == "experiment");
+            int last = exp.Q.Length - 1;
+            Assert.AreEqual(8, exp.NTargetAccepted[last]);
+            Assert.AreEqual(4, exp.NEntrapmentAccepted[last]);
+            Assert.AreEqual(2, exp.NEntrapmentOnTargetProteins[last]);
+            Assert.AreEqual(2, exp.NEntrapmentOnEntrapmentProteins[last]);
+            Assert.AreEqual(1.0, exp.Combined[last], 1e-9);                 // (1 + 1/0.5) * 4 / 12
+            Assert.AreEqual(1.0, exp.CombinedOnTargetProteins[last], 1e-9); // (1 + 1/0.25) * 2 / 10
+            Assert.AreEqual(1.0, exp.CombinedOnEntrapmentProteins[last], 1e-9);
+            Assert.AreEqual(0.008 * 12 * r / (1 + r), exp.ExpectedEntrapment[last], 1e-12);
+            // The first target (q 0.001) admits no entrapment: every count and estimate is zero.
+            Assert.AreEqual(0, exp.NEntrapmentAccepted[0]);
+            Assert.AreEqual(0, exp.NEntrapmentOnTargetProteins[0]);
+            Assert.AreEqual(0.0, exp.Combined[0]);
+            Assert.AreEqual(0.0, exp.CombinedOnTargetProteins[0]);
+            // The halves differ along the sweep (the on-target entrapment ranks 1st and 3rd), so
+            // the split is not a vacuous copy of the pooled count.
+            Assert.IsTrue(Enumerable.Range(0, exp.Q.Length).Any(i =>
+                exp.NEntrapmentOnTargetProteins[i] != exp.NEntrapmentOnEntrapmentProteins[i]));
+
+            // Pass 2 carries the same split.
+            var pass2 = ModelDiagnosticsData.BuildPass2FdpViews(Wrap(entries), cls, null, r, placement);
+            Assert.AreEqual(2, pass2.Count);
+            foreach (var view in pass2)
+                AssertPlacementSplit(view, r, rOnTarget, rOnOwn);
+            Assert.AreEqual(2, pass2.Single(v => v.Scope == "experiment").NEntrapmentOnTargetProteins.Last());
+
+            // No placement, or one with nothing on a target protein: no split, the arrays null,
+            // and the pooled count and expectation still present.
+            foreach (var noSplit in new[] { null, new EntrapmentPlacement { RatioOnEntrapmentProteins = r } })
+            {
+                var plain = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, r, 0.01, FdrLevel.Peptide,
+                    null, noSplit);
+                foreach (var view in plain.FdpViews)
+                {
+                    Assert.IsFalse(view.HasPlacementSplit, view.Label);
+                    Assert.IsNull(view.NEntrapmentOnTargetProteins, view.Label);
+                    Assert.IsNull(view.NEntrapmentOnEntrapmentProteins, view.Label);
+                    Assert.IsNull(view.CombinedOnTargetProteins, view.Label);
+                    Assert.IsNull(view.CombinedOnEntrapmentProteins, view.Label);
+                    Assert.AreEqual(0.0, view.RatioOnTargetProteins, view.Label);
+                    Assert.AreEqual(0.0, view.RatioOnEntrapmentProteins, view.Label);
+                    Assert.AreEqual(view.Q.Length, view.NEntrapmentAccepted.Length, view.Label);
+                    Assert.AreEqual(view.Q.Length, view.ExpectedEntrapment.Length, view.Label);
+                }
+                CollectionAssert.AreEqual(exp.NEntrapmentAccepted,
+                    plain.FdpViews.Single(v => v.Scope == "experiment").NEntrapmentAccepted);
+            }
+
+            // The streamed accumulator agrees with the batch build on the new fields, in both
+            // passes (the batch-vs-accumulator pattern of TestStreamingAccumulatorMatchesBatch).
+            var settings = new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                FloatFormatHandling = FloatFormatHandling.Symbol,
+                FloatParseHandling = FloatParseHandling.Double,
+            };
+            var perFileEntries = Wrap(entries);
+            var runNames = perFileEntries.Select(kv => kv.Key).ToArray();
+            var acc = new ModelDiagnosticsData.Accumulator(runNames, cls, null, r, 0.01, FdrLevel.Peptide, 1, placement);
+            foreach (var e in entries)
+            {
+                acc.Add(0, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
+                    new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
+                        e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0, 0.0));
+            }
+            Assert.AreEqual(JsonConvert.SerializeObject(data, settings),
+                JsonConvert.SerializeObject(acc.Build(null), settings),
+                @"streaming accumulator must byte-match the batch build with a placement split");
+            var batch2 = ModelDiagnosticsData.BuildPass2(perFileEntries, null, cls, null, r, 0.01, FdrLevel.Peptide,
+                null, null, placement);
+            var acc2 = new ModelDiagnosticsData.Accumulator(runNames, cls, null, r, 0.01, FdrLevel.Peptide, 2, placement);
+            foreach (var e in entries)
+            {
+                acc2.Add(0, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
+                    new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
+                        e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0, 0.0));
+            }
+            // No precursor m/z lookup, so neither arm builds the co-assignment panel.
+            Assert.AreEqual(JsonConvert.SerializeObject(batch2, settings),
+                JsonConvert.SerializeObject(acc2.BuildPass2(null, null), settings),
+                @"streamed pass-2 accumulator must byte-match the batch build with a placement split");
+            Assert.IsTrue(batch2.FdpViews.All(v => v.HasPlacementSplit));
+        }
+
+        /// <summary>
+        /// The split's invariants at every threshold of <paramref name="view"/>: the two halves
+        /// sum to the entrapment accepted, each half's combined estimate follows the FDRBench
+        /// formula at its own ratio, and the expectation is the combined estimator at FDP = q
+        /// solved for the entrapment count.
+        /// </summary>
+        private static void AssertPlacementSplit(ModelDiagnosticsData.FdpView view, double r, double rOnTarget, double rOnOwn)
+        {
+            Assert.IsTrue(view.HasPlacementSplit, view.Label);
+            Assert.AreEqual(rOnTarget, view.RatioOnTargetProteins, 1e-12, view.Label);
+            Assert.AreEqual(rOnOwn, view.RatioOnEntrapmentProteins, 1e-12, view.Label);
+            int n = view.Q.Length;
+            Assert.IsTrue(n > 0, view.Label);
+            foreach (var array in new Array[]
+                     {
+                         view.NTargetAccepted, view.NEntrapmentAccepted, view.ExpectedEntrapment, view.Combined,
+                         view.NEntrapmentOnTargetProteins, view.NEntrapmentOnEntrapmentProteins,
+                         view.CombinedOnTargetProteins, view.CombinedOnEntrapmentProteins
+                     })
+            {
+                Assert.AreEqual(n, array.Length, view.Label);
+            }
+            for (int i = 0; i < n; i++)
+            {
+                string at = string.Format(@"{0} [{1}] q={2}", view.Label, i, view.Q[i]);
+                int nT = view.NTargetAccepted[i];
+                int nP = view.NEntrapmentAccepted[i];
+                int nOnTarget = view.NEntrapmentOnTargetProteins[i];
+                int nOnOwn = view.NEntrapmentOnEntrapmentProteins[i];
+                Assert.AreEqual(nP, nOnTarget + nOnOwn, at);
+                Assert.AreEqual((1.0 + 1.0 / r) * nP / (nT + nP), view.Combined[i], 1e-12, at);
+                Assert.AreEqual((1.0 + 1.0 / rOnTarget) * nOnTarget / (nT + nOnTarget), view.CombinedOnTargetProteins[i], 1e-12, at);
+                Assert.AreEqual((1.0 + 1.0 / rOnOwn) * nOnOwn / (nT + nOnOwn), view.CombinedOnEntrapmentProteins[i], 1e-12, at);
+                Assert.AreEqual(view.Q[i] * (nT + nP) * r / (1.0 + r), view.ExpectedEntrapment[i], 1e-12, at);
+            }
+        }
+
+        // The protein-group analogue: the reported groups' q swept up the target groups' q, the
+        // groups made only of entrapment proteins counted against them at the library's
+        // entrapment-protein to target-protein ratio.
+        private static void TestProteinEntrapmentView()
+        {
+            var groups = new List<KeyValuePair<bool, double>>
+            {
+                new KeyValuePair<bool, double>(false, 0.005),
+                new KeyValuePair<bool, double>(true, 0.0015),
+                new KeyValuePair<bool, double>(false, 0.001),
+                new KeyValuePair<bool, double>(true, 0.004),
+                new KeyValuePair<bool, double>(false, 0.002),
+                new KeyValuePair<bool, double>(true, 0.01),    // past every target group: never counted
+            };
+            var view = ModelDiagnosticsData.BuildProteinEntrapmentView(groups, 100, 10);
+            Assert.IsNotNull(view);
+            const double r = 0.1;
+            Assert.AreEqual(r, view.EntrapmentRatio, 1e-12);
+            Assert.AreEqual(100, view.NLibraryTargetProteins);
+            Assert.AreEqual(10, view.NLibraryEntrapmentProteins);
+            CollectionAssert.AreEqual(new[] { 0.001, 0.002, 0.005 }, view.Q);
+            CollectionAssert.AreEqual(new[] { 1, 2, 3 }, view.NTargetGroups);
+            CollectionAssert.AreEqual(new[] { 0, 1, 2 }, view.NEntrapmentGroups);
+            for (int i = 0; i < view.Q.Length; i++)
+            {
+                int nT = view.NTargetGroups[i], nE = view.NEntrapmentGroups[i];
+                Assert.AreEqual((1.0 + 1.0 / r) * nE / (nT + nE), view.Combined[i], 1e-12);
+                Assert.AreEqual(view.Q[i] * (nT + nE) * r / (1.0 + r), view.ExpectedEntrapment[i], 1e-12);
+            }
+            Assert.AreEqual(11.0 * 2 / 5, view.Combined[2], 1e-12);
+
+            // Nothing to estimate from: no entrapment protein in the library, no target
+            // protein, or no target group to sweep.
+            Assert.IsNull(ModelDiagnosticsData.BuildProteinEntrapmentView(groups, 100, 0));
+            Assert.IsNull(ModelDiagnosticsData.BuildProteinEntrapmentView(groups, 0, 10));
+            Assert.IsNull(ModelDiagnosticsData.BuildProteinEntrapmentView(
+                groups.Where(kv => kv.Key).ToList(), 100, 10));
         }
 
         // combined = (1 + 1/r) * n_p / (n_t + n_p); lower = n_p / (r*(n_t+n_p)).

@@ -423,6 +423,10 @@ namespace pwiz.SkylineTestFunctional
                 buildLibrary.AddDecoys = true;
                 buildLibrary.AddEntrapment = true;
                 AssertEx.IsFalse(buildLibrary.EntrapmentFromFasta);
+                // The recorded Koina queries hold a build with an entrapment peptide for every
+                // target on an entrapment protein of its own, not the 10% and 10% the page starts at
+                buildLibrary.EntrapmentPercent = EntrapmentPercentControls.MAX_PERCENT;
+                buildLibrary.EntrapmentInTargetsPercent = 0;
                 AssertEx.AreEqual(Resources.BuildLibraryDlg_OkWizardPage_Finish, buildLibrary.NextButtonText);
             });
             RunUI(buildLibrary.OkWizardPage);

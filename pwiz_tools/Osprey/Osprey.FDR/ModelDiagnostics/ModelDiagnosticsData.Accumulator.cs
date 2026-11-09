@@ -2,6 +2,7 @@
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ *                Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -67,6 +68,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             private readonly IReadOnlyDictionary<uint, uint> _pairByBaseId;
             private readonly bool _haveManifest;
             private readonly double _entrapmentRatio;
+            private readonly EntrapmentPlacement _placement;
             private readonly double _runFdr;
             private readonly FdrLevel _fdrLevel;
             private readonly string[] _runNames;
@@ -137,6 +139,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// <param name="fdrLevel">reported FDR control level (drives EffectiveRunQvalue).</param>
             /// <param name="pass">1 for the pre-compaction first pass (<see cref="Build"/>),
             /// 2 for the final reported pool (<see cref="BuildPass2"/>). Decides which folds run.</param>
+            /// <param name="placement">which entrapment sits on a real target protein, with each
+            /// half's ratio, for the FDP views' placement split; null for no split.</param>
             public Accumulator(
                 string[] runNames,
                 IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
@@ -144,7 +148,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 double entrapmentRatio,
                 double runFdr,
                 FdrLevel fdrLevel,
-                int pass = 1)
+                int pass = 1,
+                EntrapmentPlacement placement = null)
             {
                 if (pass != 1 && pass != 2)
                     throw new ArgumentOutOfRangeException(nameof(pass));
@@ -155,6 +160,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 _pairByBaseId = pairByBaseId;
                 _haveManifest = classByBaseId != null && classByBaseId.Count > 0;
                 _entrapmentRatio = entrapmentRatio;
+                _placement = placement;
                 _runFdr = runFdr;
                 _fdrLevel = fdrLevel;
 
@@ -300,6 +306,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     // --- best-per-precursor (== ReduceToPrecs: max score, min q at each scope) ---
                     uint pairIdx = 0;
                     bool hasPair = owner._pairByBaseId != null && owner._pairByBaseId.TryGetValue(baseId, out pairIdx);
+                    bool onTargetProtein = owner._placement != null && owner._placement.IsOnTargetProtein(baseId);
                     if (!_best.TryGetValue(key, out var cur))
                     {
                         cur = new Prec
@@ -312,6 +319,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                             PairIndex = pairIdx,
                             Charge = charge,
                             HasPair = hasPair,
+                            OnTargetProtein = onTargetProtein,
                         };
                     }
                     else
@@ -323,6 +331,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                             cur.Class = cls;
                             cur.PairIndex = pairIdx;
                             cur.HasPair = hasPair;
+                            cur.OnTargetProtein = onTargetProtein;
                         }
                         if (q.RunPrecursorQvalue < cur.QRunPrecursor)
                             cur.QRunPrecursor = q.RunPrecursorQvalue;
@@ -438,6 +447,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                             cur.Class = file.Class;
                             cur.PairIndex = file.PairIndex;
                             cur.HasPair = file.HasPair;
+                            cur.OnTargetProtein = file.OnTargetProtein;
                         }
                         if (file.QRunPrecursor < cur.QRunPrecursor)
                             cur.QRunPrecursor = file.QRunPrecursor;
@@ -587,7 +597,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 data.WinFraction = BuildWinFractionFromReduced(_bt, _tClass);
 
                 if (data.HasEntrapment)
-                    data.FdpViews = BuildFdpViewsFromPrecs(precs, r, 1);
+                    data.FdpViews = BuildFdpViewsFromPrecs(precs, r, 1, _placement);
 
                 // Reproducibility frontier (first-pass, pre-compaction; entrapment-gated).
                 if (data.HasEntrapment)
@@ -673,7 +683,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     Experiment = ComputeCrossRunView(_expStream, _anyEntrapment ? _entExpStream : null, _decExpStream, _nFiles, r),
                 });
 
-                pass2.FdpViews = BuildPass2FdpViews(precs, _entrapmentRatio);
+                pass2.FdpViews = BuildPass2FdpViews(precs, _entrapmentRatio, _placement);
                 pass2.CoAssignment = coAssignment;
 
                 // Structural half: only when the second pass retrained on the reported pool.
