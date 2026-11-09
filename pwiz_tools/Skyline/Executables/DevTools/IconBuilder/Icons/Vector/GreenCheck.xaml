@@ -1,0 +1,7 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Green check mark: one thick stroke from the left, down to the bottom, up to the top right,
+       with a darker outline and a lighter green core. -->
+  <Path Data="M 3,18 L 10,26 L 28,5" Stroke="#0C7A1C" StrokeThickness="8" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+  <Path Data="M 3,18 L 10,26 L 28,5" Stroke="#17A42A" StrokeThickness="6" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+  <Path Data="M 4,18 L 10,24.5 L 27,5.5" Stroke="#2BBF3E" StrokeThickness="2" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0.7"/>
+</Canvas>

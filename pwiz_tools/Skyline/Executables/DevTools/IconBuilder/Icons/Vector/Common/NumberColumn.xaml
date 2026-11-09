@@ -1,0 +1,6 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Number column: a light gray number sign with slanted 2-pixel strokes. -->
+  <Rectangle Canvas.Left="4" Canvas.Top="8" Width="22" Height="4" Fill="#C0C0C0"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="18" Width="22" Height="4" Fill="#C0C0C0"/>
+  <Path Data="M 14.8,2 L 7.6,30 M 22.8,2 L 15.6,30" Stroke="#C0C0C0" StrokeThickness="3.9" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+</Canvas>

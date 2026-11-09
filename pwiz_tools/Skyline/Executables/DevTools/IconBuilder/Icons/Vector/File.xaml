@@ -1,0 +1,33 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- File: gray-outlined page with a folded top-right corner, holding a small window thumbnail
+       with a blue title bar, a red and a blue-green chart shape, and a gray bottom band. -->
+  <Path Data="M 4,3 L 22,3 L 28,9 L 28,29 L 4,29 Z" Stroke="#8C8C8C" StrokeThickness="2" StrokeLineJoin="Miter">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFFFFF" Offset="0"/>
+        <GradientStop Color="#F4F4F4" Offset="0.6"/>
+        <GradientStop Color="#DADADA" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Path Data="M 22,3 L 22,9 L 28,9 Z" Fill="#C4C4C4" Stroke="#8C8C8C" StrokeThickness="2" StrokeLineJoin="Miter"/>
+  <!-- Window thumbnail -->
+  <Rectangle Canvas.Left="7.5" Canvas.Top="9.5" Width="17" Height="15" Fill="#FFFFFF" Stroke="#A8A8A8" StrokeThickness="1"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="10" Width="16" Height="4">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#7878E0" Offset="0"/>
+        <GradientStop Color="#5050C0" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <Rectangle Canvas.Left="9" Canvas.Top="11" Width="2" Height="2" Fill="#F0D040"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="22" Width="16" Height="2" Fill="#9A9A9A"/>
+  <!-- Red chart shape -->
+  <Path Data="M 9,16 L 13,15 L 14,21 L 10,21 Z" Fill="#D03434"/>
+  <Path Data="M 9,16 L 12,15.5 L 12,18 L 10,18 Z" Fill="#F08C8C"/>
+  <!-- Blue-green chart shape -->
+  <Path Data="M 16,15 L 21,15 L 21,19 L 16,19 Z" Fill="#4060E0"/>
+  <Path Data="M 18,17 L 22,17 L 22,21 L 18,21 Z" Fill="#30B050"/>
+  <Rectangle Canvas.Left="17" Canvas.Top="16" Width="2" Height="2" Fill="#8FD4F0"/>
+</Canvas>

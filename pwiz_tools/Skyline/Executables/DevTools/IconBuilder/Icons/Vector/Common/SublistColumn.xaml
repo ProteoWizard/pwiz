@@ -1,0 +1,12 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Sublist column: black header lines, each followed by indented gray child lines.
+       Traced from the native pixels: each rectangle is a run of one color on the 2-unit grid. -->
+  <Rectangle Canvas.Left="2" Canvas.Top="2" Width="28" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="6" Width="24" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="10" Width="24" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="14" Width="28" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="18" Width="24" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="22" Width="24" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="26" Width="24" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="30" Width="24" Height="2" Fill="#808080"/>
+</Canvas>

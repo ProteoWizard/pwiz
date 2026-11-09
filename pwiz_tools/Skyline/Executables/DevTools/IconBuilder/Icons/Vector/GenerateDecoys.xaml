@@ -1,0 +1,36 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Generate decoys: an eight-tooth gear in crimson, pink toward the center, with a dark
+       red rim and a white hole with a pale pink ring. The rim is the same shapes drawn one
+       unit larger underneath. -->
+  <Canvas>
+    <Canvas.Resources>
+      <RadialGradientBrush x:Key="Body" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Center="0.45,0.4" GradientOrigin="0.4,0.35" RadiusX="0.6" RadiusY="0.6">
+        <GradientStop Color="#F2A9B6" Offset="0"/>
+        <GradientStop Color="#D45A72" Offset="0.5"/>
+        <GradientStop Color="#A82C46" Offset="1"/>
+      </RadialGradientBrush>
+    </Canvas.Resources>
+    <!-- Rim -->
+    <Ellipse Canvas.Left="4.5" Canvas.Top="4.5" Width="23" Height="23" Fill="#8A2038"/>
+    <Rectangle Canvas.Left="11.5" Canvas.Top="0.5" Width="9" Height="31" RadiusX="1" RadiusY="1" Fill="#8A2038"/>
+    <Rectangle Canvas.Left="0.5" Canvas.Top="11.5" Width="31" Height="9" RadiusX="1" RadiusY="1" Fill="#8A2038"/>
+    <Rectangle Canvas.Left="11.5" Canvas.Top="0.5" Width="9" Height="31" RadiusX="1" RadiusY="1" Fill="#8A2038" RenderTransformOrigin="0.5,0.5">
+      <Rectangle.RenderTransform><RotateTransform Angle="45"/></Rectangle.RenderTransform>
+    </Rectangle>
+    <Rectangle Canvas.Left="11.5" Canvas.Top="0.5" Width="9" Height="31" RadiusX="1" RadiusY="1" Fill="#8A2038" RenderTransformOrigin="0.5,0.5">
+      <Rectangle.RenderTransform><RotateTransform Angle="-45"/></Rectangle.RenderTransform>
+    </Rectangle>
+    <!-- Body -->
+    <Ellipse Canvas.Left="5.5" Canvas.Top="5.5" Width="21" Height="21" Fill="{StaticResource Body}"/>
+    <Rectangle Canvas.Left="12.5" Canvas.Top="1.5" Width="7" Height="29" RadiusX="0.5" RadiusY="0.5" Fill="{StaticResource Body}"/>
+    <Rectangle Canvas.Left="1.5" Canvas.Top="12.5" Width="29" Height="7" RadiusX="0.5" RadiusY="0.5" Fill="{StaticResource Body}"/>
+    <Rectangle Canvas.Left="12.5" Canvas.Top="1.5" Width="7" Height="29" RadiusX="0.5" RadiusY="0.5" Fill="{StaticResource Body}" RenderTransformOrigin="0.5,0.5">
+      <Rectangle.RenderTransform><RotateTransform Angle="45"/></Rectangle.RenderTransform>
+    </Rectangle>
+    <Rectangle Canvas.Left="12.5" Canvas.Top="1.5" Width="7" Height="29" RadiusX="0.5" RadiusY="0.5" Fill="{StaticResource Body}" RenderTransformOrigin="0.5,0.5">
+      <Rectangle.RenderTransform><RotateTransform Angle="-45"/></Rectangle.RenderTransform>
+    </Rectangle>
+    <!-- Hole -->
+    <Ellipse Canvas.Left="10.5" Canvas.Top="10.5" Width="11" Height="11" Fill="#FFFFFF" Stroke="#E6B8C2" StrokeThickness="1.5"/>
+  </Canvas>
+</Canvas>

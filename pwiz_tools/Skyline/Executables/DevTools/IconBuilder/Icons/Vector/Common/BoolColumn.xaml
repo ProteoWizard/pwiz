@@ -1,0 +1,9 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Boolean column: a light gray italic T and F separated by a gray slash. -->
+  <Rectangle Canvas.Left="2" Canvas.Top="2" Width="12" Height="2" Fill="#C0C0C0"/>
+  <Path Data="M 6,4 L 10,4 L 8,18 L 4,18 Z" Fill="#C0C0C0"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="14" Width="10" Height="2" Fill="#C0C0C0"/>
+  <Rectangle Canvas.Left="19.5" Canvas.Top="20" Width="8" Height="2" Fill="#C0C0C0"/>
+  <Path Data="M 20,16 L 24,16 L 22,30 L 18,30 Z" Fill="#C0C0C0"/>
+  <Path Data="M 25.5,6.5 L 9,23" Stroke="#808080" StrokeThickness="2.4" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+</Canvas>

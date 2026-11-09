@@ -1,0 +1,4 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Bold black digit 2, 20 units tall: rounded top, diagonal down to the left, 4-unit base bar. -->
+  <Path Fill="#000000" Data="M 8,12 Q 8,6 15,6 Q 22,6 22,12 Q 22,15.5 18.5,18.5 L 14.5,22 L 22,22 L 22,26 L 8,26 L 8,22.5 L 15.5,16 Q 17.5,14.3 17.5,12.3 Q 17.5,10 15,10 Q 12.5,10 12.5,12.5 L 8,12.5 Z"/>
+</Canvas>

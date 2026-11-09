@@ -1,0 +1,18 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="28" Height="28">
+  <!-- FragmentLibS (14x14 tree state image): the FragmentS peak (shifted one unit left so it clears
+       the glyph) over the left half of the dashed baseline, with the black library glyph (three
+       spines on a base) at the lower right. No clipping; the peak is fully visible. -->
+  <Rectangle Canvas.Left="0" Canvas.Top="20" Width="2" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="20" Width="2" Height="2" Fill="#ACA899"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="20" Width="2" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="20" Width="2" Height="2" Fill="#ACA899"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="20" Width="2" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="14" Canvas.Top="20" Width="2" Height="2" Fill="#ACA899"/>
+  <Path Data="M 10,20 L 10,17 L 12,15 L 12,8 L 14,2.5 L 16,9 L 16,20" Stroke="#0A8A0A" StrokeThickness="2" StrokeLineJoin="Round"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="26" Width="12" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="18" Width="2" Height="8" Fill="#000000"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="14" Width="2" Height="12" Fill="#000000"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="22" Width="2" Height="4" Fill="#000000"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="19" Width="1" Height="7" Fill="#9A9A9A"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="15" Width="1" Height="11" Fill="#9A9A9A"/>
+</Canvas>

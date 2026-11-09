@@ -1,0 +1,5 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Close: a bold black X of two diagonal strokes with flat ends, from (6,6) to (26,26). -->
+  <Line X1="6" Y1="6" X2="26" Y2="26" Stroke="#141414" StrokeThickness="5" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+  <Line X1="26" Y1="6" X2="6" Y2="26" Stroke="#141414" StrokeThickness="5" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+</Canvas>

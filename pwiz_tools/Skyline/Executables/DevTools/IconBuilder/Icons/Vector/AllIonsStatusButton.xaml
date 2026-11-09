@@ -1,0 +1,8 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="28" Height="28">
+  <!-- AllIonsStatusButton (14x14): the TransitionGroup three-peak drawing traced from the native
+       1-pixel lines as stepped polylines with shoulders, two units left of the 32-unit version
+       for the 28-unit canvas, with the red baseline running to both edges as in the bitmap. -->
+  <Path Data="M -2,25 L 5,25 L 9,23 L 11,21 L 11,15 L 13,13 L 13,7 L 15,7 L 15,3 L 17,9 L 17,21 L 19,23 L 19,25 L 30,25" Stroke="#0A8A0A" StrokeThickness="2" StrokeLineJoin="Round"/>
+  <Path Data="M 5,25 L 11,19 L 11,15 L 13,11 L 15,13 L 15,21" Stroke="#2024E0" StrokeThickness="2.5" StrokeLineJoin="Round"/>
+  <Path Data="M -2,27 L 7,27 L 9,25 L 11,25 L 13,23 L 15,21 L 15,25 L 17,25 L 17,27 L 30,27" Stroke="#E52814" StrokeThickness="2" StrokeLineJoin="Round"/>
+</Canvas>

@@ -1,0 +1,13 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Restore: two overlapping window frames, the front one at the lower left.
+       Traced from the native pixels: each rectangle is a run of one color on the 2-unit grid. -->
+  <Rectangle Canvas.Left="10" Canvas.Top="2" Width="20" Height="6" Fill="#000000"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="8" Width="4" Height="4" Fill="#000000"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="8" Width="4" Height="8" Fill="#000000"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="12" Width="20" Height="4" Fill="#000000"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="16" Width="28" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="18" Width="4" Height="8" Fill="#000000"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="18" Width="12" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="20" Width="4" Height="6" Fill="#000000"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="26" Width="20" Height="4" Fill="#000000"/>
+</Canvas>

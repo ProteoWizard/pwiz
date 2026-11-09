@@ -1,0 +1,13 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Alphabetical sort: a blue A above a dark red Z on the left, and a black down arrow with
+       light gray rails on the right. -->
+  <Path Data="M 2,13.5 L 7,1 L 12,13.5" Stroke="#3F63AE" StrokeThickness="2.8" StrokeLineJoin="Miter" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="8" Width="6" Height="2" Fill="#3F63AE"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="16" Width="12" Height="2" Fill="#8A3A32"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="28" Width="12" Height="2" Fill="#8A3A32"/>
+  <Path Data="M 13,18 L 3,28" Stroke="#8A3A32" StrokeThickness="2.6" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="0" Width="2" Height="20" Fill="#E0E0E0"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="0" Width="2" Height="20" Fill="#E0E0E0"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="0" Width="2" Height="22" Fill="#000000"/>
+  <Path Data="M 20.5,20.5 L 29.5,20.5 L 25,30 Z" Fill="#1A1A1A" Stroke="#848484" StrokeThickness="1" StrokeLineJoin="Round"/>
+</Canvas>

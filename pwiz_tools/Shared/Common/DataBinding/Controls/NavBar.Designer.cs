@@ -58,12 +58,14 @@ namespace pwiz.Common.DataBinding.Controls
             // bindingNavigatorMoveFirstItem
             // 
             this.bindingNavigatorMoveFirstItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.bindingNavigatorMoveFirstItem.Image = global::pwiz.Common.Properties.Resources.NavigatorFirst;
             resources.ApplyResources(this.bindingNavigatorMoveFirstItem, "bindingNavigatorMoveFirstItem");
             this.bindingNavigatorMoveFirstItem.Name = "bindingNavigatorMoveFirstItem";
             // 
             // bindingNavigatorMovePreviousItem
             // 
             this.bindingNavigatorMovePreviousItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.bindingNavigatorMovePreviousItem.Image = global::pwiz.Common.Properties.Resources.NavigatorPrevious;
             resources.ApplyResources(this.bindingNavigatorMovePreviousItem, "bindingNavigatorMovePreviousItem");
             this.bindingNavigatorMovePreviousItem.Name = "bindingNavigatorMovePreviousItem";
             // 
@@ -90,12 +92,14 @@ namespace pwiz.Common.DataBinding.Controls
             // bindingNavigatorMoveNextItem
             // 
             this.bindingNavigatorMoveNextItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.bindingNavigatorMoveNextItem.Image = global::pwiz.Common.Properties.Resources.NavigatorNext;
             resources.ApplyResources(this.bindingNavigatorMoveNextItem, "bindingNavigatorMoveNextItem");
             this.bindingNavigatorMoveNextItem.Name = "bindingNavigatorMoveNextItem";
             // 
             // bindingNavigatorMoveLastItem
             // 
             this.bindingNavigatorMoveLastItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.bindingNavigatorMoveLastItem.Image = global::pwiz.Common.Properties.Resources.NavigatorLast;
             resources.ApplyResources(this.bindingNavigatorMoveLastItem, "bindingNavigatorMoveLastItem");
             this.bindingNavigatorMoveLastItem.Name = "bindingNavigatorMoveLastItem";
             // 
@@ -139,6 +143,7 @@ namespace pwiz.Common.DataBinding.Controls
             // 
             this.navBarButtonMatchCase.CheckOnClick = true;
             this.navBarButtonMatchCase.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.navBarButtonMatchCase.Image = global::pwiz.Common.Properties.Resources.MatchCase;
             resources.ApplyResources(this.navBarButtonMatchCase, "navBarButtonMatchCase");
             this.navBarButtonMatchCase.Name = "navBarButtonMatchCase";
             this.navBarButtonMatchCase.CheckedChanged += new System.EventHandler(this.NavBarButtonMatchCaseOnCheckedChanged);
@@ -196,6 +201,7 @@ namespace pwiz.Common.DataBinding.Controls
             this.btnGroupTotal.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.btnGroupTotal.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.freezeColumnsUpToToolStripMenuItem});
+            this.btnGroupTotal.Image = global::pwiz.Common.Properties.Resources.Pivot;
             resources.ApplyResources(this.btnGroupTotal, "btnGroupTotal");
             this.btnGroupTotal.Name = "btnGroupTotal";
             this.btnGroupTotal.ButtonClick += new System.EventHandler(this.btnGroupTotal_Click);
@@ -213,6 +219,7 @@ namespace pwiz.Common.DataBinding.Controls
             this.navBarButtonCluster.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.navBarButtonClusterGrid,
             this.advancedToolStripMenuItem});
+            this.navBarButtonCluster.Image = global::pwiz.Common.Properties.Resources.Cluster;
             resources.ApplyResources(this.navBarButtonCluster, "navBarButtonCluster");
             this.navBarButtonCluster.Name = "navBarButtonCluster";
             this.navBarButtonCluster.ButtonClick += new System.EventHandler(this.navBarButtonCluster_ButtonClick);
@@ -238,6 +245,7 @@ namespace pwiz.Common.DataBinding.Controls
             // navBarButtonCopyAll
             // 
             this.navBarButtonCopyAll.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.navBarButtonCopyAll.Image = global::pwiz.Common.Properties.Resources.Copy;
             resources.ApplyResources(this.navBarButtonCopyAll, "navBarButtonCopyAll");
             this.navBarButtonCopyAll.Name = "navBarButtonCopyAll";
             this.navBarButtonCopyAll.Click += new System.EventHandler(this.NavBarButtonCopyAllOnClick);

@@ -1,0 +1,5 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Error: a solid red disc with a white X in the middle. -->
+  <Ellipse Canvas.Left="2" Canvas.Top="2" Width="28" Height="28" Fill="#CF1A2A"/>
+  <Path Data="M 10,10 L 22,22 M 22,10 L 10,22" Stroke="#FFFFFF" StrokeThickness="3.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+</Canvas>

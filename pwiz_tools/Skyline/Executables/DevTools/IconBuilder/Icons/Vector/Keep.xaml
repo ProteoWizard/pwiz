@@ -1,0 +1,16 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Gold triangle with a darker base and right edge, lighter left edge, and a small
+       white window below the middle. -->
+  <Path Data="M 16,2 L 30,27 L 2,27 Z" StrokeLineJoin="Miter" Stroke="#B88400" StrokeThickness="1">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#F9DC55" Offset="0"/>
+        <GradientStop Color="#F3C21C" Offset="0.5"/>
+        <GradientStop Color="#D9A000" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Path Data="M 4,24 L 28,24 L 29.5,26.5 L 2.5,26.5 Z" Fill="#A87600" Opacity="0.85"/>
+  <Path Data="M 16,3 L 29,26 L 27,26 L 15.5,5.5 Z" Fill="#C88E00" Opacity="0.7"/>
+  <Path Data="M 12,14 L 20,14 L 21,19 L 11,19 Z" Fill="#FFFFFF" Stroke="#E6C97A" StrokeThickness="0.5"/>
+</Canvas>
