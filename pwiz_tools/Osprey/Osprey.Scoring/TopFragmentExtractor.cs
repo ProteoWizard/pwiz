@@ -257,6 +257,40 @@ namespace pwiz.Osprey.Scoring
             return ClosestPeakFrom(mzs, spectrum.MzLowerBound(lower), targetMz, upper);
         }
 
+        /// <summary>
+        /// <see cref="FindClosestPeakInWindow(Spectrum, double, double, double)"/> for one target
+        /// m/z in two windows at once, the search window [<paramref name="lower"/>,
+        /// <paramref name="upper"/>] and a wider one [<paramref name="wideLower"/>,
+        /// <paramref name="wideUpper"/>], each returning what the single-window call would. When
+        /// the wide window starts at or below the narrow one, every peak before the wide lower
+        /// bound is below the narrow one too, so the narrow lower bound is found by stepping
+        /// forward from the wide one - the same index, for one bucket lookup instead of two.
+        /// </summary>
+        public static int FindClosestPeakInWindows(Spectrum spectrum, double targetMz,
+            double lower, double upper, double wideLower, double wideUpper, out int wideBest)
+        {
+            var mzs = spectrum.Mzs;
+            if (mzs == null || mzs.Length == 0)
+            {
+                wideBest = -1;
+                return -1;
+            }
+            int wideLo = spectrum.MzLowerBound(wideLower);
+            int lo;
+            if (wideLower <= lower)
+            {
+                lo = wideLo;
+                while (lo < mzs.Length && mzs[lo] < lower)
+                    lo++;
+            }
+            else
+            {
+                lo = spectrum.MzLowerBound(lower);
+            }
+            wideBest = ClosestPeakFrom(mzs, wideLo, targetMz, wideUpper);
+            return ClosestPeakFrom(mzs, lo, targetMz, upper);
+        }
+
         private static int ClosestPeakFrom(double[] mzs, int lo, double targetMz, double upper)
         {
             if (lo >= mzs.Length || mzs[lo] > upper)

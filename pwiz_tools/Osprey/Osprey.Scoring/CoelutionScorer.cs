@@ -201,17 +201,24 @@ namespace pwiz.Osprey.Scoring
                     blockEnd = scanMajorXics
                         ? prefilter.NextXicBlockEnd(blockStart, XIC_BLOCK_SIZE, XIC_BLOCK_BYTES)
                         : candidates.Count;
+                    List<XicData>[] blockCorrXics = null;
                     var blockXics = scanMajorXics
                         ? PeakDataExtractor.ExtractXicsScanMajor(candidates, blockStart, blockEnd,
-                            prefilter, windowSpectra, windowRts, config)
+                            prefilter, windowSpectra, windowRts, config, context.CorrelationConfig, out blockCorrXics)
                         : null;
                     for (int c = blockStart; c < blockEnd; c++)
                     {
                         List<XicData> precomputedXics = null;
+                        List<XicData> precomputedCorrXics = null;
                         if (blockXics != null)
                         {
                             precomputedXics = blockXics[c - blockStart];
                             blockXics[c - blockStart] = null;    // Released with the candidate's scoring
+                        }
+                        if (blockCorrXics != null)
+                        {
+                            precomputedCorrXics = blockCorrXics[c - blockStart];
+                            blockCorrXics[c - blockStart] = null;
                         }
 
                         var fdrEntry = ScoreCandidate(
@@ -221,7 +228,7 @@ namespace pwiz.Osprey.Scoring
                             ms1Spectra, ms1Calibration,
                             context,
                             ospreyContext, ospreyPeakData, corrScoring,
-                            prefilter, c, precomputedXics);
+                            prefilter, c, precomputedXics, precomputedCorrXics);
 
                         if (fdrEntry != null)
                             entries.Add(fdrEntry);
@@ -262,12 +269,14 @@ namespace pwiz.Osprey.Scoring
             CorrelationScoring corrScoring,
             WindowPrefilter prefilter,
             int prefilterIndex,
-            List<XicData> precomputedXics)
+            List<XicData> precomputedXics,
+            List<XicData> precomputedCorrXics)
         {
             if (!_extractor.TryExtract(
                     candidate, windowSpectra, windowRts, rtCalibration,
                     globalRtTolerance, rtSigma, ms1Spectra, ms1Calibration,
-                    context, ospreyPeakData, prefilter, prefilterIndex, precomputedXics, out var ext))
+                    context, ospreyPeakData, prefilter, prefilterIndex, precomputedXics, precomputedCorrXics,
+                    out var ext))
                 return null;
 
             var bestPeak = ext.BestPeak;
@@ -293,13 +302,10 @@ namespace pwiz.Osprey.Scoring
             // and the optional WriteMpDump fires after the feature vector below.
             // Crop XICs to the peak range so the polish operates only on signal,
             // not the wider RT search window. Matches Rust pipeline.rs:5198-5212.
-            // The learned pick already fit the chosen peak's crop for its library
-            // cosine (same XICs, scans and settings), so that fit is published
-            // rather than computed again; without it, the peak is fit here.
             int peakLen = bestPeak.EndIndex - bestPeak.StartIndex + 1;
             if (peakLen >= 3)
             {
-                var fit = ext.BestPeakFit ?? PeakPolishFit.Compute(xics, bestPeak.StartIndex, peakLen);
+                var fit = PeakPolishFit.Compute(xics, bestPeak.StartIndex, peakLen);
 
                 // Bisection seam: dump (frag_pos, frag_idx, scan_idx, rt,
                 // intensity) for every median-polish call. Mirrors the

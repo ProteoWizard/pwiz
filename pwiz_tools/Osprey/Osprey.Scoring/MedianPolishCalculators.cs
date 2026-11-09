@@ -55,10 +55,10 @@ namespace pwiz.Osprey.Scoring
 
     /// <summary>
     /// The scoring median-polish fit of fragment XICs cropped to one peak, with the cropped
-    /// inputs it was fit to. The learned pick fits every candidate peak this way for its library
-    /// cosine, and the scorer publishes the chosen peak's fit as the <see cref="MedianPolishByproduct"/>;
-    /// both crop the same XICs over the same scans and fit with the same settings, so the pick's
-    /// fit of the winning peak is the one the scorer publishes, and it is kept rather than refit.
+    /// inputs it was fit to: what the scorer publishes as the <see cref="MedianPolishByproduct"/>
+    /// for the chosen peak, over the search XICs and over the wider-tolerance XICs. The pick's
+    /// per-candidate library cosine runs the same fit in reused buffers
+    /// (<see cref="TukeyMedianPolish.TryLibCosineOverScans"/>) and keeps no result.
     /// </summary>
     internal sealed class PeakPolishFit
     {
