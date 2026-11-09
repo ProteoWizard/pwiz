@@ -952,8 +952,7 @@ namespace pwiz.ProteomeDatabase.Fasta
         public IEnumerable<ProteinSearchInfo> DoWebserviceLookup(IEnumerable<ProteinSearchInfo> proteinsToSearch, IProgressMonitor progressMonitor, bool singleBatch)
         {
             const int SINGLE_BATCH_SIZE = 500; // If caller has indicated that it wants to do a single batch and return for more later, stop after this many successes
-            const int ENTREZ_RATELIMIT = 0; // Each Entrez request is spaced by WaitForEntrezRequestInterval
-            const int UNIPROTKB_RATELIMIT = 10; 
+            const int UNIPROTKB_RATELIMIT = 10; // Entrez needs none here: WaitForEntrezRequestInterval spaces each of its requests
             var searchOrder = new[]
             {
                 GENINFO_TAG,
@@ -966,13 +965,6 @@ namespace pwiz.ProteomeDatabase.Fasta
                 {ENTREZ_TAG, 6},
                 {UNIPROTKB_TAG, 6} // If you feed uniprot a partial search term you get a huge response
             };
-            var ratelimit = new Dictionary<char, int>
-            {
-                {GENINFO_TAG, ENTREZ_RATELIMIT}, // Search on Entrez, but don't mix with non-GI searches
-                {ENTREZ_TAG, ENTREZ_RATELIMIT},
-                {UNIPROTKB_TAG, UNIPROTKB_RATELIMIT}
-            };
-
             progressMonitor = progressMonitor ?? new SilentProgressMonitor();
 
             // Sort out the various webservices so we can batch up
@@ -1041,7 +1033,7 @@ namespace pwiz.ProteomeDatabase.Fasta
             // CONSIDER(bspratt): Could this be simplified?
             var cancelled = false;
             var abort = false;
-            var rateLimitWaitLeft = MAX_RATE_LIMIT_DELAY; // Shared by every service this pass waits on
+            var rateLimitWait = TimeSpan.Zero; // Taken at the end of the pass, so no refusal holds up another service
             var politeStopwatch = new Stopwatch();
             var totalSuccessesThisBatch = 0;
             politeStopwatch.Start();
@@ -1055,7 +1047,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                 cancelled |= progressMonitor.IsCanceled;
                 if (cancelled)
                     break;
-                var politenessIntervalMsec = ratelimit[searchType];
+                var politenessIntervalMsec = Equals(searchType, UNIPROTKB_TAG) ? UNIPROTKB_RATELIMIT : 0;
                 var batchsizeIncreaseThreshold = 2;  // If you can do this many in a row at reduced batchsize, try increasing it
                 while (true)
                 {
@@ -1093,18 +1085,19 @@ namespace pwiz.ProteomeDatabase.Fasta
                     cancelled |= progressMonitor.IsCanceled;
                     if (cancelled)
                         break;
-                    // In normal use, a rate limit is honored even when it outlasts the wait the pass
-                    // that met it could spend, and whichever importer met it. All the waiting in one
-                    // pass together stays within MAX_RATE_LIMIT_DELAY. The access check
-                    // cannot be cancelled, so it does not wait, and the give-up seam keeps its own
+                    // In normal use, a rate limit is honored whichever importer met it, for as long as
+                    // the service asked: it is sent nothing, and its searches are left to a later
+                    // pass, while the other services are still asked. The give-up seam keeps its own
                     // bounded wait-and-retry.
-                    if (!GiveUpOnUnresponsiveWebService && !_probingWebAccess &&
-                        !WaitForRateLimitToLift(searchType, progressMonitor, ref rateLimitWaitLeft))
+                    if (!GiveUpOnUnresponsiveWebService && !_probingWebAccess)
                     {
-                        // Still refused for asking too often: send it nothing, and leave its searches
-                        // to a later pass. Another service may still be asked.
-                        cancelled |= progressMonitor.IsCanceled;
-                        break;
+                        var refusedFor = GetRateLimitRemaining(searchType);
+                        if (refusedFor > TimeSpan.Zero)
+                        {
+                            if (refusedFor > rateLimitWait)
+                                rateLimitWait = refusedFor;
+                            break;
+                        }
                     }
                     WebserviceLookupOutcome lookupResult;
                     try
@@ -1149,15 +1142,15 @@ namespace pwiz.ProteomeDatabase.Fasta
                             // background loader reschedules and the foreground "Resolving Protein
                             // Details" dialog stays cancelable - so a transient outage is not turned
                             // into a permanent gap in metadata (and no uniqueness filter is computed
-                            // on incomplete data). A rate limit is waited out first, or the pass the
-                            // loader schedules next would ask again while the limit still holds.
+                            // on incomplete data). A rate limit concerns only the service that refused,
+                            // so the other services are still asked, and it is waited out at the end
+                            // of the pass.
                             if (rateLimited)
                             {
                                 var wait = GetRateLimitWait(MAX_RATE_LIMIT_DELAY);
-                                if (wait > rateLimitWaitLeft)
-                                    wait = rateLimitWaitLeft;
-                                if (wait > TimeSpan.Zero)
-                                    _webSearchProvider.WaitForRateLimit(wait, progressMonitor);
+                                if (wait > rateLimitWait)
+                                    rateLimitWait = wait;
+                                break;
                             }
                             abort = true;
                             break;
@@ -1297,6 +1290,15 @@ namespace pwiz.ProteomeDatabase.Fasta
                 // Failure in the inner loop should end the outer loop also
                 if (abort)
                     break;
+            }
+
+            // Wait out the rate limits met in this pass, or the pass the loader schedules next would
+            // find the same services still refusing and come straight back
+            if (rateLimitWait > TimeSpan.Zero && !cancelled && !progressMonitor.IsCanceled)
+            {
+                if (rateLimitWait > MAX_RATE_LIMIT_DELAY)
+                    rateLimitWait = MAX_RATE_LIMIT_DELAY;
+                _webSearchProvider.WaitForRateLimit(rateLimitWait, progressMonitor);
             }
         }
 
@@ -1888,26 +1890,14 @@ namespace pwiz.ProteomeDatabase.Fasta
         }
 
         /// <summary>
-        /// If the service refused an earlier request, from this importer or another, for coming too
-        /// soon, waits until the time it asked for - but no longer than the wait the pass has left,
-        /// which is reduced by the time spent. Returns false if that time has still not come, or the
-        /// wait was cancelled.
+        /// How long until the service will take a request, if it refused an earlier one, from this
+        /// importer or another, for coming too soon. Zero when it will take one now.
         /// </summary>
-        private bool WaitForRateLimitToLift(char searchType, IProgressMonitor progressMonitor, ref TimeSpan waitLeft)
+        private TimeSpan GetRateLimitRemaining(char searchType)
         {
             if (!_webSearchProvider.IsPolite)
-                return true;
-            var service = GetRateLimitedService(searchType);
-            var remaining = _webSearchProvider.RateLimits.GetRemaining(service);
-            if (remaining <= TimeSpan.Zero)
-                return true;
-            var wait = remaining < waitLeft ? remaining : waitLeft;
-            if (wait > TimeSpan.Zero)
-            {
-                _webSearchProvider.WaitForRateLimit(wait, progressMonitor);
-                waitLeft -= wait;
-            }
-            return !progressMonitor.IsCanceled && _webSearchProvider.RateLimits.GetRemaining(service) <= TimeSpan.Zero;
+                return TimeSpan.Zero;
+            return _webSearchProvider.RateLimits.GetRemaining(GetRateLimitedService(searchType));
         }
 
         private static WebSearchFailureReason GetUnresponsiveReason(WebserviceLookupOutcome outcome)

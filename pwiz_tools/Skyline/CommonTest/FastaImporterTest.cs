@@ -1233,6 +1233,7 @@ namespace CommonTest
             RunRateLimitedLookup(longRetryAfter, giveUpOnUnresponsiveWebService: true, out _, out var testWaits);
             Assert.AreEqual(WebEnabledFastaImporter.MAX_TEST_RATE_LIMIT_DELAY, testWaits.Single());
             TestRateLimitOutlastsPass(longRetryAfter);
+            TestRateLimitIsPerService();
 
             // Retry-After of zero (or a time already past) still waits, or the next pass asks again at once
             RunRateLimitedLookup(TimeSpan.Zero, giveUpOnUnresponsiveWebService: false, out _, out var zeroWaits);
@@ -1306,20 +1307,41 @@ namespace CommonTest
             // In normal use each importer has its own provider, so the limit is shared through them
             Assert.AreSame(new WebEnabledFastaImporter.WebSearchProvider().RateLimits,
                 new WebEnabledFastaImporter.WebSearchProvider().RateLimits);
-
-            TestRateLimitIsPerService();
         }
 
         /// <summary>
-        /// A rate limit on Entrez must not hold up searches that go to UniProt, and the one-time
-        /// check for internet access must not ask a service that is refusing requests.
+        /// A rate limit on Entrez must not hold up searches that go to UniProt - neither one met in an
+        /// earlier pass nor one met in this pass - and the one-time check for internet access must not
+        /// ask a service that is refusing requests.
         /// </summary>
         private static void TestRateLimitIsPerService()
         {
             var retryAfter = TimeSpan.FromMinutes(5);
             using var helper = new HttpClientTestHelper(CreateTooManyRequestsException(retryAfter));
+
+            // Entrez already refusing: it is not asked, and UniProt is asked before any waiting
             var provider = new RateLimitRecordingWebSearchProvider();
             provider.RateLimits.Close(WebEnabledFastaImporter.ENTREZ_TAG, retryAfter);
+            var proteins = RunEntrezAndUniprotLookup(provider);
+            Assert.AreEqual(1, provider.RequestCount, "UniProt must still be searched while Entrez is refusing requests");
+            Assert.IsTrue(proteins.All(p => p.GetProteinMetadata().NeedsSearch()));
+            AssertWaitedOnceAfterRequests(provider, 1);
+
+            // UniProt is now refusing too. Its refusal shows it is reachable, without asking again.
+            var probe = new WebEnabledFastaImporter(provider);
+            Assert.IsTrue(probe.HasWebAccess(), "A service refusing requests is still a reachable one");
+            Assert.AreEqual(1, provider.RequestCount, "The access check must not ask a service that is refusing requests");
+
+            // Entrez refuses in this pass: UniProt is still asked, and the waiting comes after both
+            provider = new RateLimitRecordingWebSearchProvider();
+            proteins = RunEntrezAndUniprotLookup(provider);
+            Assert.AreEqual(2, provider.RequestCount, "An Entrez refusal in this pass must not keep UniProt from being searched");
+            Assert.IsTrue(proteins.All(p => p.GetProteinMetadata().NeedsSearch()));
+            AssertWaitedOnceAfterRequests(provider, 2);
+        }
+
+        private static IList<ProteinSearchInfo> RunEntrezAndUniprotLookup(WebEnabledFastaImporter.WebSearchProvider provider)
+        {
             var proteins = new[]
             {
                 new ProteinSearchInfo(new DbProteinName(null, new ProteinMetadata(@"XP_915497", string.Empty, null, null, null, null,
@@ -1330,13 +1352,15 @@ namespace CommonTest
             var importer = new WebEnabledFastaImporter(provider);
             // The lookup yields lazily, so enumerate it to make it run
             _ = importer.DoWebserviceLookup(proteins, new SilentProgressMonitor(), false).ToList();
-            Assert.AreEqual(1, provider.RequestCount, "UniProt must still be searched while Entrez is refusing requests");
-            Assert.IsTrue(proteins[0].GetProteinMetadata().NeedsSearch());
+            return proteins;
+        }
 
-            // UniProt is now refusing too. Its refusal shows it is reachable, without asking again.
-            var probe = new WebEnabledFastaImporter(provider);
-            Assert.IsTrue(probe.HasWebAccess(), "A service refusing requests is still a reachable one");
-            Assert.AreEqual(1, provider.RequestCount, "The access check must not ask a service that is refusing requests");
+        private static void AssertWaitedOnceAfterRequests(RateLimitRecordingWebSearchProvider provider, int requestCount)
+        {
+            Assert.AreEqual(1, provider.Waits.Count, "A pass waits on rate limits once, however many services refused");
+            Assert.AreEqual(WebEnabledFastaImporter.MAX_RATE_LIMIT_DELAY, provider.Waits[0]);
+            Assert.AreEqual(requestCount, provider.RequestCountsAtWaits[0],
+                "Waiting on one service's rate limit must not hold up the requests to another");
         }
 
         /// <summary>
@@ -1953,6 +1977,7 @@ namespace CommonTest
         private class RateLimitRecordingWebSearchProvider : QuickFailWebSearchProvider
         {
             public List<TimeSpan> Waits { get; } = new List<TimeSpan>();
+            public List<int> RequestCountsAtWaits { get; } = new List<int>();
             public int RequestCount { get; private set; }
 
             public override Stream GetWebResponseStream(string url, IProgressMonitor progressMonitor, int timeout)
@@ -1961,9 +1986,17 @@ namespace CommonTest
                 return base.GetWebResponseStream(url, progressMonitor, timeout);
             }
 
+            // Entrez requests come this way
+            public override System.Xml.XmlTextReader GetXmlTextReader(string url, IProgressMonitor progressMonitor, int timeout)
+            {
+                RequestCount++;
+                return base.GetXmlTextReader(url, progressMonitor, timeout);
+            }
+
             public override void WaitForRateLimit(TimeSpan delay, IProgressMonitor progressMonitor)
             {
                 Waits.Add(delay);
+                RequestCountsAtWaits.Add(RequestCount);
             }
         }
 
