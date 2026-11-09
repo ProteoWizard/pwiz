@@ -28,9 +28,8 @@ using pwiz.Osprey.Core;
 namespace pwiz.Osprey.FDR
 {
     /// <summary>
-    /// The five per-row Percolator q-value outputs the score pass computes, in the
-    /// exact field order the SVM write-back produces them (issue #4355 step (b),
-    /// FdrProjection struct-shrink S0). These are the outputs the lean
+    /// The per-row Percolator q-value and PEP outputs the score pass computes (issue #4355
+    /// step (b), FdrProjection struct-shrink S0). These are the outputs the lean
     /// <see cref="FdrProjection"/> no longer stores: the score pass hands each row's
     /// values to a per-pass <see cref="IFdrOutputSink"/> instead of overlaying them
     /// onto the struct. <c>ExperimentProteinQvalue</c> is NOT here -- it is produced by
@@ -43,16 +42,20 @@ namespace pwiz.Osprey.FDR
         public readonly double ExperimentPrecursorQvalue;
         public readonly double ExperimentPeptideQvalue;
         public readonly double Pep;
+        /// <summary>The experiment-wide peptide-level PEP; see <c>FdrEntry.ExperimentPeptidePep</c>.</summary>
+        public readonly double ExperimentPeptidePep;
 
         public FdrQValues(
             double runPrecursorQvalue, double runPeptideQvalue,
-            double experimentPrecursorQvalue, double experimentPeptideQvalue, double pep)
+            double experimentPrecursorQvalue, double experimentPeptideQvalue, double pep,
+            double experimentPeptidePep)
         {
             RunPrecursorQvalue = runPrecursorQvalue;
             RunPeptideQvalue = runPeptideQvalue;
             ExperimentPrecursorQvalue = experimentPrecursorQvalue;
             ExperimentPeptideQvalue = experimentPeptideQvalue;
             Pep = pep;
+            ExperimentPeptidePep = experimentPeptidePep;
         }
 
         /// <summary>
@@ -117,11 +120,13 @@ namespace pwiz.Osprey.FDR
         private readonly double[] _experimentPrecursorQvalues;
         private readonly double[] _experimentPeptideQvalues;
         private readonly double[] _peps;
+        private readonly double[] _peptidePeps;
 
         public FdrFileRows(IReadOnlyList<uint> entryIds, IReadOnlyList<bool> isDecoys,
             IReadOnlyList<byte> charges, IReadOnlyList<string> peptides, double[] scores,
             double[] runPrecursorQvalues, double[] runPeptideQvalues,
-            double[] experimentPrecursorQvalues, double[] experimentPeptideQvalues, double[] peps)
+            double[] experimentPrecursorQvalues, double[] experimentPeptideQvalues, double[] peps,
+            double[] peptidePeps)
         {
             EntryIds = entryIds;
             IsDecoys = isDecoys;
@@ -133,6 +138,7 @@ namespace pwiz.Osprey.FDR
             _experimentPrecursorQvalues = experimentPrecursorQvalues;
             _experimentPeptideQvalues = experimentPeptideQvalues;
             _peps = peps;
+            _peptidePeps = peptidePeps;
         }
 
         public int Count => Scores.Length;
@@ -146,7 +152,8 @@ namespace pwiz.Osprey.FDR
         public FdrQValues QAt(int row)
         {
             return new FdrQValues(_runPrecursorQvalues[row], _runPeptideQvalues[row],
-                _experimentPrecursorQvalues[row], _experimentPeptideQvalues[row], _peps[row]);
+                _experimentPrecursorQvalues[row], _experimentPeptideQvalues[row], _peps[row],
+                _peptidePeps[row]);
         }
     }
 
@@ -220,7 +227,7 @@ namespace pwiz.Osprey.FDR
         /// experiment competitions ranked the entry on (sidecar v4, issue #4522).
         /// </summary>
         void AcceptExperimentEntry(uint entryId, string peptide, double experimentAggregateScore,
-            double experimentPrecursorQvalue, double experimentPeptideQvalue, double pep);
+            double experimentPrecursorQvalue, double experimentPeptideQvalue, double pep, double peptidePep);
 
         /// <summary>
         /// True when the sink needs every row with its experiment-scope values joined
