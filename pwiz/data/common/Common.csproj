@@ -12,6 +12,8 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Common.Tests" />
+    <!-- MzmlCvOnlineUpdateTests points the online CV update at a fake server. -->
+    <InternalsVisibleTo Include="MsData.Tests" />
   </ItemGroup>
 
   <ItemGroup>
