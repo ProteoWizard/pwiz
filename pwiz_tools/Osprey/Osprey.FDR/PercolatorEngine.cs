@@ -2035,19 +2035,29 @@ namespace pwiz.Osprey.FDR
             for (int f = 0; f < fileNames.Count; f++)
                 rowCountByFile[fileNames[f]] = rowCounts[f];
             var wall = Stopwatch.StartNew();
-            OrderedFileLanes.For(files.Count, fileLanes, i =>
+            // Each file scores all of its rows with round 1's models (~15 s a file on SEA-AD), so
+            // without progress the step is silent for minutes at cohort scale.
+            int filesDone = 0;
+            ProgressReporter.Run(CountText.Format(files.Count,
+                    OspreyFDRResources.PercolatorEngine_AppendProteinBestToRows_Computing_the_protein_best_column_from_1_file,
+                    OspreyFDRResources.PercolatorEngine_AppendProteinBestToRows_Computing_the_protein_best_column_from__0__files),
+                files.Count, progress =>
             {
-                string fileName = files[i].Key;
-                RowBuffer rows = ReadFileRows(streamFileRows, fileName, StubColumns.Core, rowCountByFile[fileName]);
-                double[] values = column.ValuesFor(rows, loadFileFeatures(fileName));
-                foreach (int k in files[i].Value)
+                OrderedFileLanes.For(files.Count, fileLanes, i =>
                 {
-                    var entry = round2Rows[k];
-                    var extended = new double[entry.Features.Length + 1];
-                    Array.Copy(entry.Features, extended, entry.Features.Length);
-                    extended[entry.Features.Length] = values[entry.ParquetIndex];
-                    entry.Features = extended;
-                }
+                    string fileName = files[i].Key;
+                    RowBuffer rows = ReadFileRows(streamFileRows, fileName, StubColumns.Core, rowCountByFile[fileName]);
+                    double[] values = column.ValuesFor(rows, loadFileFeatures(fileName));
+                    foreach (int k in files[i].Value)
+                    {
+                        var entry = round2Rows[k];
+                        var extended = new double[entry.Features.Length + 1];
+                        Array.Copy(entry.Features, extended, entry.Features.Length);
+                        extended[entry.Features.Length] = values[entry.ParquetIndex];
+                        entry.Features = extended;
+                    }
+                    progress.Report(Interlocked.Increment(ref filesDone));
+                });
             });
             log.LogInfo(LogTag.PATH, @"{0} protein-best column for {1} round-2 rows from {2} file(s): {3:F1}s",
                 passLabel, round2Rows.Count, files.Count, wall.Elapsed.TotalSeconds);
