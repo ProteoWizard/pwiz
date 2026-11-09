@@ -270,11 +270,18 @@ namespace pwiz.Osprey.Scoring
             // scorer invokes it null-conditionally, so this is a no-op then).
             var coelutionScorer = new CoelutionScorer(_diagnostics, _recordedFeatures);
 
+            // Hand windows out largest first, one at a time. A window is the unit of
+            // parallel work, and Astral's busiest windows carry about twice the mean
+            // candidate count, so in m/z order the last few large windows ran alone
+            // while the other threads idled. Results still land by window index.
+            var scoringOrder = LargestWindowsFirst(windowsToScore, fullLibrary);
+            var swScoring = Stopwatch.StartNew();
+
             ProgressReporter.Run(
                 passLabel ?? OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Scoring_isolation_windows,
                 windowsToScore.Count, progress =>
             {
-                Parallel.For(0, windowsToScore.Count, new ParallelOptions
+                Parallel.ForEach(Partitioner.Create(scoringOrder, EnumerablePartitionerOptions.NoBuffering), new ParallelOptions
                 {
                     MaxDegreeOfParallelism = config.NThreads
                 },
@@ -316,6 +323,7 @@ namespace pwiz.Osprey.Scoring
                     }
                 });
             }, passLabel == null ? string.Empty : @"  ", 2.0);
+            swScoring.Stop();
 
             // Flatten in deterministic window-index order.
             for (int wIdx = 0; wIdx < windowResults.Length; wIdx++)
@@ -326,7 +334,7 @@ namespace pwiz.Osprey.Scoring
 
 
             // Summarize per-window timings.
-            LogWindowTimingSummary(windowTimings);
+            LogWindowTimingSummary(windowTimings, swScoring.Elapsed.TotalSeconds, config.NThreads);
 
             return allEntries;
         }
@@ -659,6 +667,45 @@ namespace pwiz.Osprey.Scoring
 
 
         /// <summary>
+        /// Window indices ordered by candidate count, largest first, ties by index. The count is
+        /// the one <see cref="CoelutionScorer.ScoreWindow"/> scores: entries with fragments whose
+        /// precursor m/z the window contains. A stable sort keeps the order the same run to run.
+        /// </summary>
+        private static int[] LargestWindowsFirst(List<IsolationWindow> windows, List<LibraryEntry> library)
+        {
+            var precursorMzs = new List<double>(library.Count);
+            foreach (var entry in library)
+            {
+                if (entry.Fragments != null && entry.Fragments.Count > 0)
+                    precursorMzs.Add(entry.PrecursorMz);
+            }
+            precursorMzs.Sort(); // Array.Sort OK: primitive values counted by range, ties are indistinguishable
+
+            var counts = new int[windows.Count];
+            for (int i = 0; i < windows.Count; i++)
+                counts[i] = FirstAtOrAbove(precursorMzs, windows[i].UpperBound) - FirstAtOrAbove(precursorMzs, windows[i].LowerBound);
+            return Enumerable.Range(0, windows.Count).OrderByDescending(i => counts[i]).ToArray();
+        }
+
+        /// <summary>
+        /// Index of the first value in ascending <paramref name="sorted"/> that is at least
+        /// <paramref name="value"/>, or its count when none is.
+        /// </summary>
+        private static int FirstAtOrAbove(List<double> sorted, double value)
+        {
+            int lo = 0, hi = sorted.Count;
+            while (lo < hi)
+            {
+                int mid = lo + (hi - lo) / 2;
+                if (sorted[mid] < value)
+                    lo = mid + 1;
+                else
+                    hi = mid;
+            }
+            return lo;
+        }
+
+        /// <summary>
         /// Per-window timing record for diagnostic summarization.
         /// </summary>
         private class WindowTiming
@@ -670,9 +717,11 @@ namespace pwiz.Osprey.Scoring
 
 
         /// <summary>
-        /// Log min/median/max per-window scoring times and the slowest window's candidate count.
+        /// Log min/median/max per-window scoring times and the slowest window's candidate count,
+        /// then how busy the threads were: the summed window time over the wall time the
+        /// threads had. What is missing from 100% is the tail where too few windows remain.
         /// </summary>
-        private void LogWindowTimingSummary(ConcurrentBag<WindowTiming> timings)
+        private void LogWindowTimingSummary(ConcurrentBag<WindowTiming> timings, double wallSeconds, int threads)
         {
             if (timings == null || timings.Count == 0)
                 return;
@@ -685,6 +734,13 @@ namespace pwiz.Osprey.Scoring
             var slowest = sorted[n - 1];
             _log.LogInfo(LogTag.TIMING, @"Per-window: min={0:F2}s, median={1:F2}s, max={2:F2}s (slowest m/z={3:F1} had {4} candidates)",
                 minS, medS, maxS, slowest.CenterMz, slowest.CandidateCount);
+            double busySeconds = sorted.Sum(t => t.Seconds);
+            int lanes = Math.Max(1, Math.Min(threads, n));
+            if (wallSeconds > 0)
+            {
+                _log.LogInfo(LogTag.TIMING, @"Window threads busy: {0:F0}s of {1:F1}s x {2} ({3:P0})",
+                    busySeconds, wallSeconds, lanes, busySeconds / (wallSeconds * lanes));
+            }
         }
     }
 }

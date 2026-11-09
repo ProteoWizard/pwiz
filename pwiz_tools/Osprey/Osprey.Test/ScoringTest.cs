@@ -1896,14 +1896,21 @@ namespace pwiz.Osprey.Test
 
             // The passing candidates' scan-major XICs equal the candidate-major ones bitwise,
             // whatever the block size, by candidate count or by byte budget. A 1-byte budget
-            // gives every passing candidate a block of its own; 20,000 bytes is about a dozen.
-            foreach (int blockSize in new[] { 1, 37, 128, candidates.Count })
-                AssertScanMajorXicsMatch(candidates, prefilter, spectra, rts, config, blockSize, long.MaxValue);
-            foreach (long blockBytes in new[] { 1L, 20000L })
+            // gives every passing candidate a block of its own; 20,000 bytes is about a dozen. The
+            // wider-tolerance XICs the same pass extracts for the correlation features equal the
+            // candidate-major ones at that tolerance in the same way.
+            var corrConfig = ScoringPipeline.CorrelationConfigFor(config, 25);
+            Assert.IsNotNull(corrConfig);
+            foreach (var corr in new[] { null, corrConfig })
             {
-                int nBlocks = AssertScanMajorXicsMatch(candidates, prefilter, spectra, rts, config,
-                    candidates.Count, blockBytes);
-                Assert.IsTrue(nBlocks > counts[PrefilterVerdict.passed] / 20, nBlocks.ToString());
+                foreach (int blockSize in new[] { 1, 37, 128, candidates.Count })
+                    AssertScanMajorXicsMatch(candidates, prefilter, spectra, rts, config, corr, blockSize, long.MaxValue);
+                foreach (long blockBytes in new[] { 1L, 20000L })
+                {
+                    int nBlocks = AssertScanMajorXicsMatch(candidates, prefilter, spectra, rts, config, corr,
+                        candidates.Count, blockBytes);
+                    Assert.IsTrue(nBlocks > counts[PrefilterVerdict.passed] / 20, nBlocks.ToString());
+                }
             }
 
             // With the prefilter off, or a window too short to score, there is nothing to compute.
@@ -1919,10 +1926,13 @@ namespace pwiz.Osprey.Test
         /// gives for <paramref name="maxCandidates"/> and <paramref name="maxBytes"/>, check that
         /// each block keeps to the budget or holds one candidate, and check every passing
         /// candidate's XICs against TopFragmentExtractor.ExtractFragmentXics over its scan range,
-        /// bit for bit, and that no other candidate gets any. Returns the number of blocks.
+        /// bit for bit, and that no other candidate gets any. With a <paramref name="corrConfig"/>,
+        /// the same for the wider-tolerance XICs at that configuration; without one, none.
+        /// Returns the number of blocks.
         /// </summary>
         private static int AssertScanMajorXicsMatch(List<LibraryEntry> candidates, WindowPrefilter prefilter,
-            List<Spectrum> spectra, double[] rts, OspreyConfig config, int maxCandidates, long maxBytes)
+            List<Spectrum> spectra, double[] rts, OspreyConfig config, OspreyConfig corrConfig,
+            int maxCandidates, long maxBytes)
         {
             var verdicts = prefilter.Verdicts;
             var startScans = prefilter.StartScans;
@@ -1936,8 +1946,12 @@ namespace pwiz.Osprey.Test
                 Assert.IsTrue(blockEnd > blockStart && blockEnd - blockStart <= maxCandidates);
                 nBlocks++;
                 var blockXics = PeakDataExtractor.ExtractXicsScanMajor(candidates, blockStart, blockEnd, prefilter,
-                    spectra, rts, config);
+                    spectra, rts, config, corrConfig, out var blockCorrXics);
                 Assert.AreEqual(blockEnd - blockStart, blockXics.Length);
+                if (corrConfig == null)
+                    Assert.IsNull(blockCorrXics);
+                else
+                    AssertXicsMatchCandidateMajor(candidates, prefilter, spectra, rts, corrConfig, blockStart, blockCorrXics);
                 long blockBytes = 0;
                 for (int c = blockStart; c < blockEnd; c++)
                 {
@@ -1969,6 +1983,36 @@ namespace pwiz.Osprey.Test
             }
             Assert.IsTrue(nonZero > 1000, nonZero.ToString());
             return nBlocks;
+        }
+
+        /// <summary>
+        /// Check one block's scan-major XICs against TopFragmentExtractor.ExtractFragmentXics at
+        /// <paramref name="config"/> over each passing candidate's scan range, bit for bit, and
+        /// that no other candidate has any.
+        /// </summary>
+        private static void AssertXicsMatchCandidateMajor(List<LibraryEntry> candidates, WindowPrefilter prefilter,
+            List<Spectrum> spectra, double[] rts, OspreyConfig config, int blockStart, List<XicData>[] blockXics)
+        {
+            for (int b = 0; b < blockXics.Length; b++)
+            {
+                int c = blockStart + b;
+                var actual = blockXics[b];
+                if (prefilter.Verdicts[c] != PrefilterVerdict.passed)
+                {
+                    Assert.IsNull(actual, string.Format(@"candidate {0}", c));
+                    continue;
+                }
+                Assert.IsNotNull(actual);
+                var expected = TopFragmentExtractor.ExtractFragmentXics(candidates[c], spectra, rts,
+                    prefilter.StartScans[c], prefilter.EndScans[c], config);
+                Assert.AreEqual(expected.Count, actual.Count);
+                for (int f = 0; f < expected.Count; f++)
+                {
+                    Assert.AreEqual(expected[f].FragmentIndex, actual[f].FragmentIndex);
+                    AssertBitwiseEqual(expected[f].RetentionTimes, actual[f].RetentionTimes, c, f);
+                    AssertBitwiseEqual(expected[f].Intensities, actual[f].Intensities, c, f);
+                }
+            }
         }
 
         private static void AssertBitwiseEqual(double[] expected, double[] actual, int candidate, int fragment)
