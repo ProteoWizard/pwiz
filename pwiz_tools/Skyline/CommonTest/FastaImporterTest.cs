@@ -1299,6 +1299,45 @@ namespace CommonTest
             Assert.IsTrue(provider.Waits.All(wait => wait == WebEnabledFastaImporter.MAX_RATE_LIMIT_DELAY));
             Assert.AreEqual(0, completed.Count);
             Assert.IsTrue(proteins.All(p => p.GetProteinMetadata().NeedsSearch()));
+
+            // Honored as asked, up to a limit: a mistaken header must not end lookups for the session
+            Assert.IsTrue(provider.RateLimits.GetRemaining(WebEnabledFastaImporter.UNIPROTKB_TAG) <= WebEnabledFastaImporter.MAX_RATE_LIMIT_HONORED,
+                $"A Retry-After of {retryAfter} kept the service closed for longer than {WebEnabledFastaImporter.MAX_RATE_LIMIT_HONORED}");
+
+            // In normal use each importer has its own provider, so the limit is shared through them
+            Assert.AreSame(new WebEnabledFastaImporter.WebSearchProvider().RateLimits,
+                new WebEnabledFastaImporter.WebSearchProvider().RateLimits);
+
+            TestRateLimitIsPerService();
+        }
+
+        /// <summary>
+        /// A rate limit on Entrez must not hold up searches that go to UniProt, and the one-time
+        /// check for internet access must not ask a service that is refusing requests.
+        /// </summary>
+        private static void TestRateLimitIsPerService()
+        {
+            var retryAfter = TimeSpan.FromMinutes(5);
+            using var helper = new HttpClientTestHelper(CreateTooManyRequestsException(retryAfter));
+            var provider = new RateLimitRecordingWebSearchProvider();
+            provider.RateLimits.Close(WebEnabledFastaImporter.ENTREZ_TAG, retryAfter);
+            var proteins = new[]
+            {
+                new ProteinSearchInfo(new DbProteinName(null, new ProteinMetadata(@"XP_915497", string.Empty, null, null, null, null,
+                    WebEnabledFastaImporter.ENTREZ_TAG + @"XP_915497")), 100),
+                new ProteinSearchInfo(new DbProteinName(null, new ProteinMetadata(@"Q96K55", string.Empty, null, null, null, null,
+                    WebEnabledFastaImporter.UNIPROTKB_TAG + @"Q96K55")), 200)
+            };
+            var importer = new WebEnabledFastaImporter(provider);
+            // The lookup yields lazily, so enumerate it to make it run
+            _ = importer.DoWebserviceLookup(proteins, new SilentProgressMonitor(), false).ToList();
+            Assert.AreEqual(1, provider.RequestCount, "UniProt must still be searched while Entrez is refusing requests");
+            Assert.IsTrue(proteins[0].GetProteinMetadata().NeedsSearch());
+
+            // UniProt is now refusing too. Its refusal shows it is reachable, without asking again.
+            var probe = new WebEnabledFastaImporter(provider);
+            Assert.IsTrue(probe.HasWebAccess(), "A service refusing requests is still a reachable one");
+            Assert.AreEqual(1, provider.RequestCount, "The access check must not ask a service that is refusing requests");
         }
 
         /// <summary>
