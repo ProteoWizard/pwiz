@@ -111,6 +111,13 @@ namespace pwiz.Osprey.Core
         public string EntrapmentFastaPath { get; set; }
 
         /// <summary>
+        /// Entrapment peptides placed on random target proteins, per target
+        /// (<c>--entrapment-in-targets</c>), added to <see cref="EntrapmentRatio"/>, or null for
+        /// none. The two together are at most 1.
+        /// </summary>
+        public double? EntrapmentInTargetsRatio { get; set; }
+
+        /// <summary>
         /// The library phase this run is (<c>--task</c> naming one of <see cref="PHASES"/>), which it
         /// runs alone, or null for a run that is not one of them.
         /// </summary>
