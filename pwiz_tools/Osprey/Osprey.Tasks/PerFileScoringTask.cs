@@ -2009,21 +2009,30 @@ namespace pwiz.Osprey.Tasks
         {
             // Run coelution scoring across all isolation windows from the caller's
             // window-spectra source (streaming per window, or the resident fallback).
-            // Stage-4 scores a file once; then only DeduplicateDoubleCounting touches
+            // Stage-4 scores a file once; then only the double-counting dedup touches
             // the spectra, and it needs only the MS2 RTs the provider carries.
+            // The dedup runs inside each window's scoring task when its result depends on
+            // nothing outside the window (DoubleCountingDedup.IsWindowLocal: no scorable entry
+            // falls in two windows), and otherwise as a pass over the whole file after scoring.
+            var pipeline = ScoringTaskShared.Pipeline(ctx);
+            var doubleCountingDedup = new DoubleCountingDedup(fullLibrary,
+                spectraProvider.Ms2RetentionTimes, isolationWindows);
+            var windowDedup = doubleCountingDedup.IsWindowLocal ? doubleCountingDedup : null;
             var swScoring = Stopwatch.StartNew();
-            var scoredEntries = ScoringTaskShared.Pipeline(ctx).RunCoelutionScoring(
+            var scoredEntries = pipeline.RunCoelutionScoring(
                 fullLibrary, spectraProvider, ms1Spectra,
                 isolationWindows, rtCalibration,
                 ms2Cal, ms1Cal,
-                context);
+                context, windowDedup: windowDedup);
             swScoring.Stop();
+            // The rows scored, including those a per-window dedup already removed.
+            int nRowsScored = scoredEntries.Count + doubleCountingDedup.RemovedCount;
             double scoringSeconds = swScoring.Elapsed.TotalSeconds;
             double ratePerSec = scoringSeconds > 0.001
-                ? scoredEntries.Count / scoringSeconds
+                ? nRowsScored / scoringSeconds
                 : 0.0;
             ctx.LogInfo(LogTag.TIMING, @"Coelution scoring: {0:F1}s ({1} candidates, {2:F0} cand/s)",
-                scoringSeconds, scoredEntries.Count, ratePerSec);
+                scoringSeconds, nRowsScored, ratePerSec);
 
             // Distinct candidates, not rows: with overlapping isolation windows ScoreWindow scores
             // a candidate once per window, and the duplicates are only removed below. Counting rows
@@ -2039,9 +2048,14 @@ namespace pwiz.Osprey.Tasks
                 else
                     nScoredTargets++;
             }
+            // Rows a per-window dedup removed are distinct from every kept row: no scorable
+            // entry falls in two windows, so no candidate was scored twice.
+            int nDistinctScored = scoredIds.Count + doubleCountingDedup.RemovedCount;
+            nScoredTargets += doubleCountingDedup.RemovedTargets;
+            nScoredDecoys += doubleCountingDedup.RemovedCount - doubleCountingDedup.RemovedTargets;
             ctx.LogInfo(string.Format(
                 OspreyTasksResources.PerFileScoringTask_ScoreAndDeduplicate_Scored_peaks_for__0__of__1__precursor_candidates___2__targets___3__decoys__in__4_,
-                scoredIds.Count,
+                nDistinctScored,
                 fullLibrary.Count,
                 nScoredTargets,
                 nScoredDecoys,
@@ -2051,9 +2065,22 @@ namespace pwiz.Osprey.Tasks
             // onto the same chromatographic feature within an isolation
             // window). Mirrors osprey/crates/osprey/src/pipeline.rs at the
             // same call site, between scoring and pair-deduplication.
-            scoredEntries = ScoringTaskShared.Pipeline(ctx).DeduplicateDoubleCounting(
-                scoredEntries, fullLibrary, spectraProvider.Ms2RetentionTimes, ms2Cal,
-                isolationWindows, config);
+            var swDedup = Stopwatch.StartNew();
+            if (windowDedup != null)
+            {
+                pipeline.LogDoubleCountingRemoved(windowDedup.RemovedCount, windowDedup.RemovedTargets,
+                    scoredEntries.Count);
+            }
+            else
+            {
+                scoredEntries = pipeline.DeduplicateDoubleCounting(
+                    scoredEntries, doubleCountingDedup, ms2Cal, isolationWindows, config);
+            }
+            ctx.LogInfo(LogTag.TIMING, @"Double-counting dedup: {0:F1}s ({1})",
+                swDedup.Elapsed.TotalSeconds, windowDedup != null
+                    ? @"per window, during scoring"
+                    : string.Format(@"whole file: {0} library entries in two windows, ids unique {1}",
+                        doubleCountingDedup.MultiWindowEntries, doubleCountingDedup.LibraryIdsUnique));
             nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
             nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
             ctx.LogInfo(LogTag.COUNT, @"Coelution scored [{0}]: {1} peaks ({2} targets, {3} decoys)",

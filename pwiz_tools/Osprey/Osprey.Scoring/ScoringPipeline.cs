@@ -80,6 +80,11 @@ namespace pwiz.Osprey.Scoring
         ///
         /// <para><paramref name="passLabel"/> is the whole progress heading of a labeled pass (a
         /// resource, never an English fragment to be completed here), and indents its block.</para>
+        ///
+        /// <para>A non-null <paramref name="windowDedup"/> runs the double-counting dedup on each
+        /// window's rows as that window finishes scoring (valid only when
+        /// <see cref="DoubleCountingDedup.IsWindowLocal"/>), so the returned rows are already
+        /// deduplicated and no pass over the whole file follows.</para>
         /// </summary>
         public List<FdrEntry> RunCoelutionScoring(
             List<LibraryEntry> fullLibrary,
@@ -91,7 +96,8 @@ namespace pwiz.Osprey.Scoring
             MzCalibrationResult ms1Calibration,
             ScoringContext context,
             string passLabel = null,
-            bool logSearchSettings = true)
+            bool logSearchSettings = true,
+            DoubleCountingDedup windowDedup = null)
         {
             // A labeled pass runs inside a per-file block that is indented under its heading.
             string settingsIndent = passLabel == null ? string.Empty : @"  ";
@@ -226,6 +232,9 @@ namespace pwiz.Osprey.Scoring
             }
 
             context.CorrelationConfig = CorrelationConfigFor(config, OspreyEnvironment.CorrFragmentTolerancePpm);
+            // After the search tolerance replaced config.FragmentTolerance above: the dedup has
+            // always matched fragments with the tolerance derived from that replaced value.
+            windowDedup?.SetFragmentTolerance(ms2Calibration, config);
 
             // Per-entry search XIC diagnostic: log the intent once at start.
             // The per-entry dump check happens inline in ScoreCandidate via
@@ -314,6 +323,8 @@ namespace pwiz.Osprey.Scoring
                         CandidateCount = windowEntries.Count
                     });
 
+                    if (windowDedup != null)
+                        windowEntries = windowDedup.DeduplicateWindow(windowEntries);
                     windowResults[wIdx] = windowEntries;
 
                     lock (lockObj)
@@ -372,12 +383,14 @@ namespace pwiz.Osprey.Scoring
         /// entry with the higher coelution_sum survives. Mirrors
         /// osprey/crates/osprey/src/pipeline.rs::deduplicate_double_counting
         /// so the same precursor cannot be counted twice from a shared
-        /// chromatographic feature.
+        /// chromatographic feature. <paramref name="dedup"/> holds the library
+        /// lookup, RT neighborhood and pair test; when it is
+        /// <see cref="DoubleCountingDedup.IsWindowLocal"/>, scoring can run this per
+        /// window instead (see <see cref="RunCoelutionScoring"/>).
         /// </summary>
         public List<FdrEntry> DeduplicateDoubleCounting(
             List<FdrEntry> entries,
-            List<LibraryEntry> library,
-            IReadOnlyList<double> ms2Rts,
+            DoubleCountingDedup dedup,
             MzCalibrationResult ms2Cal,
             List<IsolationWindow> isolationWindows,
             OspreyConfig config)
@@ -386,31 +399,21 @@ namespace pwiz.Osprey.Scoring
             if (originalCount == 0 || isolationWindows == null || isolationWindows.Count == 0)
                 return entries;
 
-            DoubleCountingTolerance(ms2Cal, config, out double fragTolValue, out ToleranceUnit fragTolUnit);
-            double rtNeighborhood = DoubleCountingRtNeighborhood(ms2Rts);
-
-            // Library lookup by EntryId (Id may not be array-index aligned).
-            var libIdMap = new Dictionary<uint, int>(library.Count);
-            for (int i = 0; i < library.Count; i++) libIdMap[library[i].Id] = i;
+            dedup.SetFragmentTolerance(ms2Cal, config);
 
             // Resolve each entry's precursor m/z from the library by
             // EntryId. FdrEntry is a lightweight stub (no PrecursorMz);
             // the library knows. Entries whose EntryId is missing from
             // the library are excluded from dedup (and from the
-            // partition below) — they're left untouched downstream.
+            // partition below) - they're left untouched downstream.
             int n = entries.Count;
             double[] entryMz = new double[n];
             for (int i = 0; i < n; i++)
-            {
-                int libIdx;
-                entryMz[i] = libIdMap.TryGetValue(entries[i].EntryId, out libIdx)
-                    ? library[libIdx].PrecursorMz
-                    : double.NaN;
-            }
+                entryMz[i] = dedup.PrecursorMz(entries[i].EntryId);
 
             // Per-window entry indices via sorted-mz partition. Exclusive
             // upper bound [lower, upper) makes every entry belong to at
-            // most one window — no cross-window write conflicts.
+            // most one window when the windows do not overlap.
             int[] mzSortedIdx = new int[n];
             for (int i = 0; i < n; i++) mzSortedIdx[i] = i;
             Array.Sort(mzSortedIdx, (a, b) => entryMz[a].CompareTo(entryMz[b])); // Array.Sort OK: tied entryMz partition into the same window; per-window order is then re-derived inside the window loop. TODO(parity): audit whether stable order is needed if downstream becomes order-sensitive.
@@ -436,61 +439,15 @@ namespace pwiz.Osprey.Scoring
                 windowEntries.Add(arr);
             }
 
-            // Removal flags. Each entry with a library mapping is in at
-            // most one window so a plain bool[] is safe under per-window
-            // parallelism. Entries without a library mapping (EntryId
-            // missing from libIdMap; entryMz = NaN) can land in multiple
-            // windows via the LowerBoundLt scan, but the inner pair
-            // loop's libIdMap.TryGetValue short-circuits before any
-            // write to removed[], so the bool[] still has at most one
-            // writer per slot.
+            // Removal flags. With non-overlapping windows each entry with a
+            // library mapping is in at most one window, so a plain bool[] has one
+            // writer per slot under per-window parallelism. Entries without a
+            // library mapping (entryMz = NaN) can land in multiple windows via the
+            // LowerBoundLt scan, but the pair loop's library lookup short-circuits
+            // before any write to removed[] for them.
             bool[] removed = new bool[n];
 
-            Parallel.ForEach(windowEntries, indices =>
-            {
-                if (indices.Length < 2) return;
-
-                int[] rtSorted = (int[])indices.Clone();
-                // Stable sort: apex_rt then base_id then entry_id (matches
-                // Rust's deterministic tiebreaker for the dedup pass).
-                Array.Sort(rtSorted, (a, b) => // Array.Sort OK: comparator's terminal key is the unique EntryId, so no ties
-                    CompareDoubleCountingOrder(entries[a].ApexRt, entries[a].EntryId,
-                        entries[b].ApexRt, entries[b].EntryId));
-
-                for (int iPos = 0; iPos < rtSorted.Length; iPos++)
-                {
-                    int idxA = rtSorted[iPos];
-                    if (removed[idxA]) continue;
-                    double apexA = entries[idxA].ApexRt;
-
-                    for (int jPos = iPos + 1; jPos < rtSorted.Length; jPos++)
-                    {
-                        int idxB = rtSorted[jPos];
-                        double apexB = entries[idxB].ApexRt;
-                        if (apexB - apexA > rtNeighborhood) break;
-                        if (removed[idxB]) continue;
-                        if (entries[idxA].IsDecoy != entries[idxB].IsDecoy) continue;
-
-                        int libIdxA, libIdxB;
-                        if (!libIdMap.TryGetValue(entries[idxA].EntryId, out libIdxA)) continue;
-                        if (!libIdMap.TryGetValue(entries[idxB].EntryId, out libIdxB)) continue;
-
-                        if (!SharesDoubleCountingFragments(library[libIdxA].Fragments,
-                                library[libIdxB].Fragments, fragTolValue, fragTolUnit))
-                            continue;
-
-                        if (entries[idxA].CoelutionSum >= entries[idxB].CoelutionSum)
-                        {
-                            removed[idxB] = true;
-                        }
-                        else
-                        {
-                            removed[idxA] = true;
-                            break; // idxA is gone; further pairs irrelevant
-                        }
-                    }
-                }
-            });
+            Parallel.ForEach(windowEntries, indices => dedup.MarkRemoved(entries, indices, removed));
 
             int removedCount = 0;
             int removedTargets = 0;
@@ -500,14 +457,7 @@ namespace pwiz.Osprey.Scoring
                 removedCount++;
                 if (!entries[i].IsDecoy) removedTargets++;
             }
-            int removedDecoys = removedCount - removedTargets;
-            if (removedCount > 0)
-            {
-                _log.LogInfo(string.Format(
-                    OspreyScoringResources.ScoringPipeline_DeduplicateDoubleCounting_Removed__0__precursor_candidate_peaks___1__targets___2__decoys__already_claimed_by_a_,
-                    removedCount, removedTargets, removedDecoys,
-                    originalCount - removedCount));
-            }
+            LogDoubleCountingRemoved(removedCount, removedTargets, originalCount - removedCount);
 
             var kept = new List<FdrEntry>(originalCount - removedCount);
             for (int i = 0; i < n; i++)
@@ -515,6 +465,18 @@ namespace pwiz.Osprey.Scoring
             return kept;
         }
 
+        /// <summary>
+        /// Reports the double-counting dedup's removals, when there were any.
+        /// </summary>
+        public void LogDoubleCountingRemoved(int removedCount, int removedTargets, int remaining)
+        {
+            if (removedCount > 0)
+            {
+                _log.LogInfo(string.Format(
+                    OspreyScoringResources.ScoringPipeline_DeduplicateDoubleCounting_Removed__0__precursor_candidate_peaks___1__targets___2__decoys__already_claimed_by_a_,
+                    removedCount, removedTargets, removedCount - removedTargets, remaining));
+            }
+        }
 
         /// <summary>
         /// The fragment tolerance the double-counting dedup matches library fragments with:
@@ -533,71 +495,6 @@ namespace pwiz.Osprey.Scoring
         {
             MzCalibration.CalibratedTolerance(ms2Cal ?? MzCalibrationResult.Uncalibrated(),
                 config.FragmentTolerance.Tolerance, config.FragmentTolerance.Unit, out value, out unit);
-        }
-
-        /// <summary>
-        /// The apex-RT neighborhood within which the double-counting dedup compares two
-        /// entries: 5 x the median spacing between distinct MS2 retention times, or 0.25 min
-        /// when there are fewer than two.
-        /// </summary>
-        private static double DoubleCountingRtNeighborhood(IReadOnlyList<double> ms2Rts)
-        {
-            var sortedRts = new List<double>(ms2Rts.Count);
-            foreach (var rt in ms2Rts) sortedRts.Add(rt);
-            sortedRts.Sort(); // Array.Sort OK: single primitive (double) list, sorted only to dedup and take the median spacing; tie order is irrelevant
-            // Dedup adjacent identicals
-            int writeIdx = 0;
-            for (int i = 0; i < sortedRts.Count; i++)
-            {
-                if (i == 0 || sortedRts[i] != sortedRts[i - 1])
-                {
-                    sortedRts[writeIdx++] = sortedRts[i];
-                }
-            }
-            if (writeIdx < sortedRts.Count)
-                sortedRts.RemoveRange(writeIdx, sortedRts.Count - writeIdx);
-            if (sortedRts.Count < 2)
-                return 0.25; // 5 * 0.05 fallback
-            var intervals = new List<double>(sortedRts.Count - 1);
-            for (int i = 1; i < sortedRts.Count; i++)
-                intervals.Add(sortedRts[i] - sortedRts[i - 1]);
-            intervals.Sort(); // Array.Sort OK: single primitive (double) list, sorted only to take the median interval; tie order is irrelevant
-            return 5.0 * intervals[intervals.Count / 2];
-        }
-
-        /// <summary>
-        /// The double-counting dedup's order: apex RT, then base_id, then entry_id. The dedup
-        /// tests each pair with the entry that comes first in it as the first argument of
-        /// <see cref="SharesDoubleCountingFragments"/>, which is not symmetric.
-        /// </summary>
-        private static int CompareDoubleCountingOrder(double apexRtA, uint entryIdA, double apexRtB, uint entryIdB)
-        {
-            int c = apexRtA.CompareTo(apexRtB);
-            if (c != 0)
-                return c;
-            uint baseA = entryIdA & 0x7FFFFFFFu;
-            uint baseB = entryIdB & 0x7FFFFFFFu;
-            c = baseA.CompareTo(baseB);
-            if (c != 0)
-                return c;
-            return entryIdA.CompareTo(entryIdB);
-        }
-
-        /// <summary>
-        /// The double-counting collision test on two library spectra: at least half (rounded
-        /// up) of the FIRST list's top 6 fragments match the second's top 6 within the given
-        /// tolerance - a count of the first list's peaks, so the test is not symmetric - where
-        /// half is of the smaller top-6 list, rounded up.
-        /// </summary>
-        private static bool SharesDoubleCountingFragments(IReadOnlyList<LibraryFragment> fragsA,
-            IReadOnlyList<LibraryFragment> fragsB, double tolerance, ToleranceUnit unit)
-        {
-            int overlap = FragmentOverlap.CountTopNFragmentOverlap(fragsA, fragsB, 6,
-                tolerance, unit);
-            int minA = Math.Min(fragsA.Count, 6);
-            int minB = Math.Min(fragsB.Count, 6);
-            int threshold = (int)Math.Ceiling(Math.Min(minA, minB) * 0.5);
-            return overlap >= threshold;
         }
 
         public List<FdrEntry> DeduplicatePairs(List<FdrEntry> entries)
