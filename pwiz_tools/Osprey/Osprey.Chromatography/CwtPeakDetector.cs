@@ -126,18 +126,24 @@ namespace pwiz.Osprey.Chromatography
             if (n == 0 || k == 0)
                 return new double[n];
 
-            int halfK = k / 2;
             double[] output = new double[n];
+            // An all-zero signal convolves to +0.0 everywhere: each term is +/-0.0, and a sum
+            // started at +0.0 stays +0.0 when +/-0.0 is added, so skipping the loop changes
+            // no bit.
+            if (IsAllZero(signal))
+                return output;
 
+            int halfK = k / 2;
             for (int i = 0; i < n; i++)
             {
+                // The kernel taps whose signal index i + j - halfK falls inside [0, n), in the
+                // same ascending j order as testing each tap, so the sum is bit-identical.
+                int jStart = Math.Max(0, halfK - i);
+                int jEnd = Math.Min(k, n - i + halfK);
+                int offset = i - halfK;
                 double sum = 0.0;
-                for (int j = 0; j < k; j++)
-                {
-                    int signalIdx = i + j - halfK;
-                    if (signalIdx >= 0 && signalIdx < n)
-                        sum += signal[signalIdx] * kernel[j];
-                }
+                for (int j = jStart; j < jEnd; j++)
+                    sum += signal[offset + j] * kernel[j];
                 output[i] = sum;
             }
 
@@ -601,6 +607,19 @@ namespace pwiz.Osprey.Chromatography
             if (n % 2 == 0)
                 return (values[n / 2 - 1] + values[n / 2]) / 2.0;
             return values[n / 2];
+        }
+
+        /// <summary>
+        /// True when every sample of <paramref name="signal"/> is zero (+0.0 or -0.0).
+        /// </summary>
+        private static bool IsAllZero(double[] signal)
+        {
+            foreach (double value in signal)
+            {
+                if (value != 0.0)
+                    return false;
+            }
+            return true;
         }
     }
 
