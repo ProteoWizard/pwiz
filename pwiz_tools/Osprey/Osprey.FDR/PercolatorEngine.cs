@@ -1069,6 +1069,7 @@ namespace pwiz.Osprey.FDR
             // have none; nothing else may quietly train without the column it was asked for.
             if (percConfig.ProteinBest != null && percConfig.PrefilterTrainSize <= 0)
             {
+                // Exception text for internal diagnostics, not displayed to user
                 throw new InvalidOperationException(
                     @"The protein-best column needs the two-round training.");
             }
@@ -1644,6 +1645,7 @@ namespace pwiz.Osprey.FDR
                 lane1.Seconds(LANE1_SCORE), lane1.Seconds(LANE1_COMPETITION), lane1.Seconds(LANE1_RUN_Q), lane1.Seconds(LANE1_FLOORS),
                 lane1.Seconds(LANE1_FLUSH), lane1.Seconds(LANE1_SINK), order1.Seconds(ORDER1_COMPETITION));
             LogBlockReads(log, passLabel, @"pass 1");
+            proteinBestColumn?.LogFloorCounts(log, passLabel);
 
             // A report over only the files this process scored would describe a different
             // population than the run's, with nothing on the page to say so.
@@ -2071,6 +2073,13 @@ namespace pwiz.Osprey.FDR
             private readonly IReadOnlyDictionary<uint, int> _heldOutFoldByBaseId;
             private readonly int _rawFeatures;
             private readonly int _threads;
+            // The floor tallies of the score pass, summed from the file lanes.
+            private long _runs;
+            private long _targets;
+            private long _decoys;
+            private long _targetFloor;
+            private long _decoyFloor;
+            private long _decoyUnpaired;
 
             public ProteinBestColumn(ProteinBestRequest request, PercolatorResults round1,
                 IReadOnlyDictionary<uint, int> heldOutFoldByBaseId, int rawFeatures, int threads)
@@ -2096,8 +2105,54 @@ namespace pwiz.Osprey.FDR
             public IReadOnlyList<double[]> PersistAndAppend(string fileName, RowBuffer rows, IReadOnlyList<double[]> rawRows)
             {
                 double[] values = ValuesFor(rows, rawRows, out double floor);
-                _request.PersistRun?.Invoke(fileName, ProteinBestRunValues.FromRows(rows.EntryIds, values, floor));
+                var runValues = ProteinBestRunValues.FromRows(rows.EntryIds, values, floor);
+                CountFloorEntries(runValues);
+                _request.PersistRun?.Invoke(fileName, runValues);
                 return Append(rows, rawRows, values);
+            }
+
+            /// <summary>
+            /// The [COUNT] line of the floor tallies: over the runs this pass scored, the precursors
+            /// of each side whose column is exactly the run's floor, and the decoys whose base_id
+            /// has no library target (unpaired), which always read the floor. A measurement only.
+            /// </summary>
+            public void LogFloorCounts(IOspreyLog log, string passLabel)
+            {
+                log.LogInfo(LogTag.COUNT,
+                    @"{0} protein-best floor over {1} scored run(s): {2} of {3} target precursor-runs and {4} of {5} decoy precursor-runs read the run's floor; {6} decoy precursor-runs are unpaired (no library target)",
+                    passLabel, Interlocked.Read(ref _runs), Interlocked.Read(ref _targetFloor), Interlocked.Read(ref _targets),
+                    Interlocked.Read(ref _decoyFloor), Interlocked.Read(ref _decoys), Interlocked.Read(ref _decoyUnpaired));
+            }
+
+            private void CountFloorEntries(ProteinBestRunValues runValues)
+            {
+                long floorBits = BitConverter.DoubleToInt64Bits(runValues.Floor);
+                long targets = 0, decoys = 0, targetFloor = 0, decoyFloor = 0, decoyUnpaired = 0;
+                for (int i = 0; i < runValues.EntryIds.Count; i++)
+                {
+                    uint entryId = runValues.EntryIds[i];
+                    bool atFloor = BitConverter.DoubleToInt64Bits(runValues.Values[i]) == floorBits;
+                    if ((entryId & ~PercolatorEntry.BASE_ID_MASK) != 0)
+                    {
+                        decoys++;
+                        if (atFloor)
+                            decoyFloor++;
+                        if (_request.Membership.PeptideOf(entryId & PercolatorEntry.BASE_ID_MASK) < 0)
+                            decoyUnpaired++;
+                    }
+                    else
+                    {
+                        targets++;
+                        if (atFloor)
+                            targetFloor++;
+                    }
+                }
+                Interlocked.Increment(ref _runs);
+                Interlocked.Add(ref _targets, targets);
+                Interlocked.Add(ref _decoys, decoys);
+                Interlocked.Add(ref _targetFloor, targetFloor);
+                Interlocked.Add(ref _decoyFloor, decoyFloor);
+                Interlocked.Add(ref _decoyUnpaired, decoyUnpaired);
             }
 
             private double[] ValuesFor(RowBuffer rows, IReadOnlyList<double[]> rawRows, out double floor)

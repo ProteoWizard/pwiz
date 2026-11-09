@@ -2293,6 +2293,16 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Second-pass FDR cannot run: the saved first-pass model was trained with {0}, but this run has {1}. Run {2} again with {1}..
+        /// </summary>
+        public static string PerFileRescoreTask_CreatePass2Worker_Second_pass_FDR_cannot_run__the_saved_first_pass_model_was_trained_with__0___but_this_run_has__1___Run__2__again_with__1__ {
+            get {
+                return ResourceManager.GetString("PerFileRescoreTask_CreatePass2Worker_Second_pass_FDR_cannot_run__the_saved_first_" +
+                        "pass_model_was_trained_with__0___but_this_run_has__1___Run__2__again_with__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The saved first-pass model carries no list of precursor candidates from proteins with 2 or more detections, which second-pass FDR needs. Run {0} again..
         /// </summary>
         public static string PerFileRescoreTask_CreatePass2Worker_The_saved_first_pass_model_carries_no_list_of_precursor_candidates_from_proteins_with_2_or_more_detections__ {

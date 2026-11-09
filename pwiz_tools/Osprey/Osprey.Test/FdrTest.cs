@@ -1771,6 +1771,8 @@ namespace pwiz.Osprey.Test
         /// Round 2 starts from a single feature, as round 1 did, rather than from that pooled mix of
         /// fold scales (which cost one small-library run every first-pass target and left the second
         /// pass none), so without the protein-best column it is round 1's training again, to the bit.
+        /// The same holds when every candidate fits round 1 but not the round-2 cap: round 2 still
+        /// takes every candidate rather than a selection by those pooled scores.
         /// </summary>
         private static void AssertRound2OverRound1RowsIsRound1(Func<int, int, PercolatorConfig> makeConfig,
             List<KeyValuePair<string, List<FdrEntry>>> fixture, FirstPassArm runArm)
@@ -1791,6 +1793,19 @@ namespace pwiz.Osprey.Test
                 "First-pass Percolator prefilter subsample (round 2): 300 precursors (150 targets, 150 decoys) from 300 candidates");
             StringAssert.Contains(log.Text, "First-pass Percolator prefilter round 2 initial score: a single feature, as round 1 (round 2 holds round 1's 300 rows)");
             Assert.IsFalse(log.Text.Contains("round 2 initial score: round-1 model"), "round 2 over round 1's rows must not start from the pooled fold scores");
+
+            // Every candidate fits round 1 but not the round-2 cap (MaxTrainSize >= candidates >
+            // PrefilterTrainSize): the round-1 scores are still all out of fold, so they neither
+            // select round 2 nor start it. Round 2 takes every candidate, exactly as above.
+            var logCapped = new CapturingLog();
+            var sinkCapped = runArm(MakeWhole(200, 4), logCapped, out _);
+            Assert.AreEqual(totalRows, AssertSinksIdentical(fixture, sinkWhole, sinkCapped));
+            Assert.AreEqual(totalRows, AssertSinksIdentical(fixture, sinkCapped, runArm(MakeWhole(200, 1), OspreyLog.None, out _)));
+            StringAssert.Contains(logCapped.Text,
+                "First-pass Percolator prefilter subsample (round 2): 300 precursors (150 targets, 150 decoys) from 300 candidates (all of them");
+            StringAssert.Contains(logCapped.Text, "First-pass Percolator prefilter round 2 initial score: a single feature, as round 1 (round 2 holds round 1's 300 rows)");
+            Assert.IsFalse(logCapped.Text.Contains("round 2 initial score: round-1 model"),
+                "a round 1 over every candidate must not select or start round 2 by its pooled fold scores");
         }
 
         /// <summary>

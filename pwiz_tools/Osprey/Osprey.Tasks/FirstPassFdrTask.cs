@@ -1822,7 +1822,8 @@ namespace pwiz.Osprey.Tasks
                 ctx.Publish(new FirstPassPercolatorModel
                 {
                     Results = resumeSidecar.Model,
-                    ExperimentAgg = resumeSidecar.ExperimentAgg
+                    ExperimentAgg = resumeSidecar.ExperimentAgg,
+                    Stamp = resumeSidecar.Stamp
                 });
                 // Gated on the MODE, matching the canEnterAtGate clause above. The stratum file
                 // is not a declared Output, so nothing invalidates or removes it when a later
@@ -2257,7 +2258,10 @@ namespace pwiz.Osprey.Tasks
                     // model trained here was trained under this process's arm.
                     ExperimentAgg = adopted
                         ? reloadedModel?.ExperimentAgg ?? OspreyEnvironment.ExperimentAgg
-                        : OspreyEnvironment.ExperimentAgg
+                        : OspreyEnvironment.ExperimentAgg,
+                    // The stamp this pass writes the model and the protein-best columns with, or
+                    // for an adopted model the one recorded beside it.
+                    Stamp = adopted ? reloadedModel?.Stamp : OspreyVersion.Stamp(Name, validityKey)
                 });
             }
             if (!adopted)

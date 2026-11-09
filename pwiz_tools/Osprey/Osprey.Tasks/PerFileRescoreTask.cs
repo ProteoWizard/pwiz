@@ -366,6 +366,8 @@ namespace pwiz.Osprey.Tasks
                 // writes the rescored rows' features beside them, so it records what scoring did.
                 + PinFeatureMask.RecordedFeaturesValidityKeySuffix()
                 + OspreyEnvironment.FdrExperimentValidityKeySuffix()
+                // OSPREY_RECON_REFIT=off plans reconciliation on the first-pass calibrations; empty when unset.
+                + OspreyEnvironment.ReconRefitValidityKeySuffix()
                 // The Stage 6 competition and the 2nd-pass sidecar score with the first-pass
                 // model, so the classifier that trained it keys this task too (empty for the SVM).
                 + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
@@ -1333,11 +1335,7 @@ namespace pwiz.Osprey.Tasks
             // and one without cannot use it. The validity key already keeps the two arms apart, so
             // a disagreement here is a model from another arm, which no run may score with.
             if (scorer.ScoresProteinBest != config.ProteinBest)
-            {
-                throw new InvalidOperationException(string.Format(
-                    OspreyTasksResources.Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__,
-                    OspreyArgNames.Text(OspreyArgNames.TASK)));
-            }
+                throw new InvalidOperationException(ProteinBestMismatchMessage(scorer.ScoresProteinBest, config.ProteinBest));
             bool transfer = !OspreyEnvironment.Pass2ProteinCompact;
             // The competition is constrained to the stratum, and competing without one would be
             // the full-population form that was removed (#4581), not a smaller version of this.
@@ -1362,6 +1360,23 @@ namespace pwiz.Osprey.Tasks
                 WriteAnswer,
                 ctx.LogWarning,
                 sidecar.Stamp);
+        }
+
+        /// <summary>
+        /// Why second-pass FDR refuses a first-pass model trained with the other
+        /// <c>--protein-best</c> setting: names both settings and the task to re-run.
+        /// </summary>
+        internal static string ProteinBestMismatchMessage(bool modelScoresProteinBest, bool configProteinBest)
+        {
+            return string.Format(
+                OspreyTasksResources.PerFileRescoreTask_CreatePass2Worker_Second_pass_FDR_cannot_run__the_saved_first_pass_model_was_trained_with__0___but_this_run_has__1___Run__2__again_with__1__,
+                ProteinBestArgText(modelScoresProteinBest), ProteinBestArgText(configProteinBest),
+                OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME));
+        }
+
+        private static string ProteinBestArgText(bool on)
+        {
+            return OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST, on ? OspreyArgNames.VALUE_ON : OspreyArgNames.VALUE_OFF);
         }
 
         /// <summary>

@@ -93,6 +93,13 @@ namespace pwiz.Osprey.Tasks
 
         private readonly object _transferTallyLock = new object();
 
+        // The protein-best no-row tallies (a measurement), summed across the parallel file loop.
+        private long _proteinBestSurvivors;
+        private long _proteinBestNoRow;
+        private long _proteinBestNoRowDecoys;
+        private long _proteinBestNoRowWithSibling;
+        private long _proteinBestNoRowWouldDiffer;
+
         /// <summary>
         /// One seeder PER WORKER THREAD, not per file and not one shared.
         ///
@@ -213,7 +220,7 @@ namespace pwiz.Osprey.Tasks
 
             Pass2FdrSidecar.ReadOneFilePass2Inputs(
                 pass1SidecarPath, effectiveParquetPath, survivors,
-                _scorer, _nFeatures, ProteinBestFor(fileName, pass1SidecarPath), _seeders.Value, _logWarning,
+                _scorer, _nFeatures, ProteinBestFor(fileName, pass1SidecarPath, survivors), _seeders.Value, _logWarning,
                 survivorIds, pass1Records,
                 out uint[] entryIds, out double[] scores, out var survivorScores);
 
@@ -291,7 +298,7 @@ namespace pwiz.Osprey.Tasks
                         fileName, survivors.Count - nMapped, survivors.Count, effectiveParquetPath));
                 }
                 Pass2FdrSidecar.TransferOneFile(fileName, pass1SidecarPath, survivors, _scorer,
-                    ProteinBestFor(fileName, pass1SidecarPath), _pass1Experiment, _logWarning, ref tally);
+                    ProteinBestFor(fileName, pass1SidecarPath, survivors), _pass1Experiment, _logWarning, ref tally);
             }
             finally
             {
@@ -323,9 +330,63 @@ namespace pwiz.Osprey.Tasks
         /// column is what the entry's siblings scored, which a move of its own peak does not
         /// change.
         /// </summary>
-        private ProteinBestRunValues ProteinBestFor(string fileName, string pass1SidecarPath)
+        private ProteinBestRunValues ProteinBestFor(string fileName, string pass1SidecarPath, List<FdrEntry> survivors)
         {
-            return Pass2FdrSidecar.LoadProteinBestForRun(_scorer, pass1SidecarPath, fileName, _firstPassStamp);
+            var proteinBest = Pass2FdrSidecar.LoadProteinBestForRun(_scorer, pass1SidecarPath, fileName, _firstPassStamp);
+            if (proteinBest != null)
+                CountNoRowFloor(proteinBest, survivors);
+            return proteinBest;
+        }
+
+        /// <summary>
+        /// A measurement only: how many of this run's survivors have no first-pass row in its
+        /// protein-best column, and so read the run's floor, and how many of those have a sibling
+        /// whose value the first pass recorded - the entry of the same base_id on the other side,
+        /// or a target of the same modified sequence - which is the value the first pass would have
+        /// given them. A lower bound on the entries a sibling-aware value would move: a peptide with
+        /// no row of its own in the run also has protein siblings the column does not record.
+        /// </summary>
+        private void CountNoRowFloor(ProteinBestRunValues proteinBest, List<FdrEntry> survivors)
+        {
+            long floorBits = BitConverter.DoubleToInt64Bits(proteinBest.Floor);
+            Dictionary<string, double> targetValueBySequence = null;
+            long noRow = 0, noRowDecoys = 0, withSibling = 0, wouldDiffer = 0;
+            foreach (var e in survivors)
+            {
+                if (proteinBest.TryGetValue(e.EntryId, out _))
+                    continue;
+                noRow++;
+                if (e.IsDecoy)
+                    noRowDecoys++;
+                if (!proteinBest.TryGetValue(e.EntryId ^ LibraryEntry.DECOY_ID_BIT, out double sibling))
+                {
+                    if (e.IsDecoy || e.ModifiedSequence == null)
+                        continue;
+                    targetValueBySequence ??= TargetValuesBySequence(proteinBest, survivors);
+                    if (!targetValueBySequence.TryGetValue(e.ModifiedSequence, out sibling))
+                        continue;
+                }
+                withSibling++;
+                if (BitConverter.DoubleToInt64Bits(sibling) != floorBits)
+                    wouldDiffer++;
+            }
+            Interlocked.Add(ref _proteinBestSurvivors, survivors.Count);
+            Interlocked.Add(ref _proteinBestNoRow, noRow);
+            Interlocked.Add(ref _proteinBestNoRowDecoys, noRowDecoys);
+            Interlocked.Add(ref _proteinBestNoRowWithSibling, withSibling);
+            Interlocked.Add(ref _proteinBestNoRowWouldDiffer, wouldDiffer);
+        }
+
+        private static Dictionary<string, double> TargetValuesBySequence(ProteinBestRunValues proteinBest,
+            List<FdrEntry> survivors)
+        {
+            var bySequence = new Dictionary<string, double>(StringComparer.Ordinal);
+            foreach (var e in survivors)
+            {
+                if (!e.IsDecoy && e.ModifiedSequence != null && proteinBest.TryGetValue(e.EntryId, out double value))
+                    bySequence[e.ModifiedSequence] = value;
+            }
+            return bySequence;
         }
 
         /// <summary>
@@ -464,6 +525,14 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public void LogSummary(PipelineContext ctx)
         {
+            if (_scorer.ScoresProteinBest)
+            {
+                ctx.LogInfo(LogTag.COUNT,
+                    @"Second-pass protein-best: {0} of {1} survivors have no first-pass row and read the run's floor ({2} of them decoys); {3} of those have a recorded sibling value, {4} of which differ from the floor",
+                    Interlocked.Read(ref _proteinBestNoRow), Interlocked.Read(ref _proteinBestSurvivors),
+                    Interlocked.Read(ref _proteinBestNoRowDecoys), Interlocked.Read(ref _proteinBestNoRowWithSibling),
+                    Interlocked.Read(ref _proteinBestNoRowWouldDiffer));
+            }
             if (_transfer)
             {
                 // The transfer seeds nothing - every survivor takes its values from the transfer

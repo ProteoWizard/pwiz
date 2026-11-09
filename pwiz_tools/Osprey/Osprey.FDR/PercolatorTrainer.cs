@@ -514,9 +514,11 @@ namespace pwiz.Osprey.FDR
         /// on that model, and on SEA-AD that collapsed the result for some seeds. Selecting the
         /// subset itself by a single feature fails the same way, which is why round 1 is
         /// required. Otherwise round 2 is the unchanged <see cref="RunPercolator"/>, with only the
-        /// subsample turned off (the subset is already the selection). When the subset is no
-        /// selection - round 2 holds exactly round 1's rows, as a small library does - round 2 starts
-        /// from a single feature instead, as round 1 did.</para>
+        /// subsample turned off (the subset is already the selection). When round 1 trained on every
+        /// candidate (no more than <see cref="PercolatorConfig.MaxTrainSize"/>), every round-1 score
+        /// is out of fold, from three fold models on different scales, so they select nothing: round
+        /// 2 then holds every candidate, whatever the round-2 size or cut, and starts from a single
+        /// feature, as round 1 did. So does a selection that lands exactly on round 1's rows.</para>
         ///
         /// <para>Every candidate must carry its feature vector. Deterministic and independent of
         /// <see cref="PercolatorConfig.NThreads"/>: a tree or linear score depends only on its own
@@ -585,33 +587,17 @@ namespace pwiz.Osprey.FDR
                 entryIds[k] = candidates[k].EntryId;
                 peptides[k] = candidates[k].Peptide;
             }
-            double minBestScore = double.NegativeInfinity;
-            if (trainConfig.PrefilterTrainQ > 0)
-            {
-                minBestScore = PrefilterScoreAtQ(round1Scores, labels, entryIds, trainConfig.PrefilterTrainQ,
-                    out int passingTargets);
-                log.LogInfo(LogTag.COUNT, @"{0} Percolator prefilter q cut: round-1 q <= {1} reached by {2} targets, at score >= {3:R}",
-                    passLabel, trainConfig.PrefilterTrainQ, passingTargets, minBestScore);
-            }
-            else if (trainConfig.PrefilterTrainLocalFdr > 0)
-            {
-                minBestScore = PrefilterScoreAtLocalFdr(round1Scores, labels, entryIds,
-                    trainConfig.PrefilterTrainLocalFdr, out int passingTargets, out double qAtCut);
-                log.LogInfo(LogTag.COUNT, @"{0} Percolator prefilter local-FDR cut: windowed decoys/targets <= {1} held for {2} targets (round-1 q {3:F4} there), at score >= {4:R}",
-                    passLabel, trainConfig.PrefilterTrainLocalFdr, passingTargets, qAtCut, minBestScore);
-            }
-            prefilterSize = Round2RowCap(prefilterSize, round1Subset.Length,
-                trainConfig.PrefilterTrainQ > 0 || trainConfig.PrefilterTrainLocalFdr > 0, minBestScore);
-            if (prefilterSize < trainConfig.PrefilterTrainSize)
-            {
-                log.LogInfo(string.Format(
-                    @"Warning: {0} no round-1 target passes the round-2 {1} cut, so round 2 trains on the best {2} rows (the round-1 size) instead.",
-                    passLabel, trainConfig.PrefilterTrainQ > 0 ? @"OSPREY_GBT_PREFILTER_Q" : @"OSPREY_GBT_PREFILTER_LFDR",
-                    prefilterSize));
-            }
-            int[] selected = PercolatorSampling.SelectTopScoringGroups(
-                labels, entryIds, peptides, round1Scores, prefilterSize, minBestScore,
-                trainConfig.PrefilterTrainSample ? trainConfig.Seed : null);
+            // Round 1 trained on every candidate when they all fit its subsample (m at most
+            // MaxTrainSize): then every round-1 score is out of fold, three fold models' scores on
+            // scales that differ severalfold pooled into one ranking. A top-N selection by that
+            // ranking keeps or drops a group by which fold held it out as much as by how it scores,
+            // and the start below would pick its first positive set by it. So such a round 2 holds
+            // every candidate - no more rows than round 1 trained on - and no cut applies.
+            bool round1HoldsAll = round1Subset.Length == m;
+            int[] selected = round1HoldsAll
+                ? round1Subset
+                : SelectRound2Rows(round1Scores, labels, entryIds, peptides, round1Subset.Length,
+                    trainConfig, log, passLabel);
             round2Entries = new List<PercolatorEntry>(selected.Length);
             var round2InitialScores = new double[selected.Length];
             int round2Targets = 0;
@@ -622,23 +608,30 @@ namespace pwiz.Osprey.FDR
                 if (!labels[k])
                     round2Targets++;
             }
-            log.LogInfo(LogTag.COUNT, @"{0} Percolator prefilter subsample (round 2): {1} precursors ({2} targets, {3} decoys) from {4} candidates by round-1 score{5}",
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator prefilter subsample (round 2): {1} precursors ({2} targets, {3} decoys) from {4} candidates {5}",
                 passLabel, round2Entries.Count, round2Targets, round2Entries.Count - round2Targets, m,
-                trainConfig.PrefilterTrainSample ? @", sampled from the eligible groups" : string.Empty);
+                round1HoldsAll ? @"(all of them: round 1 trained on every candidate)"
+                    : @"by round-1 score" + (trainConfig.PrefilterTrainSample ? @", sampled from the eligible groups" : string.Empty));
+            if (round1HoldsAll && (trainConfig.PrefilterTrainQ > 0 || trainConfig.PrefilterTrainLocalFdr > 0))
+            {
+                log.LogInfo(string.Format(
+                    @"Warning: {0} round 1 trained on all {1} candidates, so their round-1 scores are all out of fold and cut nothing: round 2 takes every candidate, ignoring {2}.",
+                    passLabel, m, trainConfig.PrefilterTrainQ > 0 ? @"OSPREY_GBT_PREFILTER_Q" : @"OSPREY_GBT_PREFILTER_LFDR"));
+            }
 
             // Round 2: the same training on that subset, its first positive set chosen by the
             // round-1 scores the subset was selected by. MaxTrainSize 0 turns the subsample off:
             // the rows are already one per precursor, so the dedup keeps them all.
             //
-            // Unless round 2's rows ARE round 1's: a library small enough that every candidate fits
-            // both the round-1 subsample and the round-2 cap. That subset is no selection, so the
-            // reason for the round-1 start does not hold, and every row's round-1 score is out of
-            // fold - three fold models' scores pooled into one ranking, on scales that differ
-            // severalfold, which picks a poor first positive set. On a 276-target library that left
-            // one run no first-pass target and the second pass none. Such a round 2 starts from a
-            // single feature, as round 1 did, and so adds only the protein-best column: without it,
-            // it is round 1's training again, to the bit.
-            if (round2Entries.Count == round1Subset.Length && selected.SequenceEqual(round1Subset))
+            // Unless round 2's rows ARE round 1's: every candidate when round 1 trained on all of
+            // them (above), or a selection that happens to land on round 1's rows. That subset is
+            // no selection, so the reason for the round-1 start does not hold, and every row's
+            // round-1 score is out of fold - three fold models' scores pooled into one ranking, on
+            // scales that differ severalfold, which picks a poor first positive set. On a
+            // 276-target library that left one run no first-pass target and the second pass none.
+            // Such a round 2 starts from a single feature, as round 1 did, and so adds only the
+            // protein-best column: without it, it is round 1's training again, to the bit.
+            if (round1HoldsAll || selected.SequenceEqual(round1Subset))
             {
                 round2InitialScores = null;
                 log.LogInfo(LogTag.COUNT, @"{0} Percolator prefilter round 2 initial score: a single feature, as round 1 (round 2 holds round 1's {1} rows)",
@@ -668,6 +661,44 @@ namespace pwiz.Osprey.FDR
                 round2Config.FeatureInfos = ProteinBestFeature.WithColumnInfo(round2Config.FeatureInfos);
             }
             return RunPercolator(round2Entries, round2Config, round2InitialScores);
+        }
+
+        /// <summary>
+        /// Round 2's rows when round 1 trained on a subsample: the best-scoring peptide groups by
+        /// round-1 score, up to <see cref="PercolatorConfig.PrefilterTrainSize"/> rows, cut at the
+        /// round-1 q or local FDR when one is requested.
+        /// </summary>
+        private static int[] SelectRound2Rows(double[] round1Scores, bool[] labels, uint[] entryIds, string[] peptides,
+            int round1Size, PercolatorConfig trainConfig, IOspreyLog log, string passLabel)
+        {
+            int prefilterSize = trainConfig.PrefilterTrainSize;
+            double minBestScore = double.NegativeInfinity;
+            if (trainConfig.PrefilterTrainQ > 0)
+            {
+                minBestScore = PrefilterScoreAtQ(round1Scores, labels, entryIds, trainConfig.PrefilterTrainQ,
+                    out int passingTargets);
+                log.LogInfo(LogTag.COUNT, @"{0} Percolator prefilter q cut: round-1 q <= {1} reached by {2} targets, at score >= {3:R}",
+                    passLabel, trainConfig.PrefilterTrainQ, passingTargets, minBestScore);
+            }
+            else if (trainConfig.PrefilterTrainLocalFdr > 0)
+            {
+                minBestScore = PrefilterScoreAtLocalFdr(round1Scores, labels, entryIds,
+                    trainConfig.PrefilterTrainLocalFdr, out int passingTargets, out double qAtCut);
+                log.LogInfo(LogTag.COUNT, @"{0} Percolator prefilter local-FDR cut: windowed decoys/targets <= {1} held for {2} targets (round-1 q {3:F4} there), at score >= {4:R}",
+                    passLabel, trainConfig.PrefilterTrainLocalFdr, passingTargets, qAtCut, minBestScore);
+            }
+            prefilterSize = Round2RowCap(prefilterSize, round1Size,
+                trainConfig.PrefilterTrainQ > 0 || trainConfig.PrefilterTrainLocalFdr > 0, minBestScore);
+            if (prefilterSize < trainConfig.PrefilterTrainSize)
+            {
+                log.LogInfo(string.Format(
+                    @"Warning: {0} no round-1 target passes the round-2 {1} cut, so round 2 trains on the best {2} rows (the round-1 size) instead.",
+                    passLabel, trainConfig.PrefilterTrainQ > 0 ? @"OSPREY_GBT_PREFILTER_Q" : @"OSPREY_GBT_PREFILTER_LFDR",
+                    prefilterSize));
+            }
+            return PercolatorSampling.SelectTopScoringGroups(
+                labels, entryIds, peptides, round1Scores, prefilterSize, minBestScore,
+                trainConfig.PrefilterTrainSample ? trainConfig.Seed : null);
         }
 
         /// <summary>

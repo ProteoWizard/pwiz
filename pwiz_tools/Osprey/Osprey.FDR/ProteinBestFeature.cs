@@ -377,8 +377,15 @@ namespace pwiz.Osprey.FDR
         /// <summary>The column of a row of <paramref name="entryId"/> in this run.</summary>
         public double ValueFor(uint entryId)
         {
+            return TryGetValue(entryId, out double value) ? value : Floor;
+        }
+
+        /// <summary>The value the first pass recorded for <paramref name="entryId"/>, if it had a row.</summary>
+        public bool TryGetValue(uint entryId, out double value)
+        {
             int i = Array.BinarySearch(_entryIds, entryId);
-            return i >= 0 ? _values[i] : Floor;
+            value = i >= 0 ? _values[i] : 0;
+            return i >= 0;
         }
     }
 

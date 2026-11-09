@@ -1001,14 +1001,30 @@ namespace pwiz.Osprey.Core
 
         private static readonly EnvVar ENV_RECON_REFIT = new EnvVar(@"OSPREY_RECON_REFIT", EnvVarGroup.behavior,
             @"Experiment: off plans cross-run reconciliation and gap-fill with each run's first-pass RT " +
-            @"calibration instead of refitting it on the consensus. Not in the validity key: run it into its own output directory.")
+            @"calibration instead of refitting it on the consensus. Keys the reconciliation and second-pass outputs.")
             { Values = new[] { RECON_REFIT_OFF } };
 
         /// <summary>
         /// OSPREY_RECON_REFIT (experiment): <c>off</c> skips the Stage 6 consensus refit, so each run is
         /// planned with its own first-pass RT calibration. Unset refits as before. Any other value throws.
         /// </summary>
-        public static readonly bool ReconciliationRefitOff = ParseReconRefit(ENV_RECON_REFIT.Value);
+        public static bool ReconciliationRefitOff => ParseReconRefit(ENV_RECON_REFIT.Value);
+
+        /// <summary>
+        /// The validity-key term of <see cref="ReconciliationRefitOff"/> for the tasks whose output
+        /// the refit reaches (PerFileRescoring, SecondPassFDR): EMPTY when unset, so no directory
+        /// written with the refit is invalidated, and <c>;reconrefit=off</c> otherwise.
+        /// </summary>
+        public static string ReconRefitValidityKeySuffix()
+        {
+            return ReconRefitValidityKeySuffix(ReconciliationRefitOff);
+        }
+
+        /// <summary><see cref="ReconRefitValidityKeySuffix()"/> for an explicitly supplied setting.</summary>
+        public static string ReconRefitValidityKeySuffix(bool refitOff)
+        {
+            return refitOff ? @";reconrefit=" + RECON_REFIT_OFF : string.Empty;
+        }
 
         private const string RECON_REFIT_OFF = @"off";
 

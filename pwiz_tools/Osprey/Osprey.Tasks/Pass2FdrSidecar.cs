@@ -204,7 +204,7 @@ namespace pwiz.Osprey.Tasks
             // written before the field existed). This node's own OSPREY_EXPERIMENT_AGG
             // says nothing about it, so carry the recorded value rather than re-reading.
             ctx.Publish(new FirstPassPercolatorModel
-                { Results = reloaded.Model, ExperimentAgg = reloaded.ExperimentAgg });
+                { Results = reloaded.Model, ExperimentAgg = reloaded.ExperimentAgg, Stamp = reloaded.Stamp });
             ctx.LogInfo(OspreyTasksResources.Pass2FdrSidecar_EnsureFrozenFirstPassPublished_Reusing_the_saved_first_pass_model_);
             ctx.LogVerbose(string.Format(
                 OspreyTasksResources.Pass2FdrSidecar_EnsureFrozenFirstPassPublished_Reloaded_the_saved_first_pass_model_for_second_pass_FDR__first_pass_experiment_,
@@ -1126,7 +1126,7 @@ namespace pwiz.Osprey.Tasks
             }
             if (haveInputs && ComputePass2TransferCompeteFull(
                     ctx, rescored, perFileParquetPaths, config, frozen.Results,
-                    frozen.ExperimentAgg, writer, stratum))
+                    frozen.ExperimentAgg, frozen.Stamp, writer, stratum))
             {
                 return;
             }
@@ -1176,6 +1176,7 @@ namespace pwiz.Osprey.Tasks
             OspreyConfig config,
             PercolatorResults frozenModel,
             string pass1ExperimentAgg,
+            ArtifactStamp frozenModelStamp,
             Pass2SidecarWriter writer,
             HashSet<uint> stratumBaseIds)
         {
@@ -1492,7 +1493,7 @@ namespace pwiz.Osprey.Tasks
                     // above puts the refusal.
                     ReadOneFilePass2Inputs(
                         sidecarByKey[fileKey], effectiveParquetPath, currentEntries,
-                        scorer, nFeatures, LoadProteinBestForRun(scorer, sidecarByKey[fileKey], fileKey, null),
+                        scorer, nFeatures, LoadProteinBestForRun(scorer, sidecarByKey[fileKey], fileKey, frozenModelStamp),
                         seeder, ctx.LogWarning,
                         survivorIds, pass1Records,
                         out uint[] eids, out double[] scs, out var fileScores);

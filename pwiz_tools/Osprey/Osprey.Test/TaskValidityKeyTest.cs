@@ -963,6 +963,38 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(string.Empty, OspreyEnvironment.Pass2StrataValidityKeySuffix(),
                     @"transfer does not compete a complement, so its outputs keep their key");
             }
+            AssertReconRefitKeysTheTasksItReaches(tasks, ctx);
+        }
+
+        /// <summary>
+        /// OSPREY_RECON_REFIT=off plans reconciliation on each run's first-pass calibration, so
+        /// the tasks downstream of the plan - PerFileRescoring and SecondPassFDR - key on it, and
+        /// no task does when it is unset, so no existing output directory moves.
+        /// </summary>
+        private static void AssertReconRefitKeysTheTasksItReaches(IReadOnlyList<OspreyTask> tasks, PipelineContext ctx)
+        {
+            const string term = @";reconrefit=off";
+            Assert.AreEqual(string.Empty, OspreyEnvironment.ReconRefitValidityKeySuffix(false));
+            Assert.AreEqual(term, OspreyEnvironment.ReconRefitValidityKeySuffix(true));
+            var unset = tasks.ToDictionary(task => task.Name, task => task.ValidityKey(ctx));
+            foreach (var key in unset)
+                Assert.IsFalse(key.Value.Contains(@"reconrefit"), key.Key + @" must not key on an unset OSPREY_RECON_REFIT");
+            using (OspreyEnvironment.OverrideVariables(new Dictionary<string, string>
+                   {
+                       { @"OSPREY_RECON_REFIT", @"off" }
+                   }))
+            {
+                Assert.AreEqual(term, OspreyEnvironment.ReconRefitValidityKeySuffix());
+                foreach (var task in tasks)
+                {
+                    string key = task.ValidityKey(ctx);
+                    bool expect = task.Name == PerFileRescoreTask.TASK_NAME || task.Name == SecondPassFdrTask.TASK_NAME;
+                    Assert.AreEqual(expect, key.Contains(term), string.Format(
+                        @"{0} must {1} key on OSPREY_RECON_REFIT=off", task.Name, expect ? @"" : @"NOT "));
+                    // Nothing else in the key moves.
+                    Assert.AreEqual(unset[task.Name], key.Replace(term, string.Empty), task.Name);
+                }
+            }
         }
     }
 }
