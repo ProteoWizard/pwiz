@@ -42,12 +42,12 @@ namespace pwiz.Osprey.Scoring
         {
             if (context.TryGetInfo(out CoelutionStats stats))
                 return stats;
-            stats = Compute(peakData);
+            stats = Compute(context, peakData);
             context.AddInfo(stats);
             return stats;
         }
 
-        private static CoelutionStats Compute(IOspreyDetailedPeakData peakData)
+        private static CoelutionStats Compute(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
         {
             var stats = new CoelutionStats();
 
@@ -59,7 +59,8 @@ namespace pwiz.Osprey.Scoring
             // its mean pairwise correlation is > 0. Matches Rust
             // pipeline.rs:5049-5058. NaN pairs are skipped (not zeroed); max is
             // seeded -Infinity and only adopted when at least one pair was valid.
-            var peak = peakData.PeakBounds;
+            var pairs = PeakPairCorrelations.GetOrCompute(context, peakData).InLoopOrder;
+            int k = 0;
             double[] fragCorrSum = new double[xics.Count];
             int[] fragCorrCount = new int[xics.Count];
             bool haveAny = false;
@@ -70,9 +71,7 @@ namespace pwiz.Osprey.Scoring
             {
                 for (int j = i + 1; j < xics.Count; j++)
                 {
-                    double corr = ScoringMath.PearsonCorrelationInRange(
-                        xics[i].Intensities, xics[j].Intensities,
-                        peak.StartIndex, peak.EndIndex);
+                    double corr = pairs[k++];
                     if (double.IsNaN(corr))
                         continue;
 

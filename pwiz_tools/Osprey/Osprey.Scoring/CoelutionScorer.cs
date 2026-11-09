@@ -281,6 +281,10 @@ namespace pwiz.Osprey.Scoring
             // Skyline's IPeakFeatureCalculator.
             ospreyContext.ClearByproducts();
 
+            // The pairwise fragment correlations over the chosen peak, which the pick computed for its
+            // coelution score; the coelution, reference and top-fragment features read them.
+            ospreyContext.AddInfo(ext.BestPeakPairs);
+
             // Tukey median-polish inputs + fit (features 15, 16, 19, 20). The publish
             // and WriteMpInputsRow stay here because the bisection
             // diagnostics (OspreyDiagnostics) live in the exe layer that
@@ -432,6 +436,8 @@ namespace pwiz.Osprey.Scoring
             {
                 PeakData.SetFrom(primary, ext.CorrelationXics);
                 Context.ClearByproducts();
+                if (ext.CorrelationBestPeakPairs != null)
+                    Context.AddInfo(ext.CorrelationBestPeakPairs);
                 // The wider-tolerance XICs differ from the ones the pick fit, so their fit is
                 // computed here; nothing of the primary crop can stand in for it.
                 if (_polish && peakLen >= 3)

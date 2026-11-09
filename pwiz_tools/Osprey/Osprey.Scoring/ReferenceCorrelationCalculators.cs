@@ -56,7 +56,7 @@ namespace pwiz.Osprey.Scoring
         {
             if (context.TryGetInfo(out ReferenceCorrelations refCorr))
                 return refCorr;
-            refCorr = Compute(peakData);
+            refCorr = Compute(context, peakData);
             context.AddInfo(refCorr);
             return refCorr;
         }
@@ -88,7 +88,7 @@ namespace pwiz.Osprey.Scoring
             return sum / k;
         }
 
-        private static ReferenceCorrelations Compute(IOspreyDetailedPeakData peakData)
+        private static ReferenceCorrelations Compute(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
         {
             var result = new ReferenceCorrelations
             {
@@ -103,9 +103,10 @@ namespace pwiz.Osprey.Scoring
             if (xics.Count < 2)
                 return result;
 
-            int reference = ChooseReference(xics, peak.StartIndex, peak.EndIndex);
+            var pairs = PeakPairCorrelations.GetOrCompute(context, peakData);
+            int reference = ChooseReference(pairs, 0);
             result.ReferenceIndex = reference;
-            result.SortedCorrelations = SortedCorrelationsWith(xics, reference, peak, x => x);
+            result.SortedCorrelations = SortedCorrelationsWith(pairs, reference);
             result.SortedMinFilteredCorrelations = SortedCorrelationsWith(xics, reference, peak, RunningMinimum);
             return result;
         }
@@ -138,13 +139,25 @@ namespace pwiz.Osprey.Scoring
         /// </summary>
         internal static int ChooseReference(IReadOnlyList<XicData> xics, int start, int end, int fallback)
         {
+            return ChooseReference(PeakPairCorrelations.Compute(xics, start, end), fallback);
+        }
+
+        /// <summary>
+        /// <see cref="ChooseReference(IReadOnlyList{XicData}, int, int, int)"/> from the XICs' pairwise
+        /// correlations over the range, already computed.
+        /// </summary>
+        internal static int ChooseReference(PeakPairCorrelations pairs, int fallback)
+        {
             bool anyValid = false;
-            var sums = new double[xics.Count];
-            for (int i = 0; i < xics.Count; i++)
+            int n = pairs.XicCount;
+            var values = pairs.InLoopOrder;
+            int k = 0;
+            var sums = new double[n];
+            for (int i = 0; i < n; i++)
             {
-                for (int j = i + 1; j < xics.Count; j++)
+                for (int j = i + 1; j < n; j++)
                 {
-                    double corr = ScoringMath.PearsonCorrelationInRange(xics[i].Intensities, xics[j].Intensities, start, end);
+                    double corr = values[k++];
                     if (double.IsNaN(corr))
                         continue;
                     sums[i] += corr;
@@ -163,6 +176,21 @@ namespace pwiz.Osprey.Scoring
             return best;
         }
 
+        // The other XICs' correlations with the reference, missing ones 0, highest first.
+        private static double[] SortedCorrelationsWith(PeakPairCorrelations pairs, int reference)
+        {
+            var corrs = new double[pairs.XicCount - 1];
+            int n = 0;
+            for (int i = 0; i < pairs.XicCount; i++)
+            {
+                if (i == reference)
+                    continue;
+                double corr = pairs.Get(reference, i);
+                corrs[n++] = double.IsNaN(corr) ? 0.0 : corr;
+            }
+            return SortDescending(corrs);
+        }
+
         private static double[] SortedCorrelationsWith(IReadOnlyList<XicData> xics, int reference, XICPeakBounds peak,
             Func<double[], double[]> transform)
         {
@@ -177,9 +205,14 @@ namespace pwiz.Osprey.Scoring
                     refIntensities, transform(xics[i].Intensities), peak.StartIndex, peak.EndIndex);
                 corrs[n++] = double.IsNaN(corr) ? 0.0 : corr;
             }
-            Array.Sort(corrs); // Array.Sort OK: primitive values only, ties are equal values
-            Array.Reverse(corrs);
-            return corrs;
+            return SortDescending(corrs);
+        }
+
+        private static double[] SortDescending(double[] values)
+        {
+            Array.Sort(values); // Array.Sort OK: primitive values only, ties are equal values
+            Array.Reverse(values);
+            return values;
         }
 
         // Each point replaced by the minimum of itself and its two neighbors, so a one-scan spike

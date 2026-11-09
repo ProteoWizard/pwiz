@@ -60,13 +60,22 @@ namespace pwiz.Osprey.Scoring
             if (context.TryGetInfo(out TopFragments top))
                 return top;
             context.TryGetInfo(out MedianPolishByproduct mp);
-            top = Compute(peakData, ReferenceCorrelations.GetOrCompute(context, peakData), mp?.Polish);
+            var pairs = peakData.PeakBounds != null ? PeakPairCorrelations.GetOrCompute(context, peakData) : null;
+            top = Compute(peakData, ReferenceCorrelations.GetOrCompute(context, peakData), mp?.Polish, pairs);
             context.AddInfo(top);
             return top;
         }
 
         internal static TopFragments Compute(IOspreyDetailedPeakData peakData, ReferenceCorrelations refCorr,
             TukeyMedianPolishResult polish)
+        {
+            return Compute(peakData, refCorr, polish, null);
+        }
+
+        // Compute, reading the pairwise correlations of the XICs over the peak bounds from pairs, or
+        // computing them when it is null.
+        private static TopFragments Compute(IOspreyDetailedPeakData peakData, ReferenceCorrelations refCorr,
+            TukeyMedianPolishResult polish, PeakPairCorrelations pairs)
         {
             var result = new TopFragments();
             var xics = peakData.Xics;
@@ -76,16 +85,15 @@ namespace pwiz.Osprey.Scoring
                 return result;
             int[] top = FragmentMath.TopIndicesByIntensity(fragments, Math.Min(TOP_COUNT, fragments.Count));
             int[] topXics = XicIndices(xics, top);
+            pairs = pairs ?? PeakPairCorrelations.Compute(xics, peak.StartIndex, peak.EndIndex);
 
             if (xics.Count >= 2)
             {
-                var reference = xics[refCorr.ReferenceIndex].Intensities;
                 foreach (int xi in topXics)
                 {
                     if (xi < 0 || xi == refCorr.ReferenceIndex)
                         continue;
-                    double corr = ScoringMath.PearsonCorrelationInRange(reference, xics[xi].Intensities,
-                        peak.StartIndex, peak.EndIndex);
+                    double corr = pairs.Get(refCorr.ReferenceIndex, xi);
                     if (corr >= ReferenceCorrelations.GOOD_CORRELATION)
                         result.RefGoodCount++;
                 }
@@ -109,7 +117,7 @@ namespace pwiz.Osprey.Scoring
                 result.MpMedianR2 = n % 2 == 1 ? r2s[n / 2] : (r2s[n / 2 - 1] + r2s[n / 2]) / 2;
             }
 
-            result.CoelutionMin = MinPairCorrelation(xics, topXics, peak.StartIndex, peak.EndIndex);
+            result.CoelutionMin = MinPairCorrelation(pairs, topXics);
             return result;
         }
 
@@ -140,6 +148,22 @@ namespace pwiz.Osprey.Scoring
         /// </summary>
         internal static double MinPairCorrelation(IReadOnlyList<XicData> xics, int[] xicIndices, int start, int end)
         {
+            // Only the few pairs asked for: the range can be wider than any peak.
+            return MinPairCorrelation(xicIndices,
+                (i, j) => ScoringMath.PearsonCorrelationInRange(xics[i].Intensities, xics[j].Intensities, start, end));
+        }
+
+        /// <summary>
+        /// <see cref="MinPairCorrelation(IReadOnlyList{XicData}, int[], int, int)"/> from the XICs' pairwise
+        /// correlations over the range, already computed.
+        /// </summary>
+        internal static double MinPairCorrelation(PeakPairCorrelations pairs, int[] xicIndices)
+        {
+            return MinPairCorrelation(xicIndices, pairs.Get);
+        }
+
+        private static double MinPairCorrelation(int[] xicIndices, Func<int, int, double> correlation)
+        {
             if (xicIndices.Length < 2)
                 return 0.0;
             double min = double.MaxValue;
@@ -150,8 +174,7 @@ namespace pwiz.Osprey.Scoring
                     double corr = 0.0;
                     if (xicIndices[i] >= 0 && xicIndices[j] >= 0)
                     {
-                        corr = ScoringMath.PearsonCorrelationInRange(xics[xicIndices[i]].Intensities,
-                            xics[xicIndices[j]].Intensities, start, end);
+                        corr = correlation(xicIndices[i], xicIndices[j]);
                         if (double.IsNaN(corr))
                             corr = 0.0;
                     }

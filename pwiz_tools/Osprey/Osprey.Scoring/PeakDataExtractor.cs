@@ -218,6 +218,7 @@ namespace pwiz.Osprey.Scoring
             double bestRankScore = double.MinValue;
             double bestCoelutionScore = 0.0;
             int bestPeakIdx = -1;
+            PeakPairCorrelations bestPeakPairs = null;  // The pick's pairwise correlations over bestPeak
             PeakPolishFit bestPeakFit = null;  // The pick's median-polish fit of bestPeak, when it fit one
 
             // Peak-pick model selection. The pure product form is the DEFAULT (Rust parity +
@@ -292,7 +293,7 @@ namespace pwiz.Osprey.Scoring
                 double rankScore = ScoreCandidatePeak(candidate, xics, refXicIntensities, p, rtResidual,
                     twoSigmaSq, pickModel, needMedianPolish,
                     out double coelutionScore, out double rtPenalty, out double intensityWeight, out double medianPolish,
-                    out var fit);
+                    out var pairs, out var fit);
 
                 // Per-candidate capture (OSPREY_PICK_DUMP_CANDIDATES). is_picked is filled in
                 // after the loop once the winning index is known. Records the EXACT raw terms
@@ -329,6 +330,7 @@ namespace pwiz.Osprey.Scoring
                     bestCoelutionScore = coelutionScore;
                     bestPeak = p;
                     bestPeakIdx = pi;
+                    bestPeakPairs = pairs;
                     bestPeakFit = fit;
                 }
 
@@ -440,13 +442,15 @@ namespace pwiz.Osprey.Scoring
             // negatively scored such re-scored decoys near +14 and emptied the
             // protein stratum of a library-decoy search (63 of 1,356 reported
             // on the two-window Stellar subset).
+            var pickedPeak = bestPeak;  // The candidate the pick chose, before its apex is refined
             int si = bestPeak.StartIndex;
             int ei = bestPeak.EndIndex;
             if (OspreyEnvironment.RefXicByCorrelation)
             {
                 // OSPREY_REF_XIC=corr: the reference is the fragment that agrees best with the others
                 // inside the chosen peak, so an intense interfered fragment does not set the apex.
-                refXicIdx = ReferenceCorrelations.ChooseReference(xics, si, ei, refXicIdx);
+                // The pick's correlations over the chosen peak are those over [si, ei].
+                refXicIdx = ReferenceCorrelations.ChooseReference(bestPeakPairs, refXicIdx);
                 refXicIntensities = xics[refXicIdx].Intensities;
             }
             int newApexIdx = si;
@@ -524,7 +528,7 @@ namespace pwiz.Osprey.Scoring
             // accessors null) and both features evaluate to 0.0, as before.
             if (context.Resolution.HasMs1Features)
             {
-                ProduceMs1Data(candidate, xics, bestPeak, startScan, windowRts,
+                ProduceMs1Data(candidate, xics, bestPeak, bestPeakPairs, startScan, windowRts,
                     ms1Spectra, ms1Calibration,
                     out XicData ms1PrecursorXic, out XicData ms1ReferenceXic, out double[] apexEnvelope);
                 if (ms1PrecursorXic != null)
@@ -563,27 +567,36 @@ namespace pwiz.Osprey.Scoring
                     twoSigmaSq, pickModel, config, overrideBounds.Value, bestPeak, bestCoelutionScore, bestRankScore,
                     corrCandidateConfig, corrXics, out corrRunnerUpPeaks)
                 : capturedPeaks;
+            PeakPairCorrelations corrBestPeakPairs = null;
             if (corrCandidateConfig != null && !overrideBounds.HasValue)
-                corrRunnerUpPeaks = WithCoelutionOver(corrXics, capturedPeaks);
+                corrRunnerUpPeaks = WithCoelutionOver(corrXics, capturedPeaks, pickedPeak, out corrBestPeakPairs);
 
-            // The rebuilt bestPeak keeps the picked peak's StartIndex and EndIndex, so the pick's fit
-            // of it is the scorer's median-polish fit of the chosen peak.
+            // The rebuilt bestPeak keeps the picked peak's StartIndex and EndIndex, so the pick's
+            // pairwise correlations and fit over it are the scorer's over the chosen peak.
             extracted = new ExtractedPeak(
                 xics, refXicIdx, refXicIntensities, bestPeak, startScan, apexSpectrum, capturedPeaks, runnerUpPeaks,
-                bestPeakFit);
+                bestPeakPairs, bestPeakFit);
             if (corrXics != null)
-                extracted.SetCorrelationXics(corrXics, corrRunnerUpPeaks);
+                extracted.SetCorrelationXics(corrXics, corrRunnerUpPeaks, corrBestPeakPairs);
             return true;
         }
 
         // The candidates with each one's coelution score replaced by the mean pairwise correlation of
-        // xics over its bounds, which must index the same scans; the pick (rank) scores are kept.
+        // xics over its bounds, which must index the same scans; the pick (rank) scores are kept. The
+        // pairwise correlations over the picked candidate are returned in pickedPairs.
         private static List<(XICPeakBounds peak, double coelutionScore, double rankScore)> WithCoelutionOver(
-            List<XicData> xics, List<(XICPeakBounds peak, double coelutionScore, double rankScore)> candidates)
+            List<XicData> xics, List<(XICPeakBounds peak, double coelutionScore, double rankScore)> candidates,
+            XICPeakBounds picked, out PeakPairCorrelations pickedPairs)
         {
+            pickedPairs = null;
             var result = new List<(XICPeakBounds peak, double coelutionScore, double rankScore)>(candidates.Count);
             foreach (var c in candidates)
-                result.Add((c.peak, MeanPairCorrelation(xics, c.peak.StartIndex, c.peak.EndIndex), c.rankScore));
+            {
+                var pairs = PeakPairCorrelations.Compute(xics, c.peak.StartIndex, c.peak.EndIndex);
+                if (ReferenceEquals(c.peak, picked))
+                    pickedPairs = pairs;
+                result.Add((c.peak, pairs.MeanValid(), c.rankScore));
+            }
             return result;
         }
 
@@ -592,17 +605,19 @@ namespace pwiz.Osprey.Scoring
         /// a Gaussian RT penalty, the log apex intensity of the reference XIC and (when
         /// <paramref name="needMedianPolish"/>) the candidate's library cosine, combined by the
         /// pick model or, without one, as the product coelution * rt_penalty * ln_intensity.
-        /// Returns the pick (rank) score, and in <paramref name="fit"/> the median-polish fit the
-        /// library cosine came from (null when it was not computed).
+        /// Returns the pick (rank) score, in <paramref name="pairs"/> the pairwise fragment
+        /// correlations the coelution is the mean of, and in <paramref name="fit"/> the median-polish
+        /// fit the library cosine came from (null when it was not computed).
         /// </summary>
         private static double ScoreCandidatePeak(LibraryEntry candidate, List<XicData> xics,
             double[] refXicIntensities, XICPeakBounds p, double rtResidual, double twoSigmaSq,
             PickLdaModel pickModel, bool needMedianPolish,
             out double coelutionScore, out double rtPenalty, out double intensityWeight, out double medianPolish,
-            out PeakPolishFit fit)
+            out PeakPairCorrelations pairs, out PeakPolishFit fit)
         {
             fit = null;
-            coelutionScore = MeanPairCorrelation(xics, p.StartIndex, p.EndIndex);
+            pairs = PeakPairCorrelations.Compute(xics, p.StartIndex, p.EndIndex);
+            coelutionScore = pairs.MeanValid();
 
             rtPenalty = Math.Exp(-(rtResidual * rtResidual) / twoSigmaSq);
 
@@ -709,7 +724,7 @@ namespace pwiz.Osprey.Scoring
                 if (rtResidual > rtTolerance || (apexRt >= bounds.Start && apexRt <= bounds.End))
                     continue;
                 double rankScore = ScoreCandidatePeak(candidate, xics, refXicIntensities, p, rtResidual,
-                    twoSigmaSq, pickModel, pickModel != null, out double coelutionScore, out _, out _, out _, out _);
+                    twoSigmaSq, pickModel, pickModel != null, out double coelutionScore, out _, out _, out _, out _, out _);
                 result.Add((p, coelutionScore, rankScore));
                 if (corrXics != null)
                     corrResult.Add((p, MeanPairCorrelation(corrXics, p.StartIndex, p.EndIndex), rankScore));
@@ -721,23 +736,7 @@ namespace pwiz.Osprey.Scoring
         // coelution score.
         private static double MeanPairCorrelation(List<XicData> xics, int start, int end)
         {
-            double sum = 0.0;
-            int count = 0;
-            for (int ii = 0; ii < xics.Count; ii++)
-            {
-                for (int jj = ii + 1; jj < xics.Count; jj++)
-                {
-                    double corr = ScoringMath.PearsonCorrelationInRange(
-                        xics[ii].Intensities, xics[jj].Intensities,
-                        start, end);
-                    if (!double.IsNaN(corr))
-                    {
-                        sum += corr;
-                        count++;
-                    }
-                }
-            }
-            return count > 0 ? sum / count : 0.0;
+            return PeakPairCorrelations.Compute(xics, start, end).MeanValid();
         }
 
         /// <summary>
@@ -1305,7 +1304,7 @@ namespace pwiz.Osprey.Scoring
         /// when there is no apex MS1 scan.
         /// </summary>
         private static void ProduceMs1Data(
-            LibraryEntry candidate, List<XicData> xics, XICPeakBounds peak,
+            LibraryEntry candidate, List<XicData> xics, XICPeakBounds peak, PeakPairCorrelations peakPairs,
             int startScan, double[] windowRts,
             List<MS1Spectrum> ms1Spectra, MzCalibrationResult ms1Calibration,
             out XicData precursorXic, out XicData referenceXic, out double[] apexEnvelope)
@@ -1338,7 +1337,12 @@ namespace pwiz.Osprey.Scoring
                 if (total >= bestTotal) { bestTotal = total; refXicIdx = f; }
             }
             if (OspreyEnvironment.RefXicByCorrelation)
-                refXicIdx = ReferenceCorrelations.ChooseReference(xics, start, end, refXicIdx);
+            {
+                // The peak's pairwise correlations, unless clamping moved the range off its bounds.
+                refXicIdx = peakPairs != null && peakPairs.Covers(xics, start, end)
+                    ? ReferenceCorrelations.ChooseReference(peakPairs, refXicIdx)
+                    : ReferenceCorrelations.ChooseReference(xics, start, end, refXicIdx);
+            }
 
             // MS1 calibration: reverse-calibrate search m/z and use calibrated tolerance.
             // Matches Rust pipeline.rs:5363-5370 (reverse_calibrate_mz + calibrated_tolerance_ppm).
@@ -1522,14 +1526,24 @@ namespace pwiz.Osprey.Scoring
         /// </summary>
         public PeakPolishFit BestPeakFit { get; }
 
+        /// <summary>The pick's pairwise correlations of <see cref="Xics"/> over <see cref="BestPeak"/>.</summary>
+        public PeakPairCorrelations BestPeakPairs { get; }
+
+        /// <summary>
+        /// The pairwise correlations of <see cref="CorrelationXics"/> over <see cref="BestPeak"/>, when
+        /// scoring the runner-up candidates over them computed these; otherwise null.
+        /// </summary>
+        public PeakPairCorrelations CorrelationBestPeakPairs { get; private set; }
+
         public ExtractedPeak(
             List<XicData> xics, int refXicIdx, double[] refXicIntensities,
             XICPeakBounds bestPeak, int startScan, Spectrum apexSpectrum,
             List<(XICPeakBounds peak, double coelutionScore, double rankScore)> capturedPeaks,
             List<(XICPeakBounds peak, double coelutionScore, double rankScore)> runnerUpPeaks,
-            PeakPolishFit bestPeakFit)
+            PeakPairCorrelations bestPeakPairs, PeakPolishFit bestPeakFit)
         {
             RunnerUpPeaks = runnerUpPeaks;
+            BestPeakPairs = bestPeakPairs;
             BestPeakFit = bestPeakFit;
             Xics = xics;
             RefXicIdx = refXicIdx;
@@ -1541,10 +1555,12 @@ namespace pwiz.Osprey.Scoring
         }
 
         public void SetCorrelationXics(List<XicData> correlationXics,
-            List<(XICPeakBounds peak, double coelutionScore, double rankScore)> correlationRunnerUpPeaks)
+            List<(XICPeakBounds peak, double coelutionScore, double rankScore)> correlationRunnerUpPeaks,
+            PeakPairCorrelations correlationBestPeakPairs)
         {
             CorrelationXics = correlationXics;
             CorrelationRunnerUpPeaks = correlationRunnerUpPeaks;
+            CorrelationBestPeakPairs = correlationBestPeakPairs;
         }
     }
 }
