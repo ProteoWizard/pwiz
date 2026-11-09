@@ -22,6 +22,7 @@
  */
 
 using System.Collections.Generic;
+using pwiz.Osprey.Chromatography;
 
 namespace pwiz.Osprey.Scoring
 {
@@ -49,6 +50,55 @@ namespace pwiz.Osprey.Scoring
         {
             Polish = polish;
             PeakXics = peakXics;
+        }
+    }
+
+    /// <summary>
+    /// The scoring median-polish fit of fragment XICs cropped to one peak, with the cropped
+    /// inputs it was fit to. The learned pick fits every candidate peak this way for its library
+    /// cosine, and the scorer publishes the chosen peak's fit as the <see cref="MedianPolishByproduct"/>;
+    /// both crop the same XICs over the same scans and fit with the same settings, so the pick's
+    /// fit of the winning peak is the one the scorer publishes, and it is kept rather than refit.
+    /// </summary>
+    internal sealed class PeakPolishFit
+    {
+        /// <summary>The per-fragment XIC slices, keyed by library fragment index.</summary>
+        public List<KeyValuePair<int, double[]>> PeakXics { get; }
+
+        /// <summary>The retention times of the cropped scans.</summary>
+        public double[] PeakRts { get; }
+
+        /// <summary>The fit, or null when <see cref="TukeyMedianPolish.Compute"/> returned none.</summary>
+        public TukeyMedianPolishResult Polish { get; }
+
+        private PeakPolishFit(List<KeyValuePair<int, double[]>> peakXics, double[] peakRts, TukeyMedianPolishResult polish)
+        {
+            PeakXics = peakXics;
+            PeakRts = peakRts;
+            Polish = polish;
+        }
+
+        /// <summary>
+        /// Crop <paramref name="xics"/> to the <paramref name="peakLen"/> scans from
+        /// <paramref name="startIndex"/> and fit them with the scoring iterations and tolerance.
+        /// </summary>
+        public static PeakPolishFit Compute(IReadOnlyList<XicData> xics, int startIndex, int peakLen)
+        {
+            var peakXics = new List<KeyValuePair<int, double[]>>(xics.Count);
+            var peakRts = new double[peakLen];
+            for (int s = 0; s < peakLen; s++)
+                peakRts[s] = xics[0].RetentionTimes[startIndex + s];
+            for (int xi = 0; xi < xics.Count; xi++)
+            {
+                var src = xics[xi].Intensities;
+                var slice = new double[peakLen];
+                for (int s = 0; s < peakLen; s++)
+                    slice[s] = src[startIndex + s];
+                peakXics.Add(new KeyValuePair<int, double[]>(xics[xi].FragmentIndex, slice));
+            }
+            var polish = TukeyMedianPolish.Compute(peakXics, peakRts,
+                TukeyMedianPolish.SCORING_MAX_ITERATIONS, TukeyMedianPolish.SCORING_TOLERANCE);
+            return new PeakPolishFit(peakXics, peakRts, polish);
         }
     }
 

@@ -281,36 +281,38 @@ namespace pwiz.Osprey.Scoring
             // Skyline's IPeakFeatureCalculator.
             ospreyContext.ClearByproducts();
 
-            // Tukey median-polish inputs + fit (features 15, 16, 19, 20). The crop,
-            // WriteMpInputsRow, and Compute stay here because the bisection
+            // Tukey median-polish inputs + fit (features 15, 16, 19, 20). The publish
+            // and WriteMpInputsRow stay here because the bisection
             // diagnostics (OspreyDiagnostics) live in the exe layer that
             // Osprey.Scoring cannot reference; the four feature values are
             // computed by the calculators from the published MedianPolishByproduct,
             // and the optional WriteMpDump fires after the feature vector below.
             // Crop XICs to the peak range so the polish operates only on signal,
             // not the wider RT search window. Matches Rust pipeline.rs:5198-5212.
+            // The learned pick already fit the chosen peak's crop for its library
+            // cosine (same XICs, scans and settings), so that fit is published
+            // rather than computed again; without it, the peak is fit here.
             int peakLen = bestPeak.EndIndex - bestPeak.StartIndex + 1;
             if (peakLen >= 3)
             {
-                var peakXics = CropToPeak(xics, bestPeak, peakLen, out var peakRts);
+                var fit = ext.BestPeakFit ?? PeakPolishFit.Compute(xics, bestPeak.StartIndex, peakLen);
 
                 // Bisection seam: dump (frag_pos, frag_idx, scan_idx, rt,
                 // intensity) for every median-polish call. Mirrors the
                 // Rust diagnostics::dump_mp_inputs at pipeline.rs:6494.
                 // Use the same input buffers passed to the median polish
-                // so we capture the exact data the algorithm sees.
+                // so we capture the exact data the algorithm sees (Compute
+                // does not modify them).
                 _diagnostics?.WriteMpInputsRow(
-                    candidate.Id, apexSpectrum.ScanNumber, peakXics, peakRts);
+                    candidate.Id, apexSpectrum.ScanNumber, fit.PeakXics, fit.PeakRts);
 
-                var polish = TukeyMedianPolish.Compute(peakXics, peakRts,
-                    TukeyMedianPolish.SCORING_MAX_ITERATIONS, TukeyMedianPolish.SCORING_TOLERANCE);
                 // Only publish when the fit converged. Every consumer (the four
                 // calculators and the WriteMpDump guard) treats a missing byproduct
                 // and a byproduct with null Polish identically (family default / no
                 // dump), so skipping the publish on a null fit is value-identical and
                 // avoids the allocation.
-                if (polish != null)
-                    ospreyContext.AddInfo(new MedianPolishByproduct(polish, peakXics));
+                if (fit.Polish != null)
+                    ospreyContext.AddInfo(new MedianPolishByproduct(fit.Polish, fit.PeakXics));
             }
 
             // The candidate peaks the runner-up features compare the chosen peak with: the ones the
@@ -401,26 +403,6 @@ namespace pwiz.Osprey.Scoring
             return any;
         }
 
-        // The fragment XICs cropped to the peak [StartIndex, StartIndex + peakLen), keyed by fragment
-        // index, with their retention times: the median-polish input.
-        private static List<KeyValuePair<int, double[]>> CropToPeak(List<XicData> xics, XICPeakBounds bestPeak,
-            int peakLen, out double[] peakRts)
-        {
-            var peakXics = new List<KeyValuePair<int, double[]>>(xics.Count);
-            peakRts = new double[peakLen];
-            for (int s = 0; s < peakLen; s++)
-                peakRts[s] = xics[0].RetentionTimes[bestPeak.StartIndex + s];
-            for (int xi = 0; xi < xics.Count; xi++)
-            {
-                var src = xics[xi].Intensities;
-                var slice = new double[peakLen];
-                for (int s = 0; s < peakLen; s++)
-                    slice[s] = src[bestPeak.StartIndex + s];
-                peakXics.Add(new KeyValuePair<int, double[]>(xics[xi].FragmentIndex, slice));
-            }
-            return peakXics;
-        }
-
         /// <summary>
         /// The window-local scoring state of the correlation-shape features under
         /// OSPREY_CORR_FRAGMENT_TOLERANCE: a second <see cref="OspreyScoringContext"/>, configured at
@@ -450,13 +432,13 @@ namespace pwiz.Osprey.Scoring
             {
                 PeakData.SetFrom(primary, ext.CorrelationXics);
                 Context.ClearByproducts();
+                // The wider-tolerance XICs differ from the ones the pick fit, so their fit is
+                // computed here; nothing of the primary crop can stand in for it.
                 if (_polish && peakLen >= 3)
                 {
-                    var peakXics = CropToPeak(ext.CorrelationXics, ext.BestPeak, peakLen, out var peakRts);
-                    var polish = TukeyMedianPolish.Compute(peakXics, peakRts,
-                        TukeyMedianPolish.SCORING_MAX_ITERATIONS, TukeyMedianPolish.SCORING_TOLERANCE);
-                    if (polish != null)
-                        Context.AddInfo(new MedianPolishByproduct(polish, peakXics));
+                    var fit = PeakPolishFit.Compute(ext.CorrelationXics, ext.BestPeak.StartIndex, peakLen);
+                    if (fit.Polish != null)
+                        Context.AddInfo(new MedianPolishByproduct(fit.Polish, fit.PeakXics));
                 }
                 if (ext.CorrelationRunnerUpPeaks != null)
                     Context.AddInfo(new PeakCandidatesByproduct(ext.CorrelationRunnerUpPeaks, ext.BestPeak));
