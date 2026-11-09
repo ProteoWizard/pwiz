@@ -2,6 +2,7 @@
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
+ *                Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -104,9 +105,9 @@ namespace pwiz.Osprey.Tasks
             }
 
             // The ANALYSIS-WIDE 1st-pass experiment sidecar IS an input, on every path: it is
-            // where the scope split put Pep and ExperimentAggregateScore, and it is how
+            // where the scope split put Pep and ExperimentAggregateScore, it is how
             // OSPREY_PASS2_QVALUE=transfer obtains its experiment values without competing at
-            // all. One file per analysis, not one per run - which is the distinction that makes
+            // all, and protein FDR scores every library protein from it. One file per analysis, not one per run - which is the distinction that makes
             // it compatible with a node that never sees the inputs.
             string pass1Experiment = FdrExperimentSidecar.PathFor(
                 ctx.Config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(ctx.Config),
@@ -568,6 +569,16 @@ namespace pwiz.Osprey.Tasks
                     swFdrBench.Elapsed.TotalSeconds);
             }
 
+            // The protein-group entrapment view is stored whether or not the report was asked
+            // for: it is the one pass-2 card made from the protein FDR result, which nothing
+            // else stores, so a report added later (--task ModelDiagnostics) folds the same
+            // product as a run with the flag. Before the blib, whose commit is what makes this
+            // task read as done; and not by a diagnostics-only regeneration, which touches no
+            // artifact but the report.
+            var proteinEntrapment = BuildProteinEntrapmentView(proteinFdr, libraryById);
+            if (!config.DiagnosticsOnly)
+                ModelDiagnosticsReport.WriteProteinEntrapment(config, proteinEntrapment, ValidityKey(ctx));
+
             // Write output blib - unless this is a diagnostics-only regeneration, whose whole
             // contract is that it touches no artifact but the report.
             ctx.LogInfo(string.Empty);
@@ -629,10 +640,41 @@ namespace pwiz.Osprey.Tasks
                 // holding every run's survivors, which is what removed the last
                 // O(runs x entries) structure in Stage 7.
                 WritePass2DiagnosticsStreamed(ctx, rescored, libraryById,
-                    config, stratumBaseIds);
+                    config, stratumBaseIds, proteinEntrapment);
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// The protein-group entrapment view for the diagnostics report: every reported group
+        /// with a picked-protein q, flagged when it is made only of entrapment proteins, against
+        /// the library's entrapment-protein to target-protein ratio. Null for a library without
+        /// entrapment proteins, which has nothing to estimate from.
+        /// </summary>
+        private static ModelDiagnosticsData.ProteinEntrapmentView BuildProteinEntrapmentView(
+            SecondPassProteinFdrResult proteinFdr, IReadOnlyDictionary<uint, LibraryEntry> libraryById)
+        {
+            var targetProteins = new HashSet<string>(StringComparer.Ordinal);
+            var entrapmentProteins = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var lib in libraryById.Values)
+            {
+                if (lib == null || EntrapmentLibraryClassifier.IsDecoySide(lib))
+                    continue;
+                bool onEntrapmentProtein = EntrapmentLibraryClassifier.IsOnEntrapmentProtein(lib);
+                foreach (string accession in lib.ProteinIds)
+                    (onEntrapmentProtein ? entrapmentProteins : targetProteins).Add(accession);
+            }
+            if (entrapmentProteins.Count == 0)
+                return null;
+            var groups = new List<KeyValuePair<bool, double>>();
+            foreach (var group in proteinFdr.Parsimony.Groups)
+            {
+                if (!proteinFdr.ProteinFdr.GroupQvalues.TryGetValue(group.Id, out double q))
+                    continue;
+                groups.Add(new KeyValuePair<bool, double>(EntrapmentLibraryClassifier.IsEntrapment(group.Accessions), q));
+            }
+            return ModelDiagnosticsData.BuildProteinEntrapmentView(groups, targetProteins.Count, entrapmentProteins.Count);
         }
 
         /// <summary>
@@ -808,7 +850,11 @@ namespace pwiz.Osprey.Tasks
             ProfilerHooks.LogMemoryStats(ctx, @"pass2-fold: after the pass-2 overlays");
             ProfilerHooks.CaptureRetentionSnapshot(@"pass2-join-end");
 
-            WritePass2DiagnosticsStreamed(ctx, rescored, libraryById, config, stratumBaseIds);
+            // No protein FDR ran on this arm, so the protein-group entrapment card is not
+            // rebuilt here: it is the one the join stored, when its stamp says it is this
+            // analysis's (ModelDiagnosticsReport.EXT_PROTEIN_ENTRAPMENT).
+            WritePass2DiagnosticsStreamed(ctx, rescored, libraryById, config, stratumBaseIds,
+                ModelDiagnosticsReport.ReadProteinEntrapment(config, ValidityKey(ctx), ctx));
             return true;
         }
 
@@ -840,12 +886,13 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private void WritePass2DiagnosticsStreamed(PipelineContext ctx, RescoredEntries rescored,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
-            OspreyConfig config, HashSet<uint> stratumBaseIds)
+            OspreyConfig config, HashSet<uint> stratumBaseIds,
+            ModelDiagnosticsData.ProteinEntrapmentView proteinEntrapment)
         {
             try
             {
                 WritePass2DiagnosticsStreamedCore(ctx, rescored, libraryById,
-                    config, stratumBaseIds);
+                    config, stratumBaseIds, proteinEntrapment);
             }
             catch (Exception ex)
             {
@@ -856,7 +903,8 @@ namespace pwiz.Osprey.Tasks
 
         private void WritePass2DiagnosticsStreamedCore(PipelineContext ctx, RescoredEntries rescored,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
-            OspreyConfig config, HashSet<uint> stratumBaseIds)
+            OspreyConfig config, HashSet<uint> stratumBaseIds,
+            ModelDiagnosticsData.ProteinEntrapmentView proteinEntrapment)
         {
             // The pass-1 product is what pass 2 ENRICHES, so its absence means there is nothing
             // for this fold to attach to - and the fold is two full passes over the stream,
@@ -946,7 +994,7 @@ namespace pwiz.Osprey.Tasks
 
             ModelDiagnosticsReport.WritePass2AndFinalizeFromAccumulator(
                 pass1Data, accumulator, coAssignment, config, ctx,
-                ValidityKey(ctx));
+                ValidityKey(ctx), proteinEntrapment);
         }
 
         /// <summary>
@@ -1045,7 +1093,8 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx)
         {
             var result = ProteinFdrEngine.RunSecondPass(
-                rescored.StreamFiles(OspreyTasksResources.SecondPassFdrTask_RunProteinFdr_Collecting_best_scores_for_protein_FDR), fullLibrary, config, ctx);
+                rescored.StreamFiles(OspreyTasksResources.SecondPassFdrTask_RunProteinFdr_Collecting_best_scores_for_protein_FDR), fullLibrary,
+                ReadFirstPassProteinScores(fullLibrary, config), config, ctx);
 
             // The 2nd-pass sidecar was written BEFORE this protein FDR ran - it is one of its
             // inputs - so the protein column it carries is still the pass-1 value at this point.
@@ -1106,6 +1155,32 @@ namespace pwiz.Osprey.Tasks
                     ctx, ctx.LogWarning);
             }
             return result;
+        }
+
+        /// <summary>
+        /// Every library protein's best first-pass score on each side, from the analysis-wide
+        /// 1st-pass experiment sidecar: one aggregate score per entry_id over every scored
+        /// precursor, decoys included, recorded before compaction dropped most of them.
+        ///
+        /// <para>Absence is FATAL. There is no second source - the pool in hand has lost those
+        /// decoys - and a protein FDR without them reports q-values far below the real error
+        /// rate.</para>
+        /// </summary>
+        private static LibraryProteinScores ReadFirstPassProteinScores(List<LibraryEntry> fullLibrary,
+            OspreyConfig config)
+        {
+            string path = FdrExperimentSidecar.PathFor(config.OutputBlib,
+                ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass);
+            var scores = new LibraryProteinScores(fullLibrary);
+            if (string.IsNullOrEmpty(path) ||
+                !FdrExperimentSidecar.ReadRecords(path, FdrScoresSidecar.Pass.FirstPass,
+                    record => scores.Add(record.EntryId, record.ExperimentAggregateScore)))
+            {
+                throw new InvalidDataException(string.Format(
+                    OspreyTasksResources.SecondPassFdrTask_ReadFirstPassProteinScores_Protein_FDR_could_not_read_the_first_pass_scores_in__0___Run_the_FirstPassFDR_task_again_to_rewrite_it_,
+                    path ?? FdrExperimentSidecar.EXT));
+            }
+            return scores;
         }
 
         /// <summary>
@@ -1243,6 +1318,12 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(LogTag.COUNT, @"Stage 1 passing peptides: {0}", passingPeptides.Count);
             ctx.LogInfo(LogTag.COUNT, @"Stage 2 passing precursors: {0}", passingPrecursors.Count);
 
+            // Entrapment ran through every stage as a target, and the FDRBench input and the
+            // diagnostics have read it as such; here, at the output alone, it is left out when
+            // asked, so the audited run is the reported run.
+            if (config.StripEntrapment)
+                StripEntrapment(passingEntries, bestByPrecursor, libraryById, ctx);
+
             // A search that reports nothing fails rather than succeeding with an empty .blib,
             // which only a later step could notice. An earlier run's .blib of the same name is
             // removed, so nothing reads it as this run's result.
@@ -1285,6 +1366,34 @@ namespace pwiz.Osprey.Tasks
                 OspreyTasksResources.SecondPassFdrTask_WriteBlibOutput_Wrote__1__library_spectra_with__2__peaks_from_1_run_to__3_,
                 OspreyTasksResources.SecondPassFdrTask_WriteBlibOutput_Wrote__1__library_spectra_with__2__peaks_across__0__runs_to__3_,
                 bestByPrecursor.Count, passingEntries.Count, config.OutputBlib));
+        }
+
+        /// <summary>
+        /// Removes every entrapment precursor (<see cref="EntrapmentLibraryClassifier.IsEntrapment(LibraryEntry)"/>
+        /// of its winning entry) from the passing set the blib is written from: its best run and
+        /// every run's observation of it. A protein group made only of entrapment proteins then
+        /// gets no spectrum and so no row.
+        /// </summary>
+        private static void StripEntrapment(List<PassingObservation> passingEntries,
+            Dictionary<(string, byte), KeyValuePair<string, FdrEntry>> bestByPrecursor,
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById, PipelineContext ctx)
+        {
+            var stripped = new HashSet<(string, byte)>();
+            foreach (var kv in bestByPrecursor)
+            {
+                if (libraryById.TryGetValue(kv.Value.Value.EntryId, out var lib) &&
+                    EntrapmentLibraryClassifier.IsEntrapment(lib))
+                {
+                    stripped.Add(kv.Key);
+                }
+            }
+            foreach (var key in stripped)
+                bestByPrecursor.Remove(key);
+            int observations = passingEntries.RemoveAll(o => stripped.Contains((o.ModifiedSequence, o.Charge)));
+            ctx.LogInfo(LogTag.ENTRAPMENT, string.Format(
+                OspreyTasksResources.SecondPassFdrTask_StripEntrapment_Left__0__entrapment_precursors___1__observations__out_of_the_result_,
+                stripped.Count, observations));
+            ctx.LogInfo(LogTag.COUNT, @"Entrapment precursors stripped from the blib: {0}", stripped.Count);
         }
 
         // Stage 1 (peptide gate): the configured FdrLevel determines which

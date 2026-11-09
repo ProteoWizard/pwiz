@@ -209,7 +209,13 @@
     race the same first-time extraction; everything staged is skip-if-present after.
 
 .PARAMETER NoBuild
-    Skip the Osprey build step (use the existing Release binary).
+    Skip the Osprey build step (use the existing binary of the chosen -Configuration).
+
+.PARAMETER Configuration
+    The build configuration to build (unless -NoBuild) and run the legs from: Release
+    (the default, what TeamCity runs) or Debug, for a session whose Release output is
+    in use by a long run. The goldens are configuration-independent: Debug and Release
+    produce the same bytes.
 
 .PARAMETER KeepRunDirs
     How many COMPLETED TestResults\regression-* run dirs the startup prune leaves in
@@ -295,6 +301,8 @@ param(
     [int]$Threads = 16,
     [switch]$TeamCity,
     [switch]$NoBuild,
+    [ValidateSet('Release', 'Debug')]
+    [string]$Configuration = 'Release',
     [switch]$StageOnly,
     [ValidateRange(0, [int]::MaxValue)]
     [int]$KeepRunDirs = 1,
@@ -359,7 +367,7 @@ if (-not $retainOutput -and -not $PSBoundParameters.ContainsKey('KeepRunDirs')) 
 $scriptRoot   = Split-Path -Parent $PSCommandPath
 $regressionDir = Join-Path $scriptRoot 'Regression'
 $goldenRoot   = Join-Path $scriptRoot 'osprey-regression.data'
-$ospreyBinDir = Join-Path $scriptRoot 'Osprey\bin\x64\Release\net10.0'
+$ospreyBinDir = Join-Path $scriptRoot "Osprey\bin\x64\$Configuration\net10.0"
 $ospreyExe    = Join-Path $ospreyBinDir 'Osprey.exe'
 
 # Bit-parity version pin. The build stamps a daily Skyline-scheme version
@@ -805,13 +813,13 @@ if (-not $NoBuild) {
             "NO_VENDOR_SUPPORT mode and every .raw throws.")
         exit 2
     }
-    Write-Progress-Tc 'Building Osprey (Release, net10.0)'
+    Write-Progress-Tc "Building Osprey ($Configuration, net10.0)"
     $buildPs1 = Join-Path $scriptRoot 'build.ps1'
     if ($IAgreeToVendorLicenses) {
-        & $buildPs1 -Configuration Release -NoTests -IAgreeToVendorLicenses
+        & $buildPs1 -Configuration $Configuration -NoTests -IAgreeToVendorLicenses
     }
     else {
-        & $buildPs1 -Configuration Release -NoTests
+        & $buildPs1 -Configuration $Configuration -NoTests
     }
     if ($LASTEXITCODE -ne 0) { Write-Problem-Tc "Osprey build failed (exit $LASTEXITCODE)"; exit $LASTEXITCODE }
 }
