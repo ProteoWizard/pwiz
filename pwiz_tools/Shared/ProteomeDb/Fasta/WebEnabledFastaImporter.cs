@@ -1033,7 +1033,7 @@ namespace pwiz.ProteomeDatabase.Fasta
             // CONSIDER(bspratt): Could this be simplified?
             var cancelled = false;
             var abort = false;
-            var rateLimitWait = TimeSpan.Zero; // Taken at the end of the pass, so no refusal holds up another service
+            var rateLimitedServices = new HashSet<char>(); // Waited on at the end of the pass, so no refusal holds up another service
             var politeStopwatch = new Stopwatch();
             var totalSuccessesThisBatch = 0;
             politeStopwatch.Start();
@@ -1089,15 +1089,10 @@ namespace pwiz.ProteomeDatabase.Fasta
                     // the service asked: it is sent nothing, and its searches are left to a later
                     // pass, while the other services are still asked. The give-up seam keeps its own
                     // bounded wait-and-retry.
-                    if (!GiveUpOnUnresponsiveWebService && !_probingWebAccess)
+                    if (!GiveUpOnUnresponsiveWebService && !_probingWebAccess && GetRateLimitRemaining(searchType) > TimeSpan.Zero)
                     {
-                        var refusedFor = GetRateLimitRemaining(searchType);
-                        if (refusedFor > TimeSpan.Zero)
-                        {
-                            if (refusedFor > rateLimitWait)
-                                rateLimitWait = refusedFor;
-                            break;
-                        }
+                        rateLimitedServices.Add(GetRateLimitedService(searchType));
+                        break;
                     }
                     WebserviceLookupOutcome lookupResult;
                     try
@@ -1147,9 +1142,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                             // of the pass.
                             if (rateLimited)
                             {
-                                var wait = GetRateLimitWait(MAX_RATE_LIMIT_DELAY);
-                                if (wait > rateLimitWait)
-                                    rateLimitWait = wait;
+                                rateLimitedServices.Add(GetRateLimitedService(searchType));
                                 break;
                             }
                             abort = true;
@@ -1292,13 +1285,17 @@ namespace pwiz.ProteomeDatabase.Fasta
                     break;
             }
 
-            // Wait out the rate limits met in this pass, or the pass the loader schedules next would
-            // find the same services still refusing and come straight back
-            if (rateLimitWait > TimeSpan.Zero && !cancelled && !progressMonitor.IsCanceled)
+            // A pass that resolved nothing because services were refusing requests waits until the
+            // first of them will take one, or the pass the loader schedules next would find them
+            // still refusing and come straight back. A pass that made progress returns its results
+            // at once: the next one skips the refusing services again.
+            if (rateLimitedServices.Count > 0 && totalSuccessesThisBatch == 0 && !cancelled && !progressMonitor.IsCanceled)
             {
-                if (rateLimitWait > MAX_RATE_LIMIT_DELAY)
-                    rateLimitWait = MAX_RATE_LIMIT_DELAY;
-                _webSearchProvider.WaitForRateLimit(rateLimitWait, progressMonitor);
+                var wait = rateLimitedServices.Min(service => _webSearchProvider.RateLimits.GetRemaining(service));
+                if (wait > MAX_RATE_LIMIT_DELAY)
+                    wait = MAX_RATE_LIMIT_DELAY;
+                if (wait > TimeSpan.Zero)
+                    _webSearchProvider.WaitForRateLimit(wait, progressMonitor);
             }
         }
 
