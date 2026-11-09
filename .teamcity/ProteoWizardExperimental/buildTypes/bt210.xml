@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="2dfdeafc-e1ff-451e-98c3-689cb41982aa" paused="true" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Skyline master and PRs (Windows x86_64 debug, with code coverage)</name>
+  <description>Runs DotCover code coverage analysis on Skyline</description>
+  <settings>
+    <inherits>
+      <ref id="ProteoWizard_GitHubReportingConfig" />
+      <ref id="ProteoWizard_WindowsBase" />
+      <ref id="ProteoWizard_GitHubMasterPrTrigger" />
+    </inherits>
+    <options>
+      <option name="artifactRules" value="build-nt-x86/*.tar.bz2&#xA;pwiz_tools/Skyline/TestResults/*.trx&#xA;pwiz_tools/Topograph/TestResults/*.trx" />
+      <option name="branchFilter" value="+:&lt;default&gt;&#xD;&#xA;+:pull/3317" />
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutDirectory" value="%WINDOWS_CHECKOUT_DIR%" />
+      <option name="checkoutMode" value="ON_AGENT" />
+      <option name="executionTimeoutMin" value="300" />
+      <option name="shouldFailBuildOnBadExitCode" value="false" />
+    </options>
+    <disabled-settings>
+      <setting-ref ref="RUNNER_105" />
+      <setting-ref ref="RUNNER_333" />
+      <setting-ref ref="RUNNER_55" />
+    </disabled-settings>
+    <parameters>
+      <param name="env.address_model_property" value="address-model=64" />
+      <param name="env.address_model_short" value="64" />
+      <param name="env.architecture_property" value="" />
+      <param name="env.link_property" value="" />
+      <param name="env.variant_property" value="debug" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_105" name="Create PrositConfig file" type="MRPP_CreateTextFile">
+        <parameters>
+          <param name="content" value="%prositconfig_production_xml%" />
+          <param name="system.dest.file" value="pwiz_tools/Skyline/Model/Prosit/Config/PrositConfig_production.xml" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_simpleRunner_141" name="" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="scripts/misc/tcbuild.bat" />
+          <param name="command.parameters" value="pwiz_tools\Skyline//Build --i-agree-to-the-vendor-licenses -j%env.NUMBER_OF_CORES% %env.toolset_property% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property% --without-compassxtract --teamcity-test-decoration runtime-debugging=off optimization=speed inlining=full debug-symbols=on iterator-debugging=off --automated --official" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_55" name="" type="VS.Solution">
+        <parameters>
+          <param name="build-file-path" value="pwiz_tools/Skyline/Skyline.sln" />
+          <param name="msbuild.prop.Configuration" value="Debug" />
+          <param name="msbuild.prop.Platform" value="x64" />
+          <param name="msbuild_version" value="16.0" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="run-platform" value="x86" />
+          <param name="targets" value="TestRunner" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="toolsVersion" value="Current" />
+          <param name="vs.version" value="vs2019" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_333" name="Skyline Tests with code coverage by built-in TC DotCover" type="VisualStudioTest">
+        <parameters>
+          <param name="dotNetCoverage.NCover.HTMLReport.File.Sort" value="0" />
+          <param name="dotNetCoverage.NCover.HTMLReport.File.Type" value="1" />
+          <param name="dotNetCoverage.NCover.Reg" value="selected" />
+          <param name="dotNetCoverage.NCover.platformBitness" value="x86" />
+          <param name="dotNetCoverage.NCover.platformVersion" value="v2.0" />
+          <param name="dotNetCoverage.NCover3.Reg" value="selected" />
+          <param name="dotNetCoverage.NCover3.args" value="//ias .*" />
+          <param name="dotNetCoverage.NCover3.platformBitness" value="x86" />
+          <param name="dotNetCoverage.NCover3.platformVersion" value="v2.0" />
+          <param name="dotNetCoverage.NCover3.reporter.executable.args" value="//or FullCoverageReport:Html:{teamcity.report.path}" />
+          <param name="dotNetCoverage.PartCover.Reg" value="selected" />
+          <param name="dotNetCoverage.PartCover.includes" value="[*]*" />
+          <param name="dotNetCoverage.PartCover.platformBitness" value="x86" />
+          <param name="dotNetCoverage.PartCover.platformVersion" value="v2.0" />
+          <param name="dotNetCoverage.dotCover.filters"><![CDATA[+:Skyline
++:SkylineCmd
++:CommonTest
++:Test
++:Test*
++:pwiz.Common
++:pwiz.CommonUtil
++:BiblioSpec
++:MSGraph
++:ProteomeDb
++:ProteoWizardWrapper
++:SkylineTool]]></param>
+          <param name="dotNetCoverage.dotCover.home.path" value="%teamcity.tool.JetBrains.dotCover.CommandLineTools.DEFAULT%" />
+          <param name="dotNetCoverage.tool" value="dotcover" />
+          <param name="dotNetTestRunner.Type" value="GenericProcess" />
+          <param name="mstest_enable" value="checked" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="vstest_detect_team_city_logger" value="true" />
+          <param name="vstest_engine" value="VSTest" />
+          <param name="vstest_framework" value="default" />
+          <param name="vstest_include"><![CDATA[pwiz_tools\Skyline\bin\x64\Debug\Skyline.exe
+pwiz_tools\Skyline\bin\x64\Debug\SkylineCmd.exe
+pwiz_tools\Skyline\bin\x64\Debug\CommonTest.dll
+pwiz_tools\Skyline\bin\x64\Debug\Test.dll
+pwiz_tools\Skyline\bin\x64\Debug\Test*.dll]]></param>
+          <param name="vstest_platform" value="x64" />
+          <param name="vstest_runner_path" value="%teamcity.dotnet.vstest.16.0%" />
+          <param name="vstest_runsettings" value="pwiz_tools/Skyline/TestSettings_x64.runsettings" />
+        </parameters>
+      </runner>
+      <runner id="dotcover" name="" type="dotcover">
+        <parameters>
+          <param name="dotNetCoverage.dotCover.coveredProcessArguments" value="loop=1 language=en runsmallmoleculeversions=1 perftests=off teamcitytestdecoration=1" />
+          <param name="dotNetCoverage.dotCover.coveredProcessExecutable" value="%teamcity.build.checkoutDir%\pwiz_tools\Skyline\bin\x64\Debug\TestRunner.exe" />
+          <param name="dotNetCoverage.dotCover.filters"><![CDATA[+:Skyline-daily
++:SkylineCmd
++:BiblioSpec
++:ProteomeDb
++:MSGraph
++:CommonTest
++:pwiz.Common*
++:pwiz.PortableUtil
++:Test*
+-:TestUtil]]></param>
+          <param name="dotNetCoverage.dotCover.generateReport" value="true" />
+          <param name="dotNetCoverage.dotCover.home.path" value="%teamcity.tool.JetBrains.dotCover.CommandLineTools.DEFAULT%" />
+          <param name="dotNetCoverage.tool" value="dotcover" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements>
+      <contains id="RQ_466" name="teamcity.agent.jvm.os.name" value="Windows" />
+      <does-not-contain id="RQ_58" name="teamcity.agent.name" value="Agent 2" />
+    </requirements>
+    <build-triggers>
+      <build-trigger id="TRIGGER_1027" type="schedulingTrigger">
+        <parameters>
+          <param name="branchFilter" value="master" />
+          <param name="cronExpression_dm" value="*" />
+          <param name="cronExpression_dw" value="?" />
+          <param name="cronExpression_hour" value="*" />
+          <param name="cronExpression_min" value="0" />
+          <param name="cronExpression_month" value="*" />
+          <param name="cronExpression_sec" value="0" />
+          <param name="cronExpression_year" value="*" />
+          <param name="dayOfWeek" value="Sunday" />
+          <param name="enableQueueOptimization" value="true" />
+          <param name="hour" value="0" />
+          <param name="minute" value="0" />
+          <param name="revisionRule" value="lastFinished" />
+          <param name="schedulingPolicy" value="daily" />
+          <param name="timezone" value="SERVER" />
+          <param name="triggerBuildWithPendingChangesOnly" value="true" />
+          <param name="triggerRules"><![CDATA[+:.
+-:README.md
+-:.travis.yml
+-:appveyor.yml
+-:.gitignore
+-:pwiz_tools/Bumbershoot/**
+-:pwiz_tools/SeeMS/**
+-:pwiz_tools/MSConvertGUI/**]]></param>
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <build-extensions>
+      <extension id="BUILD_EXT_41" type="BuildFailureOnMetric">
+        <parameters>
+          <param name="anchorBuild" value="lastSuccessful" />
+          <param name="metricKey" value="CodeCoverageL" />
+          <param name="metricThreshold" value="0.05" />
+          <param name="metricUnits" value="metricUnitsDefault" />
+          <param name="moreOrLess" value="less" />
+          <param name="withBuildAnchor" value="true" />
+        </parameters>
+      </extension>
+      <extension id="BUILD_EXT_47" type="BuildFailureOnMetric">
+        <parameters>
+          <param name="anchorBuild" value="lastSuccessful" />
+          <param name="metricKey" value="CodeCoverageM" />
+          <param name="metricThreshold" value=".05" />
+          <param name="metricUnits" value="metricUnitsDefault" />
+          <param name="moreOrLess" value="less" />
+          <param name="withBuildAnchor" value="true" />
+        </parameters>
+      </extension>
+    </build-extensions>
+    <cleanup>
+      <policy type="days" cleanup-level="EVERYTHING">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepDays.count" value="365" />
+        </parameters>
+      </policy>
+      <policy type="builds" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepBuilds.count" value="2" />
+        </parameters>
+      </policy>
+    </cleanup>
+  </settings>
+</build-type>
+

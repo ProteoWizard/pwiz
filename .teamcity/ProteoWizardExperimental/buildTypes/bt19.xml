@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="f4a76d42-8804-494a-a9d6-328eb7ddb341" paused="true" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Skyline master and PRs (Windows x86)</name>
+  <description />
+  <settings>
+    <inherits>
+      <ref id="ProteoWizard_WindowsSkylineRelease" />
+      <ref id="ProteoWizard_GitHubReportingConfig" />
+      <ref id="ProteoWizard_WindowsBase" />
+    </inherits>
+    <options>
+      <option name="artifactRules" value="pwiz_tools/Skyline/TestResults/*.trx&#xA;pwiz_tools/Topograph/TestResults/*.trx&#xA;pwiz_tools/Skyline/TestResults/TestRunner results/DdaSearchTest/*.mzid.gz&#xA;pwiz_tools/Skyline/TestResults/TestRunner results/DdaSearchTest/TestDdaSearch.blib" />
+    </options>
+    <disabled-settings>
+      <setting-ref ref="TRIGGER_1043" />
+      <setting-ref ref="vcsTrigger" />
+    </disabled-settings>
+    <build-runners order="RUNNER_simpleRunner_131, Set_PYTHON_HOME_if_unset_by_agent" />
+    <build-triggers>
+      <build-trigger id="TRIGGER_1043" type="schedulingTrigger">
+        <parameters>
+          <param name="branchFilter" value="+:." />
+          <param name="cronExpression_dm" value="*" />
+          <param name="cronExpression_dw" value="?" />
+          <param name="cronExpression_hour" value="*" />
+          <param name="cronExpression_min" value="0" />
+          <param name="cronExpression_month" value="*" />
+          <param name="cronExpression_sec" value="0" />
+          <param name="cronExpression_year" value="*" />
+          <param name="dayOfWeek" value="Sunday" />
+          <param name="enableQueueOptimization" value="true" />
+          <param name="hour" value="0" />
+          <param name="minute" value="0" />
+          <param name="revisionRule" value="lastFinished" />
+          <param name="schedulingPolicy" value="daily" />
+          <param name="timezone" value="SERVER" />
+          <param name="triggerBuildWithPendingChangesOnly" value="true" />
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <cleanup>
+      <policy type="builds" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepBuilds.count" value="1" />
+        </parameters>
+      </policy>
+    </cleanup>
+  </settings>
+</build-type>
+

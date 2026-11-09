@@ -1,6 +1,7 @@
 /*
  * Original author: Brian Pratt <bspratt .at. proteinms dot net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -25,7 +26,9 @@
 
 using System;
 using System.IO;
-using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 
 namespace SkylineNightly
 {
@@ -34,10 +37,12 @@ namespace SkylineNightly
         public const string TokenEnvVar = "TEAMCITY_NIGHTLY_TEST_AUTH_TOKEN";
 
         /// <summary>
-        /// The bt209 branch a machine downloads SkylineNightly and its master SkylineTester from, as a
-        /// TeamCity branch locator such as "pull/4700". Unset means master. This is how a change to the
-        /// nightly tooling gets tried on a machine or two before it merges: set the variable there, and
-        /// the machine runs the pull request's build as if it were master, until the variable is unset.
+        /// The bt209 branch a machine downloads SkylineNightly itself from, as a TeamCity branch locator
+        /// such as "pull/4700". Unset means master. This is how a change to SkylineNightly gets tried on
+        /// a machine or two before it merges: set the variable there, and the machine runs the pull
+        /// request's SkylineNightly until the variable is unset. It changes nothing else: SkylineTester
+        /// still comes from the branch's own build, so SkylineNightly must always be able to drive the
+        /// SkylineTester of every branch, current or not.
         ///
         /// Set it as a persistent User-level variable (PowerShell - no admin needed), which the scheduled
         /// task picks up on its next run, as it does the TeamCity token:
@@ -73,24 +78,15 @@ namespace SkylineNightly
         }
 
         /// <summary>
-        /// The branch of the master build config this machine takes as master: what BranchEnvVar says,
-        /// or master.
+        /// The branch query for the SkylineNightly download, e.g. "?branch=master" or what BranchEnvVar says.
         /// </summary>
-        public static string GetMasterBranch()
+        public static string GetSkylineNightlyBranchQuery()
         {
             var branch = Environment.GetEnvironmentVariable(BranchEnvVar);
-            return string.IsNullOrWhiteSpace(branch) ? MASTER_BRANCH : branch.Trim();
+            return "?branch=" + Uri.EscapeDataString(string.IsNullOrWhiteSpace(branch) ? MASTER_BRANCH : branch.Trim());
         }
 
-        /// <summary>
-        /// The branch query for a download from the master build config, e.g. "?branch=master".
-        /// </summary>
-        public static string GetMasterBranchQuery()
-        {
-            return "?branch=" + Uri.EscapeDataString(GetMasterBranch());
-        }
-
-        // branchQuery is e.g. "?branch=master" (see GetMasterBranchQuery), or "" for build configs whose
+        // branchQuery is e.g. "?branch=master", or "" for build configs whose
         // VCS root pins the branch. useLastSuccessful selects the most recent successful build instead of
         // the most recent finished build; SkylineNightly switches to that during prolonged TC outages.
         public static string GetArtifactUrl(string buildType, string zipName, string branchQuery, bool useLastSuccessful)
@@ -99,21 +95,59 @@ namespace SkylineNightly
             return string.Format(ARTIFACT_URL_TEMPLATE, buildType, status, zipName, branchQuery);
         }
 
-        public static void ConfigureClient(WebClient client, string token)
+        /// <summary>
+        /// Downloads a TeamCity artifact to filePath, authenticating with the token. On a network or disk
+        /// failure, deletes the partial file and throws an <see cref="IOException"/> whose message names the cause.
+        /// </summary>
+        public static void DownloadArtifact(string url, string filePath, string token)
         {
-            // The current recommendation from MSFT for future-proofing HTTPS https://docs.microsoft.com/en-us/dotnet/framework/network-programming/tls
-            // is don't specify TLS levels at all, let the OS decide. But we worry that this will mess up Win7 and Win8 installs, so we continue to specify explicitly.
             try
             {
-                var Tls13 = (SecurityProtocolType)12288; // From decompiled SecurityProtocolType - compiler has no definition for some reason
-                ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | Tls13;
+                using (var client = new HttpClient())
+                {
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    // Headers only, so the default timeout does not cut off a large zip still streaming.
+                    using (var response = client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult())
+                    {
+                        response.EnsureSuccessStatusCode();
+                        using (var source = response.Content.ReadAsStreamAsync().GetAwaiter().GetResult())
+                        using (var target = File.Create(filePath))
+                        {
+                            source.CopyTo(target);
+                        }
+                    }
+                }
             }
-            catch (NotSupportedException)
+            catch (Exception e)
             {
-                ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12; // Probably an older Windows Server
-            }
+                try
+                {
+                    File.Delete(filePath);
+                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch
+                {
+                    // The download failure is what matters.
+                }
 
-            client.Headers[HttpRequestHeader.Authorization] = "Bearer " + token;
+                // With no cancellation token, a TaskCanceledException can only be HttpClient.Timeout
+                // expiring, and its own message ("A task was canceled.") would read like a cancellation.
+                if (e is TaskCanceledException)
+                    throw new IOException("The request timed out.", e);
+                if (e is HttpRequestException || e is IOException)
+                    throw new IOException(GetFullMessage(e), e);
+                throw;
+            }
+        }
+
+        // HttpClient reports "An error occurred while sending the request." and puts the actual
+        // cause (DNS, TLS, refused connection) in the inner exceptions, which the logs need to show.
+        private static string GetFullMessage(Exception e)
+        {
+            var message = e.Message;
+            for (var inner = e.InnerException; inner != null; inner = inner.InnerException)
+                message += " " + inner.Message;
+            return message;
         }
     }
 }

@@ -220,7 +220,7 @@
     <value>NoControl</value>
   </data>
   <data name="showTimestampsCheckbox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>238, 6</value>
+    <value>157, 6</value>
   </data>
   <data name="showTimestampsCheckbox.Size" type="System.Drawing.Size, System.Drawing">
     <value>108, 17</value>

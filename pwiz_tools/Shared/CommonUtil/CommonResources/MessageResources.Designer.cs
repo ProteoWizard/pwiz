@@ -372,6 +372,33 @@ namespace pwiz.Common.CommonResources {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to {0}: skipping, its outputs are current.
+        /// </summary>
+        public static string PipelineDriver_OnSkipped__0___skipping__its_outputs_are_current_ {
+            get {
+                return ResourceManager.GetString("PipelineDriver_OnSkipped__0___skipping__its_outputs_are_current_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: starting.
+        /// </summary>
+        public static string PipelineDriver_OnStarting__0___starting {
+            get {
+                return ResourceManager.GetString("PipelineDriver_OnStarting__0___starting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: done ({1:F1}s).
+        /// </summary>
+        public static string PipelineDriver_OnDone__0___done___1_F1_s_ {
+            get {
+                return ResourceManager.GetString("PipelineDriver_OnDone__0___done___1_F1_s_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Warning: process {0} had not exited {1} seconds after being killed; files it has open may still be locked..
         /// </summary>
         public static string ProcessRunner_KillAndWaitForExit_Warning__process__0__had_not_exited__1__seconds_after_being_killed__files_it_has_open_may_still_be_locked_ {
@@ -386,6 +413,78 @@ namespace pwiz.Common.CommonResources {
         public static string ProcessRunner_Run_Run_command_ {
             get {
                 return ResourceManager.GetString("ProcessRunner_Run_Run_command_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}h{1:00}m.
+        /// </summary>
+        public static string ProgressReporter_FormatElapsed__0_h_1_00_m {
+            get {
+                return ResourceManager.GetString("ProgressReporter_FormatElapsed__0_h_1_00_m", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}m{1:00}s.
+        /// </summary>
+        public static string ProgressReporter_FormatElapsed__0_m_1_00_s {
+            get {
+                return ResourceManager.GetString("ProgressReporter_FormatElapsed__0_m_1_00_s", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}s.
+        /// </summary>
+        public static string ProgressReporter_FormatElapsed__0_s {
+            get {
+                return ResourceManager.GetString("ProgressReporter_FormatElapsed__0_s", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}....
+        /// </summary>
+        public static string ProgressReporter_ProgressReporter__0____ {
+            get {
+                return ResourceManager.GetString("ProgressReporter_ProgressReporter__0____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}  {1:0.00}% ({2:N0}/{3:N0}, {4} elapsed).
+        /// </summary>
+        public static string ProgressReporter_Report__0____1_____2___3____4__elapsed_ {
+            get {
+                return ResourceManager.GetString("ProgressReporter_Report__0____1_____2___3____4__elapsed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The {0} step could not reload its results from the intermediate files (exit code {1})..
+        /// </summary>
+        public static string RehydrateFailedException_The__0__step_could_not_reload_its_results_from_the_intermediate_files__exit_code__1___ {
+            get {
+                return ResourceManager.GetString("RehydrateFailedException_The__0__step_could_not_reload_its_results_from_the_intermediate_files__exit_code__1___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Access denied: unable to create a file in the folder &apos;{0}&apos;. Adjust the folder write permissions or retry the operation after moving or copying files to a different folder..
+        /// </summary>
+        public static string SimpleFileSaver_GetTempFileName_Access_denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_ {
+            get {
+                return ResourceManager.GetString("SimpleFileSaver_GetTempFileName_Access_denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to allocate a temporary file in the folder &apos;{0}&apos; after {1} attempts..
+        /// </summary>
+        public static string SimpleFileSaver_GetTempFileName_Failed_to_allocate_a_temporary_file_in_the_folder___0___after__1__attempts_ {
+            get {
+                return ResourceManager.GetString("SimpleFileSaver_GetTempFileName_Failed_to_allocate_a_temporary_file_in_the_folder___0___after__1__attempts_", resourceCulture);
             }
         }
         

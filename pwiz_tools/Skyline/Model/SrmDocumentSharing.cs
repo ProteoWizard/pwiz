@@ -488,13 +488,10 @@ namespace pwiz.Skyline.Model
                     !measuredResults.CacheVersion.Equals(ShareType.SkylineVersion.CacheFormatVersion))
                 {
                     String cacheFileName = Path.GetFileName(pathCache);
-                    if (cacheFileName != null)
-                    {
-                        String newCachePath = Path.Combine(EnsureTempDir().DirPath, cacheFileName);
-                        MinimizeToFile(newCachePath, CacheFormat.FromVersion(ShareType.SkylineVersion.CacheFormatVersion));
-                        zip.AddFile(newCachePath);
-                        return;
-                    }
+                    String newCachePath = Path.Combine(EnsureTempDir().DirPath, cacheFileName);
+                    MinimizeToFile(newCachePath, CacheFormat.FromVersion(ShareType.SkylineVersion.CacheFormatVersion));
+                    zip.AddFile(newCachePath);
+                    return;
                 }
             }
             zip.AddFile(pathCache);

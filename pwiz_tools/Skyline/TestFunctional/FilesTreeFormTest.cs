@@ -505,7 +505,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     var measuredResults = srmDoc.MeasuredResults;
                     var chromatograms = measuredResults.Chromatograms.ToArray();
-                    var reversedChromatograms = new List<ChromatogramSet>(chromatograms.Reverse());
+                    var reversedChromatograms = new List<ChromatogramSet>(Enumerable.Reverse(chromatograms));
 
                     measuredResults = measuredResults.ChangeChromatograms(reversedChromatograms);
                     return srmDoc.ChangeMeasuredResults(measuredResults);

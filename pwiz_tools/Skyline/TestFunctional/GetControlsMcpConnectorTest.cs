@@ -54,8 +54,7 @@ namespace pwiz.SkylineTestFunctional
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(
                 documentSettingsDlg.EditAnnotationList);
-            var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
-            string dlgId = GetOpenFormId<DefineAnnotationDlg>();
+            var defineAnnotationDlg = ShowMcpConnectorForm<DefineAnnotationDlg>(editListDlg.AddItem, out var dlgId);
 
             var controls = McpConnector.GetControls(dlgId);
             Assert.IsTrue(controls.Length > 0, @"GetControls returned nothing.");

@@ -862,7 +862,7 @@ namespace pwiz.Skyline.Model.Irt
 
             private readonly List<double> _prevIrts;
             public IEnumerable<double> PrevIrts => _prevIrts;
-            public double? LatestIrt => _prevIrts != null && _prevIrts.Count > 0 ? _prevIrts.Last() : (double?)null;
+            public double? LatestIrt => _prevIrts != null && _prevIrts.Count > 0 ? _prevIrts.Last() : null;
         }
     }
 }

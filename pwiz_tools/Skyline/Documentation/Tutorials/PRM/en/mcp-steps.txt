@@ -186,8 +186,8 @@ InvokeContextMenuItem "GraphSummary:Peak Areas - Replicate Comparison" "Normaliz
 # WaitForNoForm         "PopupPickList:*"
 
 # --- Notes / known limitations found while validating against a live Skyline ---
-# 1. The native Save As / Save dialog IS driveable (modern IFileDialog: file name set via
-#    WM_SETTEXT on its Edit, accepted via the Save button). It lists as "FileDialog:Save As".
+# 1. The native Save As / Save dialog IS driveable (modern IFileDialog: file name typed into
+#    its Edit, accepted via the Save button). It lists as "Dialog:Save As".
 #    This tutorial opens an already-saved document, so it is not exercised here.
 # 2. Now supported (were prior gaps): selecting a tabbed settings dialog's tab -- ClickFormButton on
 #    the tab's text; and checking a transition in the Targets-tree pop-up pick-list -- select the

@@ -50,8 +50,40 @@ namespace pwiz.Osprey.FDR
         /// <summary>Grid search C values for SVM cost parameter.</summary>
         public double[] CValues { get; set; }
 
+        /// <summary>
+        /// How close to the best inner-CV passing count a smaller C must come to be chosen
+        /// over it, as a fraction of that count (default: 0.01). The grid search takes the
+        /// most regularized C within this fraction of the best rather than the strict best:
+        /// on Stellar, C = 0.1, 1 and 10 are within 0.7% of each other's inner-CV targets, so
+        /// a strict maximum is decided by noise, and the weakly regularized C = 1 fit it then
+        /// often picks can split weight between correlated spectral features in a way that
+        /// the second pass, which reuses the frozen first-pass model on reconciled peaks,
+        /// handles much worse. 0 restores the strict maximum.
+        /// </summary>
+        public double CSelectionTolerance { get; set; }
+
         /// <summary>Maximum paired entries for SVM cross-validation (default: 300000).</summary>
         public int MaxTrainSize { get; set; }
+
+        /// <summary>
+        /// Rows in the round-2 training subset of the two-round tree training
+        /// (<c>OSPREY_GBT_PREFILTER_SIZE</c>), or 0 (the default) for the usual single round.
+        /// Read only by the streamed first pass, and only for the tree model: there round 1
+        /// trains on the random <see cref="MaxTrainSize"/> subsample as usual, its fold models
+        /// score every best-per-precursor candidate, and round 2 retrains on the best-scoring
+        /// peptide groups up to this many rows. See <see cref="PercolatorTrainer.TrainWithScorePrefilter"/>.
+        /// </summary>
+        public int PrefilterTrainSize { get; set; }
+
+        /// <summary>
+        /// Report <see cref="PercolatorResults.TrainEntryFolds"/> from a train-only tree run, so
+        /// the caller can score each training row with only the fold model that held it out.
+        /// Set from <c>OSPREY_GBT_OOF</c> by the Tasks-layer config build, so the trainer reads no
+        /// environment; round 1 of the two-round training also sets it on its own copy, because
+        /// it scores its training rows out of fold either way. Copied by
+        /// <see cref="CloneForTrainOnly"/>.
+        /// </summary>
+        public bool ReportTrainEntryFolds { get; set; }
 
         /// <summary>
         /// Optional per-feature metadata (machine name, display label, expected
@@ -75,14 +107,24 @@ namespace pwiz.Osprey.FDR
         public bool CollectFeatureHistograms { get; set; }
 
         /// <summary>
+        /// If true, <see cref="PercolatorTrainer.RunPercolator"/> measures what each fold did with
+        /// each feature on its training subset (<see cref="TrainingSetAnalysis"/>) before
+        /// returning. Set on every production run, not only under <c>--model-diagnostics</c>: the
+        /// per-fold training sets exist only inside the trainer, so a report written later from
+        /// the persisted model could not otherwise show them (doc 00, P16). Its cost is bounded
+        /// by <see cref="MaxTrainSize"/>, not by the cohort. Never used for scoring.
+        /// </summary>
+        public bool CollectTrainingAnalysis { get; set; }
+
+        /// <summary>
         /// If true, <see cref="PercolatorTrainer.RunPercolator"/> trains the fold
         /// models + standardizer and returns early -- skips CV/averaged
         /// scoring of the input entries, PEP estimation, q-value
         /// computation, and per-file FDR logging. Used by the streaming
-        /// path in <c>AnalysisPipeline.RunPercolatorStreaming</c>, where
-        /// the caller pre-dedups + subsamples the entries for training,
-        /// then invokes <see cref="PercolatorScorer.ScorePopulationAndComputeFdr"/>
-        /// on the full per-file FdrEntry population. Mirrors Rust's
+        /// paths, where the caller pre-dedups + subsamples the entries for
+        /// training, then scores the full population itself
+        /// (<see cref="PercolatorScorer.ScoreProjectionAndComputeFdrInPlace"/> or the
+        /// streamed first pass). Mirrors Rust's
         /// <c>PercolatorConfig::train_only</c>.
         /// </summary>
         public bool TrainOnly { get; set; }
@@ -97,7 +139,7 @@ namespace pwiz.Osprey.FDR
         public PercolatorDiagnosticsConfig Diagnostics { get; set; }
 
         /// <summary>
-        /// Train gradient-boosted decision trees (<c>--fdr-method gbdt</c>) instead
+        /// Train gradient-boosted decision trees (<c>OSPREY_FDR_MODEL=gbdt</c>) instead
         /// of the linear SVM. Everything else about the run is unchanged: the same
         /// best-per-precursor dedup, the same peptide-grouped CV folds, the same
         /// semi-supervised positive-set iteration, and the same target-decoy
@@ -115,8 +157,9 @@ namespace pwiz.Osprey.FDR
         public GbtParams GbtParams { get; set; }
 
         /// <summary>
-        /// Worker threads for the gradient-boosted-trees full-population score pass
-        /// (from <c>--threads</c>). Used ONLY there: the linear score pass stays serial
+        /// Worker threads for the gradient-boosted trees (from <c>--threads</c>): the full-population
+        /// score pass, and tree training, where each concurrently training fold gets
+        /// <c>NThreads / NFolds</c> of them. The linear score pass stays serial
         /// because its feature-contribution accumulator is a running float sum whose
         /// order is byte-parity-locked, whereas a tree score is a pure per-row function
         /// that accumulates nothing. Defaults to the machine's processor count.
@@ -131,6 +174,7 @@ namespace pwiz.Osprey.FDR
             NFolds = 3;
             Seed = 42;
             CValues = new[] { 0.001, 0.01, 0.1, 1.0, 10.0, 100.0 };
+            CSelectionTolerance = OspreyEnvironment.DEFAULT_SVM_C_SELECTION_TOLERANCE;
             MaxTrainSize = 300000;
             TrainOnly = false;
             UseGradientBoostedTrees = false;
@@ -144,9 +188,11 @@ namespace pwiz.Osprey.FDR
         /// train-the-fold-models pass over the subsampled training set. Copies every
         /// knob that selects HOW a model is trained -- including the classifier choice
         /// and its hyper-parameters -- so the training pass cannot silently diverge from
-        /// the scoring pass that consumes its output. (Both streaming paths previously
-        /// hand-copied this field list, which meant a new training knob had to be added
-        /// in two places or one path would quietly train the wrong model.)
+        /// the scoring pass that consumes its output. (The streaming paths each hand-copied
+        /// this field list, which meant a new training knob had to be added in every copy or
+        /// one path would quietly train the wrong model - and the lean first pass did: its
+        /// copy lacked the classifier choice, so it trained the SVM when
+        /// gbdt was selected.)
         ///
         /// <see cref="CollectFeatureHistograms"/> is deliberately NOT carried: the
         /// histograms are accumulated by the score pass over the full population, not
@@ -162,11 +208,15 @@ namespace pwiz.Osprey.FDR
                 NFolds = NFolds,
                 Seed = Seed,
                 CValues = CValues,
+                CSelectionTolerance = CSelectionTolerance,
                 MaxTrainSize = MaxTrainSize,
+                PrefilterTrainSize = PrefilterTrainSize,
+                ReportTrainEntryFolds = ReportTrainEntryFolds,
                 FeatureInfos = FeatureInfos,
                 UseGradientBoostedTrees = UseGradientBoostedTrees,
                 GbtParams = GbtParams,
                 NThreads = NThreads,
+                CollectTrainingAnalysis = CollectTrainingAnalysis,
                 TrainOnly = true,
                 Diagnostics = Diagnostics
             };

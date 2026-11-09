@@ -192,11 +192,11 @@ namespace pwiz.Skyline.Model.DdaSearch
             switch (defaultValue)
             {
                 case int _:
-                    return int.TryParse(serialized, NumberStyles.Integer, CultureInfo.InvariantCulture, out var i) ? (object)i : serialized;
+                    return int.TryParse(serialized, NumberStyles.Integer, CultureInfo.InvariantCulture, out var i) ? i : serialized;
                 case double _:
-                    return double.TryParse(serialized, NumberStyles.Float, CultureInfo.InvariantCulture, out var d) ? (object)d : serialized;
+                    return double.TryParse(serialized, NumberStyles.Float, CultureInfo.InvariantCulture, out var d) ? d : serialized;
                 case bool _:
-                    return bool.TryParse(serialized, out var b) ? (object)b : serialized;
+                    return bool.TryParse(serialized, out var b) ? b : serialized;
                 default:
                     return serialized;
             }
@@ -316,7 +316,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             NumDecoys = reader.GetNullableDoubleAttribute(ATTR.num_decoys);
             AutoTrain = reader.GetBoolAttribute(ATTR.auto_train, false);
             var workflowStr = reader.GetAttribute(ATTR.workflow_type);
-            Workflow = workflowStr != null && Enum.TryParse(workflowStr, out SearchWorkflowType wf) ? wf : (SearchWorkflowType?)null;
+            Workflow = workflowStr != null && Enum.TryParse(workflowStr, out SearchWorkflowType wf) ? wf : null;
             IrtStandardName = reader.GetAttribute(ATTR.irt_standard_name);
             HasExplicitModifications = reader.GetBoolAttribute(ATTR.has_explicit_modifications, false);
 

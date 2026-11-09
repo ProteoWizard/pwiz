@@ -168,13 +168,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 new MsDataFileScanHelper(SetSpectra, HandleLoadScanException,
                     false); // We need zero intensity points for proper display
 
-            GraphPane.Title.IsVisible = false;
             GraphPane.Legend.IsVisible = false;
-            // Scan filename / RT renders as the master-pane title, centred across the
-            // whole window. CreateGraph fills in the actual text per scan; ZedGraph
-            // reserves the title strip during DoLayout once the text is non-empty.
-            graphControl.MasterPane.Title.IsVisible = true;
-            graphControl.MasterPane.Title.Text = string.Empty;
+            // CreateGraph fills in the actual scan title per scan
+            SetScanTitle(string.Empty);
             // Make sure to use italics for "m/z"
             AbstractMSGraphItem.SetAxisText(GraphPane.XAxis, GraphsResources.AbstractMSGraphItem_CustomizeXAxis_MZ);
 
@@ -678,13 +674,13 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (!IsHandleCreated)
                 return;
-            BeginInvoke(new Action(() =>
+            BeginInvoke(() =>
             {
                 if (!IsMobilogramPaneVisible)
                     return;
                 AlignMobilogramChartToHeatmap();
                 graphControl.Invalidate();
-            }));
+            });
         }
 
         /// <summary>
@@ -954,8 +950,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void HandleLoadScanExceptionUI(Exception ex)
         {
-            graphControl.MasterPane.Title.Text = GraphsResources.GraphFullScan_LoadScan_Spectrum_unavailable;
-            graphControl.MasterPane.Title.IsVisible = true;
+            SetScanTitle(GraphsResources.GraphFullScan_LoadScan_Spectrum_unavailable);
             MessageDlg.ShowException(this, ex);
         }
 
@@ -968,6 +963,38 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return _heatMapPane; }
         }
+
+        /// <summary>
+        /// Shows the scan title (file name and retention time, or a status message). With a single
+        /// pane it is the pane's own title, as it always was; in the multi-pane ion mobility layouts
+        /// it is the master pane title, centered across all the panes. Call after the pane layout
+        /// is set up. The master pane title text is set either way, since <see cref="TitleText"/>
+        /// reports it.
+        /// </summary>
+        private void SetScanTitle(string text)
+        {
+            var masterPane = graphControl.MasterPane;
+            bool singlePane = masterPane.PaneList.Count <= 1;
+            bool hadMasterTitle = HasMasterTitle;
+            masterPane.Title.Text = text;
+            masterPane.Title.IsVisible = !singlePane;
+            GraphPane.Title.Text = text;
+            GraphPane.Title.IsVisible = singlePane;
+
+            // The master pane reserves room for its title only when it lays out its panes, and
+            // the panes paint over an unreserved title. Lay out again when that room changes, but
+            // not otherwise, since the ion mobility layouts adjust pane widths after the layout.
+            if (HasMasterTitle != hadMasterTitle)
+            {
+                using (var g = graphControl.CreateGraphics())
+                {
+                    masterPane.DoLayout(g);
+                }
+            }
+        }
+
+        private bool HasMasterTitle =>
+            graphControl.MasterPane.Title.IsVisible && !string.IsNullOrEmpty(graphControl.MasterPane.Title.Text);
 
         private Color GetTransitionColor(TransitionFullScanInfo t)
         {
@@ -1087,8 +1114,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     // Need to check again once on the UI thread
                     if (ReferenceEquals(fullScans, _msDataFileScanHelper.MsDataSpectra))
                     {
-                        graphControl.MasterPane.Title.Text = GraphsResources.GraphFullScan_LoadScan_Loading___;
-                        graphControl.MasterPane.Title.IsVisible = true;
+                        SetScanTitle(GraphsResources.GraphFullScan_LoadScan_Loading___);
                         graphControl.Refresh();
                     }
                 });
@@ -1147,15 +1173,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 _heatMapPane.ShowHeatMap = showHeatmap;
                 double retentionTime = _msDataFileScanHelper.MsDataSpectra[0].RetentionTime ?? _msDataFileScanHelper.ScanProvider.Times[_msDataFileScanHelper.ScanIndex];
                 string titleText = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
-                // Show the scan title once at the top of the master pane (centered across
-                // the full window) so it doesn't anchor over only one pane in multi-pane modes.
-                graphControl.MasterPane.Title.Text = titleText;
-                graphControl.MasterPane.Title.IsVisible = true;
 
                 if (showStick && showHeatmap)
                 {
                     // S+H or S+H+M: stick on top, heatmap on bottom (+ optional mobilogram on right)
                     SetupDualPaneLayout(showMobilogram);
+                    SetScanTitle(titleText);
 
                     graphControl.IsEnableVPan = graphControl.IsEnableVZoom = true;
                     _heatMapPane.Legend.IsVisible = true;
@@ -1231,6 +1254,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     // H+M: heatmap + mobilogram side by side, no stick pane
                     SetupHeatmapMobilogramLayout();
+                    SetScanTitle(titleText);
 
                     graphControl.IsEnableVPan = graphControl.IsEnableVZoom = true;
                     _heatMapPane.Legend.IsVisible = true;
@@ -1265,6 +1289,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     // H only: single-pane heatmap
                     SetupSinglePaneLayout();
+                    SetScanTitle(titleText);
 
                     _heatMapPane.CurveList.Clear();
                     _heatMapPane.GraphObjList.Clear();
@@ -1282,14 +1307,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (!_showIonSeriesAnnotations)
                         AddTransitionLabels(_heatMapPane, null);
 
-                    _heatMapPane.Title.IsVisible = false;
-
                     FireSelectedScanChanged(retentionTime);
                 }
                 else
                 {
                     // S only: heatmap pane used for stick rendering (ShowHeatMap=false)
                     SetupSinglePaneLayout();
+                    SetScanTitle(titleText);
 
                     GraphPane.CurveList.Clear();
                     GraphPane.GraphObjList.Clear();
@@ -1307,8 +1331,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     AddExtractionBoxes(GraphPane);
                     if (!_showIonSeriesAnnotations)
                         AddTransitionLabels(GraphPane, massErrors);
-
-                    GraphPane.Title.IsVisible = false;
 
                     FireSelectedScanChanged(retentionTime);
                 }
@@ -1344,9 +1366,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     AddTransitionLabels(GraphPane, massErrors);
 
                 double retentionTime = _msDataFileScanHelper.MsDataSpectra[0].RetentionTime ?? _msDataFileScanHelper.ScanProvider.Times[_msDataFileScanHelper.ScanIndex];
-                graphControl.MasterPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
-                graphControl.MasterPane.Title.IsVisible = true;
-                GraphPane.Title.IsVisible = false;
+                SetScanTitle(string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime));
 
                 FireSelectedScanChanged(retentionTime);
             }
@@ -2169,6 +2189,29 @@ namespace pwiz.Skyline.Controls.Graphs
                 double intensity = SumIntensities(fullScans, minMz, indices, minIonMobilityVal, maxIonMobilityVal);
                 maxIntensity = Math.Max(maxIntensity, intensity);
             }
+
+            if (maxMz <= 0)
+            {
+                // None of the scans have any peaks in them because they measured no ions. Show the
+                // m/z range that the instrument was scanning so that the axes still get drawn.
+                maxMz = GetMaxScanWindow(fullScans);
+            }
+        }
+
+        /// <summary>
+        /// The highest scan window upper limit declared by any of the spectra, or zero if none of
+        /// them says what m/z range it was measuring.
+        /// </summary>
+        private static double GetMaxScanWindow(IEnumerable<MsDataSpectrum> spectra)
+        {
+            double maxScanWindow = 0;
+            foreach (var spectrum in spectra)
+            {
+                var upperLimit = spectrum.Metadata?.ScanWindowUpperLimit;
+                if (upperLimit.HasValue)
+                    maxScanWindow = Math.Max(maxScanWindow, upperLimit.Value);
+            }
+            return maxScanWindow;
         }
 
         private void GetIonMobilityRange(out double minIonMobility, out double maxIonMobility)
@@ -2209,8 +2252,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _mobilogramPane.CurveList.Clear();
                 _mobilogramPane.GraphObjList.Clear();
             }
-            graphControl.MasterPane.Title.Text = _msDataFileScanHelper.FileName;
-            graphControl.MasterPane.Title.IsVisible = true;
+            SetScanTitle(_msDataFileScanHelper.FileName);
         }
 
         [Browsable(true)]
@@ -2271,20 +2313,27 @@ namespace pwiz.Skyline.Controls.Graphs
         private void ApplyXZoomToPane(GraphPane pane)
         {
             var xScale = pane.XAxis.Scale;
-            xScale.MinAuto = xScale.MaxAuto = false;
 
             if (magnifyBtn.Checked)
             {
                 double mz = _msDataFileScanHelper.Source == ChromSource.ms1
                     ? _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex].PrecursorMz
                     : _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex].ProductMz;
+                xScale.MinAuto = xScale.MaxAuto = false;
                 xScale.Min = mz - 1.5;
                 xScale.Max = mz + 3.5;
             }
-            else if (_requestedRange != null)
+            else if (_requestedRange != null && _requestedRange.Max > _requestedRange.Min)
             {
+                xScale.MinAuto = xScale.MaxAuto = false;
                 xScale.Min = _requestedRange.Min;
                 xScale.Max = _requestedRange.Max;
+            }
+            else
+            {
+                // There is no m/z range to show. Leave the axis auto-scaled, since collapsing it to
+                // a single value makes ZedGraph skip drawing the axis entirely.
+                xScale.MinAuto = xScale.MaxAuto = true;
             }
         }
 
@@ -2458,6 +2507,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool HasChromatogramData => false;
 
+        /// <summary>
+        /// The maximum for an intensity axis, which is never zero. ZedGraph draws nothing at all --
+        /// not even the axes -- when the minimum of any of a pane's axis scales equals its maximum,
+        /// so a scan which measured no ions would otherwise produce a completely blank graph.
+        /// </summary>
+        private double IntensityAxisMax => _maxIntensity > 0 ? _maxIntensity * 1.1 : 1;
+
         private void ZoomYAxis()
         {
             if (_msDataFileScanHelper.ScanProvider == null || _msDataFileScanHelper.ScanProvider.Transitions.Length == 0)
@@ -2479,7 +2535,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (isSpectrum)
             {
                 yScale.Min = 0;
-                yScale.Max = _maxIntensity * 1.1;
+                yScale.Max = IntensityAxisMax;
                 if (magnifyBtn.Checked)
                 {
                     yScale.MaxAuto = true;
@@ -2540,11 +2596,11 @@ namespace pwiz.Skyline.Controls.Graphs
                             maxY = pt.Y;
                     }
                 }
-                yScale.Max = maxY > 0 ? maxY * 1.1 : _maxIntensity * 1.1;
+                yScale.Max = maxY > 0 ? maxY * 1.1 : IntensityAxisMax;
             }
             else
             {
-                yScale.Max = _maxIntensity * 1.1;
+                yScale.Max = IntensityAxisMax;
             }
             _stickSpectrumPane.AxisChange();
         }
@@ -2566,7 +2622,7 @@ namespace pwiz.Skyline.Controls.Graphs
             yScale.MinAuto = false;
             _heatMapPane.LockYAxisMinAtZero = true;
             yScale.Min = 0;
-            yScale.Max = _maxIntensity * 1.1;
+            yScale.Max = IntensityAxisMax;
             // Magnify on → auto-fit Y to data in the zoomed X range during next paint.
             yScale.MaxAuto = magnifyBtn.Checked;
         }
@@ -2663,13 +2719,13 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.Refresh();
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             _cursorTip.Dispose();
             graphControlExtension.PropertiesSheet.SelectedObject = null;
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
             _msDataFileScanHelper.Dispose();
-            base.OnClosed(e);
+            base.OnFormClosed(e);
         }
 
         private void leftButton_Click(object sender, EventArgs e)

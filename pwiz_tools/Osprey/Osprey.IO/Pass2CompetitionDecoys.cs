@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -24,6 +24,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -75,17 +77,20 @@ namespace pwiz.Osprey.IO
     /// and is recoverable from one. The decoy half is the only third of a
     /// <c>FileCompetition</c> the pool image cannot supply.</para>
     ///
-    /// Format (32-byte header + N x 12-byte records, all little-endian):
+    /// Format (32-byte header + N x 12-byte records + the validity stamp, all little-endian;
+    /// see <see cref="BinarySidecarStamp"/>):
     /// <code>
     ///   magic         [0..8]   = b"OSPRYDCY"
-    ///   version       [8]      = u8 (= 1)
+    ///   version       [8]      = u8 (= 2)
     ///   pass          [9]      = u8 (2 = second-pass)
     ///   reserved      [10..16] = 6 bytes (zero)
     ///   entry_count   [16..24] = u64
-    ///   reserved      [24..32] = 8 bytes (zero)
+    ///   stamp_length  [24..28] = u32
+    ///   reserved      [28..32] = 4 bytes (zero)
     ///   body          [32..]   = entry_count * 12 bytes:
     ///                            [0..4]  u32 decoy entry_id (base_id = entry_id &amp; 0x7FFFFFFF)
     ///                            [4..12] f64 best composite score for that base_id in this file
+    ///   stamp         [..end]  = stamp_length bytes, the writing task's <see cref="ArtifactStamp"/>
     /// </code>
     ///
     /// <para>The magic differs from <c>OSPRYFDR</c> and <c>OSPRYEXP</c> for the reason those two
@@ -105,12 +110,14 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public static class Pass2CompetitionDecoys
     {
+        public const string EXT = @".fdr_decoys.bin";
+
         // 8-byte magic. ASCII "OSPRYDCY".
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'D', (byte)'C', (byte)'Y' };
 
-        public const byte FormatVersion = 1;
-        public const int HeaderLength = 32;
+        public const byte FormatVersion = 2;
+        public const int HeaderLength = BinarySidecarStamp.HEADER_LENGTH;
         public const int RecordLength = 12;
 
         /// <summary>The decoy high bit: an entry_id with it set is a decoy observation.</summary>
@@ -126,7 +133,7 @@ namespace pwiz.Osprey.IO
         {
             string stem = Path.GetFileNameWithoutExtension(inputPath) ?? @"unknown";
             string parent = ArtifactPaths.ResolveOutputDir(inputPath);
-            string filename = string.Format("{0}.2nd-pass.fdr_decoys.bin", stem);
+            string filename = string.Format(@"{0}.{1}{2}", stem, FdrScoresSidecar.LABEL_SECOND_PASS, EXT);
             return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
         }
 
@@ -152,9 +159,9 @@ namespace pwiz.Osprey.IO
                     if (!ReadFully(fs, header, HeaderLength))
                         return false;
                 }
-                if (!HeaderOk(header, out ulong headerCount))
+                if (!HeaderOk(header))
                     return false;
-                return TryComputeExpectedLen(headerCount, out int expectedLen) &&
+                return BinarySidecarStamp.TryComputeExpectedLength(header, RecordLength, out _, out long expectedLen) &&
                        info.Length == expectedLen;
             }
             catch (IOException)
@@ -177,7 +184,7 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Write one file's competition decoys, one record per base_id, in ascending entry_id
-        /// order. Atomic via <see cref="FileSaver"/>: the temp file is promoted on Commit, so a
+        /// order. Atomic via <see cref="SimpleFileSaver"/>: the temp file is promoted on Commit, so a
         /// failure leaves any existing destination untouched.
         ///
         /// <para><paramref name="bestDecoy"/> is
@@ -187,10 +194,11 @@ namespace pwiz.Osprey.IO
         /// can see; see the remarks on the class.</para>
         /// </summary>
         public static void Write(
-            string path, IReadOnlyDictionary<uint, (double score, uint entryId)> bestDecoy)
+            string path, IReadOnlyDictionary<uint, (double score, uint entryId)> bestDecoy, ArtifactStamp stamp)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (bestDecoy == null) throw new ArgumentNullException(nameof(bestDecoy));
+            byte[] stampBytes = BinarySidecarStamp.Encode(stamp);
 
             // Canonical order, so the file is a function of its contents and not of the order the
             // producer's dictionary happened to enumerate. Sorting the ENTRY IDS (rather than the
@@ -235,7 +243,7 @@ namespace pwiz.Osprey.IO
             if (!string.IsNullOrEmpty(parent))
                 Directory.CreateDirectory(parent);
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None))
                 using (var bw = new BinaryWriter(fs))
@@ -245,13 +253,14 @@ namespace pwiz.Osprey.IO
                     bw.Write((byte)FdrScoresSidecar.Pass.SecondPass); // [9]
                     bw.Write(new byte[6]);          // [10..16] reserved
                     bw.Write((ulong)ids.Length);    // [16..24]
-                    bw.Write(new byte[8]);          // [24..32] reserved
+                    BinarySidecarStamp.WriteHeaderField(bw, stampBytes); // [24..32]
 
                     for (int i = 0; i < ids.Length; i++)
                     {
                         bw.Write(ids[i]);           // [0..4]
                         bw.Write(scores[i]);        // [4..12]
                     }
+                    bw.Write(stampBytes);
                 }
                 saver.Commit();
             }
@@ -277,16 +286,16 @@ namespace pwiz.Osprey.IO
                     var header = new byte[HeaderLength];
                     if (!ReadFully(src, header, HeaderLength))
                         return null;
-                    if (!HeaderOk(header, out ulong headerCount))
+                    if (!HeaderOk(header))
                         return null;
-                    if (!TryComputeExpectedLen(headerCount, out int expectedLen) ||
+                    if (!BinarySidecarStamp.TryComputeExpectedLength(header, RecordLength, out int recordCount, out long expectedLen) ||
                         src.Length != expectedLen)
                     {
                         return null;
                     }
-                    var map = new Dictionary<uint, (double score, uint entryId)>((int)headerCount);
+                    var map = new Dictionary<uint, (double score, uint entryId)>(recordCount);
                     var record = new byte[RecordLength];
-                    for (ulong rec = 0; rec < headerCount; rec++)
+                    for (int rec = 0; rec < recordCount; rec++)
                     {
                         if (!ReadFully(src, record, RecordLength))
                             return null;
@@ -306,42 +315,27 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// The validity stamp of the artifact at <paramref name="path"/>, or null when it is
+        /// missing or not in the current format.
+        /// </summary>
+        public static ArtifactStamp ReadStamp(string path)
+        {
+            return IsCurrentFormat(path) ? BinarySidecarStamp.TryRead(path, RecordLength) : null;
+        }
+
+        /// <summary>
         /// Validate the 32-byte header: magic, current version, second-pass byte. Shared by every
         /// entry point so they cannot drift on what they accept.
         /// </summary>
-        private static bool HeaderOk(byte[] header, out ulong headerCount)
+        private static bool HeaderOk(byte[] header)
         {
-            headerCount = 0;
             for (int i = 0; i < Magic.Length; i++)
             {
                 if (header[i] != Magic[i])
                     return false;
             }
-            if (header[8] != FormatVersion ||
-                header[9] != (byte)FdrScoresSidecar.Pass.SecondPass)
-            {
-                return false;
-            }
-            headerCount = BitConverter.ToUInt64(header, 16);
-            return true;
-        }
-
-        /// <summary>
-        /// Compute <c>HeaderLength + headerCount * RecordLength</c> with overflow detection, so a
-        /// corrupt count cannot wrap int and let the size check pass spuriously.
-        /// </summary>
-        private static bool TryComputeExpectedLen(ulong headerCount, out int expectedLen)
-        {
-            try
-            {
-                expectedLen = checked(HeaderLength + (int)headerCount * RecordLength);
-                return true;
-            }
-            catch (OverflowException)
-            {
-                expectedLen = 0;
-                return false;
-            }
+            return header[8] == FormatVersion &&
+                   header[9] == (byte)FdrScoresSidecar.Pass.SecondPass;
         }
 
         /// <summary>

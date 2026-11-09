@@ -42,6 +42,11 @@ namespace pwiz.Skyline.Util
     
     public class MultiFileAsynchronousDownloadClient : IAsynchronousDownloadClient
     {
+        // A download that fails in a way that may not happen again (see NetworkRequestException.IsTransient)
+        // is retried this many times
+        public const int MAX_DOWNLOAD_RETRIES = 3;
+        private const int DOWNLOAD_RETRY_DELAY_MILLISECONDS = 1000;
+
         private readonly IProgressMonitor _progressMonitor;
         private IProgressStatus _progressStatus;
 
@@ -66,8 +71,21 @@ namespace pwiz.Skyline.Util
             _progressStatus = _progressStatus.ChangeMessage(string.Format(UtilResources.MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0_, file));
             _progressMonitor.UpdateProgress(_progressStatus);
 
-            using var httpClient = new HttpClientWithProgress(_progressMonitor, _progressStatus);
-            httpClient.DownloadFile(address, path);
+            // Each attempt overwrites the file from the start
+            for (int retry = 0; ; retry++)
+            {
+                try
+                {
+                    using var httpClient = new HttpClientWithProgress(_progressMonitor, _progressStatus);
+                    httpClient.DownloadFile(address, path);
+                    return;
+                }
+                catch (NetworkRequestException x) when (retry < MAX_DOWNLOAD_RETRIES && x.IsTransient() && !_progressMonitor.IsCanceled)
+                {
+                    DetailedTrace.WriteLine($@"Download of {address} failed, retry {retry + 1} of {MAX_DOWNLOAD_RETRIES}: {x.Message}");
+                    Thread.Sleep(DOWNLOAD_RETRY_DELAY_MILLISECONDS);
+                }
+            }
         }
  
         #region IDisposable Members
@@ -86,6 +104,15 @@ namespace pwiz.Skyline.Util
         /// The name of the file after downloading. For ZIP files (Unzip is true), the file will be deleted after unzipping.
         /// </summary>
         public string Filename;
+
+        /// <summary>
+        /// Optional distinctive name to use on the S3 test mirror and in the local download cache. Defaults
+        /// to the DownloadUrl's last path segment. Set this for tools whose URL ends in a generic filename
+        /// (e.g. GitHub "raw/.../latest.zip") so the mirrored copy and the cache entry don't collide with
+        /// other tools. Include the extension (e.g. "MSAmanda-3.0.22.864.zip"). The original DownloadUrl is
+        /// still used for direct/originalurls downloads; only the mirror URL and cache filename change.
+        /// </summary>
+        public string MirrorFilename;
 
         /// <summary>
         /// The path to download the file to, and to unzip if Unzip is true.
@@ -260,15 +287,21 @@ namespace pwiz.Skyline.Util
                 {
                     var requiredFile = requiredFileGroup.First();
                     
-                    // For testing, replace the hostname with the Skyline tool testing mirror path on AWS
+                    // The name used on the S3 test mirror and in the local download cache. Defaults to the
+                    // download URL's last path segment, but a tool whose URL ends in a generic name (e.g.
+                    // GitHub "raw/.../latest.zip") sets MirrorFilename to something distinctive so it doesn't
+                    // collide with other tools on the mirror or in the shared cache.
+                    var mirrorFilename = requiredFile.MirrorFilename ?? requiredFile.DownloadUrl.Segments.Last();
+
+                    // For testing, replace the whole URL with the Skyline tool testing mirror path on AWS.
                     var downloadUrl = requiredFile.DownloadUrl;
                     if (Program.UnitTest && !Program.UseOriginalURLs)
-                        downloadUrl = new Uri(Regex.Replace(downloadUrl.OriginalString, ".*/(.*)", $"{SKYLINE_TOOL_TESTING_MIRROR_URL}/$1"));
+                        downloadUrl = new Uri($@"{SKYLINE_TOOL_TESTING_MIRROR_URL}/{mirrorFilename}");
 
                     var useCachedDownloads = Program.UnitTest; // Cache downloads in case of tests running in parallel
                     var destinationFilename = Path.Combine(requiredFile.InstallPath, requiredFile.Filename);
                     string downloadFilename = useCachedDownloads
-                        ? Path.Combine(GetCachedDownloadsDirectory(), requiredFile.DownloadUrl.Segments.Last()) :
+                        ? Path.Combine(GetCachedDownloadsDirectory(), mirrorFilename) :
                         requiredFile.Unzip ? Path.GetTempFileName() : destinationFilename;
 
                     if (useCachedDownloads && File.Exists(downloadFilename))

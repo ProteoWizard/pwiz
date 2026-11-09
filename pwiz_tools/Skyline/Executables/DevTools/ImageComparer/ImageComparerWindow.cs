@@ -19,6 +19,7 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
@@ -41,6 +42,16 @@ namespace ImageComparer
         #region synchronized members
         private readonly object _lock = new object();
         private ScreenshotFile _fileToShow;
+        private volatile bool _compareAtSameSize;
+
+        // Resampling changes every anti-aliased edge a little, so a scaled comparison allows some
+        // color difference, and Win11 rounded window corners never line up after scaling
+        private static readonly DiffOptions SAME_SIZE_DIFF_OPTIONS = new DiffOptions
+        {
+            ColorTolerance = 48,
+            ExcludeCorners = true
+        };
+        private int _imageCount;    // All screenshots in the open folder, changed or not
         private OldScreenshot _oldScreenshot;
         private OldScreenshot _newScreenshot;
         private ScreenshotDiff _diff;
@@ -92,11 +103,42 @@ namespace ImageComparer
             OpenFolder(Settings.Default.LastOpenFolder);
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             Settings.Default.Save();
 
-            base.OnClosed(e);
+            base.OnFormClosed(e);
+        }
+
+        private bool IsScaledDiff
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _compareAtSameSize && !_oldScreenshot.IsPlaceholder && !_newScreenshot.IsPlaceholder &&
+                           _oldScreenshot.ImageSize != _newScreenshot.ImageSize;
+                }
+            }
+        }
+
+        /// <summary>
+        /// For a diff scaled to the same size, the size ratio of the original images, which the scaled
+        /// diff no longer knows, followed by the pixels that still differ after scaling.
+        /// </summary>
+        private string ScaledDiffText
+        {
+            get
+            {
+                Size sizeOld, sizeNew;
+                lock (_lock)
+                {
+                    sizeOld = _oldScreenshot.ImageSize;
+                    sizeNew = _newScreenshot.ImageSize;
+                }
+                var pixels = _diff.PixelsDiffer ? $@"{_diff.PixelCount} pixels after scaling" : @"same after scaling";
+                return $@" ({ScreenshotDiff.SizeRatioText(sizeOld, sizeNew)}; {pixels})";
+            }
         }
 
         private bool HasBackgroundWork { get { lock(_lock) { return !IsOldLoaded || !IsNewLoaded; } } }
@@ -123,6 +165,9 @@ namespace ImageComparer
             int restoredIndex = FindBestSelectionIndex(previousSelection);
             if (toolStripFileList.SelectedIndex != restoredIndex)
                 toolStripFileList.SelectedIndex = restoredIndex;
+
+            // The shown file may have changed on disk, which reselecting it does not reload
+            RefreshScreenshots();
         }
 
         /// <summary>
@@ -237,8 +282,9 @@ namespace ImageComparer
                 else
                 {
                     labelOldSize.ForeColor = Color.Red;
-                    labelOldSize.Text += _diff.DiffText;
-                    bool imagesMatch = !_diff.SizesDiffer && !_diff.PixelsDiffer;
+                    labelOldSize.Text += IsScaledDiff ? ScaledDiffText : _diff.DiffText;
+                    // A diff scaled to the same size has no meaningful byte comparison
+                    bool imagesMatch = !_diff.SizesDiffer && !_diff.PixelsDiffer && !IsScaledDiff;
                     if (imagesMatch)
                     {
                         _diff.ShowBinaryDiff(EnsureBinaryDiffControl());
@@ -290,7 +336,7 @@ namespace ImageComparer
         {
             toolStripPrevious.Enabled = toolStripFileList.SelectedIndex > 0;
             toolStripNext.Enabled = toolStripFileList.SelectedIndex < toolStripFileList.Items.Count - 1;
-            toolStripRevert.Enabled = _diff?.IsDiff ?? false;
+            toolStripAccept.Enabled = toolStripRevert.Enabled = _diff?.IsDiff ?? false;
             toolStripGotoWeb.Enabled = _fileToShow != null;
             UpdateChangeCount();
         }
@@ -299,7 +345,7 @@ namespace ImageComparer
         {
             int total = toolStripFileList.Items.Count;
             int current = toolStripFileList.SelectedIndex + 1;
-            labelChangeCount.Text = total > 0 ? $@"{current}/{total} changes" : string.Empty;
+            labelChangeCount.Text = total > 0 ? $@"{current}/{total} changes in {_imageCount} images" : string.Empty;
         }
 
         private void UpdateScreenshotsAsync(ImageSource oldImageSource, Color highlightColor)
@@ -370,6 +416,12 @@ namespace ImageComparer
         {
             try
             {
+                if (_compareAtSameSize && !oldScreenshot.IsPlaceholder && !newScreenshot.IsPlaceholder &&
+                    oldScreenshot.ImageSize != newScreenshot.ImageSize)
+                {
+                    return new ScreenshotDiff(ScaleScreenshot(oldScreenshot, newScreenshot.ImageSize), newScreenshot,
+                        highlightColor, SAME_SIZE_DIFF_OPTIONS);
+                }
                 return new ScreenshotDiff(oldScreenshot, newScreenshot, highlightColor);
             }
             catch (Exception e)
@@ -378,6 +430,25 @@ namespace ImageComparer
                     "Failed to diff bitmaps.", e)));
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Resamples a screenshot to another size, for comparing screenshots taken at different
+        /// display scales. Only used for the diff and its display, never saved.
+        /// </summary>
+        private static ScreenshotInfo ScaleScreenshot(ScreenshotInfo screenshot, Size size)
+        {
+            var scaled = new Bitmap(size.Width, size.Height, PixelFormat.Format32bppArgb);
+            lock (screenshot.Image)
+            {
+                using var g = Graphics.FromImage(scaled);
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                g.DrawImage(screenshot.Image, new Rectangle(Point.Empty, size));
+            }
+            var ms = new MemoryStream();
+            scaled.Save(ms, ImageFormat.Png);
+            return new ScreenshotInfo(ms, scaled);
         }
 
         private ScreenshotInfo LoadScreenshot(ScreenshotFile file, ImageSource source)
@@ -581,6 +652,8 @@ namespace ImageComparer
         private string GetOpenFolder()
         {
             using var chooseFolder = new FolderBrowserDialog();
+            // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+            chooseFolder.AutoUpgradeEnabled = false;
             chooseFolder.SelectedPath = Settings.Default.LastOpenFolder;
             if (chooseFolder.ShowDialog(this) == DialogResult.OK)
             {
@@ -605,6 +678,8 @@ namespace ImageComparer
                 toolStripFileList.Items.Clear();
             else
             {
+                _imageCount = Directory.EnumerateFiles(folderPath, "*.png", SearchOption.AllDirectories)
+                    .Count(ScreenshotFile.IsMatch);
                 var changedFiles = GitFileHelper.GetChangedFilePaths(folderPath);
                 var listScreenshots = changedFiles.Where(ScreenshotFile.IsMatch)
                     .OrderBy(s => s, StringComparer.InvariantCultureIgnoreCase)
@@ -648,6 +723,37 @@ namespace ImageComparer
                 toolStripFileList.SelectedIndex++;
         }
 
+        /// <summary>
+        /// Accepts the change to the current screenshot by staging it in Git, which also removes it
+        /// from the list of changes still to review, and moves on to the next screenshot.
+        /// </summary>
+        private void Accept()
+        {
+            var fileToShow = _fileToShow;
+            if (fileToShow == null)
+                return;
+            try
+            {
+                GitFileHelper.AcceptFile(fileToShow.Path);
+            }
+            catch (Exception e)
+            {
+                ShowMessageWithException(string.Format("Failed to accept screenshot {0}", fileToShow.Path), e);
+                return;
+            }
+
+            // The list is sorted, so after the accepted file leaves it, the same index is the next file
+            int index = toolStripFileList.SelectedIndex;
+            OpenFolder(Settings.Default.LastOpenFolder);
+            int count = toolStripFileList.Items.Count;
+            if (count > 0)
+            {
+                int next = Math.Min(Math.Max(index, 0), count - 1);
+                if (toolStripFileList.SelectedIndex != next)
+                    toolStripFileList.SelectedIndex = next;
+            }
+        }
+
         private void Revert()
         {
             string filePath = _fileToShow.Path;
@@ -659,7 +765,7 @@ namespace ImageComparer
             }
             try
             {
-                GitFileHelper.RevertFileToHead(filePath);
+                GitFileHelper.RevertFile(filePath);
                 RefreshScreenshots();
             }
             catch (Exception e)
@@ -751,6 +857,9 @@ namespace ImageComparer
                     return true;
 
                 // Actions
+                case Keys.F10:
+                    Accept();
+                    return true;
                 case Keys.Control | Keys.Z:
                 case Keys.F12:
                     Revert();
@@ -803,6 +912,9 @@ namespace ImageComparer
                     return true;
                 case Keys.A:
                     toolStripAmplify.Checked = !toolStripAmplify.Checked;
+                    return true;
+                case Keys.S:
+                    toolStripSameSize.Checked = !toolStripSameSize.Checked;
                     return true;
             }
 
@@ -873,7 +985,7 @@ namespace ImageComparer
                     buttonImageSource.Image = Resources.gitsource;
                     helpTip.SetToolTip(buttonImageSource,
                         LineSeparate(_defaultImageSourceTipText.Split('\n').First(),
-                            "Current: Git HEAD"));
+                            "Current: Git (staged or HEAD)"));
                     break;
                 case ImageSource.disk:
                 default:
@@ -901,6 +1013,11 @@ namespace ImageComparer
         private void toolStripFileList_SelectedIndexChanged(object sender, EventArgs e)
         {
             SetPath(toolStripFileList.SelectedItem as ScreenshotFile);
+        }
+
+        private void toolStripAccept_Click(object sender, EventArgs e)
+        {
+            Accept();
         }
 
         private void toolStripRevert_Click(object sender, EventArgs e)
@@ -972,6 +1089,12 @@ namespace ImageComparer
         private void toolStripAmplify_CheckedChanged(object sender, EventArgs e)
         {
             UpdatePreviewImages();
+        }
+
+        private void toolStripSameSize_CheckedChanged(object sender, EventArgs e)
+        {
+            _compareAtSameSize = toolStripSameSize.Checked;
+            UpdateScreenshotsAsync(OldImageSource, HighlightColor); // On foreground thread because the screenshots are already loaded - just updating the diff
         }
 
         private void Paste()

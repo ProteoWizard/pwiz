@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
@@ -55,8 +56,9 @@ namespace pwiz.Osprey.FDR
         /// caller-supplied index subset, returns winner arrays for downstream
         /// scratch-pooled q-value passes (see <c>CountPassing</c>), and
         /// allocates nothing on the scratch overload. <c>CompeteAndFilter</c> is
-        /// the ergonomic generic form for simple-FDR callers
-        /// (<see cref="PercolatorEngine.RunSimpleFdr"/>): it competes an
+        /// the ergonomic generic form, the port of Rust's <c>FdrController</c>, kept with
+        /// its own tests although its pipeline caller, the simple FDR method, was deleted
+        /// (#4543): it competes an
         /// <c>IEnumerable&lt;T&gt;</c> via score/decoy/id selectors and returns a
         /// typed result. Same competition rule (strict &gt;, ties to decoy), two
         /// shapes tuned to performance vs. ergonomics.

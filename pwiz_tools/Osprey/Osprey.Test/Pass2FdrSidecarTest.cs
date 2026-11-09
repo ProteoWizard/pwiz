@@ -23,8 +23,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
@@ -192,7 +194,7 @@ namespace pwiz.Osprey.Test
             var exp = new FdrExperimentRecord(
                 entryId: 1, experimentPrecursorQvalue: 0.0005,
                 experimentPeptideQvalue: 0.0006, experimentProteinQvalue: 0.004,
-                experimentAggregateScore: 12.5, pep: 0.03);
+                experimentAggregateScore: 12.5, pep: 0.03, peptidePep: 0.04);
 
             // (a) UNCHANGED: recomputed score == the record's score -> carry the whole record.
             var unchanged = new FdrEntry { EntryId = 1 };
@@ -206,6 +208,7 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0.0005, unchanged.ExperimentPrecursorQvalue, 1e-12);
             Assert.AreEqual(0.0006, unchanged.ExperimentPeptideQvalue, 1e-12);
             Assert.AreEqual(0.03, unchanged.Pep, 1e-12);
+            Assert.AreEqual(0.04, unchanged.ExperimentPeptidePep, 1e-12);
 
             // (b) MOVED: reconciliation dropped the score to 5.0 -> run q re-maps UP (worse), but
             // the experiment q is CARRIED from the 1st-pass record unchanged. This is the whole
@@ -219,6 +222,7 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0.02, moved.RunPeptideQvalue, 1e-12);     // peptide table, distinct value
             Assert.AreEqual(0.0005, moved.ExperimentPrecursorQvalue, 1e-12); // CARRIED, not re-mapped
             Assert.AreEqual(0.0006, moved.ExperimentPeptideQvalue, 1e-12);   // CARRIED, not re-mapped
+            Assert.AreEqual(0.04, moved.ExperimentPeptidePep, 1e-12);       // CARRIED with it
             Assert.IsTrue(moved.RunPrecursorQvalue > rec.RunPrecursorQvalue,
                 "a moved peak's per-run q can only worsen");
 
@@ -233,7 +237,7 @@ namespace pwiz.Osprey.Test
             var gapExp = new FdrExperimentRecord(
                 entryId: 2, experimentPrecursorQvalue: 0.004,
                 experimentPeptideQvalue: 0.006, experimentProteinQvalue: 0.5,
-                experimentAggregateScore: 7.25, pep: 1.0);
+                experimentAggregateScore: 7.25, pep: 1.0, peptidePep: 1.0);
             var clsG = Pass2FdrSidecar.AssignPerRunQ(gap, 5.0, null, gapExp,
                 precScoresDesc, precQDesc, pepScoresDesc, pepQDesc);
             Assert.AreEqual(Pass2FdrSidecar.PerRunClass.GapFill, clsG);
@@ -253,6 +257,75 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(1.0, orphan.ExperimentPrecursorQvalue, 1e-12);
             Assert.AreEqual(1.0, orphan.ExperimentPeptideQvalue, 1e-12);
             Assert.AreEqual(0.0, orphan.ExperimentAggregateScore, 1e-12);
+        }
+
+        /// <summary>
+        /// OSPREY_PASS2_QVALUE=transfer must re-score each survivor with whichever classifier the
+        /// first pass trained (<see cref="Pass2FdrSidecar.TransferOneFile"/>). It averaged the
+        /// fold weights itself, which threw on a gradient-boosted-tree model - there are no
+        /// weights - before a single file was transferred; nothing reached it with one while the
+        /// default first pass trained the SVM when gbdt was selected.
+        ///
+        /// <para>The UNCHANGED classification is the key check: it needs the re-score to
+        /// reproduce the first pass's score bit for bit, which only the tree model itself can.
+        /// One record carries a different first-pass score, standing in for a peak that
+        /// reconciliation moved, so the MOVED branch runs too.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestTransferOneFileScoresTreeModel()
+        {
+            var scorer = FrozenModelScorer.TryCreate(FirstPassModelIoTest.MakeTreeModel());
+            Assert.IsNotNull(scorer);
+            Assert.IsTrue(scorer.IsGradientBoostedTrees);
+
+            string dir = Path.Combine(Path.GetTempPath(),
+                @"osprey_transfer_trees_" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(dir);
+            string inputFile = Path.Combine(dir, @"run1.mzML");
+            string pass1Path = FdrScoresSidecar.Pass1Path(inputFile);
+            try
+            {
+                const uint movedId = 7;
+                var rng = new Random(3);
+                var survivors = new List<FdrEntry>();
+                var records = new List<FdrScoreRecord>();
+                for (uint id = 1; id <= 20; id++)
+                {
+                    var features = new double[scorer.NumFeatures];
+                    for (int j = 0; j < features.Length; j++)
+                        features[j] = rng.NextDouble();
+                    // The score the first pass wrote: this model, these features.
+                    double firstPassScore = scorer.Score(features);
+                    if (id == movedId)
+                        firstPassScore += 1.0;
+                    records.Add(new FdrScoreRecord(id, firstPassScore, 0.001 * id, 0.002 * id, 10.0 + id));
+                    survivors.Add(new FdrEntry { EntryId = id, Features = features });
+                }
+                FdrScoresSidecar.Write(pass1Path, records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
+
+                var tally = new Pass2FdrSidecar.TransferTally();
+                Pass2FdrSidecar.TransferOneFile(@"run1", pass1Path, survivors, scorer,
+                    new Dictionary<uint, FdrExperimentRecord>(), message => Assert.Fail(message), ref tally);
+
+                Assert.AreEqual(1, tally.FilesDone);
+                Assert.AreEqual(0, tally.Skipped);
+                Assert.AreEqual(1, tally.Moved);
+                Assert.AreEqual(survivors.Count - 1, tally.Unchanged);
+                foreach (var entry in survivors)
+                {
+                    if (entry.EntryId == movedId)
+                        continue;
+                    // Carried verbatim from the first-pass record it reproduced.
+                    Assert.AreEqual(0.001 * entry.EntryId, entry.RunPrecursorQvalue, 0.0);
+                    Assert.AreEqual(0.002 * entry.EntryId, entry.RunPeptideQvalue, 0.0);
+                }
+            }
+            finally
+            {
+                if (File.Exists(pass1Path))
+                    File.Delete(pass1Path);
+                Directory.Delete(dir, true);
+            }
         }
     }
 }

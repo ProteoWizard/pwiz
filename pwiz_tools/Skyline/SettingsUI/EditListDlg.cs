@@ -335,7 +335,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (form.ShowDialog(this) != DialogResult.OK)
                     return;
 
-                string newName = textBox.Text?.Trim();
+                string newName = textBox.Text.Trim();
                 if (string.IsNullOrEmpty(newName) || newName == currentName)
                     return;
 

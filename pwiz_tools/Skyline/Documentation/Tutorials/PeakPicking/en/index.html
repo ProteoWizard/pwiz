@@ -69,8 +69,8 @@
         radically smaller. To add the decoys:
     </p>
     <ul>
-        <li>On the <b>Edit</b> menu, choose <b>Refine</b> and then click <b>Add Decoy Peptides</b>.</li>
-        <li>In the <b>Number of Decoy Precursors</b> field, enter ‘29’.</li>
+        <li>On the <b>Refine</b> menu, click <b>Add Decoys</b>.</li>
+        <li>In the <b>Number of decoy peptides</b> field, enter ‘29’.</li>
         <li>In the <b>Decoy generation method</b> drop down list, select ‘Reverse Sequence<b>’</b>.</li>
     </ul>
     <p>
@@ -111,10 +111,10 @@
         <li>Click the <b>OK</b> button.</li>
         <li>Select the files below, using Shift+mouse-click to make a multiple selection:<ul>
                 <li>olgas_S130501_006_StC-DosR_B2.wiff </li>
-                <li>olgas_S130501_006_StC-DosR_C2.wiff </li>
-                <li>olgas_S130501_006_StC-DosR_A4.wiff </li>
-                <li>olgas_S130501_006_StC-DosR_B4.wiff </li>
-                <li>olgas_S130501_006_StC-DosR_C4.wiff</li>
+                <li>olgas_S130501_007_StC-DosR_C2.wiff </li>
+                <li>olgas_S130501_008_StC-DosR_A4.wiff </li>
+                <li>olgas_S130501_009_StC-DosR_B4.wiff </li>
+                <li>olgas_S130501_010_StC-DosR_C4.wiff</li>
             </ul>
         </li>
         <li>Click the <b>Open</b> button.</li>
@@ -127,7 +127,7 @@
     </p>
     <ul>
         <li>Delete the 0 at the end of the <b>Common prefix</b> field.</li>
-        <li>Click the <b>Remove</b> button.</li>
+        <li>Click the <b>OK</b> button.</li>
     </ul>
     <p>
         Once loading is complete, chromatograms will be displayed for both the target (real) and decoy peptides.
@@ -150,7 +150,7 @@
         Next you will train a scoring model and use it to improve Skyline peptide peak picking:
     </p>
     <ul>
-        <li>From the <b>Edit</b> menu, choose <b>Refine</b> and click on <b>Reintegrate</b>.</li>
+        <li>On the <b>Refine</b> menu, click <b>Reintegrate</b>.</li>
     </ul>
     <p>
         You should see the following form:
@@ -293,7 +293,7 @@
         normalized (i.e. they can have very different scales), so Skyline also shows a normalized measure (<b>Percentage Contribution</b>)
         that gives a rough indication of the relative contribution of each score to the separation of decoys from targets. Using this measure, you can
         see that, of the available scores, the <b>Shape (weighted)</b> score is the strongest single contributor to the separation of
-        targets from decoys (accounting for 62.2%).
+        targets from decoys (accounting for 58.9%).
     </p>
     <p>
         You can also visually examine the performance of each score:
@@ -396,7 +396,7 @@
         Now return to the <b>Edit Peak Scoring Model</b> form:
     </p>
     <ul>
-        <li>From the <b>Edit</b> menu, choose <b>Refine</b> and click on <b>Reintegrate</b>.</li>
+        <li>On the <b>Refine</b> menu, click <b>Reintegrate</b>.</li>
         <li>From the <b>Peak scoring model</b> drop down list, select “test1”.</li>
         <li>From the <b>Peak scoring model</b> drop down list again, select <b>&lt;Edit current…&gt;</b>.</li>
     </ul>
@@ -453,7 +453,7 @@
         contribution (and thus <i>may</i> be advisable to remove) are shown in red.
     </p>
     <ul>
-        <li>Uncheck the <b>Signal to noise</b> score (scrolling may be necessary).</li>
+        <li>Uncheck the <b>Library intensity dot-product</b> score.</li>
         <li>Uncheck the <b>Co-elution (weighted)</b> score.</li>
     </ul>
     <p>
@@ -492,13 +492,12 @@
     <p>
         The next step is to apply the trained model to the peaks picked by Skyline. Having just closed the <b>Edit Peak Scoring Model</b> form, you should be back in the <b>Reintegrate</b> form. You are now ready to apply the model you have just trained. You
         have the option to use the highest scoring peaks, using the composite score you have just trained, in all cases (<b>Overwrite manual
-            integration</b>), or to leave in place any peaks that have been picked manually (which may have been carefully curated). Checking
-        <b>Add q value annotation</b> will cause a statistical q value to be attached to every peak, which can then be exported in a Skyline
-        report. In this tutorial you will use both of these options:
+            integration</b>), or to leave in place any peaks that have been picked manually (which may have been carefully curated). Reintegrating
+        also attaches a statistical q value to every peak, which can then be exported in a Skyline report. In this tutorial you will
+        overwrite manual integration:
     </p>
     <ul>
         <li>Make sure <b>Integrate all peaks</b> is selected.</li>
-        <li>Check the <b>Add q value annotation</b> check box.</li>
         <li>Check the <b>Overwrite manual integration</b> check box.</li>
     </ul>
     <p>
@@ -529,11 +528,10 @@
         Now try reintegrating in a slightly different way by doing the following:
     </p>
     <ul>
-        <li>From the <b>Edit</b> menu, choose <b>Refine</b> and click on <b>Reintegrate</b>.</li>
+        <li>On the <b>Refine</b> menu, click <b>Reintegrate</b>.</li>
         <li>Select <b>Only integrate significant q values</b>.</li>
         <li>In the <b>Q value</b> cutoff field, enter ‘0.001’.</li>
         <li>Check <b>Overwrite manual integration</b></li>
-        <li>Check <b>Attach q value annotation</b></li>
         <li>Click the <b>OK</b> button.</li>
     </ul>
     <p>
@@ -601,8 +599,8 @@
     </ul>
     <h1>Exporting Peak Scoring Results (Skyline report)</h1>
     <p>
-        You can also obtain q-value information from a Skyline report, if you have checked the <b>Add q value annotation</b> check box in the
-        <b>Reintegrate</b> form. This method does not show individual feature scores, but has the advantage that you can combine it with any
+        You can also obtain q-value information from a Skyline report, which reintegrating with a peak scoring model makes available.
+        This method does not show individual feature scores, but has the advantage that you can combine it with any
         other columns available in a Skyline report.
     </p>
     <ul>
@@ -629,7 +627,7 @@
         <li>On the left side of the form, click on the plus icon by <b>Peptides</b> to expand the list.</li>
         <li>Under <b>Peptides</b> click on the plus icon by <b>Precursors</b> to expand the list.</li>
         <li>Under <b>Precursors</b> click on the plus icon by <b>PrecursorResults</b> to expand the list.</li>
-        <li>Click on the check box by the <b>annotation_Q Value</b> entry under <b>Precursor Results</b>.</li>
+        <li>Click on the check box by the <b>Detection Q Value</b> entry under <b>Precursor Results</b>.</li>
     </ul>
     <p>
         The <b>Edit Report</b> form should now look like this:
@@ -639,7 +637,7 @@
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
-        <li>Click the <b>OK</b> button in the <b>Edit Reports</b> form.</li>
+        <li>Click the <b>OK</b> button in the <b>Manage Reports</b> form.</li>
         <li>Select the <b>Peptide RT Results</b> item in the <b>Report</b> list.</li>
         <li>Click the <b>Export</b> button.</li>
         <li>In the <b>File name</b> field, enter “qValues_Exported_report.csv”.</li>
@@ -653,7 +651,7 @@
     </ul>
     <p>
         There should be a series of columns containing information about each peptide, including file name, peptide sequence, and so forth. There
-        should also be a column called “qValue”, which contains the estimated false discovery rate just as the mProphet exported file did.
+        should also be a column called “Detection Q Value”, which contains the estimated false discovery rate just as the mProphet exported file did.
     </p>
     <ul>
         <li>Close the file and return to Skyline.</li>
@@ -726,7 +724,7 @@
         Do the following to return to the <b>Edit Peak Scoring Model</b> form:
     </p>
     <ul>
-        <li>From the <b>Edit</b> menu, choose <b>Refine</b> and click on <b>Reintegrate</b></li>
+        <li>On the <b>Refine</b> menu, click <b>Reintegrate</b>.</li>
         <li>From the <b>Peak Scoring Model</b> dropdown list, choose the ‘test1’ model you trained from the SRM dataset.</li>
         <li>Select <b>&lt;Edit current…&gt;</b>.</li>
     </ul>

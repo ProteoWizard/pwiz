@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -48,106 +49,105 @@ namespace pwiz.Osprey.IO
             var groups = new Dictionary<string, List<LibraryEntry>>();
 
             // Silent between the parse and "Loaded N library entries" - a full group-by over
-            // every entry (6.3M on the entrapment library). Not `using`d: no re-indent, and no
-            // completed-looking 100% if this throws.
-            var progress = new ProgressReporter(@"Deduplicating library entries", entries.Count,
-                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
-            long nGrouped = 0;
-
-            foreach (var entry in entries)
+            // every entry (6.3M on the entrapment library).
+            return ProgressReporter.Run(OspreyIOResources.LibraryDeduplicator_DeduplicateLibrary_Merging_duplicate_library_precursors, entries.Count, progress =>
             {
-                progress.Report(++nGrouped);
-                string key = entry.ModifiedSequence + "\t" + entry.Charge;
-                List<LibraryEntry> group;
-                if (!groups.TryGetValue(key, out group))
-                {
-                    group = new List<LibraryEntry>();
-                    groups[key] = group;
-                }
-                group.Add(entry);
-            }
+                long nGrouped = 0;
 
-            var deduped = new List<LibraryEntry>(groups.Count);
-            // One interner for the merged (count > 1) groups' unioned protein /
-            // gene accessions, so the dedup pass keeps the loader's array-backed
-            // interning instead of re-wrapping each merge in a fresh List.
-            // Singleton groups (the vast majority) pass through untouched below.
-            var interner = new LibraryStringInterner();
-
-            foreach (var group in groups.Values)
-            {
-                if (group.Count == 1)
+                foreach (var entry in entries)
                 {
-                    deduped.Add(group[0]);
-                    continue;
+                    progress.Report(++nGrouped);
+                    string key = entry.ModifiedSequence + TextUtil.SEPARATOR_TSV + entry.Charge;
+                    List<LibraryEntry> group;
+                    if (!groups.TryGetValue(key, out group))
+                    {
+                        group = new List<LibraryEntry>();
+                        groups[key] = group;
+                    }
+                    group.Add(entry);
                 }
 
-                // Average retention time across all duplicates
-                double sumRt = 0;
-                foreach (var e in group)
-                    sumRt += e.RetentionTime;
-                double avgRt = sumRt / group.Count;
+                var deduped = new List<LibraryEntry>(groups.Count);
+                // One interner for the merged (count > 1) groups' unioned protein /
+                // gene accessions, so the dedup pass keeps the loader's array-backed
+                // interning instead of re-wrapping each merge in a fresh List.
+                // Singleton groups (the vast majority) pass through untouched below.
+                var interner = new LibraryStringInterner();
 
-                // Merge protein_ids and gene_names from all entries
-                var allProteins = new SortedSet<string>();
-                var allGenes = new SortedSet<string>();
-                foreach (var e in group)
+                foreach (var group in groups.Values)
                 {
-                    foreach (string p in e.ProteinIds)
-                        allProteins.Add(p);
-                    foreach (string g in e.GeneNames)
-                        allGenes.Add(g);
+                    if (group.Count == 1)
+                    {
+                        deduped.Add(group[0]);
+                        continue;
+                    }
+
+                    // Average retention time across all duplicates
+                    double sumRt = 0;
+                    foreach (var e in group)
+                        sumRt += e.RetentionTime;
+                    double avgRt = sumRt / group.Count;
+
+                    // Merge protein_ids and gene_names from all entries
+                    var allProteins = new SortedSet<string>();
+                    var allGenes = new SortedSet<string>();
+                    foreach (var e in group)
+                    {
+                        foreach (string p in e.ProteinIds)
+                            allProteins.Add(p);
+                        foreach (string g in e.GeneNames)
+                            allGenes.Add(g);
+                    }
+
+                    // Pick the best entry: most fragments, then highest total intensity.
+                    // Precompute total intensities once (O(n * frag_count)) so the
+                    // sort comparator is O(1) per call instead of re-summing per
+                    // comparison (O(n log n * frag_count)).
+                    var totalIntensities = new Dictionary<LibraryEntry, double>(group.Count);
+                    foreach (var e in group)
+                    {
+                        double totalIntensity = 0;
+                        foreach (var f in e.Fragments)
+                            totalIntensity += f.RelativeIntensity;
+                        totalIntensities[e] = totalIntensity;
+                    }
+                    // Array.Sort OK: picks the representative (group[0]) by fragment count then total
+                    // intensity. Tie hazard, conversion deferred: two entries with identical fragment
+                    // count AND identical total intensity would tie and either could become the kept
+                    // representative (its Fragments/Id carry through). Not a #4362 approved U-site;
+                    // adding a unique tiebreak here must be validated against the regression golden.
+                    group.Sort((a, b) => // Array.Sort OK: (see above) tie hazard on (fragCount,intensity), conversion deferred; not a #4362 approved U-site
+                    {
+                        int fragCmp = b.Fragments.Count.CompareTo(a.Fragments.Count);
+                        if (fragCmp != 0)
+                            return fragCmp;
+                        return totalIntensities[b].CompareTo(totalIntensities[a]);
+                    });
+
+                    var best = group[0];
+                    best.RetentionTime = avgRt;
+                    best.ProteinIds = interner.InternToArray(allProteins);
+                    best.GeneNames = interner.InternToArray(allGenes);
+                    deduped.Add(best);
                 }
 
-                // Pick the best entry: most fragments, then highest total intensity.
-                // Precompute total intensities once (O(n * frag_count)) so the
-                // sort comparator is O(1) per call instead of re-summing per
-                // comparison (O(n log n * frag_count)).
-                var totalIntensities = new Dictionary<LibraryEntry, double>(group.Count);
-                foreach (var e in group)
+                // Sort deterministically before assigning IDs
+                // Array.Sort OK: deduped holds one entry per (ModifiedSequence, Charge), so that key
+                // is unique and the comparator never returns 0.
+                deduped.Sort((a, b) => // Array.Sort OK: (see above) (ModifiedSequence, Charge) is unique, comparator never ties
                 {
-                    double totalIntensity = 0;
-                    foreach (var f in e.Fragments)
-                        totalIntensity += f.RelativeIntensity;
-                    totalIntensities[e] = totalIntensity;
-                }
-                // Array.Sort OK: picks the representative (group[0]) by fragment count then total
-                // intensity. Tie hazard, conversion deferred: two entries with identical fragment
-                // count AND identical total intensity would tie and either could become the kept
-                // representative (its Fragments/Id carry through). Not a #4362 approved U-site;
-                // adding a unique tiebreak here must be validated against the regression golden.
-                group.Sort((a, b) => // Array.Sort OK: (see above) tie hazard on (fragCount,intensity), conversion deferred; not a #4362 approved U-site
-                {
-                    int fragCmp = b.Fragments.Count.CompareTo(a.Fragments.Count);
-                    if (fragCmp != 0)
-                        return fragCmp;
-                    return totalIntensities[b].CompareTo(totalIntensities[a]);
+                    int cmp = string.Compare(a.ModifiedSequence, b.ModifiedSequence, StringComparison.Ordinal);
+                    if (cmp != 0)
+                        return cmp;
+                    return a.Charge.CompareTo(b.Charge);
                 });
 
-                var best = group[0];
-                best.RetentionTime = avgRt;
-                best.ProteinIds = interner.InternToArray(allProteins);
-                best.GeneNames = interner.InternToArray(allGenes);
-                deduped.Add(best);
-            }
+                // Re-assign sequential IDs
+                for (int i = 0; i < deduped.Count; i++)
+                    deduped[i].Id = (uint)i;
 
-            // Sort deterministically before assigning IDs
-            // Array.Sort OK: deduped holds one entry per (ModifiedSequence, Charge), so that key
-            // is unique and the comparator never returns 0.
-            deduped.Sort((a, b) => // Array.Sort OK: (see above) (ModifiedSequence, Charge) is unique, comparator never ties
-            {
-                int cmp = string.Compare(a.ModifiedSequence, b.ModifiedSequence, StringComparison.Ordinal);
-                if (cmp != 0)
-                    return cmp;
-                return a.Charge.CompareTo(b.Charge);
-            });
-
-            // Re-assign sequential IDs
-            for (int i = 0; i < deduped.Count; i++)
-                deduped[i].Id = (uint)i;
-
-            progress.Dispose();
-            return deduped;
+                return deduped;
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
         }
     }
 }

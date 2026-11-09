@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PanoramaClient", "..\..\..\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonUtil", "..\..\..\Shared\CommonUtil\CommonUtil.csproj", "{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonBaseUI", "..\..\..\Shared\CommonBaseUI\CommonBaseUI.csproj", "{6C0B2B6E-4C39-4F5A-9E2D-7A1B3C8D5E40}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,6 +58,10 @@ Global
 		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C0B2B6E-4C39-4F5A-9E2D-7A1B3C8D5E40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C0B2B6E-4C39-4F5A-9E2D-7A1B3C8D5E40}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C0B2B6E-4C39-4F5A-9E2D-7A1B3C8D5E40}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C0B2B6E-4C39-4F5A-9E2D-7A1B3C8D5E40}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

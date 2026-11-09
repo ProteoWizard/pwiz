@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Common.Pipeline;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
 
@@ -50,18 +51,21 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     internal static class ReconciledParquetWriter
     {
+        private const string META_RESCORED = @"osprey.rescored";
+
         /// <summary>
         /// Stream <paramref name="originalPath"/> group-by-group, overlaying the
         /// re-scored + gap-fill rows from <paramref name="fdrEntries"/>, and write the
-        /// result to <paramref name="reconciledPath"/>. Returns true when the reconciled
-        /// parquet was written; false on a read/write failure (so the caller does not
-        /// stamp a validity sidecar over a stale or absent output).
+        /// result to <paramref name="reconciledPath"/>, with <paramref name="stamp"/> in its
+        /// footer. Returns true when the reconciled parquet was written; false on a read/write
+        /// failure (so the caller can remove whatever an earlier run left there).
         /// </summary>
         internal static bool Write(string originalPath, string reconciledPath,
             List<FdrEntry> fdrEntries,
             string fileName, IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             OspreyConfig config,
             IReadOnlyList<string> joinFileStems,
+            ArtifactStamp stamp,
             Action<string> logInfo, Action<string> logWarning)
         {
             // 1. Split the re-scored entries into the small resident overlay map
@@ -78,12 +82,13 @@ namespace pwiz.Osprey.Tasks
             // 3. Reconciliation metadata (mirrors Rust build_reconciled_metadata).
             //    Whether this file had rescore work at all is recorded here, because the
             //    artifact's mere existence stopped answering that question once every file
-            //    started getting one. SecondPassFdrTask gates the 2nd Percolator pass on it
-            //    as the C# analog of Rust's total_rescored > 0, and a faithful copy must not
-            //    read as work. The condition is exactly BuildOverlay's two outputs being
-            //    empty - no re-scored row to overlay and no gap-fill row to append.
-            var metadata = BuildReconciliationMetadata(config, joinFileStems,
-                rescored: overlayByIndex.Count > 0 || gapFill.Count > 0);
+            //    started getting one. It is provenance now: the second pass answers every run
+            //    alike (#4665), so nothing branches on it - it used to gate both the second
+            //    Percolator pass (Rust's total_rescored > 0) and whether a run owed a per-file
+            //    answer. The condition is exactly BuildOverlay's two outputs being empty - no
+            //    re-scored row to overlay and no gap-fill row to append.
+            var metadata = ParquetScoreCache.WithStamp(BuildReconciliationMetadata(config, joinFileStems,
+                rescored: overlayByIndex.Count > 0 || gapFill.Count > 0), stamp);
 
             // 4. The survivors this file is allowed to carry forward, which is exactly the
             //    entries Stage 5's compaction left in the buffer (per-run q under the
@@ -107,20 +112,21 @@ namespace pwiz.Osprey.Tasks
             {
                 var result = ParquetScoreCache.StreamReconciledScoresParquet(
                     originalPath, reconciledPath, overlayByIndex, gapFill,
-                    metadata, libraryById, fileName, keepIdentities, @"  ", logWarning);
+                    metadata, libraryById, fileName, keepIdentities, PerFileRescoreTask.TASK_NAME,
+                    TextUtil.GetIndentation(1), logWarning);
                 nReplaced = result.NReplaced;
                 nAppended = result.NAppended;
                 origRowCount = result.OrigRowCount;
                 nWritten = result.NWritten;
             }
-            // A read/write IO failure is a recoverable per-file skip (clears the sidecar,
-            // re-rescored next run). But an InvalidOperationException from the streaming
+            // A read/write IO failure is a recoverable per-file skip (the caller removes the
+            // output; re-rescored next run). But an InvalidOperationException from the streaming
             // merge is the canonical-order invariant guard firing -- that is silently-invalid
             // output, so let it propagate and ABORT the run (hard-fail over warn-and-proceed).
             catch (Exception ex) when (!(ex is InvalidOperationException))
             {
                 logWarning(string.Format(
-                    "Stage 6 write-back: failed to transfer {0} -> {1}: {2}",
+                    OspreyTasksResources.ReconciledParquetWriter_Write_Could_not_write_the_re_scored_intermediate_file__1__from__0____2_,
                     originalPath, reconciledPath, ex.Message));
                 return false;
             }
@@ -128,8 +134,8 @@ namespace pwiz.Osprey.Tasks
             // Reports what was WRITTEN against what was read. The two differ now that the
             // compacted-away rows are dropped, and the ratio is the whole point of the
             // artifact - a log that still printed original+appended would hide it.
-            logInfo(string.Format(
-                "  Wrote reconciled parquet for {0}: {1} rows ({2} replaced + {3} appended; original {4} rows)",
+            logInfo(TextUtil.GetIndentation(1) + string.Format(
+                OspreyTasksResources.ReconciledParquetWriter_Write___Wrote__1__precursor_candidate_peaks_for__0____2__re_scored_and__3__missing_peaks_added__,
                 fileName, nWritten, nReplaced, nAppended, origRowCount));
             return true;
         }
@@ -182,7 +188,7 @@ namespace pwiz.Osprey.Tasks
         /// without that, a worker rescoring a single parquet stamps a single-file
         /// hash that the downstream --task SecondPassFDR node rejects on
         /// mismatch. The join file stems come from the planner's
-        /// reconciliation.json (v2+) via <see cref="RescoreInputs.JoinFileStems"/>;
+        /// reconciliation.json (v2+), when the caller passes them;
         /// fall back to the config-derived hash when the caller passed none
         /// (in-process pipeline where config.InputFiles already has all files, or
         /// v1 backward compat).
@@ -206,13 +212,13 @@ namespace pwiz.Osprey.Tasks
                 // answer. The version stamp cannot carry this: OSPREY_VERSION_OVERRIDE is the
                 // sanctioned way to consume another build's artifacts, so it is exactly the
                 // guard an operator turns off. (issue #4486)
-                { @"osprey.reconciled", ParquetScoreCache.RECONCILED_SURVIVORS },
+                { ParquetScoreCache.META_RECONCILED, ParquetScoreCache.RECONCILED_SURVIVORS },
                 { @"osprey.reconciliation_hash", reconciliationHash },
                 // "1" iff Stage 6 actually re-scored or gap-filled something in this file.
                 // Absent on a parquet written before this key existed, which is why the
                 // reader treats a MISSING value as "1": back then the file was only written
                 // when there was work, so its existence meant the same thing.
-                { @"osprey.rescored", rescored ? @"1" : @"0" },
+                { META_RESCORED, rescored ? @"1" : @"0" },
             };
         }
     }

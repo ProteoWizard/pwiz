@@ -97,6 +97,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Default (AlphaPeptDeep).
+        /// </summary>
+        public static string CarafeModelList_GetDisplayName_Default__AlphaPeptDeep_ {
+            get {
+                return ResourceManager.GetString("CarafeModelList_GetDisplayName_Default__AlphaPeptDeep_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Models:.
+        /// </summary>
+        public static string CarafeModelList_Label_Models {
+            get {
+                return ResourceManager.GetString("CarafeModelList_Label_Models", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Edit Carafe Models.
+        /// </summary>
+        public static string CarafeModelList_Title_Edit_Carafe_Models {
+            get {
+                return ResourceManager.GetString("CarafeModelList_Title_Edit_Carafe_Models", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Collision Energy Regression:.
         /// </summary>
         public static string CollisionEnergyList_Label_Collision_Energy_Regression {

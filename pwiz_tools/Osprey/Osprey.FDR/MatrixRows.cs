@@ -73,7 +73,7 @@ namespace pwiz.Osprey.FDR
             int need = nRows * nCols;
             if (destData.Length < need)
                 throw new ArgumentException(
-                    string.Format("destData length {0} < required {1}", destData.Length, need));
+                    string.Format(@"destData length {0} < required {1}", destData.Length, need));
             double[] src = matrix.Data;
             for (int i = 0; i < nRows; i++)
             {

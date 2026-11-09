@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vcs-root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="fb35f17d-b753-4472-9e40-f3486086d420" type="svn" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>proteowizard</name>
+  <param name="externals-mode" value="externals-none" />
+  <param name="labelingMessage" value="Labeled automatically by TeamCity" />
+  <param name="labelingPatterns" value="trunk=&gt;tags" />
+  <param name="svn-config-directory" value="/home/cruisecontrol/.subversion" />
+  <param name="svn-use-default-config-directory" value="true" />
+  <param name="url" value="https://proteowizard.svn.sourceforge.net/svnroot/proteowizard/trunk/pwiz" />
+  <param name="working-copy-format" value="1.6" />
+</vcs-root>
+

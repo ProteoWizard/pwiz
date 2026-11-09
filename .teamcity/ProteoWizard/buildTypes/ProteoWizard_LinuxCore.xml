@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="5bd8e966-3a23-4086-b5d1-758303543b13" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Linux core</name>
+  <settings>
+    <options>
+      <option name="allowExternalStatus" value="true" />
+      <option name="artifactRules" value="build-linux-x86_64/*.tar.bz2&#xA;build-linux-x86_64/VERSION&#xA;**/*.blib.observed" />
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutDirectory" value="pwiz" />
+      <option name="checkoutMode" value="ON_AGENT" />
+    </options>
+    <disabled-settings>
+      <setting-ref ref="vcsTrigger" />
+    </disabled-settings>
+    <parameters>
+      <param name="env.JAVA_HOME" value="" />
+      <param name="env.MSPARSER_HOME" value="/usr/lib/msparser/gnu" />
+      <param name="env.address_model_property" value="address-model=64" />
+      <param name="env.architecture_property" value="" />
+      <param name="env.link_property" value="" />
+      <param name="env.toolset_property" value="gcc-9" />
+      <param name="env.variant_property" value="release" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_simpleRunner_122" name="" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="/bin/bash" />
+          <param name="command.parameters" value="scripts/misc/tcbuild.sh --automated --i-agree-to-the-vendor-licenses toolset=%env.toolset_property% --prefix=build-linux-x86_64/usr pwiz pwiz_aux executables pwiz_tools/BiblioSpec/tests -j%env.NUMBER_OF_CORES% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property%" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_336" name="Build tarball separately" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="/bin/bash" />
+          <param name="command.parameters" value="quickbuild.sh --automated toolset=%env.toolset_property% pwiz-bin.tar.bz2 -j%env.NUMBER_OF_CORES% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property%" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizard_PwizGithubMasterWithPRs" />
+    </vcs-settings>
+    <requirements>
+      <contains id="RQ_471" name="teamcity.agent.jvm.os.name" value="Linux" />
+      <does-not-equal id="RQ_473" name="teamcity.agent.jvm.os.arch" value="i386" />
+    </requirements>
+    <build-triggers>
+      <build-trigger id="vcsTrigger" type="vcsTrigger">
+        <parameters>
+          <param name="branchFilter"><![CDATA[+:*
+-:Skyline/skyline_*]]></param>
+          <param name="enableQueueOptimization" value="true" />
+          <param name="quietPeriod" value="61" />
+          <param name="quietPeriodMode" value="USE_CUSTOM" />
+          <param name="triggerRules"><![CDATA[+:.
+-:README.md
+-:.travis.yml
+-:appveyor.yml
+-:.gitignore]]></param>
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <cleanup>
+      <policy type="days" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepDays.count" value="120" />
+        </parameters>
+      </policy>
+    </cleanup>
+  </settings>
+</template>
+

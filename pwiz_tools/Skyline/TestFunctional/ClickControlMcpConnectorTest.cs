@@ -124,8 +124,7 @@ namespace pwiz.SkylineTestFunctional
         // A select_tab action on the (caption-less) TabControl selects a tab by its visible text.
         private void ClickTab()
         {
-            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            string settingsId = GetOpenFormId<PeptideSettingsUI>();
+            var peptideSettings = ShowMcpConnectorForm<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, out var settingsId);
 
             RunUI(() => peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Digest);
             var tabControl = new UiElementPath(

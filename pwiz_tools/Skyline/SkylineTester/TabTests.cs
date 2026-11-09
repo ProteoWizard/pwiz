@@ -92,7 +92,7 @@ namespace SkylineTester
 
             var cultures = new List<CultureInfo>();
             if (MainWindow.TestsChinese.Checked)
-                cultures.Add(new CultureInfo("zh-CHS"));
+                cultures.Add(new CultureInfo("zh-Hans")); // As the nightlies run it, from the resource folders' name
             if (MainWindow.TestsFrench.Checked)
                 cultures.Add(new CultureInfo("fr-FR"));
             if (MainWindow.TestsJapanese.Checked)

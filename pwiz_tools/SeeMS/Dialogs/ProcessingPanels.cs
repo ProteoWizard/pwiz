@@ -26,9 +26,10 @@ using System.Drawing;
 using System.Data;
 using System.Text;
 using System.Windows.Forms;
-using pwiz.CLI.analysis;
+using Pwiz.Analysis;
+using Pwiz.Analysis.PeakPicking;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
     public partial class ProcessingPanels : UserControl
     {
@@ -47,10 +48,8 @@ namespace seems
             thresholderOrientationComboBox.Items.Add( "Least Intense" );
 
             smootherAlgorithmComboBox.Items.Add( "Savitzky-Golay" );
-            //smootherAlgorithmComboBox.Items.Add( "Whittaker" );
 
             smootherSavitzkyGolayParameters.Location = smootherParametersGroupBox.Location;
-            smootherWhittakerParameters.Location = smootherParametersGroupBox.Location;
 
             // initialize labels
             smootherSavitzkyGolayTrackBar_ValueChanged( null, null );

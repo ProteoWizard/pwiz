@@ -17,17 +17,22 @@
  * limitations under the License.
  */
 using Parquet;
-using Parquet.Data;
 using Parquet.Schema;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace pwiz.Skyline.Model.Databinding
 {
@@ -36,69 +41,45 @@ namespace pwiz.Skyline.Model.Databinding
         public void Export(Stream stream, RowItemEnumerator rowItemEnumerator)
         {
             // Build columns and schema from item properties
-            var columns = BuildColumns(rowItemEnumerator.ItemProperties);
+            var columnValueTree = new ColumnValueTree();
+            var columns = BuildColumns(rowItemEnumerator.ItemProperties, columnValueTree);
             var schema = new ParquetSchema(columns.Select(col => col.SchemaField).ToArray());
 
-            using var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult();
-            writer.CompressionMethod = CompressionMethod.Zstd;
-            using var writeWorker = new QueueWorker<DataColumn[]>(
-                consume: (dataColumns, threadIndex) =>
-                {
-                    using var groupWriter = writer.CreateRowGroup();
-                    foreach (var dataColumn in dataColumns)
-                    {
-                        groupWriter.WriteColumnAsync(dataColumn).GetAwaiter().GetResult();
-                    }
-                });
-            // Single writer thread, queue at most 1 chunk ahead
-            writeWorker.RunAsync(1, @"Parquet Writer", maxQueueSize: 1);
-            int rowsPerGroup = DecideRowCountPerGroup(rowItemEnumerator.ItemProperties);
-            // Process in chunks
-            while (true)
+            var options = new ParquetOptions
             {
-                if (rowItemEnumerator.IsCanceled || writeWorker.Exception != null)
-                {
-                    break;
-                }
-
-                var chunk = new List<RowItem>();
-                while (chunk.Count < rowsPerGroup && rowItemEnumerator.MoveNext())
-                {
-                    chunk.Add(rowItemEnumerator.Current);
-                }
-
-                if (chunk.Count == 0)
-                {
-                    break;
-                }
-
-                // Create arrays for this chunk
-                var chunkArrays = columns.Select(col => col.CreateArray(chunk.Count)).ToArray();
-
-                // Populate chunk data
-                PopulateChunk(rowItemEnumerator.ProgressMonitor, chunk, columns, chunkArrays);
-                if (rowItemEnumerator.IsCanceled)
-                {
-                    break;
-                }
-
-                // Create DataColumns and queue for writing
-                var dataColumns = new DataColumn[columns.Count];
-                for (int i = 0; i < columns.Count; i++)
-                {
-                    dataColumns[i] = columns[i].CreateDataColumn(chunkArrays[i]);
-                }
-                writeWorker.Add(dataColumns);
-            }
-
-            writeWorker.DoneAdding(wait: true);
-            if (writeWorker.Exception != null)
+                CompressionMethod = CompressionMethod.Zstd,
+                // Parquet.Net's default is SmallestSize, which is Zstd level 19 and many times slower
+                // than the level 3 that Optimal maps to, for a few percent smaller file
+                CompressionLevel = CompressionLevel.Optimal,
+                // Parquet.Net 6 only dictionary-encodes a column when asked to, and decides by scanning the
+                // column's values; a sample of this many rows rejects a mostly unique column without the full scan
+                DictionaryEncodingSampleSize = 10000
+            };
+            // The strings in a report are mostly repeated (protein, peptide, replicate and file names),
+            // which a dictionary shrinks a lot and makes much cheaper to encode than one string at a time.
+            // Parquet.Net's ClrType for a string field is ReadOnlyMemory<char>, so the storage type is checked.
+            // List columns are left plain because some readers cannot decode dictionary-encoded lists.
+            foreach (var column in columns.Where(col => col.ListElementType == null && col.StorageType.Type == typeof(string)))
             {
-                throw writeWorker.Exception;
+                options.ColumnEncodingHints[column.DataField.Path.ToString()] = EncodingHint.Dictionary;
             }
+            // Parquet.Net 6 does not use ConfigureAwait(false) when it writes the file's header and footer,
+            // so blocking on it from a thread with a WinForms SynchronizationContext would deadlock
+            var writer = ActionUtil.CallWithoutSynchronizationContext(() =>
+                ParquetWriter.CreateAsync(schema, stream, options).GetAwaiter().GetResult());
+            using (var pipeline = new ExportPipeline(writer, columns, columnValueTree, rowItemEnumerator))
+            {
+                pipeline.RowsPerGroup = DecideRowCountPerGroup(rowItemEnumerator.ItemProperties);
+                pipeline.Run();
+            }
+            // Disposing the writer writes the footer. On a stream the export has already failed on
+            // that throws again, and from a "using" that exception would replace the one which says
+            // why the export failed. The writer holds nothing but the caller's stream, so a failed
+            // export leaves it undisposed.
+            ActionUtil.CallWithoutSynchronizationContext(() => writer.DisposeAsync().GetAwaiter().GetResult());
         }
 
-        private List<ColumnData> BuildColumns(ItemProperties itemProperties)
+        private List<ColumnData> BuildColumns(ItemProperties itemProperties, ColumnValueTree columnValueTree)
         {
             var columns = new List<ColumnData>();
             var usedColumnNames = new HashSet<string>();
@@ -106,37 +87,367 @@ namespace pwiz.Skyline.Model.Databinding
             foreach (DataPropertyDescriptor property in itemProperties)
             {
                 var name = GetUniqueColumnName(property, usedColumnNames);
-                columns.Add(new ColumnData(name, property));
+                columns.Add(new ColumnData(name, property, columnValueTree));
             }
 
             return columns;
         }
 
-        private void PopulateChunk(IProgressMonitor progressMonitor,
-            IList<RowItem> rowItems, List<ColumnData> columns, Array[] chunkArrays)
+        /// <summary>
+        /// Runs one export as three stages on separate threads: a reader which pulls rows from the
+        /// <see cref="RowItemEnumerator"/> into chunks, the calling thread which calculates the column
+        /// values of each chunk on the ParallelEx workers, and a writer which encodes and compresses each
+        /// chunk into a row group. Each stage hands its output to the next through a queue holding one
+        /// chunk, so a stage never gets more than one chunk ahead of the one after it.
+        /// The first exception from any stage cancels the others and is rethrown by <see cref="Run"/>.
+        /// </summary>
+        private class ExportPipeline : IDisposable
         {
-            // Values with no Parquet storage type get stored as strings by calling ToString(),
-            // which formats using the thread's culture, so the values have to be converted under
-            // the culture this report is being exported with. All of the columns come from the
-            // same DataSchema, so the culture only needs to be set once per row.
-            var dataSchemaLocalizer = columns.FirstOrDefault()?.PropertyDescriptor.DataSchemaLocalizer
-                                      ?? DataSchemaLocalizer.INVARIANT;
-            ParallelEx.For(0, rowItems.Count, rowIndex =>
+            private readonly ParquetWriter _writer;
+            private readonly IList<ColumnData> _columns;
+            private readonly ColumnValueTree _columnValueTree;
+            private readonly RowItemEnumerator _rowItemEnumerator;
+            private readonly BlockingCollection<List<RowItem>> _chunks = new BlockingCollection<List<RowItem>>(1);
+            /// <summary>
+            /// Chunks whose columns have been calculated and packed, waiting to be written as a row group.
+            /// </summary>
+            private readonly BlockingCollection<ColumnBuffer[]> _rowGroups = new BlockingCollection<ColumnBuffer[]>(1);
+            /// <summary>
+            /// Column buffers which the writer has finished with, ready to hold another chunk.
+            /// One set is being populated, one is waiting to be written and one is being written,
+            /// so the arrays which hold a chunk get allocated three times per export instead of once per chunk.
+            /// </summary>
+            private readonly BlockingCollection<ColumnBuffer[]> _freeBuffers = new BlockingCollection<ColumnBuffer[]>();
+            private const int MAX_BUFFER_SETS = 3;
+            private int _bufferSetCount;
+            private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+            private readonly CancellationToken _cancellationToken;
+            private Exception _exception;
+
+            public ExportPipeline(ParquetWriter writer, IList<ColumnData> columns, ColumnValueTree columnValueTree,
+                RowItemEnumerator rowItemEnumerator)
             {
-                if (progressMonitor.IsCanceled)
+                _writer = writer;
+                _columns = columns;
+                _columnValueTree = columnValueTree;
+                _rowItemEnumerator = rowItemEnumerator;
+                _cancellationToken = _cancellationTokenSource.Token;
+            }
+
+            public int RowsPerGroup { get; set; } = 1000;
+
+            public void Run()
+            {
+                var readThread = StartThread(@"Parquet Row Reader", ReadChunks);
+                var writeThread = StartThread(@"Parquet Writer", WriteRowGroups);
+                RunStage(() =>
+                {
+                    foreach (var chunk in _chunks.GetConsumingEnumerable(_cancellationToken))
+                    {
+                        var buffers = TakeBuffers(chunk.Count);
+                        PopulateChunk(chunk, buffers);
+                        if (_rowItemEnumerator.IsCanceled)
+                        {
+                            // Stops the reader and the writer without waiting for what they are doing
+                            _cancellationTokenSource.Cancel();
+                            break;
+                        }
+                        _rowGroups.Add(buffers, _cancellationToken);
+                    }
+                });
+                _rowGroups.CompleteAdding();
+                readThread.Join();
+                writeThread.Join();
+                if (_exception != null)
+                {
+                    ExceptionDispatchInfo.Capture(_exception).Throw();
+                }
+            }
+
+            public void Dispose()
+            {
+                _cancellationTokenSource.Dispose();
+                _chunks.Dispose();
+                _rowGroups.Dispose();
+                _freeBuffers.Dispose();
+            }
+
+            /// <summary>
+            /// Returns a set of column buffers with room for a chunk of the given size, waiting for the
+            /// writer to finish with one if all <see cref="MAX_BUFFER_SETS"/> are in use. Every chunk but the
+            /// last has <see cref="RowsPerGroup"/> rows, so a set made for one chunk fits all of the later ones.
+            /// </summary>
+            private ColumnBuffer[] TakeBuffers(int rowCount)
+            {
+                if (!_freeBuffers.TryTake(out var buffers))
+                {
+                    if (_bufferSetCount < MAX_BUFFER_SETS)
+                    {
+                        _bufferSetCount++;
+                        buffers = _columns.Select(column => column.CreateBuffer(rowCount)).ToArray();
+                    }
+                    else
+                    {
+                        buffers = _freeBuffers.Take(_cancellationToken);
+                    }
+                }
+                foreach (var buffer in buffers)
+                {
+                    buffer.Reset(rowCount);
+                }
+                return buffers;
+            }
+
+            private Thread StartThread(string name, Action stage)
+            {
+                var thread = new Thread(() =>
+                {
+                    LocalizationHelper.InitThread();
+                    RunStage(stage);
+                })
+                {
+                    Name = name,
+                    IsBackground = true
+                };
+                thread.Start();
+                return thread;
+            }
+
+            private void RunStage(Action stage)
+            {
+                try
+                {
+                    stage();
+                }
+                catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
+                {
+                    // Another stage failed, or the export was canceled
+                }
+                catch (Exception exception)
+                {
+                    // The first exception wins. Cancelling unblocks the other stages, whose
+                    // OperationCanceledExceptions are then ignored above
+                    Interlocked.CompareExchange(ref _exception, exception, null);
+                    _cancellationTokenSource.Cancel();
+                }
+            }
+
+            private void ReadChunks()
+            {
+                try
+                {
+                    while (true)
+                    {
+                        var chunk = new List<RowItem>();
+                        while (chunk.Count < RowsPerGroup && _rowItemEnumerator.MoveNext())
+                        {
+                            chunk.Add(_rowItemEnumerator.Current);
+                        }
+
+                        if (chunk.Count == 0)
+                        {
+                            return;
+                        }
+                        _chunks.Add(chunk, _cancellationToken);
+                    }
+                }
+                finally
+                {
+                    _chunks.CompleteAdding();
+                }
+            }
+
+            private void WriteRowGroups()
+            {
+                foreach (var buffers in _rowGroups.GetConsumingEnumerable(_cancellationToken))
+                {
+                    using (var groupWriter = _writer.CreateRowGroup())
+                    {
+                        // Encoding and compressing the columns is the expensive part, and Parquet.Net
+                        // can do it for several columns at once into memory. Only appending them to the
+                        // file has to happen one after another, in schema order.
+                        var preparedColumns = new PreparedColumn[buffers.Length];
+                        try
+                        {
+                            ParallelEx.For(0, buffers.Length, colIndex =>
+                            {
+                                preparedColumns[colIndex] = buffers[colIndex]
+                                    .PrepareAsync(groupWriter, _cancellationToken).GetAwaiter().GetResult();
+                            }, threadName: @"Parquet Column Compression");
+                            foreach (var preparedColumn in preparedColumns)
+                            {
+                                groupWriter.WritePreparedColumnAsync(preparedColumn, _cancellationToken).GetAwaiter().GetResult();
+                            }
+                        }
+                        finally
+                        {
+                            // Columns prepared but not written when something went wrong
+                            foreach (var preparedColumn in preparedColumns)
+                            {
+                                preparedColumn?.Dispose();
+                            }
+                        }
+                    }
+                    // Nothing refers to the buffers any more, so the next chunk can be stored in them
+                    _freeBuffers.Add(buffers);
+                }
+            }
+
+            /// <summary>
+            /// True if the user canceled the export or another stage failed, so a chunk
+            /// being populated will never be written.
+            /// </summary>
+            private bool IsStopping
+            {
+                get { return _rowItemEnumerator.IsCanceled || _cancellationToken.IsCancellationRequested; }
+            }
+
+            /// <summary>
+            /// Calculates every column's value for every row in the chunk into the buffers and packs
+            /// them, ready to be written as one row group.
+            /// </summary>
+            private void PopulateChunk(IList<RowItem> rowItems, ColumnBuffer[] buffers)
+            {
+                // Values with no Parquet storage type get stored as strings by calling ToString(),
+                // which formats using the thread's culture, so the values have to be converted under
+                // the culture this report is being exported with. All of the columns come from the
+                // same DataSchema, so the culture only needs to be set once per row.
+                var dataSchemaLocalizer = _columns.FirstOrDefault()?.PropertyDescriptor.DataSchemaLocalizer
+                                          ?? DataSchemaLocalizer.INVARIANT;
+                // Consecutive rows which share the same Value object (for instance the rows expanded from one
+                // transition by a "Results" sublist) form a run. Columns which depend only on the Value have
+                // the same value for every row in the run, so they are calculated once per run.
+                var runStarts = new List<int>();
+                for (int rowIndex = 0; rowIndex < rowItems.Count; rowIndex++)
+                {
+                    if (rowIndex == 0 || !ReferenceEquals(rowItems[rowIndex].Value, rowItems[rowIndex - 1].Value))
+                    {
+                        runStarts.Add(rowIndex);
+                    }
+                }
+                ParallelEx.For(0, runStarts.Count, runIndex =>
+                {
+                    if (IsStopping)
+                    {
+                        return;
+                    }
+                    int startRow = runStarts[runIndex];
+                    int endRow = runIndex + 1 < runStarts.Count ? runStarts[runIndex + 1] : rowItems.Count;
+                    dataSchemaLocalizer.CallWithCultureInfo(() =>
+                    {
+                        var nodeValues = new object[_columnValueTree.NodeCount];
+                        _columnValueTree.Evaluate(rowItems[startRow], nodeValues, true);
+                        for (int colIndex = 0; colIndex < _columns.Count; colIndex++)
+                        {
+                            var column = _columns[colIndex];
+                            if (!column.DependsOnlyOnRowValue)
+                            {
+                                continue;
+                            }
+                            var value = column.ConvertToStorageValue(nodeValues[column.NodeIndex]);
+                            if (value != null)
+                            {
+                                for (int rowIndex = startRow; rowIndex < endRow; rowIndex++)
+                                {
+                                    buffers[colIndex].Store(rowIndex, value);
+                                }
+                            }
+                        }
+                        for (int rowIndex = startRow; rowIndex < endRow && !IsStopping; rowIndex++)
+                        {
+                            var rowItem = rowItems[rowIndex];
+                            _columnValueTree.Evaluate(rowItem, nodeValues, false);
+                            for (int colIndex = 0; colIndex < _columns.Count; colIndex++)
+                            {
+                                var column = _columns[colIndex];
+                                if (column.DependsOnlyOnRowValue)
+                                {
+                                    continue;
+                                }
+                                var value = column.NodeIndex >= 0
+                                    ? column.ConvertToStorageValue(nodeValues[column.NodeIndex])
+                                    : column.GetStorageValue(rowItem);
+                                if (value != null)
+                                {
+                                    buffers[colIndex].Store(rowIndex, value);
+                                }
+                            }
+                        }
+                    });
+                    for (int rowIndex = startRow; rowIndex < endRow; rowIndex++)
+                    {
+                        rowItems[rowIndex] = null;
+                    }
+                }, threadName: nameof(PopulateChunk));
+                if (IsStopping)
                 {
                     return;
                 }
-                var rowItem = rowItems[rowIndex];
-                rowItems[rowIndex] = null;
-                dataSchemaLocalizer.CallWithCultureInfo(() =>
+                // A column with nulls has to be packed, and a list column flattened, so the columns are
+                // packed in parallel rather than one after another on this thread while the workers wait
+                // for the next chunk
+                ParallelEx.For(0, _columns.Count, colIndex =>
                 {
-                    for (int colIndex = 0; colIndex < columns.Count; colIndex++)
+                    buffers[colIndex].Pack();
+                }, threadName: nameof(ColumnBuffer.Pack));
+            }
+        }
+
+        /// <summary>
+        /// The distinct ColumnDescriptors which the report's columns and their ancestors consist of, ordered so
+        /// that every parent precedes its children. Evaluating the nodes in that order calculates an ancestor
+        /// shared by several columns (such as "Results!*.Value" for every result column) once per row instead
+        /// of once per column.
+        /// </summary>
+        private class ColumnValueTree
+        {
+            private readonly List<ColumnDescriptor> _nodes = new List<ColumnDescriptor>();
+            private readonly List<int> _parentIndexes = new List<int>();
+            private readonly List<bool> _dependsOnlyOnRowValue = new List<bool>();
+            private readonly Dictionary<ColumnDescriptor, int> _nodeIndexes = new Dictionary<ColumnDescriptor, int>();
+
+            public int NodeCount
+            {
+                get { return _nodes.Count; }
+            }
+
+            /// <summary>
+            /// Adds the column and any of its ancestors which are not already present,
+            /// and returns the index of the column's node.
+            /// </summary>
+            public int AddNode(ColumnDescriptor columnDescriptor)
+            {
+                if (_nodeIndexes.TryGetValue(columnDescriptor, out int nodeIndex))
+                {
+                    return nodeIndex;
+                }
+                int parentIndex = columnDescriptor.Parent == null ? -1 : AddNode(columnDescriptor.Parent);
+                nodeIndex = _nodes.Count;
+                _nodes.Add(columnDescriptor);
+                _parentIndexes.Add(parentIndex);
+                _dependsOnlyOnRowValue.Add(columnDescriptor.DependsOnlyOnRowValue);
+                _nodeIndexes.Add(columnDescriptor, nodeIndex);
+                return nodeIndex;
+            }
+
+            /// <summary>
+            /// Calculates the values of the nodes which depend only on the row's Value, or of the other nodes,
+            /// into <paramref name="nodeValues"/>. The values of the nodes which depend only on the Value have
+            /// to be there already when the other nodes are calculated.
+            /// </summary>
+            public void Evaluate(RowItem rowItem, object[] nodeValues, bool dependsOnlyOnRowValue)
+            {
+                for (int nodeIndex = 0; nodeIndex < _nodes.Count; nodeIndex++)
+                {
+                    if (_dependsOnlyOnRowValue[nodeIndex] != dependsOnlyOnRowValue)
                     {
-                        columns[colIndex].StoreValue(rowItem, rowIndex, chunkArrays[colIndex]);
+                        continue;
                     }
-                });
-            }, threadName:nameof(PopulateChunk));
+                    int parentIndex = _parentIndexes[nodeIndex];
+                    var parentValue = parentIndex < 0 ? null : nodeValues[parentIndex];
+                    nodeValues[nodeIndex] = _nodes[nodeIndex].GetValueFromParent(parentValue, rowItem, null);
+                }
+            }
         }
 
         public static IEnumerable<string> MakeValidColumnNames(IEnumerable<string> columnNames)
@@ -207,10 +518,18 @@ namespace pwiz.Skyline.Model.Databinding
 
         private class ColumnData
         {
-            public ColumnData(string name, DataPropertyDescriptor propertyDescriptor)
+            public ColumnData(string name, DataPropertyDescriptor propertyDescriptor, ColumnValueTree columnValueTree)
             {
                 Name = name;
                 PropertyDescriptor = propertyDescriptor;
+                NodeIndex = -1;
+                if (propertyDescriptor is ColumnPropertyDescriptor columnPropertyDescriptor &&
+                    columnPropertyDescriptor.PivotKey == null &&
+                    columnPropertyDescriptor.DisplayColumn.ColumnDescriptor != null)
+                {
+                    NodeIndex = columnValueTree.AddNode(columnPropertyDescriptor.DisplayColumn.ColumnDescriptor);
+                    DependsOnlyOnRowValue = columnPropertyDescriptor.DependsOnlyOnRowValue;
+                }
                 var valueType = PropertyDescriptor.DataSchema.GetWrappedValueType(PropertyDescriptor.PropertyType);
 
                 // Check if this is a ListColumnValue<T>
@@ -218,101 +537,112 @@ namespace pwiz.Skyline.Model.Databinding
                 if (ListElementType != null)
                 {
                     // This is a list column
-                    // Use nullable storage type so the array can hold nulls for absent lists
-                    ElementStorageType = DecideStorageType(ListElementType);
-                    StorageType = typeof(IEnumerable<>).MakeGenericType(ElementStorageType);
-                    // Element is nullable so individual list slots can hold nulls
-                    var elementField = new DataField(@"element", ElementStorageType,
-                        isNullable: true, isArray: false);
+                    // The element storage type is nullable so individual list slots can hold nulls
+                    StorageType = new StorageType(typeof(IEnumerable<>).MakeGenericType(ListElementType.Type));
+                    var elementField = MakeDataField(@"element", ListElementType.Type, isArray: false);
                     SchemaField = new ListField(Name, elementField);
                     DataField = elementField;
                 }
                 else
                 {
-                    StorageType = DecideStorageType(valueType);
-                    DataField = new DataField(Name, StorageType);
+                    StorageType = new StorageType(DecideStorageType(valueType));
+                    DataField = MakeDataField(Name, StorageType.Type, isArray: null);
                     SchemaField = DataField;
                 }
             }
 
             public string Name { get; }
             public DataPropertyDescriptor PropertyDescriptor { get; }
-            public Type StorageType { get; }
-            public Type ListElementType { get; }
-            public Type ElementStorageType { get; }
+            /// <summary>
+            /// Index of this column's node in the ColumnValueTree, or -1 if the column is not a plain
+            /// ColumnPropertyDescriptor and has to be evaluated on its own with <see cref="GetStorageValue"/>.
+            /// </summary>
+            public int NodeIndex { get; }
+            /// <summary>
+            /// True if rows which share the same <see cref="RowItem.Value"/> have the same value in this column.
+            /// Only known for columns in the ColumnValueTree; any other column is assumed to vary per row.
+            /// </summary>
+            public bool DependsOnlyOnRowValue { get; }
+            /// <summary>
+            /// The type of the values in the array that holds a chunk of this column.
+            /// For list columns this is an IEnumerable of <see cref="ListElementType"/>.
+            /// </summary>
+            public StorageType StorageType { get; }
+            /// <summary>
+            /// For list columns, the storage type of each list element. Otherwise null.
+            /// </summary>
+            public StorageType ListElementType { get; }
             public Field SchemaField { get; }
             public DataField DataField { get; }
 
-            public object GetValue(RowItem rowItem)
+            /// <summary>
+            /// Creates a buffer which holds this column for a chunk of up to <paramref name="capacity"/> rows.
+            /// The buffer's element type is the one Parquet.Net stores the field's values as, which for
+            /// a string column is <see cref="ReadOnlyMemory{Char}"/>.
+            /// </summary>
+            public ColumnBuffer CreateBuffer(int capacity)
             {
-                var dataSchema = PropertyDescriptor.DataSchema;
-                return dataSchema.UnwrapValue(PropertyDescriptor.GetValue(rowItem));
+                var bufferType = ListElementType != null ? typeof(ListColumnBuffer<>) : typeof(ColumnBuffer<>);
+                return (ColumnBuffer) Activator.CreateInstance(bufferType.MakeGenericType(DataField.ClrType),
+                    DataField, capacity);
             }
 
-            public Array CreateArray(int rowCount)
+            /// <summary>
+            /// Returns the column's value for the row, converted to something that can be stored
+            /// in a <see cref="ColumnBuffer"/>, or null.
+            /// </summary>
+            public object GetStorageValue(RowItem rowItem)
             {
-                return Array.CreateInstance(StorageType, rowCount);
+                return ConvertToStorageValue(PropertyDescriptor.GetValue(rowItem));
             }
 
-            public DataColumn CreateDataColumn(Array chunkArray)
+            /// <summary>
+            /// Converts a value which the column's property descriptor returned to something
+            /// that can be stored in a <see cref="ColumnBuffer"/>, or null. For a list column
+            /// that is an array of <see cref="ListElementType"/>.
+            /// </summary>
+            public object ConvertToStorageValue(object value)
             {
-                if (ListElementType == null)
-                {
-                    // Simple column - no flattening needed
-                    return new DataColumn(DataField, chunkArray);
-                }
-
-                // List column - need to flatten data and create repetition levels
-                var allElements = new List<object>();
-                var repetitionLevels = new List<int>();
-
-                for (int rowIndex = 0; rowIndex < chunkArray.Length; rowIndex++)
-                {
-                    var listValue = chunkArray.GetValue(rowIndex) as Array;
-                    if (listValue == null || listValue.Length == 0)
-                    {
-                        // Empty or null list - still need to represent this row
-                        allElements.Add(null);
-                        repetitionLevels.Add(0);
-                    }
-                    else
-                    {
-                        for (int i = 0; i < listValue.Length; i++)
-                        {
-                            allElements.Add(listValue.GetValue(i));
-                            repetitionLevels.Add(i == 0 ? 0 : 1); // 0 = start of new list, 1 = continuation
-                        }
-                    }
-                }
-
-                // Create flattened array of the element storage type
-                var flattenedArray = Array.CreateInstance(ElementStorageType, allElements.Count);
-                for (int i = 0; i < allElements.Count; i++)
-                {
-                    flattenedArray.SetValue(allElements[i], i);
-                }
-
-                return new DataColumn(DataField, flattenedArray, repetitionLevels.ToArray());
-            }
-
-            public void StoreValue(RowItem rowItem, int rowIndex, Array values)
-            {
-                var value = GetValue(rowItem);
+                value = PropertyDescriptor.DataSchema.UnwrapValue(value);
                 if (value == null)
                 {
-                    return;
+                    return null;
                 }
 
                 if (ListElementType != null)
                 {
                     // Extract the list from ListColumnValue<T>
-                    value = ConvertListColumnValue(value);
+                    return ConvertListColumnValue(value);
                 }
-                else
+                return ConvertToColumnValue(StorageType, value);
+            }
+
+            private static DataField MakeDataField(string name, Type storageType, bool? isArray)
+            {
+                if (storageType != typeof(DateTime?))
                 {
-                    value = ConvertToStorageType(value, StorageType);
+                    return new DataField(name, storageType, isNullable: true, isArray);
                 }
-                values.SetValue(value, rowIndex);
+                // Without a format, Parquet.Net writes DateTime as the deprecated INT96. The
+                // values are stored to the millisecond because Parquet.Net 6 writes the digits
+                // of a Millis value as they are, but does its own time zone conversion when it
+                // writes Micros or Nanos.
+                return new DateTimeDataField(name, DateTimeFormat.Timestamp, true,
+                    DateTimeTimeUnit.Millis, true, isArray);
+            }
+
+            private static object ConvertToColumnValue(StorageType storageType, object value)
+            {
+                value = storageType.ConvertValue(value);
+                // Parquet.Net writes the DateTime digits without looking at DateTime.Kind,
+                // so a local time has to be converted to UTC here. A time with no time zone
+                // (DateTimeKind.Unspecified) is written as if it were UTC, which keeps the
+                // output the same on every computer.
+                if (value is DateTime dateTime && dateTime.Kind == DateTimeKind.Local)
+                {
+                    return dateTime.ToUniversalTime();
+                }
+                return value;
             }
 
             private Array ConvertListColumnValue(object listColumnValue)
@@ -324,15 +654,15 @@ namespace pwiz.Skyline.Model.Databinding
                     return null;
                 }
 
-                if (array.GetType().GetElementType() == ListElementType)
+                if (array.GetType().GetElementType() == ListElementType.Type && ListElementType.Type != typeof(DateTime?))
                 {
                     return array;
                 }
 
-                var convertedArray = Array.CreateInstance(ListElementType, array.Length);
+                var convertedArray = Array.CreateInstance(ListElementType.Type, array.Length);
                 for (int i = 0; i < array.Length; i++)
                 {
-                    var value = ConvertToStorageType(array.GetValue(i), ListElementType);
+                    var value = ConvertToColumnValue(ListElementType, array.GetValue(i));
                     if (value != null)
                     {
                         convertedArray.SetValue(value, i);
@@ -342,7 +672,203 @@ namespace pwiz.Skyline.Model.Databinding
                 return convertedArray;
             }
         }
-        private static Type GetListColumnValueStorageType(Type type)
+        /// <summary>
+        /// Holds one column of a chunk while the values are calculated, and writes it as one column of
+        /// a row group. A buffer is reused for chunk after chunk so that the large arrays which hold a
+        /// chunk are not allocated, and collected, once per chunk.
+        /// </summary>
+        private abstract class ColumnBuffer
+        {
+            /// <summary>
+            /// Makes the buffer ready for a chunk with the given number of rows, all of them null.
+            /// </summary>
+            public abstract void Reset(int rowCount);
+            /// <summary>
+            /// Stores a value which is not null and has already been converted to the column's storage type.
+            /// Different rows may be stored from different threads.
+            /// </summary>
+            public abstract void Store(int rowIndex, object value);
+            /// <summary>
+            /// Arranges the chunk's values the way Parquet wants them written, once every row has been stored:
+            /// the values which are not null packed together, with definition levels saying where the nulls were.
+            /// </summary>
+            public abstract void Pack();
+            /// <summary>
+            /// Encodes and compresses the packed chunk into memory, ready to be written as a column of the row group.
+            /// </summary>
+            public abstract Task<PreparedColumn> PrepareAsync(ParquetRowGroupWriter groupWriter, CancellationToken cancellationToken);
+
+            /// <summary>
+            /// Converts a stored value to the type Parquet.Net stores the field's values as. A value from
+            /// <see cref="StorageType.ConvertValue"/> is already that type, except a string, which is
+            /// stored as <see cref="ReadOnlyMemory{Char}"/>.
+            /// </summary>
+            protected static T ToStorage<T>(object value) where T : struct
+            {
+                if (typeof(T) == typeof(ReadOnlyMemory<char>))
+                {
+                    return (T) (object) ((string) value).AsMemory();
+                }
+                return (T) value;
+            }
+        }
+
+        private class ColumnBuffer<T> : ColumnBuffer where T : struct
+        {
+            private readonly DataField _field;
+            private readonly T[] _values;
+            /// <summary>
+            /// The Parquet definition level of each row: 1 where the row has a value, 0 where it is null.
+            /// </summary>
+            private readonly int[] _definitionLevels;
+            private int _rowCount;
+            /// <summary>
+            /// After <see cref="Pack"/>, the number of values at the start of <see cref="_values"/>.
+            /// </summary>
+            private int _valueCount;
+
+            public ColumnBuffer(DataField field, int capacity)
+            {
+                _field = field;
+                _values = new T[capacity];
+                _definitionLevels = new int[capacity];
+            }
+
+            public override void Reset(int rowCount)
+            {
+                if (rowCount > _values.Length)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(rowCount));
+                }
+                _rowCount = rowCount;
+                Array.Clear(_definitionLevels, 0, rowCount);
+            }
+
+            public override void Store(int rowIndex, object value)
+            {
+                _values[rowIndex] = ToStorage<T>(value);
+                _definitionLevels[rowIndex] = 1;
+            }
+
+            public override void Pack()
+            {
+                // The values which are not null are moved towards the start of the array, in place:
+                // a value never moves past a row which has not been looked at yet
+                _valueCount = 0;
+                for (int i = 0; i < _rowCount; i++)
+                {
+                    if (_definitionLevels[i] != 0)
+                    {
+                        _values[_valueCount++] = _values[i];
+                    }
+                }
+            }
+
+            public override Task<PreparedColumn> PrepareAsync(ParquetRowGroupWriter groupWriter, CancellationToken cancellationToken)
+            {
+                return groupWriter.PrepareColumnAsync(_field, new ReadOnlyMemory<T>(_values, 0, _valueCount),
+                    new ReadOnlyMemory<int>(_definitionLevels, 0, _rowCount), null, cancellationToken);
+            }
+        }
+
+        /// <summary>
+        /// A list column keeps one array per row of a chunk holding that row's list, and packs them into
+        /// one flat array of the elements with the repetition levels which say where each list starts and
+        /// the definition levels which say whether a row's list is null, empty, or has a null element.
+        /// </summary>
+        private class ListColumnBuffer<T> : ColumnBuffer where T : struct
+        {
+            private readonly DataField _elementField;
+            private readonly Array[] _lists;
+            private int _rowCount;
+            private T[] _values = Array.Empty<T>();
+            private int[] _definitionLevels = Array.Empty<int>();
+            private int[] _repetitionLevels = Array.Empty<int>();
+            private int _valueCount;
+            /// <summary>
+            /// The number of definition and repetition levels, one per list element, or one for a row
+            /// whose list is null or empty.
+            /// </summary>
+            private int _levelCount;
+
+            public ListColumnBuffer(DataField elementField, int capacity)
+            {
+                _elementField = elementField;
+                _lists = new Array[capacity];
+            }
+
+            public override void Reset(int rowCount)
+            {
+                if (rowCount > _lists.Length)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(rowCount));
+                }
+                _rowCount = rowCount;
+                Array.Clear(_lists, 0, rowCount);
+            }
+
+            public override void Store(int rowIndex, object value)
+            {
+                _lists[rowIndex] = (Array) value;
+            }
+
+            public override void Pack()
+            {
+                int levelCount = 0;
+                for (int rowIndex = 0; rowIndex < _rowCount; rowIndex++)
+                {
+                    levelCount += Math.Max(1, _lists[rowIndex]?.Length ?? 0);
+                }
+                if (levelCount > _definitionLevels.Length)
+                {
+                    _values = new T[levelCount];
+                    _definitionLevels = new int[levelCount];
+                    _repetitionLevels = new int[levelCount];
+                }
+                // The element's definition level counts the levels of nesting which are present: the
+                // list, the list's repeated group (so at least one element), and the element's value
+                int valueLevel = _elementField.MaxDefinitionLevel;
+                int nullElementLevel = valueLevel - 1;
+                int emptyListLevel = valueLevel - 2;
+                int nullListLevel = valueLevel - 3;
+                _valueCount = 0;
+                _levelCount = 0;
+                for (int rowIndex = 0; rowIndex < _rowCount; rowIndex++)
+                {
+                    var list = _lists[rowIndex];
+                    if (list == null || list.Length == 0)
+                    {
+                        _repetitionLevels[_levelCount] = 0;
+                        _definitionLevels[_levelCount++] = list == null ? nullListLevel : emptyListLevel;
+                        continue;
+                    }
+                    for (int i = 0; i < list.Length; i++)
+                    {
+                        var element = list.GetValue(i);
+                        // 0 starts a new list, 1 continues the previous element's list
+                        _repetitionLevels[_levelCount] = i == 0 ? 0 : 1;
+                        if (element == null)
+                        {
+                            _definitionLevels[_levelCount++] = nullElementLevel;
+                        }
+                        else
+                        {
+                            _definitionLevels[_levelCount++] = valueLevel;
+                            _values[_valueCount++] = ToStorage<T>(element);
+                        }
+                    }
+                }
+            }
+
+            public override Task<PreparedColumn> PrepareAsync(ParquetRowGroupWriter groupWriter, CancellationToken cancellationToken)
+            {
+                return groupWriter.PrepareColumnAsync(_elementField, new ReadOnlyMemory<T>(_values, 0, _valueCount),
+                    new ReadOnlyMemory<int>(_definitionLevels, 0, _levelCount),
+                    new ReadOnlyMemory<int>(_repetitionLevels, 0, _levelCount), cancellationToken);
+            }
+        }
+
+        private static StorageType GetListColumnValueStorageType(Type type)
         {
             var elementType = ListColumnValue.GetElementType(type);
             if (elementType == null)
@@ -350,7 +876,7 @@ namespace pwiz.Skyline.Model.Databinding
                 return null;
             }
 
-            return DecideStorageType(elementType);
+            return new StorageType(DecideStorageType(elementType));
         }
 
         private static Dictionary<Type, Type> _storageTypes = new Dictionary<Type, Type>
@@ -363,7 +889,8 @@ namespace pwiz.Skyline.Model.Databinding
             { typeof(decimal), typeof(decimal?) },
             // Old call sites wrapped DateTime as DateTimeOffset with a local-Kind
             // assumption that wasn't actually valid; store DateTime? directly so
-            // the value goes through unchanged.
+            // the value goes through unchanged. See ColumnData.MakeDataField for
+            // how it is encoded.
             { typeof(DateTime), typeof(DateTime?) }
         };
 
@@ -384,29 +911,57 @@ namespace pwiz.Skyline.Model.Databinding
             return typeof(string);
         }
 
-        public static object ConvertToStorageType(object value, Type type)
+        /// <summary>
+        /// The .NET type that a column's values are held in before being written to Parquet.
+        /// The nullable underlying type is computed once in the constructor so that converting
+        /// each value does not have to call <see cref="Nullable.GetUnderlyingType"/>, which is slow.
+        /// </summary>
+        public class StorageType
         {
-            if (value == null)
+            public StorageType(Type type)
             {
-                return null;
+                Type = type;
+                NullableUnderlyingType = Nullable.GetUnderlyingType(type);
             }
 
-            if (value.GetType() == type)
-            {
-                return value;
-            }
+            public Type Type { get; }
+            /// <summary>
+            /// If <see cref="Type"/> is a <see cref="Nullable{T}"/>, then T. Otherwise null.
+            /// </summary>
+            public Type NullableUnderlyingType { get; }
 
-            var nullableUnderlyingType = Nullable.GetUnderlyingType(type);
-            if (nullableUnderlyingType != null)
+            /// <summary>
+            /// Converts a value to something which can be stored in an array whose element type is <see cref="Type"/>.
+            /// Note that a boxed <see cref="Nullable{T}"/> with a value is a boxed T, so for a nullable
+            /// storage type the returned value is a boxed T.
+            /// </summary>
+            public object ConvertValue(object value)
             {
-                value = ConvertToStorageType(value, nullableUnderlyingType);
-                return value == null ? null : Activator.CreateInstance(type, value);
+                if (value == null)
+                {
+                    return null;
+                }
+
+                var valueType = value.GetType();
+                if (valueType == Type)
+                {
+                    return value;
+                }
+
+                if (NullableUnderlyingType != null)
+                {
+                    if (valueType == NullableUnderlyingType)
+                    {
+                        return value;
+                    }
+                    return Convert.ChangeType(value, NullableUnderlyingType);
+                }
+                if (Type == typeof(string))
+                {
+                    return value.ToString();
+                }
+                return Convert.ChangeType(value, Type);
             }
-            if (type == typeof(string))
-            {
-                return value.ToString();
-            }
-            return Convert.ChangeType(value, type);
         }
 
         /// <summary>

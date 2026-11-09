@@ -1,6 +1,7 @@
 /*
  * Original author: brendanx .at. uw.edu
  * AI assistance: Cursor (Claude Sonnet 4) <cursor .at. anysphere.co>
+ *                Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2025 University of Washington - Seattle, WA
  * 
@@ -25,6 +26,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -416,6 +418,13 @@ namespace pwiz.Common.SystemUtil
                 catch (Exception ex)
                 {
                     var mapped = MapHttpException(ex, uri);
+                    // Any other I/O failure reading the response means the connection dropped mid-download
+                    if (mapped is IOException && !(mapped is NetworkRequestException))
+                    {
+                        mapped = new NetworkRequestException(
+                            MessageResources.HttpClientWithProgress_MapHttpException_The_connection_was_lost_during_download__Please_check_your_internet_connection_and_try_again_,
+                            NetworkFailureType.ConnectionLost, uri, mapped);
+                    }
                     TestBehavior?.OnException(uri, mapped);
                     throw mapped;
                 }
@@ -544,7 +553,7 @@ namespace pwiz.Common.SystemUtil
                 if (cookies.Count > 0)
                 {
                     var cookieHeader = string.Join(@"; ", 
-                        cookies.Cast<Cookie>().Select(c => $@"{c.Name}={c.Value}"));
+                        cookies.Select(c => $@"{c.Name}={c.Value}"));
                     request.Headers.Add(cookieHeaderName, cookieHeader);
                 }
             }
@@ -606,7 +615,7 @@ namespace pwiz.Common.SystemUtil
                         if (t.IsFaulted)
                             _ = t.Exception;
                         else if (t.Status == TaskStatus.RanToCompletion)
-                            t.Result?.Dispose();
+                            t.Result.Dispose();
                     }, TaskScheduler.Default);
 
                     // The delay shares the caller's token, so cancelling completes it too and the
@@ -1193,18 +1202,45 @@ namespace pwiz.Common.SystemUtil
                 return new NetworkRequestException(message, statusCodeValue, uri, httpEx);
             }
                 
-            // DNS resolution failure (e.g., 'The remote name could not be resolved')
-            // This is real and has been seen in a debugger. The InnerException is a WebException
-            // HttpClient appears to use HttpWebRequest, but wrap its exceptions in HttpRequestException
-            if (httpEx.InnerException is WebException { Status: WebExceptionStatus.NameResolutionFailure })
+            // DNS resolution failure (e.g., 'No such host is known')
+            if (IsDnsResolutionFailure(httpEx))
+            {
                 return new NetworkRequestException(
                     string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_resolve_host__0___Please_check_your_DNS_settings_or_VPN_proxy_, server), 
                     NetworkFailureType.DnsResolution, uri, httpEx);
+            }
 
             // Generic connection failure (no HTTP response received)
             return new NetworkRequestException(
                 string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_, server), 
                 NetworkFailureType.ConnectionFailed, uri, httpEx);
+        }
+
+        /// <summary>
+        /// Whether the request failed because a host name could not be resolved, as opposed to
+        /// resolving and then failing to connect. The two are reported differently to the user.
+        /// Not every resolver failure is reported as <see cref="HttpRequestError.NameResolutionError"/>:
+        /// a name that exists but has no address record arrives as
+        /// <see cref="HttpRequestError.ConnectionError"/> with an inner <see cref="SocketException"/>
+        /// of <see cref="SocketError.NoData"/>, so the inner socket error is checked as well.
+        /// </summary>
+        private static bool IsDnsResolutionFailure(HttpRequestException httpEx)
+        {
+            if (httpEx.HttpRequestError == HttpRequestError.NameResolutionError)
+                return true;
+            var socketEx = httpEx.InnerException as SocketException;
+            if (socketEx == null)
+                return false;
+            switch (socketEx.SocketErrorCode)
+            {
+                case SocketError.HostNotFound:
+                case SocketError.NoData:
+                case SocketError.NoRecovery:
+                case SocketError.TryAgain:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         public static bool IsNetworkReallyAvailable()
@@ -1264,8 +1300,9 @@ namespace pwiz.Common.SystemUtil
             // This prevents background threads from blocking process shutdown
             AppDomain.CurrentDomain.ProcessExit += (sender, e) => DisposeInstance();
 
-            // Use HttpClientHandler (SocketsHttpHandler is not available in .NET Framework 4.7.2)
-            // Note: Connection pooling and DNS refresh are handled automatically by HttpClient
+            // On .NET, HttpClientHandler delegates to SocketsHttpHandler, which pools connections.
+            // PooledConnectionLifetime is not set, so a connection kept busy keeps the address it
+            // first resolved; only idle connections are dropped and re-resolved.
             _handler = new HttpClientHandler
             {
                 UseProxy = true,
@@ -1428,6 +1465,26 @@ namespace pwiz.Common.SystemUtil
         public bool IsDnsFailure()
         {
             return FailureType == NetworkFailureType.DnsResolution;
+        }
+
+        /// <summary>
+        /// Returns true if repeating the request may succeed: a failed, refused or lost connection, a DNS
+        /// failure, a timeout, or a server error, request timeout or rate limit (HTTP 5xx, 408, 429).
+        /// Having no network at all, and any other HTTP error (e.g. 404), are not transient.
+        /// </summary>
+        public bool IsTransient()
+        {
+            switch (FailureType)
+            {
+                case NetworkFailureType.NoConnection:
+                    return false;
+                case NetworkFailureType.HttpError:
+                    return (int?) StatusCode >= 500 ||
+                           StatusCode == HttpStatusCode.RequestTimeout ||
+                           StatusCode == HttpStatusCode.TooManyRequests;
+                default:
+                    return true;
+            }
         }
 
         public static HttpStatusCode? GetHttpStatusCode(Exception e)

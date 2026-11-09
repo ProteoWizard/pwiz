@@ -20,6 +20,8 @@
 using System.Collections.Generic;
 using System.IO;
 
+// Also linked into Test.csproj, whose layout implies pwiz.SkylineTest; this is the tool's namespace
+// ReSharper disable once CheckNamespace
 namespace AssortResources
 {
     public class ResourceFile

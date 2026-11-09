@@ -35,6 +35,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnBack = new System.Windows.Forms.Button();
             this.btnNext = new System.Windows.Forms.Button();
             this.wizardPages = new WizardPages();
+            this.titlePanel = new System.Windows.Forms.Panel();
+            this.lblTitle = new System.Windows.Forms.Label();
             this.dataFilesPage = new System.Windows.Forms.TabPage();
             this.lblDataFiles = new System.Windows.Forms.Label();
             this.fastaPage = new System.Windows.Forms.TabPage();
@@ -65,6 +67,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnRemoveVariableMod = new System.Windows.Forms.Button();
             this.runSearchPage = new System.Windows.Forms.TabPage();
             this.wizardPages.SuspendLayout();
+            this.titlePanel.SuspendLayout();
             this.searchSettingsPage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMissedCleavages)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numThreads)).BeginInit();
@@ -103,6 +106,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.wizardPages.Controls.Add(this.runSearchPage);
             this.wizardPages.Name = "wizardPages";
             this.wizardPages.SelectedIndex = 0;
+            this.wizardPages.SelectedIndexChanged += new System.EventHandler(this.wizardPages_SelectedIndexChanged);
+            //
+            // titlePanel
+            //
+            this.titlePanel.BackColor = System.Drawing.Color.GhostWhite;
+            this.titlePanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.titlePanel.Controls.Add(this.lblTitle);
+            resources.ApplyResources(this.titlePanel, "titlePanel");
+            this.titlePanel.Name = "titlePanel";
+            //
+            // lblTitle
+            //
+            resources.ApplyResources(this.lblTitle, "lblTitle");
+            this.lblTitle.Name = "lblTitle";
             //
             // dataFilesPage
             //
@@ -306,6 +323,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.titlePanel);
             this.Controls.Add(this.wizardPages);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnBack);
@@ -315,6 +333,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.Name = "DiannSearchDlg";
             this.ShowInTaskbar = false;
             this.wizardPages.ResumeLayout(false);
+            this.titlePanel.ResumeLayout(false);
+            this.titlePanel.PerformLayout();
             this.searchSettingsPage.ResumeLayout(false);
             this.searchSettingsPage.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMissedCleavages)).EndInit();
@@ -330,6 +350,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.Button btnBack;
         private System.Windows.Forms.Button btnNext;
         private WizardPages wizardPages;
+        private System.Windows.Forms.Panel titlePanel;
+        private System.Windows.Forms.Label lblTitle;
         private System.Windows.Forms.TabPage dataFilesPage;
         private System.Windows.Forms.Label lblDataFiles;
         private System.Windows.Forms.TabPage fastaPage;

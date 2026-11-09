@@ -52,8 +52,7 @@ namespace pwiz.SkylineTestFunctional
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(
                 documentSettingsDlg.EditAnnotationList);
-            var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
-            string dlgId = GetOpenFormId<DefineAnnotationDlg>();
+            var defineAnnotationDlg = ShowMcpConnectorForm<DefineAnnotationDlg>(editListDlg.AddItem, out var dlgId);
 
             // The form is the root of every path (Parent null, Text the form id, Type "Form"); controls
             // hang off it as Parent.

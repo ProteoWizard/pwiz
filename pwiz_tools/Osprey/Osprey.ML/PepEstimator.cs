@@ -67,7 +67,7 @@ namespace pwiz.Osprey.ML
         public static PepEstimator Fit(double[] scores, bool[] isDecoy, int nBins)
         {
             if (scores.Length != isDecoy.Length)
-                throw new ArgumentException("scores and isDecoy must have same length");
+                throw new ArgumentException(@"scores and isDecoy must have same length");
 
             if (scores.Length == 0)
                 return new PepEstimator(new[] { 1.0 }, 0.0, 1.0);

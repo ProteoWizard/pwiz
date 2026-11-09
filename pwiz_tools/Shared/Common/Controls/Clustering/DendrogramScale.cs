@@ -310,7 +310,7 @@ namespace pwiz.Common.Controls.Clustering
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
-            info.AddValue("schema2", schema2);
+            info.AddValue(@"schema2", schema2);
         }
         #endregion
 

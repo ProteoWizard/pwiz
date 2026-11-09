@@ -44,9 +44,10 @@ namespace pwiz.Skyline.Controls.Graphs
             _timer.Start();
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             _timer.Dispose();
+            base.OnFormClosed(e);
         }
 
         private void _timer_Tick(object sender, EventArgs e)

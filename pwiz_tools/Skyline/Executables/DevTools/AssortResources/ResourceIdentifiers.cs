@@ -24,8 +24,9 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-#nullable enable
 
+// Also linked into Test.csproj, whose layout implies pwiz.SkylineTest; this is the tool's namespace
+// ReSharper disable once CheckNamespace
 namespace AssortResources
 {
     public class ResourceIdentifiers

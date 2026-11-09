@@ -19,6 +19,7 @@
 using System;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Util.Extensions;
@@ -60,7 +61,7 @@ namespace pwiz.SkylineTestUtil
                 var longWaitDlg = FormUtil.OpenForms.OfType<LongWaitDlg>().FirstOrDefault();
                 if (true == longWaitDlg?.IsHandleCreated)
                 {
-                    CommonActionUtil.SafeBeginInvoke(longWaitDlg, ()=>
+                    ControlUtil.SafeBeginInvoke(longWaitDlg, ()=>
                     {
                         longWaitDlg.CancelButton.PerformClick();
                     });

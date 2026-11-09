@@ -61,8 +61,7 @@ namespace pwiz.SkylineTestFunctional
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(
                 documentSettingsDlg.EditAnnotationList);
-            var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
-            string dlgId = GetOpenFormId<DefineAnnotationDlg>();
+            var defineAnnotationDlg = ShowMcpConnectorForm<DefineAnnotationDlg>(editListDlg.AddItem, out var dlgId);
             var appliesTo = new UiElementPath(
                 new UiElementPath(null, dlgId, null, @"Form"),
                 GetLocalizedText<DefineAnnotationDlg>(@"lblAppliesTo"), null, null);
@@ -105,9 +104,8 @@ namespace pwiz.SkylineTestFunctional
             var documentGrid = WaitForOpenForm<DocumentGridForm>();
             WaitForConditionUI(() => documentGrid.IsComplete);
 
-            var viewEditor = ShowDialog<Common.DataBinding.Controls.Editor.ViewEditor>(
-                documentGrid.NavBar.CustomizeView);
-            string editorId = GetOpenFormId<Common.DataBinding.Controls.Editor.ViewEditor>();
+            var viewEditor = ShowMcpConnectorForm<Common.DataBinding.Controls.Editor.ViewEditor>(
+                documentGrid.NavBar.CustomizeView, out var editorId);
 
             var tree = viewEditor.ChooseColumnsTab.AvailableFieldsTree;
             string parentText = null, childText = null;

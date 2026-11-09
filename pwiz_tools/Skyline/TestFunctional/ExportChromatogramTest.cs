@@ -96,7 +96,13 @@ namespace pwiz.SkylineTestFunctional
                 exportChromDlg.UpdateChromExtractors(true, true);
                 exportChromDlg.WriteChromatograms(exportActual);
             });
-            AssertEx.FileEquals(exportExpected, exportActual);
+            // Columns opt into a small relative tolerance so net8 vs net472 float ToString()
+            // last-digit differences and tiny chromatogram-extraction float drift (numerically
+            // identical values) are absorbed. Mirrors the ChromatogramExporterTest unit test;
+            // scoped to this test so other ColumnTolerances callers keep their exact tolerances.
+            var columnTolerances = new AssertEx.ColumnTolerances(0.001, 1e-6);
+            columnTolerances.AddTolerance(3, 0.0001, 1e-6); // mz column: tighter absolute wiggle plus the same relative floor
+            AssertEx.FileEquals(exportExpected, exportActual, columnTolerances);
             OkDialog(exportChromDlg, exportChromDlg.CancelDialog);
         }
     }

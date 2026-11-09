@@ -6,7 +6,7 @@ using System;
 using System.Collections;
 using System.Windows.Forms;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
     public class ListViewColumnSorter : System.Collections.IComparer
     {

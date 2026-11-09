@@ -408,15 +408,6 @@ namespace pwiz.SkylineTestFunctional
             var locatorResult = JObject.Parse(locatorResponse);
             Assert.IsNotNull(locatorResult[nameof(JSON_RPC.result)]);
 
-            // QueryAvailableMethods - special dispatch path (not on the interface)
-            string methodsResponse = server.HandleRequest(
-                Encoding.UTF8.GetBytes(buildRequest(@"QueryAvailableMethods")));
-            var methodsResult = JObject.Parse(methodsResponse);
-            string methods = (string)methodsResult[nameof(JSON_RPC.result)];
-            AssertEx.Contains(methods, nameof(IJsonToolService.GetVersion));
-            AssertEx.Contains(methods, nameof(IJsonToolService.GetSelection));
-            AssertEx.Contains(methods, nameof(IJsonToolService.ExportReport));
-
             // Error: unknown method (caught by Dispatch, returned as error JSON)
             string unknownResponse = server.HandleRequest(
                 Encoding.UTF8.GetBytes(buildRequest(@"NotARealMethod")));
@@ -766,7 +757,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsNotNull(metadata.Columns);
 
             // Verify file was created
-            Assert.IsTrue(File.Exists(tempPath));
+            AssertEx.FileExists(tempPath);
             var lines = File.ReadAllLines(tempPath);
             Assert.IsTrue(lines.Length > 1); // Header + data rows
 
@@ -1359,13 +1350,13 @@ namespace pwiz.SkylineTestFunctional
 
             string docSettingsPath = TestFilesDir.GetTestPath(@"doc_settings.xml");
             string result = server.GetDocumentSettings(docSettingsPath);
-            Assert.IsTrue(File.Exists(docSettingsPath));
+            AssertEx.FileExists(docSettingsPath);
             string xml = File.ReadAllText(docSettingsPath);
             AssertEx.Contains(xml, expectedTag);
 
             string defSettingsPath = TestFilesDir.GetTestPath(@"default_settings.xml");
             string defResult = server.GetDefaultSettings(defSettingsPath);
-            Assert.IsTrue(File.Exists(defSettingsPath));
+            AssertEx.FileExists(defSettingsPath);
             string defXml = File.ReadAllText(defSettingsPath);
             AssertEx.Contains(defXml, expectedTag);
 
@@ -1497,8 +1488,6 @@ namespace pwiz.SkylineTestFunctional
             string formId = server.GetOpenForms()
                 .First(f => f.Type == nameof(SequenceTreeForm)).Id;
 
-            bool desktopAvailable = ScreenCapture.IsDesktopAvailable();
-
             // First call with no permission yet: returns Pending synchronously
             // and asynchronously opens the confirmation dialog. The previous
             // implementation blocked the pipe thread inside ShowDialog; the
@@ -1507,7 +1496,7 @@ namespace pwiz.SkylineTestFunctional
             string pendingPath = TestFilesDir.GetTestPath(@"pending_test.png");
             string pendingResult = server.GetFormImage(formId, pendingPath);
             AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_PERMISSION_REQUIRED.Value, pendingResult);
-            Assert.IsFalse(File.Exists(pendingPath),
+            AssertEx.FileNotExists(pendingPath,
                 @"Pending response must not write a file");
             var dlg = WaitForOpenForm<ScreenCapturePermissionDlg>();
 
@@ -1516,7 +1505,7 @@ namespace pwiz.SkylineTestFunctional
             string repeatPendingPath = TestFilesDir.GetTestPath(@"pending_repeat.png");
             string repeatPendingResult = server.GetFormImage(formId, repeatPendingPath);
             AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_PERMISSION_REQUIRED.Value, repeatPendingResult);
-            Assert.IsFalse(File.Exists(repeatPendingPath));
+            AssertEx.FileNotExists(repeatPendingPath);
             AssertEx.AreEqual(1, FormUtil.OpenForms.OfType<ScreenCapturePermissionDlg>().Count());
 
             // User clicks Cancel: state records denial.
@@ -1527,7 +1516,7 @@ namespace pwiz.SkylineTestFunctional
             string deniedPath = TestFilesDir.GetTestPath(@"denied_test.png");
             string deniedResult = server.GetFormImage(formId, deniedPath);
             AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_DENIED.Value, deniedResult);
-            Assert.IsFalse(File.Exists(deniedPath));
+            AssertEx.FileNotExists(deniedPath);
             Assert.IsFalse(FormUtil.OpenForms.OfType<ScreenCapturePermissionDlg>().Any(),
                 @"Session-denied state must not open a second dialog");
 
@@ -1549,26 +1538,16 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(dlg.DoNotAskAgain);
             OkDialog(dlg);
 
-            // After Allow, the next call captures (or surfaces desktop-unavailable
-            // in CI environments without a desktop session).
-            string allowResult = server.GetFormImage(formId, allowPath);
-            if (desktopAvailable)
-            {
-                Assert.IsTrue(File.Exists(allowPath));
-                Assert.IsTrue(new FileInfo(allowPath).Length > 0);
-            }
-            else
-            {
-                AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE.Value, allowResult);
-            }
+            // After Allow, the next call captures. Without a desktop session (e.g. a
+            // disconnected Remote Desktop) the form is rendered off-screen instead.
+            server.GetFormImage(formId, allowPath);
+            AssertEx.FileExists(allowPath);
+            Assert.IsTrue(new FileInfo(allowPath).Length > 0);
 
             // Session permission persists: subsequent calls capture without a dialog.
             string sessionPath = TestFilesDir.GetTestPath(@"session_test.png");
-            string sessionResult = server.GetFormImage(formId, sessionPath);
-            if (desktopAvailable)
-                Assert.IsTrue(File.Exists(sessionPath));
-            else
-                AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE.Value, sessionResult);
+            server.GetFormImage(formId, sessionPath);
+            AssertEx.FileExists(sessionPath);
             Assert.IsFalse(FormUtil.OpenForms.OfType<ScreenCapturePermissionDlg>().Any());
 
             // Malformed formId is rejected on the pipe thread before any
@@ -1595,11 +1574,8 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(dlg);
             Assert.IsTrue(Settings.Default.AllowMcpScreenCapture);
 
-            string persistResult = server.GetFormImage(formId, persistPath);
-            if (desktopAvailable)
-                Assert.IsTrue(File.Exists(persistPath));
-            else
-                AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE.Value, persistResult);
+            server.GetFormImage(formId, persistPath);
+            AssertEx.FileExists(persistPath);
 
             // Clean up setting for other tests
             RunUI(() =>
@@ -1620,39 +1596,31 @@ namespace pwiz.SkylineTestFunctional
             string imageName = @"form_image_test.png";
             string imagePath = TestFilesDir.GetTestPath(imageName);
 
-            bool desktopAvailable = ScreenCapture.IsDesktopAvailable();
-
+            // Captured from the screen, or rendered off-screen when there is no desktop session.
             string result = server.GetFormImage(formId, imagePath);
-            if (desktopAvailable)
+            AssertEx.FileExists(imagePath);
+            Assert.IsTrue(new FileInfo(imagePath).Length > 0);
+            // Result should be the file path (forward-slash format)
+            AssertEx.Contains(result, imageName);
+
+            // Verify the image is valid by loading it
+            using (var img = Image.FromFile(imagePath))
             {
-                Assert.IsTrue(File.Exists(imagePath));
-                Assert.IsTrue(new FileInfo(imagePath).Length > 0);
-                // Result should be the file path (forward-slash format)
-                AssertEx.Contains(result, imageName);
-
-                // Verify the image is valid by loading it
-                using (var img = Image.FromFile(imagePath))
-                {
-                    Assert.IsTrue(img.Width > 0);
-                    Assert.IsTrue(img.Height > 0);
-                }
-
-                // Auto-generated path (null filePath) - exercise default path logic
-                string autoImagePath = null;
-                try
-                {
-                    autoImagePath = server.GetFormImage(formId);
-                    Assert.IsTrue(File.Exists(autoImagePath));
-                }
-                finally
-                {
-                    if (autoImagePath != null)
-                        FileEx.SafeDelete(autoImagePath);
-                }
+                Assert.IsTrue(img.Width > 0);
+                Assert.IsTrue(img.Height > 0);
             }
-            else
+
+            // Auto-generated path (null filePath) - exercise default path logic
+            string autoImagePath = null;
+            try
             {
-                AssertEx.Contains(result, @"not available");
+                autoImagePath = server.GetFormImage(formId);
+                AssertEx.FileExists(autoImagePath);
+            }
+            finally
+            {
+                if (autoImagePath != null)
+                    FileEx.SafeDelete(autoImagePath);
             }
 
             // Error: invalid form ID
@@ -1680,13 +1648,13 @@ namespace pwiz.SkylineTestFunctional
             // GetGraphData - export to TSV
             string dataPath = TestFilesDir.GetTestPath(@"graph_data.tsv");
             string dataResult = server.GetGraphData(graphId, dataPath);
-            Assert.IsTrue(File.Exists(dataPath));
+            AssertEx.FileExists(dataPath);
             Assert.IsTrue(new FileInfo(dataPath).Length > 0);
 
             // GetGraphImage - export to PNG
             string imagePath = TestFilesDir.GetTestPath(@"graph_image.png");
             string imageResult = server.GetGraphImage(graphId, imagePath);
-            Assert.IsTrue(File.Exists(imagePath));
+            AssertEx.FileExists(imagePath);
             Assert.IsTrue(new FileInfo(imagePath).Length > 0);
             // Verify it's a valid image
             using (var img = Image.FromFile(imagePath))
@@ -1700,7 +1668,7 @@ namespace pwiz.SkylineTestFunctional
             try
             {
                 autoDataPath = server.GetGraphData(graphId);
-                Assert.IsTrue(File.Exists(autoDataPath));
+                AssertEx.FileExists(autoDataPath);
             }
             finally
             {
@@ -1994,7 +1962,7 @@ namespace pwiz.SkylineTestFunctional
             // Read real tutorial HTML from the repo (same content GitHub would serve)
             string tutorialsDir = TestContext.GetProjectDirectory(@"Documentation\Tutorials");
             string htmlPath = Path.Combine(tutorialsDir, TUTORIAL_NAME, TUTORIAL_EN, @"index.html");
-            Assert.IsTrue(File.Exists(htmlPath), @"Tutorial HTML not found: " + htmlPath);
+            AssertEx.FileExists(htmlPath, @"Tutorial HTML not found: " + htmlPath);
             string realHtml = File.ReadAllText(htmlPath);
 
             // Serve the real HTML via HttpClientTestHelper (no network access)
@@ -2011,7 +1979,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             // Verify markdown was written and has expected structure
-            Assert.IsTrue(File.Exists(tutorialPath));
+            AssertEx.FileExists(tutorialPath);
             string markdown = File.ReadAllText(tutorialPath);
             AssertEx.Contains(markdown, @"# ");  // Has headings
             AssertEx.Contains(markdown, @"[Screenshot:");  // Has image placeholders
@@ -2019,7 +1987,7 @@ namespace pwiz.SkylineTestFunctional
             // Serve a real tutorial image from the repo
             string imageFilename = @"s-01.png";
             string repoImagePath = Path.Combine(tutorialsDir, TUTORIAL_NAME, TUTORIAL_EN, imageFilename);
-            Assert.IsTrue(File.Exists(repoImagePath), @"Tutorial image not found: " + repoImagePath);
+            AssertEx.FileExists(repoImagePath, @"Tutorial image not found: " + repoImagePath);
             byte[] realImageData = File.ReadAllBytes(repoImagePath);
 
             string imagePath = TestFilesDir.GetTestPath(@"tutorial_image.png");
@@ -2029,7 +1997,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsNotNull(imageMetadata.FilePath);
                 Assert.AreEqual(imageFilename, imageMetadata.Image);
             }
-            Assert.IsTrue(File.Exists(imagePath));
+            AssertEx.FileExists(imagePath);
             Assert.AreEqual(realImageData.Length, new FileInfo(imagePath).Length);
         }
 
@@ -2241,7 +2209,7 @@ namespace pwiz.SkylineTestFunctional
                 CommandArgs.ARG_REPORT_FILE + reportPath.ToForwardSlashPath()
             };
             server.RunCommand(reportArgs);
-            Assert.IsTrue(File.Exists(reportPath));
+            AssertEx.FileExists(reportPath);
             Assert.IsTrue(new FileInfo(reportPath).Length > 0);
             // Verify Immediate Window contains the command header and report output
             string iwAfterReport = GetImmediateWindowText();
@@ -2367,7 +2335,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.Contains(saveAsResult, Path.GetFileName(saveAsPath));
             AssertEx.AreEqual(saveAsPath, SkylineWindow.DocumentFilePath);
             Assert.IsFalse(SkylineWindow.Dirty);
-            Assert.IsTrue(File.Exists(saveAsPath));
+            AssertEx.FileExists(saveAsPath);
 
             // --open (synonym for --in): re-open the first saved file, verify round-trip
             string openResult = server.RunCommand(CommandArgs.ARG_OPEN + newPath);
@@ -2391,7 +2359,7 @@ namespace pwiz.SkylineTestFunctional
                 CommandArgs.ARG_OUT + combinedPath);
             AssertEx.AreEqual(combinedPath, SkylineWindow.DocumentFilePath, combinedResult);
             AssertEx.AreEqual(0, SkylineWindow.Document.MoleculeGroupCount);
-            Assert.IsTrue(File.Exists(combinedPath));
+            AssertEx.FileExists(combinedPath);
 
             // --in with .sky.zip: regression check that the MCP path dispatches
             // through OpenSharedFile (extract first) rather than feeding the
@@ -2400,7 +2368,7 @@ namespace pwiz.SkylineTestFunctional
             server.RunCommand(
                 CommandArgs.ARG_OPEN + newPath,
                 CommandArgs.ARG_SHARE_ZIP + sharedZipPath);
-            Assert.IsTrue(File.Exists(sharedZipPath));
+            AssertEx.FileExists(sharedZipPath);
             int sharedGroups = SkylineWindow.Document.MoleculeGroupCount;
 
             string sharedOpenResult = server.RunCommand(CommandArgs.ARG_IN + sharedZipPath);

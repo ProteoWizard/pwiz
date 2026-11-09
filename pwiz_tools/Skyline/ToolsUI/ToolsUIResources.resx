@@ -346,39 +346,6 @@
   <data name="ToolUpdatesDlg_InstallUpdates_Installing_updates_to__0_" xml:space="preserve">
     <value>Installing updates to {0}</value>
   </data>
-  <data name="NvidiaInstaller_OkDialog_Successfully_set_up_Nvidia" xml:space="preserve">
-    <value>Successfully set up Nvidia libraries</value>
-  </data>
-  <data name="NvidiaInstaller_OkDialog_Failed_to_set_up_Nvidia" xml:space="preserve">
-    <value>Failed to set up Nvidia libraries</value>
-  </data>
-  <data name="NvidiaInstaller_Setup_Nvidia_Libraries" xml:space="preserve">
-    <value>Setting up Nvidia GPU Computation</value>
-  </data>
-  <data name="PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment" xml:space="preserve">
-    <value>Successfully set up Python virtual environment</value>
-  </data>
-  <data name="PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment" xml:space="preserve">
-    <value>Failed to set up Python virtual environment</value>
-  </data>
-  <data name="PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required" xml:space="preserve">
-    <value>Python {0} set up is required for {1}, click 'OK' to proceed.</value>
-  </data>
-  <data name="PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required_please_wait" xml:space="preserve">
-    <value>Python {0} set up is required for {1}, please wait for python to install and configure ...</value>
-  </data>
-  <data name="PythonInstaller_Requesting_Administrator_elevation" xml:space="preserve">
-    <value>Administrative privileges are required to complete the installation, consult with your system administrator if necessary.  Would you like to continue?</value>
-  </data>
-  <data name="PythonInstaller_Install_Nvidia_Library" xml:space="preserve">
-    <value>Skyline detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by setting up Nvidia GPU computation? Elevated privileges are required to install this feature.</value>
-  </data>
-  <data name="PythonInstaller_Downloading_Nvidia_Library" xml:space="preserve">
-    <value>Downloading Nvidia Cuda Toolkit and Deep Neural Network software.</value>
-  </data>
-  <data name="PythonInstaller_Installing_Nvidia_Library" xml:space="preserve">
-    <value>Installing Nvidia Cuda Toolkit and Deep Neural Network software.</value>
-  </data>
   <data name="SkylineProcessRunner_Timeout" xml:space="preserve">
     <value>SkylineProcessRunner timed-out after {0} milliseconds</value>
   </data>
@@ -443,5 +410,23 @@ To enable, install the following items:
   </data>
   <data name="ToolService_ReorderElements_Elements_reordered_by_external_tool" xml:space="preserve">
     <value>Elements reordered by external tool</value>
+  </data>
+  <data name="ImportSettingsDlg_OkDialog_Choose_the_installation_to_import_settings_from_" xml:space="preserve">
+    <value>Choose the installation to import settings from.</value>
+  </data>
+  <data name="ImportSettingsDlg_ImportSettingsDlg__Do_you_want_to_import_settings_from_one_of_these_previous_versions_" xml:space="preserve">
+    <value>&amp;Do you want to import settings from one of these previous versions?</value>
+  </data>
+  <data name="ImportSettingsDlg_ImportSettingsDlg_Don_t_Import" xml:space="preserve">
+    <value>Don't Import</value>
+  </data>
+  <data name="ToolOptionsUI_ImportSettings_Failed_to_import_settings_from__0_" xml:space="preserve">
+    <value>Failed to import settings from {0}</value>
+  </data>
+  <data name="ToolOptionsUI_ImportSettings_Importing_settings" xml:space="preserve">
+    <value>Importing settings</value>
+  </data>
+  <data name="ToolOptionsUI_ImportSettings_No_other_installed_Skyline_with_saved_settings_was_found_" xml:space="preserve">
+    <value>No other installed Skyline with saved settings was found.</value>
   </data>
 </root>

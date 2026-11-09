@@ -148,11 +148,11 @@
       <Component Id="arrow.dll">
         <File Source="$(var.Skyline.TargetDir)/arrow.dll" KeyPath="yes"/>
       </Component>
-      <Component Id="BiblioSpec.dll">
-        <File Source="$(var.Skyline.TargetDir)/BiblioSpec.dll" KeyPath="yes"/>
+      <Component Id="BiblioSpecUtil.dll">
+        <File Source="$(var.Skyline.TargetDir)/BiblioSpecUtil.dll" KeyPath="yes"/>
       </Component>
-      <Component Id="BiblioSpec.pdb">
-        <File Source="$(var.Skyline.TargetDir)/BiblioSpec.pdb" KeyPath="yes"/>
+      <Component Id="BiblioSpecUtil.pdb">
+        <File Source="$(var.Skyline.TargetDir)/BiblioSpecUtil.pdb" KeyPath="yes"/>
       </Component>
       <Component Id="BlibBuild.exe">
         <File Source="$(var.Skyline.TargetDir)/BlibBuild.exe" KeyPath="yes"/>
@@ -255,8 +255,8 @@
       <Component Id="NHibernate.dll">
         <File Source="$(var.Skyline.TargetDir)/NHibernate.dll" KeyPath="yes"/>
       </Component>
-      <Component Id="ParquetNet.dll">
-        <File Source="$(var.Skyline.TargetDir)/ParquetNet.dll" KeyPath="yes"/>
+      <Component Id="Parquet.dll">
+        <File Source="$(var.Skyline.TargetDir)/Parquet.dll" KeyPath="yes"/>
       </Component>
       <Component Id="IronCompress.dll">
         <File Source="$(var.Skyline.TargetDir)/IronCompress.dll" KeyPath="yes"/>
@@ -327,11 +327,11 @@
       <Component Id="pwiz.CommonUtil.pdb">
         <File Source="$(var.Skyline.TargetDir)/pwiz.CommonUtil.pdb" KeyPath="yes"/>
       </Component>
-      <Component Id="pwiz.PortableUtil.dll">
-        <File Source="$(var.Skyline.TargetDir)/pwiz.PortableUtil.dll" KeyPath="yes"/>
+      <Component Id="pwiz.CommonBaseUI.dll">
+        <File Source="$(var.Skyline.TargetDir)/pwiz.CommonBaseUI.dll" KeyPath="yes"/>
       </Component>
-      <Component Id="pwiz.PortableUtil.pdb">
-        <File Source="$(var.Skyline.TargetDir)/pwiz.PortableUtil.pdb" KeyPath="yes"/>
+      <Component Id="pwiz.CommonBaseUI.pdb">
+        <File Source="$(var.Skyline.TargetDir)/pwiz.CommonBaseUI.pdb" KeyPath="yes"/>
       </Component>
       <Component Id="pwiz_data_cli.dll">
         <File Source="$(var.Skyline.TargetDir)/pwiz_data_cli.dll" KeyPath="yes"/>
@@ -463,8 +463,8 @@
       </Component>
     </ComponentGroup>
     <ComponentGroup Id="ja_files" Directory="ja_directory">
-      <Component Id="ja_BiblioSpec.resources.dll">
-        <File Source="$(var.Skyline.TargetDir)/ja\BiblioSpec.resources.dll" Id="ja_BiblioSpec.resources.dll_file" KeyPath="yes"/>
+      <Component Id="ja_BiblioSpecUtil.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/ja\BiblioSpecUtil.resources.dll" Id="ja_BiblioSpecUtil.resources.dll_file" KeyPath="yes"/>
       </Component>
       <Component Id="ja_DigitalRune.Windows.Docking.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/ja\DigitalRune.Windows.Docking.resources.dll" Id="ja_DigitalRune.Windows.Docking.resources.dll_file" KeyPath="yes"/>
@@ -486,6 +486,9 @@
       </Component>
       <Component Id="ja_pwiz.CommonUtil.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/ja\pwiz.CommonUtil.resources.dll" Id="ja_pwiz.CommonUtil.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="ja_pwiz.CommonBaseUI.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/ja\pwiz.CommonBaseUI.resources.dll" Id="ja_pwiz.CommonBaseUI.resources.dll_file" KeyPath="yes"/>
       </Component>
       <Component Id="ja_Skyline.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/ja\$(var.Skyline.TargetName).resources.dll" Id="ja_Skyline.resources.dll_file" KeyPath="yes"/>
@@ -523,8 +526,8 @@
       </Component>
     </ComponentGroup>
     <ComponentGroup Id="zh_CHS_files" Directory="zh_CHS_directory">
-      <Component Id="zh_CHS_BiblioSpec.resources.dll">
-        <File Source="$(var.Skyline.TargetDir)/zh-CHS\BiblioSpec.resources.dll" Id="zh_CHS_BiblioSpec.resources.dll_file" KeyPath="yes"/>
+      <Component Id="zh_CHS_BiblioSpecUtil.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/zh-CHS\BiblioSpecUtil.resources.dll" Id="zh_CHS_BiblioSpecUtil.resources.dll_file" KeyPath="yes"/>
       </Component>
       <Component Id="zh_CHS_DigitalRune.Windows.Docking.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/zh-CHS\DigitalRune.Windows.Docking.resources.dll" Id="zh_CHS_DigitalRune.Windows.Docking.resources.dll_file" KeyPath="yes"/>
@@ -546,6 +549,9 @@
       </Component>
       <Component Id="zh_CHS_pwiz.CommonUtil.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/zh-CHS\pwiz.CommonUtil.resources.dll" Id="zh_CHS_pwiz.CommonUtil.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="zh_CHS_pwiz.CommonBaseUI.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/zh-CHS\pwiz.CommonBaseUI.resources.dll" Id="zh_CHS_pwiz.CommonBaseUI.resources.dll_file" KeyPath="yes"/>
       </Component>
       <Component Id="zh_CHS_Skyline.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/zh-CHS\$(var.Skyline.TargetName).resources.dll" Id="zh_CHS_Skyline.resources.dll_file" KeyPath="yes"/>

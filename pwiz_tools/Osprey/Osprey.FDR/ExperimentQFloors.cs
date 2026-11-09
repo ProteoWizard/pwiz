@@ -29,8 +29,9 @@ namespace pwiz.Osprey.FDR
     /// <summary>
     /// The best-of-runs floors experiment-scope q-values are raised to: for each entry_id, and
     /// for each <c>(ModifiedSequence, IsDecoy)</c> peptide identity, the minimum over runs of the
-    /// combined run q-value. Folded over every run, applied per row - the two halves of
-    /// <see cref="PercolatorEngine.ClampExperimentQToBestRun"/>, held together as one object so a
+    /// combined run q-value. Folded over every run, applied per row - the two halves of the
+    /// experiment-q clamp (<see cref="PercolatorEngine.AccumulateExperimentQFloors"/> and
+    /// <see cref="PercolatorEngine.ApplyExperimentQFloors"/>), held together as one object so a
     /// caller that folds in one place and applies in another does not carry two loose maps
     /// between them.
     ///
@@ -106,6 +107,18 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
+        /// The modified sequence of the TARGET entry with this base_id, or null when no target
+        /// with it was observed. A target's entry_id is its base_id. Used to group a base_id's
+        /// target and decoy precursors under one peptide for the second-pass peptide competition.
+        /// </summary>
+        public string TargetPeptideFor(uint baseId)
+        {
+            return _peptideByEntryId.TryGetValue(baseId, out var pkey) && !pkey.IsDecoy
+                ? pkey.ModifiedSequence
+                : null;
+        }
+
+        /// <summary>
         /// Fold ONE per-run observation into the ENTRY floor, from the two run q-values a
         /// per-file FDR record carries. The streaming half of this type: a caller already
         /// reading those records for another purpose gets the floor for nothing, instead of
@@ -117,7 +130,7 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public void Observe(uint entryId, double runPrecursorQvalue, double runPeptideQvalue)
         {
-            // FdrLevel.Both: the combined run q the blib ID line and OspreyRunScores.RunQValue
+            // FdrLevel.Both: the combined run q the blib ID line and RetentionTimes.score
             // both use, so "reported => some run passes at BOTH granularities" is the invariant
             // this floor enforces. See PercolatorEngine.AccumulateExperimentQFloors.
             double runBoth = runPrecursorQvalue > runPeptideQvalue

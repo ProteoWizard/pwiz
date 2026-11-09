@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vcs-root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="c46e13e6-3643-4952-85b2-507334d08e6e" type="svn" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Skyline Unstable Test Only Branch</name>
+  <param name="externals-mode" value="externals-full" />
+  <param name="labelingMessage" value="Labeled automatically by TeamCity" />
+  <param name="labelingPatterns" value="trunk=&gt;tags" />
+  <param name="svn-config-directory" value="/home/labkey/.subversion" />
+  <param name="svn-use-default-config-directory" value="true" />
+  <param name="url" value="https://svn.code.sf.net/p/proteowizard/code/branches/work/20170719_smlibs_annotations" />
+  <param name="working-copy-format" value="1.7" />
+</vcs-root>
+

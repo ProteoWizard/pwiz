@@ -27,14 +27,17 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.ComponentModel;
-using pwiz.CLI;
-using pwiz.CLI.msdata;
+
+using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Spectra;
+using Pwiz.Data.MsData.Readers;
+using Pwiz.Data.MsData.Mzml;
 
 using ChromatogramData = System.Collections.Generic.Map<double, double>;
 using FragmentToChromatogramMap = System.Collections.Generic.Map<double, System.Collections.Generic.Map<double, double>>;
 using ParentToFragmentMap = System.Collections.Generic.Map<double, System.Collections.Generic.Map<double, System.Collections.Generic.Map<double, double>>>;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
 	public class ProgressReportEventArgs : EventArgs
 	{
@@ -132,16 +135,38 @@ namespace seems
 			// create empty data source
 		}
 
+        // Full reader list: the built-in formats plus every vendor reader, as MSConvertGUI has.
+        // Constructed once and reused; same shape MsConvert.Converter uses.
+        private static readonly ReaderList s_fullReaderList = BuildFullReaderList();
+        public static ReaderList FullReaderList => s_fullReaderList;
+
+        private static ReaderList BuildFullReaderList()
+        {
+            var list = Pwiz.Vendor.Thermo.ThermoReaderRegistration.CreateDefaultWithThermo();
+            list.Add(new Pwiz.Vendor.Bruker.Reader_Bruker
+            {
+                CombineIonMobilitySpectra = Pwiz.SeeMS.Settings.Default.CombineIonMobilitySpectra,
+            });
+            list.Add(new Pwiz.Vendor.Waters.Reader_Waters());
+            list.Add(new Pwiz.Vendor.Agilent.Reader_Agilent());
+            list.Add(new Pwiz.Vendor.Sciex.Reader_Sciex());
+            list.Add(new Pwiz.Vendor.Shimadzu.Reader_Shimadzu());
+            list.Add(new Pwiz.Vendor.UIMF.Reader_UIMF());
+            list.Add(new Pwiz.Vendor.UNIFI.Reader_UNIFI());
+            list.Add(new Pwiz.Vendor.Mobilion.Reader_Mobilion());
+            return list;
+        }
+
         public static ReaderConfig GetReaderConfig()
         {
             return new ReaderConfig
             {
-                simAsSpectra = Properties.Settings.Default.SimAsSpectra,
-                srmAsSpectra = Properties.Settings.Default.SrmAsSpectra,
-                combineIonMobilitySpectra = Properties.Settings.Default.CombineIonMobilitySpectra,
-                ignoreZeroIntensityPoints = Properties.Settings.Default.IgnoreZeroIntensityPoints,
-                acceptZeroLengthSpectra = Properties.Settings.Default.AcceptZeroLengthSpectra,
-                allowMsMsWithoutPrecursor = false
+                SimAsSpectra = Pwiz.SeeMS.Settings.Default.SimAsSpectra,
+                SrmAsSpectra = Pwiz.SeeMS.Settings.Default.SrmAsSpectra,
+                CombineIonMobilitySpectra = Pwiz.SeeMS.Settings.Default.CombineIonMobilitySpectra,
+                IgnoreZeroIntensityPoints = Pwiz.SeeMS.Settings.Default.IgnoreZeroIntensityPoints,
+                AcceptZeroLengthSpectra = Pwiz.SeeMS.Settings.Default.AcceptZeroLengthSpectra,
+                AllowMsMsWithoutPrecursor = false
             };
         }
 
@@ -151,14 +176,19 @@ namespace seems
                 throw new FileNotFoundException("Filepath not found: " + filepath, filepath.Filepath);
 
 		    MSDataFile = new MSData();
-            ReaderList.FullReaderList.read(filepath.Filepath, MSDataFile, filepath.RunIndex, GetReaderConfig());
+            // pwiz-sharp ReaderList.Read takes (path, msd, config); the cpp/CLI runIndex
+            // round-trips through ReaderConfig.RunIndex. Use the full reader list so vendor
+            // files identify.
+            var readerConfig = GetReaderConfig();
+            readerConfig.RunIndex = filepath.RunIndex;
+            FullReaderList.Read(filepath.Filepath, MSDataFile, readerConfig);
 			sourceFilepath = filepath;
 
             // create dummy spectrum/chromatogram list to simplify logic
-		    MSDataFile.run.spectrumList = MSDataFile.run.spectrumList ?? new SpectrumListSimple();
-		    MSDataFile.run.chromatogramList = MSDataFile.run.chromatogramList ?? new ChromatogramListSimple();
+		    MSDataFile.Run.SpectrumList = MSDataFile.Run.SpectrumList ?? new SpectrumListSimple();
+		    MSDataFile.Run.ChromatogramList = MSDataFile.Run.ChromatogramList ?? new ChromatogramListSimple();
 
-			Name = MSDataFile.run.id;
+			Name = MSDataFile.Run.Id;
 
             setInputFileWaitHandle = new EventWaitHandle( false, EventResetMode.ManualReset );
 			/*setInputFileDelegate = new ParameterizedThreadStart( startSetInputFile );
@@ -182,19 +212,23 @@ namespace seems
 	}
 }
 
-namespace pwiz.CLI.msdata
+namespace Pwiz.Data.MsData
 {
     public static class SpectrumExtensions
     {
 
         public static double[] GetIonMobilityArray(this Spectrum s)
         {
-            if (!s.id.StartsWith("merged="))
+            if (!s.Id.StartsWith("merged="))
                 return null;
-            return s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_ion_mobility_drift_time_array)?.data.Storage() ??
-                   s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_inverse_reduced_ion_mobility_array)?.data.Storage() ??
-                   s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_raw_ion_mobility_array)?.data.Storage() ??
-                   s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_raw_inverse_reduced_ion_mobility_array)?.data.Storage();
+            // pwiz-sharp BinaryDataArray.Data is IList<double>; cpp returned a flat array.
+            // Materialize to double[] so callers' indexing/loop-counting works unchanged.
+            var d = s.GetArrayByCvid(Pwiz.Data.Common.Cv.CVID.MS_mean_ion_mobility_drift_time_array)?.Data ??
+                    s.GetArrayByCvid(Pwiz.Data.Common.Cv.CVID.MS_mean_inverse_reduced_ion_mobility_array)?.Data ??
+                    s.GetArrayByCvid(Pwiz.Data.Common.Cv.CVID.MS_mean_ion_mobility_array)?.Data ??
+                    s.GetArrayByCvid(Pwiz.Data.Common.Cv.CVID.MS_raw_ion_mobility_array)?.Data ??
+                    s.GetArrayByCvid(Pwiz.Data.Common.Cv.CVID.MS_raw_inverse_reduced_ion_mobility_array)?.Data;
+            return d is null ? null : System.Linq.Enumerable.ToArray(d);
         }
     }
 }
