@@ -514,7 +514,9 @@ namespace pwiz.Osprey.FDR
         /// on that model, and on SEA-AD that collapsed the result for some seeds. Selecting the
         /// subset itself by a single feature fails the same way, which is why round 1 is
         /// required. Otherwise round 2 is the unchanged <see cref="RunPercolator"/>, with only the
-        /// subsample turned off (the subset is already the selection).</para>
+        /// subsample turned off (the subset is already the selection). When the subset is no
+        /// selection - round 2 holds exactly round 1's rows, as a small library does - round 2 starts
+        /// from a single feature instead, as round 1 did.</para>
         ///
         /// <para>Every candidate must carry its feature vector. Deterministic and independent of
         /// <see cref="PercolatorConfig.NThreads"/>: a tree or linear score depends only on its own
@@ -627,8 +629,26 @@ namespace pwiz.Osprey.FDR
             // Round 2: the same training on that subset, its first positive set chosen by the
             // round-1 scores the subset was selected by. MaxTrainSize 0 turns the subsample off:
             // the rows are already one per precursor, so the dedup keeps them all.
-            log.LogInfo(LogTag.COUNT, @"{0} Percolator prefilter round 2 initial score: round-1 model (out of fold for round-1 training rows, fold mean otherwise)",
-                passLabel);
+            //
+            // Unless round 2's rows ARE round 1's: a library small enough that every candidate fits
+            // both the round-1 subsample and the round-2 cap. That subset is no selection, so the
+            // reason for the round-1 start does not hold, and every row's round-1 score is out of
+            // fold - three fold models' scores pooled into one ranking, on scales that differ
+            // severalfold, which picks a poor first positive set. On a 276-target library that left
+            // one run no first-pass target and the second pass none. Such a round 2 starts from a
+            // single feature, as round 1 did, and so adds only the protein-best column: without it,
+            // it is round 1's training again, to the bit.
+            if (round2Entries.Count == round1Subset.Length && selected.SequenceEqual(round1Subset))
+            {
+                round2InitialScores = null;
+                log.LogInfo(LogTag.COUNT, @"{0} Percolator prefilter round 2 initial score: a single feature, as round 1 (round 2 holds round 1's {1} rows)",
+                    passLabel, round2Entries.Count);
+            }
+            else
+            {
+                log.LogInfo(LogTag.COUNT, @"{0} Percolator prefilter round 2 initial score: round-1 model (out of fold for round-1 training rows, fold mean otherwise)",
+                    passLabel);
+            }
             var round2Config = trainConfig.CloneForTrainOnly();
             round2Config.MaxTrainSize = 0;
             if (appendRound2Column != null)

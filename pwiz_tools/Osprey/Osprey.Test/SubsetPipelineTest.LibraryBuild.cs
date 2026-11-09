@@ -98,15 +98,17 @@ namespace pwiz.Osprey.Test
 
             // A changed digest option is a different library: predicted again, and the search
             // runs again because its library file changed. Without missed cleavages the library is
-            // too small for the protein-best column (one run finds no first-pass target with it, and
-            // the second pass none at all), so these two legs search with it off.
-            var proteinBestOff = new[] { OspreyCommandArgs.ARG_PROTEIN_BEST.ArgumentText, OspreyArgNames.VALUE_OFF };
-            string changed = RunOsprey(buildArgs.Concat(new[] { CarafeCommandLine.ARG_MISS_C.ArgumentText, @"0" }).Concat(proteinBestOff).ToArray(), Verifier(false));
+            // small enough (276 targets) that round 2 of the training holds round 1's own rows, and
+            // it searches with the protein-best column on, the default.
+            string changed = RunOsprey(buildArgs.Concat(new[] { CarafeCommandLine.ARG_MISS_C.ArgumentText, @"0" }).ToArray(), Verifier(false));
             AssertTasks(changed, Array.Empty<string>(), new[] { PredictLibraryTask.TASK_NAME }.Concat(ALL_TASKS));
+            // Round 2 starts from a single feature: from round 1's pooled out-of-fold scores this
+            // search left one run no first-pass target and the second pass no precursor at all.
+            StringAssert.Contains(changed, @"Percolator prefilter round 2 initial score: a single feature, as round 1");
             CollectionAssert.AreNotEqual(libraryBefore, HashFile(library));
             // Carafe's underscore spelling names the same option, and the same library.
             byte[] missC0 = HashFile(library);
-            string underscore = RunOsprey(buildArgs.Concat(new[] { @"--miss_c", @"0" }).Concat(proteinBestOff).ToArray(), Verifier(false));
+            string underscore = RunOsprey(buildArgs.Concat(new[] { @"--miss_c", @"0" }).ToArray(), Verifier(false));
             AssertTasks(underscore, new[] { PredictLibraryTask.TASK_NAME }.Concat(ALL_TASKS), Array.Empty<string>());
             CollectionAssert.AreEqual(missC0, HashFile(library));
 

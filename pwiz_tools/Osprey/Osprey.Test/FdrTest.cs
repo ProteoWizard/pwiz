@@ -1634,6 +1634,7 @@ namespace pwiz.Osprey.Test
 
             AssertOutOfFoldConfigAndResume(MakeConfig(100, 4), featureInfos, fixture, RunArm);
             AssertProteinBestColumnTrains(threads => MakeConfig(100, threads), fixture, sinkPrefilter, prefilterModel, RunArm);
+            AssertRound2OverRound1RowsIsRound1(MakeConfig, fixture, RunArm);
         }
 
         /// <summary>
@@ -1716,6 +1717,7 @@ namespace pwiz.Osprey.Test
             // The column: the shared assertions the trees pass, then the second pass's scorer.
             AssertProteinBestColumnTrains(threads => MakeConfig(100, threads), fixture, sinkPrefilter, prefilterModel, RunArm);
             AssertFrozenLinearScorerReadsColumn(MakeConfig(100, 4), fixture, features, RunArm);
+            AssertRound2OverRound1RowsIsRound1(MakeConfig, fixture, RunArm);
         }
 
         /// <summary>
@@ -1761,6 +1763,35 @@ namespace pwiz.Osprey.Test
 
         private delegate CapturingSink FirstPassArm(PercolatorConfig config, IOspreyLog log,
             out PercolatorResults model, PercolatorResults pretrained = null);
+
+        /// <summary>
+        /// A library small enough that every best-per-precursor candidate fits both the round-1
+        /// subsample and the round-2 cap: round 2's rows are then round 1's own, not a selection, and
+        /// every one of them carries an out-of-fold round-1 score, each from a different fold model.
+        /// Round 2 starts from a single feature, as round 1 did, rather than from that pooled mix of
+        /// fold scales (which cost one small-library run every first-pass target and left the second
+        /// pass none), so without the protein-best column it is round 1's training again, to the bit.
+        /// </summary>
+        private static void AssertRound2OverRound1RowsIsRound1(Func<int, int, PercolatorConfig> makeConfig,
+            List<KeyValuePair<string, List<FdrEntry>>> fixture, FirstPassArm runArm)
+        {
+            // 300 candidates, under both caps.
+            PercolatorConfig MakeWhole(int prefilterSize, int threads)
+            {
+                var config = makeConfig(prefilterSize, threads);
+                config.MaxTrainSize = 1000;
+                return config;
+            }
+            var log = new CapturingLog();
+            var sinkWhole = runArm(MakeWhole(1000, 4), log, out _);
+            int totalRows = fixture.Sum(kv => kv.Value.Count);
+            Assert.AreEqual(totalRows, AssertSinksIdentical(fixture, runArm(MakeWhole(0, 4), OspreyLog.None, out _), sinkWhole));
+            Assert.AreEqual(totalRows, AssertSinksIdentical(fixture, sinkWhole, runArm(MakeWhole(1000, 1), OspreyLog.None, out _)));
+            StringAssert.Contains(log.Text,
+                "First-pass Percolator prefilter subsample (round 2): 300 precursors (150 targets, 150 decoys) from 300 candidates");
+            StringAssert.Contains(log.Text, "First-pass Percolator prefilter round 2 initial score: a single feature, as round 1 (round 2 holds round 1's 300 rows)");
+            Assert.IsFalse(log.Text.Contains("round 2 initial score: round-1 model"), "round 2 over round 1's rows must not start from the pooled fold scores");
+        }
 
         /// <summary>
         /// <c>--protein-best</c> through the streamed first pass: the model trains on one more
