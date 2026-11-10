@@ -307,7 +307,7 @@ namespace pwiz.Osprey.Tasks
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
-                + OspreyEnvironment.TransferReconciliationValidityKeySuffix()
+                + OspreyEnvironment.TransferReconciliationValidityKeySuffix(ctx.Config)
                 // The fold now gives the stratum's complement its own experiment q.
                 + OspreyEnvironment.Pass2StrataValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()

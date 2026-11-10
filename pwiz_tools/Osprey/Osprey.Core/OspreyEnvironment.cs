@@ -1864,11 +1864,17 @@ namespace pwiz.Osprey.Core
         /// FirstPassFDR writes), and none of their paired decoys (what PerFileRescoring
         /// re-scores). Both differ from the builds that reconciled every precursor passing at any
         /// level in any run, decoys included, so FirstPassFDR, PerFileRescoring and SecondPassFDR
-        /// carry it. Empty under protein-compact, whose outputs are unchanged.
+        /// carry it. The reported set is the blib's experiment gate, so the suffix also names
+        /// <see cref="OspreyConfig.FdrLevel"/> and <see cref="OspreyConfig.ExperimentFdr"/>, which
+        /// no other key term covers. Empty under protein-compact, whose outputs are unchanged.
         /// </summary>
-        public static string TransferReconciliationValidityKeySuffix()
+        public static string TransferReconciliationValidityKeySuffix(OspreyConfig config)
         {
-            return Pass2TransferQ ? @";reconset=output;recondecoys=0;pepfloor=reported" : string.Empty;
+            if (!Pass2TransferQ)
+                return string.Empty;
+            return string.Format(CultureInfo.InvariantCulture,
+                @";reconset=output@{0},{1:R};recondecoys=0;pepfloor=reported",
+                config.FdrLevel, config.ExperimentFdr);
         }
 
         /// <summary>

@@ -544,7 +544,7 @@ namespace pwiz.Osprey.Tasks
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 // The Stage 6 consensus this task writes holds the reconciliation set.
-                + OspreyEnvironment.TransferReconciliationValidityKeySuffix()
+                + OspreyEnvironment.TransferReconciliationValidityKeySuffix(ctx.Config)
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
                 + PinFeatureMask.ValidityKeySuffix()
                 + OspreyEnvironment.FdrExperimentValidityKeySuffix()

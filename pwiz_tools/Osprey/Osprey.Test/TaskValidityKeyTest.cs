@@ -964,6 +964,46 @@ namespace pwiz.Osprey.Test
                     @"transfer does not compete a complement, so its outputs keep their key");
             }
             AssertReconRefitKeysTheTasksItReaches(tasks, ctx);
+            AssertTransferReconciliationSetKeysTheBlibGate(tasks);
+        }
+
+        /// <summary>
+        /// Under transfer, reconciliation takes only the precursors the blib reports, and the blib
+        /// gates on --fdr-level and --experiment-fdr, which no other key term covers. So
+        /// FirstPassFDR (it writes the consensus), PerFileRescoring and SecondPassFDR key on both,
+        /// and no other task does: resuming with a looser experiment FDR must not keep the
+        /// reconciliation planned for the old reported set.
+        /// </summary>
+        private static void AssertTransferReconciliationSetKeysTheBlibGate(IReadOnlyList<OspreyTask> tasks)
+        {
+            var defaultCtx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
+            var looserCtx = new PipelineContext(new OspreyConfig { ExperimentFdr = 0.05 }, tasks, null, null, null);
+            var peptideCtx = new PipelineContext(new OspreyConfig { FdrLevel = FdrLevel.Peptide }, tasks, null, null, null);
+            foreach (var task in tasks)
+            {
+                Assert.AreEqual(task.ValidityKey(defaultCtx), task.ValidityKey(looserCtx),
+                    string.Format(@"{0} must not key on {1} under protein-compact", task.Name,
+                        OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText));
+            }
+            using (OspreyEnvironment.OverrideVariables(new Dictionary<string, string>
+                   {
+                       { @"OSPREY_PASS2_QVALUE", OspreyEnvironment.PASS2_QVALUE_TRANSFER }
+                   }))
+            {
+                foreach (var task in tasks)
+                {
+                    bool expect = task.Name == FirstPassFdrTask.TASK_NAME ||
+                                  task.Name == PerFileRescoreTask.TASK_NAME ||
+                                  task.Name == SecondPassFdrTask.TASK_NAME;
+                    string key = task.ValidityKey(defaultCtx);
+                    Assert.AreEqual(expect, key != task.ValidityKey(looserCtx), string.Format(
+                        @"{0} must {1} key on {2} under transfer", task.Name, expect ? @"" : @"NOT ",
+                        OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText));
+                    Assert.AreEqual(expect, key != task.ValidityKey(peptideCtx), string.Format(
+                        @"{0} must {1} key on {2} under transfer", task.Name, expect ? @"" : @"NOT ",
+                        OspreyCommandArgs.ARG_FDR_LEVEL.ArgumentText));
+                }
+            }
         }
 
         /// <summary>
