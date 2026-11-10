@@ -1253,6 +1253,21 @@ namespace pwiz.Osprey.Core
         /// <summary>OSPREY_PROTEIN_BEST_SHUFFLE=1: the negative control, accessions permuted among peptides.</summary>
         public static bool ProteinBestShuffle => ParseIntOrNull(ENV_PROTEIN_BEST_SHUFFLE) == 1;
 
+        /// <summary>The default bound on the runs round 1 of the protein-best training draws from.</summary>
+        public const int PROTEIN_BEST_ROUND1_RUNS = 10;
+
+        private static readonly EnvVar ENV_PROTEIN_BEST_ROUND1_RUNS = new EnvVar(@"OSPREY_PROTEIN_BEST_ROUND1_RUNS", EnvVarGroup.behavior,
+            @"With " + OspreyArgNames.PREFIX + OspreyArgNames.PROTEIN_BEST + @" on: round 1 of the two-round training draws its " +
+            @"rows from at most this many runs, chosen by the training seed, so its feature read is a few files rather than " +
+            @"all of them; 0 draws from every run. No effect on a cohort of this many runs or fewer. Changes the validity key.")
+            { ValueExample = @"<N>", DefaultValue = @"10" };
+
+        /// <summary>
+        /// OSPREY_PROTEIN_BEST_ROUND1_RUNS: the bound on the runs round 1 trains from
+        /// (<see cref="PROTEIN_BEST_ROUND1_RUNS"/> unless set; 0 for every run).
+        /// </summary>
+        public static int ProteinBestRound1Runs => ParseIntOrNull(ENV_PROTEIN_BEST_ROUND1_RUNS) ?? PROTEIN_BEST_ROUND1_RUNS;
+
         /// <summary>
         /// The round-2 row count of the two-round first-pass training: OSPREY_GBT_PREFILTER_SIZE when it
         /// is set (0 then trains one round), else <see cref="PROTEIN_BEST_PREFILTER_SIZE"/> with the
@@ -1275,18 +1290,22 @@ namespace pwiz.Osprey.Core
         public static string ProteinBestValidityKeySuffix(OspreyConfig config)
         {
             return ProteinBestValidityKeySuffix(config.ProteinBest ? PROTEIN_BEST_TOP_N : 0,
-                ProteinBestDecoyOwn, ProteinBestShuffle);
+                ProteinBestDecoyOwn, ProteinBestShuffle, ProteinBestRound1Runs);
         }
 
-        /// <summary><see cref="ProteinBestValidityKeySuffix(OspreyConfig)"/> for explicitly supplied settings.</summary>
-        public static string ProteinBestValidityKeySuffix(int topN, bool decoyOwn, bool shuffle)
+        /// <summary>
+        /// <see cref="ProteinBestValidityKeySuffix(OspreyConfig)"/> for explicitly supplied settings.
+        /// The round-1 bound is keyed in every arm, its default included: a cohort larger than the
+        /// bound trains a different round 1 than every directory written before the bound existed.
+        /// </summary>
+        public static string ProteinBestValidityKeySuffix(int topN, bool decoyOwn, bool shuffle, int round1Runs)
         {
             if (topN <= 0)
                 return string.Empty;
-            return string.Format(CultureInfo.InvariantCulture, @";proteinbest={0};proteinbestdecoy={1}{2}",
+            return string.Format(CultureInfo.InvariantCulture, @";proteinbest={0};proteinbestdecoy={1}{2};proteinbestround1runs={3}",
                 DescribeProteinBestTopN(topN),
                 decoyOwn ? PROTEIN_BEST_DECOY_OWN : PROTEIN_BEST_DECOY_PAIRED,
-                shuffle ? @";proteinbestshuffle=1" : string.Empty);
+                shuffle ? @";proteinbestshuffle=1" : string.Empty, round1Runs);
         }
 
         /// <summary>
@@ -1298,10 +1317,13 @@ namespace pwiz.Osprey.Core
             if (!config.ProteinBest)
                 return string.Format(@"Protein-best training column: {0}", OspreyArgNames.VALUE_OFF);
             return string.Format(CultureInfo.InvariantCulture,
-                @"Protein-best training column: {0} (two-round first pass, round 2 at {1} rows{2}{3})",
+                @"Protein-best training column: {0} (two-round first pass, round 1 from {4}, round 2 at {1} rows{2}{3})",
                 OspreyArgNames.VALUE_ON, PrefilterSizeFor(true),
                 ProteinBestDecoyOwn ? @", OSPREY_PROTEIN_BEST_DECOY=" + PROTEIN_BEST_DECOY_OWN : string.Empty,
-                ProteinBestShuffle ? @", OSPREY_PROTEIN_BEST_SHUFFLE=1 (negative control)" : string.Empty);
+                ProteinBestShuffle ? @", OSPREY_PROTEIN_BEST_SHUFFLE=1 (negative control)" : string.Empty,
+                ProteinBestRound1Runs > 0
+                    ? string.Format(CultureInfo.InvariantCulture, @"at most {0} runs", ProteinBestRound1Runs)
+                    : @"every run");
         }
 
         /// <summary>
@@ -1314,11 +1336,14 @@ namespace pwiz.Osprey.Core
             string argText = OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST);
             if (!config.ProteinBest)
             {
-                return ENV_PROTEIN_BEST_DECOY.IsSet || ENV_PROTEIN_BEST_SHUFFLE.IsSet
-                    ? string.Format(@"OSPREY_PROTEIN_BEST_DECOY and OSPREY_PROTEIN_BEST_SHUFFLE shape the column {0} adds " +
-                                    @"and cannot be set with {1}.", argText, OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST, OspreyArgNames.VALUE_OFF))
+                return ENV_PROTEIN_BEST_DECOY.IsSet || ENV_PROTEIN_BEST_SHUFFLE.IsSet || ENV_PROTEIN_BEST_ROUND1_RUNS.IsSet
+                    ? string.Format(@"OSPREY_PROTEIN_BEST_DECOY, OSPREY_PROTEIN_BEST_SHUFFLE and OSPREY_PROTEIN_BEST_ROUND1_RUNS " +
+                                    @"shape the column {0} adds and cannot be set with {1}.", argText,
+                        OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST, OspreyArgNames.VALUE_OFF))
                     : null;
             }
+            if (ProteinBestRound1Runs < 0)
+                return @"OSPREY_PROTEIN_BEST_ROUND1_RUNS must be 0 (every run) or a positive number of runs.";
             if (PrefilterSizeFor(true) <= 0)
             {
                 return string.Format(@"{0} reaches the model through round 2 of the two-round training: " +

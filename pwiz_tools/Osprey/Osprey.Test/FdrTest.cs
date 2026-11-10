@@ -1861,6 +1861,27 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(fixture.Sum(kv => kv.Value.Count), AssertSinksIdentical(fixture, sinkOn, sinkResumed));
             }
 
+            // The round-1 bound: at the cohort's run count it changes nothing; below it round 1
+            // draws from fewer runs, still trains the column, and is the same bits at any thread count.
+            PercolatorConfig MakeBounded(int threads, int round1Runs)
+            {
+                var config = makeConfig(threads);
+                config.ProteinBest = new ProteinBestRequest(request.Membership, request.TopN, request.DecoyOwn,
+                    null, round1Runs);
+                return config;
+            }
+            var boundedLog = new CapturingLog();
+            Assert.AreEqual(fixture.Sum(kv => kv.Value.Count),
+                AssertSinksIdentical(fixture, sinkOn, runArm(MakeBounded(4, fixture.Count), boundedLog, out _)));
+            Assert.IsFalse(boundedLog.Text.Contains("protein-best round 1 draws from"),
+                "a bound no smaller than the run count must leave round 1 drawing from every run");
+            var oneRunLog = new CapturingLog();
+            var sinkOneRun = runArm(MakeBounded(4, 1), oneRunLog, out var modelOneRun);
+            StringAssert.Contains(oneRunLog.Text, "First-pass protein-best round 1 draws from 1 of 2 runs");
+            Assert.AreEqual(ProteinBestFeature.FEATURE_NAME, modelOneRun.FeatureNames.Last());
+            Assert.AreEqual(fixture.Sum(kv => kv.Value.Count),
+                AssertSinksIdentical(fixture, sinkOneRun, runArm(MakeBounded(1, 1), OspreyLog.None, out _)));
+
             // Without two-round training the column has no way into the model.
             var oneRound = makeConfig(4);
             oneRound.PrefilterTrainSize = 0;

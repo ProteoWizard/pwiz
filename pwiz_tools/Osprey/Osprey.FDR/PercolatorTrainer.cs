@@ -534,11 +534,16 @@ namespace pwiz.Osprey.FDR
         /// <param name="round2Entries">The round-2 training rows, which the caller treats as the
         /// training rows from here on (the held-out folds of <c>OSPREY_GBT_OOF</c> are keyed by
         /// them).</param>
-        /// <param name="appendRound2Column">Optional: the protein-aware column
-        /// (<c>--protein-best</c>). Handed round 1's model, each round-1 training precursor's
-        /// held-out fold by base_id, and the round-2 rows, whose feature vectors it extends by the
-        /// column, once round 2 is selected and before it trains. Null (the default) leaves round
-        /// 2's feature vectors as they are.</param>
+        /// <param name="afterRound1">Optional: handed round 1's model and each round-1 training
+        /// precursor's held-out fold by base_id once round 1 has trained, before any candidate is
+        /// scored. Only the round-1 rows need feature vectors before it; it must leave every
+        /// candidate with one. The protein-aware column (<c>--protein-best</c>) loads the rest of the
+        /// candidates here in the same read that computes the column. Null (the default) needs every
+        /// candidate's features on entry.</param>
+        /// <param name="appendRound2Column">Optional: the protein-aware column. Handed the round-2
+        /// rows' indices into <paramref name="candidates"/> and the rows themselves, whose feature
+        /// vectors it extends by the column, once round 2 is selected and before it trains. Null (the
+        /// default) leaves round 2's feature vectors as they are.</param>
         internal static PercolatorResults TrainWithScorePrefilter(
             IList<PercolatorEntry> candidates,
             int[] round1Subset,
@@ -546,7 +551,8 @@ namespace pwiz.Osprey.FDR
             IOspreyLog log,
             string passLabel,
             out List<PercolatorEntry> round2Entries,
-            Action<PercolatorResults, IReadOnlyDictionary<uint, int>, List<PercolatorEntry>> appendRound2Column = null)
+            Action<PercolatorResults, IReadOnlyDictionary<uint, int>> afterRound1 = null,
+            Action<int[], List<PercolatorEntry>> appendRound2Column = null)
         {
             int prefilterSize = trainConfig.PrefilterTrainSize;
             if (prefilterSize <= 0)
@@ -562,6 +568,20 @@ namespace pwiz.Osprey.FDR
             round1Config.ReportTrainEntryFolds = true;
             round1Config.Diagnostics = null;
             var round1 = RunPercolator(round1Entries, round1Config);
+            if (afterRound1 != null)
+            {
+                // A peptide group shares one fold across its charges, its decoy and its runs, so
+                // keying by base_id also holds a precursor's rows in OTHER runs out of the models
+                // that trained on it.
+                var heldOutFoldByBaseId = new Dictionary<uint, int>(round1Subset.Length);
+                for (int s = 0; s < round1Subset.Length; s++)
+                {
+                    int fold = round1.TrainEntryFolds[s];
+                    if (fold >= 0)
+                        heldOutFoldByBaseId[candidates[round1Subset[s]].EntryId & PercolatorEntry.BASE_ID_MASK] = fold;
+                }
+                afterRound1(round1, heldOutFoldByBaseId);
+            }
 
             // Score every candidate with the round-1 models, out of fold where it trained.
             int m = candidates.Count;
@@ -647,17 +667,8 @@ namespace pwiz.Osprey.FDR
             if (appendRound2Column != null)
             {
                 // Selection above stays on round 1's scores and raw features: the column is an
-                // input to round 2, not a reason a group was chosen for it. A peptide group shares
-                // one fold across its charges, its decoy and its runs, so keying by base_id also
-                // holds a precursor's rows in OTHER runs out of the models that trained on it.
-                var heldOutFoldByBaseId = new Dictionary<uint, int>(round1Subset.Length);
-                for (int s = 0; s < round1Subset.Length; s++)
-                {
-                    int fold = round1.TrainEntryFolds[s];
-                    if (fold >= 0)
-                        heldOutFoldByBaseId[candidates[round1Subset[s]].EntryId & PercolatorEntry.BASE_ID_MASK] = fold;
-                }
-                appendRound2Column(round1, heldOutFoldByBaseId, round2Entries);
+                // input to round 2, not a reason a group was chosen for it.
+                appendRound2Column(selected, round2Entries);
                 round2Config.FeatureInfos = ProteinBestFeature.WithColumnInfo(round2Config.FeatureInfos);
             }
             return RunPercolator(round2Entries, round2Config, round2InitialScores);

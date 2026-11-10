@@ -453,9 +453,10 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig { ProteinBest = false }),
                 @"the linear SVM must emit nothing, or every existing output directory is invalidated");
             // On, the default, it emits the two-round training and the column, spelled as the
-            // OSPREY_GBT_PREFILTER_SIZE=200000 OSPREY_PROTEIN_BEST=max experiment spelled them, so
-            // that experiment's directories stay current and no other arm's are adopted.
-            Assert.AreEqual(@";gbtprefilter=200000;proteinbest=max;proteinbestdecoy=paired",
+            // OSPREY_GBT_PREFILTER_SIZE=200000 OSPREY_PROTEIN_BEST=max experiment spelled them, and
+            // the round-1 run bound, which a cohort above it trains differently with, so no
+            // directory written before the bound is adopted.
+            Assert.AreEqual(@";gbtprefilter=200000;proteinbest=max;proteinbestdecoy=paired;proteinbestround1runs=10",
                 PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig()));
             Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(FdrClassifier.LinearSvm,
                     new GbtParams { NTrees = 7 }, OspreyEnvironment.GBT_MAX_ITERATIONS_DEFAULT + 1, 1),

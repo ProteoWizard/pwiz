@@ -271,17 +271,18 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(string.Empty, OspreyEnvironment.ProteinBestValidityKeySuffix(new OspreyConfig { ProteinBest = false }));
 
             // The key: empty when off, so no existing directory moves; every setting otherwise.
-            Assert.AreEqual(string.Empty, OspreyEnvironment.ProteinBestValidityKeySuffix(0, true, true));
-            string max = OspreyEnvironment.ProteinBestValidityKeySuffix(1, false, false);
-            Assert.AreEqual(@";proteinbest=max;proteinbestdecoy=paired", max);
+            Assert.AreEqual(string.Empty, OspreyEnvironment.ProteinBestValidityKeySuffix(0, true, true, 10));
+            string max = OspreyEnvironment.ProteinBestValidityKeySuffix(1, false, false, OspreyEnvironment.PROTEIN_BEST_ROUND1_RUNS);
+            Assert.AreEqual(@";proteinbest=max;proteinbestdecoy=paired;proteinbestround1runs=10", max);
             var keys = new HashSet<string>
             {
                 max,
-                OspreyEnvironment.ProteinBestValidityKeySuffix(4, false, false),
-                OspreyEnvironment.ProteinBestValidityKeySuffix(1, true, false),
-                OspreyEnvironment.ProteinBestValidityKeySuffix(1, false, true)
+                OspreyEnvironment.ProteinBestValidityKeySuffix(4, false, false, 10),
+                OspreyEnvironment.ProteinBestValidityKeySuffix(1, true, false, 10),
+                OspreyEnvironment.ProteinBestValidityKeySuffix(1, false, true, 10),
+                OspreyEnvironment.ProteinBestValidityKeySuffix(1, false, false, 0)
             };
-            Assert.AreEqual(4, keys.Count, string.Join(@" ", keys));
+            Assert.AreEqual(5, keys.Count, string.Join(@" ", keys));
         }
 
         private static void AssertModifiedFormsAreOnePeptide()

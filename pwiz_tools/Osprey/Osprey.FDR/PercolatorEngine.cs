@@ -1217,30 +1217,17 @@ namespace pwiz.Osprey.FDR
             log.LogInfo(LogTag.COUNT, @"{0} Percolator streaming best-per-precursor: {1} precursors ({2} targets, {3} decoys) from {4} peaks",
                 passLabel, m, dedupTargets, m - dedupTargets, n);
 
+            // --protein-best: round 1 draws its rows from a bounded set of runs, so the read of its
+            // feature vectors - which must come before the read that computes the column - is a few
+            // files rather than all of them. Null when every run may supply them.
+            int[] round1Pool = percConfig.ProteinBest != null
+                ? Round1Pool(dedup, fileNames, percConfig.ProteinBest.Round1Runs, percConfig.Seed, log, passLabel)
+                : null;
+
             // Peptide-grouped subsample when the dedup count exceeds MaxTrainSize (mirrors
             // BuildTrainingSubset: SelectBestPerPrecursor already ran above via the streaming dedup,
             // so only the SubsampleByPeptideGroup step remains). localSelected indexes `dedup`.
-            int[] localSelected;
-            if (maxTrain <= 0 || m <= maxTrain)
-            {
-                localSelected = new int[m];
-                for (int i = 0; i < m; i++)
-                    localSelected[i] = i;
-            }
-            else
-            {
-                var dedupLabels = new bool[m];
-                var dedupEntryIds = new uint[m];
-                var dedupPeptides = new string[m];
-                for (int i = 0; i < m; i++)
-                {
-                    dedupLabels[i] = dedup[i].IsDecoy;
-                    dedupEntryIds[i] = dedup[i].EntryId;
-                    dedupPeptides[i] = dedup[i].Peptide;
-                }
-                localSelected = PercolatorSampling.SubsampleByPeptideGroup(
-                    dedupLabels, dedupEntryIds, dedupPeptides, maxTrain, percConfig.Seed);
-            }
+            int[] localSelected = SubsampleDedup(dedup, round1Pool, maxTrain, percConfig.Seed);
 
             // A persisted model is only usable if it was trained on THIS run's feature set, and
             // nothing upstream can establish that: the validity key the caller checks carries no
@@ -1328,7 +1315,10 @@ namespace pwiz.Osprey.FDR
             // subset, bounded by MaxTrainSize. With the two-round training it is every deduped
             // candidate, so the resident features grow from MaxTrainSize rows to the candidate
             // count (about candidates x features doubles).
-            var loadEntries = candidateEntries ?? subsetEntries;
+            // --protein-best loads only round 1's rows here: the rest of the candidates come in the
+            // read after round 1 trains, the same read that computes the column, so each file is
+            // read once for both instead of once for each.
+            var loadEntries = percConfig.ProteinBest != null ? subsetEntries : candidateEntries ?? subsetEntries;
             var subsetByFile = PercolatorSampling.GroupIndicesByFileName(loadEntries);
             // Both skipped when the caller supplied the model this pass would have trained.
             // Training exists to score entries; when every entry's score is already on disk
@@ -1378,20 +1368,25 @@ namespace pwiz.Osprey.FDR
                 trainResults = pretrainedModel;
             else if (candidateEntries != null)
             {
-                Action<PercolatorResults, IReadOnlyDictionary<uint, int>, List<PercolatorEntry>> appendColumn = null;
+                Action<PercolatorResults, IReadOnlyDictionary<uint, int>> afterRound1 = null;
+                Action<int[], List<PercolatorEntry>> appendColumn = null;
                 if (percConfig.ProteinBest != null)
                 {
-                    appendColumn = (round1, heldOutFolds, round2Rows) =>
+                    double[] proteinBestByCandidate = null;
+                    var candidates = candidateEntries;
+                    afterRound1 = (round1, heldOutFolds) =>
                     {
                         proteinBestColumn = new ProteinBestColumn(percConfig.ProteinBest, round1, heldOutFolds,
                             nFeatures, percConfig.NThreads);
-                        AppendProteinBestToRows(proteinBestColumn, round2Rows, streamFileRows, loadFileFeatures,
-                            fileNames, rowCounts, fileLanes, log, passLabel);
+                        proteinBestByCandidate = LoadCandidatesWithProteinBest(proteinBestColumn, candidates,
+                            streamFileRows, loadFileFeatures, fileNames, rowCounts, nFeatures, fileLanes, log, passLabel);
                     };
+                    appendColumn = (selected, round2Rows) =>
+                        AppendProteinBestToRows(proteinBestByCandidate, selected, round2Rows, log, passLabel);
                 }
                 // Round 2's subset replaces the random one as this pass's training rows.
                 trainResults = PercolatorTrainer.TrainWithScorePrefilter(candidateEntries, localSelected,
-                    trainConfig, log, passLabel, out subsetEntries, appendColumn);
+                    trainConfig, log, passLabel, out subsetEntries, afterRound1, appendColumn);
             }
             else
                 trainResults = PercolatorTrainer.RunPercolator(subsetEntries, trainConfig);
@@ -2020,17 +2015,104 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Extends the round-2 training rows' feature vectors by the protein-best column of their
-        /// run. Each file writes only its own rows, so the files need no ordering; a file with no
-        /// round-2 row is not read.
+        /// The run set round 1 draws its training rows from, as ascending indices into
+        /// <paramref name="dedup"/>: the precursors whose drawn run is one of
+        /// <paramref name="round1Runs"/> runs chosen by the training seed. Null when the bound is
+        /// off or the cohort is no larger than it, which leaves every run in and the training as it
+        /// was. The runs are ranked by a SplitMix64 mix of their position and the seed, a fixed choice
+        /// for an ordered input list.
         /// </summary>
-        private static void AppendProteinBestToRows(ProteinBestColumn column, List<PercolatorEntry> round2Rows,
+        private static int[] Round1Pool(List<FirstPassDedupRow> dedup, IReadOnlyList<string> fileNames, int round1Runs,
+            ulong seed, IOspreyLog log, string passLabel)
+        {
+            int nFiles = fileNames.Count;
+            if (round1Runs <= 0 || nFiles <= round1Runs)
+                return null;
+            var ranks = new ulong[nFiles];
+            var order = new int[nFiles];
+            for (int f = 0; f < nFiles; f++)
+            {
+                ranks[f] = MixRun(f, seed);
+                order[f] = f;
+            }
+            Array.Sort(ranks, order); // Array.Sort OK: SplitMix64 is a bijection on 64 bits and the inputs differ, so no two ranks tie
+            var chosen = new HashSet<string>(StringComparer.Ordinal);
+            for (int i = 0; i < round1Runs; i++)
+                chosen.Add(fileNames[order[i]]);
+            var pool = new List<int>();
+            for (int i = 0; i < dedup.Count; i++)
+            {
+                if (chosen.Contains(dedup[i].FileName))
+                    pool.Add(i);
+            }
+            log.LogInfo(LogTag.COUNT, @"{0} protein-best round 1 draws from {1} of {2} runs: {3} of {4} precursors",
+                passLabel, round1Runs, nFiles, pool.Count, dedup.Count);
+            return pool.ToArray();
+        }
+
+        /// <summary>The SplitMix64 finalizer of a run's position and the training seed.</summary>
+        private static ulong MixRun(int run, ulong seed)
+        {
+            // Wrapping is the point here - this is a hash mixer, not a quantity.
+            unchecked
+            {
+                ulong x = (ulong)run + seed * 0x9E3779B97F4A7C15UL + 0xD1B54A32D192ED03UL;
+                x = (x ^ (x >> 30)) * 0xBF58476D1CE4E5B9UL;
+                x = (x ^ (x >> 27)) * 0x94D049BB133111EBUL;
+                return x ^ (x >> 31);
+            }
+        }
+
+        /// <summary>
+        /// The training subset as ascending indices into <paramref name="dedup"/>: the peptide-grouped
+        /// subsample of <paramref name="pool"/> (every row when null) when it exceeds
+        /// <paramref name="maxTrain"/>, else all of it.
+        /// </summary>
+        private static int[] SubsampleDedup(List<FirstPassDedupRow> dedup, int[] pool, int maxTrain, ulong seed)
+        {
+            int count = pool?.Length ?? dedup.Count;
+            if (maxTrain <= 0 || count <= maxTrain)
+            {
+                if (pool != null)
+                    return pool;
+                var all = new int[count];
+                for (int i = 0; i < count; i++)
+                    all[i] = i;
+                return all;
+            }
+            var labels = new bool[count];
+            var entryIds = new uint[count];
+            var peptides = new string[count];
+            for (int i = 0; i < count; i++)
+            {
+                var d = dedup[pool?[i] ?? i];
+                labels[i] = d.IsDecoy;
+                entryIds[i] = d.EntryId;
+                peptides[i] = d.Peptide;
+            }
+            int[] picked = PercolatorSampling.SubsampleByPeptideGroup(labels, entryIds, peptides, maxTrain, seed);
+            if (pool == null)
+                return picked;
+            // Ascending positions in an ascending pool stay ascending.
+            var mapped = new int[picked.Length];
+            for (int i = 0; i < picked.Length; i++)
+                mapped[i] = pool[picked[i]];
+            return mapped;
+        }
+
+        /// <summary>
+        /// The read after round 1: every candidate file's feature rows once, giving each candidate
+        /// without one its feature vector and computing the file's protein-best column from round 1's
+        /// models, of which each candidate keeps its own row's value. Returns those values by
+        /// candidate index. Each file writes only its own candidates, so the files need no ordering.
+        /// </summary>
+        private static double[] LoadCandidatesWithProteinBest(ProteinBestColumn column, List<PercolatorEntry> candidates,
             Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRows,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures, IReadOnlyList<string> fileNames,
-            int[] rowCounts, int fileLanes, IOspreyLog log, string passLabel)
+            int[] rowCounts, int nFeatures, int fileLanes, IOspreyLog log, string passLabel)
         {
-            var byFile = PercolatorSampling.GroupIndicesByFileName(round2Rows);
-            var files = new List<KeyValuePair<string, List<int>>>(byFile);
+            var values = new double[candidates.Count];
+            var files = new List<KeyValuePair<string, List<int>>>(PercolatorSampling.GroupIndicesByFileName(candidates));
             var rowCountByFile = new Dictionary<string, int>(fileNames.Count, StringComparer.Ordinal);
             for (int f = 0; f < fileNames.Count; f++)
                 rowCountByFile[fileNames[f]] = rowCounts[f];
@@ -2046,21 +2128,47 @@ namespace pwiz.Osprey.FDR
                 OrderedFileLanes.For(files.Count, fileLanes, i =>
                 {
                     string fileName = files[i].Key;
+                    IReadOnlyList<double[]> rawRows = loadFileFeatures(fileName);
                     RowBuffer rows = ReadFileRows(streamFileRows, fileName, StubColumns.Core, rowCountByFile[fileName]);
-                    double[] values = column.ValuesFor(rows, loadFileFeatures(fileName));
+                    double[] fileValues = column.ValuesFor(rows, rawRows);
                     foreach (int k in files[i].Value)
                     {
-                        var entry = round2Rows[k];
-                        var extended = new double[entry.Features.Length + 1];
-                        Array.Copy(entry.Features, extended, entry.Features.Length);
-                        extended[entry.Features.Length] = values[entry.ParquetIndex];
-                        entry.Features = extended;
+                        var entry = candidates[k];
+                        if (entry.Features == null)
+                        {
+                            entry.Features = (double[])PercolatorScorer.ResolveFeatureRow(
+                                rawRows, entry.ParquetIndex, entry.CoelutionSum, nFeatures).Clone();
+                        }
+                        values[k] = fileValues[entry.ParquetIndex];
                     }
                     progress.Report(Interlocked.Increment(ref filesDone));
                 });
             });
-            log.LogInfo(LogTag.PATH, @"{0} protein-best column for {1} round-2 rows from {2} file(s): {3:F1}s",
-                passLabel, round2Rows.Count, files.Count, wall.Elapsed.TotalSeconds);
+            log.LogInfo(LogTag.PATH, @"{0} protein-best column and training features for {1} candidates from {2} file(s): {3:F1}s",
+                passLabel, candidates.Count, files.Count, wall.Elapsed.TotalSeconds);
+            return values;
+        }
+
+        /// <summary>
+        /// Extends the round-2 training rows' feature vectors by their protein-best values, which
+        /// <paramref name="byCandidate"/> holds by candidate index; <paramref name="selected"/> gives
+        /// each round-2 row's candidate index, in the rows' order.
+        /// </summary>
+        private static void AppendProteinBestToRows(double[] byCandidate, int[] selected, List<PercolatorEntry> round2Rows,
+            IOspreyLog log, string passLabel)
+        {
+            var files = new HashSet<string>(StringComparer.Ordinal);
+            for (int i = 0; i < round2Rows.Count; i++)
+            {
+                var entry = round2Rows[i];
+                var extended = new double[entry.Features.Length + 1];
+                Array.Copy(entry.Features, extended, entry.Features.Length);
+                extended[entry.Features.Length] = byCandidate[selected[i]];
+                entry.Features = extended;
+                files.Add(entry.FileName);
+            }
+            log.LogInfo(LogTag.PATH, @"{0} protein-best column for {1} round-2 rows from {2} file(s)",
+                passLabel, round2Rows.Count, files.Count);
         }
 
         /// <summary>

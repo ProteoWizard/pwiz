@@ -2128,7 +2128,8 @@ namespace pwiz.Osprey.Tasks
                 return null;
             ulong? shuffleSeed = OspreyEnvironment.ProteinBestShuffle ? OspreyEnvironment.FdrSeed ?? 42UL : null;
             return new ProteinBestRequest(ProteinBestMembership.FromLibrary(library, shuffleSeed),
-                OspreyEnvironment.PROTEIN_BEST_TOP_N, OspreyEnvironment.ProteinBestDecoyOwn, persistRun);
+                OspreyEnvironment.PROTEIN_BEST_TOP_N, OspreyEnvironment.ProteinBestDecoyOwn, persistRun,
+                OspreyEnvironment.ProteinBestRound1Runs);
         }
 
         /// <summary>

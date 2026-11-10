@@ -271,14 +271,26 @@ namespace pwiz.Osprey.FDR
         /// <param name="persistRun">Optional: given each run the score pass scores, with the
         /// run's column, so the second pass can score that run's rescored rows with it. Called
         /// from the score pass's file lanes, one call per run.</param>
+        /// <param name="round1Runs">At most this many runs, drawn by the training seed, supply
+        /// round 1's training rows; 0 lets every run supply them.</param>
         public ProteinBestRequest(ProteinBestMembership membership, int topN, bool decoyOwn,
-            Action<string, ProteinBestRunValues> persistRun = null)
+            Action<string, ProteinBestRunValues> persistRun = null, int round1Runs = 0)
         {
             Membership = membership;
             TopN = topN;
             DecoyOwn = decoyOwn;
             PersistRun = persistRun;
+            Round1Runs = round1Runs;
         }
+
+        /// <summary>
+        /// The bound on the runs round 1 trains from, or 0 for every run. Round 1's models must exist
+        /// before the read that computes the column, so their training rows are read first; drawn
+        /// from every run they touch every page of every file, a full read of its own. A bounded set
+        /// of runs makes that read a few files, and it changes nothing until a cohort has more runs
+        /// than the bound. Round 2, which scores everything, still trains on rows from every run.
+        /// </summary>
+        public int Round1Runs { get; }
 
         /// <summary>Receives each scored run's column; null to keep none.</summary>
         public Action<string, ProteinBestRunValues> PersistRun { get; }
