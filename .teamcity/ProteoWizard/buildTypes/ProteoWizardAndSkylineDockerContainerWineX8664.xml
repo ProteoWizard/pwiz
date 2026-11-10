@@ -226,17 +226,10 @@ docker-entrypoint.sh /docker2singularity.sh chambm/pwiz-skyline-i-agree-to-the-v
       </depend-on>
     </dependencies>
     <cleanup>
-      <policy type="days" cleanup-level="HISTORY_ENTRY">
-        <parameters>
-          <param name="artifactPatterns" value="+:**/*" />
-          <param name="keepDays.count" value="30" />
-        </parameters>
-      </policy>
-      <policy type="daysAndBuilds" cleanup-level="ARTIFACTS">
+      <policy type="days" cleanup-level="ARTIFACTS">
         <parameters>
           <param name="artifactPatterns"><![CDATA[*.tbz2
 *.simg]]></param>
-          <param name="keepBuilds.count" value="1" />
           <param name="keepDays.count" value="7" />
         </parameters>
       </policy>
