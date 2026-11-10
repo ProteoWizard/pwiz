@@ -20,10 +20,15 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Sockets;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -63,6 +68,7 @@ namespace pwiz.SkylineTestFunctional
                 TestProperPopulation();
                 TestInstallR();
                 TestInstallPackages();
+                TestInternetConnectionTimeout();
                 TestStartToFinish();
 
                 // Remove mocked-up and unusable R EXE because it will cause a test failure if left behind
@@ -217,6 +223,10 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestInstallPackages()
         {
+            // Package installation probes CRAN first; answer that probe locally so
+            // these tests never depend on the live site. TestInternetConnectionFailure nests its
+            // own failing behavior inside this one.
+            using var helper = SimulateRProjectReachable();
             TestNoAdminPrivledges();
             TestExitBoxBeforeCompletion();
             TestUnknownError();
@@ -313,6 +323,38 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(rInstaller, () => Cancel(rInstaller));
         }
 
+        /// <summary>
+        /// A site that accepts the connection and never answers must fail the connectivity probe
+        /// within the probe's own timeout, not the much longer HTTP response timeout.
+        /// </summary>
+        private static void TestInternetConnectionTimeout()
+        {
+            // Must reach a real socket; a simulation left installed would answer the probe first
+            Assert.IsNull(HttpClientWithProgress.TestBehavior);
+
+            // A started listener completes the handshake from the kernel backlog, so the
+            // connection is accepted and then answered by nobody
+            var listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start();
+            try
+            {
+                var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+                var uri = new Uri($@"http://127.0.0.1:{port}/");
+                var timeout = TimeSpan.FromSeconds(1);
+                var stopwatch = Stopwatch.StartNew();
+                Assert.IsFalse(RUtil.CheckForInternetConnection(uri, timeout, out var errorMessage));
+                stopwatch.Stop();
+                Assert.AreEqual(string.Format(ToolsUIResources.RUtil_CheckForInternetConnection_Timed_out_after__0__seconds_,
+                    timeout.TotalSeconds), errorMessage);
+                Assert.IsTrue(stopwatch.Elapsed < TimeSpan.FromSeconds(30),
+                    $"Probe took {stopwatch.Elapsed.TotalSeconds} seconds to time out");
+            }
+            finally
+            {
+                listener.Stop();
+            }
+        }
+
         // Test package install success
         private static void TestPackageInstallSuccess()
         {
@@ -338,8 +380,8 @@ namespace pwiz.SkylineTestFunctional
         // Tests the start to finish process of installing both R and associated packages
         private static void TestStartToFinish()
         {
-            using var helper = HttpClientTestHelper.SimulateSuccessfulDownload(new byte[1024]);
-            
+            using var helper = SimulateRProjectReachable(new byte[1024]);
+
             var packages = new Collection<ToolPackage> { PACKAGE_1, PACKAGE_2, PACKAGE_3, PACKAGE_4 };
             var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, packages, false));
             WaitForConditionUI(10 * 1000, () => rInstaller.IsLoaded);
@@ -353,6 +395,28 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Assert.AreEqual(Resources.RInstaller_GetR_R_installation_complete_, downloadRDlg.Message));
             OkDialog(downloadRDlg, downloadRDlg.OkDialog);
             WaitForClosedForm(rInstaller);
+        }
+
+        /// <summary>
+        /// Answers the HEAD connectivity probe to CRAN with success, and any GET with
+        /// the given mock download bytes, so no request leaves the machine.
+        /// </summary>
+        private static HttpClientTestHelper SimulateRProjectReachable(byte[] mockDownload = null)
+        {
+            return new HttpClientTestHelper(new HttpClientTestBehavior
+            {
+                MockResponseData = mockDownload,
+                RequestResponseFactory = AnswerRProjectProbe
+            });
+        }
+
+        private static Stream AnswerRProjectProbe(HttpRequestMessage request)
+        {
+            if (request.Method != HttpMethod.Head)
+                return null;
+            // Fails the test if the probe ever goes anywhere but the intended site
+            Assert.AreEqual(RUtil.INTERNET_CHECK_SITE, request.RequestUri?.Host);
+            return new MemoryStream();
         }
 
         // helper method to simulate the creation of the InstallR dialog, so we can use our test installer

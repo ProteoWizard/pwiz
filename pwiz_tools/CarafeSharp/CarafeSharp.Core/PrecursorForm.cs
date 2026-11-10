@@ -2,6 +2,7 @@
  * Original author: Michael MacCoss <maccoss .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
+ *                Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -25,17 +26,21 @@ namespace pwiz.CarafeSharp.Core
     /// <summary>A peptide form at one precursor charge, the unit the MS2 model predicts.</summary>
     public sealed class PrecursorForm
     {
-        public PrecursorForm(PeptideForm peptide, int charge)
+        public PrecursorForm(PeptideForm peptide, int charge, string proteinId = null)
         {
             if (charge < 1)
                 throw new ArgumentException(string.Format(@"Invalid precursor charge {0}.", charge), nameof(charge));
             Peptide = peptide;
             Charge = charge;
+            ProteinId = proteinId;
         }
 
         public PeptideForm Peptide { get; }
 
         public int Charge { get; }
+
+        /// <summary>The precursor's proteins as the library's <c>ProteinID</c> text (<see cref="PrecursorTable.PROTEIN_ID"/>), or null for none.</summary>
+        public string ProteinId { get; }
 
         public override string ToString()
         {

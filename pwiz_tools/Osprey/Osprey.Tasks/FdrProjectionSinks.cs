@@ -219,13 +219,13 @@ namespace pwiz.Osprey.Tasks
         }
 
         public void AcceptExperimentEntry(uint entryId, string peptide, double experimentAggregateScore,
-            double experimentPrecursorQvalue, double experimentPeptideQvalue, double pep)
+            double experimentPrecursorQvalue, double experimentPeptideQvalue, double pep, double peptidePep)
         {
             // The protein q is the one value not known yet - it needs the pooled parsimony +
             // picked-protein FDR that runs after this pass - so it goes in at its 1.0 default
             // and ApplyProteinQvalues replaces it before the file is written.
             _experiment.Add(entryId, experimentPrecursorQvalue, experimentPeptideQvalue,
-                1.0, experimentAggregateScore, pep);
+                1.0, experimentAggregateScore, pep, peptidePep);
             _entryIds.Add(entryId);
             _peptides.Add(peptide);
         }

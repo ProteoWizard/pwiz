@@ -164,10 +164,10 @@ namespace pwiz.Osprey.Test
         /// parquet, one q-value sidecar, calibration and spectra cache, so each one's identity
         /// keys that run's export - absent and present differ, and so do two versions of one file
         /// - while another run's export, the task key and the task's other outputs do not move.
-        /// The q-value sidecar is the second-pass one only when PerFileRescoring wrote it - its
-        /// stamp and its decoys file. One SecondPassFDR writes after the export (a run with no
-        /// Stage 6 work, or no readable first-pass model) is not read and must not key it, or the
-        /// export flips to it on a later invocation of the same command.
+        /// The q-value sidecar is the first-pass one, always: a second-pass sidecar, whether
+        /// SecondPassFDR or the PerFileRescoring worker (its stamp, decoys and plan) wrote it, is
+        /// not read and must not key the export, or the export would change on a later invocation
+        /// of the same command.
         /// </summary>
         private static void AssertTrainingExportKeyFollowsEachRunsInputs()
         {
@@ -205,18 +205,18 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(otherRun, RunKey(runB), @"another run's export does not depend on this run's files");
                 }
 
+                // The export selects on the first-pass run q, whatever second pass exists: a
+                // second-pass sidecar, from SecondPassFDR or from the PerFileRescoring worker with
+                // its decoys and the run's plan under the reconciled parquet's stamp, is not read,
+                // so none of them keys the export, and the first-pass sidecar always does.
                 string pass2 = FdrScoresSidecar.Pass2Path(runA);
                 WritePass2Sidecar(pass2, SecondPassFdrTask.TASK_NAME, 1);
-                Assert.AreEqual(current, RunKey(runA), @"a second-pass sidecar PerFileRescoring did not write is not read, so it must not key the export");
+                Assert.AreEqual(current, RunKey(runA), @"a second-pass sidecar is not read, so it must not key the export");
                 Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out var pass));
                 Assert.AreEqual(FdrScoresSidecar.Pass.FirstPass, pass);
-                // The worker's stamp alone is not enough: the worker also writes the decoys file,
-                // and a sidecar without it is not the worker's complete answer.
                 WritePass2Sidecar(pass2, PerFileRescoreTask.TASK_NAME, 1);
-                Assert.AreEqual(current, RunKey(runA), @"a PerFileRescoring sidecar without the worker's decoys must not flip the export to the second pass");
+                Assert.AreEqual(current, RunKey(runA), @"a PerFileRescoring sidecar must not flip the export to the second pass");
                 Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out pass));
-                // The worker's answer is the pair carrying the stamp of the reconciled parquet
-                // beside it. A pair from a run under another key is not this run's answer.
                 var workerStamp = OspreyVersion.Stamp(PerFileRescoreTask.TASK_NAME, @"key");
                 // One row: an empty entry list writes no parquet at all. Written as Stage 6
                 // writes it - its producer over a Stage 4 parquet - because a reconciled parquet
@@ -238,27 +238,17 @@ namespace pwiz.Osprey.Test
                     null, @"a.mzML", null, PerFileRescoreTask.TASK_NAME, null, null);
                 current = RunKey(runA);
                 Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(runA),
-                    new Dictionary<uint, (double score, uint entryId)>(),
-                    OspreyVersion.Stamp(PerFileRescoreTask.TASK_NAME, @"another-key"));
-                Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out pass),
-                    @"decoys stamped by a run under another key are not this run's worker answer");
-                Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(runA),
                     new Dictionary<uint, (double score, uint entryId)>(), workerStamp);
-                // The run's plan is part of the same answer: the worker writes it, under the same
-                // stamp, just before the rescore it describes.
-                Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out pass),
-                    @"a worker answer without the run's reconciliation plan is not complete");
                 ReconciliationFile.Save(ReconciliationFile.PathForInput(runA),
                     new ReconciliationFile { FormatVersion = ReconciliationFile.CurrentFormatVersion }, workerStamp);
-                Assert.AreEqual(pass2, TrainingExportWriter.RunQPath(runA, out pass), @"the worker's stamp, decoys and plan make the second pass the one read");
-                Assert.AreEqual(FdrScoresSidecar.Pass.SecondPass, pass);
-                Assert.AreNotEqual(current, RunKey(runA), @"switching the sidecar read must invalidate the run's export");
-                current = RunKey(runA);
+                Assert.IsTrue(Pass2FdrSidecar.HasWorkerStamp(runA), @"the worker's stamp, decoys and plan are the worker's complete second pass");
+                Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out pass),
+                    @"the worker's complete second pass is still not what the export selects on");
+                Assert.AreEqual(FdrScoresSidecar.Pass.FirstPass, pass);
+                Assert.AreEqual(current, RunKey(runA), @"the worker's second pass must not key the export");
                 WritePass2Sidecar(pass2, PerFileRescoreTask.TASK_NAME, 2);
-                Assert.AreNotEqual(current, RunKey(runA), @"the worker's sidecar rewritten must invalidate the run's export");
-                current = RunKey(runA);
-                File.WriteAllText(FdrScoresSidecar.Pass1Path(runA), @"no longer read");
-                Assert.AreEqual(current, RunKey(runA), @"the first-pass sidecar is not read once the second pass is");
+                Assert.AreEqual(current, RunKey(runA), @"the worker's sidecar rewritten must not invalidate the run's export");
+                current = AssertRewritesInvalidate(FdrScoresSidecar.Pass1Path(runA), current, () => RunKey(runA));
                 Assert.AreEqual(otherRun, RunKey(runB), @"another run's export does not depend on this run's files");
 
                 Assert.AreEqual(key, task.ValidityKey(ctx), @"the per-run identities belong to the run's export, not the task key (P4)");
@@ -659,6 +649,24 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(expectTrain, key.Contains(train), string.Format(
                     @"{0} must {1} key on the first-pass training selection",
                     task.Name, expectTrain ? @"" : @"NOT "));
+                // The complement's q changed meaning without a byte or mode string moving (issue
+                // #4581), so the two tasks that write it must key on it and the rest must not -
+                // FirstPassFDR least of all, whose re-run costs hours at cohort scale.
+                bool expectStrata = task.Name == PerFileRescoreTask.TASK_NAME ||
+                                    task.Name == SecondPassFdrTask.TASK_NAME;
+                Assert.AreEqual(expectStrata, key.Contains(OspreyEnvironment.PASS2_STRATA_TERM), string.Format(
+                    @"{0} must {1} key on the protein-compact complement competition",
+                    task.Name, expectStrata ? @"" : @"NOT "));
+            }
+            Assert.AreEqual(OspreyEnvironment.PASS2_STRATA_TERM, OspreyEnvironment.Pass2StrataValidityKeySuffix(),
+                @"the default protein-compact mode carries the complement term");
+            using (OspreyEnvironment.OverrideVariables(new Dictionary<string, string>
+                   {
+                       { @"OSPREY_PASS2_QVALUE", OspreyEnvironment.PASS2_QVALUE_TRANSFER }
+                   }))
+            {
+                Assert.AreEqual(string.Empty, OspreyEnvironment.Pass2StrataValidityKeySuffix(),
+                    @"transfer does not compete a complement, so its outputs keep their key");
             }
         }
     }
