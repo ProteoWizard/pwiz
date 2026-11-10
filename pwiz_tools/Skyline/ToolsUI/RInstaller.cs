@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
 using pwiz.Common.SystemUtil;
@@ -471,23 +472,53 @@ namespace pwiz.Skyline.ToolsUI
             return p.StandardOutput.ReadToEnd();
         }
 
-        public const string INTERNET_CHECK_SITE = "www.r-project.org";
+        /// <summary>
+        /// The main CRAN site. Tool package install scripts download from CRAN mirrors, and
+        /// Skyline downloads R itself from here, so reaching it is a better predictor of a
+        /// successful install than reaching the R Project home page.
+        /// </summary>
+        public const string INTERNET_CHECK_SITE = "cran.r-project.org";
 
         /// <summary>
-        /// Returns true if internet connection is available and can reach r-project.org.
+        /// How long the connectivity probe waits before reporting failure. Long enough for a slow
+        /// proxy to answer and for Windows to report a specific connect failure (about 21 seconds),
+        /// but well short of the full HTTP response timeout, which would leave the user waiting minutes.
+        /// </summary>
+        public static readonly TimeSpan INTERNET_CHECK_TIMEOUT = TimeSpan.FromSeconds(30);
+
+        /// <summary>
+        /// Returns true if internet connection is available and can reach CRAN.
         /// Uses a lightweight HEAD request to minimize bandwidth and verify connectivity
-        /// to the R Project site specifically (needed for R package downloads).
+        /// to the site R packages are downloaded from.
         /// </summary>
         /// <param name="errorMessage">If returns false, contains a user-friendly error message explaining the issue</param>
         public static bool CheckForInternetConnection(out string errorMessage)
         {
+            return CheckForInternetConnection(new Uri(@"https://" + INTERNET_CHECK_SITE), INTERNET_CHECK_TIMEOUT, out errorMessage);
+        }
+
+        /// <summary>
+        /// Returns true if a HEAD request to <paramref name="uri"/> succeeds within <paramref name="timeout"/>.
+        /// </summary>
+        /// <param name="uri">The address to probe</param>
+        /// <param name="timeout">How long to wait for an answer before giving up</param>
+        /// <param name="errorMessage">If returns false, contains a user-friendly error message explaining the issue</param>
+        public static bool CheckForInternetConnection(Uri uri, TimeSpan timeout, out string errorMessage)
+        {
             errorMessage = null;
 
-            // Verify we can actually reach r-project.org with a lightweight HEAD request
+            // The client gives up sooner only through its cancellation token
+            using var timeoutSource = new CancellationTokenSource(timeout);
             try
             {
-                using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
-                return httpClient.Head(@"https://" + INTERNET_CHECK_SITE);
+                using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor(timeoutSource.Token));
+                return httpClient.Head(uri);
+            }
+            catch (OperationCanceledException) when (timeoutSource.IsCancellationRequested)
+            {
+                errorMessage = string.Format(ToolsUIResources.RUtil_CheckForInternetConnection_Timed_out_after__0__seconds_,
+                    timeout.TotalSeconds);
+                return false;
             }
             catch (Exception ex)
             {
