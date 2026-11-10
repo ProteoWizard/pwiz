@@ -233,7 +233,7 @@ namespace pwiz.Common.SystemUtil
         public bool Head(Uri uri)
         {
             using var request = CreateRequest(HttpMethod.Head, uri);
-            var response = SendRequest(request);
+            using var response = SendRequest(request);
             return response.IsSuccessStatusCode;
         }
 
