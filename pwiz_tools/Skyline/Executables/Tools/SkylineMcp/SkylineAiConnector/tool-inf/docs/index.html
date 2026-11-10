@@ -166,8 +166,10 @@
             The MCP server requires it to run.</li>
         <li><b>"Skyline does not support AI connections"</b> &mdash; Update to Skyline-daily 26.1.1.083 or
             later. Older versions do not include the MCP server infrastructure.</li>
-        <li><b>Claude Desktop checkbox disabled</b> &mdash; Claude Desktop may not be detected if it has
-            never been launched. Start Claude Desktop at least once, then reopen the AI Connector.</li>
+        <li><b>Claude Desktop checkbox disabled</b> &mdash; Claude Desktop was not found in its usual install
+            locations. Start Claude Desktop at least once, then reopen the AI Connector. If the checkbox is
+            still disabled, create the file <code>%APPDATA%\Claude\claude_desktop_config.json</code>
+            containing <code>{}</code> and reopen the AI Connector.</li>
         <li><b>Codex asks before every Skyline tool call</b> &mdash; This is the Codex default for MCP servers. To
             skip the prompts, add <code>default_tools_approval_mode = "approve"</code> under
             <code>[mcp_servers.skyline]</code> in the Codex <code>config.toml</code>.</li>

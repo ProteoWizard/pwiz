@@ -46,6 +46,7 @@ namespace SkylineAiConnector
         private const string SERVERS_KEY = "servers"; // VS Code uses a different key
         private const string CLAUDE_PROCESS_NAME = "claude";
         private const string WINDOWS_APPS_PATH_MARKER = @"\WindowsApps\";
+        private const string INSTALLER_PATH_MARKER = @"\" + CLAUDE_INSTALLER_FOLDER + @"\";
 
         private static readonly JsonSerializerOptions WRITE_OPTIONS = new JsonSerializerOptions
         {
@@ -121,12 +122,16 @@ namespace SkylineAiConnector
 
         public static void RemoveFromClaudeDesktop()
         {
-            RemoveFromJsonConfig(ClaudeDesktopConfigPath, MCP_SERVERS_KEY);
+            // Nothing to remove without a config file, and writing one here would create the
+            // data folder that makes Claude Desktop look installed.
+            string configPath = ClaudeDesktopConfigPath;
+            if (File.Exists(configPath))
+                RemoveFromJsonConfig(configPath, MCP_SERVERS_KEY);
         }
 
         /// <summary>
-        /// True if any Claude Desktop processes (from the Windows Store app) are running.
-        /// Distinguished from Claude Code by the WindowsApps install path.
+        /// True if any Claude Desktop processes (Windows Store app or standalone installer) are
+        /// running. Distinguished from Claude Code by the install path.
         /// </summary>
         public static bool IsClaudeDesktopRunning()
         {
@@ -719,8 +724,8 @@ namespace SkylineAiConnector
         }
 
         /// <summary>
-        /// Get all Claude Desktop processes (Windows Store app under WindowsApps).
-        /// Excludes Claude Code processes which run from a different path.
+        /// Get all Claude Desktop processes (Windows Store app under WindowsApps, or the standalone
+        /// installer under AnthropicClaude). Excludes Claude Code processes, which run from other paths.
         /// </summary>
         private static Process[] GetClaudeDesktopProcesses()
         {
@@ -730,7 +735,9 @@ namespace SkylineAiConnector
                 try
                 {
                     string path = process.MainModule?.FileName;
-                    if (path != null && path.IndexOf(WINDOWS_APPS_PATH_MARKER, StringComparison.OrdinalIgnoreCase) >= 0)
+                    if (path != null &&
+                        (path.IndexOf(WINDOWS_APPS_PATH_MARKER, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                         path.IndexOf(INSTALLER_PATH_MARKER, StringComparison.OrdinalIgnoreCase) >= 0))
                     {
                         result.Add(process);
                         continue;
