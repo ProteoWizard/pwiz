@@ -43,6 +43,10 @@ namespace pwiz.Skyline.Controls
         {
             InitializeComponent();
             textImWindow.Font = new Font(@"Consolas", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            // Wrap long output lines rather than running them off the right edge. Set here instead
+            // of in the designer because each localized .resx carries its own WordWrap value, which
+            // would leave the wrapping applied only in English.
+            textImWindow.WordWrap = true;
             // Initializes a new TextWriter to write to the textBox instead.
             _textBoxStreamWriter = new TextBoxStreamWriter(textImWindow, this, writerHelper);
             _parent = parent;

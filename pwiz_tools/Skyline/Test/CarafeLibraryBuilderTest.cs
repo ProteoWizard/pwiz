@@ -407,7 +407,7 @@ namespace pwiz.SkylineTest
 
                     CollectionAssert.AreEquivalent(answer_messages[i].ToList(), capture.CapturedMessages.ToList());
               
-                    capture.CapturedMessages.Clear();
+                    capture.Clear();
 
                     var warningModSupports = builder.GetWarningMods();
                     Assert.AreEqual(3, warningModSupports.Where(kvp =>
@@ -498,7 +498,7 @@ namespace pwiz.SkylineTest
                             modifiedSeq, unsupportedMod.Name, CarafeLibraryBuilder.ALPHAPEPTDEEP);
                     }
                     Assert.AreEqual(expectedMsg, capture.CapturedMessages[0]);
-                    capture.CapturedMessages.Clear();
+                    capture.Clear();
 
                     var warningModSupports = builder.GetWarningMods();
                     Assert.AreEqual(1, warningModSupports.Where(kvp =>
