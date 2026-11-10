@@ -391,16 +391,27 @@ namespace pwiz.Osprey.FDR
 
     /// <summary>
     /// Which peptides sit on which proteins, reduced to indices in a canonical order: peptides and
-    /// accessions by ordinal name, so the indices depend on no input order. A peptide is a modified
-    /// sequence, so its charge states are one peptide; a decoy shares its target's base_id, so it
-    /// reads the same entry. Immutable once built, so the file lanes share one.
+    /// accessions by ordinal name, so the indices depend on no input order. A peptide is an
+    /// unmodified sequence, so its charge states and modified forms are one peptide: two forms of
+    /// one sequence are not two pieces of evidence for its protein. A decoy shares its target's
+    /// base_id, so it reads the same entry. Immutable once built, so the file lanes share one.
     /// </summary>
     public sealed class ProteinBestMembership
     {
         private readonly Dictionary<uint, int> _peptideByBaseId;
         private readonly int[][] _proteinsByPeptide;
 
-        /// <summary>One target library entry: its base_id, modified sequence and accessions.</summary>
+        /// <summary>
+        /// The membership of a library's targets, each grouped by its unmodified
+        /// <see cref="LibraryEntry.Sequence"/>, not its modified sequence.
+        /// </summary>
+        public static ProteinBestMembership FromLibrary(IEnumerable<LibraryEntry> library, ulong? shuffleSeed = null)
+        {
+            return Build(library.Where(entry => !entry.IsDecoy).Select(entry =>
+                new Precursor(entry.Id, entry.Sequence, entry.ProteinIds)), shuffleSeed);
+        }
+
+        /// <summary>One target library entry: its base_id, unmodified sequence and accessions.</summary>
         public readonly struct Precursor
         {
             public uint BaseId { get; }

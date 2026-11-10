@@ -2126,10 +2126,8 @@ namespace pwiz.Osprey.Tasks
         {
             if (!config.ProteinBest)
                 return null;
-            var precursors = library.Where(entry => !entry.IsDecoy).Select(entry =>
-                new ProteinBestMembership.Precursor(entry.Id, entry.ModifiedSequence, entry.ProteinIds));
             ulong? shuffleSeed = OspreyEnvironment.ProteinBestShuffle ? OspreyEnvironment.FdrSeed ?? 42UL : null;
-            return new ProteinBestRequest(ProteinBestMembership.Build(precursors, shuffleSeed),
+            return new ProteinBestRequest(ProteinBestMembership.FromLibrary(library, shuffleSeed),
                 OspreyEnvironment.PROTEIN_BEST_TOP_N, OspreyEnvironment.ProteinBestDecoyOwn, persistRun);
         }
 

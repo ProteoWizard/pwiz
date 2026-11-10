@@ -60,6 +60,7 @@ namespace pwiz.Osprey.Test
             AssertShuffleKeepsGroupSizes();
             AssertOrderIndependentBits();
             AssertSettingsKey();
+            AssertModifiedFormsAreOnePeptide();
         }
 
         /// <summary>A run: rows of (base_id, is decoy, prior score).</summary>
@@ -281,6 +282,30 @@ namespace pwiz.Osprey.Test
                 OspreyEnvironment.ProteinBestValidityKeySuffix(1, false, true)
             };
             Assert.AreEqual(4, keys.Count, string.Join(@" ", keys));
+        }
+
+        private static void AssertModifiedFormsAreOnePeptide()
+        {
+            // Two modified forms of PEPTMIDE (1, 2) and OTHERK (3) on P1: the forms are one peptide,
+            // so neither is evidence for the other, and they count once as OTHERK's siblings.
+            var library = new[]
+            {
+                new LibraryEntry(1, @"PEPTMIDE", @"PEPTMIDE", 2, 500, 10) { ProteinIds = new[] { @"P1" } },
+                new LibraryEntry(2, @"PEPTMIDE", @"PEPTM[Oxidation]IDE", 2, 508, 10) { ProteinIds = new[] { @"P1" } },
+                new LibraryEntry(3, @"OTHERK", @"OTHERK", 2, 400, 12) { ProteinIds = new[] { @"P1" } },
+                new LibraryEntry(1 | LibraryEntry.DECOY_ID_BIT, @"PEPTMIDE", @"PEPTMIDE", 2, 500, 10)
+                    { ProteinIds = new[] { @"P1" }, IsDecoy = true }
+            };
+            var membership = ProteinBestMembership.FromLibrary(library);
+            Assert.AreEqual(2, membership.PeptideCount, @"the two forms of PEPTMIDE are one peptide");
+            // Decoy precursors 1 and 3 at 1 and 3 make a floor of 2.
+            var run = new Run().Target(1, 100).Target(2, 90).Target(3, 5).Decoy(1, 1).Decoy(3, 3);
+            var top1 = run.Column(1, false, membership);
+            Assert.AreEqual(5, top1[0], @"PEPTMIDE reads OTHERK, not its oxidized form");
+            Assert.AreEqual(5, top1[1], @"the oxidized form reads OTHERK, not PEPTMIDE");
+            Assert.AreEqual(100, top1[2], @"OTHERK reads the best form of PEPTMIDE");
+            var top2 = run.Column(2, false, membership);
+            Assert.AreEqual((100 + 2) / 2.0, top2[2], TOLERANCE, @"PEPTMIDE counts once, padded with the floor");
         }
 
         private static int[] ProteinSizes(ProteinBestMembership membership)
