@@ -1,6 +1,7 @@
 /*
  * Original author: Brian Pratt <bspratt .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2014 University of Washington - Seattle, WA
  * 
@@ -19,9 +20,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
@@ -1130,6 +1135,7 @@ namespace CommonTest
 
             TestProteinSearchInfoIntersection();
             TestUniprotErrorBody();
+            TestWebServiceRateLimit();
 
             DoTestFastaImport(false, false);  // Run with simulated web access
             DoTestFastaImport(false, true); // Run with simulated web access, using negative tests
@@ -1180,12 +1186,320 @@ namespace CommonTest
                 "A response with no recognizable header is unusable, not an answer of 'no such protein'");
         }
 
+        /// <summary>
+        /// UniProt rate-limits its REST API, answering HTTP 429 with a Retry-After header that says
+        /// how long to stay away. Treating that like any other transient error - retry at once, then
+        /// end the pass for the background loader to reschedule - only meets another 429, and the
+        /// rescheduled passes keep asking for as long as the limit holds. The caller hangs, and the
+        /// requests keep the limit in force.
+        /// </summary>
+        private void TestWebServiceRateLimit()
+        {
+            var retryAfter = TimeSpan.FromSeconds(7);
+
+            // Seam on, as automated tests opt into: give up after a bounded number of refusals,
+            // waiting as asked before each new attempt but not before giving up
+            var abandoned = RunRateLimitedLookup(retryAfter, giveUpOnUnresponsiveWebService: true,
+                out var abandonedCompleted, out var abandonedWaits);
+            Assert.AreEqual(0, abandoned.Count(p => p.GetProteinMetadata().NeedsSearch()),
+                "A rate-limited web service must not leave proteins pending forever");
+            Assert.IsTrue(abandoned.All(p => p.FailureReason == WebSearchFailureReason.rate_limited));
+            Assert.IsTrue(abandoned.All(p => p.Status == ProteinSearchInfo.SearchStatus.failure));
+            Assert.AreEqual(abandoned.Count, abandonedCompleted.Count);
+            Assert.AreEqual(WebEnabledFastaImporter.MAX_CONSECUTIVE_WEBSERVICE_FAILURES - 1, abandonedWaits.Count);
+            Assert.IsTrue(abandonedWaits.All(wait => wait == retryAfter));
+
+            // Seam off, as production runs: the pass ends retry-eligible, but only after waiting as
+            // asked, so the pass the loader schedules next does not ask again while the limit holds
+            var pending = RunRateLimitedLookup(retryAfter, giveUpOnUnresponsiveWebService: false,
+                out var pendingCompleted, out var pendingWaits);
+            Assert.AreEqual(pending.Count, pending.Count(p => p.GetProteinMetadata().NeedsSearch()));
+            Assert.IsTrue(pending.All(p => p.Status == ProteinSearchInfo.SearchStatus.unsearched));
+            Assert.IsTrue(pending.Any(p => p.FailureReason == WebSearchFailureReason.rate_limited));
+            Assert.AreEqual(0, pendingCompleted.Count);
+            Assert.AreEqual(1, pendingWaits.Count);
+            AssertWaitNear(retryAfter, pendingWaits[0]);
+
+            // A 429 that does not say how long to wait still gets a wait - the default, as far as
+            // the seam's cap allows
+            RunRateLimitedLookup(null, giveUpOnUnresponsiveWebService: true, out _, out var defaultWaits);
+            Assert.AreEqual(Min(WebEnabledFastaImporter.DEFAULT_RATE_LIMIT_DELAY, WebEnabledFastaImporter.MAX_TEST_RATE_LIMIT_DELAY),
+                defaultWaits.Single());
+
+            // A long demand is capped: in normal use because the wait holds a lock the UI thread can
+            // need, and in a test so a service asking for minutes cannot push it past its timeout
+            var longRetryAfter = TimeSpan.FromHours(1);
+            RunRateLimitedLookup(longRetryAfter, giveUpOnUnresponsiveWebService: false, out _, out var cappedWaits);
+            Assert.AreEqual(WebEnabledFastaImporter.MAX_RATE_LIMIT_DELAY, cappedWaits.Single());
+            RunRateLimitedLookup(longRetryAfter, giveUpOnUnresponsiveWebService: true, out _, out var testWaits);
+            Assert.AreEqual(WebEnabledFastaImporter.MAX_TEST_RATE_LIMIT_DELAY, testWaits.Single());
+            TestRateLimitOutlastsPass(longRetryAfter);
+            TestRateLimitIsPerService();
+            TestRateLimitNoWaitAfterProgress();
+
+            // Retry-After of zero (or a time already past) still waits, or the next pass asks again at once
+            RunRateLimitedLookup(TimeSpan.Zero, giveUpOnUnresponsiveWebService: false, out _, out var zeroWaits);
+            AssertWaitNear(WebEnabledFastaImporter.MIN_RATE_LIMIT_DELAY, zeroWaits.Single());
+
+            TestWebAccessProbeRateLimited(retryAfter);
+            TestRateLimitWaitCancellation();
+            TestRetryAfterHeader();
+            TestEntrezRequestSpacing();
+        }
+
+        /// <summary>
+        /// NCBI refuses a fourth Entrez request within a second when no API key is sent, and each
+        /// Entrez lookup is two requests, the summary and then the full records. Every request,
+        /// not just every lookup, must come at least the request interval after the one before -
+        /// including the first request of an importer created right after another finished.
+        /// </summary>
+        private static void TestEntrezRequestSpacing()
+        {
+            const int IMPORTER_COUNT = 2;
+            var provider = new EntrezRequestTimingProvider();
+            for (int importerIndex = 0; importerIndex < IMPORTER_COUNT; importerIndex++)
+            {
+                var proteins = new[] { "XP_915497", "NP_313205" }
+                    .Select((accession, i) => new ProteinSearchInfo(
+                        new DbProteinName(null, new ProteinMetadata(accession, string.Empty, null, null, null, null,
+                            WebEnabledFastaImporter.ENTREZ_TAG + accession)), 100 * (i + 1)))
+                    .ToList();
+                var importer = new WebEnabledFastaImporter(provider)
+                {
+                    GiveUpOnUnresponsiveWebService = true
+                };
+                // The lookup yields lazily, so enumerate it to make it run
+                _ = importer.DoWebserviceLookup(proteins, new SilentProgressMonitor(), false).ToList();
+            }
+
+            var times = provider.RequestTimes;
+            Assert.IsTrue(times.Count >= 2 * IMPORTER_COUNT, $"Expected the summary and full requests of each importer, but saw {times.Count}");
+            // Allow for the clock and the sleep not agreeing to the millisecond
+            var shortestGap = WebEnabledFastaImporter.ENTREZ_REQUEST_INTERVAL - TimeSpan.FromMilliseconds(20);
+            for (int i = 1; i < times.Count; i++)
+            {
+                var gap = times[i] - times[i - 1];
+                Assert.IsTrue(gap >= shortestGap, $"Entrez request {i + 1} came {gap.TotalMilliseconds}ms after the one before");
+            }
+        }
+
+        /// <summary>
+        /// A service may ask for a longer wait than one pass will spend. The passes that follow - from
+        /// any importer, as the metadata and digest loaders each have their own - keep waiting until
+        /// the time it asked for has passed, and do not ask again before then.
+        /// </summary>
+        private static void TestRateLimitOutlastsPass(TimeSpan retryAfter)
+        {
+            using var helper = new HttpClientTestHelper(CreateTooManyRequestsException(retryAfter));
+            var provider = new RateLimitRecordingWebSearchProvider();
+            RunUniprotLookup(provider, false, out _);
+            // A new importer, as each loader has its own
+            var proteins = RunUniprotLookup(provider, false, out var completed);
+
+            Assert.AreEqual(1, provider.RequestCount, "A pass must not ask again before the time the service asked for");
+            Assert.AreEqual(2, provider.Waits.Count);
+            Assert.IsTrue(provider.Waits.All(wait => wait == WebEnabledFastaImporter.MAX_RATE_LIMIT_DELAY));
+            Assert.AreEqual(0, completed.Count);
+            Assert.IsTrue(proteins.All(p => p.GetProteinMetadata().NeedsSearch()));
+
+            // Honored as asked, up to a limit: a mistaken header must not end lookups for the session
+            Assert.IsTrue(provider.RateLimits.GetRemaining(WebEnabledFastaImporter.UNIPROTKB_TAG) <= WebEnabledFastaImporter.MAX_RATE_LIMIT_HONORED,
+                $"A Retry-After of {retryAfter} kept the service closed for longer than {WebEnabledFastaImporter.MAX_RATE_LIMIT_HONORED}");
+
+            // In normal use each importer has its own provider, so the limit is shared through them
+            Assert.AreSame(new WebEnabledFastaImporter.WebSearchProvider().RateLimits,
+                new WebEnabledFastaImporter.WebSearchProvider().RateLimits);
+        }
+
+        /// <summary>
+        /// A rate limit on Entrez must not hold up searches that go to UniProt - neither one met in an
+        /// earlier pass nor one met in this pass - and the one-time check for internet access must not
+        /// ask a service that is refusing requests.
+        /// </summary>
+        private static void TestRateLimitIsPerService()
+        {
+            var retryAfter = TimeSpan.FromMinutes(5);
+            using var helper = new HttpClientTestHelper(CreateTooManyRequestsException(retryAfter));
+
+            // Entrez already refusing: it is not asked, and UniProt is asked before any waiting
+            var provider = new RateLimitRecordingWebSearchProvider();
+            provider.RateLimits.Close(WebEnabledFastaImporter.ENTREZ_TAG, retryAfter);
+            var proteins = RunEntrezAndUniprotLookup(provider);
+            Assert.AreEqual(1, provider.RequestCount, "UniProt must still be searched while Entrez is refusing requests");
+            Assert.IsTrue(proteins.All(p => p.GetProteinMetadata().NeedsSearch()));
+            AssertWaitedOnceAfterRequests(provider, 1);
+
+            // UniProt is now refusing too. Its refusal shows it is reachable, without asking again.
+            var probe = new WebEnabledFastaImporter(provider);
+            Assert.IsTrue(probe.HasWebAccess(), "A service refusing requests is still a reachable one");
+            Assert.AreEqual(1, provider.RequestCount, "The access check must not ask a service that is refusing requests");
+
+            // Entrez refuses in this pass: UniProt is still asked, and the waiting comes after both
+            provider = new RateLimitRecordingWebSearchProvider();
+            proteins = RunEntrezAndUniprotLookup(provider);
+            Assert.AreEqual(2, provider.RequestCount, "An Entrez refusal in this pass must not keep UniProt from being searched");
+            Assert.IsTrue(proteins.All(p => p.GetProteinMetadata().NeedsSearch()));
+            AssertWaitedOnceAfterRequests(provider, 2);
+
+            // Nothing could be asked: the pass waits only until the first service will take a request
+            var shortRetryAfter = TimeSpan.FromSeconds(3);
+            provider = new RateLimitRecordingWebSearchProvider();
+            provider.RateLimits.Close(WebEnabledFastaImporter.ENTREZ_TAG, retryAfter);
+            provider.RateLimits.Close(WebEnabledFastaImporter.UNIPROTKB_TAG, shortRetryAfter);
+            RunEntrezAndUniprotLookup(provider);
+            Assert.AreEqual(0, provider.RequestCount);
+            Assert.AreEqual(1, provider.Waits.Count);
+            AssertWaitNear(shortRetryAfter, provider.Waits[0]);
+        }
+
+        /// <summary>
+        /// A pass that resolved proteins returns them at once, with no wait for a service that is
+        /// still refusing: the next pass skips that service again, and the caller, which asks for
+        /// one batch at a time, would otherwise be slowed by it on every batch.
+        /// </summary>
+        private static void TestRateLimitNoWaitAfterProgress()
+        {
+            const string uniprotBody =
+                "Entry\tGene Names\tOrganism\tLength\tEntry Name\tProtein names\tReviewed\n" +
+                "Q96K55\tZNF664\tHomo sapiens (Human)\t200\tZN664_HUMAN\tZinc finger protein 664\treviewed\n";
+            using var helper = HttpClientTestHelper.SimulateSuccessfulDownload(uniprotBody);
+            var provider = new RateLimitRecordingWebSearchProvider();
+            provider.RateLimits.Close(WebEnabledFastaImporter.ENTREZ_TAG, TimeSpan.FromMinutes(5));
+            var proteins = RunEntrezAndUniprotLookup(provider);
+            Assert.AreEqual(ProteinSearchInfo.SearchStatus.success, proteins[1].Status);
+            Assert.IsTrue(proteins[0].GetProteinMetadata().NeedsSearch());
+            Assert.AreEqual(0, provider.Waits.Count, "A pass that made progress must not wait on a service still refusing requests");
+        }
+
+        /// <summary>
+        /// A wait read from a rate limit's remaining time, a little less than the time it was set for
+        /// </summary>
+        private static void AssertWaitNear(TimeSpan expected, TimeSpan actual)
+        {
+            Assert.IsTrue(actual <= expected && actual > expected - TimeSpan.FromSeconds(1),
+                $"Expected a wait of about {expected}, but saw {actual}");
+        }
+
+        private static IList<ProteinSearchInfo> RunEntrezAndUniprotLookup(WebEnabledFastaImporter.WebSearchProvider provider)
+        {
+            var proteins = new[]
+            {
+                new ProteinSearchInfo(new DbProteinName(null, new ProteinMetadata(@"XP_915497", string.Empty, null, null, null, null,
+                    WebEnabledFastaImporter.ENTREZ_TAG + @"XP_915497")), 100),
+                new ProteinSearchInfo(new DbProteinName(null, new ProteinMetadata(@"Q96K55", string.Empty, null, null, null, null,
+                    WebEnabledFastaImporter.UNIPROTKB_TAG + @"Q96K55")), 200)
+            };
+            var importer = new WebEnabledFastaImporter(provider);
+            // The lookup yields lazily, so enumerate it to make it run
+            _ = importer.DoWebserviceLookup(proteins, new SilentProgressMonitor(), false).ToList();
+            return proteins;
+        }
+
+        private static void AssertWaitedOnceAfterRequests(RateLimitRecordingWebSearchProvider provider, int requestCount)
+        {
+            Assert.AreEqual(1, provider.Waits.Count, "A pass waits on rate limits once, however many services refused");
+            Assert.AreEqual(WebEnabledFastaImporter.MAX_RATE_LIMIT_DELAY, provider.Waits[0]);
+            Assert.AreEqual(requestCount, provider.RequestCountsAtWaits[0],
+                "Waiting on one service's rate limit must not hold up the requests to another");
+        }
+
+        /// <summary>
+        /// The real wait, not a recorded one: cancelling while waiting out a rate limit must end the
+        /// wait promptly, and must not lead to another request or to the proteins being given up on -
+        /// they stay pending for a later lookup.
+        /// </summary>
+        private static void TestRateLimitWaitCancellation()
+        {
+            var longRetryAfter = TimeSpan.FromMinutes(5);
+            foreach (var giveUp in new[] { true, false })
+            {
+                using var helper = new HttpClientTestHelper(CreateTooManyRequestsException(longRetryAfter));
+                var monitor = new CancelDuringWaitProgressMonitor();
+                var provider = new CancelDuringRateLimitWaitProvider(monitor);
+                var proteins = RunUniprotLookup(provider, giveUp, out var completed, monitor);
+
+                Assert.AreEqual(1, provider.WaitTimes.Count);
+                Assert.IsTrue(provider.WaitTimes[0] < TimeSpan.FromSeconds(5),
+                    $"Cancelling took {provider.WaitTimes[0]} to end a wait of {longRetryAfter}");
+                Assert.AreEqual(1, provider.RequestCount, "A cancelled lookup must not ask again");
+                Assert.AreEqual(0, completed.Count);
+                Assert.IsTrue(proteins.All(p => p.GetProteinMetadata().NeedsSearch()));
+                Assert.IsTrue(proteins.All(p => p.Status == ProteinSearchInfo.SearchStatus.unsearched));
+            }
+        }
+
+        /// <summary>
+        /// The one-time check for internet access runs on a background loader with no way to cancel
+        /// it, and its answer is kept for the life of the importer. A refusal for asking too often
+        /// still proves the service is reachable, so it must neither wait nor be taken as "no internet",
+        /// which would turn off protein metadata lookups for the rest of the session.
+        /// </summary>
+        private static void TestWebAccessProbeRateLimited(TimeSpan retryAfter)
+        {
+            using var helper = new HttpClientTestHelper(CreateTooManyRequestsException(retryAfter));
+            var provider = new RateLimitRecordingWebSearchProvider();
+            var importer = new WebEnabledFastaImporter(provider);
+            Assert.IsTrue(importer.HasWebAccess(), "A rate-limited web service is still a reachable one");
+            Assert.AreEqual(0, provider.Waits.Count, "The access check cannot be cancelled, so it must not wait");
+        }
+
+        /// <summary>
+        /// Retry-After comes as a number of seconds or as a date. A date is measured from the
+        /// server's own clock, so a skewed local clock does not shrink the wait to nothing.
+        /// </summary>
+        private static void TestRetryAfterHeader()
+        {
+            using var seconds = new HttpResponseMessage(HttpStatusCode.TooManyRequests);
+            seconds.Headers.RetryAfter = new RetryConditionHeaderValue(TimeSpan.FromSeconds(60));
+            Assert.AreEqual(TimeSpan.FromSeconds(60), NetworkRequestException.GetRetryAfter(seconds.Headers));
+
+            // Server time a day in the past: measured against the local clock this would be no wait at all
+            var serverNow = DateTimeOffset.UtcNow.AddDays(-1);
+            using var date = new HttpResponseMessage(HttpStatusCode.TooManyRequests);
+            date.Headers.Date = serverNow;
+            date.Headers.RetryAfter = new RetryConditionHeaderValue(serverNow.AddSeconds(90));
+            Assert.AreEqual(TimeSpan.FromSeconds(90), NetworkRequestException.GetRetryAfter(date.Headers));
+
+            using var none = new HttpResponseMessage(HttpStatusCode.TooManyRequests);
+            Assert.IsNull(NetworkRequestException.GetRetryAfter(none.Headers));
+        }
+
+        private static IList<ProteinSearchInfo> RunRateLimitedLookup(TimeSpan? retryAfter,
+            bool giveUpOnUnresponsiveWebService, out IList<ProteinSearchInfo> completed, out IList<TimeSpan> waits)
+        {
+            using var helper = new HttpClientTestHelper(CreateTooManyRequestsException(retryAfter));
+
+            var provider = new RateLimitRecordingWebSearchProvider();
+            var proteins = RunUniprotLookup(provider, giveUpOnUnresponsiveWebService, out completed);
+            waits = provider.Waits;
+            return proteins;
+        }
+
+        private static TimeSpan Min(TimeSpan a, TimeSpan b)
+        {
+            return a < b ? a : b;
+        }
+
+        private static NetworkRequestException CreateTooManyRequestsException(TimeSpan? retryAfter)
+        {
+            var uri = new Uri(@"https://rest.uniprot.org/uniprotkb/search");
+            const string message = @"Response status code does not indicate success: 429 (Too Many Requests).";
+            return new NetworkRequestException(message, HttpStatusCode.TooManyRequests, uri,
+                new HttpRequestException(message), retryAfter: retryAfter);
+        }
+
         private static IList<ProteinSearchInfo> RunUniprotErrorBodyLookup(string responseBody,
             bool giveUpOnUnresponsiveWebService, out IList<ProteinSearchInfo> completed)
         {
             using var helper = HttpClientTestHelper.SimulateSuccessfulDownload(responseBody);
             Assert.IsNotNull(helper);
+            return RunUniprotLookup(new QuickFailWebSearchProvider(), giveUpOnUnresponsiveWebService, out completed);
+        }
 
+        private static IList<ProteinSearchInfo> RunUniprotLookup(WebEnabledFastaImporter.WebSearchProvider provider,
+            bool giveUpOnUnresponsiveWebService, out IList<ProteinSearchInfo> completed,
+            IProgressMonitor progressMonitor = null)
+        {
             // Accessions from the tail of human_and_yeast_no_metadata.protdb that go to the web.
             // UniProt requests start one protein at a time, so only the first reaches the web before
             // the pass ends; the other two are here to show that giving up completes every protein
@@ -1198,12 +1512,12 @@ namespace CommonTest
                         WebEnabledFastaImporter.UNIPROTKB_TAG + accession)), lengths[i]))
                 .ToList();
 
-            var importer = new WebEnabledFastaImporter(new QuickFailWebSearchProvider())
+            var importer = new WebEnabledFastaImporter(provider)
             {
                 GiveUpOnUnresponsiveWebService = giveUpOnUnresponsiveWebService
             };
             // The lookup yields lazily, so enumerate it to make it run
-            completed = importer.DoWebserviceLookup(proteins, new SilentProgressMonitor(), false).ToList();
+            completed = importer.DoWebserviceLookup(proteins, progressMonitor ?? new SilentProgressMonitor(), false).ToList();
             return proteins;
         }
 
@@ -1691,6 +2005,111 @@ namespace CommonTest
             {
                 return 1; // try only once
             }
+
+            // A refusal faked for one test must not hold up the next
+            public override WebEnabledFastaImporter.RateLimitGate RateLimits { get; } = new WebEnabledFastaImporter.RateLimitGate();
+        }
+
+        /// <summary>
+        /// Records each wait a rate limit asks for, instead of sleeping through it, and counts the
+        /// requests made.
+        /// </summary>
+        private class RateLimitRecordingWebSearchProvider : QuickFailWebSearchProvider
+        {
+            public List<TimeSpan> Waits { get; } = new List<TimeSpan>();
+            public List<int> RequestCountsAtWaits { get; } = new List<int>();
+            public int RequestCount { get; private set; }
+
+            public override Stream GetWebResponseStream(string url, IProgressMonitor progressMonitor, int timeout)
+            {
+                RequestCount++;
+                return base.GetWebResponseStream(url, progressMonitor, timeout);
+            }
+
+            // Entrez requests come this way
+            public override System.Xml.XmlTextReader GetXmlTextReader(string url, IProgressMonitor progressMonitor, int timeout)
+            {
+                RequestCount++;
+                return base.GetXmlTextReader(url, progressMonitor, timeout);
+            }
+
+            public override void WaitForRateLimit(TimeSpan delay, IProgressMonitor progressMonitor)
+            {
+                Waits.Add(delay);
+                RequestCountsAtWaits.Add(RequestCount);
+            }
+        }
+
+        /// <summary>
+        /// Runs the real rate-limit wait, starting the monitor's countdown to cancellation as the
+        /// wait begins, and counts the requests made.
+        /// </summary>
+        private class CancelDuringRateLimitWaitProvider : QuickFailWebSearchProvider
+        {
+            private readonly CancelDuringWaitProgressMonitor _monitor;
+
+            public CancelDuringRateLimitWaitProvider(CancelDuringWaitProgressMonitor monitor)
+            {
+                _monitor = monitor;
+            }
+
+            public int RequestCount { get; private set; }
+            public List<TimeSpan> WaitTimes { get; } = new List<TimeSpan>();
+
+            public override Stream GetWebResponseStream(string url, IProgressMonitor progressMonitor, int timeout)
+            {
+                RequestCount++;
+                return base.GetWebResponseStream(url, progressMonitor, timeout);
+            }
+
+            public override void WaitForRateLimit(TimeSpan delay, IProgressMonitor progressMonitor)
+            {
+                var stopwatch = Stopwatch.StartNew();
+                _monitor.StartCountdown();
+                base.WaitForRateLimit(delay, progressMonitor);
+                WaitTimes.Add(stopwatch.Elapsed);
+            }
+        }
+
+        /// <summary>
+        /// Polite, as the real provider is, and notes when each Entrez request goes out, answering
+        /// each with an empty result instead of going to the web.
+        /// </summary>
+        private class EntrezRequestTimingProvider : QuickFailWebSearchProvider
+        {
+            private readonly Stopwatch _clock = Stopwatch.StartNew();
+
+            public List<TimeSpan> RequestTimes { get; } = new List<TimeSpan>();
+
+            public override System.Xml.XmlTextReader GetXmlTextReader(string url, IProgressMonitor progressMonitor, int timeout)
+            {
+                RequestTimes.Add(_clock.Elapsed);
+                return new System.Xml.XmlTextReader(new StringReader(@"<eSummaryResult></eSummaryResult>"));
+            }
+        }
+
+        /// <summary>
+        /// Not cancelled until a countdown, started once a wait is under way, has run out - so the
+        /// request before the wait goes out normally and the cancellation lands mid-wait.
+        /// </summary>
+        private class CancelDuringWaitProgressMonitor : IProgressMonitor
+        {
+            private static readonly TimeSpan CANCEL_AFTER = TimeSpan.FromMilliseconds(300);
+            private Stopwatch _countdown;
+
+            public void StartCountdown()
+            {
+                _countdown = Stopwatch.StartNew();
+            }
+
+            public bool IsCanceled => _countdown != null && _countdown.Elapsed >= CANCEL_AFTER;
+
+            public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+            {
+                return UpdateProgressResponse.normal;
+            }
+
+            public bool HasUI => false;
         }
 
         /// <summary>

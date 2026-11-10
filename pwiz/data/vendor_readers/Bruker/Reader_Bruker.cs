@@ -256,7 +256,7 @@ public sealed class Reader_Bruker : IReader
         (string id, CVID cv, string? softwareName, string version) = format switch
         {
             BrukerFormat.Baf => ("BAF2SQL", CVID.MS_Bruker_software, "BAF2SQL", "2.7.300.20-112"),
-            BrukerFormat.Tdf or BrukerFormat.Tsf => ("TIMS_SDK", CVID.MS_Bruker_software, "TIMS SDK", "2.21.104.32"),
+            BrukerFormat.Tdf or BrukerFormat.Tsf => ("TIMS_SDK", CVID.MS_Bruker_software, "TIMS SDK", "5.2.202.1"),
             // YEP / FID go through CompassXtract (Windows-only in-process COM); cpp's default
             // branch, Reader_Bruker.cpp:144-148, hardcodes the same 3.1.7.
             _ => ("CompassXtract", CVID.MS_CompassXtract, null, "3.1.7"),
