@@ -49,8 +49,18 @@ namespace pwiz.Osprey.Test
         /// as digested by <see cref="AnalysisDigest"/>: the value the default analysis produced at
         /// c0c2bcd43c, before the column existed, captured there with the same digest. Off must stay
         /// that analysis bit for bit; a reviewed change to the one-round first pass recaptures it.
+        /// One value per OS: scoring still calls the platform Math.Log10, Math.Exp and Math.Log for
+        /// several features (peak_apex, median polish), which differ by an ulp between the Windows
+        /// and Linux C libraries, so the analysis is reproducible on each OS but not across them.
+        /// The Linux value is this test's on Linux, whose off outputs match c0c2bcd43c's default byte for byte there.
         /// </summary>
-        private const string PRE_PROTEIN_BEST_DIGEST = @"484FA69B75AF6301E5B9570419C846170FB71A2288A270D678EC1C2BFEEAF8AE";
+        private const string PRE_PROTEIN_BEST_DIGEST_WINDOWS = @"484FA69B75AF6301E5B9570419C846170FB71A2288A270D678EC1C2BFEEAF8AE";
+        private const string PRE_PROTEIN_BEST_DIGEST_LINUX = @"0D193CB94A4B6AB2EF20E3F4F3756E6953506091397E1C27CDCE257668093F69";
+
+        private static string PreProteinBestDigest
+        {
+            get { return OperatingSystem.IsWindows() ? PRE_PROTEIN_BEST_DIGEST_WINDOWS : PRE_PROTEIN_BEST_DIGEST_LINUX; }
+        }
 
         /// <summary>
         /// The protein-best column (<c>--protein-best</c>, on by default) through the whole pipeline
@@ -93,7 +103,7 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// <c>--protein-best off</c>, with no two-round training asked for, is the one-round first
         /// pass that was the default before the column: the same scores and q-values in both passes,
-        /// to the bit, as <see cref="PRE_PROTEIN_BEST_DIGEST"/> pins, and no column written.
+        /// to the bit, as <see cref="PreProteinBestDigest"/> pins, and no column written.
         /// </summary>
         private void AssertProteinBestOffIsPreColumnAnalysis()
         {
@@ -102,7 +112,7 @@ namespace pwiz.Osprey.Test
             string log = RunAnalysis(offDir, DataInputs(), variables, ProteinBestArgs(false));
             AssertProteinBestLogged(log, false, variables);
             Assert.AreEqual(0, ProteinBestColumns(offDir).Length, @"off writes no column");
-            Assert.AreEqual(PRE_PROTEIN_BEST_DIGEST, AnalysisDigest(offDir), @"off is the analysis before the column");
+            Assert.AreEqual(PreProteinBestDigest, AnalysisDigest(offDir), @"off is the analysis before the column");
         }
 
         /// <summary>
