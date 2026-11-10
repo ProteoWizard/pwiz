@@ -1799,9 +1799,9 @@ namespace pwiz.Osprey.Tasks
                 passNumber, ms2Calibration.Mean, unitText, ms2Calibration.SD, 3.0 * ms2Calibration.SD, allMs2Errors.Count));
             if (UsesMs2OffsetCurve(config))
             {
-                // Unit-resolution MS2: an offset beyond half the fragment tolerance, which the mean
-                // cannot see, is calibrated by the m/z-dependent curve instead. An offset within it,
-                // or too few fragments to fit one: the mean stays. (Experimental ppm curve: any offset.)
+                // Unit-resolution MS2 (and the experimental ppm curve): the m/z-dependent curve, at any
+                // offset. Too few fragments to fit one: the mean stays, warned about at unit resolution
+                // when the offset is beyond half the fragment tolerance, which the mean cannot see.
                 var peaks = new List<Ms2FragmentPeaks>();
                 foreach (var m in contributingMatches)
                 {
@@ -1817,15 +1817,10 @@ namespace pwiz.Osprey.Tasks
                         OspreyTasksResources.Calibrator_AggregateMassCalibrations_MS2_m_z_offset_curve__pass__0____offset__1__to__2___3___SD__4___3___3_SD__5___3___n__6__fragments_,
                         passNumber, curve.OffsetCurve.Min(), curve.OffsetCurve.Max(), unitText, curve.SD, 3.0 * curve.SD, curve.Count));
                 }
-                else if (!double.IsNaN(shift) && Math.Abs(shift) <= widths.MeanWindow)
+                else if (!double.IsNaN(shift) && (widths.MeanWindow < 0 || Math.Abs(shift) <= widths.MeanWindow))
                 {
-                    _ctx.LogVerbose(string.Format(
-                        OspreyTasksResources.Calibrator_AggregateMassCalibrations_MS2_m_z_offset__pass__0____shift__1___2__within_half_the__3___2__tolerance__the_mean_is_kept,
-                        passNumber, shift, unitText, config.FragmentTolerance.Tolerance));
-                }
-                else if (!double.IsNaN(shift) && widths.MeanWindow < 0)
-                {
-                    // The ppm curve, used at any shift: too few fragments near the shift to fit it.
+                    // Too few fragments near the shift to fit the curve: the mean stays, and sees this
+                    // offset (or the curve is the ppm one, which has no such limit).
                     _ctx.LogVerbose(string.Format(
                         OspreyTasksResources.Calibrator_AggregateMassCalibrations_MS2_m_z_offset_curve__pass__0____too_few_fragments_near_the__1___2__shift_to_fit_a_curve__the_mean_is_kept,
                         passNumber, shift, unitText));

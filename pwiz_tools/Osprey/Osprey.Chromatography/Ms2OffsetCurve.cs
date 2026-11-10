@@ -143,16 +143,17 @@ namespace pwiz.Osprey.Chromatography
         public const double M_PLUS_1_FRACTION = 0.5;
 
         /// <summary>
-        /// The share of the fragment tolerance within which the offset is left to the mean: an
-        /// offset inside half the window the mean is taken over is seen whole by it, and the mean's
-        /// calibration is kept, as Rust osprey computes it.
+        /// The share of the fragment tolerance within which the mean sees an offset whole: an offset
+        /// inside half the window the mean is taken over. The curve is used at any offset; where too
+        /// few fragments lie near a larger one to fit it, the mean the calibration falls back to
+        /// cannot see that offset, and the calibrator warns.
         /// </summary>
         public const double MEAN_WINDOW_FRACTION = 0.5;
 
         /// <summary>
         /// The widths an offset curve is found with, in the unit of its fragments' offsets: the
         /// shift scan's range, step and hit tolerance, the association half-width, whether the
-        /// shift is checked for the M+1, and the shift within which the mean is kept.
+        /// shift is checked for the M+1, and the shift beyond which the mean cannot see it.
         /// </summary>
         public sealed class Widths
         {
@@ -170,8 +171,8 @@ namespace pwiz.Osprey.Chromatography
 
             /// <summary>
             /// Unit-resolution (Th) data searched with <paramref name="fragmentToleranceTh"/>: the
-            /// constants of <see cref="Ms2OffsetCurve"/>, the M+1 check, and the mean kept within
-            /// <see cref="MEAN_WINDOW_FRACTION"/> of the tolerance.
+            /// constants of <see cref="Ms2OffsetCurve"/>, the M+1 check, and the mean seeing an offset
+            /// within <see cref="MEAN_WINDOW_FRACTION"/> of the tolerance.
             /// </summary>
             public static Widths UnitResolution(double fragmentToleranceTh)
             {
@@ -184,7 +185,8 @@ namespace pwiz.Osprey.Chromatography
             /// <paramref name="fragmentTolerancePpm"/>, offsets in ppm. The scan covers twice the
             /// tolerance either way in hundredths of it, a hit is within a quarter of it, a fragment's
             /// offset is its peak within the tolerance of the curve, there is no M+1 check (resolved
-            /// isotopes lie thousands of ppm apart), and the curve is used whatever the shift.
+            /// isotopes lie thousands of ppm apart), and no shift is warned about when the curve
+            /// cannot be fitted.
             /// </summary>
             public static Widths Ppm(double fragmentTolerancePpm)
             {
@@ -210,7 +212,10 @@ namespace pwiz.Osprey.Chromatography
             /// <summary>Whether the shift is stepped down off the M+1 (<see cref="MonoisotopicShift"/>).</summary>
             public bool StepIsotopes { get; }
 
-            /// <summary>A shift no larger than this leaves the calibration to the mean; negative, never.</summary>
+            /// <summary>
+            /// The largest shift the mean sees whole: beyond it, a calibration left to the mean for
+            /// want of fragments to fit the curve is warned about. Negative, never.
+            /// </summary>
             public double MeanWindow { get; }
 
             /// <summary>Peaks within this of a fragment's library m/z are collected for it.</summary>
@@ -225,12 +230,14 @@ namespace pwiz.Osprey.Chromatography
         /// (<see cref="MzCalibrationResult.OffsetCurveMz"/>, <see cref="MzCalibrationResult.OffsetCurve"/>),
         /// its mean over the associated fragments as <see cref="MzCalibrationResult.Mean"/>, the
         /// SD of the fragments' offsets about it, and 3 SD as the tolerance (the curve itself
-        /// is subtracted). Null, so the caller keeps the mean, when too few fragments have a peak
-        /// near the offset, or when the offset lies within <see cref="MEAN_WINDOW_FRACTION"/> of
-        /// <paramref name="fragmentToleranceTh"/>, where the mean sees it.
+        /// is subtracted), whatever the offset. Null, so the caller keeps the mean, when too few
+        /// fragments have a peak near the offset.
         /// </summary>
         /// <param name="fragments">The calibration matches' top fragments and the peaks around them.</param>
-        /// <param name="fragmentToleranceTh">The fragment tolerance the mean's errors are collected within.</param>
+        /// <param name="fragmentToleranceTh">
+        /// The fragment tolerance the mean's errors are collected within, which sets the offset the
+        /// mean sees (<see cref="Widths.MeanWindow"/>).
+        /// </param>
         /// <param name="shift">The monoisotopic shift the curve starts from, NaN with too few fragments.</param>
         public static MzCalibrationResult Calculate(IReadOnlyList<Ms2FragmentPeaks> fragments,
             double fragmentToleranceTh, out double shift)
@@ -253,8 +260,6 @@ namespace pwiz.Osprey.Chromatography
             shift = BestShift(fragments, widths);
             if (widths.StepIsotopes)
                 shift = MonoisotopicShift(fragments, shift);
-            if (Math.Abs(shift) <= widths.MeanWindow)
-                return null;
             double start = shift;
             double[] mz, offset;
             Associate(fragments, _ => start, widths.AssociationHalfWidth, out mz, out offset);

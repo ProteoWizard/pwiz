@@ -397,7 +397,7 @@ namespace pwiz.Osprey.Test
         /// tolerance, from fragments whose spectra also carry their M+1 isotope and noise peaks; the
         /// mean of each fragment's closest peak within the tolerance, the ppm calibration, does not.
         /// A shift that lands on the M+1 is stepped back to the monoisotopic peak. An offset within half
-        /// the tolerance, which the mean sees, is left to the mean. The curve is subtracted at each
+        /// the tolerance, which the mean sees, gets the curve too. The curve is subtracted at each
         /// m/z, kept through the calibration file, and a file without one keeps its mean.
         /// </summary>
         [TestMethod]
@@ -465,12 +465,15 @@ namespace pwiz.Osprey.Test
                 fragmentTolerance, out shift));
             Assert.IsTrue(double.IsNaN(shift));
 
-            // An offset well inside the tolerance, as most runs have: the mean sees it, and is kept. The
-            // same fragments searched with a tolerance no wider than twice the offset get the curve.
-            var small = SyntheticIonTrapFragments(3000, new Random(5), mz => -0.06 - 0.0001 * (mz - 200.0));
-            Assert.IsNull(Ms2OffsetCurve.Calculate(small, fragmentTolerance, out shift));
+            // An offset well inside the tolerance, as most runs have: the mean would see it, but the curve
+            // is used, and follows its slope.
+            Func<double, double> smallOffset = mz => -0.06 - 0.0001 * (mz - 200.0);
+            var small = SyntheticIonTrapFragments(3000, new Random(5), smallOffset);
+            var smallCurve = Ms2OffsetCurve.Calculate(small, fragmentTolerance, out shift);
+            Assert.IsNotNull(smallCurve);
             Assert.AreEqual(-0.11, shift, 0.06);
-            Assert.IsNotNull(Ms2OffsetCurve.Calculate(small, 0.1, out shift));
+            foreach (double mz in new[] { 300.0, 700.0, 1100.0 })
+                Assert.AreEqual(smallOffset(mz), smallCurve.OffsetAt(mz), 0.03, string.Format("small offset at m/z {0}", mz));
 
             // A run of tied shifts gives its middle: every fragment's one peak at -0.6 Th ties the shifts
             // from -0.8 to -0.4 (to a grid step: -0.6 is not exact in single precision).
@@ -536,7 +539,7 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(farOffset, curve.OffsetAt(mz), 0.03, string.Format("M+1 case, offset at m/z {0}", mz));
 
             AssertOffsetCurveApplication();
-            AssertOffsetCurveGate();
+            AssertOffsetCurveAnyOffset();
             AssertOffsetCurvePositiveOffset();
             AssertOffsetCurveReassociation();
 
@@ -597,23 +600,16 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The curve applies only to a shift beyond half the fragment tolerance, on either side of zero:
-        /// 0.05 Th inside the 0.25 Th of a 0.5 Th tolerance the mean is kept, and 0.05 Th outside it the
-        /// curve is used.
+        /// The curve applies at any shift, on either side of zero: 0.05 Th inside the 0.25 Th the mean
+        /// sees with a 0.5 Th tolerance, as 0.05 Th outside it.
         /// </summary>
-        private static void AssertOffsetCurveGate()
+        private static void AssertOffsetCurveAnyOffset()
         {
             const double fragmentTolerance = 0.5;
-            foreach (double offset in new[] { -0.20, 0.20 })
+            foreach (double offset in new[] { -0.30, -0.20, 0.20, 0.30 })
             {
-                var inside = SyntheticIonTrapFragments(3000, new Random(31), _ => offset);
-                Assert.IsNull(Ms2OffsetCurve.Calculate(inside, fragmentTolerance, out double shift), string.Format("offset {0}", offset));
-                Assert.AreEqual(offset, shift, 0.03);
-            }
-            foreach (double offset in new[] { -0.30, 0.30 })
-            {
-                var outside = SyntheticIonTrapFragments(3000, new Random(31), _ => offset);
-                var curve = Ms2OffsetCurve.Calculate(outside, fragmentTolerance, out double shift);
+                var fragments = SyntheticIonTrapFragments(3000, new Random(31), _ => offset);
+                var curve = Ms2OffsetCurve.Calculate(fragments, fragmentTolerance, out double shift);
                 Assert.IsNotNull(curve, string.Format("offset {0}", offset));
                 Assert.AreEqual(offset, shift, 0.03);
                 Assert.AreEqual(offset, curve.OffsetAt(700.0), 0.03);

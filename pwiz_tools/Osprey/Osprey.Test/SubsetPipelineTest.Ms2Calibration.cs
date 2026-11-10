@@ -48,10 +48,11 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// The unit-resolution MS2 m/z calibration on real data with a large offset. The Stellar
-        /// subset's MS2 sit only about 0.06 Th low, which the mean calibration sees, so its own
-        /// search keeps the mean. Its MS2 m/z moved down by <see cref="AppliedMs2Shift"/> (-0.30 Th at
-        /// m/z 200 to -0.40 Th above 600), so they sit -0.35 to -0.55 Th low in all, as a 2026 Stellar
-        /// run's profile apex does, must be calibrated by the m/z offset curve: each run's curve
+        /// subset's MS2 sit only about 0.06 Th low, which the mean calibration would see; its own
+        /// search is calibrated by the curve all the same. Its MS2 m/z moved down by
+        /// <see cref="AppliedMs2Shift"/> (-0.30 Th at m/z 200 to -0.40 Th above 600), so they sit -0.35
+        /// to -0.55 Th low in all, as a 2026 Stellar run's profile apex does, must be calibrated by
+        /// the m/z offset curve: each run's curve
         /// recovers the shift, and the search reports nearly what the unshifted subset reports. The
         /// same shifted runs calibrated by the mean (OSPREY_MS2_CAL_MEAN=1, as Rust osprey does) miss
         /// part of the offset, need a window over twice as wide, and report fewer precursors.
@@ -85,17 +86,17 @@ namespace pwiz.Osprey.Test
             {
                 string run = Path.GetFileName(shiftedInputs[i]);
                 var own = LoadMs2Calibration(DataInputs().ElementAt(i), baselineDir);
-                Assert.IsFalse(own.HasOffsetCurve, @"the subset's own offset is within half the tolerance");
+                Assert.IsTrue(own.HasOffsetCurve, @"the subset's own offset, within half the tolerance, gets the curve");
                 var curve = LoadMs2Calibration(shiftedInputs[i], shiftedDir);
                 Assert.IsTrue(curve.HasOffsetCurve, run);
                 foreach (double mz in new[] { 400.0, 700.0, 1000.0 })
                 {
-                    Assert.AreEqual(AppliedMs2Shift(mz) + own.Mean, curve.OffsetAt(mz), OFFSET_CURVE_TOLERANCE_TH,
+                    Assert.AreEqual(AppliedMs2Shift(mz) + own.OffsetAt(mz), curve.OffsetAt(mz), OFFSET_CURVE_TOLERANCE_TH,
                         string.Format(@"{0} at m/z {1}", run, mz));
                 }
                 var meanOnly = LoadMs2Calibration(shiftedInputs[i], meanDir);
                 Assert.IsFalse(meanOnly.HasOffsetCurve, run);
-                Assert.IsTrue(meanOnly.Mean - (AppliedMs2Shift(700) + own.Mean) > MEAN_MISS_TH,
+                Assert.IsTrue(meanOnly.Mean - (AppliedMs2Shift(700) + own.OffsetAt(700)) > MEAN_MISS_TH,
                     string.Format(@"{0}: the mean finds {1:F3} Th", run, meanOnly.Mean));
                 Assert.IsTrue(meanOnly.SD > MEAN_WINDOW_RATIO * curve.SD,
                     string.Format(@"{0}: SD {1:F3} with the mean, {2:F3} with the curve", run, meanOnly.SD, curve.SD));

@@ -109,9 +109,14 @@ namespace pwiz.Osprey.Test
 
             // Entrapment: a shuffled entrapment peptide per target, each with its own decoy, in the
             // library's DecoyPairs, and the FDRBench pairing manifest beside the working files.
+            // Calibrated by the mean: this one window is at the edge of 1% run FDR, where a run reports
+            // nothing unless 100 targets outscore its best decoy, and the m/z curve's narrower window
+            // on the subset's -0.06 Th offset leaves 88-98 in each run (the mean, 100-113). What is
+            // tested here is the entrapment library, not the calibration.
             string entrapmentDir = CreateDir(@"library-build-entrapment");
+            var entrapmentVariables = new Dictionary<string, string>(Verifier(false)) { [@"OSPREY_MS2_CAL_MEAN"] = @"1" };
             string entrapmentLog = RunOsprey(LibraryBuildArgs(fasta, entrapmentDir)
-                .Concat(new[] { OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText }).ToArray(), Verifier(false));
+                .Concat(new[] { OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText }).ToArray(), entrapmentVariables);
             AssertTasks(entrapmentLog, Array.Empty<string>(), new[] { PredictLibraryTask.TASK_NAME }.Concat(ALL_TASKS));
             string entrapmentLibrary = Path.Combine(entrapmentDir, Path.GetFileNameWithoutExtension(BLIB_FILE) + LibraryBuildWorkflow.PREDICTED_SUFFIX + LibrarySource.EXT_BLIB);
             int withEntrapment = AssertPredictedLibrary(entrapmentLibrary, true, PredictLibraryTask.TASK_NAME);
