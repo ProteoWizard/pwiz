@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.Intrinsics;
 using System.Threading;
 
@@ -30,10 +31,20 @@ namespace pwiz.Osprey.Demux
     public sealed class JointDemuxParams
     {
         /// <summary>
-        /// The TOF peak's sigma, in grid samples, at the m/z of <see cref="PeakSigmaMz"/>: linear between
-        /// them, constant beyond. Measured on a ZenoTOF 8600 from strong isolated MS2 profile peaks.
+        /// The sigma of the Gaussian the TOF peak is fitted with, in grid samples, at the m/z of
+        /// <see cref="PeakSigmaMz"/>: linear between them, constant beyond. A ZT Scan grid sample is 9.79E-5 in
+        /// sqrt(m/z), 11.3 ppm at 300 m/z and 5.7 ppm at 1200. The default is the width measured on a ZenoTOF 8600
+        /// from strong isolated MS2 profile peaks; <see cref="UseScanningDefaults"/> widens it.
         /// </summary>
         public double[] PeakSigmaSamples { get; set; } = { 1.17, 1.35, 1.51, 1.52 };
+
+        /// <summary>
+        /// How much wider than the measured <see cref="PeakSigmaSamples"/> the ZT Scan joint solve fits
+        /// (<see cref="UseScanningDefaults"/>). On three ZT Scan runs searched by Osprey with entrapment, 1.3 found
+        /// about 1% more precursors than the measured width under two FDR seeds, with 27% fewer MS2 centroids; 0.8 and
+        /// 2.0 each lost 2-3%. The measured width splits single ions into two centroids 9-16 ppm either side.
+        /// </summary>
+        public const double SCANNING_SIGMA_SCALE = 1.3;
 
         /// <summary>The m/z of each <see cref="PeakSigmaSamples"/> value.</summary>
         public double[] PeakSigmaMz { get; set; } = { 300, 550, 850, 1200 };
@@ -223,6 +234,22 @@ namespace pwiz.Osprey.Demux
                 FirstRelativeTolerance = 1e-3;
             if (!Set(nameof(GrowRelativeTolerance)))
                 GrowRelativeTolerance = 1e-4;
+            return this;
+        }
+
+        /// <summary>
+        /// The ZT Scan joint solve's peak: <see cref="PeakSigmaSamples"/> times <see cref="SCANNING_SIGMA_SCALE"/>,
+        /// and a <see cref="PeakHalfWidth"/> of at least 3.3 of the widest sigma so the Gaussian is not truncated (7
+        /// samples), each unless <paramref name="isSet"/> says the caller set it. The merge distance follows the sigma
+        /// unless <see cref="MergeSigmaSamples"/> is set. Returns these settings.
+        /// </summary>
+        public JointDemuxParams UseScanningDefaults(Func<string, bool> isSet = null)
+        {
+            bool Set(string name) => isSet != null && isSet(name);
+            if (!Set(nameof(PeakSigmaSamples)))
+                PeakSigmaSamples = PeakSigmaSamples.Select(sigma => sigma * SCANNING_SIGMA_SCALE).ToArray();
+            if (!Set(nameof(PeakHalfWidth)))
+                PeakHalfWidth = Math.Max(PeakHalfWidth, (int)Math.Ceiling(3.3 * PeakSigmaSamples.Max()));
             return this;
         }
 

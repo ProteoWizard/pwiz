@@ -354,6 +354,10 @@ namespace pwiz.Osprey.DemuxTool
             // own centroids are written (--joint-fitted), which they were not measured on.
             if (options.Joint && staggered && options.JointApportion)
                 options.JointParameters.UseStaggeredDefaults(jointSet.Contains);
+            // Scanning (ZT Scan), a Gaussian 1.3 times the measured MS2 peak width: the measured width splits single
+            // ions into two centroids, and 1.3 found about 1% more precursors on three runs with 27% fewer centroids.
+            if (options.Joint && !staggered)
+                options.JointParameters.UseScanningDefaults(jointSet.Contains);
             // A scanning acquisition keeps the fit's own centroids unless asked to split and centroid with Centrix,
             // until that is shown to do better on the slice.
             if (!staggered)

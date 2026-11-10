@@ -167,6 +167,14 @@ namespace pwiz.Osprey.Test
             for (int d = 0; d < expected.Length; d++)
                 Assert.AreEqual(expected[d] / total, kernel[d], 0.01, string.Format(@"B[{0}]", d - half));
             Assert.IsNull(shape.Kernels(half, 100000));
+            // A support wider than the samples measured: zero past them, the measured part unchanged.
+            int wide = TofPeakShape.ISOLATION + 2;
+            var wideKernel = shape.Kernels(wide, 50).Value.Kernels[0];
+            Assert.AreEqual(2 * wide + 1, wideKernel.Length);
+            Assert.AreEqual(0.0, wideKernel[0]);
+            Assert.AreEqual(0.0, wideKernel[2 * wide]);
+            Assert.AreEqual(1.0, wideKernel.Sum(), 1e-12);
+            Assert.AreEqual(kernel[half], wideKernel[wide], 0.001);
 
             var flat = Enumerable.Repeat(1.0 / (2 * half + 1), 2 * half + 1).ToArray();
             var parameters = new JointDemuxParams { PeakShapeMz = new[] { 400.0, 800.0 }, PeakShapes = new[] { flat, kernel } };
@@ -196,6 +204,17 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(1.35, narrow.SigmaAt(550), 1e-12);
             Assert.AreEqual(0.5 * (1.35 + 1.51), narrow.SigmaAt(700), 1e-12);
             Assert.AreEqual(Math.Exp(-0.5 / (0.9 * 0.9)), narrow.PeakAt(550)[half + 1] / narrow.PeakAt(550)[half], 1e-12);
+            // The ZT Scan solve's peak: 1.3 times the measured sigma, merged within it, on a support of 7 samples;
+            // what the caller set is kept.
+            var scanning = new JointDemuxParams().UseScanningDefaults();
+            Assert.AreEqual(1.3 * 1.35, scanning.GaussianSigmaAt(550), 1e-12);
+            Assert.AreEqual(1.3 * 1.35, scanning.SigmaAt(550), 1e-12);
+            Assert.AreEqual(7, scanning.PeakHalfWidth);
+            Assert.AreEqual(15, scanning.PeakAt(550).Length);
+            var named = new JointDemuxParams { PeakSigmaSamples = new[] { 1.0 }, PeakSigmaMz = new[] { 500.0 } }
+                .UseScanningDefaults(name => name == nameof(JointDemuxParams.PeakSigmaSamples));
+            Assert.AreEqual(1.0, named.GaussianSigmaAt(550), 1e-12);
+            Assert.AreEqual(5, named.PeakHalfWidth);
         }
 
         /// <summary>

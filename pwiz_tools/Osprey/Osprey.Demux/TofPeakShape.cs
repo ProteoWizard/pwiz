@@ -111,20 +111,21 @@ namespace pwiz.Osprey.Demux
         /// <summary>
         /// The measured kernel of every bin with at least <paramref name="minPeaks"/> peaks, at the bin's median
         /// m/z: 2 <paramref name="half"/> + 1 values for the offsets -half..half, summing to 1, the table
-        /// <see cref="JointDemuxParams.PeakShapeMz"/> and <see cref="JointDemuxParams.PeakShapes"/> take. Null when
-        /// no bin has enough.
+        /// <see cref="JointDemuxParams.PeakShapeMz"/> and <see cref="JointDemuxParams.PeakShapes"/> take. Offsets
+        /// beyond <see cref="ISOLATION"/>, where nothing is measured, are zero. Null when no bin has enough.
         /// </summary>
         public (double[] Mz, double[][] Kernels)? Kernels(int half, int minPeaks)
         {
             var mzs = new List<double>();
             var kernels = new List<double[]>();
+            int measured = Math.Min(half, ISOLATION);
             for (int bin = 0; bin < _mz.Length; bin++)
             {
                 if (_mz[bin].Count < minPeaks)
                     continue;
                 var kernel = new double[2 * half + 1];
                 double total = 0;
-                for (int d = -half; d <= half; d++)
+                for (int d = -measured; d <= measured; d++)
                 {
                     kernel[d + half] = _sum[bin, d + ISOLATION] / _count[bin];
                     total += kernel[d + half];
