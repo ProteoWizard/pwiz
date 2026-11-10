@@ -108,6 +108,17 @@
           <param name="vcsRootId" value="ProteoWizard_PwizGithubSkylineReleaseOnly" />
         </parameters>
       </extension>
+      <extension id="KEEP_RULE_7" type="keepRules">
+        <parameters>
+          <param name="filters.1.pattern" value="+:skyline_*" />
+          <param name="filters.1.type" value="branchPattern" />
+          <param name="keepData.1.type" value="everything" />
+          <param name="limit.type" value="all" />
+          <param name="partitions.1.type" value="perBranch" />
+          <param name="preserveArtifacts" value="true" />
+          <param name="ruleDisabled" value="false" />
+        </parameters>
+      </extension>
     </build-extensions>
     <cleanup>
       <policy type="builds" cleanup-level="ARTIFACTS">
