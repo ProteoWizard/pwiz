@@ -474,8 +474,8 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>
         /// The main CRAN site. Tool package install scripts download from CRAN mirrors, and
-        /// Skyline downloads R itself from here, so reaching it is a better predictor of a
-        /// successful install than reaching the R Project home page.
+        /// Skyline downloads R itself from here, so reaching it indicates whether an install
+        /// can download what it needs.
         /// </summary>
         public const string INTERNET_CHECK_SITE = "cran.r-project.org";
 
