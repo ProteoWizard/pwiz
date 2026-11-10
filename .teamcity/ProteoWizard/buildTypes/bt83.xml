@@ -97,6 +97,15 @@ echo ##teamcity[setParameter name='env.PWIZ_VERSION' value='%%PWIZ_VERSION%%']]]
         </parameters>
       </extension>
     </build-extensions>
+    <cleanup>
+      <policy type="daysAndBuilds" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepBuilds.count" value="1" />
+          <param name="keepDays.count" value="3" />
+        </parameters>
+      </policy>
+    </cleanup>
   </settings>
 </build-type>
 
