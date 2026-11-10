@@ -82,6 +82,20 @@ echo ##teamcity[setParameter name='env.PWIZ_VERSION' value='%%PWIZ_VERSION%%']]]
           <param name="withBuildAnchor" value="true" />
         </parameters>
       </extension>
+      <extension id="KEEP_RULE_9" type="keepRules">
+        <parameters>
+          <param name="filters.1.pattern" value="+:&lt;default&gt;" />
+          <param name="filters.1.type" value="branchPattern" />
+          <param name="filters.2.status" value="successful" />
+          <param name="filters.2.type" value="buildStatus" />
+          <param name="keepData.1.type" value="everything" />
+          <param name="limit.buildsCount" value="30" />
+          <param name="limit.type" value="lastNBuilds" />
+          <param name="partitions.1.type" value="perBranch" />
+          <param name="preserveArtifacts" value="true" />
+          <param name="ruleDisabled" value="false" />
+        </parameters>
+      </extension>
     </build-extensions>
   </settings>
 </build-type>
