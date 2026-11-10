@@ -144,8 +144,8 @@ namespace pwiz.CarafeSharp.Training
             var shuffle = new NumpyRandomState(options.Seed);
             var result = new FineTuneResult();
 
-            // On the GPU, training keeps cuDNN's TF32, which repeats byte for byte where float32 does not.
-            using (TorchDevice.AllowTf32ForTraining(options.Device))
+            // On the GPU, float32 training repeats byte for byte only with cuDNN's deterministic algorithms.
+            using (TorchDevice.DeterministicCuDnn(options.Device, log))
             {
                 if (rtRows != null)
                     TrainRt(rtRows, pretrained, options, outputDirectory, shuffle, result, log);

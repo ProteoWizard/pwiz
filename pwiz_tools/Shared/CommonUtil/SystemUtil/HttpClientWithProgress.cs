@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
@@ -721,7 +722,7 @@ namespace pwiz.Common.SystemUtil
 
             if (!string.IsNullOrEmpty(fileName))
             {
-                request.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue(@"attachment")
+                request.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue(@"attachment")
                 {
                     FileName = fileName
                 };
@@ -1059,7 +1060,8 @@ namespace pwiz.Common.SystemUtil
                 statusCode, reasonPhrase, uri);
                     
             // Throw with response body attached for server-specific error extraction
-            return new NetworkRequestException(message, response.StatusCode, uri, new HttpRequestException(message), responseBody);
+            return new NetworkRequestException(message, response.StatusCode, uri, new HttpRequestException(message), responseBody,
+                NetworkRequestException.GetRetryAfter(response.Headers));
         }
 
         private Exception MapHttpException(Exception ex, Uri uri)
@@ -1424,6 +1426,13 @@ namespace pwiz.Common.SystemUtil
         public string ResponseBody { get; }
 
         /// <summary>
+        /// How long the server asked the client to wait before trying again, from its Retry-After
+        /// header - typically sent with HTTP 429 (Too Many Requests) or 503 (Service Unavailable).
+        /// Null when the server did not say.
+        /// </summary>
+        public TimeSpan? RetryAfter { get; }
+
+        /// <summary>
         /// Creates a new NetworkRequestException for HTTP status code errors.
         /// </summary>
         /// <param name="message">User-friendly error message describing what went wrong</param>
@@ -1431,13 +1440,16 @@ namespace pwiz.Common.SystemUtil
         /// <param name="requestUri">The URI that was being requested</param>
         /// <param name="innerException">The underlying exception that caused this error</param>
         /// <param name="responseBody">Optional response body for server-specific error extraction</param>
-        public NetworkRequestException(string message, HttpStatusCode statusCode, Uri requestUri, Exception innerException, string responseBody = null)
+        /// <param name="retryAfter">Optional wait the server asked for before the next request</param>
+        public NetworkRequestException(string message, HttpStatusCode statusCode, Uri requestUri, Exception innerException,
+            string responseBody = null, TimeSpan? retryAfter = null)
             : base(message, innerException)
         {
             FailureType = NetworkFailureType.HttpError;
             StatusCode = statusCode;
             RequestUri = requestUri;
             ResponseBody = responseBody;
+            RetryAfter = retryAfter;
         }
 
         /// <summary>
@@ -1485,6 +1497,25 @@ namespace pwiz.Common.SystemUtil
                 default:
                     return true;
             }
+        }
+
+        /// <summary>
+        /// The wait a server asked for in its Retry-After header, given either as a number of
+        /// seconds or as the date when it will accept requests again. A date is measured from the
+        /// server's own Date header when it sent one, so a skewed local clock does not shorten the
+        /// wait to nothing. Null when there is no Retry-After header.
+        /// </summary>
+        public static TimeSpan? GetRetryAfter(HttpResponseHeaders headers)
+        {
+            var retryAfter = headers?.RetryAfter;
+            if (retryAfter?.Delta != null)
+                return retryAfter.Delta.Value;
+            if (retryAfter?.Date != null)
+            {
+                var wait = retryAfter.Date.Value - (headers.Date ?? DateTimeOffset.UtcNow);
+                return wait > TimeSpan.Zero ? wait : TimeSpan.Zero;
+            }
+            return null;
         }
 
         public static HttpStatusCode? GetHttpStatusCode(Exception e)

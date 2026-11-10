@@ -2175,7 +2175,34 @@ namespace pwiz.Skyline.SettingsUI {
                 return ResourceManager.GetString("EditStaticModDlg_UpdateListAvailableMods_Show_common", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Shuffled peptides on entrapment proteins of their own, as a percentage of the targets, to measure the true false discovery rate of a search..
+        /// </summary>
+        public static string EntrapmentPercentControls_SetToolTips_Shuffled_peptides_on_entrapment_proteins_of_their_own__as_a_percentage_of_the_targets__to_measure_the_true_false_discovery_rate_of_a_search_ {
+            get {
+                return ResourceManager.GetString("EntrapmentPercentControls_SetToolTips_Shuffled_peptides_on_entrapment_proteins_of_their_own__as_a_percentage_of_the_targets__to_measure_the_true_false_discovery_rate_of_a_search_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Shuffled peptides placed on real target proteins, as a percentage of the targets, so protein-aware scoring is audited too. With the entrapment percentage, the total entrapment added..
+        /// </summary>
+        public static string EntrapmentPercentControls_SetToolTips_Shuffled_peptides_placed_on_real_target_proteins__as_a_percentage_of_the_targets__so_protein_aware_scoring_is_audited_too__With_the_entrapment_percentage__the_total_entrapment_added_ {
+            get {
+                return ResourceManager.GetString("EntrapmentPercentControls_SetToolTips_Shuffled_peptides_placed_on_real_target_proteins__as_a_percentage_of_the_targets__so_protein_aware_scoring_is_audited_too__With_the_entrapment_percentage__the_total_entrapment_added_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The entrapment percentages together must be at least {0}% and at most {1}%..
+        /// </summary>
+        public static string EntrapmentPercentControls_Validate_The_entrapment_percentages_together_must_be_at_least__0___and_at_most__1___ {
+            get {
+                return ResourceManager.GetString("EntrapmentPercentControls_Validate_The_entrapment_percentages_together_must_be_at_least__0___and_at_most__1___", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Export Filtered MIDAS Library.
         /// </summary>

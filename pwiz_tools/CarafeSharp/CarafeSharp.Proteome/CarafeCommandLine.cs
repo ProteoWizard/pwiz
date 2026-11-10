@@ -199,12 +199,14 @@ namespace pwiz.CarafeSharp.Proteome
         public static readonly CarafeArgument ARG_DECOY_SEED = Value(@"decoy-seed", @"<n>");
         public static readonly CarafeArgument ARG_ENTRAPMENT_DB = Value(@"entrapment-db", PATH_TO_FILE + EXT_FASTA);
         public static readonly CarafeArgument ARG_ENTRAPMENT_RATIO = Value(@"entrapment-ratio", @"<ratio>");
+        // CarafeSharp's own: Carafe keeps every entrapment peptide on an entrapment protein.
+        public static readonly CarafeArgument ARG_ENTRAPMENT_IN_TARGETS = Value(@"entrapment-in-targets", @"<ratio>");
         public static readonly CarafeArgument ARG_NO_SIMILARITY_GATE = Flag(@"no-similarity-gate");
         public static readonly CarafeArgument ARG_IGNORE_PAIRING_ERRORS = Flag(@"ignore-pairing-errors");
 
         private static readonly CarafeArgumentGroup GROUP_ENTRAPMENT = new CarafeArgumentGroup(() => @"Entrapment FASTA build", true,
             ARG_ENTRAPMENT, ARG_NO_DECOYS, ARG_DECOY_PREFIX, ARG_MZ_FILTER, ARG_ENTRAPMENT_SEED, ARG_DECOY_SEED,
-            ARG_ENTRAPMENT_DB, ARG_ENTRAPMENT_RATIO, ARG_NO_SIMILARITY_GATE, ARG_IGNORE_PAIRING_ERRORS);
+            ARG_ENTRAPMENT_DB, ARG_ENTRAPMENT_RATIO, ARG_ENTRAPMENT_IN_TARGETS, ARG_NO_SIMILARITY_GATE, ARG_IGNORE_PAIRING_ERRORS);
 
         // --- Library prediction ------------------------------------------------------------
         public static readonly CarafeArgument ARG_LF_TYPE = Value(@"lf-type", @"<DIA-NN|EncyclopeDIA|Skyline|blib>");
@@ -1210,19 +1212,45 @@ namespace pwiz.CarafeSharp.Proteome
                 if (!settings.AddEntrapment)
                     throw new ArgumentException(ARG_ENTRAPMENT_RATIO.ArgumentText + @" has no effect without " + ARG_ENTRAPMENT.ArgumentText);
                 settings.EntrapmentRatio = ParseDouble(ARG_ENTRAPMENT_RATIO, ratioText);
-                if (settings.EntrapmentRatio > 1.0)
+                if (settings.EntrapmentRatio < 0)
+                    throw new ArgumentException(ARG_ENTRAPMENT_RATIO.ArgumentText + @" cannot be negative: " + ratioText);
+            }
+            if (TryGet(ARG_ENTRAPMENT_IN_TARGETS, out string inTargetsText))
+            {
+                if (!settings.AddEntrapment)
+                    throw new ArgumentException(ARG_ENTRAPMENT_IN_TARGETS.ArgumentText + @" has no effect without " + ARG_ENTRAPMENT.ArgumentText);
+                settings.EntrapmentInTargetsRatio = ParseDouble(ARG_ENTRAPMENT_IN_TARGETS, inTargetsText);
+                if (!(settings.EntrapmentInTargetsRatio > 0 && settings.EntrapmentInTargetsRatio <= 1.0))
                 {
                     throw new ArgumentException(string.Format(CultureInfo.InvariantCulture,
-                        @"{0} cannot exceed 1.0 (one entrapment peptide per target): {1}", ARG_ENTRAPMENT_RATIO.ArgumentText, settings.EntrapmentRatio));
-                }
-                if (settings.EntrapmentRatio < EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO)
-                {
-                    throw new ArgumentException(string.Format(CultureInfo.InvariantCulture,
-                        @"{0} {1:F4} is below the tested minimum of {2:F2}", ARG_ENTRAPMENT_RATIO.ArgumentText, settings.EntrapmentRatio,
-                        EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO));
+                        @"{0} must be above 0 and at most 1.0 (entrapment peptides placed on target proteins, per target): {1}",
+                        ARG_ENTRAPMENT_IN_TARGETS.ArgumentText, settings.EntrapmentInTargetsRatio));
                 }
             }
+            CheckEntrapmentRatio(settings);
             return settings;
+        }
+
+        /// <summary>
+        /// The limits on the entrapment ratio apply to the total: the standard entrapment plus
+        /// the entrapment placed on target proteins, when any is asked for.
+        /// </summary>
+        private static void CheckEntrapmentRatio(EntrapmentFastaSettings settings)
+        {
+            double total = settings.EntrapmentRatio + settings.EntrapmentInTargetsRatio;
+            string what = settings.EntrapmentInTargetsRatio > 0
+                ? ARG_ENTRAPMENT_RATIO.ArgumentText + @" and " + ARG_ENTRAPMENT_IN_TARGETS.ArgumentText + @" together"
+                : ARG_ENTRAPMENT_RATIO.ArgumentText;
+            if (total > 1.0)
+            {
+                throw new ArgumentException(string.Format(CultureInfo.InvariantCulture,
+                    @"{0} cannot exceed 1.0 (one entrapment peptide per target): {1}", what, total));
+            }
+            if (total < EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO)
+            {
+                throw new ArgumentException(string.Format(CultureInfo.InvariantCulture,
+                    @"{0} {1:F4} is below the tested minimum of {2:F2}", what, total, EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO));
+            }
         }
 
         private bool Has(CarafeArgument arg)
