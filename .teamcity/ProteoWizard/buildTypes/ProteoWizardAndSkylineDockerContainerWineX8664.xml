@@ -184,6 +184,18 @@ docker-entrypoint.sh /docker2singularity.sh chambm/pwiz-skyline-i-agree-to-the-v
           <param name="secure:github_access_token" value="credentialsJSON:f8fb99a5-f2ce-42ef-9ef4-8809c17e6b32" />
         </parameters>
       </extension>
+      <extension id="KEEP_RULE_12" type="keepRules">
+        <parameters>
+          <param name="filters.1.pattern" value="+:&lt;default&gt;" />
+          <param name="filters.1.type" value="branchPattern" />
+          <param name="keepData.1.type" value="everything" />
+          <param name="limit.buildsCount" value="30" />
+          <param name="limit.type" value="lastNBuilds" />
+          <param name="partitions.1.type" value="perBranch" />
+          <param name="preserveArtifacts" value="true" />
+          <param name="ruleDisabled" value="false" />
+        </parameters>
+      </extension>
     </build-extensions>
     <artifact-dependencies>
       <dependency id="ARTIFACT_DEPENDENCY_2279" sourceBuildTypeId="bt83" cleanDestination="true">
