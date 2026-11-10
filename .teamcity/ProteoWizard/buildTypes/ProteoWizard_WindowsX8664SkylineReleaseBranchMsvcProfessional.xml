@@ -113,7 +113,8 @@
           <param name="filters.1.pattern" value="+:skyline_*" />
           <param name="filters.1.type" value="branchPattern" />
           <param name="keepData.1.type" value="everything" />
-          <param name="limit.type" value="all" />
+          <param name="limit.buildsCount" value="3" />
+          <param name="limit.type" value="lastNBuilds" />
           <param name="partitions.1.type" value="perBranch" />
           <param name="preserveArtifacts" value="true" />
           <param name="ruleDisabled" value="false" />
