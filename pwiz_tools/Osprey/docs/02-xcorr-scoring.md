@@ -170,8 +170,7 @@ describes. The C# port routes this through `IResolutionStrategy`
   The comment notes this pure-f32 preprocess matches Rust upstream.
 - **`HramStrategy.PreprocessWindowSpectra`** (`ResolutionStrategy.cs:191`):
   preprocesses nothing. It returns a `WindowXcorrCache` holding the window's
-  spectra, the scorer and a scratch rented for the window's lifetime, with an
-  empty `Sparse` array. `ScoreXcorr` fills `Sparse[i]` (a `SparseXcorrSpectrum`
+  spectra and the scorer, with an empty `Sparse` array. `ScoreXcorr` fills `Sparse[i]` (a `SparseXcorrSpectrum`
   rather than a dense `float[NBins]`) the first time a candidate asks for spectrum
   `i`. Xcorr reads only each scored candidate's apex and apex +/-2, so a window
   with few candidates needs few of its spectra: on 3 Astral files, Stage 6's
@@ -180,14 +179,17 @@ describes. The C# port routes this through `IResolutionStrategy`
   its own spectrum and clears the scratch buffers it uses before using them (it
   leaves them dirty, so that scratch is for fills only). The candidates of one window
   may score on several threads at once (see `03-spectral-scoring.md` B.1), each
-  through its own `WindowXcorrCache.ForLane` view with its own `VisitedBins` and fill
-  scratch over the shared `Sparse` array. Two lanes filling one spectrum compute the
-  same values, and `Interlocked.CompareExchange` keeps the first stored, so the fill
-  needs no lock. `ReleaseWindowCache` returns the scratch to the pool.
+  through its own `WindowXcorrCache.ForLane` view over the shared `Sparse` array. The
+  lane rents one fill scratch from the pool for its lifetime and uses that scratch's
+  `VisitedBins` as its own (fills never touch it, each xcorr clears the bins it set,
+  and the pool clears it on return), so a block allocates no NBins array. Two lanes
+  filling one spectrum compute the same values, and `Interlocked.CompareExchange`
+  keeps the first stored, so the fill needs no lock. `ReleaseWindowCache` returns a
+  lane's scratch to the pool and stops a window's cache filling.
 
 `ScoreXcorr` (`ResolutionStrategy.cs:164` / `:212`) dispatches on the cache type:
 unit reads `preprocessed.Doubles[i]` via `XcorrFromPreprocessed`; HRAM fills
-`preprocessed.Sparse[i]` if it is empty and the window still holds its scratch,
+`preprocessed.Sparse[i]` if it is empty and the cache is not released,
 then reads it via `XcorrFromSparse`. A row filled before `ReleaseWindowCache` is
 still served after it. With no cache (no scratch pool) or an unfilled row after
 release, it falls back to a live `XcorrAtScan` (with a rented scratch when there is

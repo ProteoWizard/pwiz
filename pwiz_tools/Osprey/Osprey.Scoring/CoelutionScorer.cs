@@ -197,9 +197,10 @@ namespace pwiz.Osprey.Scoring
         internal sealed class WindowWork
         {
             private readonly CoelutionScorer _scorer;
-            private readonly List<LibraryEntry> _candidates;
-            private readonly List<Spectrum> _windowSpectra;
-            private readonly double[] _windowRts;
+            // The window's data, dropped by the thread that completes the window
+            private List<LibraryEntry> _candidates;
+            private List<Spectrum> _windowSpectra;
+            private double[] _windowRts;
             private readonly List<MS1Spectrum> _ms1Spectra;
             private readonly RTCalibration _rtCalibration;
             private readonly MzCalibrationResult _ms1Calibration;
@@ -207,7 +208,7 @@ namespace pwiz.Osprey.Scoring
             private readonly double _rtSigma;
             private readonly SpectralScorer _spectralScorer;
             private readonly ScoringContext _context;
-            private readonly WindowPrefilter _prefilter;
+            private WindowPrefilter _prefilter;
             private readonly bool _scanMajorXics;
             private readonly int[] _blockEnds;          // Exclusive end of each block; block b starts at _blockEnds[b - 1]
             private readonly List<FdrEntry>[] _blockEntries;
@@ -306,8 +307,8 @@ namespace pwiz.Osprey.Scoring
             /// <summary>
             /// Score the next block no thread has started, if any. False when none remains.
             /// <paramref name="completedWindow"/> is true for the one call, on whichever thread,
-            /// that scores the window's last block to finish: <see cref="Entries"/> is then set
-            /// and the window's XCorr cache released.
+            /// that scores the window's last block to finish: <see cref="Entries"/> is then set,
+            /// the window's XCorr cache released, and its spectra, prefilter and candidates dropped.
             /// </summary>
             public bool TryScoreNextBlock(out bool completedWindow)
             {
@@ -326,6 +327,14 @@ namespace pwiz.Osprey.Scoring
                         _blockEntries[b] = null;
                     }
                     Release();
+                    // Every block has returned, so no thread reads the window's data again. Drop it
+                    // now rather than when the last reference to this object goes, which may be the
+                    // scheduler's or another thread's.
+                    _preprocessedXcorr = null;
+                    _windowSpectra = null;
+                    _windowRts = null;
+                    _prefilter = null;
+                    _candidates = null;
                     Entries = entries;
                     completedWindow = true;
                 }

@@ -137,7 +137,11 @@ is open, a window's blocks all score on the thread that opened it. After that, t
 threads that would otherwise idle while the last windows finish - on SEA-AD Astral the
 largest window takes over half the stage's wall clock on one thread. The window's entries
 are its blocks' entries in block order, i.e. candidate order, so the output does not
-depend on which thread scored which block, or on the thread count.
+depend on which thread scored which block, or on the thread count. The thread that
+scores a window's last block drops the window's spectra, XCorr cache, prefilter and
+candidates, and the scheduler holds only windows with a block no thread has started,
+so at most about `NThreads` windows' data are alive at once, as when the window was
+the unit of work (issue #4398).
 
 ### B.2 Per-candidate data production — `PeakDataExtractor`
 
