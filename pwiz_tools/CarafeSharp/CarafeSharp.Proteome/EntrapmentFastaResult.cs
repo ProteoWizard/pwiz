@@ -53,6 +53,9 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary>Targets deliberately left without entrapment because the ratio is below 1.</summary>
         public int EntrapmentNotSelected { get; set; }
 
+        /// <summary>Entrapment peptides placed on a target protein instead of an entrapment protein of their own.</summary>
+        public int EntrapmentOnTargetProteins { get; set; }
+
         /// <summary>Median |target - entrapment| neutral mass (Da) of a foreign assignment.</summary>
         public double EntrapmentMedianAbsMassDelta { get; set; }
 

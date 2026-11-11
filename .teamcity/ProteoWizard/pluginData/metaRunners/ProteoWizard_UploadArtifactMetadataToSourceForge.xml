@@ -69,6 +69,16 @@ metadataFile.close()]]></param>
           <param name="teamcitySshKey" value="chambm@sourceforge.net-ed25519" />
         </parameters>
       </runner>
+      <runner name="" type="ProteoWizard_UploadReleaseMetadataToS3">
+        <conditions>
+          <equals name="teamcity.build.branch.is_default" value="true" />
+          <does-not-equal name="env.BUILD_IS_PERSONAL" value="true" />
+        </conditions>
+        <parameters>
+          <param name="release.metadata.files" value="artifact_xml/%system.teamcity.buildType.id%.xml" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
     </build-runners>
     <requirements />
   </settings>
