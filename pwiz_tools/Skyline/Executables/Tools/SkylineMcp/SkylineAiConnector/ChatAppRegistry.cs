@@ -45,6 +45,7 @@ namespace SkylineAiConnector
         private const string MCP_SERVERS_KEY = "mcpServers";
         private const string SERVERS_KEY = "servers"; // VS Code uses a different key
         private const string CLAUDE_PROCESS_NAME = "claude";
+        private const string CLAUDE_CLI_EXE = CLAUDE_PROCESS_NAME + ".exe";
         private const string WINDOWS_APPS_PATH_MARKER = @"\WindowsApps\";
         private const string INSTALLER_PATH_MARKER = @"\" + CLAUDE_INSTALLER_FOLDER + @"\";
 
@@ -61,35 +62,23 @@ namespace SkylineAiConnector
         private const string CLAUDE_INSTALLER_FOLDER = "AnthropicClaude";
 
         /// <summary>
-        /// The file Claude Desktop reads local MCP servers from. Current Claude Desktop builds do
-        /// not create it until the user adds a local MCP server, so an existing file is preferred,
-        /// then the data folder the installed app already uses, where AddToClaudeDesktop creates it.
+        /// The config files to keep the Skyline entry in, the one Claude Desktop most likely reads
+        /// first. A Windows Store install can virtualize its app data into its package folder, where
+        /// that copy shadows %APPDATA%\Claude, so every existing copy is written. Current Claude
+        /// Desktop builds do not create the file until a local MCP server is added; when there is
+        /// none, it goes in the data folder the installed app already uses.
         /// </summary>
-        private static string ClaudeDesktopConfigPath
+        private static string[] ClaudeDesktopConfigPaths
         {
             get
             {
-                // Standard install: %APPDATA%\Claude\
-                string standardFolder = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    CLAUDE_DATA_FOLDER);
-                var dataFolders = new List<string> { standardFolder };
-                // Windows Store install with virtualized app data: %LOCALAPPDATA%\Packages\Claude_*\LocalCache\Roaming\Claude\
-                foreach (string packageDir in GetClaudeStorePackageDirectories())
-                    dataFolders.Add(Path.Combine(packageDir, "LocalCache", "Roaming", CLAUDE_DATA_FOLDER));
-
-                foreach (string folder in dataFolders)
-                {
-                    string configPath = Path.Combine(folder, CLAUDE_DESKTOP_CONFIG);
-                    if (File.Exists(configPath))
-                        return configPath;
-                }
-                foreach (string folder in dataFolders)
-                {
-                    if (Directory.Exists(folder))
-                        return Path.Combine(folder, CLAUDE_DESKTOP_CONFIG);
-                }
-                return Path.Combine(standardFolder, CLAUDE_DESKTOP_CONFIG);
+                var dataFolders = GetClaudeDesktopDataFolders();
+                var existingFiles = dataFolders.Select(folder => Path.Combine(folder, CLAUDE_DESKTOP_CONFIG))
+                    .Where(File.Exists).ToArray();
+                if (existingFiles.Length > 0)
+                    return existingFiles;
+                string dataFolder = dataFolders.FirstOrDefault(Directory.Exists) ?? dataFolders.Last();
+                return new[] { Path.Combine(dataFolder, CLAUDE_DESKTOP_CONFIG) };
             }
         }
 
@@ -100,8 +89,7 @@ namespace SkylineAiConnector
         /// </summary>
         public static bool IsClaudeDesktopInstalled()
         {
-            string configPath = ClaudeDesktopConfigPath;
-            if (File.Exists(configPath) || Directory.Exists(Path.GetDirectoryName(configPath)))
+            if (GetClaudeDesktopDataFolders().Any(Directory.Exists))
                 return true;
             if (GetClaudeStorePackageDirectories().Length > 0)
                 return true;
@@ -112,20 +100,20 @@ namespace SkylineAiConnector
 
         public static bool IsRegisteredInClaudeDesktop()
         {
-            return IsRegisteredInJsonConfig(ClaudeDesktopConfigPath, MCP_SERVERS_KEY);
+            return IsRegisteredInJsonConfig(ClaudeDesktopConfigPaths[0], MCP_SERVERS_KEY);
         }
 
         public static void AddToClaudeDesktop()
         {
-            AddToJsonConfig(ClaudeDesktopConfigPath, MCP_SERVERS_KEY, BuildServerEntry());
+            foreach (string configPath in ClaudeDesktopConfigPaths)
+                AddToJsonConfig(configPath, MCP_SERVERS_KEY, BuildServerEntry());
         }
 
         public static void RemoveFromClaudeDesktop()
         {
             // Nothing to remove without a config file, and writing one here would create the
             // data folder that makes Claude Desktop look installed.
-            string configPath = ClaudeDesktopConfigPath;
-            if (File.Exists(configPath))
+            foreach (string configPath in ClaudeDesktopConfigPaths.Where(File.Exists))
                 RemoveFromJsonConfig(configPath, MCP_SERVERS_KEY);
         }
 
@@ -177,9 +165,14 @@ namespace SkylineAiConnector
             }
         }
 
+        /// <summary>
+        /// True if the claude CLI that registration runs is installed. ~/.claude.json alone is not
+        /// enough: the Code tab in Claude Desktop creates it too, using an embedded copy that is not
+        /// on PATH, and that tab already sees the servers registered with Claude Desktop.
+        /// </summary>
         public static bool IsClaudeCodeInstalled()
         {
-            return File.Exists(ClaudeCodeConfigPath);
+            return File.Exists(ClaudeCodeConfigPath) && IsOnPath(CLAUDE_CLI_EXE);
         }
 
         public static bool IsRegisteredInClaudeCode()
@@ -470,6 +463,22 @@ namespace SkylineAiConnector
             return null;
         }
 
+        /// <summary>
+        /// Claude Desktop data folders, the one the app most likely reads first: each Windows Store
+        /// package's virtualized %LOCALAPPDATA%\Packages\Claude_*\LocalCache\Roaming\Claude\, then the
+        /// standard %APPDATA%\Claude\.
+        /// </summary>
+        private static List<string> GetClaudeDesktopDataFolders()
+        {
+            var dataFolders = GetClaudeStorePackageDirectories()
+                .Select(packageDir => Path.Combine(packageDir, "LocalCache", "Roaming", CLAUDE_DATA_FOLDER))
+                .ToList();
+            dataFolders.Add(Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                CLAUDE_DATA_FOLDER));
+            return dataFolders;
+        }
+
         private static string[] GetClaudeStorePackageDirectories()
         {
             return GetDirectoriesSafe(Path.Combine(
@@ -615,6 +624,22 @@ namespace SkylineAiConnector
         }
 
         // -- Helpers --
+
+        /// <summary>
+        /// True if a file of this name is in a PATH folder, the way Process.Start finds "claude"
+        /// for RunClaudeCli.
+        /// </summary>
+        private static bool IsOnPath(string fileName)
+        {
+            foreach (string pathEntry in (Environment.GetEnvironmentVariable("PATH") ?? string.Empty).Split(Path.PathSeparator))
+            {
+                if (string.IsNullOrWhiteSpace(pathEntry))
+                    continue;
+                if (File.Exists(Path.Combine(pathEntry.Trim().Trim('"'), fileName)))
+                    return true;
+            }
+            return false;
+        }
 
         private static void RunClaudeCli(string arguments)
         {
