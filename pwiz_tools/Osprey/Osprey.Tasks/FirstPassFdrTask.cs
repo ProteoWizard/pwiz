@@ -1015,13 +1015,13 @@ namespace pwiz.Osprey.Tasks
             int pass = 1)
         {
             ModelDiagnosticsReport.BuildClassificationFromLibrary(config, libraryById, log, pass,
-                out var classByBaseId, out var pairByBaseId, out var entrapmentRatio);
+                out var classByBaseId, out var pairByBaseId, out var entrapmentRatio, out var placement);
             var runNames = new string[fileNames.Count];
             for (int i = 0; i < runNames.Length; i++)
                 runNames[i] = fileNames[i];
             return new ModelDiagnosticsData.Accumulator(
                 runNames, classByBaseId, pairByBaseId, entrapmentRatio, config.RunFdr,
-                config.FdrLevel, pass);
+                config.FdrLevel, pass, placement);
         }
 
         /// <summary>

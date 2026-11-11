@@ -256,11 +256,17 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_ENTRAPMENT_FASTA = new OspreyArgument(OspreyArgNames.ENTRAPMENT_FASTA,
             () => GetPathToFile(EXT_FASTA), (c, p) => c.SetLibraryBuildOption(p, b => b.EntrapmentFastaPath = p.Value))
             { DescriptionArgs = () => new object[] { ARG_ENTRAPMENT.ArgumentText } };
+        // Entrapment placed on target proteins, a ratio added to --entrapment's: CarafeSharp's
+        // --entrapment-in-targets, declared here because --entrapment is Osprey's own.
+        public static readonly OspreyArgument ARG_ENTRAPMENT_IN_TARGETS = new OspreyArgument(OspreyArgNames.ENTRAPMENT_IN_TARGETS,
+            RATIO_VALUE, (c, p) => c.SetLibraryBuildOption(p, b => b.EntrapmentInTargetsRatio = ParseDouble(p)))
+            { DescriptionArgs = () => new object[] { ARG_ENTRAPMENT.ArgumentText, ARG_ENTRAPMENT_IN_TARGETS.ArgumentText,
+                EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO } };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_LIBRARY_BUILD =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Library_Build, true,
                 ARG_FASTA, ARG_PRECURSORS, ARG_TRAINING_INPUT, ARG_TRAINING_INPUT_LIST, ARG_MODEL, ARG_DEVICE, ARG_TORCH_RUNTIMES,
-                ARG_INSTALL_CUDA_RUNTIME, ARG_ENTRAPMENT, ARG_ENTRAPMENT_FASTA);
+                ARG_INSTALL_CUDA_RUNTIME, ARG_ENTRAPMENT, ARG_ENTRAPMENT_FASTA, ARG_ENTRAPMENT_IN_TARGETS);
 
         // CarafeSharp's declarations, declared again for Osprey's parser: the name, the value and
         // its listed values come from CarafeSharp, and the handler records the value into the
@@ -484,10 +490,13 @@ namespace pwiz.Osprey
             () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.DecoyPairingManifestPath = p.Value)
             { DescriptionArgs = () => new object[] { ARG_DECOYS_IN_LIBRARY.ArgumentText, TextUtil.EXT_TSV, LibrarySource.EXT_BLIB,
                 LibrarySource.EXT_PARQUET } };
+        public static readonly OspreyArgument ARG_STRIP_ENTRAPMENT = new OspreyArgument(OspreyArgNames.STRIP_ENTRAPMENT,
+            (c, p) => c._config.StripEntrapment = true)
+            { Scope = OspreyPropertyScope.search, DescriptionArgs = () => new object[] { LibrarySource.EXT_BLIB, ARG_MODEL_DIAGNOSTICS.ArgumentText } };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_DECOYS =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Decoys, true,
-                ARG_DECOYS_IN_LIBRARY, ARG_DECOY_PAIRING_MANIFEST);
+                ARG_DECOYS_IN_LIBRARY, ARG_DECOY_PAIRING_MANIFEST, ARG_STRIP_ENTRAPMENT);
 
         // --- Training Export ---------------------------------------------------------------
         // A PerFileRescoring product (docs/22-training-export.md; P17 in

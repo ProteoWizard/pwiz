@@ -1330,11 +1330,33 @@ namespace pwiz.Osprey
                 if (predictsOutputLibrary && !File.Exists(build.EntrapmentFastaPath))
                     return string.Format(OspreyResources.Program_LibraryBuildError_FASTA_file_not_found___0_, build.EntrapmentFastaPath);
             }
-            if (build.EntrapmentRatio.HasValue &&
-                !(build.EntrapmentRatio.Value >= EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO && build.EntrapmentRatio.Value <= 1))
+            if (build.EntrapmentInTargetsRatio.HasValue)
             {
-                return string.Format(OspreyResources.Program_LibraryBuildError__0__must_be_in___1____2__,
-                    OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText, EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO, 1);
+                if (!build.Entrapment)
+                {
+                    return string.Format(OspreyResources.Program_LibraryBuildError__0__needs__1__,
+                        OspreyCommandArgs.ARG_ENTRAPMENT_IN_TARGETS.ArgumentText, OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText);
+                }
+                if (!(build.EntrapmentInTargetsRatio.Value >= 0 && build.EntrapmentInTargetsRatio.Value <= 1))
+                {
+                    return string.Format(OspreyResources.Program_LibraryBuildError__0__must_be_in___1____2__,
+                        OspreyCommandArgs.ARG_ENTRAPMENT_IN_TARGETS.ArgumentText, 0, 1);
+                }
+            }
+            // The limits on the entrapment ratio apply to the total: --entrapment's ratio plus the
+            // entrapment placed on target proteins, when any is asked for.
+            if (build.EntrapmentRatio.HasValue || build.EntrapmentInTargetsRatio.HasValue)
+            {
+                double ratio = build.EntrapmentRatio ?? 1.0;
+                double total = ratio + (build.EntrapmentInTargetsRatio ?? 0.0);
+                if (ratio < 0 || !(total >= EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO && total <= 1))
+                {
+                    var ratioArgs = new List<string> { OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText };
+                    if (ratio >= 0 && build.EntrapmentInTargetsRatio.HasValue)
+                        ratioArgs.Add(OspreyCommandArgs.ARG_ENTRAPMENT_IN_TARGETS.ArgumentText);
+                    return string.Format(OspreyResources.Program_LibraryBuildError__0__must_be_in___1____2__,
+                        string.Join(@", ", ratioArgs), EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO, 1);
+                }
             }
             // The tuning writes <out>.model.zip, so tuning from it would overwrite its own input,
             // and a re-run would tune again from the last result instead of finding it current.

@@ -849,6 +849,7 @@ namespace pwiz.Osprey.Tasks
                     _experimentRecords.TryGetValue(rec.EntryId, out var exp))
                 {
                     entry.Pep = exp.Pep;
+                    entry.ExperimentPeptidePep = exp.PeptidePep;
                     entry.ExperimentAggregateScore = exp.ExperimentAggregateScore;
                 }
             }
@@ -879,6 +880,7 @@ namespace pwiz.Osprey.Tasks
                     if (!_experimentRecords.TryGetValue(e.EntryId, out var exp))
                         continue;
                     e.Pep = exp.Pep;
+                    e.ExperimentPeptidePep = exp.PeptidePep;
                     e.ExperimentAggregateScore = exp.ExperimentAggregateScore;
                     restored++;
                 }
@@ -1603,6 +1605,9 @@ namespace pwiz.Osprey.Tasks
             // Once, after the stream, rather than per file: the counts are run-wide and a
             // missing 1st-pass sidecar is a run-wide conclusion.
             seeder.LogSummary(ctx);
+            // The peptide-level competition over the same aggregates, grouped by the identities
+            // the survivor walk recorded, so every charge state of a peptide gets one peptide q.
+            var peptides = competition.CompetePeptides(floors.TargetPeptideFor);
 
             // 4. Finish each reported survivor from the bounded competition state, one file at a
             //    time, over the per-run SIDECARS rather than the entries - each file's records
@@ -1633,8 +1638,13 @@ namespace pwiz.Osprey.Tasks
                     // that aggregate, and its PEP is the pass-1 winner fact for the same
                     // ranking. The protein q goes in at 1.0, as below.
                     pass1Experiment.TryGetValue(rec.EntryId, out var q1);
+                    // The PEPs are carried with the rest of the pass-1 experiment scope: an
+                    // off-stratum entry did not enter the stratum's competition, so it has no
+                    // 2nd-pass winner and its pass-1 winner facts (precursor and peptide PEP) are
+                    // the ones that still describe it. The complement's competition is at the
+                    // precursor level, so its q stands in for the peptide q as well.
                     return new FdrExperimentRecord(rec.EntryId, eq, eq,
-                        1.0, q1.ExperimentAggregateScore, q1.Pep);
+                        1.0, q1.ExperimentAggregateScore, q1.Pep, q1.PeptidePep);
                 }
                 // The aggregate MUST move with the q. This mode recomputes experiment q from a
                 // fresh full-population competition, so the pass-1 aggregate the seed carried is
@@ -1650,16 +1660,16 @@ namespace pwiz.Osprey.Tasks
                 // aggregate their own competition ranked on.
                 double? agg = competition.ExperimentAggregateScore(rec.EntryId);
                 // The protein q goes in at 1.0: the second-pass protein FDR has not run yet, and
-                // it is the one column of this record that the step after it owns.
-                // Precursor-level path: peptide q stays in step with precursor q for the
-                // reported set (peptide-level FDR is not the target here).
+                // it is the one column of this record that the step after it owns. The peptide
+                // q and PEP come from the peptide-level competition over the same aggregates.
                 pass1Experiment.TryGetValue(rec.EntryId, out var prior);
                 // The PEP WINNER FACT, stored once per entry rather than joined onto every
                 // observation. This is what retired PatchPep: the value used to be knowable only
                 // after the fold and only for one run, so it was written back into each per-run
                 // sidecar afterwards - which is what made those files mutable (issue #4486).
-                return new FdrExperimentRecord(rec.EntryId, eq, eq, 1.0,
-                    agg ?? prior.ExperimentAggregateScore, competition.PepWinner(rec.EntryId));
+                return new FdrExperimentRecord(rec.EntryId, eq, peptides.QValue(rec.EntryId), 1.0,
+                    agg ?? prior.ExperimentAggregateScore, competition.PepWinner(rec.EntryId),
+                    peptides.Pep(rec.EntryId));
             }
         }
 
@@ -1741,15 +1751,15 @@ namespace pwiz.Osprey.Tasks
         /// One entry_id's experiment-scope record under the transfer: its pass-1 experiment
         /// values, carried verbatim, with the protein q left at 1.0 for the second-pass protein
         /// FDR to fill in. A precursor with no pass-1 record never competed: q = 1.0, aggregate
-        /// 0.0, PEP 1.0 - the values <see cref="AssignPerRunQ"/> gives its entries.
+        /// 0.0, both PEPs 1.0 - the values <see cref="AssignPerRunQ"/> gives its entries.
         /// </summary>
         private static FdrExperimentRecord CarryPass1Experiment(uint entryId,
             IReadOnlyDictionary<uint, FdrExperimentRecord> pass1Experiment)
         {
             if (!pass1Experiment.TryGetValue(entryId, out var q1))
-                return new FdrExperimentRecord(entryId, 1.0, 1.0, 1.0, 0.0, 1.0);
+                return new FdrExperimentRecord(entryId, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0);
             return new FdrExperimentRecord(entryId, q1.ExperimentPrecursorQvalue,
-                q1.ExperimentPeptideQvalue, 1.0, q1.ExperimentAggregateScore, q1.Pep);
+                q1.ExperimentPeptideQvalue, 1.0, q1.ExperimentAggregateScore, q1.Pep, q1.PeptidePep);
         }
 
         /// <summary>
@@ -1866,7 +1876,7 @@ namespace pwiz.Osprey.Tasks
                     {
                         experiment.Add(exp.EntryId, exp.ExperimentPrecursorQvalue,
                             exp.ExperimentPeptideQvalue, exp.ExperimentProteinQvalue,
-                            exp.ExperimentAggregateScore, exp.Pep);
+                            exp.ExperimentAggregateScore, exp.Pep, exp.PeptidePep);
                     }
                     nMapped += staged.Count;
                 }
@@ -2534,6 +2544,7 @@ namespace pwiz.Osprey.Tasks
             // PEP rides with the other experiment-scope values: one per entry_id, from the
             // analysis-wide record rather than from any run's own file (issue #4486).
             double expPep = firstPassExperiment?.Pep ?? 1.0;
+            double expPeptidePep = firstPassExperiment?.PeptidePep ?? 1.0;
             if (firstPass.HasValue)
             {
                 FdrScoreRecord rec1 = firstPass.Value;
@@ -2550,6 +2561,7 @@ namespace pwiz.Osprey.Tasks
                     entry.ExperimentPrecursorQvalue = expPrecQ;
                     entry.ExperimentPeptideQvalue = expPepQ;
                     entry.Pep = expPep;
+                    entry.ExperimentPeptidePep = expPeptidePep;
                     entry.ExperimentAggregateScore = expAgg;
                     return PerRunClass.Unchanged;
                 }
@@ -2560,6 +2572,7 @@ namespace pwiz.Osprey.Tasks
                 entry.ExperimentPrecursorQvalue = expPrecQ;
                 entry.ExperimentPeptideQvalue = expPepQ;
                 entry.Pep = expPep;
+                entry.ExperimentPeptidePep = expPeptidePep;
                 // Carried with the experiment q for the same reason, and NOT re-derived from
                 // newScore: it is the score that pass-1 experiment q was computed from, so
                 // re-mapping it to the rescored value would break the pairing that is the

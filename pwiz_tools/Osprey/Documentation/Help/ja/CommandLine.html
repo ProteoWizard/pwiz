@@ -42,6 +42,7 @@ a { color: #1565c0; }
 <tr><td><nobr>--install-cuda-runtime</nobr></td><td>Download the NVIDIA CUDA runtime from nuget.org (several GB; the size is logged first, and every package is checked against the hashes this build was tested with) into the <nobr>--torch-runtimes</nobr> folder and exit, so that <nobr>--device</nobr> can predict on the GPU. Needs nothing else on the command line.</td></tr>
 <tr><td><nobr>--entrapment</nobr>&nbsp;[&lt;ratio&gt;]</td><td>With <nobr>--fasta</nobr>: add an entrapment peptide to every target (or to this fraction of the targets, 0.1 to 1), shuffled from the target or, with <nobr>--entrapment-fasta</nobr>, drawn from a foreign proteome, each with a decoy of its own. For measuring the true FDR with FDRBench, whose pairing manifest is written as &lt;output&gt;.predicted/pairing.tsv.</td></tr>
 <tr><td><nobr>--entrapment-fasta</nobr>&nbsp;path/to/file（ファイル）.fasta</td><td>With <nobr>--entrapment</nobr>: draw the entrapment peptides, matched in mass, from this <nobr>foreign-species</nobr> protein FASTA instead of shuffling the targets.</td></tr>
+<tr><td><nobr>--entrapment-in-targets</nobr>&nbsp;&lt;ratio&gt;</td><td>With <nobr>--entrapment</nobr>: also add, for this fraction of the targets (up to 1), an entrapment peptide placed on a random target protein, so the protein evidence a <nobr>protein-aware</nobr> step gives false targets reaches entrapment too; only the pairing manifest&#39;s peptide_type marks these as entrapment. Added to the entrapment of <nobr>--entrapment</nobr> (<nobr>--entrapment</nobr> 0.1 <nobr>--entrapment-in-targets</nobr> 0.1 is 20% entrapment); together at most 1 and at least 0.1.</td></tr>
 </table>
 <div class="RowType">Library Digest</div>
 <p>With --fasta: what the library holds. These are CarafeSharp's options, under their standard names.</p>
@@ -153,6 +154,7 @@ a { color: #1565c0; }
 <tr><th>引数</th><th>説明</th></tr>
 <tr><td><nobr>--decoys-in-library</nobr></td><td>Search with the decoys the library holds instead of generating a reversed decoy for every target. A decoy is recognized by the library&#39;s own decoy table (in a .blib), by its Decoy column (in a .tsv), or by a protein accession starting with one of DECOY_, rev_, decoy_; the search stops with an error when none is recognized.</td></tr>
 <tr><td><nobr>--decoy-pairing-manifest</nobr>&nbsp;path/to/file（ファイル）.tsv</td><td>With <nobr>--decoys-in-library</nobr> and a .tsv or .parquet library: the FDRBench pairing manifest (a <nobr>5-column</nobr> TSV) that pairs each decoy, and each entrapment peptide, with its target. A .blib library carries its pairing in its own table and needs none.</td></tr>
+<tr><td><nobr>--strip-entrapment</nobr></td><td>Leave the entrapment peptides and the protein groups made only of them out of the result (the .blib and the reports); the <nobr>--model-diagnostics</nobr> report still measures them. Default: they are reported like targets.</td></tr>
 </table>
 <div class="RowType">Training Export</div>
 <table>

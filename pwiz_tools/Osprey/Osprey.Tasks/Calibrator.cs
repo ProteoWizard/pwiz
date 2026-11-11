@@ -281,7 +281,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     nTotalTargets++;
                     _libTargetSideCount++;
-                    if (EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds))
+                    if (EntrapmentLibraryClassifier.IsEntrapment(entry))
                         _libEntrapmentCount++;
                     if (entry.RetentionTime < libMinRt)
                         libMinRt = entry.RetentionTime;
@@ -2192,7 +2192,7 @@ namespace pwiz.Osprey.Tasks
                 // marker). Pure diagnostic tag for the --verbose anchor-purity report and the CAL
                 // view's entrapment-FDP curve, which every run records; unused by scoring/selection,
                 // so output is unchanged.
-                IsEntrapment = EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds),
+                IsEntrapment = EntrapmentLibraryClassifier.IsEntrapment(entry),
                 Sequence = entry.Sequence,
                 ScanNumber = apexSpectrum.ScanNumber,
                 CorrelationScore = bestCorrSum,

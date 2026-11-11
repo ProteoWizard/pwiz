@@ -379,6 +379,31 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <p class="note" id="fdpNote"></p>
     <div class="print-only" id="fdpPrintAll"></div>
   </div>
+  <div class="card" id="placementCard">
+    <h2>Entrapment FDP by protein placement</h2>
+    <p class="desc">The same combined estimate, split by where the entrapment sits: on <b>target proteins</b> (an
+      entrapment peptide that can receive the protein evidence a false target would) against on <b>entrapment
+      proteins of its own</b> (the standard design, which no protein-aware step can boost). Each half is scaled by
+      its own entrapment-to-target ratio. A step that uses no protein information gives the same curve for both;
+      a protein-aware step that is not calibrated shows as the target-protein half rising above the other.
+      The expected count is what a calibrated q would let through at that threshold, with a Poisson
+      interval, so a thin entrapment arm's noise reads as noise.</p>
+    <div class="kpis" id="placementKpis"></div>
+    <div class="legend" id="placementLegend"></div>
+    <div class="chartbox" id="placementChart"></div>
+    <p class="note" id="placementNote"></p>
+  </div>
+  <div class="card" id="proteinEntrapCard">
+    <h2>Protein-group FDP from entrapment proteins</h2>
+    <p class="desc">The reported protein groups against the groups made only of entrapment proteins, on the
+      experiment-level picked-protein q. The combined estimate uses the library's entrapment-protein to
+      target-protein ratio. Entrapment placed on target proteins is not counted here: it belongs to a target
+      protein's group by design, and is read at the precursor level above.</p>
+    <div class="kpis" id="proteinEntrapKpis"></div>
+    <div class="legend" id="proteinEntrapLegend"></div>
+    <div class="chartbox" id="proteinEntrapChart"></div>
+    <p class="note" id="proteinEntrapNote"></p>
+  </div>
   <div class="card" id="yieldCard">
     <h2>Identification yield</h2>
     <p class="desc">Accepted real-target precursors as the reported q-value threshold sweeps, at the scope
@@ -785,7 +810,8 @@ function passBundle(p){
     features:D.model||[],modelDegenerate:D.modelDegenerate,scores:D.scores,trainingSet:D.trainingSet||null,
     densityRatio:D.densityRatio,winFraction:D.winFraction,
     fdpViews:D.fdpViews,idYield:D.idYield,crossRun:D.crossRun,perFile:D.perFile,
-    coAssignment:D.coAssignment,equalChance:D.equalChance?D.equalChance.pass1:null};
+    coAssignment:D.coAssignment,equalChance:D.equalChance?D.equalChance.pass1:null,
+    proteinEntrapment:null};
   const m=D.pass2.model;   // null under confidence-transfer mode
   return {pass:2,label:"2nd pass",desc:"post-reconciliation reported pool",
     hasStructural:!!m,
@@ -793,7 +819,8 @@ function passBundle(p){
     trainingSet:m?(m.trainingSet||null):null,
     densityRatio:D.pass2.densityRatio,winFraction:D.pass2.winFraction,
     fdpViews:D.pass2.fdpViews,idYield:D.pass2.idYield,crossRun:D.pass2.crossRun,perFile:D.pass2.perFile,
-    coAssignment:D.pass2.coAssignment,equalChance:D.equalChance?D.equalChance.pass2:null};
+    coAssignment:D.pass2.coAssignment,equalChance:D.equalChance?D.equalChance.pass2:null,
+    proteinEntrapment:D.pass2.proteinEntrapment||null};
 }
 const PASSES=[passBundle(1)];
 if(D.pass2)PASSES.push(passBundle(2));
@@ -1461,7 +1488,75 @@ function renderFdrTab(b){
     const btn=H(ssel,"button",{class:"vbtn"+(k===fdrScope?" on":"")},sc[1]);
     btn.onclick=()=>{if(fdrScope===k)return;fdrScope=k;renderFdrTab(B());};});
   drawFdpCard(b);
+  drawPlacementCard(b);
+  drawProteinEntrapmentCard(b);
   drawYield(b);
+}
+
+// The entrapment FDP split by protein placement, for the active pass + scope. Hidden unless
+// the library carries entrapment on target proteins (the protein-aware audit design).
+const PLACEMENT_SERIES=[{k:"combined",name:"combined FDP (all entrapment)",color:COL.target,key:"combined"},
+                        {k:"onTargets",name:"on target proteins",color:COL.ptarget,key:"combinedOnTargetProteins"},
+                        {k:"own",name:"on entrapment proteins",color:COL.pdecoy,key:"combinedOnEntrapmentProteins"}];
+const placementOff={combined:false,onTargets:false,own:false};
+function expectedText(n,e){
+  const half=1.96*Math.sqrt(Math.max(e,0));
+  return fmt(n,0)+" (expected "+fmt(e,1)+" &plusmn; "+fmt(half,1)+")";
+}
+function drawPlacementCard(b){
+  const card=document.getElementById("placementCard");
+  const views=b.fdpViews||[];
+  const f=views.find(v=>v.scope===fdrScopeKey())||null;
+  if(!f||!f.hasPlacementSplit||!f.combinedOnTargetProteins){card.style.display="none";return;}
+  card.style.display="";
+  const host=document.getElementById("placementChart");host.innerHTML="";
+  const wrap=H(host,"div",{style:"display:flex;gap:14px;flex-wrap:wrap"});
+  const maxq=f.q[f.q.length-1]||1;
+  drawFdpPanel(H(wrap,"div",{}),f,0.02,"zoom  q in [0, 2%]",PLACEMENT_SERIES,placementOff);
+  drawFdpPanel(H(wrap,"div",{}),f,Math.max(0.02,maxq),"full extent",PLACEMENT_SERIES,placementOff);
+  const i1=opIdx(f,0.01);const kp=document.getElementById("placementKpis");kp.innerHTML="";
+  kpi(kp,"discoveries @1% q",fmt(f.nTargetAccepted[i1],0),"");
+  const kpE=H(kp,"div",{class:"kpi"});
+  H(kpE,"div",{class:"v",html:expectedText(f.nEntrapmentAccepted[i1],f.expectedEntrapment[i1])});
+  H(kpE,"div",{class:"k"},"entrapment @1% q, all");
+  kpi(kp,"on target proteins @1% q",fmt(f.nEntrapmentOnTargetProteins[i1],0)+" / FDP "+pct(f.combinedOnTargetProteins[i1],2),cls(f.combinedOnTargetProteins[i1],0.01));
+  kpi(kp,"on entrapment proteins @1% q",fmt(f.nEntrapmentOnEntrapmentProteins[i1],0)+" / FDP "+pct(f.combinedOnEntrapmentProteins[i1],2),cls(f.combinedOnEntrapmentProteins[i1],0.01));
+  const ratio=(f.combinedOnEntrapmentProteins[i1]>0)?f.combinedOnTargetProteins[i1]/f.combinedOnEntrapmentProteins[i1]:NaN;
+  kpi(kp,"target-protein / own-protein FDP @1% q",isNaN(ratio)?"-":fmt(ratio,2)+"x",isNaN(ratio)?"":(ratio<=1.25?"good":ratio<=2?"warn":"bad"));
+  document.getElementById("placementNote").innerHTML=
+    "Library ratios: on target proteins r = "+fmt(f.ratioOnTargetProteins,3)+", on entrapment proteins r = "+fmt(f.ratioOnEntrapmentProteins,3)+
+    " (total r = "+fmt(f.entrapmentRatio,3)+"). "+
+    "Inside detected proteins the entrapment shares the protein with every absent target peptide, so the target-protein half is read as a lower bound there; "+
+    "the two halves diverging is the signal, not either value alone (<a href='https://github.com/ProteoWizard/pwiz/blob/master/pwiz_tools/Osprey/docs/protein-shuffled-entrapment.md' target='_blank' rel='noopener'>the audit design</a>).";
+  legend(document.getElementById("placementLegend"),PLACEMENT_SERIES.filter(se=>f[se.key]).map(se=>({name:se.name,color:se.color,toggle:o=>{placementOff[se.k]=o;drawPlacementCard(B());}})));
+}
+
+// Protein-group FDP from the entrapment-only groups, pass 2 only (the reported protein q).
+const PROTEIN_ENTRAP_SERIES=[{k:"combined",name:"combined protein-group FDP",color:COL.target,key:"combined"}];
+const proteinEntrapOff={combined:false};
+function drawProteinEntrapmentCard(b){
+  const card=document.getElementById("proteinEntrapCard");
+  const pe=b.proteinEntrapment;
+  if(!pe||!pe.q||!pe.q.length){card.style.display="none";return;}
+  card.style.display="";
+  // The precursor panel's shape, so the same drawing serves: q, accepted targets, the series.
+  const f={q:pe.q,nTargetAccepted:pe.nTargetGroups,combined:pe.combined};
+  const host=document.getElementById("proteinEntrapChart");host.innerHTML="";
+  const wrap=H(host,"div",{style:"display:flex;gap:14px;flex-wrap:wrap"});
+  const maxq=pe.q[pe.q.length-1]||1;
+  drawFdpPanel(H(wrap,"div",{}),f,0.02,"zoom  protein q in [0, 2%]",PROTEIN_ENTRAP_SERIES,proteinEntrapOff);
+  drawFdpPanel(H(wrap,"div",{}),f,Math.max(0.02,maxq),"full extent",PROTEIN_ENTRAP_SERIES,proteinEntrapOff);
+  const i1=opIdx(f,0.01);const kp=document.getElementById("proteinEntrapKpis");kp.innerHTML="";
+  kpi(kp,"protein groups @1% protein q",fmt(pe.nTargetGroups[i1],0),"");
+  const kpE=H(kp,"div",{class:"kpi"});
+  H(kpE,"div",{class:"v",html:expectedText(pe.nEntrapmentGroups[i1],pe.expectedEntrapment[i1])});
+  H(kpE,"div",{class:"k"},"entrapment groups @1% protein q");
+  kpi(kp,"combined protein-group FDP @1% q",pct(pe.combined[i1],2),cls(pe.combined[i1],0.01));
+  kpi(kp,"max protein q",pct(maxq,1),"");
+  document.getElementById("proteinEntrapNote").innerHTML=
+    "Library: "+fmt(pe.nLibraryEntrapmentProteins,0)+" entrapment proteins against "+fmt(pe.nLibraryTargetProteins,0)+
+    " target proteins, r = "+fmt(pe.entrapmentRatio,3)+". Groups with no picked-protein q (decoy winners) are not counted.";
+  legend(document.getElementById("proteinEntrapLegend"),PROTEIN_ENTRAP_SERIES.map(se=>({name:se.name,color:se.color,toggle:o=>{proteinEntrapOff[se.k]=o;drawProteinEntrapmentCard(B());}})));
 }
 
 // The entrapment "q vs true FDP" calibration card for the active pass + scope. Hidden

@@ -466,11 +466,20 @@
   <data name="ModelDiagnosticsReport_BuildClassificationFromLibrary_Classifying__0__precursor_candidates_for_second_pass_model_diagnostics___" xml:space="preserve">
     <value>Classifying {0:N0} precursor candidates for second-pass model diagnostics...</value>
   </data>
+  <data name="SecondPassFdrTask_StripEntrapment_Left__0__entrapment_precursors___1__observations__out_of_the_result_" xml:space="preserve">
+    <value>Left {0:N0} entrapment precursors ({1:N0} observations) out of the result.</value>
+  </data>
+  <data name="ModelDiagnosticsReport_BuildClassificationFromLibrary__0__of__1__entrapment_peptides_sit_on_a_target_protein__the_model_diagnostics_report_splits_the_entrapment_FDP_by_protein_placement_" xml:space="preserve">
+    <value>{0:N0} of {1:N0} entrapment peptides sit on a target protein; the model diagnostics report splits the entrapment FDP by protein placement.</value>
+  </data>
   <data name="ModelDiagnosticsReport_FinalizePass2_Added_the_second_pass_results_to_the_model_diagnostics_report___0_" xml:space="preserve">
     <value>Added the second-pass results to the model diagnostics report: {0}</value>
   </data>
   <data name="ModelDiagnosticsReport_ReadPass1ForEnrichment_The_saved_first_pass_diagnostics_results_were_not_found__so_the_report_keeps_its_first_" xml:space="preserve">
     <value>The saved first-pass diagnostics results were not found, so the report keeps its first-pass content and the second-pass results are not added.</value>
+  </data>
+  <data name="ModelDiagnosticsReport_ReadProteinEntrapment_The_saved_protein_group_entrapment_results___0___belong_to_a_different_analysis__so_the_report_leaves_that_card_out_" xml:space="preserve">
+    <value>The saved protein-group entrapment results ({0}) belong to a different analysis, so the report leaves that card out.</value>
   </data>
   <data name="ModelDiagnosticsReport_TryRenderFromProducts_Rebuilt_the_model_diagnostics_report_from_the_completed_analysis___0_" xml:space="preserve">
     <value>Rebuilt the model diagnostics report from the completed analysis: {0}</value>
@@ -1110,6 +1119,9 @@
   </data>
   <data name="SecondPassFdrTask_RunProteinFdr_Collecting_best_scores_for_protein_FDR" xml:space="preserve">
     <value>Collecting best scores for protein FDR</value>
+  </data>
+  <data name="SecondPassFdrTask_ReadFirstPassProteinScores_Protein_FDR_could_not_read_the_first_pass_scores_in__0___Run_the_FirstPassFDR_task_again_to_rewrite_it_" xml:space="preserve">
+    <value>Protein FDR could not read the first-pass scores in {0}. Run the FirstPassFDR task again to rewrite it.</value>
   </data>
   <data name="SecondPassFdrTask_Run_1_of__1__re_scored_intermediate_files_was_written_by_an_older_Osprey_build_and_cannot_be_" xml:space="preserve">
     <value>1 of {1:N0} re-scored intermediate files was written by an older Osprey build and cannot be read by second-pass FDR, nor can the intermediate files beside it. Delete this analysis's {3} files and run the first pass again. Older file: {2}.</value>
