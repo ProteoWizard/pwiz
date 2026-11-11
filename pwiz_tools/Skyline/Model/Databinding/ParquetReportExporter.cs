@@ -996,15 +996,23 @@ namespace pwiz.Skyline.Model.Databinding
 
         /// <summary>
         /// Returns the number of rows that should be in each row group based on the
-        /// set of columns that are going to be written.
-        /// 
+        /// set of columns that are going to be written, between <see cref="MIN_ROWS_PER_GROUP"/>
+        /// and <see cref="MAX_ROWS_PER_GROUP"/>.
         /// </summary>
         public static int DecideRowCountPerGroup(ItemProperties itemProperties)
         {
             var targetGroupSize = 1 << 28; // Try to have row groups that are 256MB on disk
             int rowCount = targetGroupSize / EstimateRowByteCount(itemProperties);
-            return Math.Max(rowCount, 1000);
+            return Math.Min(Math.Max(rowCount, MIN_ROWS_PER_GROUP), MAX_ROWS_PER_GROUP);
         }
+
+        private const int MIN_ROWS_PER_GROUP = 1000;
+        /// <summary>
+        /// The estimate of a list column's size cannot tell how long its lists are, and a chunk of rows with
+        /// long lists (such as chromatograms) can hold more elements than an array can. Smaller chunks also
+        /// let one chunk be compressed and written while the next one is being calculated.
+        /// </summary>
+        private const int MAX_ROWS_PER_GROUP = 50000;
 
         /// <summary>
         /// Returns a loose estimate of the number of bytes each row will take up.
