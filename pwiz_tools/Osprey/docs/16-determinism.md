@@ -64,6 +64,12 @@ order." This is the C# realization of the Rust "sort after parallel collection"
 pattern — implemented as an indexed scatter so no post-sort is even needed for
 the flatten itself.
 
+The same holds inside a window: its candidates score in blocks, possibly on several
+threads (`CoelutionScorer.WindowWork`), each block into its own slot, and the window's
+entries are the blocks' entries in block order - candidate order. A block shares only
+state that is read-only once the window is open; its scoring context, peak-data view and
+XCorr `VisitedBins` / fill scratch are its own.
+
 Within a window, spectra are sorted by `(RetentionTime, ScanNumber)` before XIC
 extraction (`Osprey.Scoring/CoelutionScorer.cs:97`), `ScanNumber` giving a unique
 total order so the sort never ties.

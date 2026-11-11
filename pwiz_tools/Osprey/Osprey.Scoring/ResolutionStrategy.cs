@@ -22,6 +22,7 @@
  */
 
 using System.Collections.Generic;
+using System.Threading;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Scoring
@@ -41,8 +42,12 @@ namespace pwiz.Osprey.Scoring
     /// for it and kept for the rest of the window. Xcorr reads only each scored candidate's apex
     /// and the four scans around it, so a window with few candidates needs few of its spectra -
     /// measured on 3 Astral files, Stage 6's gap-fill passes used 2.5-5% of them and its re-score
-    /// 64%, first-pass scoring 91%. A cache serves one window on one thread (candidates are
-    /// scored in sequence), so filling it needs no lock.</para>
+    /// 64%, first-pass scoring 91%.</para>
+    ///
+    /// <para>The candidates of one window may be scored on several threads at once, each through
+    /// its own <see cref="ForLane"/> view: the lane has its own VisitedBins and fill scratch and
+    /// shares the filled spectra. Two lanes filling the same spectrum compute the same values, and
+    /// the first one stored is the one every lane reads.</para>
     /// </summary>
     public sealed class WindowXcorrCache
     {
@@ -72,7 +77,29 @@ namespace pwiz.Osprey.Scoring
             VisitedBins = new bool[nBins];
         }
 
+        // A lane over the shared spectra of another cache, with its own VisitedBins and fill scratch.
+        private WindowXcorrCache(WindowXcorrCache shared, XcorrScratch scratch)
+        {
+            Doubles = shared.Doubles;
+            Sparse = shared.Sparse;
+            Spectra = shared.Spectra;
+            Scorer = shared.Scorer;
+            Scratch = scratch;
+            VisitedBins = new bool[shared.VisitedBins.Length];
+        }
+
         public int Count { get { return Doubles != null ? Doubles.Length : Sparse.Length; } }
+
+        /// <summary>
+        /// A view of this cache for one thread scoring some of the window's candidates while other
+        /// threads score others. It shares the preprocessed spectra and fills them on demand as this
+        /// cache does, with scratch rented from <paramref name="scratchPool"/>; pass it to
+        /// <see cref="IResolutionStrategy.ReleaseWindowCache"/> when the thread is done with it.
+        /// </summary>
+        public WindowXcorrCache ForLane(XcorrScratchPool scratchPool)
+        {
+            return new WindowXcorrCache(this, Sparse != null && Scratch != null ? scratchPool.Rent() : null);
+        }
     }
 
     /// <summary>
@@ -223,8 +250,11 @@ namespace pwiz.Osprey.Scoring
                 var sparse = preprocessed.Sparse[spectrumIndex];
                 if (sparse == null && preprocessed.Scratch != null)
                 {
-                    sparse = preprocessed.Sparse[spectrumIndex] = preprocessed.Scorer.PreprocessSpectrumForXcorrSparse(
+                    // Lanes of one window may fill the same spectrum at once; they compute the same
+                    // values, and all of them read the first one stored.
+                    sparse = preprocessed.Scorer.PreprocessSpectrumForXcorrSparse(
                         preprocessed.Spectra[spectrumIndex], preprocessed.Scratch);
+                    sparse = Interlocked.CompareExchange(ref preprocessed.Sparse[spectrumIndex], sparse, null) ?? sparse;
                 }
                 if (sparse != null)
                     return scorer.XcorrFromSparse(sparse, entry, preprocessed.VisitedBins);

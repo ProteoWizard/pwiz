@@ -26,6 +26,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
@@ -281,45 +282,79 @@ namespace pwiz.Osprey.Scoring
                 passLabel ?? OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Scoring_isolation_windows,
                 windowsToScore.Count, progress =>
             {
-                Parallel.ForEach(Partitioner.Create(scoringOrder, EnumerablePartitionerOptions.NoBuffering), new ParallelOptions
+                var scheduler = new WindowScheduler(scoringOrder, windowsToScore);
+                Parallel.For(0, Math.Max(1, config.NThreads), new ParallelOptions
                 {
                     MaxDegreeOfParallelism = config.NThreads
                 },
-                wIdx =>
+                (lane, loopState) =>
                 {
-                    var window = windowsToScore[wIdx];
-                    var swWindow = Stopwatch.StartNew();
-                    // Source this window's calibrated MS2 spectra by the same key
-                    // the grouping has always used. On the streaming path this is
-                    // where the window's peaks are read from disk; they fall out of
-                    // scope (and are collected) when this Parallel.For body returns.
-                    int windowKey = (int)Math.Round(window.Center * 10.0);
-                    var windowSpectra = spectraProvider.GetCalibratedWindow(windowKey);
-                    // When calibration failed, centre the window on the library/mzML RT
-                    // range mapping instead of the raw library RT. The tolerance above
-                    // is still FallbackRtTolerance -- the map predicts, it does not
-                    // narrow (issue #4401). Identity, hence a no-op, when the two RT
-                    // scales already agree.
-                    var windowEntries = coelutionScorer.ScoreWindow(
-                        window, fullLibrary, windowSpectra, ms1Spectra,
-                        rtCalibration ?? context.FallbackRtMap,
-                        ms1Calibration, rtToleranceGlobal, rtSigmaGlobal,
-                        scorer, context);
-                    swWindow.Stop();
-
-                    windowTimings.Add(new WindowTiming
+                    while (!loopState.ShouldExitCurrentIteration)
                     {
-                        CenterMz = window.Center,
-                        Seconds = swWindow.Elapsed.TotalSeconds,
-                        CandidateCount = windowEntries.Count
-                    });
+                        // A window no thread has opened yet, or, once every window is open, a block
+                        // of an open window, so the last windows' candidates do not score on one
+                        // thread each while the others idle.
+                        CoelutionScorer.WindowWork work;
+                        int wIdx;
+                        if (!scheduler.TryTakeWork(out wIdx, out work))
+                            return;
 
-                    windowResults[wIdx] = windowEntries;
+                        var swWork = Stopwatch.StartNew();
+                        if (work == null)
+                        {
+                            var window = windowsToScore[wIdx];
+                            try
+                            {
+                                // Source this window's calibrated MS2 spectra by the same key
+                                // the grouping has always used. On the streaming path this is
+                                // where the window's peaks are read from disk; they are collected
+                                // once the window's last block is scored.
+                                int windowKey = (int)Math.Round(window.Center * 10.0);
+                                var windowSpectra = spectraProvider.GetCalibratedWindow(windowKey);
+                                // When calibration failed, centre the window on the library/mzML RT
+                                // range mapping instead of the raw library RT. The tolerance above
+                                // is still FallbackRtTolerance -- the map predicts, it does not
+                                // narrow (issue #4401). Identity, hence a no-op, when the two RT
+                                // scales already agree.
+                                work = coelutionScorer.OpenWindow(
+                                    window, fullLibrary, windowSpectra, ms1Spectra,
+                                    rtCalibration ?? context.FallbackRtMap,
+                                    ms1Calibration, rtToleranceGlobal, rtSigmaGlobal,
+                                    scorer, context);
+                            }
+                            finally
+                            {
+                                scheduler.Opened(wIdx, work);
+                            }
+                        }
 
-                    lock (lockObj)
-                    {
-                        windowsProcessed++;
-                        progress.Report(windowsProcessed);
+                        try
+                        {
+                            bool completedWindow = work.IsComplete;
+                            while (!completedWindow && !loopState.ShouldExitCurrentIteration &&
+                                   work.TryScoreNextBlock(out completedWindow))
+                            {
+                            }
+                            swWork.Stop();
+                            var timing = scheduler.AddSeconds(wIdx, swWork.Elapsed.TotalSeconds);
+                            if (completedWindow)
+                            {
+                                timing.CandidateCount = work.Entries.Count;
+                                windowTimings.Add(timing);
+                                windowResults[wIdx] = work.Entries;
+
+                                lock (lockObj)
+                                {
+                                    windowsProcessed++;
+                                    progress.Report(windowsProcessed);
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            work.Release();
+                            throw;
+                        }
                     }
                 });
             }, passLabel == null ? string.Empty : @"  ", 2.0);
@@ -708,6 +743,91 @@ namespace pwiz.Osprey.Scoring
         /// <summary>
         /// Per-window timing record for diagnostic summarization.
         /// </summary>
+        /// <summary>
+        /// Hands out the coelution scoring work: each window, in the order given, to the thread
+        /// that opens it and scores its blocks, and once no window is left to open, a block of an
+        /// open window to any idle thread. Until then a window is scored on its own thread, as it
+        /// was when the window was the unit of parallel work; afterwards the threads that would
+        /// have idled while the last windows finished score those windows' blocks with them. A
+        /// window's entries do not depend on which threads scored its blocks.
+        /// </summary>
+        private sealed class WindowScheduler
+        {
+            private readonly object _lock = new object();
+            private readonly Queue<int> _unopened;
+            private readonly List<KeyValuePair<int, CoelutionScorer.WindowWork>> _open =
+                new List<KeyValuePair<int, CoelutionScorer.WindowWork>>();
+            private readonly WindowTiming[] _timings;
+            private int _opening;
+
+            public WindowScheduler(IEnumerable<int> windowOrder, List<IsolationWindow> windows)
+            {
+                _unopened = new Queue<int>(windowOrder);
+                _timings = new WindowTiming[windows.Count];
+                for (int i = 0; i < windows.Count; i++)
+                    _timings[i] = new WindowTiming { CenterMz = windows[i].Center };
+            }
+
+            /// <summary>
+            /// The next work for a thread: a window to open (<paramref name="work"/> null), or an
+            /// open window with a block no thread has started. Waits while windows are being opened
+            /// and none of the open ones has such a block; false once there is no work left.
+            /// </summary>
+            public bool TryTakeWork(out int windowIndex, out CoelutionScorer.WindowWork work)
+            {
+                lock (_lock)
+                {
+                    while (true)
+                    {
+                        work = null;
+                        if (_unopened.Count > 0)
+                        {
+                            windowIndex = _unopened.Dequeue();
+                            _opening++;
+                            return true;
+                        }
+                        _open.RemoveAll(w => !w.Value.HasUnstartedBlocks);
+                        if (_open.Count > 0)
+                        {
+                            windowIndex = _open[0].Key;
+                            work = _open[0].Value;
+                            return true;
+                        }
+                        windowIndex = -1;
+                        if (_opening == 0)
+                            return false;
+                        Monitor.Wait(_lock);
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Records that a window taken by <see cref="TryTakeWork"/> is open, its blocks available
+            /// to other threads; <paramref name="work"/> is null when opening it failed.
+            /// </summary>
+            public void Opened(int windowIndex, CoelutionScorer.WindowWork work)
+            {
+                lock (_lock)
+                {
+                    _opening--;
+                    if (work != null && work.HasUnstartedBlocks)
+                        _open.Add(new KeyValuePair<int, CoelutionScorer.WindowWork>(windowIndex, work));
+                    Monitor.PulseAll(_lock);
+                }
+            }
+
+            /// <summary>Adds thread time spent on a window; returns the window's timing.</summary>
+            public WindowTiming AddSeconds(int windowIndex, double seconds)
+            {
+                lock (_lock)
+                {
+                    var timing = _timings[windowIndex];
+                    timing.Seconds += seconds;
+                    return timing;
+                }
+            }
+        }
+
         private class WindowTiming
         {
             public double CenterMz { get; set; }

@@ -178,9 +178,12 @@ describes. The C# port routes this through `IResolutionStrategy`
   gap-fill passes used 2.5-5% of them, its re-score 64%, first-pass scoring 91%.
   Rust preprocesses every spectrum; output is identical because a fill reads only
   its own spectrum and clears the scratch buffers it uses before using them (it
-  leaves them dirty, so that scratch is for fills only). A cache serves one window on one thread
-  (candidates are scored in sequence), so the fill needs no lock.
-  `ReleaseWindowCache` returns the scratch to the pool.
+  leaves them dirty, so that scratch is for fills only). The candidates of one window
+  may score on several threads at once (see `03-spectral-scoring.md` B.1), each
+  through its own `WindowXcorrCache.ForLane` view with its own `VisitedBins` and fill
+  scratch over the shared `Sparse` array. Two lanes filling one spectrum compute the
+  same values, and `Interlocked.CompareExchange` keeps the first stored, so the fill
+  needs no lock. `ReleaseWindowCache` returns the scratch to the pool.
 
 `ScoreXcorr` (`ResolutionStrategy.cs:164` / `:212`) dispatches on the cache type:
 unit reads `preprocessed.Doubles[i]` via `XcorrFromPreprocessed`; HRAM fills

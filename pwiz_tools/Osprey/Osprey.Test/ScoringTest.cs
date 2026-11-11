@@ -25,6 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -47,10 +49,12 @@ namespace pwiz.Osprey.Test
         // disjoint: a reused Id returns another test's fragment m/z values and fails (or passes)
         // for the wrong reason. FragmentSelectionTest.FRAG_ID_BASE = 900000,
         // MZ_INDEX_ID_BASE = 910000, SCAN_MAJOR_ID_BASE = 920000 (scan-major prefilter test),
-        // CalibrationTest.SCAN_MAJOR_CAL_ID_BASE = 930000, CORR_TOLERANCE_ID_BASE = 940000.
+        // CalibrationTest.SCAN_MAJOR_CAL_ID_BASE = 930000, CORR_TOLERANCE_ID_BASE = 940000,
+        // WINDOW_BLOCKS_ID_BASE = 950000.
         private const uint MZ_INDEX_ID_BASE = 910000u;
         private const uint SCAN_MAJOR_ID_BASE = 920000u;
         private const uint CORR_TOLERANCE_ID_BASE = 940000u;
+        private const uint WINDOW_BLOCKS_ID_BASE = 950000u;
 
         #region DecoyGenerator Tests
 
@@ -2157,6 +2161,124 @@ namespace pwiz.Osprey.Test
             return new CoelutionScorer(null, recordedFeatures).ScoreWindow(new IsolationWindow(500.0, 2.0, 2.0),
                 new List<LibraryEntry> { entry }, new List<Spectrum>(spectra), new List<MS1Spectrum>(),
                 null, MzCalibrationResult.Uncalibrated(), 0.3, 0.2, scorer, context).Single();
+        }
+
+        #endregion
+
+        #region Window blocks scored on many threads
+
+        /// <summary>
+        /// A window's candidates score in blocks of consecutive candidates that several threads may
+        /// score at once (CoelutionScorer.WindowWork), each through its own scoring context and XCorr
+        /// cache lane over the window's shared, filled-on-demand HRAM spectra. The entries must be
+        /// the ones ScoreWindow scores on one thread, in the same order, every feature bit for bit,
+        /// with and without the wider correlation-tolerance XICs. Candidates draw 6 fragments from a
+        /// small pool of m/z values, each with its own elution profiles, so they coelute to varied
+        /// degrees and many share spectra (and so XCorr fills) with candidates in other blocks.
+        /// </summary>
+        [TestMethod]
+        public void TestWindowBlocksScoreIdenticallyOnManyThreads()
+        {
+            const int nCandidates = 1300;   // Three blocks of at most 512 candidates
+            const int nScans = 60;
+            var random = new Random(5150);
+            var pool = new double[30];
+            for (int p = 0; p < pool.Length; p++)
+                pool[p] = 300.0 + 900.0 * random.NextDouble() + p * 1e-3;  // Distinct m/z values
+            var library = new List<LibraryEntry>(nCandidates);
+            for (int c = 0; c < nCandidates; c++)
+            {
+                var entry = new LibraryEntry(WINDOW_BLOCKS_ID_BASE + (uint)c, @"PEPTIDEK", @"PEPTIDEK", 2,
+                    498.5 + 3.0 * random.NextDouble(), CORR_RT0 + CORR_RT_STEP * (10 + random.Next(nScans - 20)));
+                var fragmentMzs = pool.OrderBy(_ => random.Next()).Take(6).ToArray();
+                entry.Fragments = Enumerable.Range(0, fragmentMzs.Length).Select(f => new LibraryFragment
+                {
+                    Mz = fragmentMzs[f],
+                    RelativeIntensity = 1.0f - 0.12f * f,
+                    Annotation = new FragmentAnnotation { IonType = IonType.Y, Ordinal = (byte)(2 + f), Charge = 1 },
+                }).ToList();
+                library.Add(entry);
+            }
+            // Each pool m/z elutes as three Gaussians at random apexes, with a few percent of noise.
+            var apexes = pool.Select(_ => Enumerable.Range(0, 3).Select(i => 5.0 + (nScans - 10) * random.NextDouble()).ToArray()).ToArray();
+            var spectra = new List<Spectrum>(nScans);
+            for (int s = 0; s < nScans; s++)
+            {
+                var mzs = new List<double>();
+                var intensities = new List<float>();
+                foreach (int p in Enumerable.Range(0, pool.Length).OrderBy(p => pool[p]))
+                {
+                    double intensity = apexes[p].Sum(a => 1e5 * Math.Exp(-0.5 * Math.Pow((s - a) / 2.5, 2))) *
+                                       (0.95 + 0.1 * random.NextDouble());
+                    if (intensity < 10.0)
+                        continue;
+                    mzs.Add(pool[p]);
+                    intensities.Add((float)intensity);
+                }
+                spectra.Add(new Spectrum
+                {
+                    ScanNumber = 2000 + (uint)s,
+                    RetentionTime = CORR_RT0 + CORR_RT_STEP * s,
+                    PrecursorMz = 500.0,
+                    IsolationWindow = new IsolationWindow(500.0, 2.0, 2.0),
+                    Mzs = mzs.ToArray(),
+                    Intensities = intensities.ToArray(),
+                });
+            }
+
+            var config = new OspreyConfig { FragmentTolerance = FragmentToleranceConfig.Hram(10.0) };
+            foreach (var corrConfig in new[] { null, ScoringPipeline.CorrelationConfigFor(config, 15.0) })
+            {
+                var serial = ScoreWindowBlocks(library, spectra, config, corrConfig, 1, out _);
+                Assert.IsTrue(serial.Count > 100, string.Format(@"{0} entries scored", serial.Count));
+                var parallel = ScoreWindowBlocks(library, spectra, config, corrConfig, 8, out int nBlocks);
+                Assert.AreEqual(3, nBlocks);
+                Assert.AreEqual(serial.Count, parallel.Count);
+                for (int i = 0; i < serial.Count; i++)
+                {
+                    Assert.AreEqual(serial[i].EntryId, parallel[i].EntryId, string.Format(@"entry {0}", i));
+                    Assert.AreEqual(serial[i].ScanNumber, parallel[i].ScanNumber);
+                    for (int f = 0; f < OspreyFeatureCalculators.FeatureCount; f++)
+                    {
+                        Assert.AreEqual(BitConverter.DoubleToInt64Bits(serial[i].Features[f]),
+                            BitConverter.DoubleToInt64Bits(parallel[i].Features[f]),
+                            string.Format(@"entry {0}, feature {1} ({2})", serial[i].EntryId, f,
+                                OspreyFeatureCalculators.Get(f).Name));
+                    }
+                }
+            }
+        }
+
+        // The window's entries scored by ScoreWindow (threads == 1), or by that many threads taking
+        // its blocks as they free up, with the window's block count. Each call fills a new XCorr cache.
+        private static List<FdrEntry> ScoreWindowBlocks(List<LibraryEntry> library, List<Spectrum> spectra,
+            OspreyConfig config, OspreyConfig corrConfig, int threads, out int nBlocks)
+        {
+            var context = new ScoringContext(config, @"synthetic") { CorrelationConfig = corrConfig };
+            var scorer = context.Resolution.CreateScorer();
+            context.EnsureXcorrScratchPool(scorer.BinConfig.NBins);
+            var coelutionScorer = new CoelutionScorer(null);
+            var window = new IsolationWindow(500.0, 2.0, 2.0);
+            nBlocks = 0;
+            if (threads == 1)
+            {
+                return coelutionScorer.ScoreWindow(window, library, new List<Spectrum>(spectra),
+                    new List<MS1Spectrum>(), null, MzCalibrationResult.Uncalibrated(), 0.3, 0.2, scorer, context);
+            }
+            var work = coelutionScorer.OpenWindow(window, library, new List<Spectrum>(spectra),
+                new List<MS1Spectrum>(), null, MzCalibrationResult.Uncalibrated(), 0.3, 0.2, scorer, context);
+            nBlocks = work.BlockCount;
+            int completions = 0;
+            Parallel.For(0, threads, new ParallelOptions { MaxDegreeOfParallelism = threads }, _ =>
+            {
+                while (work.TryScoreNextBlock(out bool completedWindow))
+                {
+                    if (completedWindow)
+                        Interlocked.Increment(ref completions);
+                }
+            });
+            Assert.AreEqual(1, completions, @"one block completes the window");
+            return work.Entries;
         }
 
         #endregion

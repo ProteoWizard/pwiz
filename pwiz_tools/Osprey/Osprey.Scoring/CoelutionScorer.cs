@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 
@@ -119,14 +120,44 @@ namespace pwiz.Osprey.Scoring
             SpectralScorer scorer,
             ScoringContext context)
         {
-            var config = context.Config;
-            var entries = new List<FdrEntry>();
+            var work = OpenWindow(window, fullLibrary, windowSpectra, ms1Spectra, rtCalibration,
+                ms1Calibration, globalRtTolerance, rtSigma, scorer, context);
+            try
+            {
+                while (work.TryScoreNextBlock(out _))
+                {
+                }
+                return work.Entries;
+            }
+            finally
+            {
+                work.Release();
+            }
+        }
 
+        /// <summary>
+        /// Prepare the scoring of one window's candidates, as <see cref="ScoreWindow"/> scores them,
+        /// in blocks of consecutive candidates that any number of threads may score at once through
+        /// <see cref="WindowWork.TryScoreNextBlock"/>. The window's entries are those blocks' entries
+        /// in candidate order, the same list in the same order whichever threads scored them.
+        /// </summary>
+        internal WindowWork OpenWindow(
+            IsolationWindow window,
+            List<LibraryEntry> fullLibrary,
+            List<Spectrum> windowSpectra,
+            List<MS1Spectrum> ms1Spectra,
+            RTCalibration rtCalibration,
+            MzCalibrationResult ms1Calibration,
+            double globalRtTolerance,
+            double rtSigma,
+            SpectralScorer scorer,
+            ScoringContext context)
+        {
             // The caller (RunCoelutionScoring) resolves this window's calibrated
             // spectra from the IWindowSpectraProvider by key; an absent/empty
             // window yields no scored entries, as before.
             if (windowSpectra == null || windowSpectra.Count == 0)
-                return entries;
+                return new WindowWork();
 
             // Sort spectra by RT for XIC extraction, with ScanNumber as a unique
             // secondary key so the comparator never returns 0 -- an allocation-free
@@ -150,61 +181,190 @@ namespace pwiz.Osprey.Scoring
             }
 
             if (candidates.Count == 0)
-                return entries;
+                return new WindowWork();
 
-            // Build RT array for this window
-            double[] windowRts = new double[windowSpectra.Count];
-            for (int i = 0; i < windowSpectra.Count; i++)
-                windowRts[i] = windowSpectra[i].RetentionTime;
+            return new WindowWork(this, candidates, windowSpectra, ms1Spectra, rtCalibration,
+                ms1Calibration, globalRtTolerance, rtSigma, scorer, context);
+        }
 
-            // The window's XCorr cache (see IResolutionStrategy.PreprocessWindowSpectra);
-            // released once all candidates for this window are scored.
-            var preprocessedXcorr = context.Resolution.PreprocessWindowSpectra(
-                windowSpectra, scorer, context.XcorrScratchPool);
+        /// <summary>
+        /// One window's candidates, prepared for scoring in blocks of consecutive candidates: the
+        /// window's sorted spectra, its XCorr cache, and the signal prefilter run for all of them at
+        /// once. Each block is scored with its own scoring context, peak-data view and
+        /// <see cref="WindowXcorrCache.ForLane"/> cache view, so blocks share only state that is
+        /// read-only once the window is open, and a candidate scores the same values on any thread.
+        /// </summary>
+        internal sealed class WindowWork
+        {
+            private readonly CoelutionScorer _scorer;
+            private readonly List<LibraryEntry> _candidates;
+            private readonly List<Spectrum> _windowSpectra;
+            private readonly double[] _windowRts;
+            private readonly List<MS1Spectrum> _ms1Spectra;
+            private readonly RTCalibration _rtCalibration;
+            private readonly MzCalibrationResult _ms1Calibration;
+            private readonly double _globalRtTolerance;
+            private readonly double _rtSigma;
+            private readonly SpectralScorer _spectralScorer;
+            private readonly ScoringContext _context;
+            private readonly WindowPrefilter _prefilter;
+            private readonly bool _scanMajorXics;
+            private readonly int[] _blockEnds;          // Exclusive end of each block; block b starts at _blockEnds[b - 1]
+            private readonly List<FdrEntry>[] _blockEntries;
+            private WindowXcorrCache _preprocessedXcorr;
+            private int _nextBlock;
+            private int _completedBlocks;
+            private int _released;
 
-            // Reused per-window scoring context + peak-data adapter for the
-            // modular feature calculators. The per-candidate loop mutates them in
-            // place (ClearByproducts + Set) so scoring allocates no context /
-            // peak-data per candidate. Windows are scored on separate threads
-            // (Parallel.For above), so these are window-local, never shared task
-            // state.
-            var ospreyContext = new OspreyScoringContext(config);
-            ospreyContext.SetWindow(context.Resolution, preprocessedXcorr, scorer,
-                context.XcorrScratchPool);
-            var ospreyPeakData = new OspreyPeakData();
-            // The correlation-shape features' context and view over the wider-tolerance XICs, when
-            // OSPREY_CORR_FRAGMENT_TOLERANCE sets one (ScoringContext.CorrelationConfig).
-            var corrScoring = context.CorrelationConfig != null
-                ? new CorrelationScoring(context.CorrelationConfig, context, preprocessedXcorr, scorer,
-                    _correlationPolish)
-                : null;
-
-            try
+            /// <summary>A window with no candidates to score: complete, with no entries.</summary>
+            public WindowWork()
             {
-                // Run the signal prefilter for all candidates at once, scan-major, so each
-                // spectrum is matched against every candidate while it is in cache. Null when
-                // the prefilter is off (or OSPREY_SCAN_MAJOR_PREFILTER=0), leaving each
-                // candidate's own TryExtract to run it as before.
-                var prefilter = OspreyEnvironment.ScanMajorPrefilter
-                    ? _extractor.ComputePrefilterScanMajor(candidates, windowSpectra, windowRts,
-                        rtCalibration, globalRtTolerance, context)
-                    : null;
-                // The passing candidates' fragment XICs, also extracted scan-major, one block of
-                // consecutive candidates at a time to bound the XICs alive at once. Scoring
-                // order is unchanged.
-                bool scanMajorXics = prefilter != null && OspreyEnvironment.ScanMajorXic;
+                _blockEnds = Array.Empty<int>();
+                Entries = new List<FdrEntry>();
+            }
 
-                // Score each candidate
+            public WindowWork(CoelutionScorer scorer, List<LibraryEntry> candidates, List<Spectrum> windowSpectra,
+                List<MS1Spectrum> ms1Spectra, RTCalibration rtCalibration, MzCalibrationResult ms1Calibration,
+                double globalRtTolerance, double rtSigma, SpectralScorer spectralScorer, ScoringContext context)
+            {
+                _scorer = scorer;
+                _candidates = candidates;
+                _windowSpectra = windowSpectra;
+                _ms1Spectra = ms1Spectra;
+                _rtCalibration = rtCalibration;
+                _ms1Calibration = ms1Calibration;
+                _globalRtTolerance = globalRtTolerance;
+                _rtSigma = rtSigma;
+                _spectralScorer = spectralScorer;
+                _context = context;
+
+                // Build RT array for this window
+                _windowRts = new double[windowSpectra.Count];
+                for (int i = 0; i < windowSpectra.Count; i++)
+                    _windowRts[i] = windowSpectra[i].RetentionTime;
+
+                // The window's XCorr cache (see IResolutionStrategy.PreprocessWindowSpectra);
+                // released once all candidates for this window are scored.
+                _preprocessedXcorr = context.Resolution.PreprocessWindowSpectra(
+                    windowSpectra, spectralScorer, context.XcorrScratchPool);
+                WindowPrefilter prefilter;
+                try
+                {
+                    // Run the signal prefilter for all candidates at once, scan-major, so each
+                    // spectrum is matched against every candidate while it is in cache. Null when
+                    // the prefilter is off (or OSPREY_SCAN_MAJOR_PREFILTER=0), leaving each
+                    // candidate's own TryExtract to run it as before.
+                    prefilter = OspreyEnvironment.ScanMajorPrefilter
+                        ? scorer._extractor.ComputePrefilterScanMajor(candidates, windowSpectra, _windowRts,
+                            rtCalibration, globalRtTolerance, context)
+                        : null;
+                }
+                catch
+                {
+                    Release();
+                    throw;
+                }
+                // The passing candidates' fragment XICs, also extracted scan-major, one block of
+                // consecutive candidates at a time to bound the XICs alive at once. Without them
+                // the window is one block.
+                _prefilter = prefilter;
+                _scanMajorXics = prefilter != null && OspreyEnvironment.ScanMajorXic;
+                var blockEnds = new List<int>();
                 int blockEnd;
                 for (int blockStart = 0; blockStart < candidates.Count; blockStart = blockEnd)
                 {
-                    blockEnd = scanMajorXics
+                    blockEnd = prefilter != null && _scanMajorXics
                         ? prefilter.NextXicBlockEnd(blockStart, XIC_BLOCK_SIZE, XIC_BLOCK_BYTES)
                         : candidates.Count;
+                    blockEnds.Add(blockEnd);
+                }
+                _blockEnds = blockEnds.ToArray();
+                _blockEntries = new List<FdrEntry>[_blockEnds.Length];
+            }
+
+            /// <summary>The window's entries in candidate order, once every block is scored; else null.</summary>
+            public List<FdrEntry> Entries { get; private set; }
+
+            /// <summary>True once every block is scored, and <see cref="Entries"/> set.</summary>
+            public bool IsComplete
+            {
+                get { return Entries != null; }
+            }
+
+            /// <summary>The number of blocks the window's candidates score in.</summary>
+            public int BlockCount
+            {
+                get { return _blockEnds.Length; }
+            }
+
+            /// <summary>True while a block remains that no thread has started.</summary>
+            public bool HasUnstartedBlocks
+            {
+                get { return Volatile.Read(ref _nextBlock) < _blockEnds.Length; }
+            }
+
+            /// <summary>
+            /// Score the next block no thread has started, if any. False when none remains.
+            /// <paramref name="completedWindow"/> is true for the one call, on whichever thread,
+            /// that scores the window's last block to finish: <see cref="Entries"/> is then set
+            /// and the window's XCorr cache released.
+            /// </summary>
+            public bool TryScoreNextBlock(out bool completedWindow)
+            {
+                completedWindow = false;
+                int block = Interlocked.Increment(ref _nextBlock) - 1;
+                if (block >= _blockEnds.Length)
+                    return false;
+
+                _blockEntries[block] = ScoreBlock(block == 0 ? 0 : _blockEnds[block - 1], _blockEnds[block]);
+                if (Interlocked.Increment(ref _completedBlocks) == _blockEnds.Length)
+                {
+                    var entries = new List<FdrEntry>();
+                    for (int b = 0; b < _blockEntries.Length; b++)
+                    {
+                        entries.AddRange(_blockEntries[b]);
+                        _blockEntries[b] = null;
+                    }
+                    Release();
+                    Entries = entries;
+                    completedWindow = true;
+                }
+                return true;
+            }
+
+            /// <summary>Return the window's XCorr cache scratch to the pool; safe to call more than once.</summary>
+            public void Release()
+            {
+                if (_preprocessedXcorr != null && Interlocked.Exchange(ref _released, 1) == 0)
+                    _context.Resolution.ReleaseWindowCache(_preprocessedXcorr, _context.XcorrScratchPool);
+            }
+
+            private List<FdrEntry> ScoreBlock(int blockStart, int blockEnd)
+            {
+                var entries = new List<FdrEntry>();
+                var config = _context.Config;
+                var laneXcorr = _preprocessedXcorr?.ForLane(_context.XcorrScratchPool);
+                try
+                {
+                    // Reused scoring context + peak-data adapter for the modular feature
+                    // calculators. The per-candidate loop mutates them in place (ClearByproducts +
+                    // Set) so scoring allocates no context / peak-data per candidate. A block is
+                    // scored on one thread, so these are block-local, never shared.
+                    var ospreyContext = new OspreyScoringContext(config);
+                    ospreyContext.SetWindow(_context.Resolution, laneXcorr, _spectralScorer,
+                        _context.XcorrScratchPool);
+                    var ospreyPeakData = new OspreyPeakData();
+                    // The correlation-shape features' context and view over the wider-tolerance XICs, when
+                    // OSPREY_CORR_FRAGMENT_TOLERANCE sets one (ScoringContext.CorrelationConfig).
+                    var corrScoring = _context.CorrelationConfig != null
+                        ? new CorrelationScoring(_context.CorrelationConfig, _context, laneXcorr, _spectralScorer,
+                            _scorer._correlationPolish)
+                        : null;
+
                     List<XicData>[] blockCorrXics = null;
-                    var blockXics = scanMajorXics
-                        ? PeakDataExtractor.ExtractXicsScanMajor(candidates, blockStart, blockEnd,
-                            prefilter, windowSpectra, windowRts, config, context.CorrelationConfig, out blockCorrXics)
+                    var blockXics = _scanMajorXics
+                        ? PeakDataExtractor.ExtractXicsScanMajor(_candidates, blockStart, blockEnd,
+                            _prefilter, _windowSpectra, _windowRts, config, _context.CorrelationConfig, out blockCorrXics)
                         : null;
                     for (int c = blockStart; c < blockEnd; c++)
                     {
@@ -221,25 +381,25 @@ namespace pwiz.Osprey.Scoring
                             blockCorrXics[c - blockStart] = null;
                         }
 
-                        var fdrEntry = ScoreCandidate(
-                            candidates[c], windowSpectra, windowRts,
-                            rtCalibration,
-                            globalRtTolerance, rtSigma,
-                            ms1Spectra, ms1Calibration,
-                            context,
+                        var fdrEntry = _scorer.ScoreCandidate(
+                            _candidates[c], _windowSpectra, _windowRts,
+                            _rtCalibration,
+                            _globalRtTolerance, _rtSigma,
+                            _ms1Spectra, _ms1Calibration,
+                            _context,
                             ospreyContext, ospreyPeakData, corrScoring,
-                            prefilter, c, precomputedXics, precomputedCorrXics);
+                            _prefilter, c, precomputedXics, precomputedCorrXics);
 
                         if (fdrEntry != null)
                             entries.Add(fdrEntry);
                     }
+                    return entries;
                 }
-
-                return entries;
-            }
-            finally
-            {
-                context.Resolution.ReleaseWindowCache(preprocessedXcorr, context.XcorrScratchPool);
+                finally
+                {
+                    if (laneXcorr != null)
+                        _context.Resolution.ReleaseWindowCache(laneXcorr, _context.XcorrScratchPool);
+                }
             }
         }
 

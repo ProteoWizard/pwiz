@@ -125,10 +125,19 @@ AnalysisPipeline / PerFileScoring task
                       └─ run the 41 OspreyFeatureCalculators → double[41]
 ```
 
-Windows run in parallel (`MaxDegreeOfParallelism = config.NThreads`,
-`ScoringPipeline.cs:271`); per-window results are placed into a fixed-index array and
-flattened in **window order** (`:301`) so the parquet byte stream is reproducible
-regardless of completion order.
+Windows run in parallel (`config.NThreads` threads, largest window first); per-window
+results are placed into a fixed-index array and flattened in **window order** so the
+parquet byte stream is reproducible regardless of completion order.
+
+A window's candidates are scored in blocks of consecutive candidates (the scan-major XIC
+blocks, at most 512 candidates or 4 MB of XICs), each with its own scoring context,
+peak-data view and XCorr cache lane (`CoelutionScorer.WindowWork`). Until every window
+is open, a window's blocks all score on the thread that opened it. After that, the
+`ScoringPipeline.WindowScheduler` hands the unstarted blocks of the open windows to
+threads that would otherwise idle while the last windows finish - on SEA-AD Astral the
+largest window takes over half the stage's wall clock on one thread. The window's entries
+are its blocks' entries in block order, i.e. candidate order, so the output does not
+depend on which thread scored which block, or on the thread count.
 
 ### B.2 Per-candidate data production — `PeakDataExtractor`
 
