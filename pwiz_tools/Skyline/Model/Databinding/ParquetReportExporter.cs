@@ -890,6 +890,11 @@ namespace pwiz.Skyline.Model.Databinding
         /// </summary>
         private class ListColumnBuffer<T> : ColumnBuffer where T : struct
         {
+            /// <summary>
+            /// True if T is a Nullable, so that a list of T can be packed without boxing: its default value is
+            /// null, and any other value is not.
+            /// </summary>
+            private static readonly bool IS_NULLABLE = Nullable.GetUnderlyingType(typeof(T)) != null;
             private readonly DataField _elementField;
             private readonly Array[] _lists;
             private int _rowCount;
@@ -967,6 +972,25 @@ namespace pwiz.Skyline.Model.Databinding
                     {
                         _repetitionLevels[_levelCount] = 0;
                         _definitionLevels[_levelCount++] = list == null ? nullListLevel : emptyListLevel;
+                        continue;
+                    }
+                    if (IS_NULLABLE && list is T[] typedList)
+                    {
+                        // Copied without boxing each element, which costs more than everything else for long lists
+                        for (int i = 0; i < typedList.Length; i++)
+                        {
+                            var element = typedList[i];
+                            _repetitionLevels[_levelCount] = i == 0 ? 0 : 1;
+                            if (EqualityComparer<T>.Default.Equals(element, default))
+                            {
+                                _definitionLevels[_levelCount++] = nullElementLevel;
+                            }
+                            else
+                            {
+                                _definitionLevels[_levelCount++] = valueLevel;
+                                _values[_valueCount++] = element;
+                            }
+                        }
                         continue;
                     }
                     for (int i = 0; i < list.Length; i++)
