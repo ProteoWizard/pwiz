@@ -518,6 +518,9 @@ namespace pwiz.Skyline.Model.Databinding
 
         private class ColumnData
         {
+            private static readonly ConcurrentDictionary<Type, Func<Array, Array>> _toNullableArray =
+                new ConcurrentDictionary<Type, Func<Array, Array>>();
+
             public ColumnData(string name, DataPropertyDescriptor propertyDescriptor, ColumnValueTree columnValueTree)
             {
                 Name = name;
@@ -654,9 +657,16 @@ namespace pwiz.Skyline.Model.Databinding
                     return null;
                 }
 
-                if (array.GetType().GetElementType() == ListElementType.Type && ListElementType.Type != typeof(DateTime?))
+                var arrayElementType = array.GetType().GetElementType();
+                if (arrayElementType == ListElementType.Type && ListElementType.Type != typeof(DateTime?))
                 {
                     return array;
+                }
+                if (arrayElementType == ListElementType.NullableUnderlyingType && arrayElementType != typeof(DateTime))
+                {
+                    // For example float[] for a column of float?: a typed copy, instead of converting every
+                    // element through object, which costs more than everything else for long lists
+                    return _toNullableArray.GetOrAdd(arrayElementType, MakeToNullableArray)(array);
                 }
 
                 var convertedArray = Array.CreateInstance(ListElementType.Type, array.Length);
@@ -670,6 +680,26 @@ namespace pwiz.Skyline.Model.Databinding
                 }
 
                 return convertedArray;
+            }
+
+            private static Func<Array, Array> MakeToNullableArray(Type elementType)
+            {
+                var method = typeof(ColumnData).GetMethod(nameof(ToNullableArray),
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                // ReSharper disable once PossibleNullReferenceException
+                return (Func<Array, Array>) Delegate.CreateDelegate(typeof(Func<Array, Array>),
+                    method.MakeGenericMethod(elementType));
+            }
+
+            private static Array ToNullableArray<T>(Array array) where T : struct
+            {
+                var values = (T[]) array;
+                var result = new T?[values.Length];
+                for (int i = 0; i < values.Length; i++)
+                {
+                    result[i] = values[i];
+                }
+                return result;
             }
         }
         /// <summary>

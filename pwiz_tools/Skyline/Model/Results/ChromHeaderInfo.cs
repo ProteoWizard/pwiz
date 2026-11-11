@@ -2330,11 +2330,21 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                if (_timeIntensitiesGroup == null)
+                var timeIntensitiesGroup = _timeIntensitiesGroup;
+                if (timeIntensitiesGroup == null)
                 {
-                    _timeIntensitiesGroup = _chromatogramCache?.ReadTimeIntensities(Header);
+                    // Threads calculating report rows can ask for the same group at the same time,
+                    // and the points should only be read once
+                    lock (this)
+                    {
+                        if (_timeIntensitiesGroup == null)
+                        {
+                            _timeIntensitiesGroup = _chromatogramCache?.ReadTimeIntensities(Header);
+                        }
+                        timeIntensitiesGroup = _timeIntensitiesGroup;
+                    }
                 }
-                return _timeIntensitiesGroup;
+                return timeIntensitiesGroup;
             }
         }
 
