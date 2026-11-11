@@ -1122,7 +1122,7 @@ namespace pwiz.Osprey.Core
             @"the N rows of the best-scoring peptide groups. Changes the validity key. Loads the features of every candidate " +
             @"during training (about double the resident features). Ignored, with a warning, by the " +
             @"projection path. 0 is off. Unset, it is " + PROTEIN_BEST_PREFILTER_SIZE.ToString(CultureInfo.InvariantCulture) + @" with " +
-            OspreyArgNames.PREFIX + OspreyArgNames.PROTEIN_BEST + @" on (the default), whose column needs round 2, and off with it off.")
+            OspreyArgNames.PREFIX + OspreyArgNames.PROTEIN_BEST + @" on, whose column needs round 2, and off with it off (the default).")
             { ValueExample = @"<N>" };
 
         /// <summary>

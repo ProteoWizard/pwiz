@@ -208,7 +208,7 @@ SVM, or the tree ensemble under `OSPREY_FDR_MODEL=gbdt` - IS the model for pass 
 runs on a subset - which is why a pass-2 feature-contribution view needs the frozen
 coefficients plus per-feature target/decoy means, and nothing that has to be retrained.
 
-### The protein-best column (`--protein-best`, on by default)
+### The protein-best column (`--protein-best on`, off by default)
 
 A first pass trained with the protein-best column (see [07](07-fdr-control.md)) has a frozen model one
 feature wider than the reconciled feature vectors. The column of a row is what the OTHER peptides on its

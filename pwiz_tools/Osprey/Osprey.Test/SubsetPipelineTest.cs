@@ -1576,7 +1576,7 @@ namespace pwiz.Osprey.Test
                 {
                     OspreyCommandArgs.ARG_LIBRARY.ArgumentText, library,
                     OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(phaseDir, BLIB_FILE)
-                }).Concat(CommonArgs(data.Resolution));
+                }).Concat(CommonArgs(data.Resolution)).Concat(data.MoreArgs);
             return RunOsprey(args.ToArray(), data.Variables(false));
         }
 
@@ -2400,7 +2400,7 @@ namespace pwiz.Osprey.Test
         private sealed class Subset
         {
             public Subset(string dataDir, string libraryFile, string resolution, string[] runs,
-                string pass2Mode = null, IReadOnlyDictionary<string, string> moreVariables = null)
+                string pass2Mode = null, IReadOnlyDictionary<string, string> moreVariables = null, string[] moreArgs = null)
             {
                 DataDir = dataDir;
                 LibraryFile = libraryFile;
@@ -2408,6 +2408,7 @@ namespace pwiz.Osprey.Test
                 Runs = runs;
                 Pass2Mode = pass2Mode;
                 MoreVariables = moreVariables;
+                MoreArgs = moreArgs ?? Array.Empty<string>();
             }
 
             public string DataDir { get; }
@@ -2420,6 +2421,9 @@ namespace pwiz.Osprey.Test
 
             /// <summary>Further variables every phase runs under (an experimental arm), or null.</summary>
             public IReadOnlyDictionary<string, string> MoreVariables { get; }
+
+            /// <summary>Further arguments every phase runs with (a setting the arm asks for), or none.</summary>
+            public string[] MoreArgs { get; }
 
             /// <summary>
             /// <see cref="Verifier"/>, with this subset's pass-2 mode set on every phase - a chain
@@ -2449,7 +2453,7 @@ namespace pwiz.Osprey.Test
                     OspreyCommandArgs.ARG_LIBRARY.ArgumentText, Path.Combine(DataDir, LibraryFile),
                     OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(workDir, BLIB_FILE),
                     OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, workDir
-                }).Concat(CommonArgs(Resolution)).ToArray();
+                }).Concat(CommonArgs(Resolution)).Concat(MoreArgs).ToArray();
             }
         }
     }

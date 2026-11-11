@@ -368,8 +368,8 @@ namespace pwiz.Osprey.Tasks
                 config.RunFdr.ToString(CultureInfo.InvariantCulture));
             writer.AddMetadata(OspreyBlibWriter.KEY_EXPERIMENT_FDR,
                 config.ExperimentFdr.ToString(CultureInfo.InvariantCulture));
-            // Recorded whether or not the command line names it, since the default is on and the
-            // command alone does not say which first pass trained. Off writes no row, so a library
+            // Recorded when on, so the library says which first pass trained without its command
+            // line, or the default that line relied on. Off writes no row, so a library
             // searched without the column is the one written before the setting existed.
             if (config.ProteinBest)
                 writer.AddMetadata(OspreyBlibWriter.KEY_PROTEIN_BEST, OspreyArgNames.VALUE_ON);

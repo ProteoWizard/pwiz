@@ -209,9 +209,9 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(FdrLevel.Precursor, Parse(OspreyCommandArgs.ARG_FDR_LEVEL, @"bogus").FdrLevel);     // warn -> default unchanged
             Assert.AreEqual(SharedPeptideMode.Razor, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES + @"razor").SharedPeptides);
             Assert.AreEqual(SharedPeptideMode.All, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES, @"bogus").SharedPeptides); // warn -> default
-            // --protein-best: on by default, and off is the only other value.
-            Assert.IsTrue(io.ProteinBest, @"the protein-best column is on by default");
-            Assert.AreEqual(OspreyArgNames.VALUE_ON, OspreyCommandArgs.ARG_PROTEIN_BEST.DefaultValue());
+            // --protein-best: off by default, and on is the only other value.
+            Assert.IsFalse(io.ProteinBest, @"the protein-best column is off by default");
+            Assert.AreEqual(OspreyArgNames.VALUE_OFF, OspreyCommandArgs.ARG_PROTEIN_BEST.DefaultValue());
             Assert.IsFalse(Parse(OspreyCommandArgs.ARG_PROTEIN_BEST + OspreyArgNames.VALUE_OFF).ProteinBest);
             // Off must not end the parse: the arguments after it still apply.
             var offThenThreads = Parse(OspreyCommandArgs.ARG_PROTEIN_BEST + OspreyArgNames.VALUE_OFF, OspreyCommandArgs.ARG_THREADS + 8);

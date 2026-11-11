@@ -441,7 +441,7 @@ namespace pwiz.Osprey
                 }
             }) { Scope = OspreyPropertyScope.search, DefaultValue = Default(() => new OspreyConfig().SharedPeptides), DescriptionArgs = () => new object[] { @"all" } };
 
-        // The protein-best training column (issue #4580), on by default. Off is the one-round first
+        // The protein-best training column (issue #4580), off by default. Off is the one-round first
         // pass that preceded it, bit for bit; the developer switches that shape it stay environment
         // variables (OSPREY_PROTEIN_BEST_DECOY, OSPREY_PROTEIN_BEST_SHUFFLE). A block body, so the
         // handler is an Action: an assignment of a bool would bind to the Func overload, whose false
@@ -452,7 +452,7 @@ namespace pwiz.Osprey
             {
                 Scope = OspreyPropertyScope.search,
                 DefaultValue = Default(() => new OspreyConfig().ProteinBest ? OspreyArgNames.VALUE_ON : OspreyArgNames.VALUE_OFF),
-                DescriptionArgs = () => new object[] { OspreyArgNames.VALUE_ON }
+                DescriptionArgs = () => new object[] { OspreyArgNames.VALUE_OFF }
             };
 
         public static readonly OspreyArgument ARG_FDRBENCH = new OspreyArgument(@"fdrbench",

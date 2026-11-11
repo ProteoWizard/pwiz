@@ -713,14 +713,14 @@ namespace pwiz.Osprey
                         @"and cannot be set together with OSPREY_GBT_PREFILTER_Q.", OspreyEnvironment.GbtPrefilterLocalFdrSetting));
                     return EXIT_CODE_FAILURE_TO_START;
                 }
-                // Abort for the same reason: without a size (or --protein-best's default one) there is no round 2, so the switches
+                // Abort for the same reason: without a size (or --protein-best on's default one) there is no round 2, so the switches
                 // would do nothing while the run kept the one-round baseline's key.
                 if (OspreyEnvironment.PrefilterSwitchesWithoutSize(OspreyEnvironment.GbtPrefilterQSetting,
                         OspreyEnvironment.GbtPrefilterLocalFdrSetting, OspreyEnvironment.GbtPrefilterSample,
                         OspreyEnvironment.PrefilterSizeFor(config.ProteinBest)))
                 {
                     LogError(string.Format(@"OSPREY_GBT_PREFILTER_Q, OSPREY_GBT_PREFILTER_LFDR and OSPREY_GBT_PREFILTER_SAMPLE shape round 2 " +
-                             @"of the two-round training and need it on: {0} (the default), or OSPREY_GBT_PREFILTER_SIZE (the row cap) above 0.",
+                             @"of the two-round training and need it on: {0}, or OSPREY_GBT_PREFILTER_SIZE (the row cap) above 0.",
                              OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST, OspreyArgNames.VALUE_ON)));
                     return EXIT_CODE_FAILURE_TO_START;
                 }

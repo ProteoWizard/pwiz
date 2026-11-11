@@ -274,7 +274,7 @@ namespace pwiz.Osprey.FDR
         /// back the other arm's numbers.</para>
         ///
         /// <para>The one exception for the SVM is the two-round training
-        /// (<c>OSPREY_GBT_PREFILTER_SIZE</c> and its switches, and <c>--protein-best</c>, on by default),
+        /// (<c>OSPREY_GBT_PREFILTER_SIZE</c> and its switches, and <c>--protein-best on</c>),
         /// which trains a different model under either classifier and appends its terms whenever it is on.</para>
         ///
         /// <para>Kept out of the base task key and out of <c>SearchParameterHash</c>, which must
@@ -286,9 +286,9 @@ namespace pwiz.Osprey.FDR
         {
             string suffix = GbdtValidityKeySuffix(config?.FdrClassifier ?? FdrClassifier.LinearSvm, BuildGbtParams(),
                 OspreyEnvironment.GbtMaxIterations, OspreyEnvironment.GbtInnerFolds);
-            // The two-round training (OSPREY_GBT_PREFILTER_SIZE, or its --protein-best default)
+            // The two-round training (OSPREY_GBT_PREFILTER_SIZE, or its --protein-best on default size)
             // trains a different model, so it is keyed when on - and only then, so a one-round key
-            // (--protein-best off) is unchanged. The same terms under either classifier: the linear
+            // (--protein-best off, the default) is unchanged. The same terms under either classifier: the linear
             // SVM's key has no fdrmodel term, the tree model's does, so the two cannot collide.
             bool proteinBest = config?.ProteinBest ?? false;
             int prefilterSize = OspreyEnvironment.PrefilterSizeFor(proteinBest);

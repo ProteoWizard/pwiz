@@ -452,11 +452,14 @@ namespace pwiz.Osprey.Test
             // OSPREY_FDR_MODEL invalidates no existing SVM output directory.
             Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig { ProteinBest = false }),
                 @"the linear SVM must emit nothing, or every existing output directory is invalidated");
-            // On, the default, it emits the two-round training and the column, spelled as the
+            // Off is the default, so the default key is the one before the column existed.
+            Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig()),
+                @"the default must not change existing keys");
+            // On, it emits the two-round training and the column, spelled as the
             // OSPREY_GBT_PREFILTER_SIZE=200000 OSPREY_PROTEIN_BEST=max experiment spelled them, so
             // that experiment's directories stay current and no other arm's are adopted.
             Assert.AreEqual(@";gbtprefilter=200000;proteinbest=max;proteinbestdecoy=paired",
-                PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig()));
+                PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig { ProteinBest = true }));
             Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(FdrClassifier.LinearSvm,
                     new GbtParams { NTrees = 7 }, OspreyEnvironment.GBT_MAX_ITERATIONS_DEFAULT + 1, 1),
                 @"tree settings must not reach a linear-SVM key");
@@ -491,7 +494,7 @@ namespace pwiz.Osprey.Test
             }
 
             // --protein-best keys the same three tasks, so a resume with the other setting retrains.
-            var proteinBestCtx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
+            var proteinBestCtx = new PipelineContext(new OspreyConfig { ProteinBest = true }, tasks, null, null, null);
             foreach (var task in tasks)
             {
                 bool expectTerm = task.Name == FirstPassFdrTask.TASK_NAME ||
