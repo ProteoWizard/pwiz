@@ -307,12 +307,15 @@ namespace pwiz.Osprey.Tasks
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                + OspreyEnvironment.TransferReconciliationValidityKeySuffix(ctx.Config)
                 // The fold now gives the stratum's complement its own experiment q.
                 + OspreyEnvironment.Pass2StrataValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
                 + PinFeatureMask.ValidityKeySuffix()
                 + PinFeatureMask.RescoreValidityKeySuffix()
                 + OspreyEnvironment.FdrExperimentValidityKeySuffix()
+                // OSPREY_RECON_REFIT=off plans reconciliation on the first-pass calibrations; empty when unset.
+                + OspreyEnvironment.ReconRefitValidityKeySuffix()
                 // The fold-versus-resident term is GONE with OSPREY_STAGE7_STREAM (2026-09-10):
                 // it distinguished two arms an operator could pick between, and only one arm
                 // remains. It was empty on the streamed default, so no existing output directory

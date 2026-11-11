@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -642,5 +643,13 @@ namespace pwiz.Osprey.Tasks
         /// could be aborted by a stale exported variable. Provenance travels with the artifact.
         /// </summary>
         public string ExperimentAgg { get; set; }
+
+        /// <summary>
+        /// The stamp of the first pass that produced the model - the one its model file and every
+        /// run's protein-best column carry - or null when it is not known (a model file written
+        /// before the stamp was read back). A second pass that scores with the column refuses a
+        /// run's column stamped by another first pass.
+        /// </summary>
+        public ArtifactStamp Stamp { get; set; }
     }
 }

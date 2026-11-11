@@ -89,6 +89,7 @@ namespace pwiz.Osprey.Scoring
             WindowPrefilter prefilter,
             int prefilterIndex,
             List<XicData> precomputedXics,
+            List<XicData> precomputedCorrXics,
             out ExtractedPeak extracted)
         {
             extracted = default;
@@ -547,11 +548,12 @@ namespace pwiz.Osprey.Scoring
             // OSPREY_CORR_FRAGMENT_TOLERANCE: the correlation-shape features read the same fragments
             // over the same scans re-extracted at the wider tolerance, and - when one that reads them
             // is computed - compare the chosen peak with the same candidates by their coelution over
-            // those XICs. Only once the peak is chosen, so a candidate that scores nothing pays
-            // nothing, and released with it.
+            // those XICs. Taken from the window scorer's scan-major pass when it extracted them over
+            // this same range, otherwise extracted here once the peak is chosen; released with it.
             var corrConfig = context.CorrelationConfig;
             var corrXics = corrConfig != null
-                ? TopFragmentExtractor.ExtractFragmentXics(candidate, windowSpectra, windowRts, startScan, endScan, corrConfig)
+                ? precomputedCorrXics ?? TopFragmentExtractor.ExtractFragmentXics(candidate, windowSpectra, windowRts,
+                    startScan, endScan, corrConfig)
                 : null;
             var corrCandidateConfig = _correlationCandidates ? corrConfig : null;
             List<(XICPeakBounds peak, double coelutionScore, double rankScore)> corrRunnerUpPeaks = null;
@@ -863,6 +865,11 @@ namespace pwiz.Osprey.Scoring
         /// <para>Returns one XIC list per block candidate (index c - blockStart), null for a
         /// candidate that did not pass, which TryExtract then handles as before. The block bounds
         /// how many candidates' XICs are alive at once.</para>
+        /// <para>With a <paramref name="corrConfig"/> (<see cref="ScoringContext.CorrelationConfig"/>),
+        /// the same pass also extracts the wider-tolerance XICs TryExtract would otherwise
+        /// re-extract candidate by candidate once a peak is chosen, into
+        /// <paramref name="blockCorrXics"/>; null without one. Probing each spectrum for both
+        /// windows while it is in cache is what makes the second set cheap.</para>
         /// </summary>
         public static List<XicData>[] ExtractXicsScanMajor(
             List<LibraryEntry> candidates,
@@ -871,7 +878,9 @@ namespace pwiz.Osprey.Scoring
             WindowPrefilter prefilter,
             List<Spectrum> windowSpectra,
             double[] windowRts,
-            OspreyConfig config)
+            OspreyConfig config,
+            OspreyConfig corrConfig,
+            out List<XicData>[] blockCorrXics)
         {
             var verdicts = prefilter.Verdicts;
             var startScans = prefilter.StartScans;
@@ -887,6 +896,11 @@ namespace pwiz.Osprey.Scoring
             var targetIntensities = new double[blockSize * MAX_FRAGS][];
             var targetCounts = new int[blockSize];
             var fragmentTolerance = config.FragmentTolerance;
+            // The wider-tolerance targets, at the same slots: same fragments, same scans.
+            blockCorrXics = corrConfig != null ? new List<XicData>[blockSize] : null;
+            var corrLowers = corrConfig != null ? new double[blockSize * MAX_FRAGS] : null;
+            var corrUppers = corrConfig != null ? new double[blockSize * MAX_FRAGS] : null;
+            var corrIntensities = corrConfig != null ? new double[blockSize * MAX_FRAGS][] : null;
             int firstScan = int.MaxValue;
             int lastScan = -1;
             int nPassing = 0;
@@ -906,6 +920,17 @@ namespace pwiz.Osprey.Scoring
                     targetIntensities[b * MAX_FRAGS + t] = xics[t].Intensities;
                 targetCounts[b] = xics.Count;
                 blockXics[b] = xics;
+                if (corrConfig != null)
+                {
+                    var corrXics = TopFragmentExtractor.CreateFragmentXics(candidates[c], windowRts,
+                        startScans[c], endScans[c], corrConfig.FragmentTolerance,
+                        new Span<double>(targetMzs, b * MAX_FRAGS, MAX_FRAGS),
+                        new Span<double>(corrLowers, b * MAX_FRAGS, MAX_FRAGS),
+                        new Span<double>(corrUppers, b * MAX_FRAGS, MAX_FRAGS));
+                    for (int t = 0; t < corrXics.Count; t++)
+                        corrIntensities[b * MAX_FRAGS + t] = corrXics[t].Intensities;
+                    blockCorrXics[b] = corrXics;
+                }
                 firstScan = Math.Min(firstScan, startScans[c]);
                 lastScan = Math.Max(lastScan, endScans[c]);
                 nPassing++;
@@ -947,12 +972,28 @@ namespace pwiz.Osprey.Scoring
                     int c = blockStart + b;
                     int offset = s - startScans[c];
                     int targetEnd = b * MAX_FRAGS + targetCounts[b];
-                    for (int target = b * MAX_FRAGS; target < targetEnd; target++)
+                    if (corrIntensities == null)
                     {
-                        int best = TopFragmentExtractor.FindClosestPeakInWindow(spectrum,
-                            targetMzs[target], targetLowers[target], targetUppers[target]);
-                        if (best >= 0)
-                            targetIntensities[target][offset] = spectrumIntensities[best];
+                        for (int target = b * MAX_FRAGS; target < targetEnd; target++)
+                        {
+                            int best = TopFragmentExtractor.FindClosestPeakInWindow(spectrum,
+                                targetMzs[target], targetLowers[target], targetUppers[target]);
+                            if (best >= 0)
+                                targetIntensities[target][offset] = spectrumIntensities[best];
+                        }
+                    }
+                    else
+                    {
+                        for (int target = b * MAX_FRAGS; target < targetEnd; target++)
+                        {
+                            int best = TopFragmentExtractor.FindClosestPeakInWindows(spectrum, targetMzs[target],
+                                targetLowers[target], targetUppers[target], corrLowers[target], corrUppers[target],
+                                out int corrBest);
+                            if (best >= 0)
+                                targetIntensities[target][offset] = spectrumIntensities[best];
+                            if (corrBest >= 0)
+                                corrIntensities[target][offset] = spectrumIntensities[corrBest];
+                        }
                     }
                     // Past its range: swap the last active candidate into this slot.
                     if (s == endScans[c])
@@ -1119,24 +1160,12 @@ namespace pwiz.Osprey.Scoring
             if (peakLen < 3 || xics.Count == 0)
                 return 1.0;
 
-            var peakXics = new List<KeyValuePair<int, double[]>>(xics.Count);
-            var peakRts = new double[peakLen];
-            for (int s = 0; s < peakLen; s++)
-                peakRts[s] = xics[0].RetentionTimes[p.StartIndex + s];
-            for (int xi = 0; xi < xics.Count; xi++)
+            // The fit over the peak's scans, in place: the pick fits every candidate peak.
+            if (!TukeyMedianPolish.TryLibCosineOverScans(xics, p.StartIndex, peakLen, candidate.Fragments,
+                    TukeyMedianPolish.SCORING_MAX_ITERATIONS, TukeyMedianPolish.SCORING_TOLERANCE, out double lc))
             {
-                var src = xics[xi].Intensities;
-                var slice = new double[peakLen];
-                for (int s = 0; s < peakLen; s++)
-                    slice[s] = src[p.StartIndex + s];
-                peakXics.Add(new KeyValuePair<int, double[]>(xics[xi].FragmentIndex, slice));
-            }
-
-            var polish = TukeyMedianPolish.Compute(peakXics, peakRts,
-                TukeyMedianPolish.SCORING_MAX_ITERATIONS, TukeyMedianPolish.SCORING_TOLERANCE);
-            if (polish == null)
                 return 1.0;
-            double lc = TukeyMedianPolish.LibCosine(polish, candidate.Fragments);
+            }
             return !double.IsNaN(lc) && lc > 0.0 ? lc : 1.0;
         }
 

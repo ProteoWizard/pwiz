@@ -629,6 +629,9 @@ namespace pwiz.Osprey
                 // --task SecondPassFDR, on a Rehydrate, and on any warm resume - exactly the runs
                 // whose q-values an operator is most likely to attribute to the wrong arm.
                 LogInfo(OspreyEnvironment.DescribeExperimentAgg());
+                // Always printed, on or off: the default changed, so a log that did not name it could
+                // not tell which first pass trained, and a warm resume skips the stage that would.
+                LogInfo(OspreyEnvironment.DescribeProteinBest(config));
                 // Abort, do not fall back: the default arm's q-values filed under the name of the
                 // arm the caller asked for, as for OSPREY_PASS2_QVALUE below. It used to warn and run
                 // max, which a mistyped sweep cell could not be told apart from.
@@ -710,12 +713,15 @@ namespace pwiz.Osprey
                         @"and cannot be set together with OSPREY_GBT_PREFILTER_Q.", OspreyEnvironment.GbtPrefilterLocalFdrSetting));
                     return EXIT_CODE_FAILURE_TO_START;
                 }
-                // Abort for the same reason: without a size there is no round 2, so the switches
+                // Abort for the same reason: without a size (or --protein-best on's default one) there is no round 2, so the switches
                 // would do nothing while the run kept the one-round baseline's key.
-                if (OspreyEnvironment.GbtPrefilterSwitchesWithoutSize)
+                if (OspreyEnvironment.PrefilterSwitchesWithoutSize(OspreyEnvironment.GbtPrefilterQSetting,
+                        OspreyEnvironment.GbtPrefilterLocalFdrSetting, OspreyEnvironment.GbtPrefilterSample,
+                        OspreyEnvironment.PrefilterSizeFor(config.ProteinBest)))
                 {
-                    LogError(@"OSPREY_GBT_PREFILTER_Q, OSPREY_GBT_PREFILTER_LFDR and OSPREY_GBT_PREFILTER_SAMPLE shape round 2 " +
-                             @"of the two-round training and need OSPREY_GBT_PREFILTER_SIZE (the row cap) set as well.");
+                    LogError(string.Format(@"OSPREY_GBT_PREFILTER_Q, OSPREY_GBT_PREFILTER_LFDR and OSPREY_GBT_PREFILTER_SAMPLE shape round 2 " +
+                             @"of the two-round training and need it on: {0}, or OSPREY_GBT_PREFILTER_SIZE (the row cap) above 0.",
+                             OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST, OspreyArgNames.VALUE_ON)));
                     return EXIT_CODE_FAILURE_TO_START;
                 }
                 // Abort for the same reason: the mask is resolved when the FDR stage first loads
@@ -1141,6 +1147,9 @@ namespace pwiz.Osprey
                 ExperimentAggFileCount(config, hasInputFiles));
             if (aggErr != null)
                 return aggErr;
+            string proteinBestErr = OspreyEnvironment.ValidateProteinBestSettings(config);
+            if (proteinBestErr != null)
+                return proteinBestErr;
 
             // Every run is keyed on its input STEM - the per-file artifacts are
             // <stem>.<suffix>, and every per-run map in the pipeline is keyed the same way -

@@ -35,6 +35,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Scoring
@@ -131,143 +132,20 @@ namespace pwiz.Osprey.Scoring
                 fragmentIndices[f] = xics[f].Key;
 
             // Build ln-space matrix. Zeros -> NaN (missing).
-            var residuals = new double[nFrags][];
+            var w = PolishWorkspace.For(nFrags, nScans);
             for (int f = 0; f < nFrags; f++)
-            {
-                var src = xics[f].Value;
-                var row = new double[nScans];
-                for (int s = 0; s < nScans; s++)
-                {
-                    double v = src[s];
-                    row[s] = v > 0.0 ? Math.Log(v) : double.NaN;
-                }
-                residuals[f] = row;
-            }
+                w.SetLnRow(f, xics[f].Value, 0);
+            double overall = Fit(w, maxIter, tol, out int nIter, out bool converged);
 
-            double overall = 0.0;
-            var rowEffects = new double[nFrags];
-            var colEffects = new double[nScans];
-            bool converged = false;
-            int nIter = 0;
-
-            var colBuf = new double[nFrags];
-            var rowMedians = new double[nFrags];
-            var colMedians = new double[nScans];
-            // Working copy for NanMedian, which reorders it; sized for a row or a column.
-            var medianScratch = new double[Math.Max(nFrags, nScans)];
-            var oldResiduals = new double[nFrags][];
-            for (int f = 0; f < nFrags; f++)
-                oldResiduals[f] = new double[nScans];
-
-            for (int iteration = 0; iteration < maxIter; iteration++)
-            {
-                nIter = iteration + 1;
-
-                // Save old residuals for convergence check (matches Rust).
-                // Rust checks max|new - old| AFTER both sweeps complete,
-                // not incrementally during each sweep.
-                for (int f = 0; f < nFrags; f++)
-                    Array.Copy(residuals[f], oldResiduals[f], nScans);
-
-                // Row sweep: subtract nanmedian of each row
-                for (int f = 0; f < nFrags; f++)
-                    rowMedians[f] = NanMedian(residuals[f], medianScratch);
-
-                for (int f = 0; f < nFrags; f++)
-                {
-                    double rm = rowMedians[f];
-                    if (IsFinite(rm))
-                    {
-                        var row = residuals[f];
-                        for (int s = 0; s < nScans; s++)
-                            if (IsFinite(row[s]))
-                                row[s] -= rm;
-                    }
-                }
-
-                double medianOfRowMedians = NanMedian(rowMedians, medianScratch);
-                if (IsFinite(medianOfRowMedians))
-                {
-                    for (int f = 0; f < nFrags; f++)
-                    {
-                        if (IsFinite(rowMedians[f]))
-                            rowEffects[f] += rowMedians[f] - medianOfRowMedians;
-                    }
-                    overall += medianOfRowMedians;
-                }
-
-                // Column sweep: subtract nanmedian of each column
-                for (int s = 0; s < nScans; s++)
-                {
-                    for (int f = 0; f < nFrags; f++)
-                        colBuf[f] = residuals[f][s];
-                    colMedians[s] = NanMedian(colBuf, medianScratch);
-                }
-
-                for (int f = 0; f < nFrags; f++)
-                {
-                    var row = residuals[f];
-                    for (int s = 0; s < nScans; s++)
-                    {
-                        double cm = colMedians[s];
-                        if (IsFinite(row[s]) && IsFinite(cm))
-                            row[s] -= cm;
-                    }
-                }
-
-                double medianOfColMedians = NanMedian(colMedians, medianScratch);
-                if (IsFinite(medianOfColMedians))
-                {
-                    for (int s = 0; s < nScans; s++)
-                    {
-                        if (IsFinite(colMedians[s]))
-                            colEffects[s] += colMedians[s] - medianOfColMedians;
-                    }
-                    overall += medianOfColMedians;
-                }
-
-                // Convergence: max|new_residual - old_residual| after both sweeps
-                double maxChange = 0.0;
-                for (int f = 0; f < nFrags; f++)
-                    for (int s = 0; s < nScans; s++)
-                    {
-                        double n = residuals[f][s];
-                        double o = oldResiduals[f][s];
-                        if (IsFinite(n) && IsFinite(o))
-                        {
-                            double d = Math.Abs(n - o);
-                            if (d > maxChange)
-                                maxChange = d;
-                        }
-                    }
-
-                if (maxChange < tol)
-                {
-                    converged = true;
-                    break;
-                }
-            }
-
-            // Count fragments with at least one finite value
-            int nFragmentsUsed = 0;
-            for (int f = 0; f < nFrags; f++)
-            {
-                bool any = false;
-                var row = residuals[f];
-                for (int s = 0; s < nScans; s++)
-                {
-                    if (IsFinite(row[s]))
-                    {
-                        any = true;
-                        break;
-                    }
-                }
-                if (any)
-                    nFragmentsUsed++;
-            }
-
+            int nFragmentsUsed = w.CountFragmentsWithSignal();
             if (nFragmentsUsed < 2)
                 return null;
+
+            var residuals = new double[nFrags][];
+            for (int f = 0; f < nFrags; f++)
+                residuals[f] = w.Residuals.AsSpan(f * nScans, nScans).ToArray();
+            var rowEffects = w.RowEffects.AsSpan(0, nFrags).ToArray();
+            var colEffects = w.ColEffects.AsSpan(0, nScans).ToArray();
 
             // Build linear-space elution profile: exp(overall + col_effects[s])
             var profileRts = new double[nScans];
@@ -294,6 +172,155 @@ namespace pwiz.Osprey.Scoring
         }
 
         /// <summary>
+        /// <see cref="LibCosine"/> of the <see cref="Compute"/> fit over the scans
+        /// [<paramref name="start"/>, <paramref name="start"/> + <paramref name="nScans"/>) of
+        /// <paramref name="xics"/>, without building the result: the peak pick fits every
+        /// candidate peak and keeps only this value, so the fit runs in reused per-thread buffers.
+        /// The same arithmetic in the same order as Compute then LibCosine; false where Compute
+        /// would return null.
+        /// </summary>
+        public static bool TryLibCosineOverScans(IReadOnlyList<XicData> xics, int start, int nScans,
+            IReadOnlyList<LibraryFragment> libraryFragments, int maxIter, double tol, out double libCosine)
+        {
+            libCosine = 0.0;
+            if (xics == null || xics.Count < 2 || nScans < 3)
+                return false;
+
+            int nFrags = xics.Count;
+            var w = PolishWorkspace.For(nFrags, nScans);
+            for (int f = 0; f < nFrags; f++)
+                w.SetLnRow(f, xics[f].Intensities, start);
+            double overall = Fit(w, maxIter, tol, out _, out _);
+            if (w.CountFragmentsWithSignal() < 2)
+                return false;
+
+            Span<int> fragmentIndices = stackalloc int[nFrags];
+            Span<bool> hasSignal = stackalloc bool[nFrags];
+            for (int f = 0; f < nFrags; f++)
+            {
+                fragmentIndices[f] = xics[f].FragmentIndex;
+                hasSignal[f] = w.RowHasSignal(f);
+            }
+            libCosine = LibCosine(fragmentIndices, hasSignal, overall, w.RowEffects, libraryFragments);
+            return true;
+        }
+
+        /// <summary>
+        /// The median-polish iterations over the ln-space matrix already in
+        /// <paramref name="w"/>'s residuals, which it leaves holding the final residuals beside the
+        /// row and column effects. Returns the overall effect.
+        /// </summary>
+        private static double Fit(PolishWorkspace w, int maxIter, double tol, out int nIter, out bool converged)
+        {
+            int nFrags = w.NFrags;
+            int nScans = w.NScans;
+            var residuals = w.Residuals;
+            var oldResiduals = w.OldResiduals;
+            var rowEffects = w.RowEffects;
+            var colEffects = w.ColEffects;
+            var colBuf = w.ColBuf;
+            var rowMedians = w.RowMedians;
+            var colMedians = w.ColMedians;
+            var medianScratch = w.MedianScratch;
+            Array.Clear(rowEffects, 0, nFrags);
+            Array.Clear(colEffects, 0, nScans);
+
+            double overall = 0.0;
+            converged = false;
+            nIter = 0;
+            int cells = nFrags * nScans;
+            for (int iteration = 0; iteration < maxIter; iteration++)
+            {
+                nIter = iteration + 1;
+
+                // Save old residuals for convergence check (matches Rust).
+                // Rust checks max|new - old| AFTER both sweeps complete,
+                // not incrementally during each sweep.
+                Array.Copy(residuals, oldResiduals, cells);
+
+                // Row sweep: subtract nanmedian of each row
+                for (int f = 0; f < nFrags; f++)
+                    rowMedians[f] = NanMedian(new ReadOnlySpan<double>(residuals, f * nScans, nScans), medianScratch);
+
+                for (int f = 0; f < nFrags; f++)
+                {
+                    double rm = rowMedians[f];
+                    if (IsFinite(rm))
+                    {
+                        int rowStart = f * nScans;
+                        for (int s = 0; s < nScans; s++)
+                        {
+                            if (IsFinite(residuals[rowStart + s]))
+                                residuals[rowStart + s] -= rm;
+                        }
+                    }
+                }
+
+                double medianOfRowMedians = NanMedian(new ReadOnlySpan<double>(rowMedians, 0, nFrags), medianScratch);
+                if (IsFinite(medianOfRowMedians))
+                {
+                    for (int f = 0; f < nFrags; f++)
+                    {
+                        if (IsFinite(rowMedians[f]))
+                            rowEffects[f] += rowMedians[f] - medianOfRowMedians;
+                    }
+                    overall += medianOfRowMedians;
+                }
+
+                // Column sweep: subtract nanmedian of each column
+                for (int s = 0; s < nScans; s++)
+                {
+                    for (int f = 0; f < nFrags; f++)
+                        colBuf[f] = residuals[f * nScans + s];
+                    colMedians[s] = NanMedian(new ReadOnlySpan<double>(colBuf, 0, nFrags), medianScratch);
+                }
+
+                for (int f = 0; f < nFrags; f++)
+                {
+                    int rowStart = f * nScans;
+                    for (int s = 0; s < nScans; s++)
+                    {
+                        double cm = colMedians[s];
+                        if (IsFinite(residuals[rowStart + s]) && IsFinite(cm))
+                            residuals[rowStart + s] -= cm;
+                    }
+                }
+
+                double medianOfColMedians = NanMedian(new ReadOnlySpan<double>(colMedians, 0, nScans), medianScratch);
+                if (IsFinite(medianOfColMedians))
+                {
+                    for (int s = 0; s < nScans; s++)
+                    {
+                        if (IsFinite(colMedians[s]))
+                            colEffects[s] += colMedians[s] - medianOfColMedians;
+                    }
+                    overall += medianOfColMedians;
+                }
+
+                // Convergence: max|new_residual - old_residual| after both sweeps
+                double maxChange = 0.0;
+                for (int i = 0; i < cells; i++)
+                {
+                    double n = residuals[i];
+                    double o = oldResiduals[i];
+                    if (IsFinite(n) && IsFinite(o))
+                    {
+                        double d = Math.Abs(n - o);
+                        if (d > maxChange)
+                            maxChange = d;
+                    }
+                }
+
+                if (maxChange < tol)
+                {
+                    converged = true;
+                    break;
+                }
+            }
+            return overall;
+        }
+
+        /// <summary>
         /// Cosine similarity between Tukey median polish row effects and library
         /// fragment intensities, using sqrt preprocessing (Poisson noise model).
         /// Library intensity always contributes; undetected fragments push 0 into
@@ -307,46 +334,60 @@ namespace pwiz.Osprey.Scoring
             if (polish == null)
                 return 0.0;
             int n = polish.FragmentIndices.Length;
-            if (n < 2)
-                return 0.0;
-
-            var rowVec = new List<double>(n);
-            var libVec = new List<double>(n);
-
+            Span<bool> hasSignal = stackalloc bool[n];
             for (int i = 0; i < n; i++)
             {
-                int fragIdx = polish.FragmentIndices[i];
-                if (fragIdx >= libraryFragments.Count)
-                    continue;
-
-                double libInt = libraryFragments[fragIdx].RelativeIntensity;
-                libVec.Add(Math.Sqrt(Math.Max(0.0, libInt)));
-
-                bool hasSignal = false;
                 var resRow = polish.Residuals[i];
                 for (int s = 0; s < resRow.Length; s++)
                 {
                     if (IsFinite(resRow[s]))
                     {
-                        hasSignal = true;
+                        hasSignal[i] = true;
                         break;
                     }
                 }
+            }
+            return LibCosine(polish.FragmentIndices, hasSignal, polish.Overall, polish.RowEffects, libraryFragments);
+        }
 
-                if (!hasSignal || !IsFinite(polish.RowEffects[i]))
+        /// <summary>
+        /// <see cref="LibCosine(TukeyMedianPolishResult, IReadOnlyList{LibraryFragment})"/> from the
+        /// fit's parts: each fragment's library index, whether its residual row has any finite
+        /// value, and the overall and row effects.
+        /// </summary>
+        private static double LibCosine(ReadOnlySpan<int> fragmentIndices, ReadOnlySpan<bool> hasSignal,
+            double overall, double[] rowEffects, IReadOnlyList<LibraryFragment> libraryFragments)
+        {
+            int n = fragmentIndices.Length;
+            if (n < 2)
+                return 0.0;
+
+            Span<double> rowVec = stackalloc double[n];
+            Span<double> libVec = stackalloc double[n];
+            int count = 0;
+            for (int i = 0; i < n; i++)
+            {
+                int fragIdx = fragmentIndices[i];
+                if (fragIdx >= libraryFragments.Count)
+                    continue;
+
+                double libInt = libraryFragments[fragIdx].RelativeIntensity;
+                libVec[count] = Math.Sqrt(Math.Max(0.0, libInt));
+
+                if (!hasSignal[i] || !IsFinite(rowEffects[i]))
                 {
-                    rowVec.Add(0.0);
+                    rowVec[count++] = 0.0;
                     continue;
                 }
 
-                double linear = Math.Exp(polish.Overall + polish.RowEffects[i]);
-                rowVec.Add(Math.Sqrt(Math.Max(0.0, linear)));
+                double linear = Math.Exp(overall + rowEffects[i]);
+                rowVec[count++] = Math.Sqrt(Math.Max(0.0, linear));
             }
 
-            if (rowVec.Count < 2)
+            if (count < 2)
                 return 0.0;
 
-            return CosineAngle(rowVec, libVec);
+            return CosineAngle(rowVec.Slice(0, count), libVec.Slice(0, count));
         }
 
         /// <summary>
@@ -519,7 +560,7 @@ namespace pwiz.Osprey.Scoring
         /// equal doubles differ only in the sign of zero, and the residuals start as the ln of
         /// a positive value and change only by subtraction, where x - x gives +0.0.
         /// </summary>
-        private static double NanMedian(double[] values, double[] scratch)
+        private static double NanMedian(ReadOnlySpan<double> values, double[] scratch)
         {
             int count = 0;
             for (int i = 0; i < values.Length; i++)
@@ -530,9 +571,9 @@ namespace pwiz.Osprey.Scoring
             return MedianMath.MedianInPlace(new Span<double>(scratch, 0, count));
         }
 
-        private static double CosineAngle(List<double> a, List<double> b)
+        private static double CosineAngle(ReadOnlySpan<double> a, ReadOnlySpan<double> b)
         {
-            int n = Math.Min(a.Count, b.Count);
+            int n = Math.Min(a.Length, b.Length);
             double dot = 0.0, normA = 0.0, normB = 0.0;
             for (int i = 0; i < n; i++)
             {
@@ -600,6 +641,98 @@ namespace pwiz.Osprey.Scoring
             if (denom < 1e-30)
                 return 0.0;
             return (dn * sxy - sx * sy) / Math.Sqrt(denom);
+        }
+
+        /// <summary>
+        /// One thread's buffers for <see cref="Fit"/>: the ln-space residual matrix (row-major,
+        /// fragment by scan), its copy for the convergence check, the effects, and the median
+        /// scratch. Grown when a fit needs more and reused otherwise, so the per-candidate fits of
+        /// the peak pick allocate nothing.
+        /// </summary>
+        private sealed class PolishWorkspace
+        {
+            [ThreadStatic] private static PolishWorkspace _current;
+
+            public static PolishWorkspace For(int nFrags, int nScans)
+            {
+                var w = _current ?? (_current = new PolishWorkspace());
+                w.Resize(nFrags, nScans);
+                return w;
+            }
+
+            public int NFrags { get; private set; }
+            public int NScans { get; private set; }
+            public double[] Residuals { get; private set; } = Array.Empty<double>();
+            public double[] OldResiduals { get; private set; } = Array.Empty<double>();
+            public double[] RowEffects { get; private set; } = Array.Empty<double>();
+            public double[] ColEffects { get; private set; } = Array.Empty<double>();
+            public double[] ColBuf { get; private set; } = Array.Empty<double>();
+            public double[] RowMedians { get; private set; } = Array.Empty<double>();
+            public double[] ColMedians { get; private set; } = Array.Empty<double>();
+            public double[] MedianScratch { get; private set; } = Array.Empty<double>();
+
+            /// <summary>
+            /// Fragment row <paramref name="f"/> of the ln-space matrix from
+            /// <paramref name="intensities"/> starting at <paramref name="start"/>: ln of each
+            /// positive intensity, NaN (missing) for the rest.
+            /// </summary>
+            public void SetLnRow(int f, double[] intensities, int start)
+            {
+                int rowStart = f * NScans;
+                for (int s = 0; s < NScans; s++)
+                {
+                    double v = intensities[start + s];
+                    Residuals[rowStart + s] = v > 0.0 ? Math.Log(v) : double.NaN;
+                }
+            }
+
+            public bool RowHasSignal(int f)
+            {
+                int rowStart = f * NScans;
+                for (int s = 0; s < NScans; s++)
+                {
+                    if (IsFinite(Residuals[rowStart + s]))
+                        return true;
+                }
+                return false;
+            }
+
+            public int CountFragmentsWithSignal()
+            {
+                int n = 0;
+                for (int f = 0; f < NFrags; f++)
+                {
+                    if (RowHasSignal(f))
+                        n++;
+                }
+                return n;
+            }
+
+            private void Resize(int nFrags, int nScans)
+            {
+                NFrags = nFrags;
+                NScans = nScans;
+                int cells = nFrags * nScans;
+                if (Residuals.Length < cells)
+                {
+                    Residuals = new double[cells];
+                    OldResiduals = new double[cells];
+                }
+                if (RowEffects.Length < nFrags)
+                {
+                    RowEffects = new double[nFrags];
+                    ColBuf = new double[nFrags];
+                    RowMedians = new double[nFrags];
+                }
+                if (ColEffects.Length < nScans)
+                {
+                    ColEffects = new double[nScans];
+                    ColMedians = new double[nScans];
+                }
+                int scratch = Math.Max(nFrags, nScans);
+                if (MedianScratch.Length < scratch)
+                    MedianScratch = new double[scratch];
+            }
         }
     }
 }

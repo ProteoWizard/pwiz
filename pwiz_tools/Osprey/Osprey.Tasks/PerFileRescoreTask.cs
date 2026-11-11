@@ -241,6 +241,10 @@ namespace pwiz.Osprey.Tasks
                 yield return ParquetScoreCache.GetScoresPath(input);
                 yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
                 yield return FdrScoresSidecar.Pass1Path(input);
+                // The column the pass-2 worker scores the run's rescored rows with, under
+                // --protein-best: the frozen model was trained with it.
+                if (config.ProteinBest)
+                    yield return ProteinBestSidecar.PathFor(input);
             }
             string siblingPath = ScoringTaskShared.ArtifactSiblingPath(config);
             string experimentPath = FdrExperimentSidecar.PathFor(config.OutputBlib, siblingPath,
@@ -353,6 +357,7 @@ namespace pwiz.Osprey.Tasks
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                + OspreyEnvironment.TransferReconciliationValidityKeySuffix(ctx.Config)
                 // The worker's competition now gives the stratum's complement its own run q.
                 + OspreyEnvironment.Pass2StrataValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
@@ -362,6 +367,8 @@ namespace pwiz.Osprey.Tasks
                 // writes the rescored rows' features beside them, so it records what scoring did.
                 + PinFeatureMask.RecordedFeaturesValidityKeySuffix()
                 + OspreyEnvironment.FdrExperimentValidityKeySuffix()
+                // OSPREY_RECON_REFIT=off plans reconciliation on the first-pass calibrations; empty when unset.
+                + OspreyEnvironment.ReconRefitValidityKeySuffix()
                 // The Stage 6 competition and the 2nd-pass sidecar score with the first-pass
                 // model, so the classifier that trained it keys this task too (empty for the SVM).
                 + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
@@ -1325,6 +1332,11 @@ namespace pwiz.Osprey.Tasks
                 FdrScoresSidecar.Write(FdrScoresSidecar.Pass2Path(inputFile), records,
                     FdrScoresSidecar.Pass.SecondPass, stamp);
             }
+            // --protein-best: a model with the column scores only with each run's column,
+            // and one without cannot use it. The validity key already keeps the two arms apart, so
+            // a disagreement here is a model from another arm, which no run may score with.
+            if (scorer.ScoresProteinBest != config.ProteinBest)
+                throw new InvalidOperationException(ProteinBestMismatchMessage(scorer.ScoresProteinBest, config.ProteinBest));
             bool transfer = !OspreyEnvironment.Pass2ProteinCompact;
             // The competition is constrained to the stratum, and competing without one would be
             // the full-population form that was removed (#4581), not a smaller version of this.
@@ -1347,7 +1359,25 @@ namespace pwiz.Osprey.Tasks
                 transfer ? null : sidecar.StratumBaseIds,
                 Pass2FdrSidecar.LoadPass1ExperimentRecords(config),
                 WriteAnswer,
-                ctx.LogWarning);
+                ctx.LogWarning,
+                sidecar.Stamp);
+        }
+
+        /// <summary>
+        /// Why second-pass FDR refuses a first-pass model trained with the other
+        /// <c>--protein-best</c> setting: names both settings and the task to re-run.
+        /// </summary>
+        internal static string ProteinBestMismatchMessage(bool modelScoresProteinBest, bool configProteinBest)
+        {
+            return string.Format(
+                OspreyTasksResources.PerFileRescoreTask_CreatePass2Worker_Second_pass_FDR_cannot_run__the_saved_first_pass_model_was_trained_with__0___but_this_run_has__1___Run__2__again_with__1__,
+                ProteinBestArgText(modelScoresProteinBest), ProteinBestArgText(configProteinBest),
+                OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME));
+        }
+
+        private static string ProteinBestArgText(bool on)
+        {
+            return OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST, on ? OspreyArgNames.VALUE_ON : OspreyArgNames.VALUE_OFF);
         }
 
         /// <summary>
@@ -2047,6 +2077,9 @@ namespace pwiz.Osprey.Tasks
             // pure waste.
             var consensusTargets = MultiChargeConsensus.SelectRescoreTargets(
                 run.Survivors, inputs.Config.RunFdr);
+            if (OspreyEnvironment.Pass2TransferQ)
+                consensusTargets = MultiChargeConsensus.ReportedOnly(consensusTargets, run.Survivors,
+                    inputs.Config.FdrLevel, inputs.Config.ExperimentFdr);
             var reconTargets = ReconTargetsForRun(run);
             gapFillTargets = run.GapFill ?? new List<GapFillTarget>();
 
@@ -2077,6 +2110,7 @@ namespace pwiz.Osprey.Tasks
                 gapFillTargets.Count));
             return true;
         }
+
 
         /// <summary>
         /// PHASE 3 -- reconciled parquet write-back. Reads the original Stage 4

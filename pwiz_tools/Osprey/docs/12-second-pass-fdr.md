@@ -208,6 +208,20 @@ SVM, or the tree ensemble under `OSPREY_FDR_MODEL=gbdt` - IS the model for pass 
 runs on a subset - which is why a pass-2 feature-contribution view needs the frozen
 coefficients plus per-feature target/decoy means, and nothing that has to be retrained.
 
+### The protein-best column (`--protein-best on`, off by default)
+
+A first pass trained with the protein-best column (see [07](07-fdr-control.md)) has a frozen model one
+feature wider than the reconciled feature vectors. The column of a row is what the OTHER peptides on its
+protein scored in the first pass's round 1, which moving the row's own peak does not change, and it cannot
+be recomputed later (round 1's models are not saved). So `FirstPassFDR` writes each run's column to
+`<stem>.1st-pass.protein_best.bin` as it scores the run, and `FrozenModelScorer` appends to every rescored
+row - moved, gap-filled or CWT, target or decoy - its entry's value in that run, or the run's floor (the
+median of its decoy precursors' round-1 scores) for an entry the run had no first-pass row for. A row the
+first pass left alone therefore scores bit for bit as it did, and the transfer classifies it UNCHANGED.
+The floor for such a row is conservative: the first pass would have read the peptide's sibling value had
+it scored the precursor in that run. The column file is a declared `FirstPassFDR` output and a
+`PerFileRescoring` input; a missing one, or one stamped by another first pass, stops the run.
+
 ## Inputs from the first pass
 
 The frozen modes are frozen against artifacts, not against in-process state, so a

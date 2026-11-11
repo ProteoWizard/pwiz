@@ -1458,7 +1458,8 @@ namespace pwiz.Osprey.Test
                     OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT),
                     OutputArtifact(FirstPassModelIO.EXT_MODEL), OutputArtifact(Stage6ConsensusFile.EXT));
                 ShipFilesIfPresent(dirPrefix + @"phase2", phaseDir, OutputArtifact(FirstPassModelIO.EXT_STRATUM),
-                    ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass), OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
+                    ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass), OutputArtifact(ModelDiagnosticsReport.EXT_PASS1),
+                    PassArtifact(run, FdrScoresSidecar.Pass.FirstPass, ProteinBestSidecar.EXT));
                 string log = RunTask(data, phaseDir, PerFileRescoreTask.TASK_NAME, run);
                 logs[PerFileRescoreTask.TASK_NAME] = log;
                 AssertHasLine(log, PathLine(LogKey.ROUTE_RESCORE_HYDRATE, @"per-run"));
@@ -1575,7 +1576,7 @@ namespace pwiz.Osprey.Test
                 {
                     OspreyCommandArgs.ARG_LIBRARY.ArgumentText, library,
                     OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(phaseDir, BLIB_FILE)
-                }).Concat(CommonArgs(data.Resolution));
+                }).Concat(CommonArgs(data.Resolution)).Concat(data.MoreArgs);
             return RunOsprey(args.ToArray(), data.Variables(false));
         }
 
@@ -2399,13 +2400,15 @@ namespace pwiz.Osprey.Test
         private sealed class Subset
         {
             public Subset(string dataDir, string libraryFile, string resolution, string[] runs,
-                string pass2Mode = null)
+                string pass2Mode = null, IReadOnlyDictionary<string, string> moreVariables = null, string[] moreArgs = null)
             {
                 DataDir = dataDir;
                 LibraryFile = libraryFile;
                 Resolution = resolution;
                 Runs = runs;
                 Pass2Mode = pass2Mode;
+                MoreVariables = moreVariables;
+                MoreArgs = moreArgs ?? Array.Empty<string>();
             }
 
             public string DataDir { get; }
@@ -2416,6 +2419,12 @@ namespace pwiz.Osprey.Test
             /// <summary>The OSPREY_PASS2_QVALUE every phase runs under, or null for the default.</summary>
             public string Pass2Mode { get; }
 
+            /// <summary>Further variables every phase runs under (an experimental arm), or null.</summary>
+            public IReadOnlyDictionary<string, string> MoreVariables { get; }
+
+            /// <summary>Further arguments every phase runs with (a setting the arm asks for), or none.</summary>
+            public string[] MoreArgs { get; }
+
             /// <summary>
             /// <see cref="Verifier"/>, with this subset's pass-2 mode set on every phase - a chain
             /// whose phases disagreed on it would compare two analyses, not two routes.
@@ -2423,6 +2432,11 @@ namespace pwiz.Osprey.Test
             public IReadOnlyDictionary<string, string> Variables(bool verify)
             {
                 var variables = Verifier(verify).ToDictionary(kv => kv.Key, kv => kv.Value);
+                if (MoreVariables != null)
+                {
+                    foreach (var kv in MoreVariables)
+                        variables[kv.Key] = kv.Value;
+                }
                 if (Pass2Mode != null)
                     variables[@"OSPREY_PASS2_QVALUE"] = Pass2Mode;
                 return variables;
@@ -2439,7 +2453,7 @@ namespace pwiz.Osprey.Test
                     OspreyCommandArgs.ARG_LIBRARY.ArgumentText, Path.Combine(DataDir, LibraryFile),
                     OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(workDir, BLIB_FILE),
                     OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, workDir
-                }).Concat(CommonArgs(Resolution)).ToArray();
+                }).Concat(CommonArgs(Resolution)).Concat(MoreArgs).ToArray();
             }
         }
     }

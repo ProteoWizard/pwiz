@@ -205,13 +205,26 @@ namespace pwiz.Osprey.FDR.Reconciliation
             private readonly HashSet<(uint, byte)> _passingBaseIds;
             private readonly IReadOnlyDictionary<string, RTCalibration> _perFileRefinedCal;
             private readonly IReadOnlyDictionary<string, RTCalibration> _perFileOriginalCal;
+            private readonly bool _reconcileDecoys;
 
+            /// <param name="consensus">The cross-run consensus RTs.</param>
+            /// <param name="passingBaseIds">The (base id, charge) pairs that passed in any run.</param>
+            /// <param name="perFileRefinedCal">Each run's refined calibration, when refit.</param>
+            /// <param name="perFileOriginalCal">Each run's first-pass calibration.</param>
+            /// <param name="reconcileDecoys">Whether the paired decoys of passing precursors are moved
+            /// too. A second pass that re-competes targets against decoys needs them scored at the
+            /// same reconciled boundaries; one that carries first-pass q-values forward (transfer)
+            /// never reads a decoy past the first pass, so moving them is work with no consumer -
+            /// and it was most of the work, since a decoy's apex is rarely at its target's
+            /// consensus RT.</param>
             public FilePlanner(
                 IReadOnlyList<PeptideConsensusRT> consensus,
                 HashSet<(uint, byte)> passingBaseIds,
                 IReadOnlyDictionary<string, RTCalibration> perFileRefinedCal,
-                IReadOnlyDictionary<string, RTCalibration> perFileOriginalCal)
+                IReadOnlyDictionary<string, RTCalibration> perFileOriginalCal,
+                bool reconcileDecoys = true)
             {
+                _reconcileDecoys = reconcileDecoys;
                 if (consensus == null)
                     throw new ArgumentNullException(nameof(consensus));
                 _passingBaseIds = passingBaseIds ?? throw new ArgumentNullException(nameof(passingBaseIds));
@@ -332,6 +345,8 @@ namespace pwiz.Osprey.FDR.Reconciliation
                 for (int entryIdx = 0; entryIdx < entries.Count; entryIdx++)
                 {
                     var entry = entries[entryIdx];
+                    if (entry.IsDecoy && !_reconcileDecoys)
+                        continue;
 
                     // Only consider entries in the consensus set.
                     var key = (entry.ModifiedSequence, entry.IsDecoy);

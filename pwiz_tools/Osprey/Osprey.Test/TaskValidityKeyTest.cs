@@ -442,15 +442,24 @@ namespace pwiz.Osprey.Test
         private static void AssertTreeClassifierKeysTheModelTasks()
         {
             var tasks = OspreyTasks.Create().Pipeline;
-            var linearCtx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
-            var treeCtx = new PipelineContext(new OspreyConfig { FdrClassifier = FdrClassifier.Gbdt }, tasks, null, null, null);
+            // The protein-best column off in both, so the classifier is the only difference.
+            var linearCtx = new PipelineContext(new OspreyConfig { ProteinBest = false }, tasks, null, null, null);
+            var treeCtx = new PipelineContext(new OspreyConfig { FdrClassifier = FdrClassifier.Gbdt, ProteinBest = false }, tasks, null, null, null);
             string treeTerm = PercolatorEngine.GbdtValidityKeySuffix(treeCtx.Config);
             Assert.AreNotEqual(string.Empty, treeTerm, @"gbdt must emit a term");
-            // The linear SVM emits NOTHING, through both overloads and whatever the tree settings
-            // say, so moving the choice from --fdr-method to OSPREY_FDR_MODEL invalidates no
-            // existing SVM output directory.
-            Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig()),
+            // The linear SVM with the protein-best column off emits NOTHING, through both overloads
+            // and whatever the tree settings say, so moving the choice from --fdr-method to
+            // OSPREY_FDR_MODEL invalidates no existing SVM output directory.
+            Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig { ProteinBest = false }),
                 @"the linear SVM must emit nothing, or every existing output directory is invalidated");
+            // Off is the default, so the default key is the one before the column existed.
+            Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig()),
+                @"the default must not change existing keys");
+            // On, it emits the two-round training and the column, spelled as the
+            // OSPREY_GBT_PREFILTER_SIZE=200000 OSPREY_PROTEIN_BEST=max experiment spelled them, so
+            // that experiment's directories stay current and no other arm's are adopted.
+            Assert.AreEqual(@";gbtprefilter=200000;proteinbest=max;proteinbestdecoy=paired",
+                PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig { ProteinBest = true }));
             Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(FdrClassifier.LinearSvm,
                     new GbtParams { NTrees = 7 }, OspreyEnvironment.GBT_MAX_ITERATIONS_DEFAULT + 1, 1),
                 @"tree settings must not reach a linear-SVM key");
@@ -482,6 +491,18 @@ namespace pwiz.Osprey.Test
                 string linearKey = task.ValidityKey(linearCtx);
                 Assert.AreEqual(expectTerm ? linearKey + treeTerm : linearKey, task.ValidityKey(treeCtx),
                     string.Format(@"{0} must {1}key on the classifier", task.Name, expectTerm ? string.Empty : @"NOT "));
+            }
+
+            // --protein-best keys the same three tasks, so a resume with the other setting retrains.
+            var proteinBestCtx = new PipelineContext(new OspreyConfig { ProteinBest = true }, tasks, null, null, null);
+            foreach (var task in tasks)
+            {
+                bool expectTerm = task.Name == FirstPassFdrTask.TASK_NAME ||
+                                  task.Name == PerFileRescoreTask.TASK_NAME ||
+                                  task.Name == SecondPassFdrTask.TASK_NAME;
+                Assert.AreEqual(expectTerm, task.ValidityKey(linearCtx) != task.ValidityKey(proteinBestCtx),
+                    string.Format(@"{0} must {1}key on {2}", task.Name, expectTerm ? string.Empty : @"NOT ",
+                        OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST)));
             }
 
             AssertEveryTreeSettingKeysDifferently();
@@ -944,6 +965,78 @@ namespace pwiz.Osprey.Test
             {
                 Assert.AreEqual(string.Empty, OspreyEnvironment.Pass2StrataValidityKeySuffix(),
                     @"transfer does not compete a complement, so its outputs keep their key");
+            }
+            AssertReconRefitKeysTheTasksItReaches(tasks, ctx);
+            AssertTransferReconciliationSetKeysTheBlibGate(tasks);
+        }
+
+        /// <summary>
+        /// Under transfer, reconciliation takes only the precursors the blib reports, and the blib
+        /// gates on --fdr-level and --experiment-fdr, which no other key term covers. So
+        /// FirstPassFDR (it writes the consensus), PerFileRescoring and SecondPassFDR key on both,
+        /// and no other task does: resuming with a looser experiment FDR must not keep the
+        /// reconciliation planned for the old reported set.
+        /// </summary>
+        private static void AssertTransferReconciliationSetKeysTheBlibGate(IReadOnlyList<OspreyTask> tasks)
+        {
+            var defaultCtx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
+            var looserCtx = new PipelineContext(new OspreyConfig { ExperimentFdr = 0.05 }, tasks, null, null, null);
+            var peptideCtx = new PipelineContext(new OspreyConfig { FdrLevel = FdrLevel.Peptide }, tasks, null, null, null);
+            foreach (var task in tasks)
+            {
+                Assert.AreEqual(task.ValidityKey(defaultCtx), task.ValidityKey(looserCtx),
+                    string.Format(@"{0} must not key on {1} under protein-compact", task.Name,
+                        OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText));
+            }
+            using (OspreyEnvironment.OverrideVariables(new Dictionary<string, string>
+                   {
+                       { @"OSPREY_PASS2_QVALUE", OspreyEnvironment.PASS2_QVALUE_TRANSFER }
+                   }))
+            {
+                foreach (var task in tasks)
+                {
+                    bool expect = task.Name == FirstPassFdrTask.TASK_NAME ||
+                                  task.Name == PerFileRescoreTask.TASK_NAME ||
+                                  task.Name == SecondPassFdrTask.TASK_NAME;
+                    string key = task.ValidityKey(defaultCtx);
+                    Assert.AreEqual(expect, key != task.ValidityKey(looserCtx), string.Format(
+                        @"{0} must {1} key on {2} under transfer", task.Name, expect ? @"" : @"NOT ",
+                        OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText));
+                    Assert.AreEqual(expect, key != task.ValidityKey(peptideCtx), string.Format(
+                        @"{0} must {1} key on {2} under transfer", task.Name, expect ? @"" : @"NOT ",
+                        OspreyCommandArgs.ARG_FDR_LEVEL.ArgumentText));
+                }
+            }
+        }
+
+        /// <summary>
+        /// OSPREY_RECON_REFIT=off plans reconciliation on each run's first-pass calibration, so
+        /// the tasks downstream of the plan - PerFileRescoring and SecondPassFDR - key on it, and
+        /// no task does when it is unset, so no existing output directory moves.
+        /// </summary>
+        private static void AssertReconRefitKeysTheTasksItReaches(IReadOnlyList<OspreyTask> tasks, PipelineContext ctx)
+        {
+            const string term = @";reconrefit=off";
+            Assert.AreEqual(string.Empty, OspreyEnvironment.ReconRefitValidityKeySuffix(false));
+            Assert.AreEqual(term, OspreyEnvironment.ReconRefitValidityKeySuffix(true));
+            var unset = tasks.ToDictionary(task => task.Name, task => task.ValidityKey(ctx));
+            foreach (var key in unset)
+                Assert.IsFalse(key.Value.Contains(@"reconrefit"), key.Key + @" must not key on an unset OSPREY_RECON_REFIT");
+            using (OspreyEnvironment.OverrideVariables(new Dictionary<string, string>
+                   {
+                       { @"OSPREY_RECON_REFIT", @"off" }
+                   }))
+            {
+                Assert.AreEqual(term, OspreyEnvironment.ReconRefitValidityKeySuffix());
+                foreach (var task in tasks)
+                {
+                    string key = task.ValidityKey(ctx);
+                    bool expect = task.Name == PerFileRescoreTask.TASK_NAME || task.Name == SecondPassFdrTask.TASK_NAME;
+                    Assert.AreEqual(expect, key.Contains(term), string.Format(
+                        @"{0} must {1} key on OSPREY_RECON_REFIT=off", task.Name, expect ? @"" : @"NOT "));
+                    // Nothing else in the key moves.
+                    Assert.AreEqual(unset[task.Name], key.Replace(term, string.Empty), task.Name);
+                }
             }
         }
     }

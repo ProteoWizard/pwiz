@@ -50,6 +50,7 @@ namespace pwiz.Osprey.Tasks
     internal sealed class RunReconciliationPlanner
     {
         private readonly double _consensusFdr;
+        private readonly double _refitBandwidth;
         private readonly IReadOnlyDictionary<string, string> _perFileParquetPaths;
         private readonly Lazy<State> _state;
         private readonly PipelineContext _ctx;
@@ -86,6 +87,7 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx)
         {
             _consensusFdr = config.Reconciliation.ConsensusFdr;
+            _refitBandwidth = config.RtCalibration.LoessBandwidth;
             _perFileParquetPaths = perFileParquetPaths;
             _ctx = ctx;
             _state = new Lazy<State>(() => BuildState(loadConsensus(), perFileCalibrations,
@@ -106,7 +108,9 @@ namespace pwiz.Osprey.Tasks
             var state = _state.Value;
             var entries = new List<FdrEntry>(survivors);
             FdrEntry.SortCanonicalResolved(entries, fileName);
-            var refined = CalibrationRefit.Refit(state.Consensus.Consensus, entries, _consensusFdr);
+            // A null refit plans the run with its first-pass calibration (OSPREY_RECON_REFIT=off)
+            var refined = OspreyEnvironment.ReconciliationRefitOff ? null
+                : CalibrationRefit.Refit(state.Consensus.Consensus, entries, _consensusFdr, _refitBandwidth);
 
             List<KeyValuePair<int, ReconcileAction>> actions = null;
             IReadOnlyList<GapFillTarget> gapFill = Array.Empty<GapFillTarget>();
@@ -182,8 +186,12 @@ namespace pwiz.Osprey.Tasks
             // lookup they also take is empty and no call on this path reads it.
             IReadOnlyDictionary<string, RTCalibration> noRefitLookup = new Dictionary<string, RTCalibration>();
             BuildGapFillLibraryLookups(fullLibrary, out var libLookup, out var libPrecursorMz);
+            // Transfer carries every decoy's first-pass values forward and competes nothing, so
+            // its decoys stay where the first pass put them; protein-compact re-competes and needs
+            // them moved with their targets.
             state.Planner = new ReconciliationPlanner.FilePlanner(
-                state.Consensus.Consensus, state.Consensus.PassingBaseIds, noRefitLookup, perFileCalibrations);
+                state.Consensus.Consensus, state.Consensus.PassingBaseIds, noRefitLookup, perFileCalibrations,
+                reconcileDecoys: !OspreyEnvironment.Pass2TransferQ);
             state.GapFiller = new GapFillTargetIdentifier.FileIdentifier(
                 state.Consensus.Consensus, state.Consensus.PassingPrecursors, noRefitLookup, perFileCalibrations,
                 libLookup, libPrecursorMz, perFileIsolationMz);

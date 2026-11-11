@@ -999,6 +999,46 @@ namespace pwiz.Osprey.Core
                 @"OSPREY_RECONCILIATION", RECONCILIATION_SYMMETRIC_DECOYS, value));
         }
 
+        private static readonly EnvVar ENV_RECON_REFIT = new EnvVar(@"OSPREY_RECON_REFIT", EnvVarGroup.behavior,
+            @"Experiment: off plans cross-run reconciliation and gap-fill with each run's first-pass RT " +
+            @"calibration instead of refitting it on the consensus. Keys the reconciliation and second-pass outputs.")
+            { Values = new[] { RECON_REFIT_OFF } };
+
+        /// <summary>
+        /// OSPREY_RECON_REFIT (experiment): <c>off</c> skips the Stage 6 consensus refit, so each run is
+        /// planned with its own first-pass RT calibration. Unset refits as before. Any other value throws.
+        /// </summary>
+        public static bool ReconciliationRefitOff => ParseReconRefit(ENV_RECON_REFIT.Value);
+
+        /// <summary>
+        /// The validity-key term of <see cref="ReconciliationRefitOff"/> for the tasks whose output
+        /// the refit reaches (PerFileRescoring, SecondPassFDR): EMPTY when unset, so no directory
+        /// written with the refit is invalidated, and <c>;reconrefit=off</c> otherwise.
+        /// </summary>
+        public static string ReconRefitValidityKeySuffix()
+        {
+            return ReconRefitValidityKeySuffix(ReconciliationRefitOff);
+        }
+
+        /// <summary><see cref="ReconRefitValidityKeySuffix()"/> for an explicitly supplied setting.</summary>
+        public static string ReconRefitValidityKeySuffix(bool refitOff)
+        {
+            return refitOff ? @";reconrefit=" + RECON_REFIT_OFF : string.Empty;
+        }
+
+        private const string RECON_REFIT_OFF = @"off";
+
+        private static bool ParseReconRefit(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+            if (value.Trim().ToLowerInvariant() == RECON_REFIT_OFF)
+                return true;
+            throw new InvalidOperationException(string.Format(
+                OspreyCoreResources.OspreyEnvironment_ParseSingleValueSwitch__0__must_be___1___or_unset__not___2___,
+                @"OSPREY_RECON_REFIT", RECON_REFIT_OFF, value));
+        }
+
         private static readonly EnvVar ENV_DUMP_RUN_PEP = new EnvVar(@"OSPREY_DUMP_RUN_PEP", EnvVarGroup.diagnostic,
             @"Experiment: a folder. The transfer second pass fits each run's PEP from its " +
             @"first-pass target-vs-paired-decoy winners and writes every survivor's class, " +
@@ -1077,23 +1117,27 @@ namespace pwiz.Osprey.Core
         public static readonly bool GbtOutOfFold = ParseIntOrNull(ENV_GBT_OOF) == 1;
 
         private static readonly EnvVar ENV_GBT_PREFILTER_SIZE = new EnvVar(@"OSPREY_GBT_PREFILTER_SIZE", EnvVarGroup.behavior,
-            @"Experiment, gbdt first pass only: two-round training. Round 1 trains on the usual random " +
+            @"Experiment, first pass, either classifier (the GBT_ prefix is historical): two-round training. Round 1 trains on the usual random " +
             @"subsample; its fold models score every best-per-precursor candidate, and round 2 retrains on " +
             @"the N rows of the best-scoring peptide groups. Changes the validity key. Loads the features of every candidate " +
             @"during training (about double the resident features). Ignored, with a warning, by the " +
-            @"projection path. 0 or unset is off.")
+            @"projection path. 0 is off. Unset, it is " + PROTEIN_BEST_PREFILTER_SIZE.ToString(CultureInfo.InvariantCulture) + @" with " +
+            OspreyArgNames.PREFIX + OspreyArgNames.PROTEIN_BEST + @" on, whose column needs round 2, and off with it off (the default).")
             { ValueExample = @"<N>" };
 
         /// <summary>
-        /// OSPREY_GBT_PREFILTER_SIZE=N (experiment): two-round first-pass tree training. Round 1 trains as usual
+        /// OSPREY_GBT_PREFILTER_SIZE=N: two-round first-pass training, as set (0 when unset; the size a
+        /// run trains with is <see cref="PrefilterSizeFor"/>, which defaults it for --protein-best). Round 1 trains as usual
         /// on the random MaxTrainSize subsample; its fold models then score every best-per-precursor candidate, and
-        /// round 2 retrains on the N rows of the peptide groups that score best. Tree model only; 0 when unset.
-        /// Keyed through the gbdt validity-key term, so a run with it never adopts outputs trained without it.
+        /// round 2 retrains on the N rows of the peptide groups that score best. Either classifier, the name
+        /// notwithstanding; 0 when unset. Keyed through the classifier validity-key term
+        /// (PercolatorEngine.GbdtValidityKeySuffix, which appends it for the SVM too), so a run with it never
+        /// adopts outputs trained without it.
         /// Memory: the first pass then loads the features of every best-per-precursor candidate, not only the
         /// MaxTrainSize subsample - about candidates x features doubles resident during training. Read only
         /// by the streamed first pass; the projection path ignores it and logs a warning.
         /// </summary>
-        public static readonly int GbtPrefilterSize = Math.Max(0, ParseIntOrZero(ENV_GBT_PREFILTER_SIZE));
+        public static int GbtPrefilterSize => Math.Max(0, ParseIntOrZero(ENV_GBT_PREFILTER_SIZE));
 
         private static readonly EnvVar ENV_GBT_PREFILTER_Q = new EnvVar(@"OSPREY_GBT_PREFILTER_Q", EnvVarGroup.behavior,
             @"Experiment, with OSPREY_GBT_PREFILTER_SIZE as a row cap: round 2 keeps every peptide group whose " +
@@ -1158,17 +1202,137 @@ namespace pwiz.Osprey.Core
         public static readonly bool GbtPrefilterSample = ParseIntOrNull(ENV_GBT_PREFILTER_SAMPLE) == 1;
 
         /// <summary>
-        /// True when OSPREY_GBT_PREFILTER_Q, _LFDR or _SAMPLE is set without OSPREY_GBT_PREFILTER_SIZE; startup
-        /// aborts. They only shape round 2 of the two-round training, which runs only with a size, so without
-        /// one the run would be the one-round baseline under the baseline's validity key.
+        /// True when OSPREY_GBT_PREFILTER_Q, _LFDR or _SAMPLE is set while the run trains one round
+        /// (<paramref name="size"/>, from <see cref="PrefilterSizeFor"/>, is 0); startup aborts. They only
+        /// shape round 2 of the two-round training, so the run would be the one-round baseline under the
+        /// baseline's validity key.
         /// </summary>
-        public static readonly bool GbtPrefilterSwitchesWithoutSize = PrefilterSwitchesWithoutSize(
-            GbtPrefilterQSetting, GbtPrefilterLocalFdrSetting, GbtPrefilterSample, GbtPrefilterSize);
-
-        /// <summary><see cref="GbtPrefilterSwitchesWithoutSize"/> for explicitly supplied settings.</summary>
-        internal static bool PrefilterSwitchesWithoutSize(string qSetting, string localFdrSetting, bool sample, int size)
+        public static bool PrefilterSwitchesWithoutSize(string qSetting, string localFdrSetting, bool sample, int size)
         {
             return size <= 0 && (!string.IsNullOrEmpty(qSetting) || !string.IsNullOrEmpty(localFdrSetting) || sample);
+        }
+
+        /// <summary>
+        /// The round-2 row count of the two-round first-pass training with <c>--protein-best on</c> and
+        /// OSPREY_GBT_PREFILTER_SIZE unset: the column reaches the model only through round 2, and this
+        /// is the size every protein-best experiment trained with.
+        /// </summary>
+        public const int PROTEIN_BEST_PREFILTER_SIZE = 200000;
+
+        /// <summary>The <see cref="ProteinBestDecoyOwn"/> spelling of the default decoy arm.</summary>
+        public const string PROTEIN_BEST_DECOY_PAIRED = @"paired";
+
+        /// <summary>The <see cref="ProteinBestDecoyOwn"/> spelling of the decoy-sibling arm.</summary>
+        public const string PROTEIN_BEST_DECOY_OWN = @"own";
+
+        /// <summary>The validity-key and log spelling of the column's reduction: the top sibling.</summary>
+        private const string PROTEIN_BEST_MAX = @"max";
+
+        /// <summary>
+        /// How many top sibling peptides the column reduces. Always the maximum: the mean-of-top-N
+        /// arms the experiment also tried remain in <c>ProteinBestFeature.ComputeColumn</c>, but no
+        /// setting selects them.
+        /// </summary>
+        public const int PROTEIN_BEST_TOP_N = 1;
+
+        private static readonly EnvVar ENV_PROTEIN_BEST_DECOY = new EnvVar(@"OSPREY_PROTEIN_BEST_DECOY", EnvVarGroup.behavior,
+            @"With " + OspreyArgNames.PREFIX + OspreyArgNames.PROTEIN_BEST + @" on: paired has a decoy read the value of its " +
+            @"paired target's protein, from target siblings, so it sees what a false target would; own has it read decoy " +
+            @"siblings only. Changes the validity key.")
+            { Values = new[] { PROTEIN_BEST_DECOY_PAIRED, PROTEIN_BEST_DECOY_OWN }, DefaultValue = PROTEIN_BEST_DECOY_PAIRED };
+
+        private static readonly EnvVar ENV_PROTEIN_BEST_SHUFFLE = new EnvVar(@"OSPREY_PROTEIN_BEST_SHUFFLE", EnvVarGroup.behavior,
+            @"With " + OspreyArgNames.PREFIX + OspreyArgNames.PROTEIN_BEST + @" on, the negative control: 1 permutes which " +
+            @"peptide has which accessions, seeded, keeping every protein's peptide count. Changes the validity key.")
+            { Values = new[] { @"0", @"1" }, DefaultValue = @"0" };
+
+        /// <summary>OSPREY_PROTEIN_BEST_DECOY=own: decoys read decoy siblings, not their paired target's value.</summary>
+        public static bool ProteinBestDecoyOwn => string.Equals(ENV_PROTEIN_BEST_DECOY.Value?.Trim(),
+            PROTEIN_BEST_DECOY_OWN, StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>OSPREY_PROTEIN_BEST_SHUFFLE=1: the negative control, accessions permuted among peptides.</summary>
+        public static bool ProteinBestShuffle => ParseIntOrNull(ENV_PROTEIN_BEST_SHUFFLE) == 1;
+
+        /// <summary>
+        /// The round-2 row count of the two-round first-pass training: OSPREY_GBT_PREFILTER_SIZE when it
+        /// is set (0 then trains one round), else <see cref="PROTEIN_BEST_PREFILTER_SIZE"/> with the
+        /// protein-best column on, which needs round 2, and 0 - one round, the default before the
+        /// column - with it off. Re-read on each access, like the size itself.
+        /// </summary>
+        public static int PrefilterSizeFor(bool proteinBest)
+        {
+            if (ENV_GBT_PREFILTER_SIZE.IsSet)
+                return GbtPrefilterSize;
+            return proteinBest ? PROTEIN_BEST_PREFILTER_SIZE : 0;
+        }
+
+        /// <summary>
+        /// The FDR validity-key term for the protein-aware column: EMPTY when off, so no directory
+        /// written without it is invalidated. The model it trains has another feature and different
+        /// scores, so a directory written with one arm must never be adopted by another. The terms
+        /// are those the OSPREY_PROTEIN_BEST=max experiment wrote, so its directories stay current.
+        /// </summary>
+        public static string ProteinBestValidityKeySuffix(OspreyConfig config)
+        {
+            return ProteinBestValidityKeySuffix(config.ProteinBest ? PROTEIN_BEST_TOP_N : 0,
+                ProteinBestDecoyOwn, ProteinBestShuffle);
+        }
+
+        /// <summary><see cref="ProteinBestValidityKeySuffix(OspreyConfig)"/> for explicitly supplied settings.</summary>
+        public static string ProteinBestValidityKeySuffix(int topN, bool decoyOwn, bool shuffle)
+        {
+            if (topN <= 0)
+                return string.Empty;
+            return string.Format(CultureInfo.InvariantCulture, @";proteinbest={0};proteinbestdecoy={1}{2}",
+                DescribeProteinBestTopN(topN),
+                decoyOwn ? PROTEIN_BEST_DECOY_OWN : PROTEIN_BEST_DECOY_PAIRED,
+                shuffle ? @";proteinbestshuffle=1" : string.Empty);
+        }
+
+        /// <summary>
+        /// The run-log line for the protein-best setting, on or off, with the developer switches that
+        /// shape it when they are set, and the round-2 size it trains with.
+        /// </summary>
+        public static string DescribeProteinBest(OspreyConfig config)
+        {
+            if (!config.ProteinBest)
+                return string.Format(@"Protein-best training column: {0}", OspreyArgNames.VALUE_OFF);
+            return string.Format(CultureInfo.InvariantCulture,
+                @"Protein-best training column: {0} (two-round first pass, round 2 at {1} rows{2}{3})",
+                OspreyArgNames.VALUE_ON, PrefilterSizeFor(true),
+                ProteinBestDecoyOwn ? @", OSPREY_PROTEIN_BEST_DECOY=" + PROTEIN_BEST_DECOY_OWN : string.Empty,
+                ProteinBestShuffle ? @", OSPREY_PROTEIN_BEST_SHUFFLE=1 (negative control)" : string.Empty);
+        }
+
+        /// <summary>
+        /// The startup refusal for this run's protein-best settings, or null when they hold. Either
+        /// classifier can train with the column, through the two-round training. Off, the developer
+        /// switches must be unset too: they would do nothing while the run kept the baseline's key.
+        /// </summary>
+        public static string ValidateProteinBestSettings(OspreyConfig config)
+        {
+            string argText = OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST);
+            if (!config.ProteinBest)
+            {
+                return ENV_PROTEIN_BEST_DECOY.IsSet || ENV_PROTEIN_BEST_SHUFFLE.IsSet
+                    ? string.Format(@"OSPREY_PROTEIN_BEST_DECOY and OSPREY_PROTEIN_BEST_SHUFFLE shape the column {0} adds " +
+                                    @"and cannot be set with {1}.", argText, OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST, OspreyArgNames.VALUE_OFF))
+                    : null;
+            }
+            if (PrefilterSizeFor(true) <= 0)
+            {
+                return string.Format(@"{0} reaches the model through round 2 of the two-round training: " +
+                                     @"OSPREY_GBT_PREFILTER_SIZE=0 turns that off. Unset it, or use {1}.",
+                    argText, OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST, OspreyArgNames.VALUE_OFF));
+            }
+            return null;
+        }
+
+        private static string DescribeProteinBestTopN(int topN)
+        {
+            return topN == 1
+                ? PROTEIN_BEST_MAX
+                : @"mean-" + topN.ToString(CultureInfo.InvariantCulture);
         }
 
         private static readonly EnvVar ENV_DETERMINISTIC_MATH = new EnvVar(@"OSPREY_DETERMINISTIC_MATH", EnvVarGroup.behavior,
@@ -1691,6 +1855,26 @@ namespace pwiz.Osprey.Core
         public static string Pass2QValueValidityKeySuffix(string normalizedPass2QValue)
         {
             return @";pass2=" + normalizedPass2QValue;
+        }
+
+        /// <summary>
+        /// Validity-key suffix for what cross-run reconciliation moves under
+        /// <see cref="PASS2_QVALUE_TRANSFER"/>, which carries first-pass q-values forward and
+        /// re-competes nothing: only the precursors the blib reports (the Stage 6 consensus
+        /// FirstPassFDR writes), and none of their paired decoys (what PerFileRescoring
+        /// re-scores). Both differ from the builds that reconciled every precursor passing at any
+        /// level in any run, decoys included, so FirstPassFDR, PerFileRescoring and SecondPassFDR
+        /// carry it. The reported set is the blib's experiment gate, so the suffix also names
+        /// <see cref="OspreyConfig.FdrLevel"/> and <see cref="OspreyConfig.ExperimentFdr"/>, which
+        /// no other key term covers. Empty under protein-compact, whose outputs are unchanged.
+        /// </summary>
+        public static string TransferReconciliationValidityKeySuffix(OspreyConfig config)
+        {
+            if (!Pass2TransferQ)
+                return string.Empty;
+            return string.Format(CultureInfo.InvariantCulture,
+                @";reconset=output@{0},{1:R};recondecoys=0;pepfloor=reported",
+                config.FdrLevel, config.ExperimentFdr);
         }
 
         /// <summary>

@@ -98,6 +98,36 @@ namespace pwiz.Osprey.FDR.Reconciliation
         }
 
         /// <summary>
+        /// The <see cref="SelectRescoreTargets"/> a transfer second pass can use: charge states
+        /// the blib will report (<see cref="ExperimentOutputSet"/> over the run's own
+        /// <paramref name="entries"/>, whose first-pass experiment q-values are experiment-wide).
+        /// Transfer keeps every experiment-wide value from the first pass, so re-scoring another
+        /// charge state, or a decoy, changes nothing reported. The leader is still chosen by run
+        /// FDR: moving a reported charge state onto it is the per-run peak picking
+        /// reconciliation is for. A run that lacks a peptide's overall best charge can keep one
+        /// more charge state than the experiment-wide set would, which costs a re-score and
+        /// changes nothing reported.
+        /// </summary>
+        public static IReadOnlyList<(int Index, double Apex, double Start, double End)> ReportedOnly(
+            IReadOnlyList<(int Index, double Apex, double Start, double End)> targets,
+            IReadOnlyList<FdrEntry> entries, FdrLevel fdrLevel, double experimentFdr)
+        {
+            if (targets.Count == 0)
+                return targets;
+            var reported = new ExperimentOutputSet(fdrLevel, experimentFdr);
+            reported.AddFile(entries);
+            reported.Finish(out var precursors, out _);
+            var kept = new List<(int Index, double Apex, double Start, double End)>(targets.Count);
+            foreach (var target in targets)
+            {
+                var entry = entries[target.Index];
+                if (!entry.IsDecoy && precursors.Contains((entry.ModifiedSequence, entry.Charge)))
+                    kept.Add(target);
+            }
+            return kept;
+        }
+
+        /// <summary>
         /// Pick the highest-SVM-score entry among the group members that pass
         /// FDR at <paramref name="fdrThreshold"/>. Ties on score are broken by
         /// lower run_precursor_qvalue. Returns -1 if no entry passes.

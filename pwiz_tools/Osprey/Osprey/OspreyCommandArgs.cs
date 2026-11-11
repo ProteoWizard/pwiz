@@ -441,6 +441,20 @@ namespace pwiz.Osprey
                 }
             }) { Scope = OspreyPropertyScope.search, DefaultValue = Default(() => new OspreyConfig().SharedPeptides), DescriptionArgs = () => new object[] { @"all" } };
 
+        // The protein-best training column (issue #4580), off by default. Off is the one-round first
+        // pass that preceded it, bit for bit; the developer switches that shape it stay environment
+        // variables (OSPREY_PROTEIN_BEST_DECOY, OSPREY_PROTEIN_BEST_SHUFFLE). A block body, so the
+        // handler is an Action: an assignment of a bool would bind to the Func overload, whose false
+        // (off) ends the parse and drops every argument after it.
+        public static readonly OspreyArgument ARG_PROTEIN_BEST = new OspreyArgument(OspreyArgNames.PROTEIN_BEST,
+            new[] { OspreyArgNames.VALUE_ON, OspreyArgNames.VALUE_OFF },
+            (c, p) => { c._config.ProteinBest = string.Equals(p.Value, OspreyArgNames.VALUE_ON, StringComparison.OrdinalIgnoreCase); })
+            {
+                Scope = OspreyPropertyScope.search,
+                DefaultValue = Default(() => new OspreyConfig().ProteinBest ? OspreyArgNames.VALUE_ON : OspreyArgNames.VALUE_OFF),
+                DescriptionArgs = () => new object[] { OspreyArgNames.VALUE_OFF }
+            };
+
         public static readonly OspreyArgument ARG_FDRBENCH = new OspreyArgument(@"fdrbench",
             () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.OutputFdrBench = p.Value)
             {
@@ -460,7 +474,7 @@ namespace pwiz.Osprey
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_FDR =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_FDR_Protein_Inference, true,
                 ARG_RUN_FDR, ARG_EXPERIMENT_FDR, ARG_RECONCILIATION_COMPACTION_FDR, ARG_PROTEIN_FDR, ARG_FDR_LEVEL, ARG_SHARED_PEPTIDES,
-                ARG_FDRBENCH, ARG_FDRBENCH_PER_RUN, ARG_FDRBENCH_PASS);
+                ARG_PROTEIN_BEST, ARG_FDRBENCH, ARG_FDRBENCH_PER_RUN, ARG_FDRBENCH_PASS);
 
         // --- Decoys -----------------------------------------------------------------------
         public static readonly OspreyArgument ARG_DECOYS_IN_LIBRARY = new OspreyArgument(OspreyArgNames.DECOYS_IN_LIBRARY,

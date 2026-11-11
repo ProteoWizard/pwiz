@@ -525,6 +525,24 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Train the first pass with a protein-aware column: for each candidate, the best first-round score among the other peptides of its protein in the same run. It needs the two-round first-pass training, which it turns on (default: {0}).
+        /// </summary>
+        public static string _protein_best {
+            get {
+                return ResourceManager.GetString("_protein_best", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein-best training column.
+        /// </summary>
+        public static string _protein_best_property {
+            get {
+                return ResourceManager.GetString("_protein_best_property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Protein-level FDR threshold (optional).
         /// </summary>
         public static string _protein_fdr {

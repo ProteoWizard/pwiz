@@ -149,7 +149,7 @@ namespace pwiz.Osprey.FDR
         public List<int> IterationsPerFold { get; set; }
 
         /// <summary>
-        /// Train-only tree runs with <see cref="PercolatorConfig.ReportTrainEntryFolds"/>
+        /// Train-only runs with <see cref="PercolatorConfig.ReportTrainEntryFolds"/>
         /// (OSPREY_GBT_OOF, or round 1 of the two-round training): the fold each input entry was held out of
         /// (the one model that did not train on it), or -1 for an entry outside the training
         /// subset. Null otherwise.

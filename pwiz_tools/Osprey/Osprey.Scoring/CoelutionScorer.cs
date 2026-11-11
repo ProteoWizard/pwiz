@@ -201,17 +201,24 @@ namespace pwiz.Osprey.Scoring
                     blockEnd = scanMajorXics
                         ? prefilter.NextXicBlockEnd(blockStart, XIC_BLOCK_SIZE, XIC_BLOCK_BYTES)
                         : candidates.Count;
+                    List<XicData>[] blockCorrXics = null;
                     var blockXics = scanMajorXics
                         ? PeakDataExtractor.ExtractXicsScanMajor(candidates, blockStart, blockEnd,
-                            prefilter, windowSpectra, windowRts, config)
+                            prefilter, windowSpectra, windowRts, config, context.CorrelationConfig, out blockCorrXics)
                         : null;
                     for (int c = blockStart; c < blockEnd; c++)
                     {
                         List<XicData> precomputedXics = null;
+                        List<XicData> precomputedCorrXics = null;
                         if (blockXics != null)
                         {
                             precomputedXics = blockXics[c - blockStart];
                             blockXics[c - blockStart] = null;    // Released with the candidate's scoring
+                        }
+                        if (blockCorrXics != null)
+                        {
+                            precomputedCorrXics = blockCorrXics[c - blockStart];
+                            blockCorrXics[c - blockStart] = null;
                         }
 
                         var fdrEntry = ScoreCandidate(
@@ -221,7 +228,7 @@ namespace pwiz.Osprey.Scoring
                             ms1Spectra, ms1Calibration,
                             context,
                             ospreyContext, ospreyPeakData, corrScoring,
-                            prefilter, c, precomputedXics);
+                            prefilter, c, precomputedXics, precomputedCorrXics);
 
                         if (fdrEntry != null)
                             entries.Add(fdrEntry);
@@ -262,12 +269,14 @@ namespace pwiz.Osprey.Scoring
             CorrelationScoring corrScoring,
             WindowPrefilter prefilter,
             int prefilterIndex,
-            List<XicData> precomputedXics)
+            List<XicData> precomputedXics,
+            List<XicData> precomputedCorrXics)
         {
             if (!_extractor.TryExtract(
                     candidate, windowSpectra, windowRts, rtCalibration,
                     globalRtTolerance, rtSigma, ms1Spectra, ms1Calibration,
-                    context, ospreyPeakData, prefilter, prefilterIndex, precomputedXics, out var ext))
+                    context, ospreyPeakData, prefilter, prefilterIndex, precomputedXics, precomputedCorrXics,
+                    out var ext))
                 return null;
 
             var bestPeak = ext.BestPeak;
