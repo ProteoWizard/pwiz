@@ -1,21 +1,27 @@
 using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Databinding
 {
     /// <summary>
-    /// Remembers the chromatogram groups of one precursor, in every replicate and file that has been asked
-    /// for, and the scan ids of one file, so that consecutive report cells for the same precursor do not
-    /// read them again.
+    /// Remembers the chromatogram groups of the most recently used precursors, in every replicate and file
+    /// that has been asked for, and the scan ids of one file, so that report cells for the same precursor do
+    /// not read them again. Several precursors are kept because report exporters calculate rows on several
+    /// threads at once, and those threads are usually working on different precursors.
     /// </summary>
     public class ChromDataCache
     {
+        // Each thread calculating report rows (see ParallelEx) works on one precursor at a time. Twice as many
+        // are kept so that a precursor still in use is not forgotten when the other threads move on to new ones.
+        private static readonly int MAX_PRECURSORS = ParallelEx.GetThreadCount() * 2;
+
         private readonly object _lock = new object();
         private object _documentReference;
-        private IdentityPath _precursorIdentityPath;
-        private readonly Dictionary<(string Replicate, MsDataFileUri File, bool LoadPoints), ChromatogramGroupInfo> _groups =
-            new Dictionary<(string Replicate, MsDataFileUri File, bool LoadPoints), ChromatogramGroupInfo>();
+        private readonly Dictionary<IdentityPath, Dictionary<(string Replicate, MsDataFileUri File, bool LoadPoints), ChromatogramGroupInfo>> _precursors =
+            new Dictionary<IdentityPath, Dictionary<(string Replicate, MsDataFileUri File, bool LoadPoints), ChromatogramGroupInfo>>();
+        private readonly Queue<IdentityPath> _precursorOrder = new Queue<IdentityPath>();
         private object _scanIdsDocumentReference;
         private MsDataFileUri _scanIdsFile;
         private MsDataFileScanIds _scanIds;
@@ -43,8 +49,9 @@ namespace pwiz.Skyline.Model.Databinding
         }
 
         /// <summary>
-        /// Returns the chromatogram group of a precursor in one file of a replicate. Asking for a different
-        /// precursor, or a different document, forgets the groups of the previous one.
+        /// Returns the chromatogram group of a precursor in one file of a replicate. When more precursors than
+        /// the cache holds have been asked for, the groups of the one asked for first are forgotten; asking for
+        /// a different document forgets them all.
         /// </summary>
         /// <param name="loadPoints">False to get a group whose time and intensity points have been discarded,
         /// which is cheaper to hold on to.</param>
@@ -52,24 +59,32 @@ namespace pwiz.Skyline.Model.Databinding
             ChromatogramSet chromatogramSet, MsDataFileUri filePath,
             IdentityPath precursorIdentityPath, bool loadPoints)
         {
-            // Report exporters can calculate rows on several threads at once
             lock (_lock)
             {
-                if (!ReferenceEquals(_documentReference, document.ReferenceId) ||
-                    !precursorIdentityPath.Equals(_precursorIdentityPath))
+                if (!ReferenceEquals(_documentReference, document.ReferenceId))
                 {
                     _documentReference = document.ReferenceId;
-                    _precursorIdentityPath = precursorIdentityPath;
-                    _groups.Clear();
+                    _precursors.Clear();
+                    _precursorOrder.Clear();
+                }
+                if (!_precursors.TryGetValue(precursorIdentityPath, out var groups))
+                {
+                    if (_precursorOrder.Count >= MAX_PRECURSORS)
+                    {
+                        _precursors.Remove(_precursorOrder.Dequeue());
+                    }
+                    groups = new Dictionary<(string Replicate, MsDataFileUri File, bool LoadPoints), ChromatogramGroupInfo>();
+                    _precursors.Add(precursorIdentityPath, groups);
+                    _precursorOrder.Enqueue(precursorIdentityPath);
                 }
                 var key = (chromatogramSet.Name, filePath, loadPoints);
-                if (!_groups.TryGetValue(key, out var chromatogramGroupInfo))
+                if (!groups.TryGetValue(key, out var chromatogramGroupInfo))
                 {
-                    LoadReplicate(document, chromatogramSet, loadPoints);
-                    if (!_groups.TryGetValue(key, out chromatogramGroupInfo))
+                    LoadReplicate(document, precursorIdentityPath, chromatogramSet, loadPoints, groups);
+                    if (!groups.TryGetValue(key, out chromatogramGroupInfo))
                     {
                         // Remember that this file has no chromatogram group, so it is not looked for again
-                        _groups.Add(key, null);
+                        groups.Add(key, null);
                     }
                 }
                 return chromatogramGroupInfo;
@@ -80,10 +95,12 @@ namespace pwiz.Skyline.Model.Databinding
         /// Adds the precursor's chromatogram groups in every file of the replicate. When a file has more than
         /// one, the first one is used.
         /// </summary>
-        private void LoadReplicate(SrmDocument document, ChromatogramSet chromatogramSet, bool loadPoints)
+        private static void LoadReplicate(SrmDocument document, IdentityPath precursorIdentityPath,
+            ChromatogramSet chromatogramSet, bool loadPoints,
+            Dictionary<(string Replicate, MsDataFileUri File, bool LoadPoints), ChromatogramGroupInfo> groups)
         {
-            var peptideDocNode = (PeptideDocNode) document.FindNode(_precursorIdentityPath.Parent);
-            var precursorDocNode = (TransitionGroupDocNode) peptideDocNode.FindNode(_precursorIdentityPath.Child);
+            var peptideDocNode = (PeptideDocNode) document.FindNode(precursorIdentityPath.Parent);
+            var precursorDocNode = (TransitionGroupDocNode) peptideDocNode.FindNode(precursorIdentityPath.Child);
             var tolerance = (float) document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             if (!document.Settings.MeasuredResults.TryLoadChromatogram(chromatogramSet, peptideDocNode, precursorDocNode,
                     tolerance, out var chromatogramGroupInfos))
@@ -93,7 +110,7 @@ namespace pwiz.Skyline.Model.Databinding
             foreach (var chromatogramGroupInfo in chromatogramGroupInfos)
             {
                 var key = (chromatogramSet.Name, chromatogramGroupInfo.FilePath, loadPoints);
-                if (_groups.ContainsKey(key))
+                if (groups.ContainsKey(key))
                 {
                     continue;
                 }
@@ -101,7 +118,7 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     chromatogramGroupInfo.DiscardData();
                 }
-                _groups.Add(key, chromatogramGroupInfo);
+                groups.Add(key, chromatogramGroupInfo);
             }
         }
     }
