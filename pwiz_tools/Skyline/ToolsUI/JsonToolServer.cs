@@ -1492,6 +1492,10 @@ namespace pwiz.Skyline.ToolsUI
 
         private ViewSpec ResolveReportDefinition(ReportDefinition definition, SkylineDataSchema dataSchema)
         {
+            if (!string.IsNullOrEmpty(definition.ReportXml))
+            {
+                return ReadReportXml(definition.ReportXml);
+            }
             string reportName = definition.Name ?? JsonToolConstants.DEFAULT_REPORT_NAME;
             Log(string.Format(@"Resolving report '{0}' with {1} columns: {2}",
                 reportName, definition.Select?.Length ?? 0,
@@ -1500,6 +1504,33 @@ namespace pwiz.Skyline.ToolsUI
             var reader = new ReportDefinitionReader(dataSchema);
             var viewSpec = reader.CreateViewSpec(definition, definition.DataSource);
             Log(string.Format(@"Resolved via {0} row source", viewSpec.RowSource));
+            return viewSpec;
+        }
+
+        /// <summary>
+        /// Reads the one report in the text, which is in the XML format of a .skyr file.
+        /// </summary>
+        private ViewSpec ReadReportXml(string reportXml)
+        {
+            List<ReportOrViewSpec> reports;
+            using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(reportXml)))
+            {
+                reports = ReportSharing.DeserializeReportList(stream);
+            }
+            if (reports.Count != 1)
+            {
+                throw new ArgumentException(new LlmInstruction(string.Format(
+                    @"The 'report_xml' field must hold exactly one report, but it has {0}.", reports.Count)));
+            }
+            var viewSpecLayout = reports[0].ViewSpecLayout;
+            if (viewSpecLayout == null)
+            {
+                throw new ArgumentException(new LlmInstruction(
+                    @"The 'report_xml' field uses the old report format. Use the <views> format of a .skyr file."));
+            }
+            var viewSpec = viewSpecLayout.ViewSpec;
+            Log(string.Format(@"Read report '{0}' from XML with {1} columns, row source {2}",
+                viewSpec.Name, viewSpec.Columns.Count, viewSpec.RowSource));
             return viewSpec;
         }
 

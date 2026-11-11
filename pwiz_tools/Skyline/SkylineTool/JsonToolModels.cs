@@ -173,6 +173,14 @@ namespace SkylineTool
         public bool? PivotIsotopeLabel { get; set; }
         public string Uimode { get; set; }
         public string DataSource { get; set; }
+        /// <summary>
+        /// The report in the XML format of a .skyr file, holding exactly one report. When this is
+        /// set, the report is read from it, and Select, Name, Filter, PivotReplicate,
+        /// PivotIsotopeLabel, Uimode and DataSource are ignored. This can describe reports which
+        /// the other properties cannot, such as one with a row source of Peptide and a sublist of
+        /// "Precursors!*.Transitions!*.Results!*".
+        /// </summary>
+        public string ReportXml { get; set; }
     }
 
     /// <summary>
