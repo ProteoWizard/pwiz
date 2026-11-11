@@ -755,8 +755,8 @@ namespace pwiz.Osprey.Core
 
         private static readonly EnvVar ENV_GBT_OOF = new EnvVar(@"OSPREY_GBT_OOF", EnvVarGroup.behavior,
             @"Experiment, gbdt first pass only: 1 scores each training row with only the fold model that held " +
-            @"it out, instead of the mean of every fold model, two of which trained on it. Not in the validity " +
-            @"key: run it into its own output directory. A resumed first pass retrains rather than adopt the saved model. " +
+            @"it out, instead of the mean of every fold model, two of which trained on it. Changes the validity " +
+            @"key. A resumed first pass retrains rather than adopt the saved model. " +
             @"Second-pass rescoring still scores training rows with the fold mean.");
 
         private static readonly EnvVar ENV_XIC_FRAGMENTS = new EnvVar(@"OSPREY_XIC_FRAGMENTS", EnvVarGroup.behavior,
@@ -1109,9 +1109,11 @@ namespace pwiz.Osprey.Core
         /// <summary>
         /// OSPREY_GBT_OOF=1 (experiment): on the streaming score pass, scores each tree-model training row with
         /// only the fold model that held it out, as the cross-validated direct path does, instead of the average
-        /// of every fold model (two of which trained on it). Not keyed: run it into its own output directory.
-        /// The held-out folds are not persisted with the first-pass model, so a resumed first pass retrains
-        /// rather than adopt the saved model. Known limitation: the second-pass rescoring and transfer
+        /// of every fold model (two of which trained on it). Keyed under gbdt (the <c>;gbtoof=1</c> term of
+        /// PercolatorEngine.GbdtValidityKeySuffix), so a resume under the other setting recomputes rather
+        /// than adopt the first-pass outputs and everything downstream of them. The held-out folds are
+        /// not persisted with the first-pass model, so a resumed first pass retrains rather than adopt the
+        /// saved model. Known limitation: the second-pass rescoring and transfer
         /// (FrozenModelScorer, PerFileRescoreTask) still score training rows with the fold mean.
         /// </summary>
         public static readonly bool GbtOutOfFold = ParseIntOrNull(ENV_GBT_OOF) == 1;
