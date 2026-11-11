@@ -565,9 +565,6 @@ namespace pwiz.Skyline.Model.Databinding
 
         private class ColumnData
         {
-            private static readonly ConcurrentDictionary<Type, Func<Array, Array>> _toNullableArray =
-                new ConcurrentDictionary<Type, Func<Array, Array>>();
-
             public ColumnData(string name, DataPropertyDescriptor propertyDescriptor, ColumnValueTree columnValueTree)
             {
                 Name = name;
@@ -648,8 +645,8 @@ namespace pwiz.Skyline.Model.Databinding
 
             /// <summary>
             /// Converts a value which the column's property descriptor returned to something
-            /// that can be stored in a <see cref="ColumnBuffer"/>, or null. For a list column
-            /// that is an array of <see cref="ListElementType"/>.
+            /// that can be stored in a <see cref="ColumnBuffer"/>, or null. For a list column that is
+            /// an array of <see cref="ListElementType"/>, or of its underlying type if it is Nullable.
             /// </summary>
             public object ConvertToStorageValue(object value)
             {
@@ -711,9 +708,8 @@ namespace pwiz.Skyline.Model.Databinding
                 }
                 if (arrayElementType == ListElementType.NullableUnderlyingType && arrayElementType != typeof(DateTime))
                 {
-                    // For example float[] for a column of float?: a typed copy, instead of converting every
-                    // element through object, which costs more than everything else for long lists
-                    return _toNullableArray.GetOrAdd(arrayElementType, MakeToNullableArray)(array);
+                    // For example float[] for a column of float?, which ListColumnBuffer packs as it is
+                    return array;
                 }
 
                 var convertedArray = Array.CreateInstance(ListElementType.Type, array.Length);
@@ -727,26 +723,6 @@ namespace pwiz.Skyline.Model.Databinding
                 }
 
                 return convertedArray;
-            }
-
-            private static Func<Array, Array> MakeToNullableArray(Type elementType)
-            {
-                var method = typeof(ColumnData).GetMethod(nameof(ToNullableArray),
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-                // ReSharper disable once PossibleNullReferenceException
-                return (Func<Array, Array>) Delegate.CreateDelegate(typeof(Func<Array, Array>),
-                    method.MakeGenericMethod(elementType));
-            }
-
-            private static Array ToNullableArray<T>(Array array) where T : struct
-            {
-                var values = (T[]) array;
-                var result = new T?[values.Length];
-                for (int i = 0; i < values.Length; i++)
-                {
-                    result[i] = values[i];
-                }
-                return result;
             }
         }
         /// <summary>
@@ -890,11 +866,6 @@ namespace pwiz.Skyline.Model.Databinding
         /// </summary>
         private class ListColumnBuffer<T> : ColumnBuffer where T : struct
         {
-            /// <summary>
-            /// True if T is a Nullable, so that a list of T can be packed without boxing: its default value is
-            /// null, and any other value is not.
-            /// </summary>
-            private static readonly bool IS_NULLABLE = Nullable.GetUnderlyingType(typeof(T)) != null;
             private readonly DataField _elementField;
             private readonly Array[] _lists;
             private int _rowCount;
@@ -974,21 +945,32 @@ namespace pwiz.Skyline.Model.Databinding
                         _definitionLevels[_levelCount++] = list == null ? nullListLevel : emptyListLevel;
                         continue;
                     }
-                    if (IS_NULLABLE && list is T[] typedList)
+                    // Typed copies, instead of boxing every element, which costs more than everything else for
+                    // long lists
+                    if (list is T[] values)
                     {
-                        // Copied without boxing each element, which costs more than everything else for long lists
-                        for (int i = 0; i < typedList.Length; i++)
+                        Array.Copy(values, 0, _values, _valueCount, values.Length);
+                        _valueCount += values.Length;
+                        Array.Fill(_definitionLevels, valueLevel, _levelCount, values.Length);
+                        _repetitionLevels[_levelCount] = 0;
+                        Array.Fill(_repetitionLevels, 1, _levelCount + 1, values.Length - 1);
+                        _levelCount += values.Length;
+                        continue;
+                    }
+                    if (list is T?[] nullableValues)
+                    {
+                        for (int i = 0; i < nullableValues.Length; i++)
                         {
-                            var element = typedList[i];
+                            var element = nullableValues[i];
                             _repetitionLevels[_levelCount] = i == 0 ? 0 : 1;
-                            if (EqualityComparer<T>.Default.Equals(element, default))
+                            if (element.HasValue)
                             {
-                                _definitionLevels[_levelCount++] = nullElementLevel;
+                                _definitionLevels[_levelCount++] = valueLevel;
+                                _values[_valueCount++] = element.Value;
                             }
                             else
                             {
-                                _definitionLevels[_levelCount++] = valueLevel;
-                                _values[_valueCount++] = element;
+                                _definitionLevels[_levelCount++] = nullElementLevel;
                             }
                         }
                         continue;
