@@ -86,11 +86,9 @@ fi
 export PATH="$PATH:$HOME/.dotnet/tools"
 if ! command -v pwsh >/dev/null 2>&1; then
     echo "##teamcity[progressMessage 'Installing PowerShell as a dotnet global tool']"
-    # The latest, else a known-good release: PowerShell 7.7.0 reached NuGet (2026-11-10)
-    # without the powershell.linux-x64 package it depends on, failing every fresh agent.
-    dotnet tool install --global PowerShell \
-        || dotnet tool install --global PowerShell --version 7.6.10 \
-        || fail "installing pwsh failed"
+    # Pinned to the 7.6 LTS line: PowerShell 7.7.0 ships as a RID-specific tool whose
+    # powershell.<rid> packages are missing from nuget.org, so an unpinned install fails.
+    dotnet tool install --global PowerShell --version '7.6.*' || fail "installing pwsh failed"
 fi
 
 echo "##teamcity[progressMessage 'Osprey build.ps1']"
