@@ -37,6 +37,7 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf
@@ -126,12 +127,17 @@ namespace TestPerf
         // runs → fast repeat runs. Only valid after the zip is unzipped (inside DoTest and later).
         private string CacheDir => Path.Combine(TestFilesDirs[0].PersistentFilesDir, ZIP_NAME);
 
-        // Stable Skyline doc directory — also receives DIA-NN intermediates (predicted
-        // library, MBR output parquet). Kept out of the tutorial extraction dir so that dir
-        // holds only the shipped inputs + the `.quant` cache. Stable across runs for reuse.
-        private static readonly string DocDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            @"SkylinePerfTests", @"DiannPerfDoc-stable");
+        // Skyline doc directory that also receives DIA-NN intermediates (the seeded predicted
+        // library, the MBR output report + output library, its Skyline-converted speclib, and
+        // the .sky/.blib). Uses the normal per-test results location (fresh every run) rather
+        // than a stable dir: DIA-NN's output library is reused by the --use-quant flow and
+        // never rebuilt, so a persistent dir that was ever populated by a different file set
+        // (e.g. the full ProteoBench dataset, whose runs are named after the original .raw
+        // acquisitions) would pin the wrong per-run source-file attribution into every future
+        // build's document library, leaving the chromatograms page unable to find the results
+        // files. The reusable cache that keeps repeat runs fast -- the per-file .quant and the
+        // predicted spectral library -- lives in the persistent CacheDir, not here.
+        private string DocDir => TestContext.GetTestResultsPath(@"DiannPerfDoc");
 
         // Full paths to the mzML the wizard searches.
         private string[] DiaSearchPaths => MZML_FILES.Select(f => Path.Combine(CacheDir, f)).ToArray();
@@ -459,8 +465,20 @@ namespace TestPerf
                 searchDlg.SearchControl.SearchFinished += success => searchSucceeded = success;
                 // 120 min is a generous ceiling: a cached rerun searches only one file
                 // (~a few min), while a cold first run populates the whole cache — bump if
-                // that's expected on a fresh machine.
-                WaitForConditionUI(120 * 60 * 1000, () => searchSucceeded.HasValue);
+                // that's expected on a fresh machine. A failed search reports its error in a
+                // MessageDlg, which fails the test unread after 10 seconds, so stop waiting
+                // when one appears and report what DIA-NN left behind.
+                WaitForCondition(120 * 60 * 1000,
+                    () => searchSucceeded.HasValue || FindOpenForm<MessageDlg>() != null);
+                var errorDlg = FindOpenForm<MessageDlg>();
+                if (errorDlg != null)
+                {
+                    string errorMessage = errorDlg.Message;
+                    OkDialog(errorDlg, errorDlg.OkDialog);
+                    string logText = null;
+                    RunUI(() => logText = searchDlg.SearchControl.LogText);
+                    AssertEx.Fail(GetSearchFailureReport(errorMessage, logText));
+                }
                 RunUI(() => AssertEx.IsTrue(searchSucceeded.Value, searchDlg.SearchControl.LogText));
             }
             finally
@@ -469,6 +487,53 @@ namespace TestPerf
             }
 
             AssertEx.IsTrue(File.Exists(searchDlg.SearchControl.OutputSpecLibPath));
+        }
+
+        /// <summary>
+        /// Describes a failed wizard search for the test failure message: the error, the
+        /// files in <see cref="DocDir"/>, the end of DIA-NN's console output as teed to disk,
+        /// and the end of the wizard's own log.
+        /// </summary>
+        private string GetSearchFailureReport(string errorMessage, string logText)
+        {
+            var lines = new List<string>
+            {
+                @"DIA-NN search failed: " + errorMessage,
+                string.Empty,
+                @"Files in " + DocDir + @":"
+            };
+            try
+            {
+                foreach (var file in new DirectoryInfo(DocDir).EnumerateFiles().OrderBy(f => f.Name))
+                    lines.Add(string.Format(@"  {0:yyyy-MM-dd HH:mm:ss}  {1,14:N0}  {2}",
+                        file.LastWriteTime, file.Length, file.Name));
+            }
+            catch (Exception e)
+            {
+                lines.Add(@"  (could not list: " + e.Message + @")");
+            }
+
+            string stdoutLogPath = Path.Combine(DocDir, @"diann-skyline-stdout.log");
+            lines.Add(string.Empty);
+            lines.Add(@"End of " + stdoutLogPath + @":");
+            try
+            {
+                lines.AddRange(LastLines(File.ReadAllLines(stdoutLogPath), 100));
+            }
+            catch (Exception e)
+            {
+                lines.Add(@"  (could not read: " + e.Message + @")");
+            }
+
+            lines.Add(string.Empty);
+            lines.Add(@"End of the search wizard log:");
+            lines.AddRange(LastLines((logText ?? string.Empty).Split('\n').Select(line => line.TrimEnd('\r')).ToList(), 60));
+            return TextUtil.LineSeparate(lines);
+        }
+
+        private static IEnumerable<string> LastLines(IList<string> lines, int count)
+        {
+            return lines.Skip(Math.Max(0, lines.Count - count));
         }
 
         private void ImportToSkylineDocument(DiannSearchDlg searchDlg)
