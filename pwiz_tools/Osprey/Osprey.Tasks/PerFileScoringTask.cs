@@ -198,13 +198,12 @@ namespace pwiz.Osprey.Tasks
         // describes - so a re-run under a different pick model must not
         // adopt these parquets. The override adds whether the parquets carry
         // the reference XIC, which only the training export reads.
-        //
-        // The data file is declared as the input it is, and a node that holds only its
-        // <stem>.spectra.bin satisfies it: the cache stands in for an absent source (doc 00,
-        // "HPC relay checklist"), so a harness ships the cache in its place.
         public override string ValidityKey(PipelineContext ctx) =>
             base.ValidityKey(ctx) + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config);
 
+        // The data file is declared as the input it is, and a node that holds only its
+        // <stem>.spectra.bin satisfies it: the cache stands in for an absent source (doc 00,
+        // "HPC relay checklist"), so a harness ships the cache in its place.
         public override IEnumerable<string> Inputs(PipelineContext ctx)
         {
             foreach (string libraryInput in ScoringTaskShared.LibraryInputs(ctx.Config))

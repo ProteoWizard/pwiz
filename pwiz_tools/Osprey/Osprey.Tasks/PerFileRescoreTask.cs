@@ -1723,7 +1723,7 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Release the heavy per-entry payload a rescore attaches, once the file's
-        /// reconciled parquet has been written. These six arrays have no reader after
+        /// reconciled parquet has been written. These arrays have no reader after
         /// Stage 6: <see cref="ReconciledParquetWriter"/> consumes them per file during
         /// the write above, the Stage-6 planner loads CWT candidates through its own
         /// per-file loader rather than off these entries, and the resident 2nd pass
@@ -1739,7 +1739,7 @@ namespace pwiz.Osprey.Tasks
         /// Called on all three paths that end with a file's reconciled parquet on disk: the
         /// fresh rescore (gated on the write having persisted), the per-file resume skip
         /// (<see cref="TryResumeRescoredFile"/>), and the whole-task
-        /// <see cref="Rehydrate"/> - the last two re-fatten the same six arrays out of that
+        /// <see cref="Rehydrate"/> - the last two re-fatten the same arrays out of that
         /// parquet when they reload it, so without this they hold
         /// the full payload for every file at once. All three therefore leave the identical
         /// buffer shape.

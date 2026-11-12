@@ -296,7 +296,10 @@ binary blob columns, boundary columns, and a footer of key-value metadata. Writt
 feature columns (14 in `.scores-reconciled.parquet`, plus its `score_index`; 2 more in each
 with `--training-export`; see below). Column types are deliberately aligned with Rust: `entry_id` and `scan_number`
 are `UInt32`, `charge` is `UInt8`, so a C#-written parquet loads under Rust's strict downcasts
-and vice versa (`ParquetScoreCache.cs:90`). Pre-2026-04-19 C#-written parquets used `Int32` and
+and vice versa (`ParquetScoreCache.cs:90`). The column SET is no longer the same: C# leaves out
+Rust's `fragment_mzs` / `fragment_intensities`, the reconciled `cwt_candidates`, and without
+`--training-export` the reference XIC (#5023). No gate feeds a C#-written parquet to Rust; the
+cross-implementation comparison runs each implementation end to end. Pre-2026-04-19 C#-written parquets used `Int32` and
 must be regenerated.
 
 - **Identity (8)**: `entry_id`, `is_decoy`, `sequence`, `modified_sequence`, `charge`,

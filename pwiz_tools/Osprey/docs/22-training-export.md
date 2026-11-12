@@ -24,7 +24,7 @@ Osprey decides nothing from this evidence. The consumer applies its own masking 
 |---|---|
 | Written by | `PerFileRescoring` (`Osprey.Tasks/PerFileRescoreTask.cs`), through `Osprey.Tasks/TrainingExportWriter.cs`. A declared output of that task, not a stage: the pipeline stays four stages (P17 in [00](00-pipeline-architecture.md)) |
 | Shape | per run, inside the fan-out: one run's artifacts at a time, and the spectra of the isolation windows in flight - one per worker thread, so up to `--threads` windows |
-| Enabled | only with `--training-export` (or `--task TrainingExport`, the same request as a selector); never under `--task ModelDiagnostics`. On an HPC chain it is written by the `--task PerFileRescoring` nodes; every other `--task` accepts the flag, because a wrapper hands every node the same options, and ignores it, and the startup line says where the export is written |
+| Enabled | only with `--training-export` (or `--task TrainingExport`, the same request as a selector); never under `--task ModelDiagnostics`. On an HPC chain it is written by the `--task PerFileRescoring` nodes, and the `--task PerFileScoring` nodes need the flag too: it makes them write the reference XIC the export reads (a `PerFileRescoring` node given Stage 4 parquets without it stops with that message). The FDR `--task`s accept the flag, because a wrapper hands every node the same options, and ignore it, and the startup line says where the export is written |
 | Reads | the run's `.scores-reconciled.parquet`, one q-value sidecar (below), `.calibration.json` and `.spectra.bin`; the run's data file for the instrument footer, when it is there; the library, and `<blib-stem>.1st-pass.retained_base_ids.bin` when it loads the library itself |
 | Writes | `<stem>.training.parquet` per run, its validity stamp in its own footer (`osprey.validity`). Nothing else |
 
@@ -75,7 +75,15 @@ The option therefore moves the `PerFileScoring` and `PerFileRescoring` keys, and
 reference XIC, while `FirstPassFDR` and `SecondPassFDR` report `skipping (outputs valid)`. Give
 the flag up front when the export is wanted. Each run's export is byte-identical to the one
 written with the flag up front either way, and the library is unchanged; a file reached without
-the reference XIC is refused rather than exported (`ParquetScoreCache.LoadTrainingExportRows`).
+the reference XIC is refused rather than exported (`ParquetScoreCache.LoadTrainingExportRows`,
+`StreamReconciledScoresParquet`).
+
+The key term works both ways: an analysis run with the export and then re-run in the same
+directory without the flag also re-scores Stages 4 and 6, because its parquets are keyed on a
+schema that run would not write. Keep the flag on the command line of a directory that was
+exported, or remove the directory's parquets deliberately. Accepting a file that carries more
+than the run needs would mean comparing keys by more than equality everywhere a stamp is
+checked; for an opt-in product that has not been worth it.
 
 ---
 

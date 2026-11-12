@@ -235,7 +235,7 @@ namespace pwiz.Osprey.Test
                 ParquetScoreCache.StreamReconciledScoresParquet(stage4, ParquetScoreCache.GetReconciledScoresPath(runA),
                     null, null, ParquetScoreCache.WithStamp(
                         ReconciledParquetWriter.BuildReconciliationMetadata(new OspreyConfig(), null), workerStamp),
-                    null, @"a.mzML", null, PerFileRescoreTask.TASK_NAME, null, null);
+                    null, @"a.mzML", null, PerFileRescoreTask.TASK_NAME, null, null, true);
                 current = RunKey(runA);
                 Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(runA),
                     new Dictionary<uint, (double score, uint entryId)>(), workerStamp);

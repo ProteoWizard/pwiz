@@ -123,8 +123,9 @@ namespace pwiz.Osprey.IO
         // No fragment_mzs / fragment_intensities: Rust writes both, a verbatim copy of the
         // library spectrum per row that nothing reads back, so C# stopped writing them
         // (#5023). An older file's columns are ignored, since every read is by name.
-        // Read only by the training export, so written only when the export is requested
-        // (WritesReferenceXic, #5023).
+
+        // The reference XIC pair is read only by the training export, so it is written only
+        // when the export is requested (WritesReferenceXic, #5023).
         private const string COLUMN_REFERENCE_XIC_RTS = @"reference_xic_rts";
         private const string COLUMN_REFERENCE_XIC_INTENSITIES = @"reference_xic_intensities";
         /// <summary>
@@ -564,7 +565,7 @@ namespace pwiz.Osprey.IO
         public static void WriteScoresParquet(string path, List<FdrEntry> entries,
             Dictionary<string, string> metadata,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
-            string fileName, bool writeReferenceXic = true)
+            string fileName, bool writeReferenceXic)
         {
             if (path == null)
                 throw new ArgumentNullException(nameof(path));
@@ -1887,7 +1888,7 @@ namespace pwiz.Osprey.IO
             Dictionary<string, string> metadata,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById, string fileName,
             ISet<(uint, byte, uint)> keepIdentities, string taskName, string progressIndent,
-            Action<string> logWarning, bool writeReferenceXic = true)
+            Action<string> logWarning, bool writeReferenceXic)
         {
             if (originalPath == null)
                 throw new ArgumentNullException(nameof(originalPath));
@@ -1918,6 +1919,17 @@ namespace pwiz.Osprey.IO
             using (var saver = new SimpleFileSaver(reconciledPath))
             {
                 var fieldsByName = BuildFieldLookup(reader);
+                // Asked for the reference XIC of a Stage 4 file written without it - an HPC
+                // chain whose PerFileScoring nodes did not get --training-export. Copying would
+                // give every unchanged row an empty XIC that the export's own check cannot see,
+                // since the column would be present. An InvalidOperationException, so the
+                // writer's caller stops the run rather than skipping the file and retrying it.
+                if (writeReferenceXic && !fieldsByName.ContainsKey(COLUMN_REFERENCE_XIC_RTS))
+                {
+                    throw new InvalidOperationException(string.Format(
+                        OspreyIOResources.ParquetScoreCache_StreamReconciledScoresParquet__0__has_no_reference_XIC__which_the_training_export_needs__Score_the_runs_again_with_the_export_requested_,
+                        originalPath));
+                }
                 int sourceRowCount = checked((int)(reader.Metadata?.NumRows ?? 0L));
                 int totalRows = sourceRowCount + gapFillCount;
                 // Gap-fill rows have no .scores.parquet row, so their score_index cannot BE a
