@@ -273,30 +273,6 @@
     <value>RT 质量过滤器（第 {0} 轮）：{1:N0} -&gt; {2:N0} 个肽段（移除了 {3:N0} 个 S/N &lt; {4:F1} 的肽段）</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the_CWT_candidates_in__0__could_not_be_read___1___The__" xml:space="preserve">
-    <value>协调规划已停止：无法读取 {0} 中的 CWT 候选峰：{1}。{2} 文件已损坏。请将其删除并重新运行，以便重新写入。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the__scores_parquet_file_for__0__is_missing__Delete_any_" xml:space="preserve">
-    <value>协调规划已停止：{0} 的 {1} 文件缺失。请删除所有不完整的输出并重新运行，以便重新写入。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="CwtCandidateLoader_ThrowIfAnyInvalid_Reconciliation_planning_stopped__CWT_candidates_are_missing_or_damaged_in__0__of__1__" xml:space="preserve">
-    <value>协调规划已停止：{1:N0} 个文件中有 {0:N0} 个的 CWT 候选峰缺失或损坏：[{2}]。请删除这些输入的 {3} 文件并重新运行，以便重新写入。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="CwtCandidateLoader_ValidateFileInRange__0____scores_parquet_file_missing_" xml:space="preserve">
-    <value>{0}（{1} 文件缺失）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="CwtCandidateLoader_ValidateFileInRange__0___a_CWT_candidate_refers_to_row__1___but_the__scores_parquet_file_has_only__2__rows_" xml:space="preserve">
-    <value>{0}（一个 CWT 候选峰引用了第 {1:N0} 行，但 {3} 文件只有 {2:N0} 行）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="CwtCandidateLoader_ValidateFileInRange__0___unreadable___1__" xml:space="preserve">
-    <value>{0}（无法读取：{1}）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="EntrapmentPairing_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair__an_N_terminal_Met_clip__from_the_" xml:space="preserve">
     <value>已从 FDRBench 输入和诊断中排除 1 个没有目标配对的诱捕肽段（N 端 Met 切除）。</value>
     <comment>Needs Review:New resource</comment>

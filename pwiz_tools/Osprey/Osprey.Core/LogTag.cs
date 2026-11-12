@@ -304,15 +304,6 @@ namespace pwiz.Osprey.Core
         /// <summary>Second-pass FDR views and model the finalized diagnostics report carries.</summary>
         public const string COUNT_MDIAG_PASS2 = @"mdiag-pass2";
 
-        // [BISECT] keys.
-        /// <summary>
-        /// One run's OSPREY_CWT_RECOMPUTE_CHECK summary: rows whose stored peak candidates were
-        /// recomputed, and how many agreed.
-        /// </summary>
-        public const string CWT_RECOMPUTE_CHECK = @"cwt-recompute-check";
-        /// <summary>One OSPREY_CWT_RECOMPUTE_CHECK disagreement, stored list beside recomputed list.</summary>
-        public const string CWT_RECOMPUTE_MISMATCH = @"cwt-recompute-mismatch";
-
         // Values of the release scope= field.
         /// <summary>The release after first-pass FDR, keeping what rescore and gap-fill need.</summary>
         public const string SCOPE_RESCORE_GAP_FILL = @"rescore-gap-fill";

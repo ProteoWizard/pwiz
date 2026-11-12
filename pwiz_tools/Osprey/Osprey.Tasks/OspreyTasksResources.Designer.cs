@@ -490,64 +490,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reconciliation planning stopped: the {1} file for {0} is missing. Delete any partial outputs and run again so it is written again..
-        /// </summary>
-        public static string CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the__scores_parquet_file_for__0__is_missing__Delete_any_ {
-            get {
-                return ResourceManager.GetString("CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the__scores_parqu" +
-                        "et_file_for__0__is_missing__Delete_any_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reconciliation planning stopped: the CWT candidates in {0} could not be read: {1}. The {2} file is damaged. Delete it and run again so it is written again..
-        /// </summary>
-        public static string CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the_CWT_candidates_in__0__could_not_be_read___1___The__ {
-            get {
-                return ResourceManager.GetString("CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the_CWT_candidate" +
-                        "s_in__0__could_not_be_read___1___The__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reconciliation planning stopped: CWT candidates are missing or damaged in {0:N0} of {1:N0} files: [{2}]. Delete the {3} files of those inputs and run again so they are written again..
-        /// </summary>
-        public static string CwtCandidateLoader_ThrowIfAnyInvalid_Reconciliation_planning_stopped__CWT_candidates_are_missing_or_damaged_in__0__of__1__ {
-            get {
-                return ResourceManager.GetString("CwtCandidateLoader_ThrowIfAnyInvalid_Reconciliation_planning_stopped__CWT_candida" +
-                        "tes_are_missing_or_damaged_in__0__of__1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} ({1} file missing).
-        /// </summary>
-        public static string CwtCandidateLoader_ValidateFileInRange__0____scores_parquet_file_missing_ {
-            get {
-                return ResourceManager.GetString("CwtCandidateLoader_ValidateFileInRange__0____scores_parquet_file_missing_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} (a CWT candidate refers to row {1:N0}, but the {3} file has only {2:N0} rows).
-        /// </summary>
-        public static string CwtCandidateLoader_ValidateFileInRange__0___a_CWT_candidate_refers_to_row__1___but_the__scores_parquet_file_has_only__2__rows_ {
-            get {
-                return ResourceManager.GetString("CwtCandidateLoader_ValidateFileInRange__0___a_CWT_candidate_refers_to_row__1___bu" +
-                        "t_the__scores_parquet_file_has_only__2__rows_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} (unreadable: {1}).
-        /// </summary>
-        public static string CwtCandidateLoader_ValidateFileInRange__0___unreadable___1__ {
-            get {
-                return ResourceManager.GetString("CwtCandidateLoader_ValidateFileInRange__0___unreadable___1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; is demultiplexed, but its demultiplexed spectra cache &apos;{1}&apos; is missing or stale. Re-run {2} with {3} auto to rebuild it..
         /// </summary>
         public static string DemuxCache_ThrowIfDemuxCacheMissing___0___is_demultiplexed__but_its_demultiplexed_spectra_cache___1___is_missing_or_stale_ {

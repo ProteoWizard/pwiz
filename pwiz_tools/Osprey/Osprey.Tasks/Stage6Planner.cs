@@ -81,7 +81,6 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyList<string> fileNames,
             Func<string, IReadOnlyList<FdrEntry>> loadFileEntries,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
-            IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config)
         {
             if (fileNames == null)
@@ -89,7 +88,7 @@ namespace pwiz.Osprey.Tasks
             if (loadFileEntries == null)
                 throw new ArgumentNullException(nameof(loadFileEntries));
 
-            var scan = ScanFiles(fileNames, loadFileEntries, perFileParquetPaths, config);
+            var scan = ScanFiles(fileNames, loadFileEntries, config);
             var consensus = BuildConsensus(scan, perFileCalibrations, fileNames.Count);
             if (consensus.Count == 0)
             {
@@ -137,7 +136,6 @@ namespace pwiz.Osprey.Tasks
         private ScanResult ScanFiles(
             IReadOnlyList<string> fileNames,
             Func<string, IReadOnlyList<FdrEntry>> loadFileEntries,
-            IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config)
         {
             var scan = new ScanResult
@@ -155,13 +153,6 @@ namespace pwiz.Osprey.Tasks
                 GlobalBaseIds = new HashSet<uint>(),
             };
 
-            // Fail-fast: a footer-only metadata check confirms every file's stubs are in
-            // range of its parquet (no decode, nothing resident). A missing / corrupt /
-            // out-of-range Stage-4 parquet makes the run abort with a clear
-            // "delete + regenerate {file}" error rather than reconciling only the good files.
-            // Collected across the whole pass and thrown at the barrier, so one corrupt
-            // parquet does not hide the others -- and still before any planning happens.
-            var cwtInvalid = new List<string>();
             // Transfer keeps every experiment-wide value from the first pass and re-competes
             // nothing: reconciliation improves only each run's peak, so only the precursors the
             // blib will report can use a reconciled peak. Protein-compact keeps every precursor
@@ -179,20 +170,18 @@ namespace pwiz.Osprey.Tasks
                 fileNames.Count, scanProgress =>
             {
                 int done = 0;
-                // Loading a file's survivors, choosing its multi-charge targets and range-checking
-                // its parquet are the file's own work and run on the file lanes. Everything folded
+                // Loading a file's survivors and choosing its multi-charge targets are the file's
+                // own work and run on the file lanes. Everything folded
                 // into the scan result is shared - the consensus accumulator and the passing sets
                 // keep insertion order - so it goes in on this thread, in file order.
                 OrderedFileLanes.Run(fileNames.Count, _ctx.RunPlan.FirstPassFdrLanes, i =>
                 {
                     var fileEntries = loadFileEntries(fileNames[i]);
-                    var fileInvalid = new List<string>();
-                    CwtCandidateLoader.ValidateFileInRange(fileNames[i], fileEntries, perFileParquetPaths, fileInvalid);
                     // Counted as the rescore will select them (PerFileRescoreTask).
                     var targets = MultiChargeConsensus.SelectRescoreTargets(fileEntries, config.RunFdr);
                     if (OspreyEnvironment.Pass2TransferQ)
                         targets = MultiChargeConsensus.ReportedOnly(targets, fileEntries, config.FdrLevel, config.ExperimentFdr);
-                    return (Entries: fileEntries, Targets: targets, Invalid: fileInvalid);
+                    return (Entries: fileEntries, Targets: targets);
                 }, (i, file) =>
                 {
                     string fileName = fileNames[i];
@@ -217,10 +206,8 @@ namespace pwiz.Osprey.Tasks
                     // so the distinct base_ids across all files ARE that set.
                     foreach (var entry in entries)
                         scan.GlobalBaseIds.Add(entry.EntryId & ScoringTaskShared.BASE_ID_MASK);
-                    cwtInvalid.AddRange(file.Invalid);
                     scanProgress.Report(++done);
                 });
-                CwtCandidateLoader.ThrowIfAnyInvalid(cwtInvalid, fileNames.Count);
             });
             if (outputSet != null)
             {

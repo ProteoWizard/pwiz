@@ -2979,88 +2979,50 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// CWT-candidate column round-trip through the real writer and reader: the
-        /// per-row candidate lists come back bit-identical, keep their own row via the
-        /// running <see cref="FdrEntry.ParquetIndex"/>, and survive a multi-row-group
-        /// write. Covers <see cref="CwtCandidateCodec"/>'s wiring into the
-        /// cwt_candidates column, which the codec's own unit tests cannot reach
-        /// because they never touch parquet.
-        ///
-        /// A row with a NULL candidate list is included deliberately: the writer
-        /// normalizes null and empty alike to a 4-byte zero-count blob (never a null
-        /// cell) to match Rust, and nothing else exercises the null branch.
+        /// A scores parquet written over several row groups reads back with each row on its own
+        /// running <see cref="FdrEntry.ParquetIndex"/> and its own reference XIC, and with no
+        /// <c>cwt_candidates</c> column: the CWT peak candidates are computed when Stage 6 plans
+        /// a run, not stored (#5024). Ids out of order so the write's canonical sort runs; one
+        /// row has no reference XIC, which the writer stores as an empty blob.
         /// </summary>
         [TestMethod]
-        public void TestCwtCandidatesRoundTripThroughParquet()
+        public void TestScoresParquetRowsAcrossRowGroups()
         {
             string dir = Path.Combine(Path.GetTempPath(),
-                "osprey_cwt_parquet_" + Guid.NewGuid().ToString("N"));
+                "osprey_rows_parquet_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(dir);
             try
             {
-                // Ids out of order so the write's canonical sort runs; candidate-list
-                // lengths deliberately mixed (2 / none / 1 / null) so a per-row boundary
-                // mismap surfaces as a count mismatch instead of a silent pass.
-                var byId = new Dictionary<uint, List<CwtCandidate>>
-                {
-                    { 5, new List<CwtCandidate> {
-                        NewCwtCandidate(51.5, 51.0, 52.0, 1.5e6, 42.5, 8.25),
-                        // Boundary value that pins the byte-exact BitConverter path
-                        // (the ryu/R formatter ambiguity from the Stage 5 dump).
-                        NewCwtCandidate(0.097751617431640625, 0.5, 1.5, 1.0, 1.0, -1.5) } },
-                    { 2, new List<CwtCandidate>() },
-                    { 9, new List<CwtCandidate> {
-                        NewCwtCandidate(90.25, 90.0, 90.5, 7.5e5, 13.0, 3.125) } },
-                    { 1, null },
-                };
-
                 var entries = new List<FdrEntry>();
                 foreach (uint id in new uint[] { 5, 2, 9, 1 })
                 {
                     var e = MakeStreamEntry(id, id * 100.0);
-                    e.CwtCandidates = byId[id];
+                    e.ReferenceXicRts = id == 2 ? null : new[] { id - 0.5, id + 0.097751617431640625 };
+                    e.ReferenceXicIntensities = id == 2 ? null : new[] { 1.5e6, 42.5 };
                     entries.Add(e);
                 }
 
-                string path = Path.Combine(dir, "cwt.scores.parquet");
+                string path = Path.Combine(dir, "rows.scores.parquet");
                 // Cap 2 -> ceil(4/2) = 2 row groups, so the reader's per-group append
                 // loop is exercised rather than a single-group degenerate case.
                 ParquetScoreCache.RowGroupRowCapForTest = 2;
                 ParquetScoreCache.WriteScoresParquet(path, entries, null, null, "f.mzML", true);
                 ParquetScoreCache.RowGroupRowCapForTest = null;
 
-                // Full entries carry both ParquetIndex and CwtCandidates, so one load
-                // checks the candidate values AND that each list landed on the row its
-                // running index claims (the alignment defect that once made every
-                // lookup return row 0's list).
+                Assert.IsFalse(ParquetScoreCache.HasColumn(path, "cwt_candidates"), "the CWT candidates are not stored");
                 var reloaded = ParquetScoreCache.LoadFullFdrEntries(path);
                 Assert.AreEqual(entries.Count, reloaded.Count, "row count");
+                var byId = entries.ToDictionary(e => e.EntryId);
                 for (int i = 0; i < reloaded.Count; i++)
                 {
-                    Assert.AreEqual((uint)i, reloaded[i].ParquetIndex,
-                        "ParquetIndex must be the running row position");
-                }
-
-                // The column-only reader must agree row-for-row with the full load.
-                var columnOnly = ParquetScoreCache.LoadCwtCandidatesFromParquet(path);
-                Assert.AreEqual(reloaded.Count, columnOnly.Count, "cwt column row count");
-
-                foreach (var row in reloaded)
-                {
-                    var expected = byId[row.EntryId] ?? new List<CwtCandidate>();
-                    var actual = row.CwtCandidates ?? new List<CwtCandidate>();
-                    string label = "entry " + row.EntryId;
-                    Assert.AreEqual(expected.Count, actual.Count, label + " candidate count");
-                    // Null and empty must both decode to an empty list, never null:
-                    // the writer emits the 4-byte zero-count blob for each.
-                    Assert.IsNotNull(row.CwtCandidates, label + " list must not be null");
-                    Assert.AreEqual(expected.Count, columnOnly[(int)row.ParquetIndex].Count,
-                        label + " column-only candidate count");
-                    for (int k = 0; k < expected.Count; k++)
-                    {
-                        AssertCwtCandidateBitEqual(expected[k], actual[k],
-                            label + " candidate " + k);
-                    }
+                    var row = reloaded[i];
+                    Assert.AreEqual((uint)i, row.ParquetIndex, "ParquetIndex must be the running row position");
+                    var expected = byId[row.EntryId];
+                    var expectedRts = expected.ReferenceXicRts ?? Array.Empty<double>();
+                    var actualRts = row.ReferenceXicRts ?? Array.Empty<double>();
+                    Assert.AreEqual(expectedRts.Length, actualRts.Length, "entry " + row.EntryId + " XIC length");
+                    for (int k = 0; k < expectedRts.Length; k++)
+                        AssertBitEqual(expectedRts[k], actualRts[k], "entry " + row.EntryId + " XIC rt " + k);
                 }
 
                 AssertTrainingExportProjection(path, reloaded);
@@ -3076,28 +3038,21 @@ namespace pwiz.Osprey.Test
         /// Concurrent scores-parquet writes must not corrupt each other's nullable columns.
         /// When the writer's DataFields were shared statics, building one write's schema reset
         /// the shared fields' definition level to 0 for a moment. A write in progress on another
-        /// thread then recorded present values as null, and its file read back with null
-        /// cwt_candidates cells and every later list shifted onto the wrong row. Found with 4
-        /// files scored at once in the 2026-10-13 SEA-AD acceptance run. Each row here carries
-        /// one candidate whose apex is its own entry id, so any null or shift is a mismatch.
+        /// thread then recorded present values as null, and its file read back with null cells
+        /// and every later value shifted onto the wrong row. Found with 4 files scored at once in
+        /// the 2026-10-13 SEA-AD acceptance run, in the cwt_candidates column the file no longer
+        /// has. Each row here carries a reference XIC whose one RT is its own entry id, so any
+        /// null or shift is a mismatch.
         /// </summary>
         [TestMethod]
-        public void TestConcurrentScoresParquetWritesKeepCwtCandidatesAligned()
+        public void TestConcurrentScoresParquetWritesKeepRowsAligned()
         {
             string dir = Path.Combine(Path.GetTempPath(),
-                "osprey_cwt_concurrent_" + Guid.NewGuid().ToString("N"));
+                "osprey_rows_concurrent_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(dir);
             try
             {
                 const int rows = 20000;
-                var entries = new List<FdrEntry>(rows);
-                for (uint id = 1; id <= rows; id++)
-                {
-                    var e = MakeStreamEntry(id, id);
-                    e.CwtCandidates = new List<CwtCandidate> { NewCwtCandidate(id, id - 0.5, id + 0.5, 1.0, 1.0, 1.0) };
-                    entries.Add(e);
-                }
-
                 int writers = Math.Max(4, Environment.ProcessorCount / 2);
                 var deadline = DateTime.UtcNow.AddSeconds(5);
                 int files = 0;
@@ -3105,30 +3060,35 @@ namespace pwiz.Osprey.Test
                 Parallel.For(0, writers, new ParallelOptions { MaxDegreeOfParallelism = writers }, w =>
                 {
                     // Each writer needs its own entries: the write assigns ParquetIndex.
-                    var mine = entries.Select(e => MakeStreamEntry(e.EntryId, e.EntryId)).ToList();
-                    for (int i = 0; i < mine.Count; i++)
-                        mine[i].CwtCandidates = entries[i].CwtCandidates;
+                    var mine = new List<FdrEntry>(rows);
+                    for (uint id = 1; id <= rows; id++)
+                    {
+                        var e = MakeStreamEntry(id, id);
+                        e.ReferenceXicRts = new double[] { id };
+                        e.ReferenceXicIntensities = new[] { 1.0 };
+                        mine.Add(e);
+                    }
                     // A minimum number of writes each, so a writer started late still overlaps the others.
                     for (int n = 0; n < 3 || DateTime.UtcNow < deadline; n++)
                     {
                         string path = Path.Combine(dir, string.Format("w{0}_{1}.scores.parquet", w, n));
                         ParquetScoreCache.WriteScoresParquet(path, mine, null, null, "f.mzML", true);
-                        var lists = ParquetScoreCache.LoadCwtCandidatesFromParquet(path);
+                        var read = ParquetScoreCache.LoadFullFdrEntries(path);
                         Interlocked.Increment(ref files);
-                        if (lists.Count != rows)
+                        if (read.Count != rows)
                         {
                             lock (failures)
-                                failures.Add(string.Format("{0}: {1} rows", Path.GetFileName(path), lists.Count));
+                                failures.Add(string.Format("{0}: {1} rows", Path.GetFileName(path), read.Count));
                         }
-                        for (int row = 0; row < lists.Count; row++)
+                        for (int row = 0; row < read.Count; row++)
                         {
-                            var list = lists[row];
-                            if (list == null || list.Count != 1 || list[0].ApexRt != row + 1)
+                            var xic = read[row].ReferenceXicRts;
+                            if (xic == null || xic.Length != 1 || xic[0] != row + 1)
                             {
                                 lock (failures)
                                 {
                                     failures.Add(string.Format("{0} row {1}: {2}", Path.GetFileName(path), row,
-                                        list == null ? "null" : list.Count == 1 ? "apex " + list[0].ApexRt : list.Count + " candidates"));
+                                        xic == null ? "null" : xic.Length == 1 ? "rt " + xic[0] : xic.Length + " points"));
                                 }
                                 break;
                             }
@@ -3148,7 +3108,7 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// The training export's projection of the same two-group file: the target rows only,
         /// each field it reads exactly as the full load reads it - the running ParquetIndex
-        /// across groups with the decoys skipped included - and no CWT candidates.
+        /// across groups with the decoys skipped included.
         /// </summary>
         private static void AssertTrainingExportProjection(string path, List<FdrEntry> full)
         {
@@ -3171,33 +3131,7 @@ namespace pwiz.Osprey.Test
                 CollectionAssert.AreEqual(e.Features, a.Features);
                 CollectionAssert.AreEqual(e.ReferenceXicRts, a.ReferenceXicRts);
                 CollectionAssert.AreEqual(e.ReferenceXicIntensities, a.ReferenceXicIntensities);
-                Assert.IsNull(a.CwtCandidates, "the CWT candidates are not decoded");
             }
-        }
-
-        private static CwtCandidate NewCwtCandidate(double apexRt, double startRt, double endRt,
-            double area, double snr, double coelutionScore)
-        {
-            return new CwtCandidate
-            {
-                ApexRt = apexRt,
-                StartRt = startRt,
-                EndRt = endRt,
-                Area = area,
-                Snr = snr,
-                CoelutionScore = coelutionScore,
-            };
-        }
-
-        private static void AssertCwtCandidateBitEqual(CwtCandidate expected, CwtCandidate actual,
-            string label)
-        {
-            AssertBitEqual(expected.ApexRt, actual.ApexRt, label + " ApexRt");
-            AssertBitEqual(expected.StartRt, actual.StartRt, label + " StartRt");
-            AssertBitEqual(expected.EndRt, actual.EndRt, label + " EndRt");
-            AssertBitEqual(expected.Area, actual.Area, label + " Area");
-            AssertBitEqual(expected.Snr, actual.Snr, label + " Snr");
-            AssertBitEqual(expected.CoelutionScore, actual.CoelutionScore, label + " CoelutionScore");
         }
 
         private static void AssertBitEqual(double expected, double actual, string label)
@@ -3361,10 +3295,9 @@ namespace pwiz.Osprey.Test
                 // The stream output is genuinely multi-group (3 original groups + gap-fill).
                 Assert.IsTrue(CountRowGroups(streamPath) >= 3,
                     "streaming reconciled transfer must preserve bounded row groups");
-                // The CWT candidates stay in .scores.parquet, the only file they are read from.
-                Assert.IsTrue(ParquetScoreCache.HasColumn(originalPath, "cwt_candidates"));
-                Assert.IsFalse(ParquetScoreCache.HasColumn(streamPath, "cwt_candidates"),
-                    "the reconciled file must not copy the CWT candidates");
+                // Neither file stores CWT candidates: Stage 6 computes the few it reads (#5024).
+                Assert.IsFalse(ParquetScoreCache.HasColumn(originalPath, "cwt_candidates"));
+                Assert.IsFalse(ParquetScoreCache.HasColumn(streamPath, "cwt_candidates"));
 
                 // Without the training export neither file carries the reference XIC, and a
                 // reconciled write asked for it from a Stage 4 file that lacks it refuses

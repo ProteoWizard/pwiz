@@ -257,11 +257,11 @@ namespace pwiz.Osprey.Scoring
         }
 
         /// <summary>
-        /// Recompute the CWT peak candidates <see cref="ScoreWindow"/> stores for one precursor
-        /// (<see cref="FdrEntry.CwtCandidates"/>, the Stage 6 reconciliation input) without
-        /// scoring it: the same first-pass detection - the scan-major prefilter and XIC
-        /// extraction when those are on, as <see cref="ScoreWindow"/> runs them - then the same
-        /// top-N capture, in the same order. No PIN feature is computed.
+        /// The CWT peak candidates first-pass detection ranks for one precursor - the Stage 6
+        /// reconciliation input, which Rust stores in every row of its scores parquet - computed
+        /// without scoring the precursor: the same first-pass detection (the scan-major
+        /// prefilter and XIC extraction when those are on, as <see cref="ScoreWindow"/> runs
+        /// them), then the same top-N capture, in the same order. No PIN feature is computed.
         ///
         /// <para>The caller supplies what the first pass scored the window with:
         /// <paramref name="windowSpectra"/> calibrated and in <see cref="SortWindowSpectra"/>
@@ -433,20 +433,14 @@ namespace pwiz.Osprey.Scoring
                     mpByproduct.Polish, mpByproduct.PeakXics);
             }
 
-            // Stage 6 reconciliation input: capture the top-N CWT peak
-            // candidates ranked by penalized rank score, with each kept
-            // candidate's apex/area/snr recomputed over the reference XIC
-            // slice. Mirrors Rust run_search at pipeline.rs:6852-6879.
-            // The stored coelution_score is the raw mean (NOT the RT-
-            // penalized rank score) -- reconciliation has its own RT
-            // tolerance logic via consensus RT comparison.
-            List<CwtCandidate> cwtCandidatesOut = CaptureCwtCandidates(
-                ext.CapturedPeaks, xics, ext.RefXicIdx, ext.RefXicIntensities, context);
+            // No top-N CWT candidate list: Rust stores one in every row (pipeline.rs:6852-6879)
+            // for reconciliation, which consults it for under 1% of rows. Stage 6 recomputes
+            // those rows' lists with RecomputeCwtCandidates when it plans them.
 
             // Build FdrEntry from the winning peak + feature vector (frag
             // blobs, reference-XIC slice, bounds). Extracted to BuildFdrEntry.
             var entry = BuildFdrEntry(
-                candidate, bestPeak, features, cwtCandidatesOut,
+                candidate, bestPeak, features,
                 xics, ext.RefXicIdx, ext.RefXicIntensities, windowRts, ext.StartScan, apexSpectrum);
 
             return entry;
@@ -629,7 +623,6 @@ namespace pwiz.Osprey.Scoring
             LibraryEntry candidate,
             XICPeakBounds bestPeak,
             double[] features,
-            List<CwtCandidate> cwtCandidatesOut,
             List<XicData> xics,
             int refXicIdx,
             double[] refXicIntensities,
@@ -681,7 +674,6 @@ namespace pwiz.Osprey.Scoring
                 Score = features[0],
                 ModifiedSequence = candidate.ModifiedSequence,
                 Features = features,
-                CwtCandidates = cwtCandidatesOut,
                 ReferenceXicRts = refXicRts,
                 ReferenceXicIntensities = refXicInts,
                 BoundsArea = bestPeak.Area,

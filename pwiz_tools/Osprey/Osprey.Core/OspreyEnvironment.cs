@@ -243,26 +243,6 @@ namespace pwiz.Osprey.Core
         public static readonly bool LogMemory = IsSetAndNotZero(ENV_LOG_MEMORY);
 
         /// <summary>
-        /// The name of <see cref="CwtRecomputeCheck"/>, for a test that turns it on.
-        /// </summary>
-        public const string CWT_RECOMPUTE_CHECK = @"OSPREY_CWT_RECOMPUTE_CHECK";
-
-        private static readonly EnvVar ENV_CWT_RECOMPUTE_CHECK = new EnvVar(CWT_RECOMPUTE_CHECK, EnvVarGroup.diagnostic,
-            @"In re-scoring, recompute the stored peak candidates of every precursor reconciliation " +
-            @"consulted them for, compare them with the stored ones and log the agreement.");
-
-        /// <summary>
-        /// OSPREY_CWT_RECOMPUTE_CHECK=1: in PerFileRescoring, for every precursor the
-        /// reconciliation planner gave a non-Keep action - the rows whose stored
-        /// <c>cwt_candidates</c> it consulted - recompute the candidate list from the run's spectra
-        /// and first-pass calibration and compare it with the stored one, logging one summary line
-        /// per run and a few mismatch examples. Measures whether the column can be replaced by a
-        /// recompute (issue #5024). Diagnostic only; it changes nothing the run writes. Read on
-        /// each access, so a test can set it with <see cref="OverrideVariables"/>.
-        /// </summary>
-        public static bool CwtRecomputeCheck => IsSetAndNotZero(ENV_CWT_RECOMPUTE_CHECK);
-
-        /// <summary>
         /// The name of <see cref="Diagnostics"/>, for a test that turns it on.
         /// </summary>
         public const string DIAGNOSTICS = @"OSPREY_DIAGNOSTICS";
@@ -327,6 +307,21 @@ namespace pwiz.Osprey.Core
         /// from calibration drift).
         /// </summary>
         public static readonly string LoadCalibrationPath = ENV_LOAD_CALIBRATION.Value;
+
+        /// <summary>
+        /// The validity-key term of <see cref="LoadCalibrationPath"/> for PerFileRescoring, which
+        /// recomputes Stage 4's CWT peak candidates and so must search a run with no RT
+        /// calibration the way Stage 4 did: around the library-to-run RT mapping when Stage 3
+        /// calibrated and failed, around the library RT when a loaded calibration replaced it.
+        /// The loaded file's identity, so editing it counts too; empty when unset, so every
+        /// existing key is unchanged.
+        /// </summary>
+        public static string LoadCalibrationValidityKeySuffix()
+        {
+            return string.IsNullOrEmpty(LoadCalibrationPath)
+                ? string.Empty
+                : @";loadcal=" + SearchIdentity.FileIdentityTerm(LoadCalibrationPath);
+        }
 
         private static readonly EnvVar ENV_CROSS_IMPL_FDR_SIDECAR_OUT = new EnvVar(@"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT", EnvVarGroup.diagnostic,
             @"Test hook: the FDR score file round-trip unit test also copies its output here, for a byte " +
@@ -972,7 +967,7 @@ namespace pwiz.Osprey.Core
         /// peak as the fragment with the largest sum of correlations to the other fragments there, in place
         /// of the fragment with the largest total intensity over the whole extraction window. The reference
         /// sets the apex scan (and so every apex-spectrum feature), the recomputed bounds area and SNR, the
-        /// MS1 correlation reference, and the apex/area of the stored CWT candidates; the peak_apex,
+        /// MS1 correlation reference, and the apex/area of the CWT candidates; the peak_apex,
         /// peak_area and peak_sharpness features keep their own most-intense-fragment reference. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
         /// False when unset.
         /// </summary>
