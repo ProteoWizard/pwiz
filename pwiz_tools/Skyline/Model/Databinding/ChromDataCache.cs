@@ -21,12 +21,12 @@ namespace pwiz.Skyline.Model.Databinding
         /// Identifies one of a precursor's chromatogram groups: the replicate, the file within it, and whether
         /// the group still has its time and intensity points.
         /// </summary>
-        private readonly record struct GroupKey(string Replicate, MsDataFileUri File, bool LoadPoints);
+        private readonly record struct ChromatogramGroupKey(string Replicate, MsDataFileUri File, bool LoadPoints);
 
         private readonly object _lock = new object();
         private object _documentReference;
-        private readonly Dictionary<IdentityPath, Dictionary<GroupKey, ChromatogramGroupInfo>> _precursors =
-            new Dictionary<IdentityPath, Dictionary<GroupKey, ChromatogramGroupInfo>>();
+        private readonly Dictionary<IdentityPath, Dictionary<ChromatogramGroupKey, ChromatogramGroupInfo>> _precursors =
+            new Dictionary<IdentityPath, Dictionary<ChromatogramGroupKey, ChromatogramGroupInfo>>();
         private readonly Queue<IdentityPath> _precursorOrder = new Queue<IdentityPath>();
         private object _scanIdsDocumentReference;
         private MsDataFileUri _scanIdsFile;
@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Model.Databinding
             ChromatogramSet chromatogramSet, MsDataFileUri filePath,
             IdentityPath precursorIdentityPath, bool loadPoints)
         {
-            var key = new GroupKey(chromatogramSet.Name, filePath, loadPoints);
+            var key = new ChromatogramGroupKey(chromatogramSet.Name, filePath, loadPoints);
             lock (_lock)
             {
                 var cachedGroups = GetGroups(document, precursorIdentityPath, false);
@@ -103,7 +103,7 @@ namespace pwiz.Skyline.Model.Databinding
         /// forgetting the precursor asked for first if the cache is full, and clears the cache if it holds a
         /// different document; it then never returns null.
         /// </summary>
-        private Dictionary<GroupKey, ChromatogramGroupInfo> GetGroups(
+        private Dictionary<ChromatogramGroupKey, ChromatogramGroupInfo> GetGroups(
             SrmDocument document, IdentityPath precursorIdentityPath, bool create)
         {
             if (!ReferenceEquals(_documentReference, document.ReferenceId))
@@ -124,7 +124,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 _precursors.Remove(_precursorOrder.Dequeue());
             }
-            groups = new Dictionary<GroupKey, ChromatogramGroupInfo>();
+            groups = new Dictionary<ChromatogramGroupKey, ChromatogramGroupInfo>();
             _precursors.Add(precursorIdentityPath, groups);
             _precursorOrder.Enqueue(precursorIdentityPath);
             return groups;
@@ -134,10 +134,10 @@ namespace pwiz.Skyline.Model.Databinding
         /// Returns the precursor's chromatogram groups in every file of the replicate. When a file has more than
         /// one, the first one is used.
         /// </summary>
-        private static Dictionary<GroupKey, ChromatogramGroupInfo> LoadReplicate(
+        private static Dictionary<ChromatogramGroupKey, ChromatogramGroupInfo> LoadReplicate(
             SrmDocument document, IdentityPath precursorIdentityPath, ChromatogramSet chromatogramSet, bool loadPoints)
         {
-            var groups = new Dictionary<GroupKey, ChromatogramGroupInfo>();
+            var groups = new Dictionary<ChromatogramGroupKey, ChromatogramGroupInfo>();
             var peptideDocNode = (PeptideDocNode) document.FindNode(precursorIdentityPath.Parent);
             var precursorDocNode = (TransitionGroupDocNode) peptideDocNode.FindNode(precursorIdentityPath.Child);
             var tolerance = (float) document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
@@ -148,7 +148,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
             foreach (var chromatogramGroupInfo in chromatogramGroupInfos)
             {
-                var key = new GroupKey(chromatogramSet.Name, chromatogramGroupInfo.FilePath, loadPoints);
+                var key = new ChromatogramGroupKey(chromatogramSet.Name, chromatogramGroupInfo.FilePath, loadPoints);
                 if (groups.ContainsKey(key))
                 {
                     continue;
