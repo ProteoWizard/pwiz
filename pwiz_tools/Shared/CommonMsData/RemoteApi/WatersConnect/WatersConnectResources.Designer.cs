@@ -245,6 +245,24 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Could not find a published waters_connect acquisition method &apos;{0}&apos;..
+        /// </summary>
+        public static string WatersConnectUrl_ResolveAcquisitionMethod_Could_not_find_a_published_waters_connect_acquisition_method___0__ {
+            get {
+                return ResourceManager.GetString("WatersConnectUrl_ResolveAcquisitionMethod_Could_not_find_a_published_waters_connect_acquisition_method___0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Name a waters_connect acquisition method by its path, or by its id as &apos;methodId=&lt;id&gt;&apos;..
+        /// </summary>
+        public static string WatersConnectUrl_ResolveAcquisitionMethod_Name_a_waters_connect_acquisition_method_by_its_path_or_its_id_ {
+            get {
+                return ResourceManager.GetString("WatersConnectUrl_ResolveAcquisitionMethod_Name_a_waters_connect_acquisition_method_by_its_path_or_its_id_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Could not find the injection &apos;{0}&apos; under the waters_connect path &apos;{1}&apos;..
         /// </summary>
         public static string WatersConnectUrl_ResolveInjection_Could_not_find_the_injection___0___under_the_waters_connect_path___1__ {
@@ -268,6 +286,60 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect {
         public static string WatersConnectUrl_ResolveInjection_Name_a_waters_connect_injection_by_its_path_or_its_ids_ {
             get {
                 return ResourceManager.GetString("WatersConnectUrl_ResolveInjection_Name_a_waters_connect_injection_by_its_path_or_its_ids_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to A waters_connect method named &apos;{0}&apos; already exists in the folder &apos;{1}&apos;..
+        /// </summary>
+        public static string WatersConnectUrl_ResolveMethodDestination_A_waters_connect_method_named___0___already_exists_in_the_folder___1___ {
+            get {
+                return ResourceManager.GetString("WatersConnectUrl_ResolveMethodDestination_A_waters_connect_method_named___0___already_exists_in_the_folder___1___", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Could not find the waters_connect folder &apos;{0}&apos;..
+        /// </summary>
+        public static string WatersConnectUrl_ResolveMethodDestination_Could_not_find_the_waters_connect_folder___0__ {
+            get {
+                return ResourceManager.GetString("WatersConnectUrl_ResolveMethodDestination_Could_not_find_the_waters_connect_folder___0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Name the waters_connect method to export by its folder path and name, as &apos;&lt;account alias&gt;/Folder/MethodName&apos;, or by its folder id and name, as &apos;folderId=&lt;id&gt;&amp;methodName=&lt;name&gt;&apos;..
+        /// </summary>
+        public static string WatersConnectUrl_ResolveMethodDestination_Name_the_waters_connect_method_by_its_folder_path_and_name__or_by_its_folder_id_and_name_ {
+            get {
+                return ResourceManager.GetString("WatersConnectUrl_ResolveMethodDestination_Name_the_waters_connect_method_by_its_folder_path_and_name__or_by_its_folder_id_and_name_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The waters_connect account for {0} does not support method development. {1}.
+        /// </summary>
+        public static string WatersConnectUrl_ResolveMethodDestination_The_waters_connect_account_for__0__does_not_support_method_development___1_ {
+            get {
+                return ResourceManager.GetString("WatersConnectUrl_ResolveMethodDestination_The_waters_connect_account_for__0__does_not_support_method_development___1_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The template and the exported method must be on the same waters_connect account..
+        /// </summary>
+        public static string WatersConnectUrl_ResolveMethodDestination_The_template_and_the_exported_method_must_be_on_the_same_waters_connect_account_ {
+            get {
+                return ResourceManager.GetString("WatersConnectUrl_ResolveMethodDestination_The_template_and_the_exported_method_must_be_on_the_same_waters_connect_account_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to You do not have permission to write to the waters_connect folder &apos;{0}&apos;..
+        /// </summary>
+        public static string WatersConnectUrl_ResolveMethodDestination_You_do_not_have_permission_to_write_to_the_waters_connect_folder___0__ {
+            get {
+                return ResourceManager.GetString("WatersConnectUrl_ResolveMethodDestination_You_do_not_have_permission_to_write_to_the_waters_connect_folder___0__", resourceCulture);
             }
         }
 

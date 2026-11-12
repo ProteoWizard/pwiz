@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -59,7 +60,7 @@ namespace pwiz.SkylineTestFunctional
             // suffices. The request-level mock routes every request by URL and HTTP method;
             // HttpClientTestHelper saves any enclosing behavior and restores it on dispose,
             // scoping the mock to this test.
-            Settings.Default.RemoteAccountList.Add(RemoteAccountType.WATERS_CONNECT.GetEmptyAccount());
+            Settings.Default.RemoteAccountList.Add(RemoteAccountType.WATERS_CONNECT.GetEmptyAccount().ChangeAccountAlias(ACCOUNT_ALIAS));
             _methodsResponse = BuildMethodsResponse();
             using var testBehavior = new HttpClientTestHelper(new HttpClientTestBehavior { RequestResponseFactory = HandleWcRequest });
 
@@ -74,6 +75,7 @@ namespace pwiz.SkylineTestFunctional
             TestMethodExport(exportMethodDlg);
 
             VerifyBehaviorReplacement();
+            TestCommandLineExport();
 
             _authenticationError = true;
             exportMethodDlg = ShowDialog<ExportMethodDlg>(() =>
@@ -282,7 +284,7 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void VerifyBehaviorReplacement()
         {
-            const string extraMethodName = "BehaviorSwapMethod";
+            const string extraMethodName = REVISED_METHOD_NAME;
             // The replacement behavior closes over its own augmented methods listing, so ONLY the
             // new instance can serve the extra method - shared test-instance state cannot leak the
             // extra method through the original behavior, and the swap itself is what is proved.
@@ -309,6 +311,85 @@ namespace pwiz.SkylineTestFunctional
             CancelDialog(exportMethodDlg);
             // Disposing the helper restores the original behavior, so later phases do not see
             // the extra method.
+        }
+
+        /// <summary>
+        /// Exports methods through the command-line interface, naming the template by path and by method
+        /// id, and the new method's folder by path and by folder id. A method id names a method across its
+        /// versions, so the method found by id is a revised one whose published version has a different id,
+        /// and that version id is the one the upload must use. Also checks the errors for a method id with
+        /// no published method, a folder that cannot be written to, and a destination with no method name.
+        /// </summary>
+        private void TestCommandLineExport()
+        {
+            var revisedMethods = BuildMethodsResponse(REVISED_METHOD_NAME);
+            using var revisedBehavior = new HttpClientTestHelper(new HttpClientTestBehavior
+            {
+                RequestResponseFactory = request => HandleWcRequest(request, revisedMethods)
+            });
+            string docPath = TestFilesDir.GetTestPath("MixedPolarity02.sky");
+            string skylineFolderPath = WatersConnectUrl.UrlPrefix + ACCOUNT_ALIAS + @"/Company/Skyline";
+
+            // Template and destination by path
+            ExportMethodCommand(true, docPath, skylineFolderPath + @"/Test Method 37", skylineFolderPath + @"/FolderA/TestMethod");
+            AssertEx.AreEqual(TEST_METHOD_37_VERSION_ID, _uploadedTemplateVersionId);
+            AssertEx.AreEqual(FOLDER_A_ID, _uploadedFolderId);
+
+            // Template by method id, in the unhyphenated upper-case form the server also writes ids in,
+            // and destination by folder id
+            string revisedMethodIdUpper = Guid.Parse(REVISED_METHOD_ID).ToString(@"N").ToUpperInvariant();
+            ExportMethodCommand(true, docPath, WatersConnectUrl.UrlPrefix + @"methodId=" + revisedMethodIdUpper,
+                WatersConnectUrl.UrlPrefix + @"folderId=" + FOLDER_A_ID + @"&methodName=TestMethod");
+            AssertEx.AreEqual(REVISED_METHOD_VERSION_ID, _uploadedTemplateVersionId);
+            AssertEx.AreEqual(FOLDER_A_ID, _uploadedFolderId);
+
+            const string unknownMethodId = "00000000-0000-0000-0000-00000000dead";
+            var output = ExportMethodCommand(false, docPath, WatersConnectUrl.UrlPrefix + @"methodId=" + unknownMethodId,
+                skylineFolderPath + @"/FolderA/TestMethod");
+            AssertEx.Contains(output, string.Format(
+                WatersConnectResources.WatersConnectUrl_ResolveAcquisitionMethod_Could_not_find_a_published_waters_connect_acquisition_method___0__,
+                unknownMethodId));
+
+            output = ExportMethodCommand(false, docPath, skylineFolderPath + @"/Test Method 37",
+                skylineFolderPath + @"/ExampleReadOnly/TestMethod");
+            AssertEx.Contains(output, string.Format(
+                WatersConnectResources.WatersConnectUrl_ResolveMethodDestination_You_do_not_have_permission_to_write_to_the_waters_connect_folder___0__,
+                @"Company/Skyline/ExampleReadOnly"));
+
+            output = ExportMethodCommand(false, docPath, skylineFolderPath + @"/Test Method 37",
+                WatersConnectUrl.UrlPrefix + @"folderId=" + FOLDER_A_ID);
+            AssertEx.Contains(output,
+                WatersConnectResources.WatersConnectUrl_ResolveMethodDestination_Name_the_waters_connect_method_by_its_folder_path_and_name__or_by_its_folder_id_and_name_);
+
+            // The mock lists the same methods in every folder, so FolderA already has "Test Method 37"
+            output = ExportMethodCommand(false, docPath, skylineFolderPath + @"/Test Method 37",
+                skylineFolderPath + @"/FolderA/Test Method 37");
+            AssertEx.Contains(output, string.Format(
+                WatersConnectResources.WatersConnectUrl_ResolveMethodDestination_A_waters_connect_method_named___0___already_exists_in_the_folder___1___,
+                @"Test Method 37", @"Company/Skyline/FolderA"));
+
+            // A local template file cannot be used with the waters_connect instrument
+            output = ExportMethodCommand(false, docPath, TestFilesDir.GetTestPath(@"template.exp"),
+                skylineFolderPath + @"/FolderA/TestMethod");
+            AssertEx.Contains(output,
+                WatersConnectResources.WatersConnectUrl_ResolveAcquisitionMethod_Name_a_waters_connect_acquisition_method_by_its_path_or_its_id_);
+            Assert.IsNull(_uploadedTemplateVersionId);
+        }
+
+        /// <summary>
+        /// Runs a scheduled, server-bucketed waters_connect method export on the command line, the
+        /// settings <see cref="ValidateMethodUpload"/> expects, and returns its output.
+        /// </summary>
+        private string ExportMethodCommand(bool expectSuccess, string docPath, string template, string exportFile)
+        {
+            _uploadedTemplateVersionId = _uploadedFolderId = null;
+            return RunCommand(expectSuccess,
+                "--in=" + docPath,
+                "--exp-method-instrument=" + ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT,
+                "--exp-template=" + template,
+                "--exp-file=" + exportFile,
+                "--exp-method-type=" + ExportMethodType.Scheduled,
+                "--exp-strategy=" + ExportStrategy.WcDecide);
         }
 
         /// <summary>
@@ -473,6 +554,18 @@ namespace pwiz.SkylineTestFunctional
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 
+        private const string ACCOUNT_ALIAS = "wc-test";
+        private const string FOLDER_A_ID = "79c84651-7899-4c17-91d9-299757e52ed2";
+        private const string TEST_METHOD_37_VERSION_ID = "93b20227-832b-4b26-a816-1d9b7826d086";
+        // The extra method BuildMethodsResponse adds is a revised method: its method id, which stays the
+        // same across versions, differs from the id of its published version
+        private const string REVISED_METHOD_NAME = "BehaviorSwapMethod";
+        private const string REVISED_METHOD_ID = "00000000-0000-0000-0000-000000000abd";
+        private const string REVISED_METHOD_VERSION_ID = "00000000-0000-0000-0000-000000000def";
+
+        // The template version and destination folder of the most recent method upload
+        private string _uploadedTemplateVersionId;
+        private string _uploadedFolderId;
         // Captures the most recent folder-creation (PUT) request body so tests can assert the payload.
         private string _createdFolderName;
         private string _createdFolderDescription;
@@ -492,7 +585,9 @@ namespace pwiz.SkylineTestFunctional
         /// Builds the methods enumeration response body. When <paramref name="extraMethodName"/> is
         /// set, the listing carries one additional method with that name, so
         /// <see cref="VerifyBehaviorReplacement"/> can tell the replacement behavior's responses
-        /// from the original's. Built here rather than per request so a bad fixture fails fast.
+        /// from the original's. The additional method is a revised one, with a method id different from
+        /// its version id, for <see cref="TestCommandLineExport"/>. Built here rather than per request so
+        /// a bad fixture fails fast.
         /// </summary>
         private string BuildMethodsResponse(string extraMethodName = null)
         {
@@ -504,7 +599,8 @@ namespace pwiz.SkylineTestFunctional
             extraMethod["name"] = extraMethodName;
             var readOnlyProperties = (JObject) extraMethod["readOnlyProperties"];
             Assert.IsNotNull(readOnlyProperties, "WCMethods.json fixture is missing readOnlyProperties.");
-            readOnlyProperties["methodVersionId"] = "00000000-0000-0000-0000-000000000def";
+            readOnlyProperties["methodVersionId"] = REVISED_METHOD_VERSION_ID;
+            readOnlyProperties["methodId"] = REVISED_METHOD_ID;
             methods.Add(extraMethod);
             return methods.ToString();
         }
@@ -536,6 +632,8 @@ namespace pwiz.SkylineTestFunctional
                 return StringStream(methodsResponse);
             if (url.IndexOf(WatersConnectSessionAcquisitionMethod.UPLOAD_METHOD_ENDPOINT) >= 0)
                 return HandleMethodUpload(request);
+            if (url.IndexOf(WatersConnectSessionAcquisitionMethod.SEARCH_ENDPOINT) >= 0)
+                return HandleSearch(request, methodsResponse);
             if (url.IndexOf(WatersConnectAccount.GET_FOLDERS) >= 0)
                 return StringStream(GetFoldersResponse());
             // ReSharper restore StringIndexOfIsCultureSpecific.1
@@ -594,10 +692,36 @@ namespace pwiz.SkylineTestFunctional
             var requestContent = request.Content.ReadAsStringAsync().Result;
             ValidateMethodUpload(requestContent);
             var jObject = JObject.Parse(requestContent);
+            _uploadedTemplateVersionId = jObject["templateMethodVersionId"]?.ToString();
+            _uploadedFolderId = jObject["destinationFolderId"]?.ToString();
             var id = jObject["templateMethodVersionId"]?.ToString();
             var name = jObject["name"]?.ToString() ?? string.Empty;
             var description = jObject["description"]?.ToString() ?? string.Empty;
             return StringStream(string.Format(format, id, name, description));
+        }
+
+        // Analytical data search (POST): find the listed method whose method id the filter names, and
+        // return it as the server does, as a data record with its folder and type
+        private static Stream HandleSearch(HttpRequestMessage request, string methodsResponse)
+        {
+            var filter = JObject.Parse(request.Content.ReadAsStringAsync().Result)["filter"]?.ToString() ?? string.Empty;
+            var items = new JArray();
+            foreach (var method in JArray.Parse(methodsResponse).OfType<JObject>())
+            {
+                var readOnlyProperties = (JObject) method["readOnlyProperties"];
+                var methodId = (string) readOnlyProperties?["methodId"];
+                if (methodId == null || !filter.Contains("\"" + methodId + "\""))
+                    continue;
+                items.Add(new JObject
+                {
+                    ["name"] = method["name"],
+                    ["recordId"] = methodId,
+                    ["versionId"] = readOnlyProperties["methodVersionId"],
+                    ["dataRecordTypeId"] = readOnlyProperties["dataRecordTypeId"],
+                    ["folderId"] = readOnlyProperties["folderId"]
+                });
+            }
+            return StringStream(new JObject { ["count"] = items.Count, ["items"] = items.Count > 0 ? items : null }.ToString());
         }
 
         private static Stream StringStream(string content)

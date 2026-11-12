@@ -105,14 +105,11 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         }
 
         /// <summary>
-        /// Looks up a folder in the folder tree by its id. The folder tree must already have been fetched.
+        /// Gets every folder in the folder tree, synchronously and bypassing the cache.
         /// </summary>
-        public bool TryGetFolderById(string folderId, out WatersConnectFolderObject folder)
+        public IList<WatersConnectFolderObject> GetFolderTree()
         {
-            folder = null;
-            if (TryGetData(GetRootContentsUrl(), out ImmutableList<WatersConnectFolderObject> folders))
-                folder = folders.FirstOrDefault(f => WatersConnectObject.IdEquals(f.Id, folderId));
-            return folder != null;
+            return GetFolders(GetRootContentsUrl());
         }
 
         /// <summary>

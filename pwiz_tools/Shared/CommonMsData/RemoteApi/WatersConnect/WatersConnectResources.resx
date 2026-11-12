@@ -188,6 +188,30 @@
   <data name="WatersConnectUrl_ResolveInjection_Could_not_find_the_waters_connect_injection_with_the_id___0__" xml:space="preserve">
     <value>Could not find the waters_connect injection with the id '{0}'.</value>
   </data>
+  <data name="WatersConnectUrl_ResolveAcquisitionMethod_Could_not_find_a_published_waters_connect_acquisition_method___0__" xml:space="preserve">
+    <value>Could not find a published waters_connect acquisition method '{0}'.</value>
+  </data>
+  <data name="WatersConnectUrl_ResolveAcquisitionMethod_Name_a_waters_connect_acquisition_method_by_its_path_or_its_id_" xml:space="preserve">
+    <value>Name a waters_connect acquisition method by its path, or by its id as 'methodId=&lt;id&gt;'.</value>
+  </data>
+  <data name="WatersConnectUrl_ResolveMethodDestination_A_waters_connect_method_named___0___already_exists_in_the_folder___1___" xml:space="preserve">
+    <value>A waters_connect method named '{0}' already exists in the folder '{1}'.</value>
+  </data>
+  <data name="WatersConnectUrl_ResolveMethodDestination_The_template_and_the_exported_method_must_be_on_the_same_waters_connect_account_" xml:space="preserve">
+    <value>The template and the exported method must be on the same waters_connect account.</value>
+  </data>
+  <data name="WatersConnectUrl_ResolveMethodDestination_Could_not_find_the_waters_connect_folder___0__" xml:space="preserve">
+    <value>Could not find the waters_connect folder '{0}'.</value>
+  </data>
+  <data name="WatersConnectUrl_ResolveMethodDestination_Name_the_waters_connect_method_by_its_folder_path_and_name__or_by_its_folder_id_and_name_" xml:space="preserve">
+    <value>Name the waters_connect method to export by its folder path and name, as '&lt;account alias&gt;/Folder/MethodName', or by its folder id and name, as 'folderId=&lt;id&gt;&amp;methodName=&lt;name&gt;'.</value>
+  </data>
+  <data name="WatersConnectUrl_ResolveMethodDestination_The_waters_connect_account_for__0__does_not_support_method_development___1_" xml:space="preserve">
+    <value>The waters_connect account for {0} does not support method development. {1}</value>
+  </data>
+  <data name="WatersConnectUrl_ResolveMethodDestination_You_do_not_have_permission_to_write_to_the_waters_connect_folder___0__" xml:space="preserve">
+    <value>You do not have permission to write to the waters_connect folder '{0}'.</value>
+  </data>
   <data name="WatersConnectUrl_ResolveInjection_Name_a_waters_connect_injection_by_its_path_or_its_ids_" xml:space="preserve">
     <value>Name a waters_connect injection by its path, or by its ids as 'sampleSetId=&lt;id&gt;&amp;injectionId=&lt;id&gt;'.</value>
   </data>
