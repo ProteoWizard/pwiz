@@ -500,9 +500,9 @@ namespace pwiz.Osprey
 
         // --- Training Export ---------------------------------------------------------------
         // A PerFileRescoring product (docs/22-training-export.md; P17 in
-        // docs/00-pipeline-architecture.md). Off, nothing about the run changes; on, it adds
-        // one <stem>.training.parquet per run, and adding it to a finished directory writes
-        // only the exports and re-scores nothing.
+        // docs/00-pipeline-architecture.md). On, it adds one <stem>.training.parquet per run and
+        // writes the reference XIC it reads into the scores parquets, which runs without it
+        // leave out; so adding it to a finished directory re-scores Stages 4 and 6 (#5023).
         public static readonly OspreyArgument ARG_TRAINING_EXPORT = new OspreyArgument(OspreyArgNames.TRAINING_EXPORT,
             (c, p) => c._config.TrainingExport.Enabled = true)
             { DescriptionArgs = () => new object[] { @"<stem>" + TrainingExportParquet.EXT, ARG_TRAINING_EXPORT_MAX_Q.ArgumentText } };

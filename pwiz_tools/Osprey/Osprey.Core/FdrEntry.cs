@@ -195,25 +195,6 @@ namespace pwiz.Osprey.Core
         public List<CwtCandidate> CwtCandidates { get; set; }
 
         /// <summary>
-        /// Library fragment m/z list for this entry, mirroring Rust
-        /// CoelutionScoredEntry::fragment_mzs. Populated at scoring time
-        /// from the candidate's full fragment list (NOT just the top-N
-        /// used by XIC extraction). Null on stubs loaded from Parquet
-        /// before the column is read back. Carried through to the
-        /// reconciled .scores.parquet's `fragment_mzs` blob column for
-        /// downstream consumers (Skyline blib export, etc.).
-        /// </summary>
-        public double[] FragmentMzs { get; set; }
-
-        /// <summary>
-        /// Library fragment relative intensities for this entry, mirroring
-        /// Rust CoelutionScoredEntry::fragment_intensities. Same length /
-        /// ordering as <see cref="FragmentMzs"/>. f32 to match the
-        /// underlying LibraryFragment representation.
-        /// </summary>
-        public float[] FragmentIntensities { get; set; }
-
-        /// <summary>
         /// Reference XIC retention times across the WINNING peak's
         /// boundary (i.e. ref_xic[bestPeak.StartIndex..=bestPeak.EndIndex]).
         /// Mirrors Rust CoelutionScoredEntry::reference_xic's first

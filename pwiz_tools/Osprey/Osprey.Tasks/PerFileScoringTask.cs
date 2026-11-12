@@ -218,7 +218,9 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public override string ValidityKey(PipelineContext ctx)
         {
-            return base.ValidityKey(ctx) + PinFeatureMask.RecordedFeaturesValidityKeySuffix();
+            return base.ValidityKey(ctx) + PinFeatureMask.RecordedFeaturesValidityKeySuffix()
+                // Whether the parquets carry the reference XIC, which only the training export reads.
+                + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config);
         }
 
         public override IEnumerable<string> Outputs(PipelineContext ctx)
@@ -1928,7 +1930,7 @@ namespace pwiz.Osprey.Tasks
 
             // Retention snapshot at the in-scoring PEAK -- this is the moment the memory
             // work targets. Here scoredEntries still hold every heavy per-entry array
-            // (Features / CwtCandidates / FragmentMzs / FragmentIntensities /
+            // (Features / CwtCandidates /
             // ReferenceXic*) and the library is still resident, but the resident MS2 is
             // gone on the streaming path (dropped above), which is the reduction this
             // snapshot exists to confirm. Those per-entry arrays are dropped a few lines
@@ -1963,7 +1965,8 @@ namespace pwiz.Osprey.Tasks
                 // the library since FdrEntry doesn't carry these).
                 var swParquet = Stopwatch.StartNew();
                 ParquetScoreCache.WriteScoresParquet(
-                    parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName);
+                    parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName,
+                    ParquetScoreCache.WritesReferenceXic(config));
                 swParquet.Stop();
                 ctx.LogInfo(string.Format(
                     OspreyTasksResources.PerFileScoringTask_ProcessFile_Wrote__0__precursor_candidate_peaks_to__1____2_s_,
@@ -1973,7 +1976,7 @@ namespace pwiz.Osprey.Tasks
                 // the parquet above and are reloadable by ParquetIndex, so drop them from
                 // the retained buffer to bound memory -- all N files' entries are held at
                 // once for FirstPassFDR, and these arrays dominate. Features is reloaded before
-                // first-pass Percolator (FirstPassFdrTask); CWT / fragments / ref-XIC are
+                // first-pass Percolator (FirstPassFdrTask); CWT / ref-XIC are
                 // reloaded from parquet in Stage 6 / 7. This brings the cold buffer to the
                 // same stub shape LoadFdrStubsFromParquet produces (see the FdrEntry field
                 // docs, which already document these as null on parquet-loaded stubs).
@@ -1981,8 +1984,6 @@ namespace pwiz.Osprey.Tasks
                 {
                     entry.Features = null;
                     entry.CwtCandidates = null;
-                    entry.FragmentMzs = null;
-                    entry.FragmentIntensities = null;
                     entry.ReferenceXicRts = null;
                     entry.ReferenceXicIntensities = null;
                 }

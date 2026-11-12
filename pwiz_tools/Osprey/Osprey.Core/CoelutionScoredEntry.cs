@@ -43,16 +43,12 @@ namespace pwiz.Osprey.Core
         public double ApexRt { get; set; }
         public XICPeakBounds PeakBounds { get; set; }
         public CoelutionFeatureSet Features { get; set; }
-        public double[] FragmentMzs { get; set; }
-        public float[] FragmentIntensities { get; set; }
         public List<CwtCandidate> CwtCandidates { get; set; }
         public string FileName { get; set; }
 
         public CoelutionScoredEntry()
         {
             ProteinIds = new List<string>();
-            FragmentMzs = new double[0];
-            FragmentIntensities = new float[0];
             CwtCandidates = new List<CwtCandidate>();
             PeakBounds = new XICPeakBounds();
             Features = new CoelutionFeatureSet();
