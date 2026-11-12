@@ -2270,6 +2270,7 @@ namespace pwiz.Skyline.Model.Results
         protected IList<ChromPeak> _chromPeaks;
         protected IList<float> _scores;
         private TimeIntensitiesGroup _timeIntensitiesGroup;
+        private readonly object _timeIntensitiesLock = new object();
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
                                      FeatureNames scoreTypeIndices,
@@ -2335,7 +2336,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     // Threads calculating report rows can ask for the same group at the same time,
                     // and the points should only be read once
-                    lock (this)
+                    lock (_timeIntensitiesLock)
                     {
                         if (_timeIntensitiesGroup == null)
                         {
