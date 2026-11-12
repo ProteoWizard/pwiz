@@ -73,6 +73,30 @@ namespace pwiz.Osprey.Scoring
             @"wide_coelution_sum", @"wide_n_coeluting", @"wide_coelution_margin", @"wide_top3_coelution_min",
         };
 
+        /// <summary>
+        /// Sort a window's spectra into the order <see cref="ScoreWindow"/> extracts XICs in: by
+        /// RT, with ScanNumber as a unique secondary key so the comparator never returns 0 -- an
+        /// allocation-free total order that matches Rust's stable slice::sort_by on the
+        /// scan-ordered window (tie hazard #4362).
+        /// </summary>
+        public static void SortWindowSpectra(List<Spectrum> windowSpectra)
+        {
+            windowSpectra.Sort((a, b) => // Array.Sort OK: (RetentionTime, ScanNumber) is a unique total order (ScanNumber unique per scan), so the comparator never ties
+            {
+                int byRt = a.RetentionTime.CompareTo(b.RetentionTime);
+                return byRt != 0 ? byRt : a.ScanNumber.CompareTo(b.ScanNumber);
+            });
+        }
+
+        /// <summary>The retention times of a window's spectra, in their order.</summary>
+        public static double[] WindowRetentionTimes(List<Spectrum> windowSpectra)
+        {
+            double[] windowRts = new double[windowSpectra.Count];
+            for (int i = 0; i < windowSpectra.Count; i++)
+                windowRts[i] = windowSpectra[i].RetentionTime;
+            return windowRts;
+        }
+
         private readonly IScoringDiagnostics _diagnostics;  // nullable by contract; invoked null-conditionally
         private readonly PeakDataExtractor _extractor;
         private readonly bool[] _recordedFeatures;   // null computes every feature
@@ -128,15 +152,7 @@ namespace pwiz.Osprey.Scoring
             if (windowSpectra == null || windowSpectra.Count == 0)
                 return entries;
 
-            // Sort spectra by RT for XIC extraction, with ScanNumber as a unique
-            // secondary key so the comparator never returns 0 -- an allocation-free
-            // total order that matches Rust's stable slice::sort_by on the scan-ordered
-            // window (tie hazard #4362).
-            windowSpectra.Sort((a, b) => // Array.Sort OK: (RetentionTime, ScanNumber) is a unique total order (ScanNumber unique per scan), so the comparator never ties
-            {
-                int byRt = a.RetentionTime.CompareTo(b.RetentionTime);
-                return byRt != 0 ? byRt : a.ScanNumber.CompareTo(b.ScanNumber);
-            });
+            SortWindowSpectra(windowSpectra);
 
             // Find candidate library entries whose precursor m/z falls in this window.
             // No minimum fragment count filter - matches Rust which scores all entries.
@@ -152,10 +168,7 @@ namespace pwiz.Osprey.Scoring
             if (candidates.Count == 0)
                 return entries;
 
-            // Build RT array for this window
-            double[] windowRts = new double[windowSpectra.Count];
-            for (int i = 0; i < windowSpectra.Count; i++)
-                windowRts[i] = windowSpectra[i].RetentionTime;
+            double[] windowRts = WindowRetentionTimes(windowSpectra);
 
             // The window's XCorr cache (see IResolutionStrategy.PreprocessWindowSpectra);
             // released once all candidates for this window are scored.
@@ -241,6 +254,63 @@ namespace pwiz.Osprey.Scoring
             {
                 context.Resolution.ReleaseWindowCache(preprocessedXcorr, context.XcorrScratchPool);
             }
+        }
+
+        /// <summary>
+        /// Recompute the CWT peak candidates <see cref="ScoreWindow"/> stores for one precursor
+        /// (<see cref="FdrEntry.CwtCandidates"/>, the Stage 6 reconciliation input) without
+        /// scoring it: the same first-pass detection - the scan-major prefilter and XIC
+        /// extraction when those are on, as <see cref="ScoreWindow"/> runs them - then the same
+        /// top-N capture, in the same order. No PIN feature is computed.
+        ///
+        /// <para>The caller supplies what the first pass scored the window with:
+        /// <paramref name="windowSpectra"/> calibrated and in <see cref="SortWindowSpectra"/>
+        /// order, <paramref name="windowRts"/> from <see cref="WindowRetentionTimes"/>, and a
+        /// <paramref name="context"/> with no boundary overrides whose search settings
+        /// <see cref="ScoringPipeline.ApplySearchSettings"/> resolved for
+        /// <paramref name="rtCalibration"/>. Returns null when the first pass would have found no
+        /// scorable peak (and so stored no row), with <paramref name="apexScanNumber"/> null;
+        /// otherwise <paramref name="apexScanNumber"/> is the scan of the peak it would pick.</para>
+        /// </summary>
+        public List<CwtCandidate> RecomputeCwtCandidates(
+            LibraryEntry candidate,
+            List<Spectrum> windowSpectra,
+            double[] windowRts,
+            RTCalibration rtCalibration,
+            double globalRtTolerance,
+            double rtSigma,
+            List<MS1Spectrum> ms1Spectra,
+            MzCalibrationResult ms1Calibration,
+            ScoringContext context,
+            out uint? apexScanNumber)
+        {
+            apexScanNumber = null;
+            var candidates = new List<LibraryEntry> { candidate };
+            var prefilter = OspreyEnvironment.ScanMajorPrefilter
+                ? _extractor.ComputePrefilterScanMajor(candidates, windowSpectra, windowRts,
+                    rtCalibration, globalRtTolerance, context)
+                : null;
+            List<XicData> precomputedXics = null;
+            List<XicData> precomputedCorrXics = null;
+            if (prefilter != null && OspreyEnvironment.ScanMajorXic)
+            {
+                var blockXics = PeakDataExtractor.ExtractXicsScanMajor(candidates, 0, 1,
+                    prefilter, windowSpectra, windowRts, context.Config, context.CorrelationConfig, out var blockCorrXics);
+                precomputedXics = blockXics[0];
+                precomputedCorrXics = blockCorrXics?[0];
+            }
+
+            if (!_extractor.TryExtract(
+                    candidate, windowSpectra, windowRts, rtCalibration,
+                    globalRtTolerance, rtSigma, ms1Spectra, ms1Calibration,
+                    context, new OspreyPeakData(), prefilter, 0, precomputedXics, precomputedCorrXics,
+                    out var ext))
+            {
+                return null;
+            }
+
+            apexScanNumber = ext.ApexSpectrum.ScanNumber;
+            return CaptureCwtCandidates(ext.CapturedPeaks, ext.Xics, ext.RefXicIdx, ext.RefXicIntensities, context);
         }
 
 

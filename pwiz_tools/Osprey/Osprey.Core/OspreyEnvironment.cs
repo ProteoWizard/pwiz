@@ -243,6 +243,26 @@ namespace pwiz.Osprey.Core
         public static readonly bool LogMemory = IsSetAndNotZero(ENV_LOG_MEMORY);
 
         /// <summary>
+        /// The name of <see cref="CwtRecomputeCheck"/>, for a test that turns it on.
+        /// </summary>
+        public const string CWT_RECOMPUTE_CHECK = @"OSPREY_CWT_RECOMPUTE_CHECK";
+
+        private static readonly EnvVar ENV_CWT_RECOMPUTE_CHECK = new EnvVar(CWT_RECOMPUTE_CHECK, EnvVarGroup.diagnostic,
+            @"In re-scoring, recompute the stored peak candidates of every precursor reconciliation " +
+            @"consulted them for, compare them with the stored ones and log the agreement.");
+
+        /// <summary>
+        /// OSPREY_CWT_RECOMPUTE_CHECK=1: in PerFileRescoring, for every precursor the
+        /// reconciliation planner gave a non-Keep action - the rows whose stored
+        /// <c>cwt_candidates</c> it consulted - recompute the candidate list from the run's spectra
+        /// and first-pass calibration and compare it with the stored one, logging one summary line
+        /// per run and a few mismatch examples. Measures whether the column can be replaced by a
+        /// recompute (issue #5024). Diagnostic only; it changes nothing the run writes. Read on
+        /// each access, so a test can set it with <see cref="OverrideVariables"/>.
+        /// </summary>
+        public static bool CwtRecomputeCheck => IsSetAndNotZero(ENV_CWT_RECOMPUTE_CHECK);
+
+        /// <summary>
         /// The name of <see cref="Diagnostics"/>, for a test that turns it on.
         /// </summary>
         public const string DIAGNOSTICS = @"OSPREY_DIAGNOSTICS";

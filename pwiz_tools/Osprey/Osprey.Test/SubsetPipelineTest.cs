@@ -254,7 +254,10 @@ namespace pwiz.Osprey.Test
         [TestMethod, DoNotParallelize]
         public void TestSubsetHpcTaskChain()
         {
-            AssertHpcChainMatchesStraight(new Subset(_dataDir, LIBRARY_FILE, @"unit", RUN_NAMES));
+            // With OSPREY_CWT_RECOMPUTE_CHECK, so each phase-3 worker recomputes the stored peak
+            // candidates from the calibration file it was shipped (#5024).
+            AssertHpcChainMatchesStraight(new Subset(_dataDir, LIBRARY_FILE, @"unit", RUN_NAMES,
+                moreVariables: WithCwtRecomputeCheck(new Dictionary<string, string>())));
             AssertHpcChainMatchesStraight(new Subset(_dataDir, LIBRARY_FILE, @"unit", RUN_NAMES,
                 OspreyEnvironment.PASS2_QVALUE_TRANSFER), OspreyEnvironment.PASS2_QVALUE_TRANSFER + @"-");
         }
@@ -277,7 +280,8 @@ namespace pwiz.Osprey.Test
         [TestMethod, DoNotParallelize]
         public void TestAstralSubsetHpcTaskChain()
         {
-            AssertHpcChainMatchesStraight(new Subset(ExtractAstral(), ASTRAL_LIBRARY_FILE, @"hram", ASTRAL_RUN_NAMES));
+            AssertHpcChainMatchesStraight(new Subset(ExtractAstral(), ASTRAL_LIBRARY_FILE, @"hram", ASTRAL_RUN_NAMES,
+                moreVariables: WithCwtRecomputeCheck(new Dictionary<string, string>())));
         }
 
         /// <summary>
@@ -819,10 +823,13 @@ namespace pwiz.Osprey.Test
             // three runs reach the second-pass worker together, so a race there shows every time
             // (a shared FrozenModelScorer scratch buffer mixed the files' features). First-pass FDR
             // gets a lane per file whatever the machine, so its lanes are compared here too.
+            // The same run also carries OSPREY_CWT_RECOMPUTE_CHECK, a diagnostic that must not change
+            // the answer, and whose recomputed peak candidates must equal the stored ones (#5024).
             string parallelDir = CreateDir(@"parallel-files");
-            RunAnalysis(parallelDir, DataInputs(), FdrLanes(RUN_NAMES.Length),
+            string parallelLog = RunAnalysis(parallelDir, DataInputs(), WithCwtRecomputeCheck(FdrLanes(RUN_NAMES.Length)),
                 OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText, RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture));
             AssertBlibsEqual(baseBlib, Path.Combine(parallelDir, BLIB_FILE));
+            AssertCwtRecomputeAgrees(parallelLog, RUN_NAMES.Length);
 
             // Each per-file stage resolves its own count: scoring and re-scoring on different lane
             // counts, over a shared --parallel-files they both override, still give the sequential
@@ -1029,10 +1036,12 @@ namespace pwiz.Osprey.Test
             AssertRetentionTimeRows(blib, precursors, ASTRAL_RUN_NAMES.Length);
             AssertRecoversFullRun(Path.Combine(dataDir, MANIFEST_FILE), blib, MIN_ASTRAL_RECOVERED_FRACTION);
 
+            // With OSPREY_CWT_RECOMPUTE_CHECK as well, for the high-resolution detection (#5024).
             string parallelDir = CreateDir(@"astral-parallel");
-            RunOsprey(AstralArgs(parallelDir, OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText,
-                ASTRAL_RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture)), Verifier(false));
+            string parallelLog = RunOsprey(AstralArgs(parallelDir, OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText,
+                ASTRAL_RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture)), WithCwtRecomputeCheck(Verifier(false)));
             AssertBlibsEqual(blib, Path.Combine(parallelDir, BLIB_FILE));
+            AssertCwtRecomputeAgrees(parallelLog, ASTRAL_RUN_NAMES.Length);
         }
 
         /// <summary>
@@ -1610,6 +1619,8 @@ namespace pwiz.Osprey.Test
                 string log = RunTask(data, phaseDir, PerFileRescoreTask.TASK_NAME, run);
                 logs[PerFileRescoreTask.TASK_NAME] = log;
                 AssertHasLine(log, PathLine(LogKey.ROUTE_RESCORE_HYDRATE, @"per-run"));
+                if (data.MoreVariables != null && data.MoreVariables.ContainsKey(OspreyEnvironment.CWT_RECOMPUTE_CHECK))
+                    AssertCwtRecomputeAgrees(log, 1);
             }
 
             // Phase 4, one node over every run: second-pass FDR and the library.
@@ -1808,6 +1819,50 @@ namespace pwiz.Osprey.Test
                 on[kvp.Key] = kvp.Value;
             on[DIANN_REPORTS] = @"1";
             return on;
+        }
+
+        /// <summary><paramref name="variables"/> with OSPREY_CWT_RECOMPUTE_CHECK switched on.</summary>
+        private static IReadOnlyDictionary<string, string> WithCwtRecomputeCheck(IReadOnlyDictionary<string, string> variables)
+        {
+            return new Dictionary<string, string>(variables)
+            {
+                [OspreyEnvironment.CWT_RECOMPUTE_CHECK] = @"1"
+            };
+        }
+
+        /// <summary>
+        /// Every one of <paramref name="runs"/> runs logged an OSPREY_CWT_RECOMPUTE_CHECK summary, the
+        /// runs together checked at least one consulted row, and no recomputed candidate list
+        /// differs from the stored one in its count, order or RTs, or lacks the window it was
+        /// scored in.
+        /// </summary>
+        private static void AssertCwtRecomputeAgrees(string log, int runs)
+        {
+            string prefix = @"[" + LogTag.BISECT + @"] " + LogKey.CWT_RECOMPUTE_CHECK + @": ";
+            var summaries = SplitLines(log).Where(l => l.Contains(prefix)).ToList();
+            string mismatchPrefix = @"[" + LogTag.BISECT + @"] " + LogKey.CWT_RECOMPUTE_MISMATCH + @": ";
+            string report = string.Join(Environment.NewLine,
+                SplitLines(log).Where(l => l.Contains(prefix) || l.Contains(mismatchPrefix)));
+            Assert.AreEqual(runs, summaries.Count, report);
+            int rows = 0, storedCandidates = 0;
+            foreach (string summary in summaries)
+            {
+                rows += CwtRecomputeField(summary, @"rows");
+                storedCandidates += CwtRecomputeField(summary, @"stored_candidates");
+                Assert.AreEqual(0, CwtRecomputeField(summary, @"rt_order_mismatch"), report);
+                Assert.AreEqual(0, CwtRecomputeField(summary, @"window_not_found"), report);
+                Assert.AreEqual(0, CwtRecomputeField(summary, @"uncalibrated"), report);
+                Assert.AreEqual(0, CwtRecomputeField(summary, @"unindexed"), report);
+            }
+            Assert.IsTrue(rows > 0, @"no consulted rows were checked" + Environment.NewLine + report);
+            Assert.IsTrue(storedCandidates > 0, @"no stored candidates were compared" + Environment.NewLine + report);
+        }
+
+        private static int CwtRecomputeField(string summary, string name)
+        {
+            var match = Regex.Match(summary, @"\b" + name + @"=(\d+)");
+            Assert.IsTrue(match.Success, @"no " + name + @" in " + summary);
+            return int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
         }
 
         /// <summary>

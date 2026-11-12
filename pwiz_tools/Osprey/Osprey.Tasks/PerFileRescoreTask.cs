@@ -1648,6 +1648,17 @@ namespace pwiz.Osprey.Tasks
             if (rtCal == null)
                 inputs.PerFileCalibrations.TryGetValue(fileName, out rtCal);
 
+            // OSPREY_CWT_RECOMPUTE_CHECK (issue #5024): recompute the stored peak candidates the
+            // plan consulted, with the FIRST-PASS calibration they were detected with, and log
+            // whether they agree. Log lines only.
+            if (OspreyEnvironment.CwtRecomputeCheck)
+            {
+                inputs.PerFileCalibrations.TryGetValue(fileName, out var firstPassCal);
+                inputs.ParquetPaths.TryGetValue(fileName, out string scoresPath);
+                CwtRecomputeCheck.Run(run, scoresPath, inputs.LibraryById, fileConfig, firstPassCal, spectraIndex,
+                    ms2Cal, ms1Cal, ms1Spectra, ctx);
+            }
+
             // Bisection seam DISABLED (paired with the per-candidate
             // WritePredictRtCall, which was removed from the scoring
             // hotspot). Dumped the cal's library_rts + fitted_values once
