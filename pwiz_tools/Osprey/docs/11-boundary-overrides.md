@@ -267,9 +267,11 @@ stamps `osprey.reconciled = "true"` and `osprey.reconciliation_hash` alongside
 (`ReconciledParquetWriter.cs:200-204`), which the downstream `--task
 SecondPassFDR` node validates.
 
-Note: the six per-row blob columns (`fragment_mzs`, `fragment_intensities`,
-`reference_xic_rts`, `reference_xic_intensities`, `bounds_area`, `bounds_snr`) are
-populated on the reconciled write path since PR #4188 (`ParquetScoreCache.BuildFdrEntryColumns`);
+Note: the per-row columns `reference_xic_rts`, `reference_xic_intensities`,
+`bounds_area` and `bounds_snr` are populated on the reconciled write path since PR #4188
+(`ParquetScoreCache.BuildFdrEntryColumns`). The reconciled parquet carries no
+`cwt_candidates` (planning reads them from `.scores.parquet`), and neither file carries
+Rust's `fragment_mzs` / `fragment_intensities` (#5023);
 an older note here that they were written null/zero stood on a stale class summary in
 the since-removed `RescoreWorker.cs`. See DIVERGENCES.md U6 (resolved).
 

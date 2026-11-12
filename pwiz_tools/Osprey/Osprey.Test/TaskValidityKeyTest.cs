@@ -235,7 +235,7 @@ namespace pwiz.Osprey.Test
                 ParquetScoreCache.StreamReconciledScoresParquet(stage4, ParquetScoreCache.GetReconciledScoresPath(runA),
                     null, null, ParquetScoreCache.WithStamp(
                         ReconciledParquetWriter.BuildReconciliationMetadata(new OspreyConfig(), null), workerStamp),
-                    null, @"a.mzML", null, PerFileRescoreTask.TASK_NAME, null, null);
+                    null, @"a.mzML", null, PerFileRescoreTask.TASK_NAME, null, null, true);
                 current = RunKey(runA);
                 Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(runA),
                     new Dictionary<uint, (double score, uint entryId)>(), workerStamp);
@@ -292,12 +292,13 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The training export is a declared output of PerFileRescoring only when asked for, and
-        /// asking for it moves no other key: PerFileRescoring's own key is the same with the flag
-        /// or without, so adding the flag to a finished analysis leaves every other output
-        /// valid and only the exports outstanding (P17). The export's key follows each export
-        /// setting, and the straight-through run and a <c>--task TrainingExport</c> selector
-        /// compute the same key, so a pay-later export is never redone.
+        /// The training export is a declared output of PerFileRescoring only when asked for.
+        /// Asking for it moves the keys of the two tasks that write a scores parquet, and no
+        /// other: those parquets carry the reference XIC the export reads only when it is
+        /// requested (#5023), so a finished analysis without it re-scores Stages 4 and 6, while
+        /// its FDR outputs stay valid. The export's key follows each export setting, and the
+        /// straight-through run and a <c>--task TrainingExport</c> selector compute the same key,
+        /// so an export is never redone.
         /// </summary>
         private static void AssertTrainingExportKey()
         {
@@ -312,7 +313,24 @@ namespace pwiz.Osprey.Test
 
             string straight = ExportKey(TaskConfigs.StraightThrough(), c => { }, out string taskKeyOn, out bool declared);
             Assert.IsTrue(declared, @"the export is a declared output of PerFileRescoring under the flag");
-            Assert.AreEqual(offTask.ValidityKey(offCtx), taskKeyOn, @"the flag must not move PerFileRescoring's key");
+            Assert.AreEqual(offTask.ValidityKey(offCtx) + @";refxic", taskKeyOn,
+                @"the flag moves PerFileRescoring's key by the reference XIC term alone");
+            var on = TaskConfigs.StraightThrough();
+            on.InputFiles = off.InputFiles;
+            on.LibrarySource = off.LibrarySource;
+            on.OutputBlib = off.OutputBlib;
+            on.TrainingExport.Enabled = true;
+            var onCtx = TaskConfigs.ContextFor(on);
+            var scoringOff = off.Pipeline.OfType<PerFileScoringTask>().Single();
+            var scoringOn = on.Pipeline.OfType<PerFileScoringTask>().Single();
+            Assert.AreEqual(scoringOff.ValidityKey(offCtx) + @";refxic", scoringOn.ValidityKey(onCtx),
+                @"the flag moves PerFileScoring's key by the reference XIC term alone");
+            Assert.AreEqual(off.Pipeline.OfType<FirstPassFdrTask>().Single().ValidityKey(offCtx),
+                on.Pipeline.OfType<FirstPassFdrTask>().Single().ValidityKey(onCtx),
+                @"the flag must not move an FDR task's key");
+            Assert.AreEqual(off.Pipeline.OfType<SecondPassFdrTask>().Single().ValidityKey(offCtx),
+                on.Pipeline.OfType<SecondPassFdrTask>().Single().ValidityKey(onCtx),
+                @"the flag must not move an FDR task's key");
             Assert.AreEqual(straight, ExportKey(TaskConfigs.ForTask(TrainingExportTask.TASK_NAME), c => { }, out _, out _),
                 OspreyArgNames.TaskText(TrainingExportTask.TASK_NAME) + @" must compute the straight-through key");
             Assert.AreEqual(straight, ExportKey(TaskConfigs.StraightThrough(), c => c.TrainingExport.MaxQ = c.RunFdr, out _, out _),

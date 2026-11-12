@@ -1884,9 +1884,10 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(metadata.ContainsKey(ArtifactStamp.PARQUET_KEY), @"no stamp to keep: " + reconciled);
             metadata[ParquetScoreCache.META_RECONCILED] = @"true";
             File.Delete(reconciled);
+            // As the run wrote it: no training export, so no reference XIC in either file.
             ParquetScoreCache.StreamReconciledScoresParquet(Path.Combine(workDir, run + ParquetScoreCache.EXT_SCORES),
                 reconciled, null, null, metadata, null, run + MZML_EXTENSION, null,
-                PerFileRescoreTask.TASK_NAME, null, null);
+                PerFileRescoreTask.TASK_NAME, null, null, false);
             Assert.IsFalse(ParquetScoreCache.IsCurrentReconciledSurvivorSubset(reconciled));
         }
 
