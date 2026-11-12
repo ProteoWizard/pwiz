@@ -667,7 +667,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 var entries = MakeAllFeatureEntries();
-                ParquetScoreCache.WriteScoresParquet(parquetPath, entries, null, null, @"f.mzML");
+                ParquetScoreCache.WriteScoresParquet(parquetPath, entries, null, null, @"f.mzML", false);
                 var vectors = ParquetScoreCache.LoadPinFeaturesFromParquet(parquetPath);
                 Assert.AreEqual(entries.Count, vectors.Count);
                 for (int row = 0; row < vectors.Count; row++)

@@ -371,15 +371,19 @@ namespace pwiz.Osprey.Tasks
                 + OspreyEnvironment.ReconRefitValidityKeySuffix()
                 // The Stage 6 competition and the 2nd-pass sidecar score with the first-pass
                 // model, so the classifier that trained it keys this task too (empty for the SVM).
-                + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
+                + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config)
+                // The reconciled parquet carries the reference XIC only for the training export.
+                + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config);
         }
 
         /// <summary>
         /// A training export's key: this task's key, the export settings, and the identities of
         /// the run's own files the export reads (<see cref="TrainingExportWriter.RunInputIdentities"/>).
         /// Changing an export setting or rewriting one run's inputs therefore redoes those
-        /// exports and never re-scores; every other output keys on the task key alone, so
-        /// adding the flag leaves them valid.
+        /// exports and never re-scores; every other output keys on the task key alone. The flag
+        /// itself does move the task key (<see cref="ParquetScoreCache.ReferenceXicValidityKeySuffix"/>),
+        /// so adding it to an analysis that ran without it re-scores, writing the reference XIC
+        /// the export reads.
         /// </summary>
         public override string OutputValidityKey(PipelineContext ctx, string taskKey, string output)
         {
@@ -394,9 +398,11 @@ namespace pwiz.Osprey.Tasks
 
         public override bool Run(PipelineContext ctx)
         {
-            // The export added to a finished analysis: nothing else of this task is outstanding,
-            // so write the exports from each run's own artifacts and re-score nothing - P16's
-            // pay-later path, the counterpart of FirstPassFdrTask.FoldDiagnosticsOnly. Taken
+            // Only the exports are outstanding (an analysis that ran with the flag, missing some
+            // exports): write them from each run's own artifacts and re-score nothing, the
+            // counterpart of FirstPassFdrTask.FoldDiagnosticsOnly. The flag added to an analysis
+            // that ran without it does not land here: the reference XIC is missing, the task key
+            // differs, and the task re-scores (#5023). Taken
             // before anything below demands FirstPassFDR's buffer, which would load it.
             if (OnlyOptionalProductsOutstanding(ctx))
             {
@@ -1794,7 +1800,7 @@ namespace pwiz.Osprey.Tasks
             // Apex retention snapshot (dotMemory only). Once the resident MS2 is streamed,
             // the remaining per-file accumulation is the scored + reconciled entries still
             // rooted by fdrEntries here (each carries the heavy Features / CwtCandidates /
-            // Fragment* / ReferenceXic* arrays). dotMemory forces its own GC before the
+            // ReferenceXic* arrays). dotMemory forces its own GC before the
             // snapshot, so the write-back's parquet-reload transient collapses and the
             // dominators are exactly that retained entry set. Taken BEFORE the release
             // below so the snapshot still shows the pre-release apex it was written to
@@ -1805,7 +1811,7 @@ namespace pwiz.Osprey.Tasks
             // on disk. Without this the fat arrays stay rooted through every remaining
             // file, which is the O(files) Stage-6 growth term of #4472: the survivor stubs
             // themselves are lean (10 scalar columns off the parquet), but rescoring
-            // replaces them with entries carrying Features / CwtCandidates / Fragment* /
+            // replaces them with entries carrying Features / CwtCandidates /
             // ReferenceXic* at roughly 1-3 KB each, and gap fill appends more.
             //
             // MUST run AFTER WriteReconciledAndStamp above: ReconciledParquetWriter uses
@@ -1915,7 +1921,7 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Release the heavy per-entry payload a rescore attaches, once the file's
-        /// reconciled parquet has been written. These six arrays have no reader after
+        /// reconciled parquet has been written. These arrays have no reader after
         /// Stage 6: <see cref="ReconciledParquetWriter"/> consumes them per file during
         /// the write above, the Stage-6 planner loads CWT candidates through its own
         /// per-file loader rather than off these entries, and the resident 2nd pass
@@ -1931,7 +1937,7 @@ namespace pwiz.Osprey.Tasks
         /// Called on all three paths that end with a file's reconciled parquet on disk: the
         /// fresh rescore (gated on the write having persisted), the per-file resume skip
         /// (<see cref="TryResumeRescoredFile"/>), and the whole-task
-        /// <see cref="Rehydrate"/> - the last two re-fatten the same six arrays out of that
+        /// <see cref="Rehydrate"/> - the last two re-fatten the same arrays out of that
         /// parquet when they reload it, so without this they hold
         /// the full payload for every file at once. All three therefore leave the identical
         /// buffer shape.
@@ -1944,8 +1950,6 @@ namespace pwiz.Osprey.Tasks
             {
                 entry.Features = null;
                 entry.CwtCandidates = null;
-                entry.FragmentMzs = null;
-                entry.FragmentIntensities = null;
                 entry.ReferenceXicRts = null;
                 entry.ReferenceXicIntensities = null;
             }
