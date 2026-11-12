@@ -128,6 +128,7 @@ namespace pwiz.Osprey.Test
 
         private string _testDir;
         private string _dataDir;
+        private FeatureSetScope _featureSettings;
 
         [TestInitialize]
         public void ExtractData()
@@ -135,11 +136,16 @@ namespace pwiz.Osprey.Test
             _testDir = Path.Combine(Path.GetTempPath(), @"osprey-subset-" + Guid.NewGuid().ToString(@"N"));
             _dataDir = Path.Combine(_testDir, @"data");
             ZipFile.ExtractToDirectory(Path.Combine(AppContext.BaseDirectory, @"TestData", DATA_ZIP), _dataDir);
+            // The legs search the Stellar subset at unit resolution, and the test reads the parquets
+            // they write in this process: it must resolve the features those runs recorded, the
+            // unit-resolution default set, not the HRAM default the test process starts with.
+            _featureSettings = new FeatureSetScope(ResolutionMode.UnitResolution, null);
         }
 
         [TestCleanup]
         public void DeleteTestDir()
         {
+            _featureSettings?.Dispose();
             if (Directory.Exists(_testDir))
                 Directory.Delete(_testDir, true);
         }

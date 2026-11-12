@@ -46,6 +46,7 @@ namespace pwiz.Osprey.Core
         public const string PROTEIN_BEST = @"protein-best";
         public const string VALUE_ON = @"on";
         public const string VALUE_OFF = @"off";
+        public const string FEATURE_SET = @"feature-set";
         public const string DECOY_PAIRING_MANIFEST = @"decoy-pairing-manifest";
         public const string TASK = @"task";
         public const string MODEL_DIAGNOSTICS = @"model-diagnostics";

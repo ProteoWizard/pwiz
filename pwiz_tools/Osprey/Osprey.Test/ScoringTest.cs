@@ -2080,17 +2080,18 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(corrScored.Features[0] > searched.Features[0] + 1.0,
                 @"the recovered fragment adds its pairs to the coelution sum");
 
-            // Recording one family at a time, each family scores what it scores with every feature
-            // computed: the wider-XIC median polish and runner-up coelution a family reads are
-            // published whenever it is computed, and skipped otherwise.
+            // Computing one family at a time (the family of its first feature, the one recorded),
+            // each family scores what it scores with every feature computed: the wider-XIC median
+            // polish and runner-up coelution a family reads are published whenever it is computed,
+            // and skipped otherwise.
             foreach (var family in PinFeatureMask.FAMILY_FIRST_FEATURES)
             {
                 int first = Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, family);
-                var recorded = PinFeatureMask.RecordedFeatures(f => f != first, false);
-                var familyScored = ScoreCorrToleranceWindow(entry, spectra, tight, corrConfig, recorded);
+                var computed = PinFeatureMask.ComputedFeatures(PinFeatureMask.RecordedFeatures(f => f != first, false));
+                var familyScored = ScoreCorrToleranceWindow(entry, spectra, tight, corrConfig, computed);
                 for (int f = 0; f < OspreyFeatureCalculators.FeatureCount; f++)
                 {
-                    double expected = recorded[f] ? corrScored.Features[f] : 0.0;
+                    double expected = computed[f] ? corrScored.Features[f] : 0.0;
                     Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(familyScored.Features[f]),
                         string.Format(@"family {0}, feature {1} ({2})", family, f, OspreyFeatureCalculators.Get(f).Name));
                 }

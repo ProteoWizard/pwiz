@@ -235,6 +235,15 @@ namespace pwiz.Osprey.Core
         public bool ProteinBest { get; set; }
 
         /// <summary>
+        /// The PIN features the FDR classifier trains on (<c>--feature-set</c>): the 21 core features,
+        /// the chosen default set, or every feature. Null when the command line did not say, and the
+        /// resolution chooses: <see cref="OspreyFeatureSet.@default"/> for HRAM data and
+        /// <see cref="OspreyFeatureSet.core"/> at unit resolution (<c>PinFeatureMask.FeatureSetFor</c>).
+        /// OSPREY_FEATURE_MASK, when set, overrides it.
+        /// </summary>
+        public OspreyFeatureSet? FeatureSet { get; set; }
+
+        /// <summary>
         /// Write the protein-group report (<c>&lt;output&gt;.protein_groups.tsv</c>) at the
         /// end of the run: one row per target protein group with its member accessions
         /// (how the proteins were grouped), the unique (representative) and shared
@@ -711,6 +720,21 @@ namespace pwiz.Osprey.Core
     {
         UnitResolution,
         HRAM
+    }
+
+    /// <summary>
+    /// The named PIN feature sets the FDR classifier can train on (<c>--feature-set</c>), nested:
+    /// <see cref="core"/> within <see cref="@default"/> within <see cref="all"/>. The member names are
+    /// the command-line values. Osprey-only; there is no Rust counterpart.
+    /// </summary>
+    public enum OspreyFeatureSet
+    {
+        /// <summary>The 21 core features, PIN 0 to 20: the features Osprey had before the families.</summary>
+        core,
+        /// <summary>The core features and the family features chosen for the default search (<c>PinFeatureMask.DEFAULT_FEATURES</c>).</summary>
+        @default,
+        /// <summary>Every PIN feature the resolution can use.</summary>
+        all
     }
 
     /// <summary>

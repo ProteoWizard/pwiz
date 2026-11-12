@@ -58,19 +58,25 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestFlippedDefaultsParticipateInTheValidityKey()
         {
-            AssertSuffixesAreUnconditional();
-            AssertEachArmKeysDifferently();
-            AssertTrainingSampleLeversKeyDifferently();
-            AssertFdrExperimentSwitchesKeyDifferently();
-            AssertRecordedFeaturesFollowTheMask();
-            AssertHramOnlyFamiliesDropOutAtUnitResolution();
-            AssertEveryTaskCarriesTheSuffixesItNeeds();
-            AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
-            AssertTreeClassifierKeysTheModelTasks();
-            AssertTrainingExportKey();
-            AssertFragmentMassErrorReaderKey();
-            AssertTrainingExportKeyFollowsEachRunsInputs();
-            AssertLibraryTermsKeyOnlyWhatChanged();
+            // The keys below are spelled out for the core set, whose recorded-feature term is empty,
+            // as they were before the HRAM default became the default set; the feature-set checks set
+            // their own resolution and set.
+            using (new FeatureSetScope(ResolutionMode.HRAM, OspreyFeatureSet.core))
+            {
+                AssertSuffixesAreUnconditional();
+                AssertEachArmKeysDifferently();
+                AssertTrainingSampleLeversKeyDifferently();
+                AssertFdrExperimentSwitchesKeyDifferently();
+                AssertRecordedFeaturesFollowTheMask();
+                AssertHramOnlyFamiliesDropOutAtUnitResolution();
+                AssertEveryTaskCarriesTheSuffixesItNeeds();
+                AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
+                AssertTreeClassifierKeysTheModelTasks();
+                AssertTrainingExportKey();
+                AssertFragmentMassErrorReaderKey();
+                AssertTrainingExportKeyFollowsEachRunsInputs();
+                AssertLibraryTermsKeyOnlyWhatChanged();
+            }
         }
 
         /// <summary>
@@ -700,17 +706,21 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(4, distinct.Count, @"every combination must key differently");
 
             // The override-path runner-up change keys the rescoring tasks only when the classifier
-            // sees a runner-up feature: empty under the default mask, present with every feature on.
-            Assert.AreEqual(string.Empty, PinFeatureMask.RescoreValidityKeySuffix(PinFeatureMask.IsMasked),
-                @"the default mask hides the runner-up features, so default keys must not change");
+            // sees a runner-up feature: empty under the core set, present with every feature on and
+            // under the default set, which uses them.
+            var coreMask = PinFeatureMask.FeatureSetMask(OspreyFeatureSet.core);
+            Assert.AreEqual(string.Empty, PinFeatureMask.RescoreValidityKeySuffix(coreMask),
+                @"the core set hides the runner-up features, so core keys must not change");
+            Assert.AreNotEqual(string.Empty, PinFeatureMask.RescoreValidityKeySuffix(PinFeatureMask.FeatureSetMask(OspreyFeatureSet.@default)),
+                @"the default set uses the runner-up features");
             Assert.AreNotEqual(string.Empty, PinFeatureMask.RescoreValidityKeySuffix(f => false),
                 @"with the runner-up features on, the rescoring tasks must key on the change");
             int margin = Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, @"peak_rank_margin");
             Assert.AreNotEqual(string.Empty, PinFeatureMask.RescoreValidityKeySuffix(f => f != margin),
                 @"any one runner-up feature unmasked must key the change");
             // The key term and the second detection it records must switch together.
-            Assert.IsFalse(PinFeatureMask.UsesRunnerUpFeatures(PinFeatureMask.IsMasked),
-                @"the default mask must skip the override-path detection");
+            Assert.IsFalse(PinFeatureMask.UsesRunnerUpFeatures(coreMask),
+                @"the core set must skip the override-path detection");
             Assert.IsTrue(PinFeatureMask.UsesRunnerUpFeatures(f => f != margin),
                 @"any one runner-up feature unmasked must run the override-path detection");
 
@@ -736,10 +746,12 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// Scoring records the core features and each family the mask leaves a feature of, or
-        /// everything under OSPREY_RECORD_ALL_FEATURES=1, and the key term names what is recorded:
-        /// empty for the core alone (the default, so default keys do not change), the same for
-        /// two arms that record the same families, and different whenever a family is added.
+        /// Scoring records the core features and each feature the classifier uses, or everything
+        /// under OSPREY_RECORD_ALL_FEATURES=1, and computes each family a recorded feature belongs
+        /// to. The key term names the recorded columns: empty for the core alone (the core set, so
+        /// core keys do not change), the same for two arms that record the same columns, and
+        /// different whenever a column is added - including another column of a family already
+        /// computed, which the file would not hold.
         /// </summary>
         private static void AssertRecordedFeaturesFollowTheMask()
         {
@@ -751,52 +763,88 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(starts.All(start => start >= core), @"every family is a PIN feature after the core");
             CollectionAssert.AreEqual(starts.OrderBy(start => start).Distinct().ToArray(), starts, @"families are in PIN order");
 
-            bool[] byDefault = PinFeatureMask.RecordedFeatures(PinFeatureMask.IsMasked, false);
-            bool[] recordAll = PinFeatureMask.RecordedFeatures(PinFeatureMask.IsMasked, true);
+            var coreMask = PinFeatureMask.FeatureSetMask(OspreyFeatureSet.core);
+            bool[] coreOnly = PinFeatureMask.RecordedFeatures(coreMask, false);
+            bool[] recordAll = PinFeatureMask.RecordedFeatures(coreMask, true);
             bool[] maskNone = PinFeatureMask.RecordedFeatures(f => false, false);
             bool[] maskAll = PinFeatureMask.RecordedFeatures(f => true, false);
             for (int f = 0; f < n; f++)
             {
-                Assert.AreEqual(f < core, byDefault[f], @"the default records the core alone");
+                Assert.AreEqual(f < core, coreOnly[f], @"the core set records the core alone");
                 Assert.AreEqual(f < core, maskAll[f], @"the core is recorded whatever the mask");
                 Assert.IsTrue(recordAll[f] && maskNone[f], @"recording all and masking none record every feature");
-                Assert.AreEqual(byDefault[f], PinFeatureMask.IsRecorded(f), @"the test process records the default set");
             }
+            CollectionAssert.AreEqual(coreOnly, PinFeatureMask.ComputedFeatures(coreOnly), @"the core set computes the core alone");
 
-            // Unmasking one feature records its whole family and nothing else.
+            // Unmasking one feature records that column alone, and computes its whole family.
             int tcRank3 = Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, @"tc_corr_rank3");
             int tcFirst = Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, @"tc_sum6");
             int tcEnd = Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, @"heavy_sum6");
-            Func<int, bool> oneUnmasked = f => PinFeatureMask.IsMasked(f) && f != tcRank3;
-            bool[] oneFamily = PinFeatureMask.RecordedFeatures(oneUnmasked, false);
+            Func<int, bool> oneUnmasked = f => coreMask(f) && f != tcRank3;
+            bool[] oneColumn = PinFeatureMask.RecordedFeatures(oneUnmasked, false);
+            bool[] oneFamily = PinFeatureMask.ComputedFeatures(oneColumn);
             for (int f = 0; f < n; f++)
             {
-                Assert.AreEqual(f < core || (f >= tcFirst && f < tcEnd), oneFamily[f],
-                    ParquetScoreCache.PIN_FEATURE_NAMES[f]);
+                string name = ParquetScoreCache.PIN_FEATURE_NAMES[f];
+                Assert.AreEqual(f < core || f == tcRank3, oneColumn[f], name);
+                Assert.AreEqual(f < core || (f >= tcFirst && f < tcEnd), oneFamily[f], name);
             }
-            // Whatever the mask, every feature the classifier reads is recorded.
-            foreach (var isMasked in new[] { PinFeatureMask.IsMasked, oneUnmasked, f => false, f => f % 3 == 0 })
+            // Whatever the mask, every feature the classifier reads is recorded, and every recorded one computed.
+            foreach (var isMasked in new[] { coreMask, oneUnmasked, f => false, f => f % 3 == 0 })
             {
                 bool[] recorded = PinFeatureMask.RecordedFeatures(isMasked, false);
+                bool[] computed = PinFeatureMask.ComputedFeatures(recorded);
                 foreach (int f in PinFeatureMask.UnmaskedIndices(isMasked))
                     Assert.IsTrue(recorded[f], ParquetScoreCache.PIN_FEATURE_NAMES[f]);
+                for (int f = 0; f < n; f++)
+                    Assert.IsTrue(!recorded[f] || computed[f], ParquetScoreCache.PIN_FEATURE_NAMES[f]);
             }
 
-            string defaultKey = PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => byDefault[f]);
+            string coreKey = PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => coreOnly[f]);
             string allKey = PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => recordAll[f]);
-            string oneKey = PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => oneFamily[f]);
-            Assert.AreEqual(string.Empty, defaultKey, @"the default must not change existing keys");
-            Assert.AreEqual(string.Empty, PinFeatureMask.RecordedFeaturesValidityKeySuffix());
+            string oneKey = PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => oneColumn[f]);
+            Assert.AreEqual(string.Empty, coreKey, @"the core set must not change existing keys");
             Assert.AreEqual(@";featrec=all;featavail=109", allKey);
             Assert.AreEqual(allKey, PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => maskNone[f]),
                 @"masking none records what recording all does, so the two share their scores");
-            Assert.AreEqual(@";featrec=tc_sum6;featavail=109", oneKey);
+            Assert.AreEqual(@";featcols=tc_corr_rank3", oneKey);
+            Func<int, bool> twoUnmasked = f => oneUnmasked(f) && f != tcFirst;
+            bool[] twoColumns = PinFeatureMask.RecordedFeatures(twoUnmasked, false);
+            CollectionAssert.AreEqual(oneFamily, PinFeatureMask.ComputedFeatures(twoColumns), @"the same family computed");
+            Assert.AreEqual(@";featcols=tc_sum6+tc_corr_rank3", PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => twoColumns[f]),
+                @"another column of a computed family is another file, so it keys differently");
 
-            // Under the default no task carries the term, so no default output directory is invalidated.
+            // The default set records its own columns, and keys them by name, so an edit of the list rekeys.
+            bool[] defaultRecorded = PinFeatureMask.RecordedFeatures(PinFeatureMask.FeatureSetMask(OspreyFeatureSet.@default), false);
+            var defaultColumns = Enumerable.Range(core, n - core).Where(f => defaultRecorded[f])
+                .Select(f => ParquetScoreCache.PIN_FEATURE_NAMES[f]).ToArray();
+            Assert.AreEqual(PinFeatureMask.DEFAULT_FEATURES.Length - core, defaultColumns.Length);
+            Assert.AreEqual(@";featcols=" + string.Join(@"+", defaultColumns),
+                PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => defaultRecorded[f]));
+
+            // Under the core set no task carries the term, so no core output directory is invalidated;
+            // under the HRAM default the scoring and rescoring tasks do.
             var tasks = OspreyTasks.Create().Pipeline;
             var ctx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
-            foreach (var task in tasks)
-                Assert.IsFalse(task.ValidityKey(ctx).Contains(@";featrec="), task.Name);
+            using (new FeatureSetScope(ResolutionMode.UnitResolution, null))
+            {
+                Assert.AreEqual(string.Empty, PinFeatureMask.RecordedFeaturesValidityKeySuffix());
+                foreach (var task in tasks)
+                {
+                    string key = task.ValidityKey(ctx);
+                    Assert.IsFalse(key.Contains(@";featrec=") || key.Contains(@";featcols="), task.Name);
+                }
+            }
+            using (new FeatureSetScope(ResolutionMode.HRAM, null))
+            {
+                string defaultKey = PinFeatureMask.RecordedFeaturesValidityKeySuffix();
+                Assert.AreEqual(PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => defaultRecorded[f]), defaultKey);
+                foreach (var task in tasks)
+                {
+                    bool expected = task.Name == PerFileScoringTask.TASK_NAME || task.Name == PerFileRescoreTask.TASK_NAME;
+                    Assert.AreEqual(expected, task.ValidityKey(ctx).Contains(defaultKey), task.Name);
+                }
+            }
         }
 
         /// <summary>
@@ -819,8 +867,8 @@ namespace pwiz.Osprey.Test
             {
                 Assert.AreEqual(f < firstHramOnly, PinFeatureMask.IsAvailable(f, unit), names[f]);
                 Assert.IsTrue(PinFeatureMask.IsAvailable(f, hram), names[f]);
-                Assert.AreEqual(f >= PinFeatureMask.CORE_FEATURE_COUNT, PinFeatureMask.DEFAULT_MASKED_FEATURES.Contains(names[f]),
-                    names[f] + @" masked by default like the other families");
+                Assert.AreEqual(f >= PinFeatureMask.CORE_FEATURE_COUNT, PinFeatureMask.FeatureSetMask(OspreyFeatureSet.core)(f),
+                    names[f] + @" masked by the core set like the other families");
             }
 
             // Unmasked: dropped at unit resolution, kept at HRAM, from the FDR vectors and the recorded columns.
@@ -843,12 +891,18 @@ namespace pwiz.Osprey.Test
             for (int f = 0; f < names.Length; f++)
                 Assert.AreEqual(f < PinFeatureMask.CORE_FEATURE_COUNT, onlySpec[f], names[f]);
 
-            // The default mask is the same at either resolution.
-            Func<int, bool> byDefault = f => PinFeatureMask.DEFAULT_MASKED_FEATURES.Contains(names[f]);
-            CollectionAssert.AreEqual(PinFeatureMask.UnmaskedIndices(byDefault),
-                PinFeatureMask.UnmaskedIndices(PinFeatureMask.MaskAtResolution(byDefault, unit)));
-            CollectionAssert.AreEqual(PinFeatureMask.RecordedFeatures(byDefault, false, hram),
-                PinFeatureMask.RecordedFeatures(byDefault, false, unit));
+            // The core set is the same at either resolution; the default set loses its HRAM-only members at unit resolution.
+            var byCore = PinFeatureMask.FeatureSetMask(OspreyFeatureSet.core);
+            CollectionAssert.AreEqual(PinFeatureMask.UnmaskedIndices(byCore),
+                PinFeatureMask.UnmaskedIndices(PinFeatureMask.MaskAtResolution(byCore, unit)));
+            CollectionAssert.AreEqual(PinFeatureMask.RecordedFeatures(byCore, false, hram),
+                PinFeatureMask.RecordedFeatures(byCore, false, unit));
+            var byDefault = PinFeatureMask.FeatureSetMask(OspreyFeatureSet.@default);
+            int[] defaultHram = PinFeatureMask.UnmaskedIndices(PinFeatureMask.MaskAtResolution(byDefault, hram));
+            int[] defaultUnit = PinFeatureMask.UnmaskedIndices(PinFeatureMask.MaskAtResolution(byDefault, unit));
+            CollectionAssert.AreEqual(PinFeatureMask.FeatureSetIndices(OspreyFeatureSet.@default), defaultHram);
+            CollectionAssert.AreEqual(defaultHram.Where(f => f < firstHramOnly).ToArray(), defaultUnit);
+            Assert.IsTrue(defaultUnit.Length < defaultHram.Length, @"the default set has HRAM-only members");
 
             // Recording everything available keys as all at either resolution, and HRAM also counts the
             // features, so its outputs from before the families are not adopted. Unit keys do not change.
@@ -860,10 +914,22 @@ namespace pwiz.Osprey.Test
                 @"at HRAM the unit-resolution columns are not all of them");
             Assert.AreEqual(string.Empty, PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => onlySpec[f], unit));
 
-            // The mask term likewise: default keys are the same everywhere, and only an HRAM mask counts.
-            const string defaultMask = @";featmask=default;fdrcols=unmasked";
-            Assert.AreEqual(defaultMask, PinFeatureMask.ValidityKeySuffix(null, hram));
-            Assert.AreEqual(defaultMask, PinFeatureMask.ValidityKeySuffix(null, unit));
+            // The mask term likewise: core keys are the old default's everywhere (the default at unit
+            // resolution), the default set lists what it uses at the resolution, all counts at HRAM,
+            // and only an HRAM mask counts.
+            const string coreMaskKey = @";featmask=default;fdrcols=unmasked";
+            Assert.AreEqual(coreMaskKey, PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.core, hram));
+            Assert.AreEqual(coreMaskKey, PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.core, unit));
+            Assert.AreEqual(coreMaskKey, PinFeatureMask.ValidityKeySuffix(null, unit));
+            Func<int[], string> setKey = used => @";featset=" + string.Join(@"+",
+                used.Where(f => f >= PinFeatureMask.CORE_FEATURE_COUNT).Select(f => names[f])) + @";fdrcols=unmasked";
+            Assert.AreEqual(setKey(defaultHram), PinFeatureMask.ValidityKeySuffix(null, hram));
+            Assert.AreEqual(setKey(defaultHram), PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.@default, hram));
+            Assert.AreEqual(setKey(defaultUnit), PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.@default, unit));
+            Assert.AreEqual(@";featset=all;featavail=109;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.all, hram));
+            Assert.AreEqual(@";featset=all;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.all, unit));
+            Assert.AreEqual(@";featmask=none;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix(Array.Empty<string>(), OspreyFeatureSet.core, unit),
+                @"a mask overrides the feature set");
             var none = Array.Empty<string>();
             Assert.AreEqual(@";featmask=none;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix(none, unit));
             Assert.AreEqual(@";featmask=none;featavail=109;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix(none, hram));

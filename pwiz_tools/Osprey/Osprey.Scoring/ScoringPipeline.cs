@@ -50,17 +50,17 @@ namespace pwiz.Osprey.Scoring
     {
         private readonly IOspreyLog _log;
         private readonly IScoringDiagnostics _diagnostics;   // nullable by contract; invoked null-conditionally
-        private readonly bool[] _recordedFeatures;           // null computes every feature
+        private readonly bool[] _computedFeatures;           // null computes every feature
 
         /// <summary>
         /// A pipeline that scores through a <see cref="CoelutionScorer"/> computing the PIN features
-        /// <paramref name="recordedFeatures"/> flags (see that constructor), or every feature when null.
+        /// <paramref name="computedFeatures"/> flags (see that constructor), or every feature when null.
         /// </summary>
-        public ScoringPipeline(IOspreyLog log, IScoringDiagnostics diagnostics, bool[] recordedFeatures = null)
+        public ScoringPipeline(IOspreyLog log, IScoringDiagnostics diagnostics, bool[] computedFeatures = null)
         {
             _log = log ?? OspreyLog.None;
             _diagnostics = diagnostics;
-            _recordedFeatures = recordedFeatures;
+            _computedFeatures = computedFeatures;
         }
 
 
@@ -268,7 +268,7 @@ namespace pwiz.Osprey.Scoring
             // Construct the per-window coelution scorer once. It captures the
             // log sink + the scoring-diagnostics sink (null when OSPREY_DIAGNOSTICS is off; the
             // scorer invokes it null-conditionally, so this is a no-op then).
-            var coelutionScorer = new CoelutionScorer(_diagnostics, _recordedFeatures);
+            var coelutionScorer = new CoelutionScorer(_diagnostics, _computedFeatures);
 
             // Hand windows out largest first, one at a time. A window is the unit of
             // parallel work, and Astral's busiest windows carry about twice the mean

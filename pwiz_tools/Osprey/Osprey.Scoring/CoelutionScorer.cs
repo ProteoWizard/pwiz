@@ -75,25 +75,26 @@ namespace pwiz.Osprey.Scoring
 
         private readonly IScoringDiagnostics _diagnostics;  // nullable by contract; invoked null-conditionally
         private readonly PeakDataExtractor _extractor;
-        private readonly bool[] _recordedFeatures;   // null computes every feature
+        private readonly bool[] _computedFeatures;   // null computes every feature
         private readonly bool _correlationPolish;    // A computed feature reads the wider-XIC median polish
 
         /// <summary>
-        /// A scorer that computes every PIN feature, or, when <paramref name="recordedFeatures"/> is
+        /// A scorer that computes every PIN feature, or, when <paramref name="computedFeatures"/> is
         /// given, only the features it flags beyond the first <see cref="OspreyFeatureCalculators.CORE_FEATURE_COUNT"/>,
-        /// which are always computed. An unflagged feature is left 0 in the vector and is not
-        /// written to the scores parquet (<c>PinFeatureMask.IsRecorded</c> decides both).
+        /// which are always computed. An unflagged feature is left 0 in the vector. The flags are
+        /// whole families (<c>PinFeatureMask.IsComputed</c>); the scores parquet writes only the
+        /// recorded columns of them (<c>PinFeatureMask.IsRecorded</c>).
         /// </summary>
-        public CoelutionScorer(IScoringDiagnostics diagnostics, bool[] recordedFeatures = null)
+        public CoelutionScorer(IScoringDiagnostics diagnostics, bool[] computedFeatures = null)
         {
-            if (recordedFeatures != null && recordedFeatures.Length != OspreyFeatureCalculators.FeatureCount)
+            if (computedFeatures != null && computedFeatures.Length != OspreyFeatureCalculators.FeatureCount)
             {
                 // Exception text for internal diagnostics, not displayed to user
                 throw new ArgumentException(string.Format(@"Expected {0} recorded-feature flags, not {1}",
-                    OspreyFeatureCalculators.FeatureCount, recordedFeatures.Length), nameof(recordedFeatures));
+                    OspreyFeatureCalculators.FeatureCount, computedFeatures.Length), nameof(computedFeatures));
             }
             _diagnostics = diagnostics;
-            _recordedFeatures = recordedFeatures;
+            _computedFeatures = computedFeatures;
             _correlationPolish = AnyComputed(CORRELATION_POLISH_READERS);
             _extractor = new PeakDataExtractor(diagnostics, AnyComputed(CORRELATION_CANDIDATE_READERS));
         }
@@ -384,11 +385,11 @@ namespace pwiz.Osprey.Scoring
 
 
         // True when ScoreCandidate computes the PIN feature at featureIndex: a core feature, or a
-        // recorded one.
+        // flagged one.
         private bool IsComputed(int featureIndex)
         {
-            return featureIndex < OspreyFeatureCalculators.CORE_FEATURE_COUNT || _recordedFeatures == null ||
-                   _recordedFeatures[featureIndex];
+            return featureIndex < OspreyFeatureCalculators.CORE_FEATURE_COUNT || _computedFeatures == null ||
+                   _computedFeatures[featureIndex];
         }
 
         // True when ScoreCandidate computes any of the named PIN features.
