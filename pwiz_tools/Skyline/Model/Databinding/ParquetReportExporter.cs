@@ -909,8 +909,25 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 // Each element has a value, a definition level and a repetition level, which are encoded
                 // separately, so the largest of them is what could get too big
-                long elementCount = Math.Max(1, _lists[rowIndex]?.Length ?? 0);
-                return elementCount * Math.Max(Unsafe.SizeOf<T>(), sizeof(int));
+                var list = _lists[rowIndex];
+                long elementCount = Math.Max(1, list?.Length ?? 0);
+                long byteCount = elementCount * Math.Max(Unsafe.SizeOf<T>(), sizeof(int));
+                // A character can take up to three bytes in UTF-8
+                if (list is ReadOnlyMemory<char>[] strings)
+                {
+                    foreach (var value in strings)
+                    {
+                        byteCount += 3L * value.Length;
+                    }
+                }
+                else if (list is ReadOnlyMemory<char>?[] nullableStrings)
+                {
+                    foreach (var value in nullableStrings)
+                    {
+                        byteCount += 3L * (value?.Length ?? 0);
+                    }
+                }
+                return byteCount;
             }
 
             public override void Pack(int startRow, int endRow)
