@@ -740,6 +740,15 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} has no reference XIC, which the training export reads. It was written by a run that did not request the export. Run the analysis again with the export requested..
+        /// </summary>
+        public static string ParquetScoreCache_LoadTrainingExportRows__0__has_no_reference_XIC__which_the_training_export_reads__It_was_written_by_a_run_that_did_not_request_the_export__Run_the_analysis_again_with_the_export_requested_ {
+            get {
+                return ResourceManager.GetString("ParquetScoreCache_LoadTrainingExportRows__0__has_no_reference_XIC__which_the_training_export_reads__It_was_written_by_a_run_that_did_not_request_the_export__Run_the_analysis_again_with_the_export_requested_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} is damaged: row {1} in row group {5} ({3} {2}) has a charge of 0, which is not a possible precursor charge. Delete the file and run {4} again to rewrite it..
         /// </summary>
         public static string ParquetScoreCache_RequireCharge__0__is_corrupt__row__1___entry_id__2___has_a_charge_of_0__which_is_not_a_possible_ {

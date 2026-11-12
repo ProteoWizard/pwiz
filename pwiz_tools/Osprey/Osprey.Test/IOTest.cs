@@ -2693,7 +2693,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 // EntryIds deliberately out of order so the write's canonical sort is
-                // exercised; distinct features + fragment blobs per row so a chunk-boundary
+                // exercised; distinct features + reference XIC blobs per row so a chunk-boundary
                 // row mismap surfaces as a value mismatch, not a silent pass.
                 var entries = new List<FdrEntry>();
                 foreach (uint id in new uint[] { 5, 2, 9, 1, 7, 3, 8 })
@@ -2712,8 +2712,6 @@ namespace pwiz.Osprey.Test
                         EndRt = id + 0.9,
                         ModifiedSequence = "PEPTIDE" + id,
                         Features = features,
-                        FragmentMzs = new[] { id + 0.25, id + 0.75 },
-                        FragmentIntensities = new float[] { id, id + 1 },
                         ReferenceXicRts = new[] { id + 1.5, id + 2.5, id + 3.5 },
                         ReferenceXicIntensities = new[] { id * 2.0, id * 3.0 },
                     });
@@ -2759,8 +2757,8 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(single[i].EndRt, multi[i].EndRt);
                     Assert.AreEqual(single[i].ModifiedSequence, multi[i].ModifiedSequence);
                     CollectionAssert.AreEqual(single[i].Features, multi[i].Features);
-                    CollectionAssert.AreEqual(single[i].FragmentMzs, multi[i].FragmentMzs);
-                    CollectionAssert.AreEqual(single[i].FragmentIntensities, multi[i].FragmentIntensities);
+                    CollectionAssert.AreEqual(single[i].ReferenceXicRts, multi[i].ReferenceXicRts);
+                    CollectionAssert.AreEqual(single[i].ReferenceXicIntensities, multi[i].ReferenceXicIntensities);
                 }
 
                 // An all-empty blob column across bounded row groups. Decoys form a
@@ -2781,8 +2779,6 @@ namespace pwiz.Osprey.Test
                         ScanNumber = id,
                         ModifiedSequence = "PEP" + id,
                         Features = new double[ParquetScoreCache.NUM_PIN_FEATURES],
-                        FragmentMzs = new[] { id + 0.5 },
-                        FragmentIntensities = new float[] { id },
                         // ReferenceXicRts / ReferenceXicIntensities left null (empty).
                     });
                 }
@@ -2799,7 +2795,6 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(0, e.ReferenceXicRts.Length,
                         "an all-empty reference-XIC column must read back as empty, not crash");
                     Assert.AreEqual(0, e.ReferenceXicIntensities.Length);
-                    Assert.AreEqual(1, e.FragmentMzs.Length);
                 }
             }
             finally
@@ -2979,8 +2974,7 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// The training export's projection of the same two-group file: the target rows only,
         /// each field it reads exactly as the full load reads it - the running ParquetIndex
-        /// across groups with the decoys skipped included - and no CWT candidates or fragment
-        /// arrays.
+        /// across groups with the decoys skipped included - and no CWT candidates.
         /// </summary>
         private static void AssertTrainingExportProjection(string path, List<FdrEntry> full)
         {
@@ -3004,8 +2998,6 @@ namespace pwiz.Osprey.Test
                 CollectionAssert.AreEqual(e.ReferenceXicRts, a.ReferenceXicRts);
                 CollectionAssert.AreEqual(e.ReferenceXicIntensities, a.ReferenceXicIntensities);
                 Assert.IsNull(a.CwtCandidates, "the CWT candidates are not decoded");
-                Assert.AreEqual(0, a.FragmentMzs.Length, "the fragment m/z are not decoded");
-                Assert.AreEqual(0, a.FragmentIntensities.Length, "the fragment intensities are not decoded");
             }
         }
 
@@ -3195,6 +3187,10 @@ namespace pwiz.Osprey.Test
                 // The stream output is genuinely multi-group (3 original groups + gap-fill).
                 Assert.IsTrue(CountRowGroups(streamPath) >= 3,
                     "streaming reconciled transfer must preserve bounded row groups");
+                // The CWT candidates stay in .scores.parquet, the only file they are read from.
+                Assert.IsTrue(ParquetScoreCache.HasColumn(originalPath, "cwt_candidates"));
+                Assert.IsFalse(ParquetScoreCache.HasColumn(streamPath, "cwt_candidates"),
+                    "the reconciled file must not copy the CWT candidates");
 
                 // Physical order: the streaming merge must emit rows already in canonical
                 // (entry_id, charge, scan_number) order -- gap-fill interleaved by scan,
@@ -3505,8 +3501,6 @@ namespace pwiz.Osprey.Test
                 BoundsSnr = id + 0.7,
                 ModifiedSequence = "PEPTIDE" + id,
                 Features = features,
-                FragmentMzs = new[] { baseValue + 0.25, baseValue + 0.75 },
-                FragmentIntensities = new[] { (float)baseValue, (float)(baseValue + 1) },
                 ReferenceXicRts = new[] { baseValue + 1.5, baseValue + 2.5 },
                 ReferenceXicIntensities = new[] { baseValue * 2.0, baseValue * 3.0 },
             };
@@ -3536,8 +3530,6 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(e.BoundsSnr, a.BoundsSnr);
                 Assert.AreEqual(e.ModifiedSequence, a.ModifiedSequence);
                 CollectionAssert.AreEqual(e.Features, a.Features);
-                CollectionAssert.AreEqual(e.FragmentMzs, a.FragmentMzs);
-                CollectionAssert.AreEqual(e.FragmentIntensities, a.FragmentIntensities);
                 CollectionAssert.AreEqual(e.ReferenceXicRts, a.ReferenceXicRts);
                 CollectionAssert.AreEqual(e.ReferenceXicIntensities, a.ReferenceXicIntensities);
             }

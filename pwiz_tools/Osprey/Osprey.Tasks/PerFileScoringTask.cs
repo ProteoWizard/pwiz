@@ -196,11 +196,15 @@ namespace pwiz.Osprey.Tasks
         // the peak-pick arm the base key carries. The pick belongs to THIS
         // stage - it chooses which candidate peak each precursor's row
         // describes - so a re-run under a different pick model must not
-        // adopt these parquets.
+        // adopt these parquets. The override adds whether the parquets carry
+        // the reference XIC, which only the training export reads.
         //
         // The data file is declared as the input it is, and a node that holds only its
         // <stem>.spectra.bin satisfies it: the cache stands in for an absent source (doc 00,
         // "HPC relay checklist"), so a harness ships the cache in its place.
+        public override string ValidityKey(PipelineContext ctx) =>
+            base.ValidityKey(ctx) + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config);
+
         public override IEnumerable<string> Inputs(PipelineContext ctx)
         {
             foreach (string libraryInput in ScoringTaskShared.LibraryInputs(ctx.Config))
@@ -1916,7 +1920,7 @@ namespace pwiz.Osprey.Tasks
 
             // Retention snapshot at the in-scoring PEAK -- this is the moment the memory
             // work targets. Here scoredEntries still hold every heavy per-entry array
-            // (Features / CwtCandidates / FragmentMzs / FragmentIntensities /
+            // (Features / CwtCandidates /
             // ReferenceXic*) and the library is still resident, but the resident MS2 is
             // gone on the streaming path (dropped above), which is the reduction this
             // snapshot exists to confirm. Those per-entry arrays are dropped a few lines
@@ -1951,7 +1955,8 @@ namespace pwiz.Osprey.Tasks
                 // the library since FdrEntry doesn't carry these).
                 var swParquet = Stopwatch.StartNew();
                 ParquetScoreCache.WriteScoresParquet(
-                    parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName);
+                    parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName,
+                    ParquetScoreCache.WritesReferenceXic(config));
                 swParquet.Stop();
                 ctx.LogInfo(string.Format(
                     OspreyTasksResources.PerFileScoringTask_ProcessFile_Wrote__0__precursor_candidate_peaks_to__1____2_s_,
@@ -1961,7 +1966,7 @@ namespace pwiz.Osprey.Tasks
                 // the parquet above and are reloadable by ParquetIndex, so drop them from
                 // the retained buffer to bound memory -- all N files' entries are held at
                 // once for FirstPassFDR, and these arrays dominate. Features is reloaded before
-                // first-pass Percolator (FirstPassFdrTask); CWT / fragments / ref-XIC are
+                // first-pass Percolator (FirstPassFdrTask); CWT / ref-XIC are
                 // reloaded from parquet in Stage 6 / 7. This brings the cold buffer to the
                 // same stub shape LoadFdrStubsFromParquet produces (see the FdrEntry field
                 // docs, which already document these as null on parquet-loaded stubs).
@@ -1969,8 +1974,6 @@ namespace pwiz.Osprey.Tasks
                 {
                     entry.Features = null;
                     entry.CwtCandidates = null;
-                    entry.FragmentMzs = null;
-                    entry.FragmentIntensities = null;
                     entry.ReferenceXicRts = null;
                     entry.ReferenceXicIntensities = null;
                 }
