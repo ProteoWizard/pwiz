@@ -37,6 +37,7 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf
@@ -527,7 +528,7 @@ namespace TestPerf
             lines.Add(string.Empty);
             lines.Add(@"End of the search wizard log:");
             lines.AddRange(LastLines((logText ?? string.Empty).Split('\n').Select(line => line.TrimEnd('\r')).ToList(), 60));
-            return string.Join(Environment.NewLine, lines);
+            return TextUtil.LineSeparate(lines);
         }
 
         private static IEnumerable<string> LastLines(IList<string> lines, int count)
