@@ -43,8 +43,8 @@ namespace pwiz.Osprey.Tasks
     /// sequential per-best-precursor RefSpectra + modifications + protein group +
     /// RetentionTimes emission, then metadata and
     /// finalize. Adds the experiment-level <c>RefSpectra.PrecursorQValue</c>,
-    /// <c>RefSpectra.PrecursorPep</c>, <c>RefSpectra.PeptideQValue</c> and
-    /// <c>Proteins.QValue</c> columns (<see cref="OspreyBlibWriter.AddSearchGlobalColumns"/>),
+    /// <c>RefSpectra.PrecursorPep</c>, <c>RefSpectra.PeptideQValue</c>, <c>RefSpectra.PeptidePep</c>,
+    /// <c>Proteins.QValue</c> and <c>Proteins.Pep</c> columns (<see cref="OspreyBlibWriter.AddSearchGlobalColumns"/>),
     /// and its <c>Proteins</c> rows are protein groups. Drives <see cref="OspreyBlibWriter"/>
     /// (the SQLite layer, through the one .blib writer in BiblioSpec.IO); this type owns only
     /// the per-spectrum row composition.
@@ -260,9 +260,9 @@ namespace pwiz.Osprey.Tasks
             // LogTag.COUNT is gated behind --perf-stats, so they appear only
             // under that flag (the same trap the calibration scoring loop records).
             int precompressed = 0;
-            using (var progress = new ProgressReporter(
-                       string.Format(OspreyTasksResources.BlibOutputWriter_PrecompressSpectra_Compressing__0__library_spectra_for_the_blib, blibN),
-                       blibN, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(
+                string.Format(OspreyTasksResources.BlibOutputWriter_PrecompressSpectra_Compressing__0__library_spectra_for_the_blib, blibN),
+                blibN, progress =>
             {
                 Parallel.For(0, blibN,
                     new ParallelOptions { MaxDegreeOfParallelism = nThreads },
@@ -274,8 +274,7 @@ namespace pwiz.Osprey.Tasks
                         if (libraryById.TryGetValue(blibEntries[i].Value.EntryId, out var libEntry))
                             spectra[i] = BlibSpectrum.FromLibraryEntry(libEntry, Array.Empty<string>());
                     });
-                progress.Complete();
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             return spectra;
         }
 
@@ -295,9 +294,9 @@ namespace pwiz.Osprey.Tasks
             var refIdByPrecursor = new Dictionary<(string, byte), long>(blibEntries.Count);
             // Reported for the same reason as the pre-compress pass above: this emits several
             // row families per spectrum into SQLite and ran silent inside the same 47 s gap.
-            using (var progress = new ProgressReporter(
-                       string.Format(OspreyTasksResources.BlibOutputWriter_PrecompressSpectra_Writing__0__spectra_to_the_blib, blibEntries.Count),
-                       blibEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(
+                string.Format(OspreyTasksResources.BlibOutputWriter_PrecompressSpectra_Writing__0__spectra_to_the_blib, blibEntries.Count),
+                blibEntries.Count, progress =>
             {
                 for (int blibIdx = 0; blibIdx < blibEntries.Count; blibIdx++)
                 {
@@ -345,18 +344,18 @@ namespace pwiz.Osprey.Tasks
                     // boundaries, q-value and run count, and its experiment-level values: the
                     // precursor q-value is the one in score; Pep is one value per entry for the
                     // whole analysis, so any observation of the precursor carries it; the
-                    // peptide q-value is computed once per modified sequence, so every charge
-                    // state's row gets the same value.
+                    // peptide q-value and PEP are computed once per modified sequence, so every
+                    // charge state's row gets the same values.
                     long refId = writer.AddSpectrum(spectrum,
                         sharedApex, sharedStart, sharedEnd,
                         scoreQvalue, fileId, nRunsDetected,
-                        new SearchGlobalValues(scoreQvalue, entry.Pep, entry.ExperimentPeptideQvalue));
+                        new SearchGlobalValues(scoreQvalue, entry.Pep, entry.ExperimentPeptideQvalue,
+                            entry.ExperimentPeptidePep));
                     proteinGroups.AddMappings(refId, entry.ModifiedSequence);
 
                     refIdByPrecursor[lookupKey] = refId;
                 }
-                progress.Complete();
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             return refIdByPrecursor;
         }
 
@@ -412,10 +411,10 @@ namespace pwiz.Osprey.Tasks
             Dictionary<(string, string), double[]> sharedBounds,
             double fdrThreshold)
         {
-            using (var progress = new ProgressReporter(
-                       string.Format(OspreyTasksResources.BlibOutputWriter_WriteRetentionTimesFileMajor_Writing__0__peak_retention_times_to_the_blib,
-                                     passingEntries.Count),
-                       passingEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(
+                string.Format(OspreyTasksResources.BlibOutputWriter_WriteRetentionTimesFileMajor_Writing__0__peak_retention_times_to_the_blib,
+                              passingEntries.Count),
+                passingEntries.Count, progress =>
             {
                 int done = 0;
                 foreach (var obs in passingEntries)
@@ -465,8 +464,7 @@ namespace pwiz.Osprey.Tasks
                         runQ,
                         isBest);
                 }
-                progress.Complete();
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
         }
 
         /// <summary>
@@ -479,7 +477,8 @@ namespace pwiz.Osprey.Tasks
         /// default shared-peptide mode, one under razor. A peptide with no group (a shared peptide
         /// under the unique mode, or a library entry with no proteins) gets no rows, which matches
         /// the protein q-value of 1.0 Osprey itself gives it. A group with no target winner in the
-        /// picked-protein competition also gets 1.0, as in the protein group report.</para>
+        /// picked-protein competition also gets 1.0, as in the protein group report, and a PEP of
+        /// 1.0 with it.</para>
         /// </summary>
         private sealed class ProteinGroupRows
         {
@@ -509,7 +508,8 @@ namespace pwiz.Osprey.Tasks
                 var accessions = new List<string>(_proteinFdr.Parsimony.Groups[(int)groupId].Accessions);
                 accessions.Sort(StringComparer.Ordinal); // Array.Sort OK: distinct accession strings, so the joined key is the same in any tie order
                 double qValue = _proteinFdr.ProteinFdr.GroupQvalues.TryGetValue(groupId, out double q) ? q : 1.0;
-                rowId = _writer.AddProteinGroup(string.Join(@";", accessions), qValue);
+                double pep = _proteinFdr.ProteinFdr.GroupPeps.TryGetValue(groupId, out double p) ? p : 1.0;
+                rowId = _writer.AddProteinGroup(string.Join(@";", accessions), qValue, pep);
                 _rowIdByGroup[groupId] = rowId;
                 return rowId;
             }

@@ -213,8 +213,7 @@ namespace pwiz.Osprey.IO
                     // showed up only as an unexplained gap between the reader's "100%" and the
                     // "Loaded N MS1 and M MS/MS spectra" line - long enough that a run looked
                     // hung, with nothing in the log naming the file being written.
-                    using (var progress = new ProgressReporter(OspreyIOResources.SpectraCache_SaveSpectraCache_Writing_spectra_cache, nMs2,
-                        string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                    ProgressReporter.Run(OspreyIOResources.SpectraCache_SaveSpectraCache_Writing_spectra_cache, nMs2, progress =>
                     {
                         long nWritten = 0;
                         foreach (int key in windowKeyOrder)
@@ -226,8 +225,7 @@ namespace pwiz.Osprey.IO
                                 WriteMs2Record(w, ms2Spectra[i]);
                             }
                         }
-                        progress.Complete();
-                    }
+                    }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
 
                     // MS1 records (acquisition order; every consumer reads them in full)
                     long ms1SectionOffset = fs.Position;

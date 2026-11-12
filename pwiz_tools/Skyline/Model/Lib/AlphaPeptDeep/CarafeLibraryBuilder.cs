@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -53,13 +54,14 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private const string INPUT_FILE_NAME = @"input.tsv";
         private const string OSPREY_OUTPUT_FILE_NAME = @"predict.blib";
 
-        // Column names for AlphaPeptDeep
+        // Column names for AlphaPeptDeep, and CarafeSharp's optional protein column
         private const string SEQUENCE = @"sequence";
         private const string MODS = @"mods";
         private const string MOD_SITES = @"mod_sites";
         private const string CHARGE = @"charge";
+        public const string PROTEIN_ID = PrecursorTable.PROTEIN_ID;
 
-        private static readonly IEnumerable<string> PrecursorTableColumnNames = new[] { SEQUENCE, MODS, MOD_SITES, CHARGE };
+        private static readonly IEnumerable<string> PrecursorTableColumnNames = new[] { SEQUENCE, MODS, MOD_SITES, CHARGE, PROTEIN_ID };
 
         protected override string ToolName => ALPHAPEPTDEEP;
 
@@ -181,6 +183,22 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         /// <summary>The entrapment peptides among the document's, flagged as such in the DecoyPairs table; null for none.</summary>
         public ICollection<Target> EntrapmentTargets { get; set; }
 
+        /// <summary>
+        /// The protein label CarafeSharp gave each generated entrapment peptide (sequence to label),
+        /// its own <c>_p_target</c> protein or the target protein it was placed in; null for none.
+        /// The library's Proteins table gets it with the document's proteins (<see cref="LibraryPeptideProteins"/>).
+        /// </summary>
+        public IReadOnlyDictionary<string, string> EntrapmentProteinIds { get; set; }
+
+        private LibraryPeptideProteins _peptideProteins;
+
+        /// <summary>The protein text the precursor table carries for <paramref name="peptide"/>.</summary>
+        private string GetProteinId(PeptideDocNode peptide)
+        {
+            _peptideProteins ??= new LibraryPeptideProteins(Document, EntrapmentProteinIds);
+            return _peptideProteins.GetProteinId(peptide);
+        }
+
         /// <summary>Whether the built library gets a DecoyPairs table marking its decoys and entrapment peptides.</summary>
         public bool WritesDecoyPairs => DecoyMethod != null || (EntrapmentTargets != null && EntrapmentTargets.Count > 0);
 
@@ -203,7 +221,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         protected override string GetTableRow(PeptideDocNode peptide, ModifiedSequence modifiedSequence,
             int charge, bool training, string modsBuilder, string modSitesBuilder)
         {
-            return new[] { modifiedSequence.GetUnmodifiedSequence(), modsBuilder, modSitesBuilder, charge.ToString() }
+            return new[] { modifiedSequence.GetUnmodifiedSequence(), modsBuilder, modSitesBuilder, charge.ToString(), GetProteinId(peptide) }
                 .ToDsvLine(TextUtil.SEPARATOR_TSV);
         }
 

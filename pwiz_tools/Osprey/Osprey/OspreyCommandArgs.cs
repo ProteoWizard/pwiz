@@ -159,11 +159,12 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_INPUT_LIST = new OspreyArgument(@"input-list",
             () => GetPathToFile(EXT_TXT), (c, p) => c._inputListPaths.Add(p.Value)) { DescriptionArgs = () => new object[] { ARG_INPUT.ShortArgumentText } };
         public static readonly OspreyArgument ARG_LIBRARY = new OspreyArgument(OspreyArgNames.LIBRARY,
-            () => GetPathToFile(LibrarySource.EXT_BLIB) + @"|" + TextUtil.EXT_TSV, (c, p) => c._libraryPath = p.Value)
+            () => LibraryPathValue, (c, p) => c._libraryPath = p.Value)
             {
                 ShortName = @"l",
                 DescriptionArgs = () => new object[] { LibrarySource.EXT_BLIB, TextUtil.EXT_TSV, ARG_DECOYS_IN_LIBRARY.ArgumentText,
-                    ARG_DECOY_PAIRING_MANIFEST.ArgumentText, ARG_FASTA.ArgumentText }
+                    ARG_DECOY_PAIRING_MANIFEST.ArgumentText, ARG_FASTA.ArgumentText, LibrarySource.EXT_PARQUET,
+                    LibrarySource.EXT_SPECLIB }
             };
         public static readonly OspreyArgument ARG_OUTPUT = new OspreyArgument(OspreyArgNames.OUTPUT,
             () => GetPathToFile(LibrarySource.EXT_BLIB), (c, p) => c._outputPath = p.Value)
@@ -189,7 +190,8 @@ namespace pwiz.Osprey
             () => GetPathToFile(LibrarySource.EXT_BLIB), (c, p) => c._config.ExportLibraryBlib = p.Value)
             {
                 DescriptionArgs = () => new object[] { ARG_LIBRARY.ArgumentText, LibrarySource.EXT_BLIB,
-                    ARG_DECOYS_IN_LIBRARY.ArgumentText, ARG_DECOY_PAIRING_MANIFEST.ArgumentText, TextUtil.EXT_TSV }
+                    ARG_DECOYS_IN_LIBRARY.ArgumentText, ARG_DECOY_PAIRING_MANIFEST.ArgumentText, TextUtil.EXT_TSV,
+                    LibrarySource.EXT_PARQUET }
             };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_GENERAL_IO =
@@ -254,11 +256,17 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_ENTRAPMENT_FASTA = new OspreyArgument(OspreyArgNames.ENTRAPMENT_FASTA,
             () => GetPathToFile(EXT_FASTA), (c, p) => c.SetLibraryBuildOption(p, b => b.EntrapmentFastaPath = p.Value))
             { DescriptionArgs = () => new object[] { ARG_ENTRAPMENT.ArgumentText } };
+        // Entrapment placed on target proteins, a ratio added to --entrapment's: CarafeSharp's
+        // --entrapment-in-targets, declared here because --entrapment is Osprey's own.
+        public static readonly OspreyArgument ARG_ENTRAPMENT_IN_TARGETS = new OspreyArgument(OspreyArgNames.ENTRAPMENT_IN_TARGETS,
+            RATIO_VALUE, (c, p) => c.SetLibraryBuildOption(p, b => b.EntrapmentInTargetsRatio = ParseDouble(p)))
+            { DescriptionArgs = () => new object[] { ARG_ENTRAPMENT.ArgumentText, ARG_ENTRAPMENT_IN_TARGETS.ArgumentText,
+                EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO } };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_LIBRARY_BUILD =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Library_Build, true,
                 ARG_FASTA, ARG_PRECURSORS, ARG_TRAINING_INPUT, ARG_TRAINING_INPUT_LIST, ARG_MODEL, ARG_DEVICE, ARG_TORCH_RUNTIMES,
-                ARG_INSTALL_CUDA_RUNTIME, ARG_ENTRAPMENT, ARG_ENTRAPMENT_FASTA);
+                ARG_INSTALL_CUDA_RUNTIME, ARG_ENTRAPMENT, ARG_ENTRAPMENT_FASTA, ARG_ENTRAPMENT_IN_TARGETS);
 
         // CarafeSharp's declarations, declared again for Osprey's parser: the name, the value and
         // its listed values come from CarafeSharp, and the handler records the value into the
@@ -287,7 +295,13 @@ namespace pwiz.Osprey
         /// <summary>The library argument as the usage lines and the missing-argument errors show it.</summary>
         internal static string UsageLibrary
         {
-            get { return ARG_LIBRARY.ShortArgumentText + @" " + GetPathToFile(LibrarySource.EXT_BLIB) + @"|" + TextUtil.EXT_TSV; }
+            get { return ARG_LIBRARY.ShortArgumentText + @" " + LibraryPathValue; }
+        }
+
+        /// <summary>The value the library argument takes, as its help and the usage lines show it.</summary>
+        private static string LibraryPathValue
+        {
+            get { return GetPathToFile(LibrarySource.EXT_BLIB) + @"|" + TextUtil.EXT_TSV + @"|" + LibrarySource.EXT_PARQUET; }
         }
 
         /// <summary>The output argument as the usage lines and the missing-argument errors show it.</summary>
@@ -460,17 +474,21 @@ namespace pwiz.Osprey
             { Scope = OspreyPropertyScope.search, DescriptionArgs = () => new object[] { TextUtil.EXT_TSV, string.Join(@", ", new OspreyConfig().DecoyPrefixes), LibrarySource.EXT_BLIB } };
         public static readonly OspreyArgument ARG_DECOY_PAIRING_MANIFEST = new OspreyArgument(OspreyArgNames.DECOY_PAIRING_MANIFEST,
             () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.DecoyPairingManifestPath = p.Value)
-            { DescriptionArgs = () => new object[] { ARG_DECOYS_IN_LIBRARY.ArgumentText, TextUtil.EXT_TSV, LibrarySource.EXT_BLIB } };
+            { DescriptionArgs = () => new object[] { ARG_DECOYS_IN_LIBRARY.ArgumentText, TextUtil.EXT_TSV, LibrarySource.EXT_BLIB,
+                LibrarySource.EXT_PARQUET } };
+        public static readonly OspreyArgument ARG_STRIP_ENTRAPMENT = new OspreyArgument(OspreyArgNames.STRIP_ENTRAPMENT,
+            (c, p) => c._config.StripEntrapment = true)
+            { Scope = OspreyPropertyScope.search, DescriptionArgs = () => new object[] { LibrarySource.EXT_BLIB, ARG_MODEL_DIAGNOSTICS.ArgumentText } };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_DECOYS =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Decoys, true,
-                ARG_DECOYS_IN_LIBRARY, ARG_DECOY_PAIRING_MANIFEST);
+                ARG_DECOYS_IN_LIBRARY, ARG_DECOY_PAIRING_MANIFEST, ARG_STRIP_ENTRAPMENT);
 
         // --- Training Export ---------------------------------------------------------------
         // A PerFileRescoring product (docs/22-training-export.md; P17 in
-        // docs/00-pipeline-architecture.md). Off, nothing about the run changes; on, it adds
-        // one <stem>.training.parquet per run, and adding it to a finished directory writes
-        // only the exports and re-scores nothing.
+        // docs/00-pipeline-architecture.md). On, it adds one <stem>.training.parquet per run and
+        // writes the reference XIC it reads into the scores parquets, which runs without it
+        // leave out; so adding it to a finished directory re-scores Stages 4 and 6 (#5023).
         public static readonly OspreyArgument ARG_TRAINING_EXPORT = new OspreyArgument(OspreyArgNames.TRAINING_EXPORT,
             (c, p) => c._config.TrainingExport.Enabled = true)
             { DescriptionArgs = () => new object[] { @"<stem>" + TrainingExportParquet.EXT, ARG_TRAINING_EXPORT_MAX_Q.ArgumentText } };
@@ -626,6 +644,14 @@ namespace pwiz.Osprey
                 PrintUsage(p.Value);
                 Environment.Exit(0);
             }) { ShortName = @"h", OptionalValue = true, DescriptionArgs = () => new object[] { @"[ascii|unicode|sections|html|properties|<Section>]" } };
+        // The catalog of the second, developer-only level of controls (EnvVarUsage). Listing them
+        // is cataloging only: none of them becomes an argument, and the two levels stay distinct.
+        public static readonly OspreyArgument ARG_HELP_ENV = new OspreyArgument(@"help-env",
+            () => ArgumentBase.ValuesToExample(ArgUsage.FORMAT_ASCII, @"unicode"), (c, p) =>
+            {
+                Console.Out.Write(EnvVarUsage.BuildUsage(p.Value, USAGE_WIDTH));
+                Environment.Exit(0);
+            }) { OptionalValue = true };
         public static readonly OspreyArgument ARG_VERSION = new OspreyArgument(@"version",
             (c, p) =>
             {
@@ -643,7 +669,7 @@ namespace pwiz.Osprey
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_INFO =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Diagnostics_Info, true,
-                ARG_MODEL_DIAGNOSTICS, ARG_HELP, ARG_VERSION, ARG_INTERNAL_CULTURE);
+                ARG_MODEL_DIAGNOSTICS, ARG_HELP, ARG_HELP_ENV, ARG_VERSION, ARG_INTERNAL_CULTURE);
 
         public static IEnumerable<IUsageBlock> UsageBlocks
         {

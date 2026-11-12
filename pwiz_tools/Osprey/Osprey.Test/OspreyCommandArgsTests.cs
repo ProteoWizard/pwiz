@@ -225,6 +225,17 @@ namespace pwiz.Osprey.Test
             // Decoys.
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY).DecoysInLibrary);
             Assert.AreEqual(@"m.tsv", Parse(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY, OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST + @"m.tsv").DecoyPairingManifestPath);
+            Assert.IsFalse(Parse(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY).StripEntrapment);
+            Assert.IsTrue(Parse(OspreyCommandArgs.ARG_STRIP_ENTRAPMENT).StripEntrapment);
+
+            // Library build: entrapment placed on target proteins is a ratio of its own beside --entrapment's.
+            var entrapment = Parse(OspreyCommandArgs.ARG_FASTA + @"p.fasta", OspreyCommandArgs.ARG_ENTRAPMENT + @"0.1",
+                OspreyCommandArgs.ARG_ENTRAPMENT_IN_TARGETS + @"0.2").LibraryBuild;
+            Assert.IsTrue(entrapment.Entrapment);
+            Assert.AreEqual(0.1, entrapment.EntrapmentRatio);
+            Assert.AreEqual(0.2, entrapment.EntrapmentInTargetsRatio);
+            Assert.IsNull(Parse(OspreyCommandArgs.ARG_FASTA + @"p.fasta", OspreyCommandArgs.ARG_ENTRAPMENT).LibraryBuild.EntrapmentInTargetsRatio);
+            Assert.ThrowsException<ArgumentException>(() => Parse(OspreyCommandArgs.ARG_FASTA + @"p.fasta", OspreyCommandArgs.ARG_ENTRAPMENT_IN_TARGETS + @"x"));
 
             // Training export: off by default, and each setting lands where the task reads it.
             var noExport = Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").TrainingExport;
@@ -633,8 +644,8 @@ namespace pwiz.Osprey.Test
                 OspreyArgNames.OUTPUT_DIR, @"export-library", OspreyArgNames.FASTA, OspreyArgNames.PRECURSORS,
                 OspreyArgNames.TRAINING_INPUT, OspreyArgNames.TRAINING_INPUT_LIST, OspreyArgNames.MODEL,
                 OspreyArgNames.TORCH_RUNTIMES, OspreyArgNames.INSTALL_CUDA_RUNTIME, OspreyArgNames.ENTRAPMENT,
-                OspreyArgNames.ENTRAPMENT_FASTA, OspreyArgNames.TASK, OspreyArgNames.TRAINING_SEARCH,
-                OspreyArgNames.TASK_FILES, @"timestamp", @"memstamp", @"log-file", @"help", @"version", @"culture",
+                OspreyArgNames.ENTRAPMENT_FASTA, OspreyArgNames.ENTRAPMENT_IN_TARGETS, OspreyArgNames.TASK, OspreyArgNames.TRAINING_SEARCH,
+                OspreyArgNames.TASK_FILES, @"timestamp", @"memstamp", @"log-file", @"help", @"help-env", @"version", @"culture",
                 // Developer options and outputs a user of a host's settings page has no use for
                 OspreyArgNames.DECOY_PAIRING_MANIFEST, OspreyArgNames.TRAINING_EXPORT, @"training-export-claimant-q",
                 @"training-export-xics", @"perf-stats",

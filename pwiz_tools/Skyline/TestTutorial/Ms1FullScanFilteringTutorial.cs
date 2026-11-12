@@ -1080,17 +1080,7 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForConditionUI(() => msGraph.PropertiesVisible);
             WaitForGraphs();
-            FullScanProperties currentProperties = null;
-            RunUI(() =>
-            {
-                currentProperties = msGraph.PropertiesSheet.SelectedObject as FullScanProperties;
-            });
-            Assert.IsNotNull(currentProperties);
-            // To write new json string for the expected property values into the output stream uncomment the next line
-            //Trace.Write(currentProperties.Serialize());
-            var difference = expectedProperties.GetDifference(currentProperties);
-
-            Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
+            var currentProperties = WaitForPropertySheet(() => msGraph.PropertiesSheet.SelectedObject, expectedProperties);
             Assert.IsTrue(propertiesButton.Checked);
 
             // make sure the properties are updated when the spectrum changes

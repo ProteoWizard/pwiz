@@ -35,11 +35,11 @@ experiment-wide. There is no third scope: experiment-wide content is written onc
 | `<stem>.2nd-pass.fdr_decoys.bin` | run | Custom binary **v2** (v2 adds the validity stamp trailer) | `Osprey.IO/Pass2CompetitionDecoys.cs` | Per-run second-pass competition decoys; written before the scores sidecar |
 | `<stem>.reconciliation.json` | run | JSON (Newtonsoft) v4 | `Osprey.IO/ReconciliationFile.cs` | The run's Stage 6 plan, written by `PerFileRescoring` as it plans the run: actions, gap-fill targets, refined RT calibration (section 5) |
 | `<blib-stem>.1st-pass.consensus.json` | exp | JSON | `Osprey.Tasks/Stage6ConsensusFile.cs` | The cross-run consensus every run's plan reads: consensus RTs and the two passing sets (section 5a) |
-| `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` | exp | Custom binary **v3**, 32-byte header + 44-byte records + validity stamp trailer | `Osprey.IO/FdrExperimentSidecar.cs` | The experiment-scope columns: precursor q, peptide q, PEP, protein q, aggregate score. Both q-values are FLOORED to the precursor's best run before they are written (#4522) - see 07-fdr-control.md 3j. **Name** from the output blib, **directory** from `ResolveOutputDir` |
+| `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` | exp | Custom binary **v4**, 32-byte header + 52-byte records + validity stamp trailer | `Osprey.IO/FdrExperimentSidecar.cs` | The experiment-scope columns: precursor q, peptide q, PEP, protein q, aggregate score, peptide PEP (v4). Both q-values are FLOORED to the precursor's best run before they are written (#4522) - see 07-fdr-control.md 3j. **Name** from the output blib, **directory** from `ResolveOutputDir` |
 | `<blib-stem>.1st-pass.retained_base_ids.bin` | exp | Custom binary **v2**, 32-byte header + 4-byte records + validity stamp trailer | `Osprey.IO/RetainedBaseIdSidecar.cs` | The join-wide compaction set: every base_id the Stage 6 rescore retains, ascending - the distinct base_ids of every run's first-pass survivors. Written once when the consensus pass ends. (It used to add each planned action target's base_id, which never added one: every action targets a survivor.) Bounded by the library, not by run count - on the 446-run CHS cohort of #4650 it is 2,502,512 bytes for 625,620 ids, against the megabytes each of the 446 `reconciliation.json` envelopes spends restating the first half. (Counts travel with their run: `RetainedBaseIdSidecar` quotes 744,943 ids / 2.98 MB from a different arm of the same cohort.) Eight read sites across four tasks: `FirstPassFdrTask` (x3), `PerFileScoringTask`, `PerFileRescoreTask` (x3: one of them the streamed Stage 7 join, one the training export's library load on its export-only arm, which retains fragments for these ids alone and loads everything without the file) and Stage 7's library-fragment release (#4650). **Absence is fatal at most of them, and deliberately so** - the fallback would be rebuilding the union from every envelope, the O(runs) pre-pass this file exists to delete - but not at all of them: `PerFileRescoreTask.BuildPerRunHydrate` takes the null-returning reader and declines the per-run shape, because the run is by then already failing elsewhere for a named reason |
 | `<blib-stem>.1st-pass.model.json` | exp | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | Frozen first-pass Percolator model (normalization plus weights and biases, a few hundred KB, or per-fold tree ensembles under `OSPREY_FDR_MODEL=gbdt`, about 3.4 MB), plus `TrainingAnalysis`, the training-set feature analysis the `--model-diagnostics` report reads, because the fold training sets it describes exist nowhere else (07, "Training-set feature analysis"). Written whenever FirstPassFDR trains a model; not rewritten when it adopts the one on disk. The protein-compact stratum is NOT in it - see the next row. **Name** from the output blib, **directory** from `ResolveOutputDir`, like the experiment sidecar. Until 2026-10 it was copied identically beside every run as `<stem>.1st-pass.model.json` |
 | `<blib-stem>.1st-pass.stratum.json` | exp | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | The protein-compact stratum: base ids of every library precursor whose peptide belongs to a protein with >=2 detected peptides, ascending. Absent under every mode but protein-compact. A SECOND file rather than a member of the model file because a different PHASE produces it - the model exists when training ends, the stratum only after first-pass protein FDR resolves which proteins carry two detected peptides. Writing one file meant holding the model in memory for the whole first pass, which made a run killed in the score passes unrecoverable. `LoadForAnalysis` merges the two on read when their stamps match. Until 2026-10 it was copied beside every run: 82 x 9.6 MB = 790 MB on the SEA-AD cohort |
-| `<library-leaf>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/LibraryBlibWriter.cs` from `Osprey.IO/LibraryLoader.cs` | The derived library: a `.tsv` source's FINISHED form (deduplicated, decoys marked and paired, pairing ids assigned, a `DecoyPairs` table for a decoy or entrapment library), written once from the parse and read on every later run through `BlibLoader`, the same branch a `.blib` source takes. Validated by its `LibMetadata` row `osprey.library_hash` (section 7) |
+| `<library-leaf>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/LibraryBlibWriter.cs` from `Osprey.IO/LibraryLoader.cs` | The derived library: a `.tsv` or `.parquet` source's FINISHED form (deduplicated, decoys marked and paired, pairing ids assigned, a `DecoyPairs` table for a decoy or entrapment library), written once from the parse and read on every later run through `BlibLoader`, the same branch a `.blib` source takes. Validated by its `LibMetadata` row `osprey.library_hash` (section 7) |
 | `<output>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/OspreyBlibWriter.cs` over `Shared/BiblioSpec/BiblioSpec.IO/BlibWriter.cs` | Final output; see 13-blib-output-schema.md |
 | `<stem>.training.parquet` | run | Apache Parquet (ZSTD) v2 | `CarafeSharp.Contracts/TrainingExportParquet.cs` | `--training-export` only: `PerFileRescoring`'s per-ion training evidence, schema in [22-training-export](22-training-export.md) (section 9) |
 
@@ -292,17 +292,30 @@ binary blob columns, boundary columns, and a footer of key-value metadata. Writt
 
 ### Schema
 
-`BuildWriteSchema` (`ParquetScoreCache.cs:142`) writes 19 fixed columns followed by the 21 PIN
-feature columns. Column types are deliberately aligned with Rust: `entry_id` and `scan_number`
+`WriteFields` (`ParquetScoreCache.cs`) writes 15 fixed columns followed by the 21 PIN
+feature columns (14 in `.scores-reconciled.parquet`, plus its `score_index`; 2 more in each
+with `--training-export`; see below). Column types are deliberately aligned with Rust: `entry_id` and `scan_number`
 are `UInt32`, `charge` is `UInt8`, so a C#-written parquet loads under Rust's strict downcasts
-and vice versa (`ParquetScoreCache.cs:90`). Pre-2026-04-19 C#-written parquets used `Int32` and
+and vice versa (`ParquetScoreCache.cs:90`). The column SET is no longer the same: C# leaves out
+Rust's `fragment_mzs` / `fragment_intensities`, the reconciled `cwt_candidates`, and without
+`--training-export` the reference XIC (#5023). No gate feeds a C#-written parquet to Rust; the
+cross-implementation comparison runs each implementation end to end. Pre-2026-04-19 C#-written parquets used `Int32` and
 must be regenerated.
 
 - **Identity (8)**: `entry_id`, `is_decoy`, `sequence`, `modified_sequence`, `charge`,
   `precursor_mz`, `protein_ids` (nullable, `;`-joined), `file_name`.
 - **Boundary (6)**: `scan_number`, `apex_rt`, `start_rt`, `end_rt`, `bounds_area`, `bounds_snr`.
-- **Binary (5)**: `cwt_candidates`, `fragment_mzs`, `fragment_intensities`,
-  `reference_xic_rts`, `reference_xic_intensities`.
+- **Binary (1-3)**: `cwt_candidates` (`.scores.parquet` only), and `reference_xic_rts`,
+  `reference_xic_intensities` (with `--training-export` only).
+
+Rust also writes `fragment_mzs` and `fragment_intensities`, a verbatim copy of each row's
+library spectrum. C# stopped writing them (#5023): nothing read them back, and they were about
+10% of a SEA-AD scoring parquet. `cwt_candidates` is read only from `.scores.parquet`, by
+Stage 6 reconciliation planning, so `.scores-reconciled.parquet` does not carry it either.
+`reference_xic_*` is read only by the training export, so both files carry it only when
+`--training-export` is given (`ParquetScoreCache.WritesReferenceXic`).
+Every read is by column name, so an older file holding these columns still reads; they are
+ignored.
 - **Features (21)**: the names in `PIN_FEATURE_NAMES` (`ParquetScoreCache.cs:51`), all Float64,
   in the exact Rust `get_pin_feature_names()` order.
 
@@ -311,17 +324,15 @@ Rows are written in canonical sorted order `(entry_id, charge, scan_number)`
 regardless of which implementation wrote them. Compression is ZSTD
 (`writer.CompressionMethod = CompressionMethod.Zstd`, `ParquetScoreCache.cs:270`, `:462`).
 
-**Binary blob encoding.** The `FdrEntry` write overload (`ParquetScoreCache.cs:299`) encodes the
-blobs exactly as Rust: `fragment_mzs` / `reference_xic_*` as little-endian f64 with no length
-prefix (`EncodeF64Blob`, `ParquetScoreCache.cs:635`); `fragment_intensities` as little-endian
-f32 (`EncodeF32Blob`, `ParquetScoreCache.cs:660`); `cwt_candidates` via `CwtCandidateCodec`
+**Binary blob encoding.** The `FdrEntry` write overload (`BuildFdrEntryColumns`) encodes the
+blobs exactly as Rust: `reference_xic_*` as little-endian f64 with no length
+prefix (`EncodeF64Blob`); `cwt_candidates` via `CwtCandidateCodec`
 with a mandatory 4-byte count prefix so an empty candidate list is a zero-length blob, never a
 null cell (`ParquetScoreCache.cs:399`–`:422`). Length is recovered on read as `bytes /
 sizeof(element)`.
 
-> **Note:** the older `CoelutionScoredEntry` write overload (`ParquetScoreCache.cs:182`) still
-> writes the five binary columns as null placeholders (`ParquetScoreCache.cs:114`); populating
-> them there is marked a future sprint. The pipeline's actual per-file writes go through the
+> **Note:** the older `CoelutionScoredEntry` write overload, used only by tests, still
+> writes the binary columns as null placeholders. The pipeline's actual per-file writes go through the
 > `FdrEntry` overload, which populates them.
 
 ### Selective loaders
@@ -334,7 +345,7 @@ Mirroring Rust's specialized loaders, the C# side never loads the full parquet u
 | `ReadFdrStubScalars` (`:788`) | 5 scalar columns, zero-alloc callback | Streams stub scalars for the first-pass FDR projection without materializing `FdrEntry`s |
 | `LoadCwtCandidatesFromParquet` (`:835`) | `cwt_candidates` only | Stage 6 reconciliation planning |
 | `LoadPinFeaturesFromParquet` (`:981`) | 21 feature columns | SVM re-scoring |
-| `LoadFullFdrEntries` (`:897`) | all scalar + feature + blob columns | Full rehydration for Stage 6 reconciled write-back |
+| `LoadFullFdrEntries` | all scalar + feature + blob columns | Full rehydration (tests); the Stage 6 reconciled write-back streams the same columns but the CWT candidates |
 
 `ParquetIndex` bookkeeping is essential: both write overloads and every loader assign
 `ParquetIndex` to the post-sort row so Stage 5's per-file CWT lookup indexes each entry's own
@@ -599,9 +610,10 @@ column values added by `Osprey.IO/OspreyBlibWriter.cs`.
 ## 7. The derived library (`<library-leaf>.blib`)
 
 **C# source**: `Osprey.IO/LibraryLoader.cs` (`Load`), `Osprey.IO/LibraryBlibWriter.cs`,
-`Osprey.IO/BlibLoader.cs`. A `.tsv` library is parsed once; its FINISHED form - normalized,
-deduplicated, decoys marked and paired, every entry's pairing id assigned - is written in the
-cache directory as `<library file name>.blib` (`lib.tsv.blib`), the library's transfer format,
+`Osprey.IO/BlibLoader.cs`. A `.tsv` or DIA-NN `.parquet` library is parsed once; its FINISHED
+form - normalized, deduplicated, decoys marked and paired, every entry's pairing id assigned - is
+written in the cache directory as `<library file name>.blib` (`lib.tsv.blib`,
+`report-lib.parquet.blib`), the library's transfer format,
 through the same writer `--export-library` uses, with a `DecoyPairs` table when the library has
 decoys or entrapment. Every later run loads that file through the blib branch of `Load`
 (`BlibLoader`, the `DecoyPairs` table, the contract check, Normalize and Deduplicate as
@@ -613,7 +625,8 @@ carries them, but no output reads them.
 
 **Validity**: the `LibMetadata` row `osprey.library_hash` (`OspreyBlibWriter.KEY_LIBRARY_HASH`),
 SHA-256 of the library composition - the source's identity (name, size, mtime), the decoy
-configuration, the pairing manifest's identity, the TSV reader's term - plus
+configuration, the pairing manifest's identity, the TSV reader's term (for a `.parquet`,
+`parquet_reader:` with both its own version and the TSV reader's, whose row assembly it shares) - plus
 `BlibLoader.CacheTerm` (the blib reader's version and the fragment tolerance it types within),
 because the file is read by that reader and a change to what it makes of a blib must rebuild
 it. A mismatch logs that the derived library was built from a different version or
@@ -770,7 +783,8 @@ composition term `blib_reader:` does (with the fragment tolerance the typed peak
 within), so one edit moves the key term and the composition term together. The tolerance itself
 needs no key term: it is in the search hash. A DIA-NN TSV search keys as before; its derived
 library's hash carries `tsv_reader:` and, since the derived file is read by the blib reader,
-`blib_reader:` too, so a change to either reader rebuilds it once (section 7).
+`blib_reader:` too, so a change to either reader rebuilds it once (section 7). A DIA-NN
+`.parquet` search keys with `;tsvreader=5;parquetreader=1`, both readers' versions.
 
 Read that table as a worked example of P15's asymmetry. Every row was added after an
 under-inclusive key reused something it should not have, and none of them cost more than

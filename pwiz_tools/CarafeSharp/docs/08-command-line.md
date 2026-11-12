@@ -109,6 +109,21 @@ reads, `--log-file`, `--timestamp` and `--memstamp` (Osprey's `--log-file`, `--t
 `01-model-spec.md`, `06-saved-models.md` and `07-chronologer.md`; the help has the one-line
 version of each.
 
+The entrapment FASTA build has one option of its own, `--entrapment-in-targets <ratio>` (with
+`--entrapment`). Carafe puts every entrapment peptide on an entrapment protein of its own (the
+`_p_target` accession), which no protein-aware scoring step can ever count as detected, so such
+a step is invisible to the entrapment estimate. This option adds, for that fraction of the
+targets, an entrapment peptide placed on a target protein drawn uniformly from the proteins in
+the library: `--entrapment-ratio 0.1 --entrapment-in-targets 0.1` is 20% entrapment, half of it
+on target proteins (the two together at most 1.0 and at least 0.1). The targets that carry
+entrapment are drawn as before from the total ratio, so a build without the option is
+byte-identical to Carafe's; which of them go on a target protein, and which protein, is a seeded
+draw of its own (default seed 20261101). The peptide and its decoy carry that protein's label
+without the suffix, its FASTA header advances that protein's `_pepNNNNN` counter, and only the
+manifest's `peptide_type` (`p_target`) marks it as entrapment. The FASTA and manifest formats
+do not change. The design and what it found are in
+`pwiz_tools/Osprey/docs/protein-shuffled-entrapment.md`.
+
 ## The same declarations on Osprey's command line
 
 Osprey's one command (`osprey --fasta proteome.fasta ...`, `pwiz_tools/Osprey/docs/20-command-line.md`,
