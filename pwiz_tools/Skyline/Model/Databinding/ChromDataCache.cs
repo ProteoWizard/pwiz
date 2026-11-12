@@ -64,8 +64,8 @@ namespace pwiz.Skyline.Model.Databinding
             var key = (chromatogramSet.Name, filePath, loadPoints);
             lock (_lock)
             {
-                if (TryGetGroups(document, precursorIdentityPath, false, out var groups) &&
-                    groups.TryGetValue(key, out var cached))
+                var cachedGroups = GetGroups(document, precursorIdentityPath, false);
+                if (cachedGroups != null && cachedGroups.TryGetValue(key, out var cached))
                 {
                     return cached;
                 }
@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Model.Databinding
             var loaded = LoadReplicate(document, precursorIdentityPath, chromatogramSet, loadPoints);
             lock (_lock)
             {
-                TryGetGroups(document, precursorIdentityPath, true, out var groups);
+                var groups = GetGroups(document, precursorIdentityPath, true);
                 foreach (var entry in loaded)
                 {
                     if (!groups.ContainsKey(entry.Key))
@@ -92,32 +92,27 @@ namespace pwiz.Skyline.Model.Databinding
         }
 
         /// <summary>
-        /// Finds the groups held for the precursor. Must be called while holding the lock.
-        /// When create is true, this starts holding groups for the precursor if there are none, forgetting the
-        /// precursor asked for first if the cache is full, and clears the cache if it holds a different
-        /// document; it then always returns true.
+        /// Returns the groups held for the precursor, or null if there are none. Must be called while holding
+        /// the lock. When create is true, this starts holding groups for the precursor if there are none,
+        /// forgetting the precursor asked for first if the cache is full, and clears the cache if it holds a
+        /// different document; it then never returns null.
         /// </summary>
-        private bool TryGetGroups(SrmDocument document, IdentityPath precursorIdentityPath, bool create,
-            out Dictionary<(string Replicate, MsDataFileUri File, bool LoadPoints), ChromatogramGroupInfo> groups)
+        private Dictionary<(string Replicate, MsDataFileUri File, bool LoadPoints), ChromatogramGroupInfo> GetGroups(
+            SrmDocument document, IdentityPath precursorIdentityPath, bool create)
         {
-            groups = null;
             if (!ReferenceEquals(_documentReference, document.ReferenceId))
             {
                 if (!create)
                 {
-                    return false;
+                    return null;
                 }
                 _documentReference = document.ReferenceId;
                 _precursors.Clear();
                 _precursorOrder.Clear();
             }
-            if (_precursors.TryGetValue(precursorIdentityPath, out groups))
+            if (_precursors.TryGetValue(precursorIdentityPath, out var groups) || !create)
             {
-                return true;
-            }
-            if (!create)
-            {
-                return false;
+                return groups;
             }
             if (_precursorOrder.Count >= MAX_PRECURSORS)
             {
@@ -126,7 +121,7 @@ namespace pwiz.Skyline.Model.Databinding
             groups = new Dictionary<(string Replicate, MsDataFileUri File, bool LoadPoints), ChromatogramGroupInfo>();
             _precursors.Add(precursorIdentityPath, groups);
             _precursorOrder.Enqueue(precursorIdentityPath);
-            return true;
+            return groups;
         }
 
         /// <summary>
