@@ -54,9 +54,9 @@ namespace pwiz.Skyline.Model.Databinding
         /// a different document forgets them all.
         /// The groups are loaded without holding the lock, so that other threads can use the cache meanwhile.
         /// When two threads load the same replicate at once, the groups stored first are kept.
+        /// When loadPoints is false, the group's time and intensity points have been discarded, which makes it
+        /// cheaper to hold on to.
         /// </summary>
-        /// <param name="loadPoints">False to get a group whose time and intensity points have been discarded,
-        /// which is cheaper to hold on to.</param>
         public ChromatogramGroupInfo GetChromatogramGroupInfo(SrmDocument document,
             ChromatogramSet chromatogramSet, MsDataFileUri filePath,
             IdentityPath precursorIdentityPath, bool loadPoints)
@@ -93,10 +93,10 @@ namespace pwiz.Skyline.Model.Databinding
 
         /// <summary>
         /// Finds the groups held for the precursor. Must be called while holding the lock.
+        /// When create is true, this starts holding groups for the precursor if there are none, forgetting the
+        /// precursor asked for first if the cache is full, and clears the cache if it holds a different
+        /// document; it then always returns true.
         /// </summary>
-        /// <param name="create">True to start holding groups for the precursor if there are none, forgetting
-        /// the precursor asked for first if the cache is full, and to clear the cache if it holds a different
-        /// document. When true, this always returns true.</param>
         private bool TryGetGroups(SrmDocument document, IdentityPath precursorIdentityPath, bool create,
             out Dictionary<(string Replicate, MsDataFileUri File, bool LoadPoints), ChromatogramGroupInfo> groups)
         {
