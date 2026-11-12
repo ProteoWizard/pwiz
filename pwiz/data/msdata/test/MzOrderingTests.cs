@@ -1,4 +1,5 @@
 using Pwiz.Data.Common.Cv;
+using Pwiz.Data.MsData.Mzml;
 using Pwiz.Data.MsData.Spectra;
 
 namespace Pwiz.Data.MsData.Tests;
@@ -31,6 +32,28 @@ public class MzOrderingTests
         SrmSpectrumDoesNotVouchForTheWriter();
         SimSpectrumIsStillRepaired();
         MetadataOnlySpectrumSettlesNothing();
+        EagerlyReadFileIsReorderedWhereItIsStored();
+    }
+
+    /// <summary>
+    /// The other route to the repair: a file read eagerly into a <see cref="SpectrumListSimple"/>
+    /// is repaired once, as it is read, rather than on the way out of GetSpectrum - which returns
+    /// copies of the stored spectra, so a repair applied to what it returns would be lost.
+    /// </summary>
+    private static void EagerlyReadFileIsReorderedWhereItIsStored()
+    {
+        var msd = new MSData();
+        msd.CVs.AddRange(MSData.DefaultCVList);
+        var written = new SpectrumListSimple();
+        var unsorted = MakeSpectrum("scan=1", UNSORTED_MZS, UNSORTED_INTENSITIES);
+        unsorted.Index = 0;
+        written.Spectra.Add(unsorted);
+        msd.Run.SpectrumList = written;
+
+        var read = new MzmlReader().Read(new MzmlWriter().Write(msd)).Run.SpectrumList!;
+        Assert.IsInstanceOfType<SpectrumListSimple>(read, "the eager path is the one under test");
+        CollectionAssert.AreEqual(new[] { 200.2, 300.3, 500.5, 700.7 }, MzsOf(read.GetSpectrum(0, true)));
+        CollectionAssert.AreEqual(new[] { 40.0, 20.0, 10.0, 30.0 }, IntensitiesOf(read.GetSpectrum(0, true)));
     }
 
     /// <summary>

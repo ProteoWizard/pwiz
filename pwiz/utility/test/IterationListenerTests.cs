@@ -58,6 +58,9 @@ public class IterationListenerTests
         var canceler = new RecordingListener { Result = IterationStatus.Cancel };
         reg.AddListener(canceler, 1);
         Assert.AreEqual(IterationStatus.Cancel, reg.Broadcast(new IterationUpdate(0, 10)));
+        // BroadcastOrCancel turns that request into OperationCanceledException.
+        Assert.ThrowsException<OperationCanceledException>(() => reg.BroadcastOrCancel(new IterationUpdate(0, 10)));
+        new IterationListenerRegistry().BroadcastOrCancel(new IterationUpdate(0, 10));
 
         // RemoveListener stops further deliveries to that listener.
         var removable = new RecordingListener();

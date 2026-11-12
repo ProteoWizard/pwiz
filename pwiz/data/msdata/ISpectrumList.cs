@@ -352,7 +352,7 @@ public abstract class SpectrumListBase : ISpectrumList
     /// port instead falls back to parsing the whole file into a <see cref="SpectrumListSimple"/>,
     /// which never reaches that call - and a file with no index is exactly the kind a third-party
     /// writer emits, so leaving the fallback out would miss the writers this repair exists for.
-    /// Reading each spectrum here is free: they are already in memory.
+    /// The repair goes to the stored spectra, not through GetSpectrum, which hands out copies.
     /// </remarks>
     internal static void EnsureMzAscendingThroughout(ISpectrumList? list)
     {
@@ -361,8 +361,8 @@ public abstract class SpectrumListBase : ISpectrumList
         // way out of GetSpectrum instead, and none of them reaches here.
         if (list is not SpectrumListSimple spectra)
             return;
-        for (int i = 0; i < spectra.Count; i++)
-            spectra.EnsureMzAscending(spectra.GetSpectrum(i, true));
+        foreach (var spectrum in spectra.Spectra)
+            spectra.EnsureMzAscending(spectrum);
     }
 
     /// <summary>True iff <paramref name="values"/> never descends.</summary>
@@ -454,7 +454,13 @@ public sealed class SpectrumListSimple : SpectrumListBase
     public override SpectrumIdentity SpectrumIdentity(int index) => Spectra[index];
 
     /// <inheritdoc/>
-    public override Spectrum GetSpectrum(int index, bool getBinaryData = false) => Spectra[index];
+    /// <remarks>
+    /// Returns a copy, not the stored instance: the analysis wrappers modify the spectrum they
+    /// read in place, so handing out <see cref="Spectra"/>' own objects would apply a wrapper's
+    /// change again on every later read - which a writer's count-repair rewrite does. Code that
+    /// means to change the stored spectra goes through <see cref="Spectra"/>.
+    /// </remarks>
+    public override Spectrum GetSpectrum(int index, bool getBinaryData = false) => Spectra[index].DeepCopy();
 
     /// <inheritdoc/>
     public override DataProcessing? DataProcessing => Dp;

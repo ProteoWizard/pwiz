@@ -116,6 +116,48 @@ public class MainLogicTest
         AssertEquivalentMzml(cliOut, guiOut);
     }
 
+    /// <summary>The GUI always converts with --continueOnError, and the writers report each
+    /// skipped spectrum on Console.Error. A WinForms app has no console, so those lines must be
+    /// forwarded to the progress window's log or a file with missing spectra reports nothing.</summary>
+    [TestMethod]
+    public void StderrCapture_ForwardsLinesToTheProgressLog()
+    {
+        var original = Console.Error;
+        var captured = new System.Text.StringBuilder();
+        var senders = new System.Collections.Concurrent.ConcurrentBag<object>();
+        EventHandler<string> handler = (sender, text) => { captured.Append(text); senders.Add(sender ?? "none"); };
+        Program.StderrCaptured += handler;
+        try
+        {
+            Program.CaptureStderr();
+            Console.Error.WriteLine("Skipping spectrum 1 \"scan=2\": unreadable scan");
+            Assert.AreEqual("Skipping spectrum 1 \"scan=2\": unreadable scan" + Environment.NewLine, captured.ToString());
+            CollectionAssert.AreEqual(new object[] { "none" }, senders.Distinct().ToArray(),
+                "text written outside a conversion names no job");
+
+            // With parallel conversions, each line must name the job that wrote it - including from
+            // a task the conversion started - so the progress window logs it only for that file.
+            var job = new ProgressForm.JobInfo();
+            senders = new System.Collections.Concurrent.ConcurrentBag<object>();
+            Program.CurrentJob.Value = job;
+            try
+            {
+                Console.Error.WriteLine("from the job's thread");
+                System.Threading.Tasks.Task.Run(() => Console.Error.WriteLine("from a task it started")).Wait();
+            }
+            finally
+            {
+                Program.CurrentJob.Value = null;
+            }
+            CollectionAssert.AreEqual(new object[] { job }, senders.Distinct().ToArray(), "every piece names the writing job");
+        }
+        finally
+        {
+            Program.StderrCaptured -= handler;
+            Console.SetError(original);
+        }
+    }
+
     /// <summary>mzML→mzXML through both paths must agree (file-name extension + format flag).</summary>
     [TestMethod]
     public void MzML_To_MzXML_GuiMatchesCli()

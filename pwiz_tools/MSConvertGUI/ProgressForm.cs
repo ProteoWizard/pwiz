@@ -131,18 +131,36 @@ namespace MSConvertGUI
             info.updateTextbox.Visible = true;
         }
 
-        private StringBuilder _stderrBuffer = new StringBuilder();
+        // One partial line per source, so pieces written by jobs converting in parallel are not
+        // spliced into each other's lines. The key is the writing job, or this form for text
+        // written outside any job.
+        private readonly Dictionary<object, StringBuilder> _stderrBuffers = new Dictionary<object, StringBuilder>();
+
+        /// <summary>Adds a line written to stderr to the log of the job that wrote it, or to every
+        /// running job's log when no job is known to have written it.</summary>
         private void ShowStderr(object sender, string stderr)
         {
-            _stderrBuffer.Append(stderr);
-            if (!stderr.EndsWith("\n"))
+            var job = sender as JobInfo;
+            string line;
+            lock (_stderrBuffers)
+            {
+                object key = (object)job ?? this;
+                if (!_stderrBuffers.TryGetValue(key, out var buffer))
+                    _stderrBuffers[key] = buffer = new StringBuilder();
+                buffer.Append(stderr);
+                if (!stderr.EndsWith("\n"))
+                    return;
+                line = buffer.ToString();
+                buffer.Clear();
+            }
+
+            if (job != null)
+            {
+                UpdateLog(line, job);
                 return;
-
-            // TODO: handle stderr coming from different threads when converting in parallel
+            }
             foreach (var item in _tasksRunningList.Where(t => t.JobInfo.Started && !t.JobInfo.Finished))
-                UpdateLog(_stderrBuffer.ToString(), item.JobInfo);
-
-            _stderrBuffer.Clear();
+                UpdateLog(line, item.JobInfo);
         }
 
         private void ProgressForm_Load(object sender, EventArgs e)
@@ -213,6 +231,7 @@ namespace MSConvertGUI
 
         private void ProgressForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            Program.StderrCaptured -= ShowStderr;
             lock (_cancelMutex)
             {
                 MainLogic.ClearQueue();
