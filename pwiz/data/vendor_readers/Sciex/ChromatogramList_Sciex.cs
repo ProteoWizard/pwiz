@@ -11,9 +11,8 @@ namespace Pwiz.Vendor.Sciex;
 /// <summary>
 /// <see cref="IChromatogramList"/> for both <c>.wiff</c> and <c>.wiff2</c> files. C# port of
 /// pwiz cpp <c>ChromatogramList_ABI</c>: emits <c>TIC</c> + <c>BPC</c> (summed across all
-/// experiments in the sample), one <c>SRM</c> / <c>SIM</c> chromatogram per transition (legacy
-/// only — wiff2's SDK has no transitions, see cpp <c>WiffFile2</c>), plus ADC and TWC traces
-/// (legacy only). Works against the <see cref="AbstractWiffFile"/> abstraction so the same code path
+/// experiments in the sample), one <c>SRM</c> / <c>SIM</c> chromatogram per transition (wiff2:
+/// SIM only, from "Q1MI" experiments), plus ADC and TWC traces (legacy only). Works against the <see cref="AbstractWiffFile"/> abstraction so the same code path
 /// covers both formats.
 /// </summary>
 public sealed class ChromatogramList_Sciex : ChromatogramListBase
@@ -21,6 +20,7 @@ public sealed class ChromatogramList_Sciex : ChromatogramListBase
     private readonly AbstractWiffFile _wiff;
     private readonly bool _ownsWiff;
     private readonly bool _globalChromsAreMs1Only;
+    private readonly bool _simAsSpectra;
     private readonly List<IndexEntry> _index = new();
 
     /// <summary>DataProcessing emitted as the document's <c>defaultDataProcessingRef</c>.</summary>
@@ -30,13 +30,16 @@ public sealed class ChromatogramList_Sciex : ChromatogramListBase
     public override DataProcessing? DataProcessing => Dp;
 
     /// <summary>Wraps <paramref name="wiff"/>; <paramref name="ownsWiff"/> selects whether
-    /// disposing the chromatogram list disposes the wiff.</summary>
-    public ChromatogramList_Sciex(AbstractWiffFile wiff, bool ownsWiff, bool globalChromatogramsAreMs1Only)
+    /// disposing the chromatogram list disposes the wiff. <paramref name="simAsSpectra"/> drops
+    /// a wiff2 file's SIM chromatograms, whose data the spectrum list then carries.</summary>
+    public ChromatogramList_Sciex(AbstractWiffFile wiff, bool ownsWiff, bool globalChromatogramsAreMs1Only,
+        bool simAsSpectra = false)
     {
         ArgumentNullException.ThrowIfNull(wiff);
         _wiff = wiff;
         _ownsWiff = ownsWiff;
         _globalChromsAreMs1Only = globalChromatogramsAreMs1Only;
+        _simAsSpectra = simAsSpectra;
         CreateIndex();
     }
 
@@ -104,8 +107,12 @@ public sealed class ChromatogramList_Sciex : ChromatogramListBase
                 _index.Add(entry);
             }
 
-            // SIM transitions (legacy SIM experiments only).
-            var sim = exp.SimTransitions;
+            // SIM transitions. A wiff2 file read with simAsSpectra gets none: its SIM experiments
+            // sit beside full-scan ones (a compound optimization's Q1MI scan with its product ion
+            // scans), and a reader seeing any SIM chromatogram may take the file for one to read
+            // as chromatograms only - Skyline does - and never read the product ion spectra.
+            // Legacy .wiff keeps both, as before.
+            var sim = isWiff2 && _simAsSpectra ? Array.Empty<WiffSimTarget>() : exp.SimTransitions;
             for (int t = 0; t < sim.Count; t++)
             {
                 var target = sim[t];

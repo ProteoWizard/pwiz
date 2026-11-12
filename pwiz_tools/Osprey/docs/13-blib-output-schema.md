@@ -127,7 +127,7 @@ The C# adds a **fallback the Rust doc does not describe**: if *no* run passes ru
 
 ### Search global columns and protein groups
 
-A search blib carries four experiment-level columns, BiblioSpec's optional global q-value and
+A search blib carries six experiment-level columns, BiblioSpec's optional global q-value and
 PEP columns (`BlibSchema.OptionalRefSpectraColumns` / `OptionalProteinsColumns` in
 BiblioSpec.IO, each added with `ALTER TABLE` by `BlibWriter.AddOptionalColumn`), asked for by
 `OspreyBlibWriter.AddSearchGlobalColumns` before any row is written. A blib gets the columns only
@@ -141,11 +141,12 @@ protein-level cutoffs:
 | `RefSpectra.PrecursorQValue` | the experiment precursor q-value, the same value as `score` |
 | `RefSpectra.PrecursorPep` | the entry's `Pep`: one value per entry for the whole analysis, from the PEP fit on the first-pass experiment-wide target-decoy competition (`PercolatorQValues.ComputePepWinnerMap`) |
 | `RefSpectra.PeptideQValue` | `ExperimentPeptideQvalue`: one value per `peptideModSeq`, the same on every charge state |
+| `RefSpectra.PeptidePep` | `ExperimentPeptidePep`: the peptide's PEP from the experiment peptide competition (`StreamedCompetitionState.CompetePeptides`), one value per `peptideModSeq` like its q-value |
 | `Proteins.QValue` | the group's picked-protein q-value from the second-pass protein FDR (`ProteinFdrResult.GroupQvalues`) |
+| `Proteins.Pep` | the group's PEP from the same competition (`ProteinFdrResult.GroupPeps`, `ProteinFdr.ComputeLibraryGroupPeps`); 1.0, like its q-value, for a group with no target winner |
 
-The format defines two more, `RefSpectra.PeptidePep` and `Proteins.Pep`, which Proteome
-Discoverer libraries carry; Osprey will write them once it computes a peptide-level and a
-protein-group PEP (the PEP fits ride with the second-pass competition work, PR #4823).
+Each level pairs a q-value with a PEP, so a reader can gate on either at the level it means.
+Proteome Discoverer libraries carry the same six columns.
 
 In a search blib every `Proteins` row is a **protein group** from the second-pass parsimony, not
 a single library accession:
@@ -201,9 +202,8 @@ Until 2026-10-15 Osprey also wrote Rust osprey's four tool tables, one row per `
 - **Resume and cache safety:** every blib search adds `;blibreader=2` to every task validity key,
   and the library composition carries `blib_reader:2` with the fragment tolerance the typed
   peaks were computed within - in the hash of a `.tsv` library's derived `.blib`, which this
-  reader reads back, and of a `.libcache` an earlier release left ([14](14-intermediate-files.md)
-  section 7). Both carry `BlibLoader.READER_VERSION`, which also covers the modification parsing
-  below.
+  reader reads back ([14](14-intermediate-files.md) section 7). Both carry
+  `BlibLoader.READER_VERSION`, which also covers the modification parsing below.
 
 ### Library annotations are not read
 
@@ -223,9 +223,11 @@ typing its search uses, and are compared with Osprey's own typing (`FragmentType
 
 `ParseBlibModifications` reads each bracket of `peptideModSeq` - a mass shift
 (`PEPC[+57.021464]TIDE`), an absolute cysteine mass (`C[160.0]`) or a UniMod id (`[UniMod:4]`,
-or `(UniMod:4)` as DIA-NN writes it) - and identifies it against Osprey's UniMod table
-(`Osprey.Core/UniMod.cs`, masses from Skyline's `UniModData.cs`), as Skyline matches library
-modifications:
+or `(UniMod:4)` as DIA-NN writes it) - and identifies it against UniMod (`Osprey.Core/UniMod.cs`,
+whose ids, titles and masses are `pwiz/data/common/unimod.obo`'s, read by pwiz-sharp's
+`Pwiz.Data.Common`; Osprey keeps no masses of its own), as Skyline matches library
+modifications. A UniMod id may be any in the file; a mass is matched only against the
+modifications and specificities Skyline lists:
 
 - A mass matches a known modification allowed on its residue or terminus when both round to the
   same value at the precision the text prints, at most four decimals, or lie within 1e-4 Da
@@ -233,7 +235,7 @@ modifications:
   `Q[-17.0]` at the N-terminus) gets the exact known mass. When two match, the table's order
   decides: Skyline's common modifications first (Acetyl before Trimethyl for `K[+42.0]`).
 - A mass printed with four or more decimals that matches nothing is used as printed. One printed
-  with fewer cannot be, and a UniMod id Osprey does not know or any other text cannot be
+  with fewer cannot be, and a UniMod id not in UniMod or any other text cannot be
   identified: the library is refused, listing each such modification with the number of spectra
   carrying it and the first of them. Like Skyline, a bracket summing two modifications
   (`M[+58.0]`) is not split.
@@ -288,7 +290,7 @@ There is no CLI switch to choose the score type or to change the compression bac
 - **[INTENTIONAL-CSHARP-DESIGN] The four `Osprey*` tool tables are not written** - Rust writes `OspreyPeakBoundaries`, `OspreyRunScores`, `OspreyExperimentScores` and `OspreyCoefficients` beside the standard tables; C# dropped them on 2026-10-15 (see "The dropped `Osprey*` tables"). The cross-impl blib comparison compares the standard tables and the metadata only. Evidence: Osprey.IO/OspreyBlibWriter.cs. Severity: minor.
 - **[INTENTIONAL-CSHARP-DESIGN] The metadata table is `LibMetadata` with namespaced keys, not `OspreyMetadata`** - Rust writes `OspreyMetadata` with `osprey_version`, `search_mode`, `run_fdr`, `experiment_fdr` (its doc lists `rt_calibration_enabled` and `fdr_method` too, which it no longer writes); C# writes `LibMetadata`, the table every tool of ours shares, with `osprey.version`, `osprey.search_mode`, `osprey.run_fdr`, `osprey.experiment_fdr`, `osprey.command` and the stamp. The cross-impl comparison maps the three shared values by stripping the prefix. Evidence: Osprey.Tasks/BlibOutputWriter.cs (`WriteMetadata`); BiblioSpec.IO/BlibMetadata.cs. Severity: minor.
 - **[INTENTIONAL-CSHARP-DESIGN] Native managed SQLite writer, not ProteoWizard BiblioSpec** - The README frames the C# blib output as "reusing ProteoWizard BiblioSpec infrastructure"; in fact `BlibWriter` is a hand-rolled `System.Data.SQLite` writer that reuses only the BiblioSpec *schema* and Skyline's `BlibData`/`UtilDB` byte conventions (Ionic.Zlib level 6), not the C++ BiblioSpec code. Rust's `flate2` (stock-zlib backend) and this Ionic.Zlib path produce byte-identical `RefSpectraPeaks` blobs. Evidence: Osprey.IO/BlibWriter.cs:37, 980-1008. Severity: info.
-- **[INTENTIONAL-CSHARP-DESIGN] Proteins are protein groups, with experiment-level q-values** - Rust writes each library accession as a `Proteins` row and links each spectrum to its library entry's accessions, with no q-value columns. C# writes the second-pass parsimony protein groups as `Proteins` rows, adds `Proteins.QValue`, `RefSpectra.PrecursorQValue`, `RefSpectra.PrecursorPep` and `RefSpectra.PeptideQValue`, and links each spectrum to its peptide's groups (see "Search global columns and protein groups"). The cross-impl `Proteins`/`RefSpectraProteins` comparison is expected to differ. Evidence: Osprey.Tasks/BlibOutputWriter.cs (`ProteinGroupRows`), Osprey.IO/OspreyBlibWriter.cs (`AddSearchGlobalColumns`). Severity: minor.
+- **[INTENTIONAL-CSHARP-DESIGN] Proteins are protein groups, with experiment-level q-values** - Rust writes each library accession as a `Proteins` row and links each spectrum to its library entry's accessions, with no q-value columns. C# writes the second-pass parsimony protein groups as `Proteins` rows, adds `Proteins.QValue`, `Proteins.Pep`, `RefSpectra.PrecursorQValue`, `RefSpectra.PrecursorPep`, `RefSpectra.PeptideQValue` and `RefSpectra.PeptidePep`, and links each spectrum to its peptide's groups (see "Search global columns and protein groups"). The cross-impl `Proteins`/`RefSpectraProteins` comparison is expected to differ. Evidence: Osprey.Tasks/BlibOutputWriter.cs (`ProteinGroupRows`), Osprey.IO/OspreyBlibWriter.cs (`AddSearchGlobalColumns`). Severity: minor.
 - **[INTENTIONAL-CSHARP-DESIGN] Extra schema columns and an index not in the Rust doc tables** - C# declares `SpectrumSourceFiles.workflowType` and `ScoreTypes.probabilityType`, and creates `idx_rettimes_refid` beyond the Rust doc's indexes, for BiblioSpecLite/Skyline compatibility. Evidence: BiblioSpec.IO/BlibSchema.cs, BlibWriter.cs. Severity: info.
 
 Everything else matches the Rust doc: the standard table set, `RefSpectraPeaks` storing library theoretical fragments (f64 m/z / f32 intensity, zlib-with-raw-fallback), the nullable-`retentionTime` ID-line semantics, one `RetentionTimes` row per detected run, `copies = nRunsDetected`, and the write→finalize→atomic-rename flow. No `PORT-ERROR` was found: the C# implementation is internally consistent and (per the standing `Compare-Blib-Crossimpl.ps1` gate referenced in BlibWriter.cs) byte-identical to the Rust output, so the schema-value differences above reflect a stale Rust doc rather than a behavioral defect.

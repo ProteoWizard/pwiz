@@ -1704,6 +1704,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Looking for the latest Osprey build.
+        /// </summary>
+        public static string OspreyInstaller_EnsureInstalled_Looking_for_the_latest_Osprey_build {
+            get {
+                return ResourceManager.GetString("OspreyInstaller_EnsureInstalled_Looking_for_the_latest_Osprey_build", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Error: An unknown error occurred trying to verify access to Panorama folder &apos;{0}&apos; on the server {1}.
         ///{2}.
         /// </summary>
@@ -2107,6 +2116,42 @@ namespace pwiz.Skyline {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Download.
+        /// </summary>
+        public static string SkylineWindow_EnsureOspreyInstalled_Download {
+            get {
+                return ResourceManager.GetString("SkylineWindow_EnsureOspreyInstalled_Download", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading Osprey.
+        /// </summary>
+        public static string SkylineWindow_EnsureOspreyInstalled_Downloading_Osprey {
+            get {
+                return ResourceManager.GetString("SkylineWindow_EnsureOspreyInstalled_Downloading_Osprey", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to download Osprey..
+        /// </summary>
+        public static string SkylineWindow_EnsureOspreyInstalled_Failed_to_download_Osprey_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_EnsureOspreyInstalled_Failed_to_download_Osprey_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey {0} is not installed. Skyline can download it (about {1} MB) to its Tools folder..
+        /// </summary>
+        public static string SkylineWindow_EnsureOspreyInstalled_Osprey__0__is_not_installed__Skyline_can_download_it__about__1__MB__to_its_Tools_folder_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_EnsureOspreyInstalled_Osprey__0__is_not_installed__Skyline_can_download_it__about__1__MB__to_its_Tools_folder_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Failure attempting to save the window layout file {0}..
         /// </summary>

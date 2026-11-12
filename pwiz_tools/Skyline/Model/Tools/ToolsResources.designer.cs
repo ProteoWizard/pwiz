@@ -89,29 +89,11 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Setting up Nvidia GPU Libraries.
-        /// </summary>
-        public static string NvidiaInstaller_Setup_Nvidia_Libraries {
-            get {
-                return ResourceManager.GetString("NvidiaInstaller_Setup_Nvidia_Libraries", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to ProgramPathCollectors must have a program name.
         /// </summary>
         public static string ProgramPathContainer_Validate_ProgramPathCollectors_must_have_a_program_name {
             get {
                 return ResourceManager.GetString("ProgramPathContainer_Validate_ProgramPathCollectors_must_have_a_program_name", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} Running command: [{1}] {2} .
-        /// </summary>
-        public static string PythonInstaller__0__Running_command____1____2__ {
-            get {
-                return ResourceManager.GetString("PythonInstaller__0__Running_command____1____2__", resourceCulture);
             }
         }
         
@@ -125,37 +107,6 @@ namespace pwiz.Skyline.Model.Tools {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized string similar to Expecting one and only one file with _pth extension.
-        /// </summary>
-        public static string PythonInstaller_EnableSearchPathInPythonEmbeddablePackage_Found_0_or_more_than_one_files_with__pth_extension__this_is_unexpected {
-            get {
-                return ResourceManager.GetString("PythonInstaller_EnableSearchPathInPythonEmbeddablePackage_Found_0_or_more_than_on" +
-                        "e_files_with__pth_extension__this_is_unexpected", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to execute command: [{0}].
-        /// </summary>
-        public static string PythonInstaller_Failed_to_execute_command____0__ {
-            get {
-                return ResourceManager.GetString("PythonInstaller_Failed_to_execute_command____0__", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to execute command: [{0}]
-        ///
-        ///Output:
-        ///{1}.
-        /// </summary>
-        public static string PythonInstaller_Failed_to_execute_command____0____Output____1__ {
-            get {
-                return ResourceManager.GetString("PythonInstaller_Failed_to_execute_command____0____Output____1__", resourceCulture);
-            }
-        }
-
         /// <summary>
         ///   Looks up a localized string similar to Installing Packages.
         /// </summary>
@@ -184,24 +135,6 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Creating virtual environment [{0}]..
-        /// </summary>
-        public static string PythonInstaller_GetPythonTask_Creating_virtual_environment__0_ {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Creating_virtual_environment__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Downloading Python embeddable package..
-        /// </summary>
-        public static string PythonInstaller_GetPythonTask_Downloading_Python_embeddable_package {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Downloading_Python_embeddable_package", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Downloading the get-pip.py script..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Downloading_the_get_pip_py_script {
@@ -211,96 +144,11 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enabling Windows long paths for Python packages installation in virtual environment [{0}]..
-        /// </summary>
-        public static string PythonInstaller_GetPythonTask_Enable_Long_Paths_For_Python_packages_in_virtual_environment__0_ {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Enable_Long_Paths_For_Python_packages_in_virtual_en" +
-                        "vironment__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Enabling search path in Python embeddable package..
-        /// </summary>
-        public static string PythonInstaller_GetPythonTask_Enabling_search_path_in_Python_embeddable_package {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Enabling_search_path_in_Python_embeddable_package", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Installing Python packages in virtual environment [{0}]. First installs can take up to 10-15 minutes, please be patient ....
-        /// </summary>
-        public static string PythonInstaller_GetPythonTask_Installing_Python_packages_in_virtual_environment__0_ {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Installing_Python_packages_in_virtual_environment__" +
-                        "0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Running pip install [{0}]..
-        /// </summary>
-        public static string PythonInstaller_GetPythonTask_Running_pip_install__0_ {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Running_pip_install__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Running the get-pip.py script..
-        /// </summary>
-        public static string PythonInstaller_GetPythonTask_Running_the_get_pip_py_script {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Running_the_get_pip_py_script", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unzipping Python embeddable package..
-        /// </summary>
-        public static string PythonInstaller_GetPythonTask_Unzipping_Python_embeddable_package {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Unzipping_Python_embeddable_package", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Install.
         /// </summary>
         public static string PythonInstaller_InstallPackages_Install {
             get {
                 return ResourceManager.GetString("PythonInstaller_InstallPackages_Install", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} This sometimes could take 3-5 minutes. Please be patient. {1} .
-        /// </summary>
-        public static string PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_patient___1__ {
-            get {
-                return ResourceManager.GetString("PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_p" +
-                        "atient___1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Timed out after {0} minutes running: [{1}].
-        /// </summary>
-        public static string PythonInstaller_RunProcessOrThrow_Timed_out_after__0__minutes_running___1__ {
-            get {
-                return ResourceManager.GetString("PythonInstaller_RunProcessOrThrow_Timed_out_after__0__minutes_running___1__", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to parse package name and version from entry [{0}]..
-        /// </summary>
-        public static string PythonInstallerTaskValidator_ValidatePipInstallPackages_Failed_to_parse_package_name_and_version_from_entry___0__ {
-            get {
-                return ResourceManager.GetString("PythonInstallerTaskValidator_ValidatePipInstallPackages_Failed_to_parse_package_n" +
-                        "ame_and_version_from_entry___0__", resourceCulture);
             }
         }
         

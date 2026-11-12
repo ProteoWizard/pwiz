@@ -7,16 +7,21 @@
 .DESCRIPTION
     The real-data checks too slow for every commit (the commits run build.ps1 and its
     TestRegressionSubset):
-      1. build.ps1 -TestData Fetch -RequireData: fetches the test data it reads, then builds and
-         runs every test, the Carafe parity tests included.
+      1. build.ps1 -NoTests -TestData Fetch: builds, and fetches the packages regression.ps1 reads
+         (testfiles for the library FASTA and pairing manifest, regression-export for the export).
       2. regression.ps1 -Dataset Stellar: the full fine-tune on Stellar's export, against its golden.
-      3. regression.ps1 -Leg Chained: Osprey's export of its committed Stellar subset, trained on.
-      4. regression.ps1 -Dataset StellarSubset twice, each in a process of its own: the two runs'
+      3. regression.ps1 -Dataset StellarSubset twice, each in a process of its own: the two runs'
          models and training tables must be the same bytes, so a rerun on this agent repeats.
 
+    The full-size Carafe parity comparisons do not run here: they are a developer-run check,
+    scripts/Compare-CarafeParity.ps1, and the per-commit pass runs their committed subset twins.
+    Osprey's export feeding CarafeSharp's training is checked by Osprey's own tests, which run the
+    one command with --training-input on Osprey's committed subset (SubsetPipelineTest).
+
     The test data goes in <Downloads>\Perftests\carafesharp, not <Downloads>\Perftests, unless
-    CARAFESHARP_TESTDATA names a folder: a per-commit build on the same agent finds data in the
-    default folder by itself, and would then run the parity tests on every commit.
+    CARAFESHARP_TESTDATA names a folder. That kept the parity tests off the per-commit builds on
+    the same agent before they had a category of their own; it stays so the agent keeps the
+    packages it already fetched.
 
     Each step runs whatever the one before did; the exit code is the first failure's.
 
@@ -37,10 +42,9 @@ Write-Host "CarafeSharp test data: $env:CARAFESHARP_TESTDATA"
 
 $teamCityArgs = if ($TeamCity) { @('-TeamCity') } else { @() }
 $steps = @(
-    @{ Name = 'CarafeSharp tests with the test data'; Args = @('-File', (Join-Path $root 'build.ps1')) + $teamCityArgs +
-        @('-TestData', 'Fetch', '-TestDataPackage', 'testfiles,export,regression-export', '-RequireData') },
-    @{ Name = 'CarafeSharp regression (Stellar)'; Args = @('-File', (Join-Path $root 'regression.ps1'), '-Dataset', 'Stellar', '-NoBuild') },
-    @{ Name = 'CarafeSharp regression (chained with Osprey)'; Args = @('-File', (Join-Path $root 'regression.ps1'), '-Leg', 'Chained', '-NoBuild') }
+    @{ Name = 'CarafeSharp build and test data'; Args = @('-File', (Join-Path $root 'build.ps1')) + $teamCityArgs +
+        @('-NoTests', '-TestData', 'Fetch', '-TestDataPackage', 'testfiles,regression-export') },
+    @{ Name = 'CarafeSharp regression (Stellar)'; Args = @('-File', (Join-Path $root 'regression.ps1'), '-Dataset', 'Stellar', '-NoBuild') }
 )
 $repeatFolder = Join-Path $root ('TestResults/regression-repeat-' + (Get-Date).ToString('yyyyMMdd-HHmmss'))
 foreach ($name in 'first', 'second') {

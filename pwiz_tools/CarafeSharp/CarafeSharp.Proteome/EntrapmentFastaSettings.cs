@@ -40,6 +40,12 @@ namespace pwiz.CarafeSharp.Proteome
 
         public const long DEFAULT_ENTRAPMENT_SEED = 42;
         public const long DEFAULT_DECOY_SEED = 24;
+
+        /// <summary>
+        /// Seed of the draw that places entrapment peptides on target proteins: the one the
+        /// protein-shuffled entrapment audit was run with.
+        /// </summary>
+        public const long DEFAULT_ENTRAPMENT_PROTEIN_SEED = 20261101;
         public const double DEFAULT_MIN_MZ = 400.0;
         public const double DEFAULT_MAX_MZ = 900.0;
 
@@ -85,6 +91,24 @@ namespace pwiz.CarafeSharp.Proteome
 
         /// <summary>Fraction of targets that carry an entrapment peptide, in [0.1, 1].</summary>
         public double EntrapmentRatio { get; set; } = 1.0;
+
+        /// <summary>
+        /// Entrapment peptides placed on a target protein drawn at random, per target, added to
+        /// the entrapment of <see cref="EntrapmentRatio"/> (which stays on entrapment proteins of
+        /// its own): 0 (the default) to 1, with the sum of the two at most 1 and at least
+        /// <see cref="MIN_ENTRAPMENT_RATIO"/>. Such a peptide, and its decoy, carry the target
+        /// protein's label without <see cref="EntrapmentSuffix"/>, so only the manifest's
+        /// <c>peptide_type</c> marks it as entrapment: it can then receive protein evidence as a
+        /// false target does, which is what audits a protein-aware scoring step. Ratios of 0.1 and
+        /// 0.1 are 20% entrapment, half of it on target proteins.
+        /// </summary>
+        public double EntrapmentInTargetsRatio { get; set; }
+
+        /// <summary>
+        /// Seed of the draw behind <see cref="EntrapmentInTargetsRatio"/>, its own so that the
+        /// draws of <see cref="EntrapmentSeed"/> are unchanged by it.
+        /// </summary>
+        public long EntrapmentProteinSeed { get; set; } = DEFAULT_ENTRAPMENT_PROTEIN_SEED;
 
         /// <summary>
         /// Apply <see cref="DecoySimilarityGate"/> and I/L-aware collision checks to generated

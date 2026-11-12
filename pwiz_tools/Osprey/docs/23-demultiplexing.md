@@ -19,7 +19,7 @@ the run is read once.
 ## Using it
 
 ```
-osprey -i run1.raw -i run2.raw -l library.tsv -o results.blib --resolution hram --demux auto
+Osprey -i run1.raw -i run2.raw -l library.tsv -o results.blib --resolution hram --demux auto
 ```
 
 | `--demux` | What happens |

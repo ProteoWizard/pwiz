@@ -2,6 +2,7 @@
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ *                Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -67,6 +68,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             private readonly IReadOnlyDictionary<uint, uint> _pairByBaseId;
             private readonly bool _haveManifest;
             private readonly double _entrapmentRatio;
+            private readonly EntrapmentPlacement _placement;
             private readonly double _runFdr;
             private readonly FdrLevel _fdrLevel;
             private readonly string[] _runNames;
@@ -104,6 +106,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             private readonly CrossRunStream _expStream;
             private readonly CrossRunStream _entRunStream;
             private readonly CrossRunStream _entExpStream;
+            // Decoys under the same two gates (#4489), for the decoy-based per-k FDP. Run-count
+            // tallies only (no union / intersection): O(distinct decoys that pass in ANY run).
+            // Per-run null passes are largely fresh in each run, so that grows with the run
+            // count, bounded by the decoy library - the same bound the target tallies have.
+            private readonly CrossRunStream _decRunStream;
+            private readonly CrossRunStream _decExpStream;
             private bool _anyEntrapment;
 
             // Win fraction: base_id -> [best target score, best decoy score] + target-side class
@@ -131,6 +139,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// <param name="fdrLevel">reported FDR control level (drives EffectiveRunQvalue).</param>
             /// <param name="pass">1 for the pre-compaction first pass (<see cref="Build"/>),
             /// 2 for the final reported pool (<see cref="BuildPass2"/>). Decides which folds run.</param>
+            /// <param name="placement">which entrapment sits on a real target protein, with each
+            /// half's ratio, for the FDP views' placement split; null for no split.</param>
             public Accumulator(
                 string[] runNames,
                 IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
@@ -138,7 +148,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 double entrapmentRatio,
                 double runFdr,
                 FdrLevel fdrLevel,
-                int pass = 1)
+                int pass = 1,
+                EntrapmentPlacement placement = null)
             {
                 if (pass != 1 && pass != 2)
                     throw new ArgumentOutOfRangeException(nameof(pass));
@@ -149,6 +160,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 _pairByBaseId = pairByBaseId;
                 _haveManifest = classByBaseId != null && classByBaseId.Count > 0;
                 _entrapmentRatio = entrapmentRatio;
+                _placement = placement;
                 _runFdr = runFdr;
                 _fdrLevel = fdrLevel;
 
@@ -159,6 +171,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 _expStream = new CrossRunStream(_nFiles);
                 _entRunStream = new CrossRunStream(_nFiles);
                 _entExpStream = new CrossRunStream(_nFiles);
+                _decRunStream = new CrossRunStream(_nFiles, true);
+                _decExpStream = new CrossRunStream(_nFiles, true);
             }
 
             /// <summary>
@@ -256,6 +270,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 private readonly HashSet<string> _expKeys = new HashSet<string>(StringComparer.Ordinal);
                 private readonly HashSet<string> _entRunKeys = new HashSet<string>(StringComparer.Ordinal);
                 private readonly HashSet<string> _entExpKeys = new HashSet<string>(StringComparer.Ordinal);
+                private readonly HashSet<string> _decRunKeys = new HashSet<string>(StringComparer.Ordinal);
+                private readonly HashSet<string> _decExpKeys = new HashSet<string>(StringComparer.Ordinal);
                 private readonly Dictionary<uint, double[]> _bt = new Dictionary<uint, double[]>();
                 private readonly Dictionary<uint, EntrapmentClass> _tClass = new Dictionary<uint, EntrapmentClass>();
                 // Pass 1 only: the precursor's first-seen entrapment flag and lowest experiment q,
@@ -290,6 +306,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     // --- best-per-precursor (== ReduceToPrecs: max score, min q at each scope) ---
                     uint pairIdx = 0;
                     bool hasPair = owner._pairByBaseId != null && owner._pairByBaseId.TryGetValue(baseId, out pairIdx);
+                    bool onTargetProtein = owner._placement != null && owner._placement.IsOnTargetProtein(baseId);
                     if (!_best.TryGetValue(key, out var cur))
                     {
                         cur = new Prec
@@ -302,6 +319,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                             PairIndex = pairIdx,
                             Charge = charge,
                             HasPair = hasPair,
+                            OnTargetProtein = onTargetProtein,
                         };
                     }
                     else
@@ -313,6 +331,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                             cur.Class = cls;
                             cur.PairIndex = pairIdx;
                             cur.HasPair = hasPair;
+                            cur.OnTargetProtein = onTargetProtein;
                         }
                         if (q.RunPrecursorQvalue < cur.QRunPrecursor)
                             cur.QRunPrecursor = q.RunPrecursorQvalue;
@@ -329,9 +348,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         && pcls == EntrapmentClass.PTarget;
                     if (q.EffectiveRunQvalue(owner._fdrLevel) <= owner._runFdr)
                     {
+                        bool expOk = q.EffectiveExperimentQvalue(owner._fdrLevel) <= owner._runFdr;
                         if (isDecoy)
                         {
                             _decoys++;
+                            _decRunKeys.Add(key);
+                            if (expOk)
+                                _decExpKeys.Add(key);
                         }
                         else
                         {
@@ -340,7 +363,6 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                             else
                                 _targets++;
 
-                            bool expOk = q.EffectiveExperimentQvalue(owner._fdrLevel) <= owner._runFdr;
                             if (isEntrap)
                             {
                                 _entRunKeys.Add(key);
@@ -425,6 +447,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                             cur.Class = file.Class;
                             cur.PairIndex = file.PairIndex;
                             cur.HasPair = file.HasPair;
+                            cur.OnTargetProtein = file.OnTargetProtein;
                         }
                         if (file.QRunPrecursor < cur.QRunPrecursor)
                             cur.QRunPrecursor = file.QRunPrecursor;
@@ -444,6 +467,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     acc._expStream.AddFile(FileIdx, _expKeys);
                     acc._entRunStream.AddFile(FileIdx, _entRunKeys);
                     acc._entExpStream.AddFile(FileIdx, _entExpKeys);
+                    acc._decRunStream.AddFile(FileIdx, _decRunKeys);
+                    acc._decExpStream.AddFile(FileIdx, _decExpKeys);
                     if (_entRunKeys.Count > 0)
                         acc._anyEntrapment = true;
 
@@ -559,18 +584,20 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 _expStream.Finish();
                 _entRunStream.Finish();
                 _entExpStream.Finish();
+                _decRunStream.Finish();
+                _decExpStream.Finish();
 
                 data.CrossRun = new CrossRunDetection
                 {
                     RunNames = _runNames,
-                    PerRun = ComputeCrossRunView(_runStream, _anyEntrapment ? _entRunStream : null, _nFiles, r),
-                    Experiment = ComputeCrossRunView(_expStream, _anyEntrapment ? _entExpStream : null, _nFiles, r),
+                    PerRun = ComputeCrossRunView(_runStream, _anyEntrapment ? _entRunStream : null, _decRunStream, _nFiles, r),
+                    Experiment = ComputeCrossRunView(_expStream, _anyEntrapment ? _entExpStream : null, _decExpStream, _nFiles, r),
                 };
 
                 data.WinFraction = BuildWinFractionFromReduced(_bt, _tClass);
 
                 if (data.HasEntrapment)
-                    data.FdpViews = BuildFdpViewsFromPrecs(precs, r, 1);
+                    data.FdpViews = BuildFdpViewsFromPrecs(precs, r, 1, _placement);
 
                 // Reproducibility frontier (first-pass, pre-compaction; entrapment-gated).
                 if (data.HasEntrapment)
@@ -647,14 +674,16 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 _expStream.Finish();
                 _entRunStream.Finish();
                 _entExpStream.Finish();
-                pass2.CrossRun = new CrossRunDetection
+                _decRunStream.Finish();
+                _decExpStream.Finish();
+                pass2.CrossRun = WithoutDecoyFdp(new CrossRunDetection
                 {
                     RunNames = _runNames,
-                    PerRun = ComputeCrossRunView(_runStream, _anyEntrapment ? _entRunStream : null, _nFiles, r),
-                    Experiment = ComputeCrossRunView(_expStream, _anyEntrapment ? _entExpStream : null, _nFiles, r),
-                };
+                    PerRun = ComputeCrossRunView(_runStream, _anyEntrapment ? _entRunStream : null, _decRunStream, _nFiles, r),
+                    Experiment = ComputeCrossRunView(_expStream, _anyEntrapment ? _entExpStream : null, _decExpStream, _nFiles, r),
+                });
 
-                pass2.FdpViews = BuildPass2FdpViews(precs, _entrapmentRatio);
+                pass2.FdpViews = BuildPass2FdpViews(precs, _entrapmentRatio, _placement);
                 pass2.CoAssignment = coAssignment;
 
                 // Structural half: only when the second pass retrained on the reported pool.
@@ -710,10 +739,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 // seed: the intersection starts as run 0's set, not as the empty set.
                 private HashSet<string> _inter;
                 private int _curFile = -1;
+                // Keeps only the per-key run-count tally (and the per-run count): no union or
+                // intersection, whose arrays stay zero. For a series read only through
+                // RunCount - the decoys - the union would duplicate every key the tally holds.
+                private readonly bool _runCountOnly;
 
-                internal CrossRunStream(int nFiles)
+                internal CrossRunStream(int nFiles, bool runCountOnly = false)
                 {
                     _nFiles = nFiles;
+                    _runCountOnly = runCountOnly;
                     PerRunCount = new int[nFiles];
                     CumUnion = new int[nFiles];
                     CumIntersection = new int[nFiles];
@@ -761,13 +795,16 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     for (int i = Math.Max(_curFile, 0); i < target && i < _nFiles; i++)
                     {
                         PerRunCount[i] = _current.Count;
-                        _union.UnionWith(_current);
-                        CumUnion[i] = _union.Count;
-                        if (_inter == null)
-                            _inter = new HashSet<string>(_current, StringComparer.Ordinal);
-                        else
-                            _inter.IntersectWith(_current);
-                        CumIntersection[i] = _inter.Count;
+                        if (!_runCountOnly)
+                        {
+                            _union.UnionWith(_current);
+                            CumUnion[i] = _union.Count;
+                            if (_inter == null)
+                                _inter = new HashSet<string>(_current, StringComparer.Ordinal);
+                            else
+                                _inter.IntersectWith(_current);
+                            CumIntersection[i] = _inter.Count;
+                        }
                         foreach (var key in _current)
                         {
                             _runCount.TryGetValue(key, out int c);

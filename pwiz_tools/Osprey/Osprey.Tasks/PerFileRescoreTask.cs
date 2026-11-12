@@ -204,12 +204,50 @@ namespace pwiz.Osprey.Tasks
         // for files that had no reconciliation work). ValidityKey adds the
         // reconciliation parameter hash because the rescored content
         // depends on it.
+        //
+        // Inputs are what a node rescoring its runs must be given, doc 00's "Boundary 2 -> 3"
+        // made checkable. Per run: the spectra cache Stage 6 streams its MS2 from (no data file -
+        // there is no mzML fallback), the Stage 4 parquet the run is rehydrated from, the
+        // calibration (mass calibration is required; the RT calibration plans the run), and the
+        // run's 1st-pass FDR sidecar. Analysis-wide, the four files FirstPassFDR wrote for every
+        // node: the experiment sidecar (Stage 6's compaction reads its q-values), the retained
+        // base_id summary (fatal when absent), the frozen 1st-pass model the pass-2 worker scores
+        // with (both pass-2 modes are frozen, so it is unconditional), and under protein-compact
+        // the stratum it competes within.
+        //
+        // Under --demux a multiplexed run streams <stem>.demux.spectra.bin instead of the plain
+        // cache, which the configuration alone cannot tell; the plain cache is what is declared.
         public override IEnumerable<string> Inputs(PipelineContext ctx)
         {
-            if (ctx.Config.InputFiles == null) yield break;
-            foreach (var input in ctx.Config.InputFiles)
+            var config = ctx.Config;
+            foreach (string libraryInput in ScoringTaskShared.LibraryInputs(config))
+                yield return libraryInput;
+            if (config.InputFiles == null) yield break;
+            foreach (var input in config.InputFiles)
+            {
+                yield return SpectraCache.GetCachePath(input);
+                yield return ParquetScoreCache.GetScoresPath(input);
+                yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
                 yield return FdrScoresSidecar.Pass1Path(input);
-            if (ctx.Config.Reconciliation != null && ctx.Config.Reconciliation.Enabled)
+            }
+            string siblingPath = ScoringTaskShared.ArtifactSiblingPath(config);
+            string experimentPath = FdrExperimentSidecar.PathFor(config.OutputBlib, siblingPath,
+                FdrScoresSidecar.Pass.FirstPass);
+            if (!string.IsNullOrEmpty(experimentPath))
+                yield return experimentPath;
+            string retainedSummary = RetainedBaseIdSidecar.PathFor(config.OutputBlib, siblingPath);
+            if (!string.IsNullOrEmpty(retainedSummary))
+                yield return retainedSummary;
+            string modelPath = FirstPassModelIO.PathFor(config);
+            if (!string.IsNullOrEmpty(modelPath))
+                yield return modelPath;
+            if (OspreyEnvironment.Pass2ProteinCompact)
+            {
+                string stratumPath = FirstPassModelIO.StratumPathFor(config);
+                if (!string.IsNullOrEmpty(stratumPath))
+                    yield return stratumPath;
+            }
+            if (config.Reconciliation != null && config.Reconciliation.Enabled)
             {
                 string consensusPath = Stage6ConsensusFile.PathFor(ctx.Config);
                 if (!string.IsNullOrEmpty(consensusPath))
@@ -294,19 +332,24 @@ namespace pwiz.Osprey.Tasks
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                // The worker's competition now gives the stratum's complement its own run q.
+                + OspreyEnvironment.Pass2StrataValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
-                + LibraryFragmentRelease.ValidityKeySuffix(ctx)
                 // The Stage 6 competition and the 2nd-pass sidecar score with the first-pass
                 // model, so the classifier that trained it keys this task too (empty for the SVM).
-                + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
+                + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config)
+                // The reconciled parquet carries the reference XIC only for the training export.
+                + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config);
         }
 
         /// <summary>
         /// A training export's key: this task's key, the export settings, and the identities of
         /// the run's own files the export reads (<see cref="TrainingExportWriter.RunInputIdentities"/>).
         /// Changing an export setting or rewriting one run's inputs therefore redoes those
-        /// exports and never re-scores; every other output keys on the task key alone, so
-        /// adding the flag leaves them valid.
+        /// exports and never re-scores; every other output keys on the task key alone. The flag
+        /// itself does move the task key (<see cref="ParquetScoreCache.ReferenceXicValidityKeySuffix"/>),
+        /// so adding it to an analysis that ran without it re-scores, writing the reference XIC
+        /// the export reads.
         /// </summary>
         public override string OutputValidityKey(PipelineContext ctx, string taskKey, string output)
         {
@@ -318,9 +361,11 @@ namespace pwiz.Osprey.Tasks
 
         public override bool Run(PipelineContext ctx)
         {
-            // The export added to a finished analysis: nothing else of this task is outstanding,
-            // so write the exports from each run's own artifacts and re-score nothing - P16's
-            // pay-later path, the counterpart of FirstPassFdrTask.FoldDiagnosticsOnly. Taken
+            // Only the exports are outstanding (an analysis that ran with the flag, missing some
+            // exports): write them from each run's own artifacts and re-score nothing, the
+            // counterpart of FirstPassFdrTask.FoldDiagnosticsOnly. The flag added to an analysis
+            // that ran without it does not land here: the reference XIC is missing, the task key
+            // differs, and the task re-scores (#5023). Taken
             // before anything below demands FirstPassFDR's buffer, which would load it.
             if (OnlyTrainingExportsOutstanding(ctx))
             {
@@ -1144,7 +1189,10 @@ namespace pwiz.Osprey.Tasks
             bool transfer = !OspreyEnvironment.Pass2ProteinCompact;
             // The competition is constrained to the stratum, and competing without one would be
             // the full-population form that was removed (#4581), not a smaller version of this.
-            if (!transfer && (sidecar.StratumBaseIds == null || sidecar.StratumBaseIds.Count == 0))
+            // An EMPTY stratum is not a missing one: no protein had 2 or more detected peptides.
+            // The competition then admits only the peaks reconciliation changed, and a run that
+            // reports nothing ends in SecondPassFDR's error saying so.
+            if (!transfer && sidecar.StratumBaseIds == null)
             {
                 throw new InvalidOperationException(string.Format(
                     OspreyTasksResources.PerFileRescoreTask_CreatePass2Worker_The_saved_first_pass_model_carries_no_list_of_precursor_candidates_from_proteins_with_2_or_more_detections__,
@@ -1565,7 +1613,7 @@ namespace pwiz.Osprey.Tasks
             // Apex retention snapshot (dotMemory only). Once the resident MS2 is streamed,
             // the remaining per-file accumulation is the scored + reconciled entries still
             // rooted by fdrEntries here (each carries the heavy Features / CwtCandidates /
-            // Fragment* / ReferenceXic* arrays). dotMemory forces its own GC before the
+            // ReferenceXic* arrays). dotMemory forces its own GC before the
             // snapshot, so the write-back's parquet-reload transient collapses and the
             // dominators are exactly that retained entry set. Taken BEFORE the release
             // below so the snapshot still shows the pre-release apex it was written to
@@ -1576,7 +1624,7 @@ namespace pwiz.Osprey.Tasks
             // on disk. Without this the fat arrays stay rooted through every remaining
             // file, which is the O(files) Stage-6 growth term of #4472: the survivor stubs
             // themselves are lean (10 scalar columns off the parquet), but rescoring
-            // replaces them with entries carrying Features / CwtCandidates / Fragment* /
+            // replaces them with entries carrying Features / CwtCandidates /
             // ReferenceXic* at roughly 1-3 KB each, and gap fill appends more.
             //
             // MUST run AFTER WriteReconciledAndStamp above: ReconciledParquetWriter uses
@@ -1675,7 +1723,7 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Release the heavy per-entry payload a rescore attaches, once the file's
-        /// reconciled parquet has been written. These six arrays have no reader after
+        /// reconciled parquet has been written. These arrays have no reader after
         /// Stage 6: <see cref="ReconciledParquetWriter"/> consumes them per file during
         /// the write above, the Stage-6 planner loads CWT candidates through its own
         /// per-file loader rather than off these entries, and the resident 2nd pass
@@ -1691,7 +1739,7 @@ namespace pwiz.Osprey.Tasks
         /// Called on all three paths that end with a file's reconciled parquet on disk: the
         /// fresh rescore (gated on the write having persisted), the per-file resume skip
         /// (<see cref="TryResumeRescoredFile"/>), and the whole-task
-        /// <see cref="Rehydrate"/> - the last two re-fatten the same six arrays out of that
+        /// <see cref="Rehydrate"/> - the last two re-fatten the same arrays out of that
         /// parquet when they reload it, so without this they hold
         /// the full payload for every file at once. All three therefore leave the identical
         /// buffer shape.
@@ -1704,8 +1752,6 @@ namespace pwiz.Osprey.Tasks
             {
                 entry.Features = null;
                 entry.CwtCandidates = null;
-                entry.FragmentMzs = null;
-                entry.FragmentIntensities = null;
                 entry.ReferenceXicRts = null;
                 entry.ReferenceXicIntensities = null;
             }

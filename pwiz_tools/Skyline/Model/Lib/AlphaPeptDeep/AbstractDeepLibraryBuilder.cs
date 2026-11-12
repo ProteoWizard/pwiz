@@ -18,9 +18,11 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using pwiz.CarafeSharp.Core;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -33,8 +35,23 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
     /// <summary>
     /// Abstract base class for AlphaPeptDeep and Carafe library builders so they can share code. 
     /// </summary>
-    public abstract class AbstractDeepLibraryBuilder : ILibraryBuildWarning
+    public abstract class AbstractDeepLibraryBuilder
     {
+        /// <summary>
+        /// The predictions a library is built from. A modification supported for these is supported
+        /// as far as the modification warning and the per-peptide messages are concerned; CCS, which
+        /// only the pretrained model predicts, is extra.
+        /// </summary>
+        public const PredictionSupport LIBRARY_PREDICTION_SUPPORT =
+            PredictionSupport.fragmentation | PredictionSupport.retention_time;
+
+        /// <summary>
+        /// The UniMod modification each document modification without a UniMod id has matched, so a
+        /// definition is matched against UniMod once rather than for every peptide carrying it.
+        /// </summary>
+        private static readonly ConcurrentDictionary<StaticMod, StaticMod> MATCHED_UNIMODS =
+            new ConcurrentDictionary<StaticMod, StaticMod>();
+
         private DateTime _nowTime = DateTime.Now;
         
         protected AbstractDeepLibraryBuilder(SrmDocument document, IrtStandard irtStandard)
@@ -70,13 +87,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public abstract string InputFilePath { get; }
 
         public abstract string TrainingFilePath { get; }
-
-        public float FractionOfExpectedOutputLinesGenerated => TotalExpectedLinesOfOutput != 0
-            ? TotalGeneratedLinesOfOutput / (float)TotalExpectedLinesOfOutput
-            : 1.0F;
-
-        public int TotalExpectedLinesOfOutput { get; private protected set; }
-        public int TotalGeneratedLinesOfOutput { get; private protected set; }
 
         public void PreparePrecursorInputFile(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
@@ -180,13 +190,14 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             // The list created below is probably always short enough that determining
             // if it contains a modification would not be greatly improved by caching a set
             // for use here instead of the list.
-            var modificationTypes = new List<Tuple<ModifiedSequence.Modification, ModificationType>>();
+            var modificationTypes = new List<(ModifiedSequence.Modification Mod, StaticMod UniModMod, ModificationType Type)>();
             foreach (var explicitMod in modifiedSequence.ExplicitMods)
             {
-                if (explicitMod.UnimodId.HasValue)
+                var uniModMod = MatchUniMod(explicitMod);
+                if (uniModMod != null)
                 {
-                    var modificationType = LibraryBuilderModificationSupport.GetModificationType(explicitMod.UnimodId.Value);
-                    modificationTypes.Add(Tuple.Create(explicitMod, modificationType));
+                    var modificationType = LibraryBuilderModificationSupport.GetModificationType(uniModMod.UnimodId);
+                    modificationTypes.Add((explicitMod, uniModMod, modificationType));
                 }
                 else
                 {
@@ -199,10 +210,10 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
             // Review all modifications for support in the order they appeared, mentioning any
             // limitations for the first occurence.
-            foreach (var modAndType in modificationTypes.GroupBy(tuple => tuple.Item1.Name)
+            foreach (var modAndType in modificationTypes.GroupBy(tuple => tuple.Mod.Name)
                          .Select(g => g.First()))
             {
-                var modType = modAndType.Item2;
+                var modType = modAndType.Type;
                 if (modType == null || !modType.IsSupported(PredictionSupport.fragmentation))
                 {
                     supportedModels = PredictionSupport.none;
@@ -215,37 +226,37 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                         supportedModels &= ~PredictionSupport.ccs;
                 }
 
-                if (modType == null || !modType.IsSupported(PredictionSupport.all))
+                if (modType == null || !modType.IsSupported(LIBRARY_PREDICTION_SUPPORT))
                 {
-                    var mod = modAndType.Item1;
                     Messages.WriteAsyncUserMessage(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification,
-                        modifiedSequence, mod.Name, mod.UnimodIdWithName, ToolName);
+                        modifiedSequence, modAndType.Mod.Name, UnimodIdWithName(modAndType.UniModMod), ToolName);
                 }
             }
 
             var modsList = new List<string>();
             var modSitesList = new List<int>();
 
-            foreach (var group in modificationTypes.GroupBy(tuple => tuple.Item1.IndexAA))
+            foreach (var group in modificationTypes.GroupBy(tuple => tuple.Mod.IndexAA))
             {
+                var first = group.First();
                 var modNames = UniModData.UNI_MOD_DATA
-                    .Where(m => group.First().Item1.UnimodIdWithName.Contains(m.Name)).ToArray();
+                    .Where(m => UnimodIdWithName(first.UniModMod).Contains(m.Name)).ToArray();
                 if (modNames.Length == 0)
                 {
                     supportedModels = PredictionSupport.none;
-                    
+
                     Messages.WriteAsyncUserMessage(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification,
-                        modifiedSequence, group.First().Item1.Name, group.First().Item1.UnimodIdWithName, ToolName);
+                        modifiedSequence, first.Mod.Name, UnimodIdWithName(first.UniModMod), ToolName);
                 }
                 else
                 {
                     modsList.AddRange(modificationTypes
-                        .FindAll(tuple => tuple.Item1.IndexAA == group.First().Item1.IndexAA).Select(tuple =>
+                        .FindAll(tuple => tuple.Mod.IndexAA == first.Mod.IndexAA).Select(tuple =>
                             GetModName(new ModificationType(modNames.Single(), PredictionSupport.none),
-                                modifiedSequence.GetUnmodifiedSequence(), tuple.Item1.IndexAA)).ToList());
+                                modifiedSequence.GetUnmodifiedSequence(), tuple.Mod.IndexAA)).ToList());
                     modSitesList.AddRange(modificationTypes
-                        .FindAll(tuple => tuple.Item1.IndexAA == group.First().Item1.IndexAA)
-                        .Select(tuple => tuple.Item1.IndexAA + 1).ToList());
+                        .FindAll(tuple => tuple.Mod.IndexAA == first.Mod.IndexAA)
+                        .Select(tuple => tuple.Mod.IndexAA + 1).ToList());
                 }
             }
 
@@ -261,21 +272,60 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             return mod.AlphaNameWithAminoAcid(unmodifiedSequence, modIndexAA);
         }
 
+        /// <summary>
+        /// The UniMod modification a document modification is: itself when it carries a UniMod id,
+        /// else the UniMod modification with the same definition (formula or mass, amino acids and
+        /// terminus), which an older document names in its own way, like "Carbamidomethyl Cysteine"
+        /// for Carbamidomethyl (C). Null when no UniMod modification matches.
+        /// </summary>
+        public static StaticMod MatchUniMod(ModifiedSequence.Modification mod)
+        {
+            var staticMod = mod.StaticMod;
+            if (staticMod.UnimodId.HasValue)
+                return staticMod;
+            // The models see the modification's chemistry: not its relative retention time, and not its
+            // neutral losses, which the models do not predict, so an Oxidation (M) defined with its own
+            // losses is UniMod's Oxidation (M) for prediction
+            return MATCHED_UNIMODS.GetOrAdd(staticMod,
+                documentMod => UniMod.FindMatchingStaticMod(documentMod.ChangeRelativeRT(RelativeRT.Matching), true, true));
+        }
+
+        private static string UnimodIdWithName(StaticMod uniModMod)
+        {
+            return uniModMod.UnimodId + @":" + uniModMod.Name;
+        }
+
         public string GetWarning()
         {
-            var warningModSupports = GetWarningMods();
+            return GetWarning(GetWarningMods(), true);
+        }
+
+        /// <summary>
+        /// The warning about building with modifications the models do not know or support only in
+        /// part, from the static <c>GetWarningMods</c> over a document and a modification support, or
+        /// null when there are none. With <paramref name="ask"/> it ends with the question a build
+        /// asks before it starts; without, it is the statement alone, for a tooltip.
+        /// </summary>
+        public static string GetWarning(Dictionary<string, PredictionSupport> warningModSupports, bool ask)
+        {
             if (warningModSupports.IsNullOrEmpty())
                 return null;
 
             var warnings = new List<string>();
             AddWarning(warnings, ModelResources.Alphapeptdeep_Warn_unknown_modification,
                 warningModSupports.Where(kvp => kvp.Value == PredictionSupport.none).Select(kvp => kvp.Key));
+            // Only the modifications the models know in part; an unknown one is already listed above
             AddWarning(warnings, ModelResources.Alphapeptdeep_Warn_limited_modification,
-                warningModSupports.Where(kvp => kvp.Value != PredictionSupport.all).Select(kvp => kvp.Key));
+                warningModSupports.Where(kvp => kvp.Value != PredictionSupport.none && kvp.Value != PredictionSupport.all).Select(kvp => kvp.Key));
+            if (ask)
+            {
+                warnings.Add(Environment.NewLine);
+                warnings.Add(ModelResources.Alphapeptdeep_Warn_continue_building);
+            }
             return TextUtil.LineSeparate(warnings);
         }
 
-        private void AddWarning(List<string> warnings, string formatString, IEnumerable<string> modNames)
+        private static void AddWarning(List<string> warnings, string formatString, IEnumerable<string> modNames)
         {
             var mods = modNames.OrderBy(n => n).ToList();
             if (mods.Count > 0)
@@ -291,22 +341,33 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         /// </summary>
         public Dictionary<string, PredictionSupport> GetWarningMods()
         {
+            return GetWarningMods(Document, LibraryBuilderModificationSupport);
+        }
+
+        /// <summary>
+        /// The document's modifications the models do not know (<see cref="PredictionSupport.none"/>)
+        /// or support only in part, by the document's name for each, as a form can ask before a
+        /// builder exists.
+        /// </summary>
+        public static Dictionary<string, PredictionSupport> GetWarningMods(SrmDocument document,
+            LibraryBuilderModificationSupport modificationSupport)
+        {
             var warningModSupports = new Dictionary<string, PredictionSupport>();
 
             // Build precursor table row by row
-            foreach (var peptide in Document.Peptides)
+            foreach (var peptide in document.Peptides)
             {
-                var modifiedSequence = ModifiedSequence.GetModifiedSequence(Document.Settings, peptide, IsotopeLabelType.light);
+                var modifiedSequence = ModifiedSequence.GetModifiedSequence(document.Settings, peptide, IsotopeLabelType.light);
 
                 foreach (var mod in modifiedSequence.ExplicitMods)
                 {
                     if (warningModSupports.ContainsKey(mod.Name))
                         continue;
-                    
-                    var modType = LibraryBuilderModificationSupport.GetModificationType(mod.UnimodId);
+
+                    var modType = modificationSupport.GetModificationType(MatchUniMod(mod)?.UnimodId);
                     if (modType == null)
                         warningModSupports[mod.Name] = PredictionSupport.none;
-                    else if (!modType.IsSupported(PredictionSupport.all))
+                    else if (!modType.IsSupported(LIBRARY_PREDICTION_SUPPORT))
                         warningModSupports[mod.Name] = modType.SupportedModels;
                 }
             }
@@ -345,6 +406,30 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 }
             }
             return modifications;
+        }
+
+        /// <summary>
+        /// This support extended by the modifications a fine-tuned model was trained on, named as
+        /// CarafeSharp names them (<c>Carbamidomethyl@C</c>), each supported for fragmentation and
+        /// retention time on top of whatever the pretrained models support for it; the CCS model
+        /// stays pretrained. A name CarafeSharp's table or UniMod does not know adds nothing.
+        /// </summary>
+        public LibraryBuilderModificationSupport WithTrainingModifications(IEnumerable<string> modificationNames)
+        {
+            var types = new Dictionary<int, ModificationType>(_modificationSupport);
+            foreach (string name in modificationNames)
+            {
+                if (!ModificationTable.TryGet(name, out var definition) || definition.UnimodId <= 0)
+                    continue;
+                var uniModData = UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == definition.UnimodId);
+                if (!uniModData.ID.HasValue)
+                    continue;
+                var support = AbstractDeepLibraryBuilder.LIBRARY_PREDICTION_SUPPORT;
+                if (types.TryGetValue(definition.UnimodId, out var existing))
+                    support |= existing.SupportedModels;
+                types[definition.UnimodId] = new ModificationType(uniModData, support);
+            }
+            return new LibraryBuilderModificationSupport(types.Values.ToList());
         }
 
         public ModificationType GetModificationType(int? id)

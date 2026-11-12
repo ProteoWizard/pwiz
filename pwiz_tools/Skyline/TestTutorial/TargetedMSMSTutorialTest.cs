@@ -481,7 +481,8 @@ namespace pwiz.SkylineTestTutorial
             const int expectedMoleculeCount = 9;
             const int expectedTransitionGroupCount = 10; // Expect this many with results
             var expected20TransitionCount = AsSmallMoleculeMasses  ? 87 : 88; // Expect this many with results (note no library match possible for "as masses" version)
-            var expected80TransitionCount = AsSmallMoleculeMasses ? 88 : 87;
+            // Stray DRVYIHPF IDs no longer widen its extraction, and its precursor ion no longer coelutes in the narrower range
+            var expected80TransitionCount = AsSmallMoleculeMasses ? 88 : 86;
 
             // TODO: figure out why these assertions fail when taking screenshots. During screenshots, the expected / actual values:
             //      expected20TransitionCount = 88. Actual = 87
@@ -1198,13 +1199,7 @@ namespace pwiz.SkylineTestTutorial
 
             var propertyGrid = graphExtension.PropertiesSheet;
             Assert.IsNotNull(propertyGrid);
-            SpectrumProperties currentProperties = null;
-            RunUI(() => currentProperties = propertyGrid.SelectedObject as SpectrumProperties);
-            Assert.IsNotNull(currentProperties);
-
-            // To write new json string for the expected property values into the output stream uncomment the next line
-            //Trace.Write(currentProperties.Serialize());
-            Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
+            WaitForPropertySheet(() => propertyGrid.SelectedObject, expectedProperties);
 
             // Checks the number of properties displayed is the expected number
             // Checks that the property sheet updates upon switching peptides
@@ -1300,16 +1295,7 @@ namespace pwiz.SkylineTestTutorial
             }); 
             WaitForConditionUI(() => msGraph.PropertiesVisible);
             WaitForGraphs();
-            SpectrumProperties currentProperties = null;
-            RunUI(() =>
-            {
-                currentProperties = msGraph.PropertiesSheet.SelectedObject as SpectrumProperties;
-            });
-                
-            Assert.IsNotNull(currentProperties);
-            // To write new json string for the expected property values into the output stream uncomment the next line
-            //Trace.Write(currentProperties.Serialize());
-            Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
+            var currentProperties = WaitForPropertySheet(() => msGraph.PropertiesSheet.SelectedObject, expectedProperties);
             Assert.IsTrue(propertiesButton.Checked);
             // make sure properties are updated when spectrum combo selection changes
             RunUI(() =>

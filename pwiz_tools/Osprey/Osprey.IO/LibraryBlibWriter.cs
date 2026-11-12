@@ -85,10 +85,10 @@ namespace pwiz.Osprey.IO
                 long fileId = writer.AddSourceFile(Path.GetFullPath(librarySource), sourceName, 0.0);
                 var block = new BlibSpectrum[BLOCK_SIZE];
                 var refIds = new long[entries.Count];
-                using (var progress = new ProgressReporter(
-                           string.Format(OspreyIOResources.LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_,
-                               entries.Count, path),
-                           entries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                ProgressReporter.Run(
+                    string.Format(OspreyIOResources.LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_,
+                        entries.Count, path),
+                    entries.Count, progress =>
                 {
                     for (int start = 0; start < entries.Count; start += BLOCK_SIZE)
                     {
@@ -109,7 +109,7 @@ namespace pwiz.Osprey.IO
                         }
                         progress.Report(start + count);
                     }
-                }
+                }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
                 WriteDecoyPairs(writer, entries, refIds);
                 writer.CommitBatch();
                 writer.AddMetadata(OspreyBlibWriter.KEY_VERSION, OspreyVersion.Current);
@@ -149,7 +149,7 @@ namespace pwiz.Osprey.IO
         {
             // Generated decoys are not in the loaded library the export writes, so a decoy here
             // is a supplied one.
-            if (!entries.Any(e => e.IsDecoy || EntrapmentLibraryClassifier.IsEntrapment(e.ProteinIds)))
+            if (!entries.Any(e => e.IsDecoy || EntrapmentLibraryClassifier.IsEntrapment(e)))
                 return;
             var targetIndexById = new Dictionary<uint, int>();
             for (int i = 0; i < entries.Count; i++)
@@ -163,7 +163,7 @@ namespace pwiz.Osprey.IO
                 long? targetRefId = entry.IsDecoy && (entry.Id & LibraryEntry.DECOY_ID_BIT) != 0 &&
                                     targetIndexById.TryGetValue(entry.Id & ~LibraryEntry.DECOY_ID_BIT, out int targetIndex)
                     ? refIds[targetIndex] : null;
-                writer.AddDecoyPair(refIds[i], entry.IsDecoy, EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds),
+                writer.AddDecoyPair(refIds[i], entry.IsDecoy, EntrapmentLibraryClassifier.IsEntrapment(entry),
                     (int)entry.PairingId, targetRefId);
             }
         }

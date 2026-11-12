@@ -26,6 +26,7 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.BiblioSpec.IO;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.MSGraph;
@@ -452,10 +453,10 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<ScreenForm>("Peak Areas view (show context menu)", null,
                     bmp =>
                     {
-                        var rectBorder = ScreenshotProcessingExtensions.GetToolWindowBorderRect(
+                        var rectBorder = ScreenshotBorder.GetToolWindowBorderRect(
                             ScreenshotManager.GetFramedWindowBounds(peakAreas));
                         bmp = bmp.CleanupBorder(rectBorder,
-                            ScreenshotProcessingExtensions.CornerToolWindow, 
+                            ScreenshotBorder.CornerToolWindow, 
                             Rectangle.Union(menuStrip.Bounds, subMenuStrip.Bounds));
 
                         return ClipRegionAndEraseBackground(bmp,
@@ -1079,17 +1080,7 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForConditionUI(() => msGraph.PropertiesVisible);
             WaitForGraphs();
-            FullScanProperties currentProperties = null;
-            RunUI(() =>
-            {
-                currentProperties = msGraph.PropertiesSheet.SelectedObject as FullScanProperties;
-            });
-            Assert.IsNotNull(currentProperties);
-            // To write new json string for the expected property values into the output stream uncomment the next line
-            //Trace.Write(currentProperties.Serialize());
-            var difference = expectedProperties.GetDifference(currentProperties);
-
-            Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
+            var currentProperties = WaitForPropertySheet(() => msGraph.PropertiesSheet.SelectedObject, expectedProperties);
             Assert.IsTrue(propertiesButton.Checked);
 
             // make sure the properties are updated when the spectrum changes

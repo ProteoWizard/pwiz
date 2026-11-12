@@ -402,6 +402,13 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
     /// <inheritdoc/>
     public override ZtScanBin? ZtScan { get; }
 
+    private int _spectrumDataReads;
+
+    /// <summary>How many times a spectrum of this experiment has read its peaks from the SDK.</summary>
+    internal int SpectrumDataReads => Volatile.Read(ref _spectrumDataReads);
+
+    internal void CountSpectrumDataRead() => Interlocked.Increment(ref _spectrumDataReads);
+
     public override WiffExperimentType ExperimentType => MapExperimentType(_info.ExperimentType);
 
     public override WiffPolarity Polarity => _info.Polarity switch
@@ -444,53 +451,22 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
         };
     }
 
+    /// <remarks>
+    /// Reads only the cycle's <see cref="MassSpectrumInfo"/>, as cpp's <c>SpectrumImpl</c>
+    /// constructor does (WiffFile.cpp:765-787). The peaks are fetched, and centroided, by the
+    /// returned spectrum when its <see cref="WiffSpectrum.XValues"/> or
+    /// <see cref="WiffSpectrum.YValues"/> is first read, so a metadata-only request never pays
+    /// for a peak read or a centroiding pass.
+    /// </remarks>
     public override AbstractWiffSpectrum? GetSpectrum(int cycle1Based, bool addZeros, bool centroid)
     {
         try
         {
-            var ms = _exp.GetMassSpectrum(cycle1Based - 1);
-            // cpp WiffFile.cpp:738: pointsAreContinuous = !CentroidMode && expType != MRM && expType != SIM.
-            // Only the continuous case has a meaningful peak-array; MRM/SIM are already sticks.
-            bool pointsAreContinuous = !ms.Info.CentroidMode
-                && ExperimentType != WiffExperimentType.MRM
-                && ExperimentType != WiffExperimentType.SIM;
-
-            // cpp WiffFile.cpp:852-864: when doCentroid && pointsAreContinuous, getData uses
-            // GetPeakArray(cycle-1) — peak->xValue and peak->area * PEAK_AREA_SCALE_FACTOR (100).
-            // Without this branch the C# centroid path silently returns the raw profile data,
-            // which is what made vendor peak picking produce no peak-count reduction.
-            if (centroid && pointsAreContinuous)
-            {
-                try
-                {
-                    var peaks = _exp.GetPeakArray(cycle1Based - 1);
-                    int n = peaks?.Length ?? 0;
-                    var xs = new double[n];
-                    var ys = new double[n];
-                    for (int i = 0; i < n; i++)
-                    {
-                        xs[i] = peaks![i].xValue;
-                        ys[i] = peaks[i].area * PEAK_AREA_SCALE_FACTOR;
-                    }
-                    return new WiffSpectrum(ms, _exp, this, ExperimentType, xs, ys);
-                }
-                catch { /* fall through to profile path */ }
-            }
-
-            // cpp WiffFile.cpp:872-873 calls AddZeros(spectrum, 1) for profile (continuous)
-            // data; flanking zero-intensity points give consumers explicit baselines.
-            if (addZeros && !ms.Info.CentroidMode)
-            {
-                try { _exp.AddZeros(ms, 1); }
-                catch { /* AddZeros isn't always applicable */ }
-            }
-            return new WiffSpectrum(ms, _exp, this, ExperimentType);
+            var info = _exp.GetMassSpectrumInfo(cycle1Based - 1);
+            return new WiffSpectrum(info, _exp, this, ExperimentType, cycle1Based, addZeros, centroid);
         }
         catch { return null; }
     }
-
-    // cpp WiffFile.cpp:60: const int PEAK_AREA_SCALE_FACTOR = 100;
-    private const int PEAK_AREA_SCALE_FACTOR = 100;
 
     // ---- per-experiment TIC / BPC caches ----
     //
@@ -812,63 +788,66 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
     };
 }
 
-/// <summary><see cref="AbstractWiffSpectrum"/> backed by Clearcore2's <see cref="MassSpectrum"/>.</summary>
+/// <summary>
+/// <see cref="AbstractWiffSpectrum"/> backed by Clearcore2's <see cref="MassSpectrumInfo"/>, with
+/// the <see cref="MassSpectrum"/> (or its peak array) read on first use. Port of cpp
+/// <c>SpectrumImpl</c>, which holds the same info and fetches the data only in
+/// <c>getData</c>/<c>getDataSize</c>.
+/// </summary>
 internal sealed class WiffSpectrum : AbstractWiffSpectrum
 {
-    private readonly MassSpectrum _ms;
+    // cpp WiffFile.cpp:60: const int PEAK_AREA_SCALE_FACTOR = 100;
+    private const int PEAK_AREA_SCALE_FACTOR = 100;
+
     private readonly MassSpectrumInfo _info;
     private readonly MSExperiment _exp;
     private readonly WiffExperiment _wiffExperiment;
     private readonly WiffExperimentType _experimentType;
-    // When set, the caller already centroided this spectrum via GetPeakArray; expose those
-    // peaks as XValues/YValues and report CentroidMode=true so downstream code does not
-    // re-pick or re-pad.
-    private readonly double[]? _centroidXs;
-    private readonly double[]? _centroidYs;
+    private readonly int _cycle1Based;
+    private readonly bool _addZeros;
+    // Whether the data is the SDK's peak array rather than its points. cpp WiffFile.cpp:773:
+    // pointsAreContinuous = !CentroidMode && expType != MRM && expType != SIM, and only
+    // continuous points have peaks to pick; MRM/SIM are already sticks.
+    private readonly bool _pickPeaks;
+    private double[]? _xs;
+    private double[]? _ys;
 
-    public WiffSpectrum(MassSpectrum ms, MSExperiment exp, WiffExperiment wiffExperiment, WiffExperimentType experimentType,
-        double[]? centroidXs = null, double[]? centroidYs = null)
+    public WiffSpectrum(MassSpectrumInfo info, MSExperiment exp, WiffExperiment wiffExperiment,
+        WiffExperimentType experimentType, int cycle1Based, bool addZeros, bool centroid)
     {
-        _ms = ms;
-        _info = ms.Info;
+        _info = info;
         _exp = exp;
         _wiffExperiment = wiffExperiment;
         _experimentType = experimentType;
-        _centroidXs = centroidXs;
-        _centroidYs = centroidYs;
+        _cycle1Based = cycle1Based;
+        _addZeros = addZeros;
+        _pickPeaks = centroid && !info.CentroidMode
+            && experimentType != WiffExperimentType.MRM
+            && experimentType != WiffExperimentType.SIM;
     }
 
-    public override bool CentroidMode => _centroidXs is not null || _info.CentroidMode;
+    // A peak-picked spectrum reports CentroidMode=true so downstream code does not re-pick or
+    // re-pad it.
+    public override bool CentroidMode => _pickPeaks || _info.CentroidMode;
 
     public override double[] XValues
     {
-        // cpp WiffFile.cpp:877-892: SDK X values for MRM/SIM aren't m/z; rebuild from
-        // MassRangeInfo. MRM cells use Q3Mass (the daughter); SIM cells use Mass.
-        // Fall back to the SDK's X values when MassRangeInfo is missing or shorter
-        // than the SDK's reported NumDataPoints, matching cpp's runtime guard.
         get
         {
-            if (_centroidXs is not null) return _centroidXs;
-            if (_experimentType is WiffExperimentType.MRM or WiffExperimentType.SIM)
-            {
-                var ranges = _exp.Details?.MassRangeInfo;
-                if (ranges is { Length: > 0 } && ranges.Length == _ms.NumDataPoints)
-                {
-                    var mz = new double[ranges.Length];
-                    if (_experimentType == WiffExperimentType.MRM)
-                        for (int i = 0; i < mz.Length; i++)
-                            mz[i] = ranges[i] is MRMMassRange mrm ? mrm.Q3Mass : 0;
-                    else
-                        for (int i = 0; i < mz.Length; i++)
-                            mz[i] = ranges[i] is SIMMassRange sim ? sim.Mass : 0;
-                    return mz;
-                }
-            }
-            return _ms.GetActualXValues() ?? Array.Empty<double>();
+            EnsureData();
+            return _xs!;
         }
     }
 
-    public override double[] YValues => _centroidYs ?? (_ms.GetActualYValues() ?? Array.Empty<double>());
+    public override double[] YValues
+    {
+        get
+        {
+            EnsureData();
+            return _ys!;
+        }
+    }
+
     public override bool HasPrecursorInfo => _info.ParentMZ > 0;
     public override double PrecursorMz => _info.ParentMZ;
     public override int PrecursorCharge => _info.ParentChargeState;
@@ -985,4 +964,92 @@ internal sealed class WiffSpectrum : AbstractWiffSpectrum
     }
 
     public override WiffExperimentType ExperimentType => _experimentType;
+
+    /// <summary>
+    /// Reads the data once. A cycle the SDK cannot hand back yields empty arrays, which is what
+    /// the spectrum list's emptiness probe and its zero-point spectra expect.
+    /// </summary>
+    private void EnsureData()
+    {
+        if (_xs is not null)
+            return;
+        _wiffExperiment.CountSpectrumDataRead();
+        if (_pickPeaks && TryReadPeakArray())
+            return;
+        try
+        {
+            ReadMassSpectrum();
+        }
+        catch
+        {
+            _ys = Array.Empty<double>();
+            _xs = Array.Empty<double>();
+        }
+    }
+
+    // cpp WiffFile.cpp:895-907: when doCentroid && pointsAreContinuous, getData uses
+    // GetPeakArray(cycle-1) - peak->xValue and peak->area * PEAK_AREA_SCALE_FACTOR (100).
+    // Without this branch the C# centroid path silently returns the raw profile data,
+    // which is what made vendor peak picking produce no peak-count reduction.
+    private bool TryReadPeakArray()
+    {
+        try
+        {
+            var peaks = _exp.GetPeakArray(_cycle1Based - 1);
+            int n = peaks?.Length ?? 0;
+            var xs = new double[n];
+            var ys = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                xs[i] = peaks![i].xValue;
+                ys[i] = peaks[i].area * PEAK_AREA_SCALE_FACTOR;
+            }
+            _ys = ys;
+            _xs = xs;
+            return true;
+        }
+        catch
+        {
+            return false;   // fall back to the profile points
+        }
+    }
+
+    private void ReadMassSpectrum()
+    {
+        var ms = _exp.GetMassSpectrum(_cycle1Based - 1);
+        // cpp WiffFile.cpp:915-916 calls AddZeros(spectrum, 1) for profile (continuous)
+        // data; flanking zero-intensity points give consumers explicit baselines.
+        if (_addZeros && !_info.CentroidMode)
+        {
+            try { _exp.AddZeros(ms, 1); }
+            catch { /* AddZeros isn't always applicable */ }
+        }
+        _ys = ms.GetActualYValues() ?? Array.Empty<double>();
+        _xs = TransitionMzs(ms.NumDataPoints) ?? ms.GetActualXValues() ?? Array.Empty<double>();
+    }
+
+    // cpp WiffFile.cpp:920-935: SDK X values for MRM/SIM aren't m/z; rebuild from
+    // MassRangeInfo. MRM cells use Q3Mass (the daughter); SIM cells use Mass.
+    // Null (use the SDK's X values) when MassRangeInfo is missing or its length differs
+    // from the SDK's reported NumDataPoints, matching cpp's runtime guard.
+    private double[]? TransitionMzs(int numDataPoints)
+    {
+        if (_experimentType is not (WiffExperimentType.MRM or WiffExperimentType.SIM))
+            return null;
+        var ranges = _exp.Details?.MassRangeInfo;
+        if (ranges is not { Length: > 0 } || ranges.Length != numDataPoints)
+            return null;
+        var mz = new double[ranges.Length];
+        if (_experimentType == WiffExperimentType.MRM)
+        {
+            for (int i = 0; i < mz.Length; i++)
+                mz[i] = ranges[i] is MRMMassRange mrm ? mrm.Q3Mass : 0;
+        }
+        else
+        {
+            for (int i = 0; i < mz.Length; i++)
+                mz[i] = ranges[i] is SIMMassRange sim ? sim.Mass : 0;
+        }
+        return mz;
+    }
 }

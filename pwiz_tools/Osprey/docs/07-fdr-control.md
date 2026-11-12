@@ -174,7 +174,7 @@ for `percolator` and 1.27% for `gbdt` in the second pass (1.24% and 1.65% in the
 is a baseline for feature work, not a verdict on either classifier.
 
 **Every first-pass path trains and scores the trees.** A default run takes the lean
-counts-only first pass (`PercolatorScorer.RunStreamingFirstPass`) for `gbdt` exactly as for
+counts-only first pass (`PercolatorEngine.RunStreamingFirstPass`) for `gbdt` exactly as for
 the SVM, since both are the Percolator framework; the projection buffer takes the resident
 path. Both hand the trainer the same
 `PercolatorConfig.CloneForTrainOnly()` copy and score through the same per-classifier code:
@@ -215,7 +215,7 @@ re-run as gbdt, a gbdt directory written before the lean first pass trained tree
 `OSPREY_GBT_*` sweep point re-run as the next all recompute instead of reusing the other arm's
 results. A current model of the other classifier can therefore only reach a resume through a
 defect, and the refusals that remain are the backstop: the lean first pass throws before its
-ingest when handed one (`PercolatorScorer.RunStreamingFirstPass`), and the all-sidecars-current
+ingest when handed one (`PercolatorEngine.RunStreamingFirstPass`), and the all-sidecars-current
 resume declines to enter at the compaction gate with one and recomputes
 (`FirstPassFdrTask.CompactionGateRefusals`).
 
@@ -235,7 +235,7 @@ upstream competition. The C# port is **streaming-only**: the former sub-threshol
 change, so C# and Rust fit the standardizer on subsets built by the same selection code at
 every scale — though **no longer on the same subset by default**, since the training
 selection below is C#-only (`PercolatorEngine.RunStreamingIntoProjection`,
-`PercolatorScorer.RunStreamingFirstPass`).
+`PercolatorEngine.RunStreamingFirstPass`).
 
 ### 3a. Standardize features
 
@@ -361,7 +361,7 @@ before that step (`PercolatorTrainer.cs:264-289`). The streaming score passes -
 `ScoreProjectionAndComputeFdrInPlace` and `RunStreamingFirstPass` - then apply `standardizer` + the fold average (the averaged weights +
 bias for the SVM, the fold margins averaged per row for trees) to **every** entry, the
 training-subset entries included, reloading features one file at a time
-(`PercolatorScorer.cs:63`, `PercolatorScorer.cs:272`). See "GBDT" above for what that
+(`PercolatorScorer.ScoreProjectionAndComputeFdrInPlace`, `PercolatorEngine.RunStreamingFirstPass`). See "GBDT" above for what that
 in-sample scoring means for trees.
 
 #### Reading the feature-contribution table
@@ -378,12 +378,74 @@ It is headed "Model sanity check" and it is a **description, not feature importa
   obstacle is collinearity, not the SVM: an L2 SVM spreads weight across a covarying
   group, so each member looks individually dispensable while the group matters, and
   coefficients alone cannot say whether one of them is unneeded.
-- Percolator's 3-fold CV gives fold-to-fold weight stability for free; the importance
-  and redundancy diagnostics built on that (fold stability, univariate AUROC, grouped
-  contribution, permutation importance) are #4467 and #4550.
+- Percolator's 3-fold CV gives fold-to-fold weight stability for free; it and the
+  importance and redundancy measures are the training-set feature analysis below.
 - Under `OSPREY_FDR_MODEL=gbdt` there is no table: a tree ensemble has no weights to
   decompose. The report lists each feature's target-decoy mean gap and its per-feature
   distributions instead, and says the contribution table does not apply.
+
+#### Training-set feature analysis (#4550, #4467)
+
+The report's Model tab also measures what training did with each feature, on the rows it
+trained on (`Osprey.FDR/TrainingSetAnalysis.cs`). The contribution table describes the
+trained equation over every scored precursor; these columns and cards describe the
+training subset, and say so in the report. They are built to be read one feature at a time
+across many features, which is how candidate scores are valued.
+
+**Populations.** All three live inside the training subset of 3b - at most `MaxTrainSize`
+rows, so the cost is bounded by that cap and not by the cohort.
+
+| Population | Rows | Used by |
+|---|---|---|
+| Final training set | per fold, the positives and decoys the fold's **returned** (best-iteration) model was trained on: the targets passing the training FDR under the previous iteration's score, plus every decoy of the fold's training rows (for trees, of its inner fit rows). Per-feature values pool the folds, so a subset row that trains in two folds counts twice | AUROC, Cohen's d, TPR at 1% FPR, per-feature ROC and distributions, the "final training set" composite curve |
+| In-sample | every subset row a fold's model was fit on (for trees, the inner fit rows, not the rows held out to pick the iteration), all targets vs all decoys, scored by that fold's model | the in-sample composite curve |
+| Held-out | every subset row, scored by the model of the fold it was held out of | the held-out composite curve, permutation importance |
+
+The per-fold training sets exist only inside `PercolatorTrainer`, so the analysis is
+computed on **every** run, not only under `--model-diagnostics`, and persisted with the
+first-pass model (`TrainingAnalysis` in `<blib-stem>.1st-pass.model.json`). That is what lets
+a report written later, from the artifacts alone, show the same values (doc 00, P16). It
+never touches a model or a score the pipeline uses; `PercolatorConfig.CollectTrainingAnalysis`
+gates it and the trainer logs its time under `[TIMING]`. A model file written by an older
+build has no analysis, and the report says so.
+
+**Per-feature metrics** (model-table columns, keyed in the diagnostics JSON on each
+`model[]` row):
+
+| Metric | Definition | Population |
+|---|---|---|
+| Fold weights (`foldWeightMin` / `foldWeightMax` / `foldWeightSd`, `foldSignConsistent`) | each fold's standardized SVM weight; the coefficient is their mean, the spread is the sample SD; "flip" when the signs differ. NaN for trees | the fold models |
+| AUROC (`auroc`, `aurocFoldMin`, `aurocFoldMax`) | `P(x_pos > x_dec)`, ties counted half (Mann-Whitney). 0.5 is no separation; below 0.5 means lower values are the target-like ones. Rank-based, so invariant to monotone transforms | final training set, pooled (per-fold range alongside) |
+| Cohen's d (`cohenD`) | `(mean_pos - mean_dec) / s_pooled`, `s_pooled^2 = ((n_pos-1) s_pos^2 + (n_dec-1) s_dec^2) / (n_pos + n_dec - 2)` | final training set, pooled |
+| TPR at 1% FPR (`tprAtReferenceFpr`) | the fraction of positives strictly above the threshold that admits `floor(0.01 n_dec)` decoys strictly above it: the low-FPR corner where q <= 0.01 acceptance lives | final training set, pooled |
+| ROC (`rocTpr`) | the same read at 41 log-spaced FPRs from 1e-4 to 1 (`trainingSet.rocFpr`); exact from sorted values, not from the 60-bin histograms, whose clamped end bins would distort the corner | final training set, pooled |
+| Distributions (`trainTargetHist` / `trainDecoyHist`) | over the shared standardized bin edges, drawn solid over the full scored population (ghosted) | final training set, pooled |
+| Permutation drop (`permutationDrop`) | `(B - B_j) / B`, where `B` is the held-out targets passing the training FDR under paired target-decoy competition, counted per fold and summed, and `B_j` the same with feature `j`'s values shuffled across that fold's held-out rows. Frozen models, no retraining; one fixed-seed shuffle per feature and fold | held-out |
+
+**Pass-level values** (`trainingSet` in the JSON, `pass2.model.trainingSet` for a pass-2
+model): subset and per-fold training-set sizes and the iteration each fold returned; three
+composite ROC curves, each the per-fold curves averaged at fixed FPR with AUROC the mean of
+the folds' (final training set, in-sample, held-out - the in-sample/held-out gap is the
+overfitting readout); the permutation baseline `B`; and the feature correlation.
+
+**Correlation and groups.** Pearson correlation of the standardized features over the
+training subset, each row once, targets and decoys together (`trainingSet.correlation`).
+Features linked at `|r| >= 0.8` (single linkage, `TrainingSetAnalysis.CORRELATION_GROUP_THRESHOLD`)
+form a group, listed with its weakest member-to-member `|r|`, its **summed contribution** (the
+members' shares of the composite separation added) and its **joint permutation drop** (every
+member shuffled by one shared row order, so the members stay correlated with each other but
+not with the class). Plain permutation importance under-reports a feature whose correlated
+partner carries the same signal; the group's joint drop is the honest reading, and a joint
+drop well above the sum of the members' own drops means the members stand in for each
+other. A constant feature has NaN correlation and joins no group.
+
+**Cost.** One pass over the training subset per feature for the separation metrics, one
+`O(n p^2)` pass for the correlation, and `p + groups` re-scorings of the held-out rows for
+the permutations, run on `--threads`. Measured on the 3-file Stellar regression (300,000-row
+subset, 21 features, linear SVM): 0.8 s, against 106.5 s for the fold training it follows.
+A tree ensemble re-scores a row through every tree, so for `gbdt` the permutations use at
+most about 50,000 held-out rows per fold (`TrainingSetAnalysis.TREE_PERMUTATION_ROW_CAP`),
+thinned deterministically by whole target-decoy pairs; the curves still use every row.
 
 ### 3g. Granholm score calibration between folds
 
@@ -793,8 +855,9 @@ authoritative for blib output; the best-of-runs clamp is re-applied afterward.
 Protein parsimony always runs. Two-pass picked-protein FDR (Savitski 2015) writes
 `FdrEntry.RunProteinQvalue` (first pass, `ProteinFdr.cs:826`) and
 `FdrEntry.ExperimentProteinQvalue` (second pass, authoritative, `ProteinFdr.cs:781`).
-The ranking score is the maximum peptide SVM discriminant per group; protein-level PEP is
-intentionally not computed. **However**, unlike Rust, the C# `FdrLevel` enum has no
+The ranking score is the maximum peptide SVM discriminant per group. A protein-group PEP
+(`ProteinFdrResult.GroupPeps`) is a C# addition Rust does not compute; see
+`08-protein-parsimony.md`. **However**, unlike Rust, the C# `FdrLevel` enum has no
 `Protein` variant, so protein q-values are computed and reported in the protein report but
 **cannot gate the blib output** from the CLI — see Divergences.
 

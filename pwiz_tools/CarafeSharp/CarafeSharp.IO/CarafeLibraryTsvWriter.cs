@@ -94,7 +94,7 @@ namespace pwiz.CarafeSharp.IO
             string precursor = spectrum.ModifiedPeptide + "\t" + spectrum.Sequence + "\t" +
                                JavaNumberFormat.ToString(spectrum.PrecursorMz) + "\t" +
                                spectrum.Charge.ToString(CultureInfo.InvariantCulture) + "\t" +
-                               JavaNumberFormat.FormatFixed(spectrum.RetentionTime, 2) + "\t" +
+                               (spectrum.RetentionTime.HasValue ? JavaNumberFormat.FormatFixed(spectrum.RetentionTime.Value, 2) : string.Empty) + "\t" +
                                mobility +
                                spectrum.ProteinId + "\t" +
                                spectrum.Decoy.ToString(CultureInfo.InvariantCulture) + "\t";

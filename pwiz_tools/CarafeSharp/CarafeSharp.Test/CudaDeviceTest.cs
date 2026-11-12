@@ -52,6 +52,22 @@ namespace pwiz.CarafeSharp.Test
                     Assert.Fail(fallback);
                 Assert.Inconclusive(fallback);
             }
+            // TorchDevice turns TF32 off, so the GPU computes in float32 as the CPU does.
+            Assert.IsFalse(backends.cudnn.allow_tf32, @"cuDNN TF32 is on");
+            Assert.IsFalse(backends.cuda.matmul.allow_tf32, @"CUDA matmul TF32 is on");
+            // Fine-tuning is in float32 too, with deterministic cuDNN, which is restored afterwards.
+            var context = LibTorchContext.TryOpen(out string problem);
+            Assert.IsNotNull(context, problem);
+            bool before = context.DeterministicCuDnn;
+            string warning = null;
+            using (var scope = TorchDevice.DeterministicCuDnn(gpu, message => warning = message))
+            {
+                Assert.IsNotNull(scope, warning);
+                Assert.IsTrue(context.DeterministicCuDnn, @"cuDNN is not deterministic for training");
+                Assert.IsFalse(backends.cudnn.allow_tf32, @"cuDNN TF32 is on for training");
+            }
+            Assert.AreEqual(before, context.DeterministicCuDnn, @"cuDNN's deterministic setting was not restored after training");
+            Assert.IsNull(TorchDevice.DeterministicCuDnn(CPU, null));
             var pretrained = PretrainedModels.Open();
 
             var peptides = new[]
