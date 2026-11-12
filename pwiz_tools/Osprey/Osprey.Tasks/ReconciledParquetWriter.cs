@@ -113,7 +113,7 @@ namespace pwiz.Osprey.Tasks
                 var result = ParquetScoreCache.StreamReconciledScoresParquet(
                     originalPath, reconciledPath, overlayByIndex, gapFill,
                     metadata, libraryById, fileName, keepIdentities, PerFileRescoreTask.TASK_NAME,
-                    TextUtil.GetIndentation(1), logWarning);
+                    TextUtil.GetIndentation(1), logWarning, ParquetScoreCache.WritesReferenceXic(config));
                 nReplaced = result.NReplaced;
                 nAppended = result.NAppended;
                 origRowCount = result.OrigRowCount;

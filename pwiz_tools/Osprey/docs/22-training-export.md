@@ -24,7 +24,7 @@ Osprey decides nothing from this evidence. The consumer applies its own masking 
 |---|---|
 | Written by | `PerFileRescoring` (`Osprey.Tasks/PerFileRescoreTask.cs`), through `Osprey.Tasks/TrainingExportWriter.cs`. A declared output of that task, not a stage: the pipeline stays four stages (P17 in [00](00-pipeline-architecture.md)) |
 | Shape | per run, inside the fan-out: one run's artifacts at a time, and the spectra of the isolation windows in flight - one per worker thread, so up to `--threads` windows |
-| Enabled | only with `--training-export` (or `--task TrainingExport`, the same request as a selector); never under `--task ModelDiagnostics`. On an HPC chain it is written by the `--task PerFileRescoring` nodes; every other `--task` accepts the flag, because a wrapper hands every node the same options, and ignores it, and the startup line says where the export is written |
+| Enabled | only with `--training-export` (or `--task TrainingExport`, the same request as a selector); never under `--task ModelDiagnostics`. On an HPC chain it is written by the `--task PerFileRescoring` nodes, and the `--task PerFileScoring` nodes need the flag too: it makes them write the reference XIC the export reads (a `PerFileRescoring` node given Stage 4 parquets without it stops with that message). The FDR `--task`s accept the flag, because a wrapper hands every node the same options, and ignore it, and the startup line says where the export is written |
 | Reads | the run's `.scores-reconciled.parquet`, one q-value sidecar (below), `.calibration.json` and `.spectra.bin`; the run's data file for the instrument footer, when it is there; the library, and `<blib-stem>.1st-pass.retained_base_ids.bin` when it loads the library itself |
 | Writes | `<stem>.training.parquet` per run, its validity stamp in its own footer (`osprey.validity`). Nothing else |
 
@@ -41,9 +41,9 @@ thread, since the rescore's windows are released as it goes.
 
 **Two routes, one file.** With the flag up front, each run's export is written as soon as that
 run's reconciled parquet and per-run second pass have landed, while its spectra are in hand.
-With the flag added to a finished analysis, `PerFileRescoring` takes its export-only arm
-(`OnlyTrainingExportsOutstanding`): every other output of the task is current, so it writes each
-missing export from the run's own artifacts and re-scores nothing. Every run the in-flight
+With the flag on an analysis that ran with it but is missing exports, `PerFileRescoring` takes
+its export-only arm (`OnlyTrainingExportsOutstanding`): every other output of the task is
+current, so it writes each missing export from the run's own artifacts and re-scores nothing. Every run the in-flight
 route does not reach - one resumed as already re-scored, one with no re-scoring work - takes
 the same from-disk route at the end of the task. Both routes read the reconciled parquet and
 the q-value sidecar back from disk, so they write the same bytes. The one shortcut is the
@@ -67,17 +67,23 @@ stops before `SecondPassFDR` writes the blib. Every other output carries its sta
 re-run of the same command retries only the failed exports. An export that was asked for and
 not written is a failed run, not a warning; a run that needs the blib regardless drops the flag.
 
-**Pay later.** `PerFileRescoring`'s key does not change with the option, and neither does any
-other task's, so adding `--training-export` to a finished run's command line reports
-`PerFileScoring`, `FirstPassFDR` and `SecondPassFDR` as `skipping (outputs valid)` and runs only
-the export-only arm. (An analysis with a run that had no Stage 6 work is the exception:
-`PerFileRescoring` never counts as current there, because that run has no worker decoys file, so
-it takes its resume route instead - it reloads the first pass and re-scores nothing - and writes
-the exports at its end.) Measured on the 3-run Stellar set: the pay-later run took 15 s, 4-6 s per
-run for the export itself, against 6.5 minutes for the analysis. Each run's parquet was
-byte-identical to the one written with the flag up front, and every table of the blib but its
-`LibInfo` row (a fresh LSID and creation time on every write) was identical to the blib of the
-run without the flag.
+**Added later, it re-scores.** The export reads each row's reference XIC from the reconciled
+parquet, and nothing else does, so the scores parquets carry it only when the export is
+requested: ~9% of a SEA-AD scoring parquet saved on every run that does not export (#5023).
+The option therefore moves the `PerFileScoring` and `PerFileRescoring` keys, and adding
+`--training-export` to a finished run's command line runs those two tasks again, writing the
+reference XIC, while `FirstPassFDR` and `SecondPassFDR` report `skipping (outputs valid)`. Give
+the flag up front when the export is wanted. Each run's export is byte-identical to the one
+written with the flag up front either way, and the library is unchanged; a file reached without
+the reference XIC is refused rather than exported (`ParquetScoreCache.LoadTrainingExportRows`,
+`StreamReconciledScoresParquet`).
+
+The key term works both ways: an analysis run with the export and then re-run in the same
+directory without the flag also re-scores Stages 4 and 6, because its parquets are keyed on a
+schema that run would not write. Keep the flag on the command line of a directory that was
+exported, or remove the directory's parquets deliberately. Accepting a file that carries more
+than the run needs would mean comparing keys by more than equality everywhere a stamp is
+checked; for an opt-in product that has not been worth it.
 
 ---
 

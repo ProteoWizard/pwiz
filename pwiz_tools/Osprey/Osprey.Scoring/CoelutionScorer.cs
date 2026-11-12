@@ -420,13 +420,13 @@ namespace pwiz.Osprey.Scoring
 
         /// <summary>
         /// Build the <see cref="FdrEntry"/> for a scored candidate's winning peak.
-        /// Serializes the full library fragment list (m/z + relative intensity),
-        /// slices the reference XIC across the winning peak's [start..end] window,
+        /// Slices the reference XIC across the winning peak's [start..end] window,
         /// and copies the feature vector + bounds onto the entry. Pure: no logging,
-        /// no diagnostics -- the six blob/scalar fields mirror Rust
-        /// CoelutionScoredEntry::{fragment_mzs, fragment_intensities, reference_xic,
-        /// peak.area, peak.signal_to_noise} so the reconciled .scores.parquet
-        /// write-back stays byte-identical for cross-impl validation.
+        /// no diagnostics -- the reference XIC and bounds mirror Rust
+        /// CoelutionScoredEntry::{reference_xic, peak.area, peak.signal_to_noise}.
+        /// Rust also carries the library fragment list (fragment_mzs,
+        /// fragment_intensities); C# does not, because it is a verbatim copy of the
+        /// library spectrum that nothing reads back (#5023).
         /// </summary>
         private static FdrEntry BuildFdrEntry(
             LibraryEntry candidate,
@@ -440,23 +440,6 @@ namespace pwiz.Osprey.Scoring
             int startScan,
             Spectrum apexSpectrum)
         {
-            // FragmentMzs / FragmentIntensities iterate the FULL library
-            // fragment list (not just the top-N used by XIC extraction)
-            // because Rust's parquet writer at pipeline.rs:1620-1631
-            // serializes every library fragment.
-            var frags = candidate.Fragments;
-            int nFrags = frags?.Count ?? 0;
-            double[] fragMzs = new double[nFrags];
-            float[] fragInts = new float[nFrags];
-            if (frags != null)
-            {
-                for (int fi = 0; fi < nFrags; fi++)
-                {
-                    fragMzs[fi] = frags[fi].Mz;
-                    fragInts[fi] = frags[fi].RelativeIntensity;
-                }
-            }
-
             // ReferenceXic{Rts,Intensities} are sliced from the highest-
             // total-intensity fragment XIC across the winning peak's
             // [si..=ei] window, matching Rust's
@@ -502,8 +485,6 @@ namespace pwiz.Osprey.Scoring
                 ModifiedSequence = candidate.ModifiedSequence,
                 Features = features,
                 CwtCandidates = cwtCandidatesOut,
-                FragmentMzs = fragMzs,
-                FragmentIntensities = fragInts,
                 ReferenceXicRts = refXicRts,
                 ReferenceXicIntensities = refXicInts,
                 BoundsArea = bestPeak.Area,
