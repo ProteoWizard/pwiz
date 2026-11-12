@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
@@ -448,8 +449,7 @@ namespace Pwiz.SeeMS
         public override ProcessingMethod ToProcessingMethod()
         {
             ProcessingMethod pm = new ProcessingMethod();
-            // ReSharper disable once SpecifyACultureInStringConversionExplicitly
-            pm.UserParams.Add( new UserParam( "threshold", threshold.ToString(), "SeeMS" ) );
+            pm.UserParams.Add( new UserParam( "threshold", threshold.ToString(CultureInfo.InvariantCulture), "SeeMS" ) );
             pm.UserParams.Add( new UserParam( "type", type.ToString(), "SeeMS" ) );
             pm.UserParams.Add( new UserParam( "orientation", orientation.ToString(), "SeeMS" ) );
             return pm;
@@ -588,10 +588,8 @@ namespace Pwiz.SeeMS
         public override ProcessingMethod ToProcessingMethod()
         {
             ProcessingMethod pm = new ProcessingMethod();
-            // ReSharper disable once SpecifyACultureInStringConversionExplicitly
-            pm.UserParams.Add(new UserParam("mz", mz.ToString(), "SeeMS"));
-            // ReSharper disable once SpecifyACultureInStringConversionExplicitly
-            pm.UserParams.Add(new UserParam("tolerance", tolerance.ToString(), "SeeMS"));
+            pm.UserParams.Add(new UserParam("mz", mz.ToString(CultureInfo.InvariantCulture), "SeeMS"));
+            pm.UserParams.Add(new UserParam("tolerance", tolerance.ToString(CultureInfo.InvariantCulture), "SeeMS"));
             return pm;
         }
 
