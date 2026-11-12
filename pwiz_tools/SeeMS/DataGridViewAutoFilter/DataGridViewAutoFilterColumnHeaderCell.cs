@@ -1319,10 +1319,9 @@ namespace DataGridViewAutoFilter
 
             // Return String.Empty if there is no appropriate data source or
             // there is no filter in effect. 
-            if (String.IsNullOrEmpty(data.Filter) ||
-                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                data == null || 
-                data.DataSource == null || 
+            if (data == null ||
+                String.IsNullOrEmpty(data.Filter) ||
+                data.DataSource == null ||
                 !data.SupportsFiltering)
             {
                 return String.Empty;

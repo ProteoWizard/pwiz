@@ -348,7 +348,11 @@ public sealed class ThermoRawFile : IDisposable
                 if (!string.IsNullOrEmpty(m)) { sb.Append(m); sb.Append('\n'); }
             }
         }
-        catch { /* Method fetch can fail on some files. */ }
+        catch (Exception ex)
+        {
+            // Method fetch can fail on some files.
+            Console.Error.WriteLine($"[ThermoRawFile] {Path.GetFileName(Filename)}: {MethodTextUnavailable("instrument method")}: {ex.Message}");
+        }
         try
         {
             var statusLog = Raw.GetStatusLogForRetentionTime(0);
@@ -361,12 +365,19 @@ public sealed class ThermoRawFile : IDisposable
                 }
             }
         }
-        // ReSharper disable once EmptyGeneralCatchClause
-        catch { }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[ThermoRawFile] {Path.GetFileName(Filename)}: {MethodTextUnavailable("status log")}: {ex.Message}");
+        }
 
         ParseInstrumentMethodText(sb.ToString(), _widthBySegmentAndEvent, _defaultWidthBySegmentAndMsLevel,
             out _methodInstrumentModel);
     }
+
+    // The method and status-log text is the only source of the method isolation widths (per
+    // event and per-MS-level defaults alike) and of the method-derived instrument model.
+    private static string MethodTextUnavailable(string part) =>
+        $"{part} unreadable; any method isolation widths or instrument model it holds are unavailable";
 
     // Regex patterns ported from RawFile.cpp:1939-1949. Kept internal + static for cheap init.
     private static readonly System.Text.RegularExpressions.Regex s_segmentRegex =

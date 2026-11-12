@@ -343,8 +343,7 @@ namespace Pwiz.SeeMS
 
         public ThresholdingBy Type
         {
-            // ReSharper disable once FunctionRecursiveOnAllPaths
-            get { return Type; }
+            get { return type; }
             set
             {
                 type = value;

@@ -146,6 +146,7 @@ namespace Pwiz.SeeMS
 
     public class PeptideFragmentationAnnotation : AnnotationBase
     {
+        [Flags]
         public enum IonSeries
         {
             Off = 0,
@@ -163,19 +164,11 @@ namespace Pwiz.SeeMS
 
         Map<CVID, IonSeries> ionSeriesByDissociationMethod = new Map<CVID, IonSeries>
         {
-            // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
             {CVID.MS_collision_induced_dissociation, IonSeries.b | IonSeries.y},
-            // ReSharper disable BitwiseOperatorOnEnumWithoutFlags
             {CVID.MS_beam_type_collision_induced_dissociation, IonSeries.b | IonSeries.y | IonSeries.Immonium}, // HCD
-            // ReSharper restore BitwiseOperatorOnEnumWithoutFlags
-            // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
             {CVID.MS_trap_type_collision_induced_dissociation, IonSeries.b | IonSeries.y},
-            // ReSharper disable BitwiseOperatorOnEnumWithoutFlags
             {CVID.MS_higher_energy_beam_type_collision_induced_dissociation, IonSeries.b | IonSeries.y | IonSeries.Immonium}, // TOF-TOF
-            // ReSharper restore BitwiseOperatorOnEnumWithoutFlags
-            // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
             {CVID.MS_electron_transfer_dissociation, IonSeries.c | IonSeries.zRadical},
-            // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
             {CVID.MS_electron_capture_dissociation, IonSeries.c | IonSeries.z},
         };
 
@@ -264,17 +257,11 @@ namespace Pwiz.SeeMS
                                                bool showFragmentationSummary)
             : this(sequence, minCharge, maxCharge,
                    null,
-                   // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
                    (a ? IonSeries.a : IonSeries.Off) |
-                   // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
                    (b ? IonSeries.b : IonSeries.Off) |
-                   // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
                    (c ? IonSeries.c : IonSeries.Off) |
-                   // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
                    (x ? IonSeries.x : IonSeries.Off) |
-                   // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
                    (y ? IonSeries.y : IonSeries.Off) |
-                   // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
                    (z ? IonSeries.z : IonSeries.Off) |
                    (zRadical ? IonSeries.zRadical : IonSeries.Off),
                    showFragmentationLadders,
@@ -423,21 +410,13 @@ namespace Pwiz.SeeMS
             }
 
             ionSeries = IonSeries.Off;
-            // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
             ionSeries |= annotationPanels.aCheckBox.Checked ? IonSeries.a : IonSeries.Off;
-            // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
             ionSeries |= annotationPanels.bCheckBox.Checked ? IonSeries.b : IonSeries.Off;
-            // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
             ionSeries |= annotationPanels.cCheckBox.Checked ? IonSeries.c : IonSeries.Off;
-            // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
             ionSeries |= annotationPanels.xCheckBox.Checked ? IonSeries.x : IonSeries.Off;
-            // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
             ionSeries |= annotationPanels.yCheckBox.Checked ? IonSeries.y : IonSeries.Off;
-            // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
             ionSeries |= annotationPanels.zCheckBox.Checked ? IonSeries.z : IonSeries.Off;
-            // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
             ionSeries |= annotationPanels.zRadicalCheckBox.Checked ? IonSeries.zRadical : IonSeries.Off;
-            // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
             ionSeries |= annotationPanels.immoniumCheckBox.Checked ? IonSeries.Immonium : IonSeries.Off;
             showMisses = annotationPanels.showMissesCheckBox.Checked;
             OnOptionsChanged(this, EventArgs.Empty);
@@ -897,7 +876,6 @@ namespace Pwiz.SeeMS
             }
         }
 
-        // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
         bool ionSeriesIsEnabled (IonSeries series) { return (ionSeries & series) == series; }
 
         public override void Update (GraphItem item, pwiz.MSGraph.MSPointList points, GraphObjList annotations)
@@ -967,7 +945,6 @@ namespace Pwiz.SeeMS
                         if (!ionSeriesByDissociationMethod.Contains(method.Cvid))
                             ionSeries = IonSeries.All;
                         else
-                            // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
                             ionSeries |= ionSeriesByDissociationMethod[method.Cvid];
                     }
 

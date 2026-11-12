@@ -770,8 +770,14 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         {
             int lvl = i < msLevel - 1 ? i + 1 : msLevel - 1;
             double hw = 0;
-            // ReSharper disable once EmptyGeneralCatchClause
-            try { hw = filter.GetIsolationWidth(i) / 2.0; } catch { }
+            try
+            {
+                hw = filter.GetIsolationWidth(i) / 2.0;
+            }
+            catch (Exception)
+            {
+                WarnOnce(ReadFailureMessage("an isolation width could not be read from a multi-precursor scan filter; that precursor has no isolation window offsets"));
+            }
             entries.Add((filter.GetMass(i), lvl, hw, filter.GetActivation(i), filter.GetEnergy(i)));
         }
 
@@ -1038,25 +1044,39 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
             int precursorMsLevel = i + 1;
             bool isPrimary = precursorMsLevel == msLevel - 1;
             double isolationMz = 0;
-            // ReSharper disable once EmptyGeneralCatchClause
-            try { isolationMz = filter.GetMass(i); } catch { }
+            try
+            {
+                isolationMz = filter.GetMass(i);
+            }
+            catch (Exception)
+            {
+                WarnOnce(ReadFailureMessage("a precursor m/z could not be read from a scan filter; that precursor is omitted"));
+            }
             if (isolationMz <= 0) continue;
 
             // Mirror pwiz C++ SpectrumList_Thermo.cpp:552-568 isolation-width logic exactly.
             // trailerExtraValueDouble returns 0 (not throw) when the trailer is missing, so the
-            // override is UNCONDITIONAL for primary precursors — an absent trailer zeros out
-            // the filter-based width, then the method fallback takes over. This matters for
+            // override is UNCONDITIONAL for primary precursors - the filter-based width is never
+            // used for them, and an absent trailer leaves 0 for the method fallback. This matters for
             // newer DDA files (e.g. TMT MS3) where no "MS{n} Isolation Width:" trailer exists
             // and cpp emits no offsets because the method also has no width for that event.
             double isolationHalfWidth = 0;
-            // ReSharper disable once EmptyGeneralCatchClause
-            try { isolationHalfWidth = filter.GetIsolationWidth(i) / 2.0; } catch { }
-
             if (isPrimary)
             {
                 string widthTag = "MS" + msLevel.ToString(CultureInfo.InvariantCulture) + " Isolation Width:";
                 bool trailerHit = TryGetTrailerDouble(ie.Scan, widthTag, out double trailerWidth);
                 isolationHalfWidth = trailerWidth / 2.0;  // unconditional override, matches cpp
+            }
+            else
+            {
+                try
+                {
+                    isolationHalfWidth = filter.GetIsolationWidth(i) / 2.0;
+                }
+                catch (Exception)
+                {
+                    WarnOnce(ReadFailureMessage("an outer isolation width could not be read from an MSn scan filter; the method default width is used, if any"));
+                }
             }
 
             // Method fallback when the above resolved to 0 (LTQ-class where filter returns 0
@@ -1151,8 +1171,17 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
                 // "ms2 180.00@cid35" scan, not to whichever earlier MS2 happens to cover
                 // 104.96. cpp SpectrumList_Thermo.cpp:638.
                 double precursorIsolationMz = 0;
-                // ReSharper disable once EmptyGeneralCatchClause
-                if (i > 0) { try { precursorIsolationMz = filter.GetMass(i - 1); } catch { } }
+                if (i > 0)
+                {
+                    try
+                    {
+                        precursorIsolationMz = filter.GetMass(i - 1);
+                    }
+                    catch (Exception)
+                    {
+                        WarnOnce(ReadFailureMessage("an outer precursor m/z could not be read from an MSn scan filter; that scan's precursor spectrum link may be wrong"));
+                    }
+                }
 
                 int precursorIndex = FindPrecursorIndex(ie.Index, precursorMsLevel, isolationMz,
                     precursorIsolationMz, ie.Scan, out int nonPrecursorMasterScanNumber);
@@ -1340,6 +1369,14 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         }
         return -1;
     }
+
+    /// <summary>
+    /// Text for a per-scan SDK read failure, passed to <see cref="SpectrumListBase.WarnOnce"/>.
+    /// The text names no scan and no exception detail, so that it is identical for every scan and
+    /// WarnOnce reports it once per file rather than once per spectrum.
+    /// </summary>
+    private string ReadFailureMessage(string what) =>
+        $"[SpectrumList_Thermo] {Path.GetFileName(_raw.Filename)}: {what} (reported once per file)";
 
     private static int MsOrderToLevel(MSOrderType order) => order switch
     {
