@@ -162,6 +162,9 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(Adduct.FromStringAssumeChargeOnly("M+H").AsFormula(), Adduct.SINGLY_PROTONATED.AsFormula()); // But the underlying chemistry is the same
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("-1"), Adduct.FromStringAssumeProtonated("[M-H]"));
             Assert.AreEqual(Adduct.FromCharge(-1, Adduct.ADDUCT_TYPE.proteomic), Adduct.FromStringAssumeProtonated("[M-H]"));
+            // Parsing protonation text before any request for that charge must still yield the proteomic adduct
+            Assert.IsTrue(Adduct.FromStringAssumeProtonated("[M+11H]").IsProteomic);
+            Assert.IsTrue(Adduct.FromChargeProtonated(11).IsProteomic);
             Assert.AreEqual(Adduct.FromStringAssumeProtonatedNonProteomic("-9"), Adduct.FromStringAssumeProtonatedNonProteomic("[M-9H]"));
             Assert.AreEqual(Adduct.FromCharge(-9, Adduct.ADDUCT_TYPE.non_proteomic), Adduct.FromStringAssumeProtonatedNonProteomic("[M-9H]"));
 
