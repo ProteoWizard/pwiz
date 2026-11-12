@@ -57,8 +57,8 @@ namespace pwiz.Osprey.Tasks
     {
         /// <summary>
         /// The CWT peak candidates of each of <paramref name="rows"/>, in order: Stage 4's top-N
-        /// list for the row, empty when the run's input is not available here or the row's
-        /// precursor and apex scan match no isolation window.
+        /// list for the row. Throws <see cref="InvalidDataException"/> when the run's input is not
+        /// available here, or when any row's peak is not found again at its apex scan.
         /// </summary>
         internal static IReadOnlyList<IReadOnlyList<CwtCandidate>> ForRows(
             IReadOnlyList<FdrEntry> rows,
@@ -70,8 +70,10 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx)
         {
             var lists = new IReadOnlyList<CwtCandidate>[rows.Count];
-            if (rows.Count == 0 || spectra.InputFile == null)
+            if (rows.Count == 0)
                 return lists;
+            if (spectra.InputFile == null)
+                throw NotReproduced(spectra.FileName, rows.Count, rows.Count);
 
             var spectraIndex = spectra.Index;
             // The settings first-pass scoring resolved: a fresh clone, because resolving them writes
@@ -105,6 +107,7 @@ namespace pwiz.Osprey.Tasks
             // row it scored there. Overlapping windows sharing a scan would share its spectra, so
             // the lowest such window is taken, whatever order the windows finish in.
             var fromWindow = new int[rows.Count];
+            var apexScans = new uint?[rows.Count];
             for (int r = 0; r < rows.Count; r++)
                 fromWindow[r] = int.MaxValue;
             var lockObj = new object();
@@ -125,18 +128,45 @@ namespace pwiz.Osprey.Tasks
                             continue;
                         var list = scorer.RecomputeCwtCandidates(libraryEntries[r], windowSpectra, windowRts,
                             searchCalibration, rtTolerance, rtSigma, spectra.Ms1Spectra, spectra.Ms1Calibration,
-                            context, out _);
+                            context, out uint? apexScan);
                         lock (lockObj)
                         {
                             if (w < fromWindow[r])
                             {
                                 fromWindow[r] = w;
                                 lists[r] = list;
+                                apexScans[r] = apexScan;
                             }
                         }
                     }
                 });
+
+            // Every row is one Stage 4 stored, so the search that reproduces Stage 4 finds its
+            // peak at its apex scan. A row it does not is a search that has drifted from Stage 4's -
+            // a setting Stage 4 read that this one did not, or a calibration that is not the one
+            // Stage 4 searched with - and candidates from it would plan the run wrong without a
+            // sign. On SEA-AD and the subsets every row reproduces; a wrong calibration moved
+            // about half of them.
+            int notReproduced = 0;
+            for (int r = 0; r < rows.Count; r++)
+            {
+                if (lists[r] == null || apexScans[r] != rows[r].ScanNumber)
+                    notReproduced++;
+            }
+            if (notReproduced > 0)
+                throw NotReproduced(spectra.FileName, notReproduced, rows.Count);
             return lists;
+        }
+
+        /// <summary>
+        /// The error for a run whose first-pass peaks this cannot reproduce - reported per run,
+        /// as a damaged input is, rather than planned from candidates Stage 4 never found.
+        /// </summary>
+        private static InvalidDataException NotReproduced(string fileName, int notReproduced, int rowCount)
+        {
+            return new InvalidDataException(string.Format(
+                OspreyTasksResources.CwtCandidateRecompute_ForRows_Could_not_reproduce_the_first_pass_peaks_of__0__of__1__precursors_in__2___Score_this_run_again_from_the_start_,
+                notReproduced, rowCount, fileName));
         }
 
         /// <summary>

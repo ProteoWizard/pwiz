@@ -1282,6 +1282,9 @@
   <data name="TrainingExportWriter_ExportRun_Exporting_isolation_windows" xml:space="preserve">
     <value>Exporting isolation windows</value>
   </data>
+  <data name="CwtCandidateRecompute_ForRows_Could_not_reproduce_the_first_pass_peaks_of__0__of__1__precursors_in__2___Score_this_run_again_from_the_start_" xml:space="preserve">
+    <value>Could not reproduce the first-pass peaks of {0} of {1} precursors in {2}. Score this run again from the start.</value>
+  </data>
   <data name="DemuxCache_TryOpen_Streaming_demultiplexed_spectra_from_cache___0_" xml:space="preserve">
     <value>Streaming demultiplexed spectra from cache: {0}</value>
   </data>

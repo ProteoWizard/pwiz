@@ -490,6 +490,16 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not reproduce the first-pass peaks of {0} of {1} precursors in {2}. Score this run again from the start..
+        /// </summary>
+        public static string CwtCandidateRecompute_ForRows_Could_not_reproduce_the_first_pass_peaks_of__0__of__1__precursors_in__2___Score_this_run_again_from_the_start_ {
+            get {
+                return ResourceManager.GetString("CwtCandidateRecompute_ForRows_Could_not_reproduce_the_first_pass_peaks_of__0__of" +
+                        "__1__precursors_in__2___Score_this_run_again_from_the_start_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; is demultiplexed, but its demultiplexed spectra cache &apos;{1}&apos; is missing or stale. Re-run {2} with {3} auto to rebuild it..
         /// </summary>
         public static string DemuxCache_ThrowIfDemuxCacheMissing___0___is_demultiplexed__but_its_demultiplexed_spectra_cache___1___is_missing_or_stale_ {

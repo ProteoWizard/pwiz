@@ -220,7 +220,9 @@ namespace pwiz.Osprey.Tasks
         {
             return base.ValidityKey(ctx) + PinFeatureMask.RecordedFeaturesValidityKeySuffix()
                 // Whether the parquets carry the reference XIC, which only the training export reads.
-                + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config);
+                + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config)
+                // A loaded calibration replaces Stage 3's, which centres every search here.
+                + OspreyEnvironment.LoadCalibrationValidityKeySuffix();
         }
 
         public override IEnumerable<string> Outputs(PipelineContext ctx)

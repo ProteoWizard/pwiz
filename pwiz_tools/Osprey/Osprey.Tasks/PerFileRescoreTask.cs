@@ -376,7 +376,8 @@ namespace pwiz.Osprey.Tasks
                 + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config)
                 // Planning recomputes Stage 4's CWT peak candidates (#5024). The settings that
                 // change them are in the base key already (search hash, pick, ftolmin, fcorr,
-                // refxic, rtlocal, xic); this is the one Stage 4 reads that no key carried.
+                // refxic, rtlocal, xic); the loaded calibration is the one added here, as in
+                // PerFileScoring's key.
                 + OspreyEnvironment.LoadCalibrationValidityKeySuffix();
         }
 

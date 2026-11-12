@@ -309,10 +309,11 @@ namespace pwiz.Osprey.Core
         public static readonly string LoadCalibrationPath = ENV_LOAD_CALIBRATION.Value;
 
         /// <summary>
-        /// The validity-key term of <see cref="LoadCalibrationPath"/> for PerFileRescoring, which
-        /// recomputes Stage 4's CWT peak candidates and so must search a run with no RT
-        /// calibration the way Stage 4 did: around the library-to-run RT mapping when Stage 3
-        /// calibrated and failed, around the library RT when a loaded calibration replaced it.
+        /// The validity-key term of <see cref="LoadCalibrationPath"/> for PerFileScoring, whose
+        /// searches it centres, and PerFileRescoring, which recomputes Stage 4's CWT peak
+        /// candidates and so must search a run with no RT calibration the way Stage 4 did: around
+        /// the library-to-run RT mapping when Stage 3 calibrated and failed, around the library
+        /// RT when a loaded calibration replaced it.
         /// The loaded file's identity, so editing it counts too; empty when unset, so every
         /// existing key is unchanged.
         /// </summary>
