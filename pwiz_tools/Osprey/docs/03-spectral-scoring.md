@@ -290,13 +290,15 @@ EntryId for determinism). See `07-fdr-control.md` and `16-determinism.md`.
 
 ### B.7 The C#-only features (21-40), the feature mask and the XIC count
 
-Twenty features were added after the Rust port, in four families. The FDR classifier sees them
-only when `OSPREY_FEATURE_MASK` lets it, and scoring computes and writes a family to the
-`.scores.parquet` only when the mask leaves one of its features unmasked (or under the
-developer switch `OSPREY_RECORD_ALL_FEATURES=1`; see "What scoring records" below). **By default all 20 are masked**, so a default search reports what
-the 21 Rust features report, and every golden is unchanged. Turning them on is recommended for
-every kind of data measured so far (see "Which settings for which data" below); making that the
-default is a separate decision, because it moves every golden.
+Twenty features were added after the Rust port, in four families (since grown to 88 in 16
+families). The FDR classifier sees them only when the feature set (`--feature-set`) or
+`OSPREY_FEATURE_MASK` lets it, scoring computes a family only when the classifier uses one of its
+features, and it writes to the `.scores.parquet` only the features the classifier uses (or every
+feature under the developer switch `OSPREY_RECORD_ALL_FEATURES=1`; see "What scoring records"
+below). **At unit resolution the default is the `core` set**, so a default unit-resolution search
+reports what the 21 Rust features report and its goldens are unchanged; **HRAM data defaults to
+the `default` set**, the core and 36 family features chosen in a nested-set study, which moves the
+HRAM goldens.
 
 | # | PIN name | Family | Direction (`IsReversedScore`) | C# calculator (file) |
 |---|----------|--------|-------------------------------|----------------------|
@@ -332,7 +334,9 @@ candidate list (`cwt_candidates`) stays empty on that path, as in Rust. That sec
 makes the re-score step 15-20% slower (about 2.5 s per file on the Astral test runs, 0.5 s on
 Stellar; a few percent of PerFileRescoring), so it runs only when a runner-up feature is unmasked (`PinFeatureMask.UsesRunnerUpFeatures`, passed in as
 `ScoringContext.OverrideRunnerUpCandidates`). Under the default mask, an override-path peak
-reports a lone candidate, which the classifier never sees.
+reports a lone candidate, which the classifier never sees. (The default mask is now the `core`
+set, the unit-resolution default; the HRAM `default` set uses the runner-up features, so an HRAM
+default search runs the detection.)
 
 **Context (24-26)** - peptide length, precursor charge and precursor m/z, as Percolator and
 DIA-NN use them: how reliable a match is depends on what is being matched. A decoy has its
@@ -359,33 +363,55 @@ across the whole elution. `peak_spectrum_cosine_sd` is higher-is-better, against
 intuition: the trained SVM gives it a positive weight (7th largest on Astral), because a real
 peak's cosine rises and falls with its signal across the peak while noise stays uniformly low.
 
-#### The feature mask (`OSPREY_FEATURE_MASK`)
+#### Feature sets (`--feature-set`) and the feature mask (`OSPREY_FEATURE_MASK`)
 
-A comma-separated list of PIN feature names the classifier must not use, or `none` to use all
-41. Unset, the 20 features above are masked (`PinFeatureMask.DEFAULT_MASKED_FEATURES`). An
-unknown name stops the search at startup.
+The features the classifier trains on are a named, nested set (`OspreyFeatureSet`,
+`--feature-set core|default|all`):
 
-The mask is applied **where the FDR stage loads features**, not at scoring:
+| Set | Features | Chosen by default for |
+|---|---|---|
+| `core` | the 21 core features, PIN 0-20 | unit resolution |
+| `default` | the core and the family features in `PinFeatureMask.DEFAULT_FEATURES` (57 in all) | HRAM data |
+| `all` | every PIN feature (109) | - |
+
+Without `--feature-set` the resolution chooses (`PinFeatureMask.FeatureSetFor`): `default` for HRAM
+data, `core` at unit resolution, where the families add little and every computed family costs.
+At unit resolution the HRAM-only families (below) are masked whatever the set, so `default` there
+is its non-HRAM-only members and `all` is 101 features. `DEFAULT_FEATURES` is the one list to edit
+to change the default set; Program refuses to start if a name in it is not a PIN feature or a core
+feature is missing (`PinFeatureMask.UnknownDefaultFeatureName`), and `OspreyFeatureCalculatorsTest`
+checks the nesting. The run log always names the set in force and its feature count
+(`PinFeatureMask.DescribeFeatures`).
+
+`OSPREY_FEATURE_MASK` is the research route: a comma-separated list of PIN feature names the
+classifier must not use, or `none` to use them all. When it is set it **overrides the feature set**
+exactly - the mask alone decides, whatever `--feature-set` says. An unknown name stops the search
+at startup.
+
+The set (or mask) is applied **where the FDR stage loads features**, not at scoring:
 `ParquetScoreCache.LoadPinFeaturesFromParquet` does not read a masked column, and each vector it
 returns holds only the unmasked features, in PIN order (`PinFeatureMask.FdrFeatureIndices`). The
-classifier's matrix is therefore as wide as the unmasked set - 21 columns under the default mask,
-the same matrix the 21-feature engine trained on - and training costs scale with it. (A masked
+classifier's matrix is therefore as wide as the set - 21 columns under `core`, the same matrix the
+21-feature engine trained on - and training costs scale with it. (A masked
 feature used to load as a column of zeros, which the classifier could not use but still paid for;
 see "Absent, not zero" below.) The feature names travel with the vectors
 (`PinFeatureMask.FdrFeatureNames`): the trained model records them
 (`PercolatorResults.FeatureNames`, the `FeatureNames` of `.1st-pass.model.json`), and a saved model
-whose names are not the run's FDR features loads as unusable. The mask is not in PerFileScoring's
+whose names are not the run's FDR features loads as unusable. The set is not in PerFileScoring's
 key; what scoring records is (below), so:
-- searches that differ only in the mask share their per-file scores when they record the same
-  families. The mask is in the validity keys of FirstPassFDR, PerFileRescoring and SecondPassFDR
-  (`;featmask=default|none|<names>`), so pointing a new mask at scores that hold its features
-  re-runs only the FDR stages (minutes on three runs, against the whole search). See
+- searches that differ only in the set or mask share their per-file scores when they record the
+  same columns. The features used are in the validity keys of FirstPassFDR, PerFileRescoring and
+  SecondPassFDR: `;featmask=none|<names>` for a mask; for a set, `;featmask=default` for `core`
+  (the term the core-only default had, so no core output is invalidated), `;featset=all` for
+  `all`, and `;featset=<names>` listing the features beyond the core for any other set, so an
+  edit of `DEFAULT_FEATURES` rekeys. Pointing a new set at scores that hold its features re-runs
+  only the FDR stages (minutes on three runs, against the whole search). See
   `14-intermediate-files.md`. When a
-  runner-up feature is unmasked, PerFileRescoring and SecondPassFDR also carry
-  `;runnerup=override-candidates`, because only then does the override path find the first
-  pass's candidates (above); under the default mask the term is empty and the detection is
-  skipped. Pointing a mask that unmasks a runner-up feature at a default search's outputs
-  therefore re-runs rescoring too.
+  runner-up feature is used (the `default` set uses all three), PerFileRescoring and SecondPassFDR
+  also carry `;runnerup=override-candidates`, because only then does the override path find the
+  first pass's candidates (above); under `core` the term is empty and the detection is skipped.
+  Pointing a set that uses a runner-up feature at a core search's outputs therefore re-runs
+  rescoring too.
 - the training export (`22-training-export.md`) and anything else reading the parquet see every
   recorded feature unmasked, except that under a mask hiding all three runner-up features, peaks
   rescored at override bounds carry lone-candidate runner-up values.
@@ -396,31 +422,39 @@ Computing a feature nothing reads is a cost a released search should not pay, so
 only what the FDR path will read. The PIN features fall into the 21 **core** features (PIN 0-20)
 and **families** after them (`PinFeatureMask.FAMILY_FIRST_FEATURES`; a family runs to the next
 one's first feature). A family's features share one per-candidate computation - a byproduct
-cached on `OspreyScoringContext`, computed on first use - so recording one costs nearly what
-recording all of them does, and scoring computes or skips a family as a unit:
-- the core features are always computed and recorded, whatever the mask: the coelution sum is every
-  row's first-pass score (`FdrEntry.CoelutionSum`), and the median-polish dump and the training
-  export read core features directly;
-- a family is computed and recorded when the mask leaves any of its features unmasked
-  (`PinFeatureMask.IsRecorded`), so every feature the classifier reads is recorded;
-- `OSPREY_RECORD_ALL_FEATURES=1` records every family. **It is a developer and research switch,
-  not for release use**: it lets one scoring of a dataset serve every mask arm, at the cost of
-  computing and storing features a default search never reads.
+cached on `OspreyScoringContext`, computed on first use - so computing one costs nearly what
+computing all of them does. Scoring therefore **computes** a family as a unit but **records**
+(writes to the scores parquet) column by column:
+- the core features are always computed and recorded, whatever the set or mask: the coelution sum
+  is every row's first-pass score (`FdrEntry.CoelutionSum`, also stored as its own
+  `coelution_sum` stub column and used as the training tiebreak), the median-polish dump reads
+  PIN 15, 16, 19 and 20, and the training export reads PIN 8 and 15 - none of them through the
+  classifier's vectors;
+- a family is computed when any of its features is recorded (`PinFeatureMask.IsComputed`, the
+  flags `ScoringTaskShared.Pipeline` hands `CoelutionScorer`);
+- a family feature is recorded only when the classifier uses it (`PinFeatureMask.IsRecorded`), so
+  the parquet holds exactly the core and the set's columns, not the rest of a computed family.
+  Nothing outside the classifier reads a family feature from the parquet;
+- `OSPREY_RECORD_ALL_FEATURES=1` computes and records every feature. **It is a developer and
+  research switch, not for release use**: it lets one scoring of a dataset serve every set and
+  mask arm, at the cost of computing and storing features a default search never reads.
 
-Under the default mask that is the core alone, so a default search costs and writes what the
-21-feature engine did. A skipped feature stays 0 in the in-memory vector (`CoelutionScorer`,
-handed the flags by `ScoringTaskShared.Pipeline`), and the parquet has **no column** for it rather
-than a column of zeros. That keeps the file small and makes a missing feature detectable: a reader
+Under `core` that is the core alone, so a unit-resolution search costs and writes what the
+21-feature engine did. Under `default` it computes 11 of the 16 families and writes 57 columns.
+A skipped feature stays 0 in the in-memory vector, a computed but unrecorded one keeps its value
+in memory only, and the parquet has **no column** for either rather than a column of zeros. That keeps the file small and makes a missing feature detectable: a reader
 that needs a column the file lacks - the FDR load, or the full-row read Stage 6 rewrites into the
 reconciled parquet - refuses the file, naming the column and the switch, instead of reading zeros.
 Skipping a family changes no other feature's value (`TrainingEvidenceTest` scores with each family
 alone and compares against scoring everything, bit for bit).
 
-The recorded set is keyed into PerFileScoring and PerFileRescoring (`;featrec=`: empty for the core
-alone, `all` for every family, else the recorded families' first features), so a resume under a
-mask that unmasks a family the scores lack rescores rather than adopting them.
-`OSPREY_FEATURE_MASK=none` and `OSPREY_RECORD_ALL_FEATURES=1` record the same set and share their
-scores.
+The recorded columns are keyed into PerFileScoring and PerFileRescoring: empty for the core alone,
+`;featrec=all` for every feature the resolution can use, else `;featcols=` and the recorded columns
+beyond the core, in PIN order. So a resume under a set that uses a column the scores lack rescores
+rather than adopting them - even another column of a family the scores computed - and a column-level
+key never matches the family-level `;featrec=<families>` key older scorings wrote.
+`OSPREY_FEATURE_MASK=none` and `OSPREY_RECORD_ALL_FEATURES=1` record the same columns and share
+their scores.
 
 **Absent, not zero.** A zero column and an absent one train the same model in exact arithmetic -
 the standardizer gives a constant column scale 1 and value 0, and the SVM's dual coordinate
@@ -428,8 +462,8 @@ descent then never moves its weight off 0 - but not in floating point, and not a
 - **The linear SVM** (the default) sums its dot products in `Vector<double>` lanes
   (`LinearSvmClassifier`), so a zero column still shifts which lane each later product lands in
   and the order the lanes are added. Removing the zero columns changes the rounding, not the
-  model. Under the default mask the unmasked features are PIN 0-20, a prefix, so the reduced
-  matrix is exactly the 21-feature engine's and the committed goldens hold.
+  model. Under the `core` set the unmasked features are PIN 0-20, a prefix, so the reduced
+  matrix is exactly the 21-feature engine's and the committed unit-resolution goldens hold.
 - **Gradient-boosted trees** (`OSPREY_FDR_MODEL=gbdt`) draw a column subsample per tree from the
   column count, so a different count draws different columns and grows different trees. Under
   gbdt, results with the mask applied this way differ from the zero-column form; the masked
@@ -445,8 +479,9 @@ descent then never moves its weight off 0 - but not in floating point, and not a
 
 #### The HRAM-only families: library agreement and spectrum match
 
-Two families are masked by default like the others, and in addition **have no effect at unit
-resolution, whatever the switches say** (`PinFeatureMask.HRAM_ONLY_FAMILIES`):
+Two families take part in the sets like the others (the `default` set uses five of their
+features), and in addition **have no effect at unit resolution, whatever the set or the switches
+say** (`PinFeatureMask.HRAM_ONLY_FAMILIES`):
 
 | PIN | Name | Family | Better | Calculator |
 |---|---|---|---|---|
@@ -471,7 +506,7 @@ At 0.4 Th nearly every fragment window holds a peak, so counting matches says no
 the match probability alone finds 52-112 precursors at q 1%, against xcorr's 12,812, and the
 families add nothing measurable to the classifier. So at unit resolution they are masked and
 unrecorded (`PinFeatureMask.IsAvailable`): `Program` hands the resolved mode to
-`PinFeatureMask.ApplyResolutionMode`, the FDR vectors and the scores parquet then have no column
+`PinFeatureMask.ApplySearchSettings`, the FDR vectors and the scores parquet then have no column
 for them (see "Absent, not zero" for why that differs from a column of zeros under gbdt), and
 `OSPREY_FEATURE_MASK=none` or `OSPREY_RECORD_ALL_FEATURES=1` give the output they would give if
 the families did not exist; a logged line says so when the mask left one unmasked. An HRAM key
@@ -600,8 +635,9 @@ Flags affecting THIS stage (defaults from `Osprey.Core/OspreyConfig.cs` /
 | RT calibration `MinRtTolerance` / `MaxRtTolerance` / `FallbackRtTolerance` | config | Clamp the scan-window half-width; the Gaussian rank sigma uses the UNCLAMPED `5×MAD×1.4826` (`ScoringPipeline.cs:170-187`). |
 | `Reconciliation.TopNPeaks` | config | How many CWT candidates `BuildFdrEntry` captures for Stage-6 (`CoelutionScorer.cs:322`). |
 | `OSPREY_XIC_FRAGMENTS` (env) | unset = 6 | How many top library fragments get XICs (2-20). Changes peak picking and the XIC-based features; in every task's validity key, and checked against the scores' own record when an FDR task loads existing scores. 12 on Astral with GBDT, 6 elsewhere (B.7). |
-| `OSPREY_FEATURE_MASK` (env) | unset = features 21-40 masked | PIN features the FDR classifier must not use (comma-separated names, or `none`). Applied when the FDR stage loads features; also decides which feature families scoring computes and records. In the FDR tasks' validity keys. `none` recommended on every dataset measured (B.7). |
-| `OSPREY_RECORD_ALL_FEATURES=1` (env) | unset = record what the mask needs | Developer and research switch: compute and record every PIN feature, so arms that differ only in the mask can share one scoring. In the PerFileScoring and PerFileRescoring validity keys (`;featrec=all`). Not for release use (B.7, "What scoring records"). |
+| `--feature-set core\|default\|all` | `default` for HRAM, `core` at unit resolution | The PIN features the FDR classifier trains on: the 21 core, the core and `PinFeatureMask.DEFAULT_FEATURES` (57), or all 109. Decides which families scoring computes and which columns it records. In the FDR tasks' validity keys (B.7, "Feature sets"). |
+| `OSPREY_FEATURE_MASK` (env) | unset = the feature set decides | Research route: PIN features the FDR classifier must not use (comma-separated names, or `none`); set, it overrides `--feature-set`. Applied when the FDR stage loads features; also decides which feature families scoring computes and which columns it records. In the FDR tasks' validity keys (B.7). |
+| `OSPREY_RECORD_ALL_FEATURES=1` (env) | unset = record the set's columns | Developer and research switch: compute and record every PIN feature, so arms that differ only in the set or mask can share one scoring. In the PerFileScoring and PerFileRescoring validity keys (`;featrec=all`). Not for release use (B.7, "What scoring records"). |
 
 Diagnostic env vars for this stage (shared with Rust for cross-impl bisection):
 
@@ -653,11 +689,11 @@ presence rather than a CLI flag.
   simplification, not a behavioral output difference.
   Severity: minor.
 
-- **[INTENTIONAL-CSHARP-DESIGN] 20 C#-only PIN features (21-40), masked by default** - the
-  runner-up, context, per-fragment-rank and spectrum-across-peak families (B.7) have no Rust
-  counterpart. They widen the parquet to 41 feature columns, but with the default
-  `OSPREY_FEATURE_MASK` they are absent from the classifier's vectors, so default results match the
-  21-feature engine. Evidence: `ParquetScoreCache.PIN_FEATURE_NAMES` (41 names), `PinFeatureMask`.
+- **[INTENTIONAL-CSHARP-DESIGN] C#-only PIN features (21 onward), masked at unit resolution by
+  default** - the runner-up, context, per-fragment-rank, spectrum-across-peak and later families
+  (B.7) have no Rust counterpart. Under the `core` set, the unit-resolution default, they are
+  absent from the classifier's vectors and the scores parquet, so default unit-resolution results
+  match the 21-feature engine; the HRAM default (`default` set) uses 36 of them. Evidence: `ParquetScoreCache.PIN_FEATURE_NAMES` (41 names), `PinFeatureMask`.
   Severity: info.
 
 - **[INTENTIONAL-CSHARP-DESIGN] MS1 features gated by resolution strategy, not a config
