@@ -912,17 +912,11 @@ namespace pwiz.Skyline.Model.Databinding
                 var list = _lists[rowIndex];
                 long elementCount = Math.Max(1, list?.Length ?? 0);
                 long byteCount = elementCount * Math.Max(Unsafe.SizeOf<T>(), sizeof(int));
-                // A character can take up to three bytes in UTF-8
-                if (list is ReadOnlyMemory<char>[] strings)
+                // The elements of a string list are strings until Pack converts them. A character can take up
+                // to three bytes in UTF-8.
+                if (list is string[] strings)
                 {
                     foreach (var value in strings)
-                    {
-                        byteCount += 3L * value.Length;
-                    }
-                }
-                else if (list is ReadOnlyMemory<char>?[] nullableStrings)
-                {
-                    foreach (var value in nullableStrings)
                     {
                         byteCount += 3L * (value?.Length ?? 0);
                     }
