@@ -68,6 +68,7 @@ public sealed class SerializerMSn
 
         if (FileType.IsText())
         {
+            // ReSharper disable once UsingStatementResourceInitialization
             using var tw = new StreamWriter(output, new System.Text.UTF8Encoding(false), 4096, leaveOpen: true) { NewLine = "\n" };
             WriteText(msd, tw);
         }

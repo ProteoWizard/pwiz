@@ -31,6 +31,7 @@ public abstract class AbstractWatersHttpClient : IDisposable
     public UnifiConnectionConfig Config { get; }
 
     /// <summary>OAuth2 access token returned by the identity server, set in the constructor.</summary>
+    // ReSharper disable once MemberInitializerValueIgnored
     public string AccessToken { get; private set; } = string.Empty;
 
     /// <summary>Sample (or injection) name from the metadata endpoint.</summary>

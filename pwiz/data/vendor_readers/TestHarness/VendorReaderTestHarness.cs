@@ -725,6 +725,7 @@ public static class VendorReaderTestHarness
         }
         finally
         {
+            // ReSharper disable once EmptyGeneralCatchClause
             try { File.Delete(tmp); } catch { }
         }
     }

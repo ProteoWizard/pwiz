@@ -161,6 +161,7 @@ namespace Pwiz.SeeMS
             UpdateRow( rowIndex, null );
         }
 
+        // ReSharper disable once ParameterHidesMember
         public void UpdateRow( int rowIndex, IChromatogramList chromatogramList )
         {
             ChromatogramDataSet.ChromatogramTableRow row = ( chromatogramBindingSource[rowIndex] as DataRowView ).Row as ChromatogramDataSet.ChromatogramTableRow;

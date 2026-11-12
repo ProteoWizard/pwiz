@@ -23,6 +23,7 @@ internal static class SciexAssemblyResolver
     [ModuleInitializer]
     internal static void Install()
     {
+        // ReSharper disable once InconsistentlySynchronizedField
         if (s_installed) return;
         lock (s_lock)
         {

@@ -35,6 +35,7 @@ namespace Pwiz.Data.MsData.Mz5;
 /// </remarks>
 public sealed class Mz5Connection : IDisposable
 {
+    // ReSharper disable once MemberInitializerValueIgnored
     private long _fileId = -1L;
     private bool _disposed;
     // Ref-count of co-owners (Mz5SpectrumList + Mz5ChromatogramList). The reader

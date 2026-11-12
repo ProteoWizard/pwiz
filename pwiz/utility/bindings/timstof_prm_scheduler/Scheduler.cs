@@ -68,6 +68,7 @@ public sealed class Scheduler : IDisposable
         {
             // Trim the trailing NUL (the native side reports size INCLUDING the terminator).
             int len = (int)size - 1;
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (len < 0) len = 0;
             return Encoding.UTF8.GetString(initial, 0, len);
         }

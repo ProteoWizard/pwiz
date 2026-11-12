@@ -644,6 +644,7 @@ internal static class ArgParser
     {
         internal bool Detailed { get; private set; }
         internal bool Doc { get; private set; }
+        // ReSharper disable once MemberHidesStaticFromOuterClass
         internal bool Examples { get; private set; }
         internal string? FilterName { get; private set; }
 

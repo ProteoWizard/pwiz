@@ -756,12 +756,16 @@ public sealed class MSFReader : BuildParser
             double threshold = GetScoreThreshold(BuildInput.Sqt);
             if (Math.Abs(threshold - 0.01) < 0.001) outPepConfidence = 3;
             else if (Math.Abs(threshold - 0.05) < 0.001) outPepConfidence = 2;
-            if (useProtConfidence
+#pragma warning disable CS0162 // Unreachable code detected
+            // ReSharper disable HeuristicUnreachableCode
+            if (useProtConfidence // const false - why?
                 && ColumnExists(_db!, "TargetProteins", "ProteinFDRConfidence")
                 && TableExists(_db!, "TargetPeptideGroupsTargetProteins"))
             {
                 outProtConfidence = outPepConfidence;
             }
+            // ReSharper restore HeuristicUnreachableCode
+#pragma warning restore CS0162 // Unreachable code detected
         }
 
         string filenameCol, filenameJoin;

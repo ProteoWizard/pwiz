@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
@@ -302,7 +303,9 @@ namespace Pwiz.SeeMS
                 processingPanels.peakPickerCantWaitParameters.Visible = algorithm is CwtPeakDetector;
 
                 processingPanels.peakPickerLocalMaximumWindowSizeTrackBar.Value = (int)localMaximumWindowSize;
+                // ReSharper disable once SpecifyACultureInStringConversionExplicitly
                 processingPanels.peakPickerCantWaitMinSNRTextBox.Text = minSNR.ToString();
+                // ReSharper disable once SpecifyACultureInStringConversionExplicitly
                 processingPanels.peakPickerCantWaitMinPeakSpaceTextBox.Text = minPeakSpace.ToString();
 
                 panel.Tag = this;
@@ -341,7 +344,7 @@ namespace Pwiz.SeeMS
 
         public ThresholdingBy Type
         {
-            get { return Type; }
+            get { return type; }
             set
             {
                 type = value;
@@ -349,6 +352,7 @@ namespace Pwiz.SeeMS
             }
         }
 
+        // ReSharper disable once ParameterHidesMember
         private double defaultThreshold(ThresholdingBy type)
         {
             switch (type)
@@ -445,7 +449,7 @@ namespace Pwiz.SeeMS
         public override ProcessingMethod ToProcessingMethod()
         {
             ProcessingMethod pm = new ProcessingMethod();
-            pm.UserParams.Add( new UserParam( "threshold", threshold.ToString(), "SeeMS" ) );
+            pm.UserParams.Add( new UserParam( "threshold", threshold.ToString(CultureInfo.InvariantCulture), "SeeMS" ) );
             pm.UserParams.Add( new UserParam( "type", type.ToString(), "SeeMS" ) );
             pm.UserParams.Add( new UserParam( "orientation", orientation.ToString(), "SeeMS" ) );
             return pm;
@@ -468,6 +472,7 @@ namespace Pwiz.SeeMS
                 panel.Tag = null;
                 processingPanels.thresholderTypeComboBox.SelectedIndex = (int) type;
                 processingPanels.thresholderOrientationComboBox.SelectedIndex = (int) orientation;
+                // ReSharper disable once SpecifyACultureInStringConversionExplicitly
                 processingPanels.thresholderValueTextBox.Text = threshold.ToString();
                 panel.Tag = this;
 
@@ -541,6 +546,7 @@ namespace Pwiz.SeeMS
                 processingPanels.chargeStateCalculatorOverrideExistingCheckBox.Checked = overrideExistingCharge;
                 processingPanels.chargeStateCalculatorMinChargeUpDown.Value = minCharge;
                 processingPanels.chargeStateCalculatorMaxChargeUpDown.Value = maxCharge;
+                // ReSharper disable once SpecifyACultureInStringConversionExplicitly
                 processingPanels.chargeStateCalculatorIntensityFraction.Text = threshold.ToString();
                 panel.Tag = this;
 
@@ -582,8 +588,8 @@ namespace Pwiz.SeeMS
         public override ProcessingMethod ToProcessingMethod()
         {
             ProcessingMethod pm = new ProcessingMethod();
-            pm.UserParams.Add(new UserParam("mz", mz.ToString(), "SeeMS"));
-            pm.UserParams.Add(new UserParam("tolerance", tolerance.ToString(), "SeeMS"));
+            pm.UserParams.Add(new UserParam("mz", mz.ToString(CultureInfo.InvariantCulture), "SeeMS"));
+            pm.UserParams.Add(new UserParam("tolerance", tolerance.ToString(CultureInfo.InvariantCulture), "SeeMS"));
             return pm;
         }
 
@@ -602,7 +608,9 @@ namespace Pwiz.SeeMS
             get
             {
                 panel.Tag = null;
+                // ReSharper disable once SpecifyACultureInStringConversionExplicitly
                 processingPanels.lockmassMzTextBox.Text = mz.ToString();
+                // ReSharper disable once SpecifyACultureInStringConversionExplicitly
                 processingPanels.lockmassToleranceTextBox.Text = tolerance.ToString();
                 panel.Tag = this;
 

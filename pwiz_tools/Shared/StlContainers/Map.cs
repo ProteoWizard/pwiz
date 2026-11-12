@@ -96,6 +96,7 @@ namespace System.Collections.Generic
         public Map( Map<TKey, TValue> otherMap )
             : base( otherMap )
         {
+            // ReSharper disable once VirtualMemberCallInConstructor
             if( Keys.Count != Count ) throw new InvalidOperationException( "Map stored count does not match node count" );
         }
 
@@ -105,6 +106,7 @@ namespace System.Collections.Generic
         public Map( Map<TKey, TValue> otherMap, IComparer<TKey> comparer )
             : base( otherMap, new MapComparer( comparer ) )
         {
+            // ReSharper disable once VirtualMemberCallInConstructor
             if( Keys.Count != Count ) throw new InvalidOperationException( "Map stored count does not match node count" );
         }
 
@@ -219,7 +221,9 @@ namespace System.Collections.Generic
                 return Count.CompareTo( other.Count );
 
             int compare = 0;
+            // ReSharper disable once GenericEnumeratorNotDisposed
             Enumerator lhsItr = GetEnumerator(); lhsItr.MoveNext();
+            // ReSharper disable once GenericEnumeratorNotDisposed
             Enumerator rhsItr = other.GetEnumerator(); rhsItr.MoveNext();
             for( int i = 0; i < Count && compare == 0; ++i, lhsItr.MoveNext(), rhsItr.MoveNext() )
             {

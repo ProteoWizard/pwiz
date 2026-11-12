@@ -72,6 +72,7 @@ namespace MSConvertGUI
                     runId = Path.GetFileNameWithoutExtension(inputFilename) ?? string.Empty;
                 else
                 {
+                    // ReSharper disable once ConstantNullCoalescingCondition
                     string extension = (Path.GetExtension(runId) ?? string.Empty).ToLower();
                     if (extension == ".mzml" ||
                         extension == ".mzxml" ||
@@ -82,6 +83,7 @@ namespace MSConvertGUI
                         extension == ".ms2" ||
                         extension == ".cms2" ||
                         extension == ".mz5")
+                        // ReSharper disable once ConstantNullCoalescingCondition
                         runId = Path.GetFileNameWithoutExtension(runId) ?? string.Empty;
                 }
 
@@ -484,6 +486,7 @@ namespace MSConvertGUI
                     if (updateMessage.message.Any())
                         StatusUpdate?.Invoke(String.Format("{0}: {1}/{2}", updateMessage.message, updateMessage.iterationIndex + 1, updateMessage.iterationCount), ProgressBarStyle.Continuous, JobInfo);
                     else
+                        // ReSharper disable once FormatStringProblem
                         StatusUpdate?.Invoke(String.Format("{1}/{2}", updateMessage.message, updateMessage.iterationIndex + 1, updateMessage.iterationCount), ProgressBarStyle.Continuous, JobInfo);
                     PercentageUpdate?.Invoke(updateMessage.iterationIndex + 1, updateMessage.iterationCount, JobInfo);
                 }

@@ -140,8 +140,10 @@ public class ProteomeTests
                 Assert.IsTrue(ProteomeDataDiff.IsEqual(pd.ProteinList!, rt.ProteinList!, out string reason),
                     reason);
             }
+            // ReSharper disable once EmptyGeneralCatchClause
             finally { try { File.Delete(outPath); } catch { } }
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         finally { try { File.Delete(tmp); } catch { } }
     }
 
@@ -529,6 +531,7 @@ public class ProteomeTests
             Assert.AreEqual(string.Empty, metaOnly.Sequence,
                 "getSequence=false should return an empty sequence");
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         finally { try { File.Delete(path); } catch { } }
     }
 
@@ -545,6 +548,7 @@ public class ProteomeTests
             Assert.AreEqual(list.Count, list.Find("does-not-exist"),
                 "missing-id sentinel must be Count (cpp parity)");
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         finally { try { File.Delete(path); } catch { } }
     }
 
@@ -578,7 +582,9 @@ public class ProteomeTests
         }
         finally
         {
+            // ReSharper disable once EmptyGeneralCatchClause
             try { File.Delete(path); } catch { }
+            // ReSharper disable once EmptyGeneralCatchClause
             try { File.Delete(sidecar); } catch { }
         }
     }
@@ -624,7 +630,9 @@ public class ProteomeTests
         }
         finally
         {
+            // ReSharper disable once EmptyGeneralCatchClause
             try { File.Delete(path); } catch { }
+            // ReSharper disable once EmptyGeneralCatchClause
             try { File.Delete(sidecar); } catch { }
         }
     }
@@ -655,7 +663,9 @@ public class ProteomeTests
         }
         finally
         {
+            // ReSharper disable once EmptyGeneralCatchClause
             try { File.Delete(path); } catch { }
+            // ReSharper disable once EmptyGeneralCatchClause
             try { File.Delete(sidecar); } catch { }
         }
     }
@@ -674,6 +684,7 @@ public class ProteomeTests
         }
         catch
         {
+            // ReSharper disable once EmptyGeneralCatchClause
             try { File.Delete(path); } catch { }
             throw;
         }

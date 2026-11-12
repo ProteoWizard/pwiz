@@ -307,6 +307,7 @@ public sealed class Converter
         catch
         {
             // Best-effort cleanup; preserve original exception.
+            // ReSharper disable once EmptyGeneralCatchClause
             try { if (File.Exists(partial)) File.Delete(partial); } catch { }
             throw;
         }

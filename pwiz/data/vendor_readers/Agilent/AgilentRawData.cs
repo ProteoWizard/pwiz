@@ -516,6 +516,7 @@ public sealed class AgilentRawData : IDisposable
         {
             if (chromReader is not null)
             {
+                // ReSharper disable once EmptyGeneralCatchClause
                 try { chromReader.CloseDataFile(); } catch { }
             }
         }
@@ -544,13 +545,38 @@ public sealed class AgilentRawData : IDisposable
             var intensities = new float[frames];
             var timesMs1 = new List<double>(frames);
             var intensitiesMs1 = new List<float>(frames);
+            // Per-frame read failures are reported once per file, not once per frame: a systemic
+            // SDK problem would otherwise write a warning for every frame.
+            bool warnedInfo = false, warnedTime = false, warnedTic = false, warnedCollisionEnergy = false;
             for (int i = 0; i < frames; i++)
             {
+                int frame = i + 1;
                 IMidacFrameInfo? info = null;
-                try { info = reader.FrameInfo(i + 1); } catch { }
+                try
+                {
+                    info = reader.FrameInfo(frame);
+                }
+                catch (Exception ex)
+                {
+                    ReportOnce(ref warnedInfo, $"IMS frame {frame} info unreadable; its TIC point is left at time 0, intensity 0 and it is left out of the MS1 TIC: {ex.Message}");
+                }
                 if (info is null) continue;
-                try { times[i] = info.AcqTimeRange?.Min ?? 0; } catch { }
-                try { intensities[i] = (float)info.Tic; } catch { }
+                try
+                {
+                    times[i] = info.AcqTimeRange?.Min ?? 0;
+                }
+                catch (Exception ex)
+                {
+                    ReportOnce(ref warnedTime, $"IMS frame {frame} acquisition time unreadable; its TIC point is left at time 0: {ex.Message}");
+                }
+                try
+                {
+                    intensities[i] = (float)info.Tic;
+                }
+                catch (Exception ex)
+                {
+                    ReportOnce(ref warnedTic, $"IMS frame {frame} TIC unreadable; its TIC point is left at intensity 0: {ex.Message}");
+                }
 
                 // cpp MidacScanRecord::getCollisionEnergy (MidacData.cpp:406-415).
                 double collisionEnergy = 0;
@@ -559,7 +585,10 @@ public sealed class AgilentRawData : IDisposable
                     var energy = info.SpectrumDetails?.FragmentationEnergyRange;
                     if (energy is not null) collisionEnergy = System.Math.Max(energy.Min, energy.Max);
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    ReportOnce(ref warnedCollisionEnergy, $"IMS frame {frame} collision energy unreadable; the frame is counted in the MS1 TIC: {ex.Message}");
+                }
                 if (collisionEnergy == 0)
                 {
                     timesMs1.Add(times[i]);
@@ -571,7 +600,22 @@ public sealed class AgilentRawData : IDisposable
             _ticTimesMs1 = timesMs1.ToArray();
             _ticIntensitiesMs1 = intensitiesMs1.ToArray();
         }
-        catch { /* leave empty; the TIC chromatogram comes out empty rather than wrong */ }
+        catch (Exception ex)
+        {
+            // Leave empty; the TIC chromatogram comes out empty rather than wrong.
+            Console.Error.WriteLine($"[AgilentRawData] {DataName()}: IMS TIC unreadable; the TIC chromatograms are left empty: {ex.Message}");
+        }
+
+        void ReportOnce(ref bool reported, string message)
+        {
+            if (reported)
+                return;
+            reported = true;
+            Console.Error.WriteLine($"[AgilentRawData] {DataName()}: {message} (reported once per file)");
+        }
+
+        // The .d is a directory, so trim a trailing separator before taking its name.
+        string DataName() => System.IO.Path.GetFileName(Path.TrimEnd('\\', '/'));
     }
 
     /// <summary>Returns the lightweight scan record for row <paramref name="rowIndex"/> (0-based).</summary>
@@ -974,6 +1018,7 @@ public sealed class AgilentRawData : IDisposable
         catch { /* SDK may throw on bogus state — best-effort close */ }
         if (_imsReader is not null)
         {
+            // ReSharper disable once EmptyGeneralCatchClause
             try { _imsReader.Close(); } catch { }
             _imsReader = null;
         }

@@ -796,7 +796,9 @@ namespace System.Collections.Generic
         {
             get
             {
+                // ReSharper disable once LocalVariableHidesMember
                 int count = 0;
+                // ReSharper disable once GenericEnumeratorNotDisposed
                 Enumerator itr = GetEnumerator();
                 while( itr.MoveNext() )
                     ++count;
@@ -977,6 +979,7 @@ namespace System.Collections.Generic
             if(nodeY != node) node.Key = nodeY.Key;
 
             // Remove Correction of the colors
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if(nodeY == null || !nodeY.Color)
             {
                 while(nodeX != root && (nodeX == null || !nodeX.Color))

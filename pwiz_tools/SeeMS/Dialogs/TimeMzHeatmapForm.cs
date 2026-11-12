@@ -102,6 +102,7 @@ namespace Pwiz.SeeMS
             msGraphControl.ZoomEvent += msGraphControl_ZoomEvent;
             msGraphControl.IsEnableVZoom = msGraphControl.IsEnableVPan = true;
 
+            // ReSharper disable once VirtualMemberCallInConstructor
             Text = TabText = source.Source.Name + " Heatmaps";
 
             ContextMenuStrip dummyMenu = new ContextMenuStrip();

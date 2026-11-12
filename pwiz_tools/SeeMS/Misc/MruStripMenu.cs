@@ -61,6 +61,7 @@ namespace JWC
 			public MruMenuItem(string filename, string entryname, EventHandler eventHandler)
 			{
 				Tag = filename;
+				// ReSharper disable once VirtualMemberCallInConstructor
 				Text = entryname;
 				Click += eventHandler;
 			}
@@ -157,7 +158,9 @@ namespace JWC
 			Init(recentFileMenuItem, clickedHandler, registryKeyName, loadFromRegistry, maxEntries);
 		}
 
+		// ReSharper disable ParameterHidesMember
 		protected void Init(ToolStripMenuItem recentFileMenuItem, ClickedHandler clickedHandler, string registryKeyName, bool loadFromRegistry, int maxEntries)
+		// ReSharper restore ParameterHidesMember
 		{
 			if (recentFileMenuItem == null)
 				throw new ArgumentNullException("recentFileMenuItem");
@@ -469,6 +472,7 @@ namespace JWC
 				int number = 0;
 				for (int i = StartIndex; i < EndIndex; i++, number++)
 				{
+					// ReSharper disable once StringCompareIsCultureSpecific.3
 					if (string.Compare(((MruMenuItem)MenuItems[i]).Filename, filename, true) == 0)
 					{
 						return number;
