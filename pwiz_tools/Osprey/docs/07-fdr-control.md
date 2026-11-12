@@ -210,7 +210,8 @@ stale model of the other classifier.
 
 The validity keys of FirstPassFDR, PerFileRescoring and SecondPassFDR carry the classifier
 (`;fdrmodel=gbdt`) and every tree setting that changes the model - the effective `GbtParams`,
-`OSPREY_GBT_MAX_ITERATIONS` and `OSPREY_GBT_INNER_FOLDS`
+`OSPREY_GBT_MAX_ITERATIONS`, `OSPREY_GBT_INNER_FOLDS` and `OSPREY_GBT_OOF=1` (`;gbtoof=1`,
+which changes the training rows' first-pass scores rather than the model)
 (`PercolatorEngine.GbdtValidityKeySuffix`). The term is empty for the linear SVM, so no SVM
 directory is invalidated, and it stays out of the base key and `SearchParameterHash`, which
 must match Rust. It prevents adoption across arms: a percolator directory
