@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" parent-id="ProteoWizard" uuid="1253c1ce-3b45-4a3c-9e82-0517c4c9b4fc" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>ProteoWizard Experimental</name>
+  <description>Unproven tests and expected failures</description>
+  <parameters>
+    <param name="env.NUMBER_OF_CORES" value="%teamcity.agent.hardware.cpuCount%" />
+  </parameters>
+  <project-extensions>
+    <extension id="KEEP_RULE_2" type="keepRules">
+      <parameters>
+        <param name="keepData.1.type" value="everything" />
+        <param name="limit.daysCount" value="30" />
+        <param name="limit.type" value="lastNDays" />
+        <param name="partitions.1.type" value="perBranch" />
+        <param name="preserveArtifacts" value="true" />
+        <param name="ruleDisabled" value="false" />
+      </parameters>
+    </extension>
+  </project-extensions>
+</project>
+

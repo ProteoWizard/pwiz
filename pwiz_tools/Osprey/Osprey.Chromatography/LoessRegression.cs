@@ -225,27 +225,21 @@ namespace pwiz.Osprey.Chromatography
         /// <param name="y">Dependent variable values.</param>
         /// <param name="bandwidth">Fraction of data to use for each local fit (0.0-1.0).</param>
         /// <param name="degree">Polynomial degree for local fits (0 = constant, 1 = linear).</param>
-        /// <param name="robustnessIterations">Number of bisquare robustness iterations.</param>
-        /// <param name="classicalRobust">
-        /// When false (default), absolute residuals are computed ONCE from the initial
-        /// fit and reused across all robustness iterations, matching the current
-        /// Rust calibration_ml.rs behavior (which captures `residuals` before the
-        /// loop and never refreshes them). When true, residuals are recomputed from
-        /// the current fit on each iteration, which is the classical Cleveland (1979)
-        /// robust LOESS algorithm. Default matches Rust so Osprey stays
-        /// bit-identical out of the box.
-        /// </param>
+        /// <param name="robustnessIterations">Number of bisquare robustness iterations. Each
+        /// recomputes the absolute residuals from the current fit: the classical Cleveland
+        /// (1979) robust LOESS, as Rust calibration_ml.rs v26.3.1 and later. The legacy arm
+        /// that reused the initial fit's residuals (OSPREY_LOESS_CLASSICAL_ROBUST=0) was
+        /// retired with the other parity-only paths.</param>
         /// <returns>A fitted LoessModel for prediction.</returns>
         public static LoessModel Fit(double[] x, double[] y, double bandwidth = 0.3,
-            int degree = 1, int robustnessIterations = 2,
-            bool classicalRobust = false)
+            int degree = 1, int robustnessIterations = 2)
         {
             if (x == null || y == null)
-                throw new ArgumentNullException(x == null ? "x" : "y");
+                throw new ArgumentNullException(x == null ? @"x" : @"y");
             if (x.Length != y.Length)
-                throw new ArgumentException("x and y must have the same length");
+                throw new ArgumentException(@"x and y must have the same length");
             if (x.Length < 2)
-                throw new ArgumentException("Need at least 2 data points");
+                throw new ArgumentException(@"Need at least 2 data points");
 
             // Sort by x with a secondary key on y, so the order is
             // deterministic for duplicate x values (e.g. multi-charge
@@ -272,14 +266,8 @@ namespace pwiz.Osprey.Chromatography
             // Initial fit
             double[] fitted = LoessFitInternal(sortedX, sortedY, bandwidth, degree, null);
 
-            // Compute absolute residuals from the INITIAL fit. In the default
-            // (Rust-compat) mode these residuals are reused across every
-            // robustness iteration, matching Rust's osprey-chromatography
-            // calibration_ml.rs which captures `residuals` before the loop and
-            // never refreshes them (so all iterations compute the same bisquare
-            // weights and the same refined fit). In classical mode they are
-            // refreshed from the current fit at the top of each iteration, which
-            // is the Cleveland (1979) robust LOESS algorithm.
+            // Absolute residuals from the initial fit, refreshed from the current fit
+            // at the top of each later iteration (classical Cleveland 1979).
             double[] absResiduals = new double[n];
             for (int i = 0; i < n; i++)
                 absResiduals[i] = Math.Abs(sortedY[i] - fitted[i]);
@@ -290,9 +278,9 @@ namespace pwiz.Osprey.Chromatography
                 weights[i] = 1.0;
             for (int iter = 0; iter < robustnessIterations; iter++)
             {
-                if (classicalRobust && iter > 0)
+                if (iter > 0)
                 {
-                    // Refresh residuals from the CURRENT fit (classical mode)
+                    // Refresh residuals from the CURRENT fit
                     for (int i = 0; i < n; i++)
                         absResiduals[i] = Math.Abs(sortedY[i] - fitted[i]);
                 }

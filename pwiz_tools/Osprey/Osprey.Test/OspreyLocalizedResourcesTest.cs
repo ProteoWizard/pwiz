@@ -1,0 +1,173 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
+using System.Resources;
+using System.Text.RegularExpressions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
+using pwiz.Osprey.Chromatography;
+using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR;
+using pwiz.Osprey.IO;
+using pwiz.Osprey.Scoring;
+using pwiz.Osprey.Tasks;
+
+namespace pwiz.Osprey.Test
+{
+    /// <summary>
+    /// Osprey's counterpart of Skyline's LocalizedResourcesTest: every Japanese and Chinese
+    /// resource must be usable in place of the English one. A translation that drops or
+    /// renumbers a placeholder throws or prints the wrong value at run time, and a translated
+    /// "Error:" that the exit-code detector does not recognize makes the log and the exit code
+    /// disagree - neither shows up in an English run.
+    /// <para>
+    /// As in Skyline, only translations that exist are checked. English .resx files grow between
+    /// translation rounds, so a new English string with no ja / zh-Hans entry yet (or a new .resx
+    /// with no satellite at all) is not a failure; adding English text never requires a translation.
+    /// </para>
+    /// <para>
+    /// The reverse is a failure: a translation whose English key no longer exists. Removing or
+    /// renaming an English resource must remove its ja / zh-Hans entries in the same change, or they
+    /// linger as dead text that no code reads and that reviewers would still be asked to check.
+    /// </para>
+    /// </summary>
+    [TestClass]
+    public class OspreyLocalizedResourcesTest
+    {
+        private static readonly string[] LANGUAGES = { @"ja", @"zh-Hans" };
+
+        // A format item: {0}, {1:N0}, {2,5:F1}. Doubled braces are literal text, not items.
+        private static readonly Regex FORMAT_ITEM = new Regex(@"(?<!\{)\{\d+(?:,-?\d+)?(?::[^{}]*)?\}(?!\})");
+
+        [TestMethod]
+        public void TestLocalizedResources()
+        {
+            var resourceManagers = GetResourceManagers().ToList();
+            // Every assembly that writes user text has a resource class; losing one from the
+            // scan would silently stop checking its translations.
+            foreach (var type in new[]
+                     {
+                         typeof(OspreyChromatographyResources), typeof(OspreyCoreResources),
+                         typeof(OspreyFDRResources), typeof(OspreyIOResources), typeof(OspreyScoringResources),
+                         typeof(OspreyTasksResources), typeof(OspreyResources), typeof(OspreyCommandArgUsage)
+                     })
+            {
+                Assert.IsTrue(resourceManagers.Any(rm => rm.BaseName == type.FullName),
+                    string.Format(@"{0} is missing from the scanned resource managers", type.FullName));
+            }
+
+            var checkedCounts = LANGUAGES.ToDictionary(language => language, language => 0);
+            var orphans = new List<string>();
+            foreach (var resourceManager in resourceManagers)
+                VerifyResourceManager(resourceManager, checkedCounts, orphans);
+            Assert.AreEqual(0, orphans.Count,
+                "Translations with no English resource (the English key was removed or renamed); delete them " +
+                "from the .ja.resx / .zh-Hans.resx files:" + Environment.NewLine + string.Join(Environment.NewLine, orphans));
+            // Missing translations are skipped, so guard against a vacuous pass: satellites that
+            // stopped deploying beside the tests would otherwise skip every check silently.
+            foreach (var language in LANGUAGES)
+            {
+                Assert.IsTrue(checkedCounts[language] > 0,
+                    string.Format(@"No {0} translations were found to check; are the satellite assemblies deployed?", language));
+            }
+        }
+
+        private static void VerifyResourceManager(ResourceManager resourceManager, IDictionary<string, int> checkedCounts,
+            ICollection<string> orphans)
+        {
+            var invariantSet = resourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
+            Assert.IsNotNull(invariantSet, resourceManager.BaseName);
+            var invariantKeys = new HashSet<string>(invariantSet.Cast<DictionaryEntry>().Select(e => (string) e.Key));
+            foreach (var language in LANGUAGES)
+            {
+                // tryParents: false, so an entry the satellite lacks reads as missing rather than
+                // as the English fallback, and is skipped instead of being compared to itself.
+                var localizedSet = resourceManager.GetResourceSet(CultureInfo.GetCultureInfo(language), true, false);
+                // An earlier lookup with fallback can leave the English set cached under this culture;
+                // that is no satellite, and must not count as translations checked.
+                if (localizedSet == null || ReferenceEquals(localizedSet, invariantSet))
+                    continue;
+                foreach (var key in localizedSet.Cast<DictionaryEntry>().Select(e => (string) e.Key).Where(k => !invariantKeys.Contains(k)).OrderBy(k => k))
+                    orphans.Add(string.Format(@"{0} Entry:{1} Language:{2}", resourceManager.BaseName, key, language));
+                foreach (var entry in invariantSet.Cast<DictionaryEntry>().OrderBy(e => (string) e.Key))
+                {
+                    string message = string.Format(@"{0} Entry:{1} Language:{2}", resourceManager.BaseName, entry.Key, language);
+                    var invariantText = entry.Value as string;
+                    var localizedText = localizedSet.GetString((string) entry.Key);
+                    if (invariantText == null || localizedText == null)
+                        continue;
+                    checkedCounts[language]++;
+                    CollectionAssert.AreEquivalent(FormatItems(invariantText), FormatItems(localizedText),
+                        message + @" has different format items: " + localizedText);
+                    Assert.AreEqual(CommandStatusWriter.IsErrorLine(invariantText), CommandStatusWriter.IsErrorLine(localizedText),
+                        message + @" disagrees with the English about being an error line: " + localizedText);
+                    // A stray brace the format-item regex cannot see still throws at run time.
+                    AssertFormats(localizedText, message);
+                }
+            }
+        }
+
+        private static void AssertFormats(string text, string message)
+        {
+            try
+            {
+                // The call is the check: string.Format throws on a malformed format string.
+                // ReSharper disable once RedundantStringFormatCall
+                Assert.IsNotNull(string.Format(CultureInfo.InvariantCulture, text, FORMAT_ARGUMENTS));
+            }
+            catch (FormatException e)
+            {
+                Assert.Fail(message + @" is not a valid format string (" + e.Message + @"): " + text);
+            }
+        }
+
+        // More arguments than any Osprey resource uses, so only a malformed string can fail to format.
+        private static readonly object[] FORMAT_ARGUMENTS = new object[30];
+
+        private static List<string> FormatItems(string text)
+        {
+            return FORMAT_ITEM.Matches(text).Select(m => m.Value).ToList();
+        }
+
+        private static IEnumerable<ResourceManager> GetResourceManagers()
+        {
+            var assemblies = new[]
+            {
+                typeof(OspreyChromatographyResources).Assembly, typeof(OspreyCoreResources).Assembly,
+                typeof(OspreyFDRResources).Assembly, typeof(OspreyIOResources).Assembly,
+                typeof(OspreyScoringResources).Assembly, typeof(OspreyTasksResources).Assembly,
+                typeof(OspreyResources).Assembly
+            }.Distinct();
+            foreach (var type in assemblies.SelectMany(assembly => assembly.GetTypes()))
+            {
+                var property = type.GetProperty(nameof(OspreyCoreResources.ResourceManager),
+                    BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                if (property != null && property.GetValue(null) is ResourceManager resourceManager)
+                    yield return resourceManager;
+            }
+        }
+    }
+}

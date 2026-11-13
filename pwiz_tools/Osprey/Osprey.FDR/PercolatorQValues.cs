@@ -33,6 +33,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
@@ -71,14 +72,15 @@ namespace pwiz.Osprey.FDR
             double[] finalScores, bool[] labels, uint[] entryIds)
         {
             int n = finalScores.Length;
-            int[] winnerIndices;
-            double[] winnerScores;
-            bool[] winnerIsDecoy;
             // Throttled progress over the ~344M-row population competition (the big walk that
             // ran silent at 82 files); null (silent) on small runs. Console-only, byte-neutral.
-            using (var pepProgress = QProgress(@"Population target/decoy competition", n, n))
+            var (winnerIndices, winnerScores, winnerIsDecoy) = QRun(
+                OspreyFDRResources.PercolatorQValues_ComputePepWinnerMap_Population_target_decoy_competition, n, n, pepProgress =>
+            {
                 TargetDecoyCompetition.CompeteAll(finalScores, labels, entryIds,
-                    out winnerIndices, out winnerScores, out winnerIsDecoy, pepProgress);
+                    out int[] indices, out double[] scores, out bool[] isDecoy, pepProgress);
+                return (indices, scores, isDecoy);
+            });
 
             int nWinners = winnerIndices.Length;
             var pepOrder = new int[nWinners];
@@ -110,8 +112,50 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Memory-bounded flat form of <see cref="PercolatorEngine.ClampExperimentQToBestRun"/>
-        /// (issue #4378): floor each experiment q up to the entry's best (min-over-runs)
+        /// PEP of each winner of one target/decoy competition, by rank: a
+        /// <see cref="PepEstimator"/> fitted over the winners in <paramref name="winnerBaseIds"/>
+        /// order, then evaluated at each winner's score. The fit order is fixed because the KDE
+        /// sum is not associative; base_id order is the order <see cref="ComputePepWinnerMap"/>
+        /// fits the experiment precursor PEP in. Shared by the first- and second-pass peptide
+        /// PEPs so they cannot drift from each other.
+        /// </summary>
+        internal static double[] ComputeWinnerPeps(
+            double[] winnerScores, bool[] winnerIsDecoy, uint[] winnerBaseIds)
+        {
+            int nWinners = winnerScores.Length;
+            var pepOrder = new int[nWinners];
+            for (int k = 0; k < nWinners; k++)
+                pepOrder[k] = k;
+            Array.Sort(pepOrder, (a, b) => winnerBaseIds[a].CompareTo(winnerBaseIds[b])); // Array.Sort OK: one winner per base_id in a competition, so no ties
+            var pepScores = new double[nWinners];
+            var pepIsDecoy = new bool[nWinners];
+            for (int k = 0; k < nWinners; k++)
+            {
+                pepScores[k] = winnerScores[pepOrder[k]];
+                pepIsDecoy[k] = winnerIsDecoy[pepOrder[k]];
+            }
+            var pepEstimator = PepEstimator.FitDefault(pepScores, pepIsDecoy);
+            var peps = new double[nWinners];
+            for (int rank = 0; rank < nWinners; rank++)
+                peps[rank] = pepEstimator.PosteriorError(winnerScores[rank]);
+            return peps;
+        }
+
+        /// <summary>
+        /// The base_id of each winner a <see cref="TargetDecoyCompetition.CompeteFromIndices"/>
+        /// call returned, for <see cref="ComputeWinnerPeps"/>.
+        /// </summary>
+        internal static uint[] WinnerBaseIds(int[] winnerIndices, uint[] entryIds)
+        {
+            var baseIds = new uint[winnerIndices.Length];
+            for (int rank = 0; rank < winnerIndices.Length; rank++)
+                baseIds[rank] = entryIds[winnerIndices[rank]] & PercolatorEntry.BASE_ID_MASK;
+            return baseIds;
+        }
+
+        /// <summary>
+        /// Memory-bounded flat form of the experiment-q clamp
+        /// (<see cref="PercolatorEngine.AccumulateExperimentQFloors"/>, issue #4378): floor each experiment q up to the entry's best (min-over-runs)
         /// combined run q (<c>runBoth = max(runPrecursorQ, runPeptideQ)</c>), keyed by EntryId
         /// for the precursor floor and by <c>(peptide, isDecoy)</c> for the peptide floor (an
         /// empty peptide is skipped). Operates on the flat score-pass scalar arrays the FDR math
@@ -200,58 +244,111 @@ namespace pwiz.Osprey.FDR
                 minRunBothByPeptide[pkey] = runBoth;
         }
 
-
-
-
-
-
         /// <summary>
-        /// OSPREY_PASS2_QVALUE=transfer-compete (full-population form): given the FULL
-        /// 1st-pass population as flat SCALAR arrays -- scores, is_decoy labels, entry_ids,
-        /// file names, all index-aligned, with the reconciled minority's scores already
-        /// overwritten by the caller -- run the global target-decoy competition and compute
-        /// per-run + experiment PRECURSOR q-values and PEP over that full population. Same
-        /// competition/PEP/q math as <see cref="PercolatorScorer.ScorePopulationAndComputeFdr"/>, but takes
-        /// pre-computed scores (no features, no model application), so the 2nd pass can
-        /// recompete over the persisted full-population scalars from
-        /// <c>.1st-pass.fdr_scores.bin</c> -- with only the ~0.4% reconciled scores swapped in
-        /// -- without ever holding features resident. Outputs are index-aligned to the inputs.
-        /// Precursor-level only (the entrapment-FDR path); peptide-level q is not computed here.
+        /// The experiment-wide best-of-runs clamp floors of the streaming first pass: per entry
+        /// and per (peptide, label), the minimum over every run of max(run precursor q, run
+        /// peptide q). Files are folded in from several file lanes at once, each having reduced
+        /// its own rows with <see cref="UpdateExperimentQClampFloor"/>.
+        ///
+        /// <para>That needs no ordering, and so no in-order consumer: a floor is a minimum, which
+        /// does not depend on which file arrives first, and the floors are only ever looked up -
+        /// this type offers no enumeration - so the order keys enter them is not observable.
+        /// Merging into one big map is dominated by cache misses on random keys rather than by
+        /// row count, which made it the second-largest serial cost of the pass; sharding it lets
+        /// every lane do its own file's share, locking each shard once per file.</para>
+        ///
+        /// <para>Look-ups are lock-free and valid once every merge has returned, which is how the
+        /// pass uses it: all of pass 1 merges, then pass 2 only reads.</para>
         /// </summary>
-        public static void ComputeFullPopulationPrecursorFdr(
-            double[] scores, bool[] labels, uint[] entryIds, string[] fileNames,
-            out double[] runPrecursorQ, out double[] experimentPrecursorQ, out double[] pep)
+        internal sealed class ExperimentQClampFloors
         {
-            int n = scores.Length;
+            internal const int SHARD_COUNT = 64;   // a power of two, for the mask below
 
-            // Global target-decoy competition (group by base_id, winner per pair) + PEP on winners.
-            TargetDecoyCompetition.CompeteAll(scores, labels, entryIds,
-                out int[] winnerIndices, out double[] winnerScores, out bool[] winnerIsDecoy);
-            var pepEstimator = PepEstimator.FitDefault(winnerScores, winnerIsDecoy);
-            pep = new double[n];
-            for (int i = 0; i < n; i++) pep[i] = 1.0;
-            foreach (int idx in winnerIndices)
-                pep[idx] = pepEstimator.PosteriorError(scores[idx]);
+            private readonly Shards<uint> _byEntryId = new Shards<uint>();
+            private readonly Shards<(string, bool)> _byPeptide = new Shards<(string, bool)>();
 
-            // Per-run and experiment-wide precursor q over the full population.
-            runPrecursorQ = ComputePerRunPrecursorQvalues(scores, labels, entryIds, fileNames);
-            var uniqueFiles = new HashSet<string>(fileNames);
-            experimentPrecursorQ = uniqueFiles.Count <= 1
-                ? (double[])runPrecursorQ.Clone()
-                : ComputeExperimentPrecursorQvalues(scores, labels, entryIds);
+            /// <summary>Folds in one file's floors; safe to call from several lanes at once.</summary>
+            public void Merge(Dictionary<uint, double> fileByEntryId,
+                Dictionary<(string, bool), double> fileByPeptide)
+            {
+                _byEntryId.MergeMin(fileByEntryId);
+                _byPeptide.MergeMin(fileByPeptide);
+            }
 
-            // Best-of-runs monotonicity (issue #4390): floor each entry's experiment q up to
-            // its own best (min-over-runs) run q -- an experiment q is never more confident
-            // than the precursor's best single run. Keyed by full entry_id (target and decoy
-            // are distinct entries), matching ClampExperimentQToBestRunFlat's precursor clamp.
-            var bestRunQ = new Dictionary<uint, double>();
-            for (int i = 0; i < n; i++)
-                if (!bestRunQ.TryGetValue(entryIds[i], out double q) || runPrecursorQ[i] < q)
-                    bestRunQ[entryIds[i]] = runPrecursorQ[i];
-            for (int i = 0; i < n; i++)
-                if (experimentPrecursorQ[i] < bestRunQ[entryIds[i]])
-                    experimentPrecursorQ[i] = bestRunQ[entryIds[i]];
+            public bool TryGetByEntryId(uint entryId, out double floor)
+            {
+                return _byEntryId.TryGetValue(entryId, out floor);
+            }
+
+            public bool TryGetByPeptide((string, bool) peptideAndLabel, out double floor)
+            {
+                return _byPeptide.TryGetValue(peptideAndLabel, out floor);
+            }
+
+            private sealed class Shards<TKey>
+            {
+                private readonly Dictionary<TKey, double>[] _shards = new Dictionary<TKey, double>[SHARD_COUNT];
+
+                public Shards()
+                {
+                    for (int s = 0; s < SHARD_COUNT; s++)
+                        _shards[s] = new Dictionary<TKey, double>();
+                }
+
+                public void MergeMin(Dictionary<TKey, double> file)
+                {
+                    // Bucketed by shard first, then each shard locked ONCE for its whole batch. A
+                    // lock per key bounced each shard's lock between cores on every update, which
+                    // on a loaded NUMA box cost several times the dictionary work it guarded.
+                    var batches = new List<KeyValuePair<TKey, double>>[SHARD_COUNT];
+                    foreach (var kv in file)
+                    {
+                        int s = ShardIndex(kv.Key);
+                        (batches[s] ?? (batches[s] = new List<KeyValuePair<TKey, double>>())).Add(kv);
+                    }
+                    for (int s = 0; s < SHARD_COUNT; s++)
+                    {
+                        var batch = batches[s];
+                        if (batch == null)
+                            continue;
+                        var shard = _shards[s];
+                        lock (shard)
+                        {
+                            foreach (var kv in batch)
+                            {
+                                if (!shard.TryGetValue(kv.Key, out double cur) || kv.Value < cur)
+                                    shard[kv.Key] = kv.Value;
+                            }
+                        }
+                    }
+                }
+
+                public bool TryGetValue(TKey key, out double value)
+                {
+                    return _shards[ShardIndex(key)].TryGetValue(key, out value);
+                }
+            }
+
+            /// <summary>The shard of <paramref name="key"/> in a <see cref="SHARD_COUNT"/>-way
+            /// split. Shared with the streaming first pass's entry facts, which shard the same way
+            /// for the same reason.</summary>
+            internal static int ShardIndex<TKey>(TKey key)
+            {
+                // Mixed before masking: a uint's hash is the value itself, and entry ids are
+                // allocated in runs, so the low bits alone would crowd a few shards.
+                unchecked
+                {
+                    uint h = (uint)EqualityComparer<TKey>.Default.GetHashCode(key);
+                    h ^= h >> 16;
+                    h *= 0x45d9f3bu;
+                    h ^= h >> 16;
+                    return (int)(h & (SHARD_COUNT - 1));
+                }
+            }
         }
+
+
+
 
 
 
@@ -539,39 +636,40 @@ namespace pwiz.Osprey.FDR
                 list.Add(i);
             }
 
-            var progress = QProgress(@"Per-run precursor q-values", fileGroups.Count, n);
-            int fileDone = 0;
-            foreach (var group in fileGroups.Values)
+            QRun(OspreyFDRResources.PercolatorQValues_ComputePerRunPrecursorQvalues_Per_run_precursor_q_values, fileGroups.Count, n, progress =>
             {
-                progress?.Report(++fileDone);
-                var fileScores = new double[group.Count];
-                var fileLabels = new bool[group.Count];
-                var fileEntryIds = new uint[group.Count];
-                var allIndices = new int[group.Count];
-                for (int i = 0; i < group.Count; i++)
+                int fileDone = 0;
+                foreach (var group in fileGroups.Values)
                 {
-                    fileScores[i] = scores[group[i]];
-                    fileLabels[i] = labels[group[i]];
-                    fileEntryIds[i] = entryIds[group[i]];
-                    allIndices[i] = i;
+                    progress?.Report(++fileDone);
+                    var fileScores = new double[group.Count];
+                    var fileLabels = new bool[group.Count];
+                    var fileEntryIds = new uint[group.Count];
+                    var allIndices = new int[group.Count];
+                    for (int i = 0; i < group.Count; i++)
+                    {
+                        fileScores[i] = scores[group[i]];
+                        fileLabels[i] = labels[group[i]];
+                        fileEntryIds[i] = entryIds[group[i]];
+                        allIndices[i] = i;
+                    }
+
+                    int[] wi;
+                    double[] ws;
+                    bool[] wd;
+                    TargetDecoyCompetition.CompeteFromIndices(fileScores, fileLabels, fileEntryIds, allIndices,
+                        out wi, out ws, out wd);
+
+                    var q = new double[wi.Length];
+                    ComputeConservativeQvalues(ws, wd, q);
+
+                    for (int rank = 0; rank < wi.Length; rank++)
+                    {
+                        int globalIdx = group[wi[rank]];
+                        qvalues[globalIdx] = q[rank];
+                    }
                 }
-
-                int[] wi;
-                double[] ws;
-                bool[] wd;
-                TargetDecoyCompetition.CompeteFromIndices(fileScores, fileLabels, fileEntryIds, allIndices,
-                    out wi, out ws, out wd);
-
-                var q = new double[wi.Length];
-                ComputeConservativeQvalues(ws, wd, q);
-
-                for (int rank = 0; rank < wi.Length; rank++)
-                {
-                    int globalIdx = group[wi[rank]];
-                    qvalues[globalIdx] = q[rank];
-                }
-            }
-            progress?.Dispose();
+            });
 
             return qvalues;
         }
@@ -662,50 +760,51 @@ namespace pwiz.Osprey.FDR
                 list.Add(i);
             }
 
-            var progress = QProgress(@"Per-run peptide q-values", fileGroups.Count, n);
-            int fileDone = 0;
-            foreach (var group in fileGroups.Values)
+            QRun(OspreyFDRResources.PercolatorQValues_ComputePerRunPeptideQvalues_Per_run_peptide_q_values, fileGroups.Count, n, progress =>
             {
-                progress?.Report(++fileDone);
-                var bestPerPeptide = PercolatorSampling.BestPrecursorPerPeptide(
-                    group.ToArray(), scores, labels, peptides);
-
-                var peptScores = new double[bestPerPeptide.Length];
-                var peptLabels = new bool[bestPerPeptide.Length];
-                var peptEntryIds = new uint[bestPerPeptide.Length];
-                var allIndices = new int[bestPerPeptide.Length];
-                for (int i = 0; i < bestPerPeptide.Length; i++)
+                int fileDone = 0;
+                foreach (var group in fileGroups.Values)
                 {
-                    peptScores[i] = scores[bestPerPeptide[i]];
-                    peptLabels[i] = labels[bestPerPeptide[i]];
-                    peptEntryIds[i] = entryIds[bestPerPeptide[i]];
-                    allIndices[i] = i;
+                    progress?.Report(++fileDone);
+                    var bestPerPeptide = PercolatorSampling.BestPrecursorPerPeptide(
+                        group.ToArray(), scores, labels, peptides);
+
+                    var peptScores = new double[bestPerPeptide.Length];
+                    var peptLabels = new bool[bestPerPeptide.Length];
+                    var peptEntryIds = new uint[bestPerPeptide.Length];
+                    var allIndices = new int[bestPerPeptide.Length];
+                    for (int i = 0; i < bestPerPeptide.Length; i++)
+                    {
+                        peptScores[i] = scores[bestPerPeptide[i]];
+                        peptLabels[i] = labels[bestPerPeptide[i]];
+                        peptEntryIds[i] = entryIds[bestPerPeptide[i]];
+                        allIndices[i] = i;
+                    }
+
+                    int[] wi;
+                    double[] ws;
+                    bool[] wd;
+                    TargetDecoyCompetition.CompeteFromIndices(peptScores, peptLabels, peptEntryIds, allIndices,
+                        out wi, out ws, out wd);
+
+                    var q = new double[wi.Length];
+                    ComputeConservativeQvalues(ws, wd, q);
+
+                    var peptideQvalue = new Dictionary<string, double>();
+                    for (int rank = 0; rank < wi.Length; rank++)
+                    {
+                        int globalIdx = bestPerPeptide[wi[rank]];
+                        peptideQvalue[peptides[globalIdx]] = q[rank];
+                    }
+
+                    foreach (int idx in group)
+                    {
+                        double qv;
+                        if (peptideQvalue.TryGetValue(peptides[idx], out qv))
+                            qvalues[idx] = qv;
+                    }
                 }
-
-                int[] wi;
-                double[] ws;
-                bool[] wd;
-                TargetDecoyCompetition.CompeteFromIndices(peptScores, peptLabels, peptEntryIds, allIndices,
-                    out wi, out ws, out wd);
-
-                var q = new double[wi.Length];
-                ComputeConservativeQvalues(ws, wd, q);
-
-                var peptideQvalue = new Dictionary<string, double>();
-                for (int rank = 0; rank < wi.Length; rank++)
-                {
-                    int globalIdx = bestPerPeptide[wi[rank]];
-                    peptideQvalue[peptides[globalIdx]] = q[rank];
-                }
-
-                foreach (int idx in group)
-                {
-                    double qv;
-                    if (peptideQvalue.TryGetValue(peptides[idx], out qv))
-                        qvalues[idx] = qv;
-                }
-            }
-            progress?.Dispose();
+            });
 
             return qvalues;
         }
@@ -733,22 +832,23 @@ namespace pwiz.Osprey.FDR
             double[] scores, bool[] labels, uint[] entryIds, bool applyExperimentAgg = true)
         {
             int n = scores.Length;
-            int[] wi;
-            double[] ws;
-            bool[] wd;
-            using (var progress = QProgress(@"Experiment precursor q-values", n, n))
+            var (wi, ws, wd) = QRun(OspreyFDRResources.PercolatorQValues_ComputeExperimentPrecursorQMap_Experiment_precursor_q_values, n, n, progress =>
             {
+                int[] winnerIndices;
+                double[] winnerScores;
+                bool[] winnerDecoys;
                 if (applyExperimentAgg && OspreyEnvironment.ExperimentAggMeanBest)
                 {
                     var aggScore = TargetDecoyCompetition.ComputeBaseIdMeanBestN(
                         scores, labels, entryIds, OspreyEnvironment.MeanBestN);
-                    TargetDecoyCompetition.CompeteAll(aggScore, labels, entryIds, out wi, out ws, out wd, progress);
+                    TargetDecoyCompetition.CompeteAll(aggScore, labels, entryIds, out winnerIndices, out winnerScores, out winnerDecoys, progress);
                 }
                 else
                 {
-                    TargetDecoyCompetition.CompeteAll(scores, labels, entryIds, out wi, out ws, out wd, progress);
+                    TargetDecoyCompetition.CompeteAll(scores, labels, entryIds, out winnerIndices, out winnerScores, out winnerDecoys, progress);
                 }
-            }
+                return (winnerIndices, winnerScores, winnerDecoys);
+            });
 
             var q = new double[wi.Length];
             ComputeConservativeQvalues(ws, wd, q);
@@ -771,7 +871,7 @@ namespace pwiz.Osprey.FDR
             // acceptance boundary built from the accepted set onto the DECOY's scale (the
             // --model-diagnostics decoy row read 15.7x its definition because of them).
             //
-            // This is the same rule ClampExperimentQToBestRun already states for the run-level
+            // This is the same rule the experiment-q clamp already states for the run-level
             // floors: "never the shared base_id / bare sequence - a target must not inherit its
             // paired decoy's good run". The loser of a competition is not in the ranking, so it
             // keeps the 1.0 default, which is what TDC means.
@@ -860,12 +960,16 @@ namespace pwiz.Osprey.FDR
         /// expands this map, so both share the SAME best-per-peptide + competition +
         /// conservative-q math and cannot drift.
         ///
+        /// <para><paramref name="pepByPeptide"/> is the peptide-level PEP: each winning peptide's
+        /// posterior error probability, fitted over the same peptide-level winners
+        /// (<see cref="ComputeWinnerPeps"/>). A peptide absent from it lost and has PEP 1.0.</para>
+        ///
         /// <c>applyExperimentAgg</c> is false on the 2nd pass; see
         /// <see cref="ComputeExperimentPrecursorQMap"/> for why the aggregation is first-pass only.
         /// </summary>
         internal static Dictionary<string, double> ComputeExperimentPeptideQMap(
             double[] scores, bool[] labels, uint[] entryIds, string[] peptides,
-            bool applyExperimentAgg = true)
+            out Dictionary<string, double> pepByPeptide, bool applyExperimentAgg = true)
         {
             int n = scores.Length;
 
@@ -896,21 +1000,24 @@ namespace pwiz.Osprey.FDR
                 allPeptIndices[i] = i;
             }
 
-            int[] wi;
-            double[] ws;
-            bool[] wd;
-            using (var progress = QProgress(@"Experiment peptide q-values", bestPerPeptide.Length, bestPerPeptide.Length))
+            var (wi, ws, wd) = QRun(OspreyFDRResources.PercolatorQValues_ComputeExperimentPeptideQMap_Experiment_peptide_q_values, bestPerPeptide.Length, bestPerPeptide.Length, progress =>
+            {
                 TargetDecoyCompetition.CompeteFromIndices(peptScores, peptLabels, peptEntryIds, allPeptIndices,
-                    out wi, out ws, out wd, progress);
+                    out int[] winnerIndices, out double[] winnerScores, out bool[] winnerDecoys, progress);
+                return (winnerIndices, winnerScores, winnerDecoys);
+            });
 
             var q = new double[wi.Length];
             ComputeConservativeQvalues(ws, wd, q);
+            var peps = ComputeWinnerPeps(ws, wd, WinnerBaseIds(wi, peptEntryIds));
 
             var peptideQvalue = new Dictionary<string, double>();
+            pepByPeptide = new Dictionary<string, double>(wi.Length);
             for (int rank = 0; rank < wi.Length; rank++)
             {
                 int globalIdx = bestPerPeptide[wi[rank]];
                 peptideQvalue[peptides[globalIdx]] = q[rank];
+                pepByPeptide[peptides[globalIdx]] = peps[rank];
             }
             return peptideQvalue;
         }
@@ -920,30 +1027,56 @@ namespace pwiz.Osprey.FDR
         /// used by the RESIDENT score pass; see
         /// <see cref="ComputeExperimentPrecursorQvalues"/> for why
         /// <c>applyExperimentAgg</c> must be threaded through rather than defaulted.
+        /// <paramref name="peptidePeps"/> is each row's peptide-level PEP (1.0 where the row's
+        /// peptide lost).
         /// </summary>
         internal static double[] ComputeExperimentPeptideQvalues(
             double[] scores, bool[] labels, uint[] entryIds, string[] peptides,
-            bool applyExperimentAgg = true)
+            out double[] peptidePeps, bool applyExperimentAgg = true)
         {
             int n = scores.Length;
             var qvalues = new double[n];
+            peptidePeps = new double[n];
             var peptideQvalue = ComputeExperimentPeptideQMap(
-                scores, labels, entryIds, peptides, applyExperimentAgg);
+                scores, labels, entryIds, peptides, out var pepByPeptide, applyExperimentAgg);
             for (int i = 0; i < n; i++)
             {
-                double qv;
-                qvalues[i] = peptideQvalue.TryGetValue(peptides[i], out qv) ? qv : 1.0;
+                qvalues[i] = peptideQvalue.TryGetValue(peptides[i], out double qv) ? qv : 1.0;
+                peptidePeps[i] = pepByPeptide.TryGetValue(peptides[i], out double pv) ? pv : 1.0;
             }
             return qvalues;
         }
 
 
-        // A console progress reporter for the large first-pass q-value / competition passes,
-        // or null (no output) when the population is small enough that the pass is sub-second
-        // -- keeps unit tests / Stellar clutter-free. Console-only; never affects the q-values.
+        // Run a large first-pass q-value / competition pass with a console progress reporter,
+        // or with a null one (no output) when the population is small enough that the pass is
+        // sub-second - keeps unit tests / Stellar clutter-free. Console-only; never affects the
+        // q-values.
+        internal static void QRun(string activity, long reportTotal, long workSize, Action<ProgressReporter> body)
+        {
+            QRun<object>(activity, reportTotal, workSize, progress =>
+            {
+                body(progress);
+                return null;
+            });
+        }
+
+        // QRun for a pass that produces a value.
+        internal static T QRun<T>(string activity, long reportTotal, long workSize, Func<ProgressReporter, T> body)
+        {
+            return ShowQProgress(workSize) ? ProgressReporter.Run(activity, reportTotal, body) : body(null);
+        }
+
+        // The reporter itself, or null under the same rule as QRun, for a caller that manages
+        // the scope and calls Complete itself.
         internal static ProgressReporter QProgress(string activity, long reportTotal, long workSize)
         {
-            return workSize > 2_000_000 ? new ProgressReporter(activity, reportTotal) : null;
+            return ShowQProgress(workSize) ? new ProgressReporter(activity, reportTotal) : null;
+        }
+
+        private static bool ShowQProgress(long workSize)
+        {
+            return workSize > 2_000_000;
         }
 
 

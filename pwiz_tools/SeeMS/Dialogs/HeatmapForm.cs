@@ -34,14 +34,18 @@ using ZedGraph;
 
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.Caching.Generic;
+// MemoryCache<,> (formerly from System.Runtime.Caching.Generic) is Misc/MemoryCache.cs.
 using JWC;
-using pwiz.CLI.cv;
-using pwiz.CLI.msdata;
-using pwiz.Common.Collections;
-using SpyTools;
+using Pwiz.Data.Common.Cv;
+using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Spectra;
+using Pwiz.Data.MsData.Readers;
+using Pwiz.Data.MsData.Mzml;
 
-namespace seems
+using SpyTools;
+using pwiz.Common.Collections;
+
+namespace Pwiz.SeeMS
 {
     public partial class HeatmapForm : ManagedDockableForm
     {
@@ -57,7 +61,7 @@ namespace seems
 
         private struct MobilityData
         {
-            public MobilityData(SpectrumList spectrumList, double scanTime, int startIndex, int endIndex) : this()
+            public MobilityData(ISpectrumList spectrumList, double scanTime, int startIndex, int endIndex) : this()
             {
                 SpectrumList = spectrumList;
                 ScanTime = scanTime;
@@ -65,7 +69,7 @@ namespace seems
                 EndIndex = endIndex;
             }
 
-            public SpectrumList SpectrumList { get; private set; }
+            public ISpectrumList SpectrumList { get; private set; }
             public double ScanTime { get; private set; }
             public int StartIndex { get; private set; }
             public int EndIndex { get; private set; }
@@ -80,21 +84,19 @@ namespace seems
 
                 var bounds = result.Item2;
 
-                if (StartIndex == EndIndex)
+                // a combined spectrum carries a mobility array; a single drift scan carries its mobility on the scan
+                for (int i = StartIndex, end = EndIndex; i <= end; ++i)
                 {
-                    var s = SpectrumList.spectrum(StartIndex, true);
-                    var mzArray = s.getMZArray().data.Storage();
-                    var intensityArray = s.getIntensityArray().data.Storage();
+                    var s = SpectrumList.GetSpectrum(i, getBinaryData: true);
+                    var mzArray = s.GetMZArray().Data;
+                    var intensityArray = s.GetIntensityArray().Data;
                     var mobilityArray = s.GetIonMobilityArray();
-
-                    if (mobilityArray == null)
-                        throw new NullReferenceException("mobilityBDA");
-
-                    for (int j = 0, end = mzArray.Length; j < end; ++j)
+                    double scanMobility = mobilityArray != null ? 0 : s.ScanList.Scans[0].CvParamChild(CVID.MS_ion_mobility_attribute).ValueAs<double>();
+                    for (int j = 0; j < mzArray.Count; ++j)
                     {
                         double mz = mzArray[j];
                         double intensity = intensityArray[j];
-                        double mobility = mobilityArray[j];
+                        double mobility = mobilityArray?[j] ?? scanMobility;
 
                         bounds.MinX = Math.Min(bounds.MinX, mz);
                         bounds.MinY = Math.Min(bounds.MinY, mobility);
@@ -102,29 +104,6 @@ namespace seems
                         bounds.MaxY = Math.Max(bounds.MaxY, mobility);
 
                         result.Item1.Add(new Point3D(mz, mobility, intensity));
-                    }
-                }
-                else
-                {
-                    for (int i = StartIndex, end = EndIndex; i <= end; ++i)
-                    {
-                        var s = SpectrumList.spectrum(i, true);
-                        var mzArray = s.getMZArray().data.Storage();
-                        var intensityArray = s.getIntensityArray().data.Storage();
-                        var mobilityArray = s.GetIonMobilityArray();
-                        for (int j = 0; j < mzArray.Length; ++j)
-                        {
-                            double mz = mzArray[j];
-                            double intensity = intensityArray[j];
-                            double mobility = mobilityArray?.ElementAt(j) ?? (double) s.scanList.scans[0].cvParamChild(CVID.MS_ion_mobility_attribute).value;
-
-                            bounds.MinX = Math.Min(bounds.MinX, mz);
-                            bounds.MinY = Math.Min(bounds.MinY, mobility);
-                            bounds.MaxX = Math.Max(bounds.MaxX, mz);
-                            bounds.MaxY = Math.Max(bounds.MaxY, mobility);
-
-                            result.Item1.Add(new Point3D(mz, mobility, intensity));
-                        }
                     }
                 }
 
@@ -138,23 +117,15 @@ namespace seems
             {
                 Title = String.Format("TIC Chromatogram (ms{0})", targetMsLevel);
 
-                var dgv = source.SpectrumListForm.GridView;
-                var scanTimeColumn = dgv.Columns["ScanTime"];
-                var ticColumn = dgv.Columns["TotalIonCurrent"];
-                var msLevelColumn = dgv.Columns["MsLevel"];
-                var ionMobilityColumn = dgv.Columns["IonMobility"];
-                var dataPointsColumn = dgv.Columns["DataPoints"];
+                IntensityByScanTime = new SortedList<double, double>(source.SpectrumListForm.GridView.RowCount / 200);
 
-                IntensityByScanTime = new SortedList<double, double>(dgv.RowCount / 200);
-
-                for (int i = 0; i < dgv.RowCount; ++i)
+                foreach (var row in source.SpectrumListForm.GetRows())
                 {
-                    int msLevel = (int) dgv[msLevelColumn.Index, i].Value;
-                    if (targetMsLevel != msLevel || Convert.ToInt32(dgv[dataPointsColumn.Index, i].Value) == 0)
+                    if (targetMsLevel != row.MsLevel || row.DataPoints == 0)
                         continue;
 
-                    double scanTime = (double) dgv[scanTimeColumn.Index, i].Value;
-                    double intensity = (double) dgv[ticColumn.Index, i].Value;
+                    double scanTime = row.ScanTime;
+                    double intensity = row.TotalIonCurrent;
 
                     if (!IntensityByScanTime.ContainsKey(scanTime))
                         IntensityByScanTime[scanTime] = intensity;
@@ -332,7 +303,7 @@ namespace seems
                 isolationMzTitle = " for isolation m/z " + String.Join(", ", isolationMzByScanTime[scanTime].Distinct());
 
             heatmapGraphPane.Title.Text = String.Format("Ion Mobility Heatmap (ms{0} @ {1:F4} {3}{2})", msLevel + 1, scanTime, isolationMzTitle,
-                Properties.Settings.Default.TimeInMinutes ? "min." : "sec.");
+                Pwiz.SeeMS.Settings.Default.TimeInMinutes ? "min." : "sec.");
 
             setScale(heatmapGraphPane.XAxis.Scale, bounds.MinX, bounds.MaxX);
             setScale(heatmapGraphPane.YAxis.Scale, bounds.MinY, bounds.MaxY);
@@ -366,7 +337,7 @@ namespace seems
             var dataPointsColumn = dgv.Columns["DataPoints"];
             var indexColumn = dgv.Columns["Index"];
             var idColumn = dgv.Columns["Id"];
-            var mainSpectrumList = Source.Source.MSDataFile.run.spectrumList;
+            var mainSpectrumList = Source.Source.MSDataFile.Run.SpectrumList;
             if (scanTimeColumn == null || ticColumn == null || msLevelColumn == null || dataPointsColumn == null)
                 throw new InvalidOperationException("scan time, TIC, ms level, and data points columns should never be null");
 
@@ -402,7 +373,7 @@ namespace seems
                 if (msLevel + 1 == 2)
                     isolationMzByScanTime[scanTime] = group.Select(o => o.Item1.ToString()).ToList();
 
-                //double intensity = (double) dgv[ticColumn.Index, i].Value;
+                //double intensity = dgv[ticColumn.Index, i].ValueAs<double>();
             }
 
             if (ionMobilityBinsByMsLevelAndScanTime.Count == 0)

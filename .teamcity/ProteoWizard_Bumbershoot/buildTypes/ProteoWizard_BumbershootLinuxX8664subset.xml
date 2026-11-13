@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="a67ff49e-003c-45f1-a9a1-53111df00bd5" paused="true" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Bumbershoot Linux x86_64 subset</name>
+  <description>Builds the subset source tarball</description>
+  <settings ref="ProteoWizard_GitHubReportingConfig">
+    <options>
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutDirectory" value="pwiz" />
+      <option name="checkoutMode" value="ON_AGENT" />
+    </options>
+    <disabled-settings>
+      <setting-ref ref="RUNNER_1128" />
+    </disabled-settings>
+    <parameters>
+      <param name="env.MSPARSER_HOME" value="/usr/lib/msparser/gnu" />
+      <param name="env.toolset_property" value="toolset=gcc-9" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_1115" name="" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="/bin/bash" />
+          <param name="command.parameters" value="scripts/misc/tcbuild-subset.sh --i-agree-to-the-vendor-licenses -j%env.NUMBER_OF_CORES% %env.toolset_property% address-model=64 pwiz_tools/Bumbershoot//bumbershoot-bin.tar.bz2" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_1128" name="Download test file" type="jetbrains_powershell">
+        <parameters>
+          <param name="jetbrains_powershell_bitness" value="x86" />
+          <param name="jetbrains_powershell_edition" value="Desktop" />
+          <param name="jetbrains_powershell_execution" value="PS1" />
+          <param name="jetbrains_powershell_script_code"><![CDATA[$url = "https://github.com/galaxyproteomics/tools-galaxyp/raw/master/tools/bumbershoot/idpassemble/test-data/201208-378803-msgf.idpDB"
+$output = "%teamcity.build.checkoutDir%/201208-378803-msgf.idpDB"
+(New-Object System.Net.WebClient).DownloadFile($url, $output)]]></param>
+          <param name="jetbrains_powershell_script_mode" value="CODE" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_1130" name="Download test file (1)" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="wget" />
+          <param name="command.parameters" value="http://github.com/galaxyproteomics/tools-galaxyp/raw/master/tools/bumbershoot/test-data/201208-378803-msgf-filtered.idpDB -O &quot;%teamcity.build.checkoutDir%/201208-378803-msgf-filtered.idpDB&quot;" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_1129" name="Test that idpQuery can run" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="src_subset/build-linux-x86_64/gcc-release-x86_64/idpQuery" />
+          <param name="command.parameters" value="Protein Accession,DistinctPeptides &quot;%teamcity.build.checkoutDir%/201208-378803-msgf-filtered.idpDB&quot;" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizard_PwizGithubMasterWithPRs" />
+    </vcs-settings>
+    <requirements>
+      <contains id="RQ_1863" name="teamcity.agent.jvm.os.name" value="Linux" />
+      <does-not-equal id="RQ_1865" name="teamcity.agent.jvm.os.arch" value="i386" />
+    </requirements>
+    <build-triggers>
+      <build-trigger id="TRIGGER_602" type="buildDependencyTrigger">
+        <parameters>
+          <param name="afterSuccessfulBuildOnly" value="true" />
+          <param name="dependsOn" value="BumbershootSubsetSourceTarball" />
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <artifact-dependencies>
+      <dependency id="ARTIFACT_DEPENDENCY_2044" sourceBuildTypeId="BumbershootSubsetSourceTarball" cleanDestination="false">
+        <revisionRule name="sameChainOrLastFinished" revision="latest.sameChainOrLastFinished" />
+        <artifact sourcePath="*-src-without-t-*.tar.bz2=&gt;." />
+      </dependency>
+    </artifact-dependencies>
+    <dependencies>
+      <depend-on sourceBuildTypeId="BumbershootSubsetSourceTarball">
+        <options>
+          <option name="take-started-build-with-same-revisions" value="true" />
+        </options>
+      </depend-on>
+    </dependencies>
+  </settings>
+</build-type>
+

@@ -286,6 +286,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Runs the command line in the specified language and number and date formats, regardless of the operating system settings. Numbers in the arguments that follow must then use that culture&apos;s decimal separator. Because arguments are processed in the order given, this must come before the arguments it affects..
+        /// </summary>
+        public static string _culture {
+            get {
+                return ResourceManager.GetString("_culture", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add decoys to a template document for reintegrate model generation with mProphet. (decoy generation method is optional and defaults to “reverse”).
         /// </summary>
         public static string _decoys_add {

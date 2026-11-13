@@ -6,7 +6,7 @@
     Dot-sourced by build.ps1 (stamps the assembly via /p:Version) and by
     package.ps1 (names the redistributable artifacts). Keeping the formula in
     one place means the version baked into Osprey.exe and the version in the
-    ZIP/.msi file names can never drift.
+    ZIP/Setup.exe file names can never drift.
 
     Mirrors pwiz_tools/Skyline/Jamfile.jam: YEAR/ORDINAL/BRANCH are the
     release-line constants; DOY is the day-of-year of the git commit date

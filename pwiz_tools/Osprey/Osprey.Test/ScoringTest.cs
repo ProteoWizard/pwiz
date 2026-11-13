@@ -40,6 +40,16 @@ namespace pwiz.Osprey.Test
     {
         private const double TOLERANCE = 1e-6;
 
+        // FragmentMath memoizes top-6 m/z by entry Id in a process-wide cache, so every entry
+        // handed to HasTopNFragmentMatch needs a unique Id across the whole test process. Each
+        // test that does so takes its own high base, 10000 apart, and the four must stay
+        // disjoint: a reused Id returns another test's fragment m/z values and fails (or passes)
+        // for the wrong reason. FragmentSelectionTest.FRAG_ID_BASE = 900000,
+        // MZ_INDEX_ID_BASE = 910000, SCAN_MAJOR_ID_BASE = 920000 (scan-major prefilter test),
+        // CalibrationTest.SCAN_MAJOR_CAL_ID_BASE = 930000.
+        private const uint MZ_INDEX_ID_BASE = 910000u;
+        private const uint SCAN_MAJOR_ID_BASE = 920000u;
+
         #region DecoyGenerator Tests
 
         [TestMethod]
@@ -621,6 +631,61 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The linear-time median selection median polish uses returns exactly the median a full
+        /// sort gives - the same double, bit for bit - for odd and even counts, heavy ties,
+        /// already-sorted and reversed input, and both signs of value. SelectInPlace leaves its
+        /// element in sorted position with the values partitioned around it.
+        /// </summary>
+        [TestMethod]
+        public void TestMedianSelectionMatchesSort()
+        {
+            var random = new Random(4242);
+            for (int n = 1; n <= 64; n++)
+            {
+                for (int trial = 0; trial < 20; trial++)
+                {
+                    var values = new double[n];
+                    for (int i = 0; i < n; i++)
+                    {
+                        // Alternate between continuous values and a few distinct levels (ties).
+                        values[i] = trial % 2 == 0
+                            ? (random.NextDouble() - 0.5) * 1000
+                            : random.Next(-3, 4) * 1.25;
+                    }
+                    if (trial == 2)
+                        Array.Sort(values);
+                    else if (trial == 4)
+                        Array.Sort(values, (a, b) => b.CompareTo(a));
+                    AssertMedianMatchesSort(values);
+
+                    int k = random.Next(n);
+                    var partitioned = (double[])values.Clone();
+                    var sorted = (double[])values.Clone();
+                    Array.Sort(sorted);
+                    Assert.AreEqual(sorted[k], MedianMath.SelectInPlace(partitioned, k));
+                    Assert.AreEqual(sorted[k], partitioned[k]);
+                    for (int i = 0; i < n; i++)
+                    {
+                        Assert.IsTrue(i < k ? partitioned[i] <= partitioned[k] : partitioned[i] >= partitioned[k],
+                            string.Format("Value {0} of {1} is on the wrong side of element {2}", i, n, k));
+                    }
+                }
+            }
+            Assert.IsTrue(double.IsNaN(MedianMath.MedianInPlace(new double[0])));
+        }
+
+        private static void AssertMedianMatchesSort(double[] values)
+        {
+            var sorted = (double[])values.Clone();
+            Array.Sort(sorted);
+            int mid = sorted.Length / 2;
+            double expected = sorted.Length % 2 == 0 ? 0.5 * (sorted[mid - 1] + sorted[mid]) : sorted[mid];
+            double actual = MedianMath.MedianInPlace((double[])values.Clone());
+            Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(actual),
+                string.Format("Median of {0} values: expected {1:R}, got {2:R}", values.Length, expected, actual));
+        }
+
+        /// <summary>
         /// Session 5-8 fix: Apex selection ties must resolve to LAST index
         /// (>=, not >) to match Rust's Iterator::max_by which returns the
         /// last element among equal maxima.
@@ -760,6 +825,41 @@ namespace pwiz.Osprey.Test
             double correctedMz = observedMz - meanError; // 500.065
             Assert.AreEqual(500.065, correctedMz, 1e-10,
                 "m/z offset correction should shift by -meanError");
+
+            AssertDoubleCountingToleranceIsTheSearchTolerance();
+        }
+
+        /// <summary>
+        /// The double-counting dedup's tolerance delegates to the search's calibrated
+        /// tolerance. Pinned to the values its former copy of the rule computed for both units
+        /// calibration records ("ppm", "Th"), floors included, so the dedup is unchanged.
+        /// </summary>
+        private static void AssertDoubleCountingToleranceIsTheSearchTolerance()
+        {
+            var config = new OspreyConfig
+            {
+                FragmentTolerance = new FragmentToleranceConfig { Tolerance = 20, Unit = ToleranceUnit.Ppm },
+            };
+            foreach (var (unit, sd, expected, expectedUnit) in new[]
+                     {
+                         ("Th", 0.13, 0.39, ToleranceUnit.Mz),
+                         ("Th", 0.01, 0.05, ToleranceUnit.Mz),
+                         ("ppm", 2.0, 6.0, ToleranceUnit.Ppm),
+                         ("ppm", 0.2, 1.0, ToleranceUnit.Ppm),
+                     })
+            {
+                var cal = new MzCalibrationResult { Calibrated = true, SD = sd, Unit = unit };
+                ScoringPipeline.DoubleCountingTolerance(cal, config, out double value, out ToleranceUnit valueUnit);
+                Assert.AreEqual(Math.Max(3.0 * sd, expectedUnit == ToleranceUnit.Mz ? 0.05 : 1.0), value, 0.0, unit);
+                Assert.AreEqual(expected, value, 1e-12, unit);
+                Assert.AreEqual(expectedUnit, valueUnit, unit);
+            }
+            foreach (var uncalibrated in new[] { null, MzCalibrationResult.Uncalibrated() })
+            {
+                ScoringPipeline.DoubleCountingTolerance(uncalibrated, config, out double value, out ToleranceUnit valueUnit);
+                Assert.AreEqual(20.0, value);
+                Assert.AreEqual(ToleranceUnit.Ppm, valueUnit);
+            }
         }
 
         /// <summary>
@@ -1416,8 +1516,9 @@ namespace pwiz.Osprey.Test
                 string beforePct = line.Substring(0, pctIdx);
                 int sp = beforePct.LastIndexOf(' ');
                 string token = beforePct.Substring(sp + 1);
+                // The table is prose, written in the current culture (12,3 under fr-FR).
                 if (double.TryParse(token, System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out double share))
+                        System.Globalization.CultureInfo.CurrentCulture, out double share))
                 {
                     shareSum += share;
                     shareRows++;
@@ -1518,6 +1619,368 @@ namespace pwiz.Osprey.Test
 
         #endregion
 
+        #region m/z bucket index
+
+        /// <summary>
+        /// <see cref="MzBucketIndex"/> must return exactly the binary search's lower bound for
+        /// every query - it replaces that search in the scoring hot paths, so any difference
+        /// would silently move a peak match. Checks clustered, duplicate, single-peak, all-equal,
+        /// bucket-edge and irregular (unsorted, non-finite, overflowing span) spectra against
+        /// queries at, between, below, above every peak, at every bucket edge and 1 ulp either
+        /// side, and NaN, then the two scoring entry points through a <see cref="Spectrum"/>.
+        /// </summary>
+        [TestMethod]
+        public void TestMzBucketIndexMatchesBinarySearch()
+        {
+            var random = new Random(4768);
+            var spectra = new List<double[]>
+            {
+                new[] { 500.0 },
+                new[] { 500.0, 500.0, 500.0 },
+                new[] { 100.0, 100.0, 100.5, 200.0, 200.0, 1999.9 },
+                new[] { 150.0, 150.0000001, 150.0000002, 1800.0 },   // a dense cluster, then a gap
+                // More peaks in one bucket than the linear scan takes: binary searched.
+                Enumerable.Range(0, 20).Select(i => 500.0 + i * 1e-9).Concat(new[] { 1500.0 }).ToArray(),
+                Enumerable.Repeat(500.0, 30).Concat(new[] { 600.0 }).ToArray(),
+                // Arrays the buckets cannot describe: the index falls back to the binary search.
+                new[] { 300.0, 200.0, 400.0 },
+                new[] { 100.0, double.NaN, 300.0 },
+                new[] { double.NegativeInfinity, 200.0, 300.0 },
+                new[] { 100.0, 200.0, double.PositiveInfinity },
+                new[] { 0.0, double.Epsilon, 2 * double.Epsilon },   // n / span overflows
+                new[] { -1e308, 0.0, 1e308 },                        // span overflows
+            };
+            // Interior peaks exactly on the bucket edges, and 1 ulp below and above them.
+            foreach (int n in new[] { 3, 7, 100, 1001 })
+            {
+                spectra.Add(BucketEdgeSpectrum(123.456, 1789.123, n, mz => mz));
+                spectra.Add(BucketEdgeSpectrum(123.456, 1789.123, n, Math.BitDecrement));
+                spectra.Add(BucketEdgeSpectrum(123.456, 1789.123, n, Math.BitIncrement));
+            }
+            for (int s = 0; s < 20; s++)
+            {
+                int n = 1 + random.Next(3000);
+                var mzs = new double[n];
+                double mz = 150 + random.NextDouble() * 10;
+                for (int i = 0; i < n; i++)
+                {
+                    // Mostly fine steps, occasional duplicates and large gaps.
+                    double r = random.NextDouble();
+                    mz += r < 0.05 ? 0 : r < 0.1 ? random.NextDouble() * 200 : random.NextDouble() * 0.5;
+                    mzs[i] = mz;
+                }
+                spectra.Add(mzs);
+            }
+
+            foreach (var mzs in spectra)
+            {
+                var index = new MzBucketIndex(mzs);
+                var queries = new List<double> { double.NaN, double.NegativeInfinity, double.PositiveInfinity,
+                    mzs[0] - 1, mzs[0], mzs[mzs.Length - 1], mzs[mzs.Length - 1] + 1 };
+                foreach (double peak in mzs)
+                {
+                    queries.Add(peak);
+                    queries.Add(peak - 1e-9);
+                    queries.Add(peak + 1e-9);
+                    queries.Add(peak + random.NextDouble());
+                }
+                double first = mzs[0], span = mzs[mzs.Length - 1] - first;
+                for (int b = 0; b <= mzs.Length; b++)
+                {
+                    double edge = first + b * span / mzs.Length;
+                    queries.Add(edge);
+                    queries.Add(Math.BitDecrement(edge));
+                    queries.Add(Math.BitIncrement(edge));
+                }
+                foreach (double q in queries)
+                {
+                    Assert.AreEqual(ScoringMath.BinarySearchLowerBound(mzs, q), index.LowerBound(q),
+                        string.Format("Lower bound of {0:R} in a {1}-peak spectrum", q, mzs.Length));
+                }
+            }
+            Assert.AreEqual(0, new MzBucketIndex(new double[0]).LowerBound(500.0));
+            Assert.AreEqual(0, new MzBucketIndex(null).LowerBound(500.0));
+            Assert.AreEqual(0, new Spectrum().MzLowerBound(500.0));
+
+            // The scoring entry points through a Spectrum agree with the binary search. Each
+            // entry has a unique Id (the top-6 memo is keyed by it) and 0-3 of its 6 fragments
+            // on a peak, the rest at m/z 10-15, where no spectrum has a peak, so both outcomes
+            // occur.
+            var tolerance = new FragmentToleranceConfig { Tolerance = 10, Unit = ToleranceUnit.Ppm };
+            bool sawMatch = false, sawNoMatch = false;
+            for (int s = 0; s < spectra.Count; s++)
+            {
+                var mzs = spectra[s];
+                var spectrum = new Spectrum { Mzs = mzs, Intensities = new float[mzs.Length] };
+                for (int k = 0; k < 50; k++)
+                {
+                    double target = mzs[random.Next(mzs.Length)] + (random.NextDouble() - 0.5) * 0.02;
+                    double tolDa = tolerance.ToleranceDa(target);
+                    Assert.AreEqual(
+                        TopFragmentExtractor.FindClosestPeakInWindow(mzs, target, target - tolDa, target + tolDa),
+                        TopFragmentExtractor.FindClosestPeakInWindow(spectrum, target, target - tolDa, target + tolDa));
+                }
+                var entry = new LibraryEntry(MZ_INDEX_ID_BASE + (uint)s, "PEPTIDEK", "PEPTIDEK", 2, 500.0, 10.0);
+                int onPeak = s % 4;
+                var fragMzs = new double[6];
+                for (int f = 0; f < fragMzs.Length; f++)
+                    fragMzs[f] = f < onPeak ? mzs[random.Next(mzs.Length)] : 10.0 + f;
+                entry.Fragments = fragMzs.Select((mz, f) => new LibraryFragment { Mz = mz, RelativeIntensity = 1.0f + f }).ToList();
+                bool expected = ExpectedTopNFragmentMatch(fragMzs, mzs, tolerance);
+                Assert.AreEqual(expected, FragmentMath.HasTopNFragmentMatch(entry, spectrum, tolerance));
+                Assert.AreEqual(expected, FragmentMath.HasTopNFragmentMatch(entry, mzs, tolerance));
+                sawMatch |= expected;
+                sawNoMatch |= !expected;
+            }
+            Assert.IsTrue(sawMatch);
+            Assert.IsTrue(sawNoMatch);
+
+            // A new m/z array replaces the index.
+            var reassigned = new Spectrum { Mzs = new[] { 100.0, 200.0 } };
+            Assert.AreEqual(1, reassigned.MzLowerBound(150.0));
+            reassigned.Mzs = new[] { 160.0, 170.0, 180.0 };
+            Assert.AreEqual(0, reassigned.MzLowerBound(150.0));
+        }
+
+        /// <summary>
+        /// An ascending spectrum of n peaks from <paramref name="first"/> to
+        /// <paramref name="last"/> whose interior peaks are the edges of the index's n buckets,
+        /// each passed through <paramref name="shift"/> (identity, or 1 ulp down or up).
+        /// </summary>
+        private static double[] BucketEdgeSpectrum(double first, double last, int n, Func<double, double> shift)
+        {
+            var mzs = new double[n];
+            mzs[0] = first;
+            for (int k = 1; k < n - 1; k++)
+                mzs[k] = shift(first + k * (last - first) / n);
+            mzs[n - 1] = last;
+            return mzs;
+        }
+
+        /// <summary>
+        /// HasTopNFragmentMatch's rule for 6 fragments, by the plain binary search: at least 2
+        /// fragments with a peak inside their tolerance window.
+        /// </summary>
+        private static bool ExpectedTopNFragmentMatch(double[] fragMzs, double[] mzs, FragmentToleranceConfig tolerance)
+        {
+            int matches = 0;
+            foreach (double mz in fragMzs)
+            {
+                double tolDa = tolerance.ToleranceDa(mz);
+                int lo = ScoringMath.BinarySearchLowerBound(mzs, mz - tolDa);
+                if (lo < mzs.Length && mzs[lo] <= mz + tolDa)
+                    matches++;
+            }
+            return matches >= 2;
+        }
+
+        #endregion
+
+        #region Scan-major prefilter
+
+        /// <summary>
+        /// The window-level scan-major prefilter gives every candidate the verdict the
+        /// candidate-major loop in TryExtract gives it, and leaves the candidates TryExtract never
+        /// prefilters (boundary override, no scan range) to TryExtract. The spectra draw each of a
+        /// small pool of fragment m/z values at random, so candidates pass at varied offsets into
+        /// their ranges and others run out of range without passing. Candidates carry 1 to 12
+        /// fragments with tied relative intensities (fewer than 6 windows, and top-6 selection
+        /// among ties), and two have none. The passing candidates' scan-major XICs
+        /// (ExtractXicsScanMajor) equal the candidate-major ones bitwise, in blocks of any
+        /// candidate count or byte budget.
+        /// </summary>
+        [TestMethod]
+        public void TestScanMajorPrefilterMatchesCandidateMajor()
+        {
+            var random = new Random(4711);
+            // Intensities and near-duplicate peaks draw from their own stream, leaving the
+            // prefilter's m/z draws as they were.
+            var randomXic = new Random(817);
+            const int nScans = 80;
+            var pool = new double[24];
+            for (int p = 0; p < pool.Length; p++)
+                pool[p] = 300.0 + 600.0 * random.NextDouble();
+            var spectra = new List<Spectrum>(nScans);
+            var rts = new double[nScans];
+            for (int s = 0; s < nScans; s++)
+            {
+                rts[s] = 10.0 + 0.05 * s;
+                var mzs = new List<double>();
+                foreach (double mz in pool)
+                {
+                    if (random.NextDouble() < 0.3)
+                    {
+                        mzs.Add(mz);
+                        // A second peak inside the 10 ppm window, so the closest-peak pick matters.
+                        if (randomXic.NextDouble() < 0.3)
+                            mzs.Add(mz * (1.0 + (randomXic.NextDouble() - 0.5) * 1.6e-5));
+                    }
+                }
+                for (int n = 0; n < 20; n++)
+                    mzs.Add(200.0 + 800.0 * random.NextDouble());
+                mzs.Sort();
+                var intensities = mzs.Select(_ => (float)(1000.0 * randomXic.NextDouble())).ToArray();
+                spectra.Add(new Spectrum { Mzs = mzs.ToArray(), Intensities = intensities, RetentionTime = rts[s] });
+            }
+
+            var candidates = new List<LibraryEntry>();
+            for (int c = 0; c < 400; c++)
+            {
+                // RTs past both ends of the window too, so some ranges are clipped or empty.
+                double rt = 9.0 + 6.0 * random.NextDouble();
+                var entry = new LibraryEntry(SCAN_MAJOR_ID_BASE + (uint)c, "PEPTIDEK", "PEPTIDEK", 2, 500.0, rt);
+                entry.Fragments = Enumerable.Range(0, 1 + c % 12).Select(f => new LibraryFragment
+                {
+                    Mz = f % 3 != 2 ? pool[random.Next(pool.Length)] : 100.0 + f,
+                    RelativeIntensity = 1.0f + f % 4    // Ties among 5 or more fragments
+                }).ToList();
+                candidates.Add(entry);
+            }
+            // In range but without fragments: both loops pass them (no fragment windows match
+            // every spectrum), and both extract no XICs for them.
+            var noFragments = new[]
+            {
+                new LibraryEntry(SCAN_MAJOR_ID_BASE + 400, "PEPTIDEK", "PEPTIDEK", 2, 500.0, 11.0) { Fragments = null },
+                new LibraryEntry(SCAN_MAJOR_ID_BASE + 401, "PEPTIDEK", "PEPTIDEK", 2, 500.0, 11.0) { Fragments = new List<LibraryFragment>() },
+            };
+            candidates.AddRange(noFragments);
+
+            var config = new OspreyConfig
+            {
+                FragmentTolerance = new FragmentToleranceConfig { Tolerance = 10, Unit = ToleranceUnit.Ppm }
+            };
+            var overrideId = candidates[0].Id;
+            var context = new ScoringContext(config, @"synthetic")
+            {
+                BoundaryOverrides = new Dictionary<uint, (double Apex, double Start, double End)>
+                {
+                    { overrideId, (11.0, 10.9, 11.1) },
+                },
+            };
+            const double rtTolerance = 0.3;
+            var extractor = new PeakDataExtractor(null);
+            var prefilter = extractor.ComputePrefilterScanMajor(candidates, spectra, rts, null, rtTolerance, context);
+            Assert.IsNotNull(prefilter);
+            var verdicts = prefilter.Verdicts;
+            Assert.AreEqual(candidates.Count, verdicts.Length);
+
+            var counts = new Dictionary<PrefilterVerdict, int>();
+            for (int c = 0; c < candidates.Count; c++)
+            {
+                var expected = PrefilterVerdict.not_computed;
+                if (PeakDataExtractor.TryResolveScanRange(candidates[c], rts, null, rtTolerance, context,
+                        out var overrideBounds, out double expectedRt, out int startScan, out int endScan) &&
+                    !overrideBounds.HasValue)
+                {
+                    expected = PeakDataExtractor.HasPrefilterSignal(candidates[c], spectra, startScan, endScan,
+                        config.FragmentTolerance)
+                        ? PrefilterVerdict.passed
+                        : PrefilterVerdict.failed;
+                    // The range TryExtract then takes instead of resolving it again.
+                    Assert.AreEqual(startScan, prefilter.StartScans[c]);
+                    Assert.AreEqual(endScan, prefilter.EndScans[c]);
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(expectedRt),
+                        BitConverter.DoubleToInt64Bits(prefilter.ExpectedRts[c]));
+                }
+                Assert.AreEqual(expected, verdicts[c], string.Format(@"candidate {0}", c));
+                counts.TryGetValue(expected, out int n);
+                counts[expected] = n + 1;
+            }
+            Assert.AreEqual(PrefilterVerdict.not_computed, verdicts[0], @"a boundary override is not prefiltered");
+            foreach (var entry in noFragments)
+                Assert.AreEqual(PrefilterVerdict.passed, verdicts[candidates.IndexOf(entry)]);
+            foreach (var verdict in new[] { PrefilterVerdict.not_computed, PrefilterVerdict.passed, PrefilterVerdict.failed })
+                Assert.IsTrue(counts.ContainsKey(verdict) && counts[verdict] > 10, verdict.ToString());
+
+            // The passing candidates' scan-major XICs equal the candidate-major ones bitwise,
+            // whatever the block size, by candidate count or by byte budget. A 1-byte budget
+            // gives every passing candidate a block of its own; 20,000 bytes is about a dozen.
+            foreach (int blockSize in new[] { 1, 37, 128, candidates.Count })
+                AssertScanMajorXicsMatch(candidates, prefilter, spectra, rts, config, blockSize, long.MaxValue);
+            foreach (long blockBytes in new[] { 1L, 20000L })
+            {
+                int nBlocks = AssertScanMajorXicsMatch(candidates, prefilter, spectra, rts, config,
+                    candidates.Count, blockBytes);
+                Assert.IsTrue(nBlocks > counts[PrefilterVerdict.passed] / 20, nBlocks.ToString());
+            }
+
+            // With the prefilter off, or a window too short to score, there is nothing to compute.
+            config.PrefilterEnabled = false;
+            Assert.IsNull(extractor.ComputePrefilterScanMajor(candidates, spectra, rts, null, rtTolerance, context));
+            config.PrefilterEnabled = true;
+            Assert.IsNull(extractor.ComputePrefilterScanMajor(candidates, spectra.Take(4).ToList(), rts.Take(4).ToArray(),
+                null, rtTolerance, context));
+        }
+
+        /// <summary>
+        /// Extract the XICs scan-major in the blocks <see cref="WindowPrefilter.NextXicBlockEnd"/>
+        /// gives for <paramref name="maxCandidates"/> and <paramref name="maxBytes"/>, check that
+        /// each block keeps to the budget or holds one candidate, and check every passing
+        /// candidate's XICs against TopFragmentExtractor.ExtractFragmentXics over its scan range,
+        /// bit for bit, and that no other candidate gets any. Returns the number of blocks.
+        /// </summary>
+        private static int AssertScanMajorXicsMatch(List<LibraryEntry> candidates, WindowPrefilter prefilter,
+            List<Spectrum> spectra, double[] rts, OspreyConfig config, int maxCandidates, long maxBytes)
+        {
+            var verdicts = prefilter.Verdicts;
+            var startScans = prefilter.StartScans;
+            var endScans = prefilter.EndScans;
+            int nonZero = 0;
+            int nBlocks = 0;
+            int blockEnd;
+            for (int blockStart = 0; blockStart < candidates.Count; blockStart = blockEnd)
+            {
+                blockEnd = prefilter.NextXicBlockEnd(blockStart, maxCandidates, maxBytes);
+                Assert.IsTrue(blockEnd > blockStart && blockEnd - blockStart <= maxCandidates);
+                nBlocks++;
+                var blockXics = PeakDataExtractor.ExtractXicsScanMajor(candidates, blockStart, blockEnd, prefilter,
+                    spectra, rts, config);
+                Assert.AreEqual(blockEnd - blockStart, blockXics.Length);
+                long blockBytes = 0;
+                for (int c = blockStart; c < blockEnd; c++)
+                {
+                    var xics = blockXics[c - blockStart];
+                    if (xics != null)
+                        blockBytes += (xics.Count + 1L) * (endScans[c] - startScans[c] + 1) * sizeof(double);
+                }
+                Assert.IsTrue(blockBytes <= maxBytes || blockEnd - blockStart == 1, blockBytes.ToString());
+                for (int c = blockStart; c < blockEnd; c++)
+                {
+                    var actual = blockXics[c - blockStart];
+                    if (verdicts[c] != PrefilterVerdict.passed)
+                    {
+                        Assert.IsNull(actual, string.Format(@"candidate {0}", c));
+                        continue;
+                    }
+                    Assert.IsNotNull(actual);
+                    var expected = TopFragmentExtractor.ExtractFragmentXics(candidates[c], spectra, rts,
+                        startScans[c], endScans[c], config);
+                    Assert.AreEqual(expected.Count, actual.Count);
+                    for (int f = 0; f < expected.Count; f++)
+                    {
+                        Assert.AreEqual(expected[f].FragmentIndex, actual[f].FragmentIndex);
+                        AssertBitwiseEqual(expected[f].RetentionTimes, actual[f].RetentionTimes, c, f);
+                        AssertBitwiseEqual(expected[f].Intensities, actual[f].Intensities, c, f);
+                        nonZero += expected[f].Intensities.Count(i => i != 0);
+                    }
+                }
+            }
+            Assert.IsTrue(nonZero > 1000, nonZero.ToString());
+            return nBlocks;
+        }
+
+        private static void AssertBitwiseEqual(double[] expected, double[] actual, int candidate, int fragment)
+        {
+            Assert.AreEqual(expected.Length, actual.Length);
+            for (int i = 0; i < expected.Length; i++)
+            {
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected[i]), BitConverter.DoubleToInt64Bits(actual[i]),
+                    string.Format(@"candidate {0} fragment {1} scan {2}", candidate, fragment, i));
+            }
+        }
+
+        #endregion
+
         #region Sparse XCorr cache (issue #4398)
 
         /// <summary>
@@ -1587,6 +2050,40 @@ namespace pwiz.Osprey.Test
             double denseScore = scorer.XcorrFromPreprocessed(dense, entry, new bool[nBins]);
             double sparseScore = scorer.XcorrFromSparse(sparse, entry, new bool[nBins]);
             Assert.AreEqual(denseScore, sparseScore, 0.0, "XcorrFromSparse must match XcorrFromPreprocessed exactly");
+
+            // Through the HRAM strategy's window cache, which fills each row on demand from one
+            // scratch it holds for the window: every row, filled in any order, must score exactly
+            // as a spectrum preprocessed on its own, and a row filled before release must still be
+            // served after it (not fall back to the live f64 path).
+            var windowSpectra = new List<Spectrum>();
+            for (int s = 0; s < 4; s++)
+            {
+                var shifted = new double[spectrum.Mzs.Length];
+                for (int i = 0; i < shifted.Length; i++)
+                    shifted[i] = spectrum.Mzs[i] + s * 0.37;
+                windowSpectra.Add(new Spectrum { Mzs = shifted, Intensities = spectrum.Intensities });
+            }
+            var expectedScores = new double[windowSpectra.Count];
+            for (int s = 0; s < windowSpectra.Count; s++)
+            {
+                expectedScores[s] = scorer.XcorrFromSparse(
+                    scorer.PreprocessSpectrumForXcorrSparse(windowSpectra[s], new XcorrScratch(nBins)), entry, new bool[nBins]);
+            }
+            var hram = ResolutionStrategy.Create(ResolutionMode.HRAM);
+            var pool = new XcorrScratchPool(nBins);
+            var cache = hram.PreprocessWindowSpectra(windowSpectra, scorer, pool);
+            var filled = new[] { 2, 0, 3 };     // out of order; row 1 is never filled
+            foreach (int s in filled)
+            {
+                Assert.AreEqual(expectedScores[s], hram.ScoreXcorr(cache, s, windowSpectra[s], entry, scorer, pool), 0.0,
+                    string.Format("On-demand row {0} must match its own preprocessing", s));
+            }
+            hram.ReleaseWindowCache(cache, pool);
+            foreach (int s in filled)
+            {
+                Assert.AreEqual(expectedScores[s], hram.ScoreXcorr(cache, s, windowSpectra[s], entry, scorer, pool), 0.0,
+                    string.Format("Row {0} filled before release must be served after it", s));
+            }
         }
 
         /// <summary>

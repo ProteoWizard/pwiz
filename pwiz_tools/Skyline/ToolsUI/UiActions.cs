@@ -340,12 +340,12 @@ namespace pwiz.Skyline.ToolsUI
 
         public static readonly UiAction SendText = SimpleAction<IKeyboardElement, string>(
                 @"SendText", (e, text) => { e.SendTextNow(text); return null; })
-            .Describe(new LlmInstruction(@"Type text into this control, whether or not it has the focus. Named for what it does: it delivers the CHARACTERS, it does not simulate key presses - for a key use 'send_key_stroke', and to paste use 'paste' (which takes the text, so it needs no clipboard). Do NOT type into the Targets tree: it forwards each character through the FOCUSED window, so the characters land in whatever application is in front, arrive out of order, and leave the tree stuck editing a label. Use 'rename_node' to set a node's text."),
+            .Describe(new LlmInstruction(@"Type text into this control, whether or not it has the focus. Named for what it does: it delivers the CHARACTERS, it does not simulate key presses - for a key use 'send_key_stroke', and to paste use 'paste' (which takes the text, so it needs no clipboard). Typing into the Targets tree edits the selected node's label, as it does for a user: select the node first (the blank one at the end to add a target). With a background proteome the matches appear in a completion pop-up, a form of its own - select an item in its list to accept it, or press 'Down'/'Up' then 'Enter' on the tree; 'Enter' alone accepts the text as typed and 'Esc' cancels. The matches are looked up in the background, so the pop-up opens a moment after the typing returns: read its list before choosing."),
                 new LlmInstruction(@"the text to type, taken literally"));
 
-        public static readonly UiAction SendKeyStroke = SimpleAction<IKeyboardElement, string>(
+        public static readonly UiAction SendKeyStroke = SimpleAction<IKeyStrokeElement, string>(
                 @"SendKeyStroke", (e, keyStroke) => { e.SendKeyStrokeNow(keyStroke); return null; })
-            .Describe(new LlmInstruction(@"Press one key on this control, whether or not it has the focus - e.g. to accept a choice in a popup, or to paste with 'Ctrl+V' where the form's own handler does the pasting. Raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather than by a handler (Backspace editing text, an arrow moving a plain list's selection) will not take effect."),
+            .Describe(new LlmInstruction(@"Press one key on this control, whether or not it has the focus, as the keyboard does - e.g. to accept a choice in a popup, to paste with 'Ctrl+V', or to move through a list or tree with the arrows, Home and End. The key goes through everything a real press does: keyboard shortcuts (e.g. F11 on the main window) and dialog keys (Enter, Esc) first, then a form that previews keys (e.g. Escape on a graph returns to the Targets view), the control's KeyDown handlers and its own behavior (an arrow moving a list's selection, Backspace editing text), then the character the key types. On a form (the root of a path), the key goes where the keyboard would while it is the active window: to the control that has the focus in it, or the form itself. In the Targets tree while a label is being edited, keys go to the edit box."),
                 new LlmInstruction(@"the key with any modifiers, '+'-separated, e.g. ""Down"", ""Enter"" or ""Ctrl+V"""));
 
         public static readonly UiAction CheckItem = SimpleAction<ICheckItemsElement, string>(
@@ -383,6 +383,10 @@ namespace pwiz.Skyline.ToolsUI
         public static readonly UiAction SetCurrentCellAddress = SimpleAction<GridElement, object>(
                 @"SetCurrentCellAddress", (e, arg) => { var cell = UiValue.ToColumnRow(arg); e.SetCurrentCellAddressNow(cell[0], cell[1]); return null; })
             .Describe(new LlmInstruction(@"Move the grid's current cell (do this before set_grid_text or opening a cell's menu)."), new LlmInstruction(@"a [column, row] array, e.g. [0, 1]"));
+
+        public static readonly UiAction ClickCellImage = SimpleAction<GridElement, object>(
+                @"ClickCellImage", (e, arg) => { e.ClickCellImageNow(UiValue.ToInt(arg)); return null; })
+            .Describe(new LlmInstruction(@"Click an image drawn in the grid's current cell (move there first with set_current_cell_address), e.g. the Audit Log's undo arrow or magnifying glass."), new LlmInstruction(@"the zero-based index of the image among those the cell shows, counting from the left"));
 
         // The graph's own actions, on GraphElement the way the grid actions are on GridElement - so a graph
         // takes part in the same machinery as every other control: get_actions lists them, perform_action drives
@@ -430,19 +434,17 @@ namespace pwiz.Skyline.ToolsUI
         public static readonly UiAction SelectAll = SimpleAction<IClipboardElement>(@"SelectAll", e => { e.SelectAllNow(); return null; })
             .Describe(new LlmInstruction(@"Select all the content of this element (a text box, a grid, the Targets tree, or the main Skyline window) -- e.g. before paste, to replace it."));
 
-        // Renames the tree's selected node in place -- e.g. the MethodEdit tutorial's "Type 'Primary
-        // Peptides' and press Enter" on a peptide group. Select the node first.
-        public static readonly UiAction RenameNode = SimpleAction<IRenameNodeElement, string>(
-                @"RenameNode", (e, value) => { e.RenameNodeNow(value); return null; })
-            .Describe(new LlmInstruction(@"Rename the tree's selected node in place (select the node first)."), new LlmInstruction(@"the new name"));
+        public static readonly UiAction ShowTooltip = SimpleAction<ITooltipElement>(
+                @"ShowTooltip", e => { e.ShowTooltipNow(); return null; })
+            .Describe(new LlmInstruction(@"Show the tooltip of the selected item, as resting the mouse on it does: a tree's selected node, a list's selected item, a grid's current cell (select it first). Skyline comes to the front and the control takes the focus, which its tooltip needs. An item that has a tooltip brings it up about half a second later as a window of its own in the open forms, where its image can be captured whole; it stays until the selection changes, the mouse moves, or the focus goes elsewhere."));
 
         // Every action, in get_actions / get_children listing order (the universal ones first).
         public static readonly UiAction[] AllActions =
         {
             GetActions, GetChildren, Click, GetValue, SetValue, SendText, SendKeyStroke, GetOptions, CheckItem, UncheckItem,
-            SelectItem, UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress,
+            SelectItem, UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress, ClickCellImage,
             GetGraphZoom, ZoomGraphTo, ClickGraph, Expand,
-            Collapse, SelectTab, Dismiss, Paste, SelectAll, RenameNode
+            Collapse, SelectTab, Dismiss, Paste, SelectAll, ShowTooltip
         };
 
         // The action with the given wire name, matched case- and underscore-insensitively, or null.

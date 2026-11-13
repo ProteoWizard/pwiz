@@ -18,7 +18,6 @@
  */
 using System;
 using System.IO;
-using System.Linq;
 using pwiz.Common.CommonResources;
 using pwiz.Common.SystemUtil.PInvoke;
 

@@ -114,7 +114,11 @@ namespace pwiz.Skyline.Model.DdaSearch
             //AddAdditionalSetting(COMET_SETTINGS, new Setting("search_enzyme2_number", "0"));
             //AddAdditionalSetting(COMET_SETTINGS, new Setting("show_fragment_ions", 0, 0, 1));
             //AddAdditionalSetting(COMET_SETTINGS, new Setting("skip_researching", 1, 0, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("spectrum_batch_size", 0, 0));
+            // spectrum_batch_size controls how many spectra Comet loads+searches at a time; 0 means
+            // all-at-once, which for large inputs (e.g. DIA-Umpire pseudo-spectra, ~150k+ spectra) runs
+            // ~2.5-4x slower than batching due to memory/cache pressure. Use crux's default batch of
+            // 20000 instead. This is purely a performance knob -- results are identical either way.
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("spectrum_batch_size", 20000, 0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("text_file_extension", ""));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("theoretical_fragment_ions", 1, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("use_NL_ions", "1", new []{ "0", "1" }));
@@ -285,7 +289,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     _enzyme.RestrictC ?? _enzyme.RestrictN,
                     Environment.NewLine);
 
-                string defaultOutputDirectory = Path.GetDirectoryName(SpectrumFileNames[0].GetFilePath()) ?? Path.Combine(Environment.CurrentDirectory, "comet-output");
+                string defaultOutputDirectory = Path.GetDirectoryName(SpectrumFileNames[0].GetFilePath()) ?? Path.Combine(Environment.CurrentDirectory, @"comet-output");
                 defaultOutputDirectory = PathEx.GetNonUnicodePath(defaultOutputDirectory);  // Convert unicode path to 8.3 if needed
 
                 string paramsFile = KeepIntermediateFiles ? Path.Combine(defaultOutputDirectory, @"comet.params") : Path.GetTempFileName();
@@ -342,7 +346,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 {
                     string cometPepXmlFilepath = GetCometSearchResultFilepath(spectrumFilename);
                     string finalOutputFilepath = GetSearchResultFilepath(spectrumFilename);
-                    FixPercolatorPepXml(cometPepXmlFilepath, finalOutputFilepath, spectrumFilename, qvalueByPsmId);
+                    PERCOLATOR_PEPXML_ANNOTATOR.AddQValues(cometPepXmlFilepath, finalOutputFilepath, qvalueByPsmId);
                 }
 
                 DeleteIntermediateFiles();
@@ -472,51 +476,17 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
         }
 
-        // Add Percolator score to Comet pepXML
-        private void FixPercolatorPepXml(string cruxOutputFilepath, string finalOutputFilepath, MsDataFileUri spectrumFilename, Dictionary<string, double> qvalueByPsmId)
-        {
-            bool isBrukerSource = DataSourceUtil.GetSourceType(spectrumFilename.GetFilePath()) == DataSourceUtil.TYPE_BRUKER;
+        // Adds each hit's Percolator q-value to the Comet pepXML, after its expect score.
+        internal static readonly PercolatorPepXmlAnnotator PERCOLATOR_PEPXML_ANNOTATOR =
+            new PercolatorPepXmlAnnotator(GetPercolatorSpectrumId, @"_", @"<search_score name=""expect""", false);
 
-            using (var pepXmlFile = new StreamReader(cruxOutputFilepath))
-            using (var fixedPepXmlFile = new StreamWriter(finalOutputFilepath))
-            {
-                string line;
-                string lastPsmId = "";
-                string lastRank = "";
-                while ((line = pepXmlFile.ReadLine()) != null)
-                {
-                    if (line.Contains(@"<spectrum_query"))
-                    {
-                        // We need to convert:
-                        //   DdaSearchTest/comet.run_2.04610.04610.3
-                        // to:
-                        //   DdaSearchTest/comet.run_2_4610_3
-                        lastPsmId = Regex.Replace(line, @".* spectrum=""(.+?)\.0*(\d+)\.\d+\.(\d+)"" .*", "$1_$2_$3");
-                    }
-                    else if (line.Contains(@"<search_hit"))
-                    {
-                        lastRank = Regex.Replace(line, @".* hit_rank=""(\d+)"" .*", "$1");
-                    }
-                    else if (line.Contains(@"<search_score name=""expect"""))
-                    {
-                        string psmIdAndRank = $@"{lastPsmId}_{lastRank}";
-                        if (qvalueByPsmId.ContainsKey(psmIdAndRank))
-                        {
-                            fixedPepXmlFile.WriteLine(line);
-                            fixedPepXmlFile.WriteLine(@"    <search_score name=""percolator_qvalue"" value=""{0}"" />", qvalueByPsmId[psmIdAndRank].ToString(CultureInfo.InvariantCulture));
-                            continue;
-                        }
-                        // MCC: This happens when percolator's text tables drops a PSM that is in pepXML; I'm not sure why it happens though.
-                        //else
-                        //    Console.WriteLine($"{lastPsmId} not found in percolator scores.");
-                    }
-                    else if (line.Contains(@"</search_summary>"))
-                    {
-                        fixedPepXmlFile.WriteLine(@"<parameter name=""post-processor"" value=""percolator"" />");
-                    }
-                    fixedPepXmlFile.WriteLine(line);
-                }
-            }
+        private static string GetPercolatorSpectrumId(string spectrumQueryLine)
+        {
+            // We need to convert:
+            //   DdaSearchTest/comet.run_2.04610.04610.3
+            // to:
+            //   DdaSearchTest/comet.run_2_4610_3
+            return Regex.Replace(spectrumQueryLine, @".* spectrum=""(.+?)\.0*(\d+)\.\d+\.(\d+)"" .*", "$1_$2_$3");
         }
 
         // Fix (TODO: remove these hacks when it's fixed in Crux and/or Comet):

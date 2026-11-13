@@ -2,6 +2,7 @@
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ *                Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -26,14 +27,18 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
+using pwiz.Osprey.IO;
 
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
-    /// The user-facing end-of-run reports, modeled on DIA-NN's output so the two tools
-    /// are directly comparable:
+    /// The end-of-run reports modeled on DIA-NN's output, so the two tools are directly
+    /// comparable, written only under OSPREY_DIANN_REPORTS
+    /// (<see cref="OspreyEnvironment.DiannReports"/>): they hold nothing the output .blib does
+    /// not, and nothing in Osprey reads them.
     /// <list type="bullet">
     /// <item><c>&lt;output&gt;.protein_groups.tsv</c> -- DIA-NN's <c>pg_matrix</c> shape
     /// (Protein.Group / Protein.Names / N.Peptides / N.Proteotypic / PG.Q.Value), plus the
@@ -44,60 +49,101 @@ namespace pwiz.Osprey.Tasks
     /// experiment-level row.</item>
     /// </list>
     /// These are distinct from the <c>cs_stage7_protein_fdr.tsv</c> cross-impl DIAGNOSTIC
-    /// dump (counts only, env-gated); these are default, user-facing, and additive (new
-    /// files), so the byte-parity gate -- which compares the blib + the Stage-7 dump -- is
-    /// unaffected.
+    /// dump (counts only, env-gated); these are additive (new files), so the byte-parity
+    /// gate -- which compares the blib + the Stage-7 dump -- is unaffected.
     /// </summary>
     public static class OspreyReportWriter
     {
+        public const string EXT_PROTEIN_GROUPS = @".protein_groups.tsv";
+        public const string EXT_STATS = @".stats.tsv";
+
         /// <summary>
         /// Write both default reports next to <paramref name="config"/>'s output blib.
         /// A no-op (with a warning) when no output path is known. Called once, from the
         /// Stage-7 protein-FDR step, with the experiment-level parsimony + FDR result and the
         /// survivor milestone the per-replicate rows re-derive from - one file at a time, which
-        /// is all this writer ever needed (#4486).
+        /// is all this writer ever needed (#4486). A report that cannot be written is reported
+        /// through <paramref name="logWarning"/> and skipped; it never fails the run.
         /// </summary>
         internal static void WriteReports(
             SecondPassProteinFdrResult experimentResult,
             RescoredEntries rescored,
             IList<LibraryEntry> fullLibrary,
             OspreyConfig config,
-            Action<string> logInfo)
+            IOspreyLog log,
+            Action<string> logWarning)
         {
             string stem = ReportStem(config);
             if (stem == null)
             {
-                logInfo?.Invoke(
-                    "Skipping reports: no output path (-o) to derive report file names from.");
+                log?.LogInfo(string.Format(
+                    OspreyTasksResources.OspreyReportWriter_WriteReports_Skipping_reports__no_output_path___o__to_derive_report_file_names_from_,
+                    OspreyArgNames.Text(OspreyArgNames.OUTPUT)));
                 return;
             }
 
+            // The entrapment peptides, when the result leaves them out (--strip-entrapment):
+            // their precursors and peptides are not counted, and a protein group made only of
+            // entrapment proteins is not listed. The per-replicate protein count still comes
+            // from the engine's own gate and keeps any such group that passes it.
+            var excludedPeptides = config.StripEntrapment ? EntrapmentPeptides(fullLibrary) : null;
+
             if (config.WriteProteinReport)
             {
-                string path = stem + @".protein_groups.tsv";
-                WriteProteinGroups(path, experimentResult, fullLibrary, config);
-                logInfo?.Invoke(string.Format(
-                    "[COUNT] Wrote protein-group report: {0}", path));
+                string path = stem + EXT_PROTEIN_GROUPS;
+                TryWriteReport(@"protein-group",
+                    OspreyTasksResources.OspreyReportWriter_WriteReports_protein_group_report, path, log, logWarning,
+                    () => WriteProteinGroups(path, experimentResult, fullLibrary, config, excludedPeptides));
             }
 
             if (config.WriteSummaryReport)
             {
-                string path = stem + @".stats.tsv";
-                WriteSummary(path, experimentResult, rescored, fullLibrary, config, logInfo);
-                logInfo?.Invoke(string.Format(
-                    "[COUNT] Wrote summary report: {0}", path));
+                string path = stem + EXT_STATS;
+                TryWriteReport(@"summary",
+                    OspreyTasksResources.OspreyReportWriter_WriteReports_summary_report, path, log, logWarning,
+                    () => WriteSummary(path, experimentResult, rescored, fullLibrary, config, excludedPeptides));
             }
         }
 
-        // Report file stem = the output blib without its extension, else the report path,
-        // else null (caller skips). Path.ChangeExtension(x, null) drops the extension.
+        /// <summary>The modified sequences of the library's entrapment peptides.</summary>
+        private static HashSet<string> EntrapmentPeptides(IList<LibraryEntry> fullLibrary)
+        {
+            var peptides = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var entry in fullLibrary)
+            {
+                if (!entry.IsDecoy && EntrapmentLibraryClassifier.IsEntrapment(entry))
+                    peptides.Add(entry.ModifiedSequence);
+            }
+            return peptides;
+        }
+
+        // The reports are additive: nothing downstream reads them, and the blib has not been
+        // written yet when they run. So a write failure is a warning naming the path, not a
+        // pipeline abort. The common case is the previous run's report still open in Excel,
+        // which makes SimpleFileSaver.Commit throw IOException on the replace; Commit deliberately
+        // lets that propagate so the caller can log it. SimpleFileSaver's disposal drops the temp.
+        // label is the machine token on the [COUNT] line; displayName is the localized name
+        // the warning uses.
+        private static void TryWriteReport(string label, string displayName, string path,
+            IOspreyLog log, Action<string> logWarning, Action write)
+        {
+            try
+            {
+                write();
+                log?.LogInfo(LogTag.COUNT, @"Wrote {0} report: {1}", label, path);
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                logWarning?.Invoke(string.Format(
+                    OspreyTasksResources.OspreyReportWriter_TryWriteReport_Failed_to_write_the__0___1____2_, displayName, path, ex.Message));
+            }
+        }
+
+        // Report file stem = the output blib without its extension, else null (caller skips).
+        // Path.ChangeExtension(x, null) drops the extension.
         private static string ReportStem(OspreyConfig config)
         {
-            if (!string.IsNullOrEmpty(config.OutputBlib))
-                return Path.ChangeExtension(config.OutputBlib, null);
-            if (!string.IsNullOrEmpty(config.OutputReport))
-                return Path.ChangeExtension(config.OutputReport, null);
-            return null;
+            return string.IsNullOrEmpty(config.OutputBlib) ? null : Path.ChangeExtension(config.OutputBlib, null);
         }
 
         // ------------------------------------------------------------------ protein groups
@@ -106,7 +152,8 @@ namespace pwiz.Osprey.Tasks
             string path,
             SecondPassProteinFdrResult result,
             IList<LibraryEntry> fullLibrary,
-            OspreyConfig config)
+            OspreyConfig config,
+            HashSet<string> excludedPeptides = null)
         {
             var groups = result.Parsimony.Groups;
             var groupQ = result.ProteinFdr.GroupQvalues;
@@ -122,18 +169,21 @@ namespace pwiz.Osprey.Tasks
 
             // Reported for the same reason as the per-replicate FDR below (#4571). This half of
             // the report writer ran silent: it scans the whole library above and then walks every
-            // group here, and its only bracketing line is a [COUNT] that OspreyOutput.IsStatLine
-            // drops unless --perf-stats. A run configured with --protein-report but no summary
-            // report therefore produced no visible output for the entire report step.
+            // group here, and its only bracketing line is a [COUNT] that LogTag.COUNT
+            // writes only under --perf-stats. A run with the protein report on but the summary
+            // report off therefore produced no visible output for the entire report step.
             int groupIdx = 0;
             var rows = new List<string[]>(groups.Count);
-            using (var progress = new ProgressReporter(
-                       string.Format(@"Building the protein-group report over {0} group(s)", groups.Count),
-                       groups.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(
+                CountText.Format(groups.Count, OspreyTasksResources.OspreyReportWriter_WriteProteinGroups_Building_the_protein_group_report_for_1_group,
+                    OspreyTasksResources.OspreyReportWriter_WriteProteinGroups_Building_the_protein_group_report_for__0__groups),
+                groups.Count, progress =>
             {
                 foreach (var g in groups)
                 {
                     progress.Report(++groupIdx);
+                    if (excludedPeptides != null && EntrapmentLibraryClassifier.IsEntrapmentOnly(g.Accessions))
+                        continue;
                     double q = groupQ.TryGetValue(g.Id, out double qv) ? qv : 1.0;
                     bool passes = q <= config.EffectiveProteinFdr;
 
@@ -142,8 +192,13 @@ namespace pwiz.Osprey.Tasks
                     // stable file.
                     var grouping = g.UniquePeptides
                         .Concat(g.SharedPeptides)
+                        .Where(x => excludedPeptides == null || !excludedPeptides.Contains(x))
                         .OrderBy(x => x, StringComparer.Ordinal)
                         .ToList();
+                    // A target protein whose only evidence was entrapment placed on it has no
+                    // peptide left to report once that evidence is stripped.
+                    if (excludedPeptides != null && grouping.Count == 0)
+                        continue;
 
                     var accessionSet = new HashSet<string>(g.Accessions, StringComparer.Ordinal);
                     var libUnique = new List<string>();
@@ -172,7 +227,7 @@ namespace pwiz.Osprey.Tasks
                         string.Join(@";", libUnique),
                     });
                 }
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
 
             // Deterministic order: passing first, then most confident, then by accessions
             // (the group identity -- distinct, so the ordering is total). Stable OrderBy
@@ -182,17 +237,11 @@ namespace pwiz.Osprey.Tasks
                 .ThenBy(r => double.Parse(r[4], CultureInfo.InvariantCulture))
                 .ThenBy(r => r[0], StringComparer.Ordinal);
 
-            using (var w = new StreamWriter(path, false))
+            WriteTsv(path, new[]
             {
-                w.NewLine = "\n";
-                w.WriteLine(string.Join("\t", new[]
-                {
-                    "Protein.Group", "Protein.Names", "N.Peptides", "N.Proteotypic",
-                    "PG.Q.Value", "Passes.PG.FDR", "Grouping.Peptides", "Library.Unique.Peptides"
-                }));
-                foreach (var r in ordered)
-                    w.WriteLine(string.Join("\t", r));
-            }
+                @"Protein.Group", @"Protein.Names", @"N.Peptides", @"N.Proteotypic",
+                @"PG.Q.Value", @"Passes.PG.FDR", @"Grouping.Peptides", @"Library.Unique.Peptides"
+            }, ordered);
         }
 
         // Scan the library ONCE, capturing every protein accession each DETECTED peptide
@@ -239,7 +288,7 @@ namespace pwiz.Osprey.Tasks
             RescoredEntries rescored,
             IList<LibraryEntry> fullLibrary,
             OspreyConfig config,
-            Action<string> logInfo)
+            HashSet<string> excludedPeptides = null)
         {
             var level = config.FdrLevel;
             var rows = new List<string[]>();
@@ -259,17 +308,19 @@ namespace pwiz.Osprey.Tasks
             // pass per file - a 46 s silence at 82 files on the 2026-08-15 measurement, with only
             // the caller's heading in front of it (#4571).
             int runIdx = 0;
-            using (var progress = new ProgressReporter(
-                       string.Format(@"Per-replicate protein FDR over {0} run(s)", nFiles),
-                       nFiles, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(
+                nFiles == 1
+                    ? OspreyTasksResources.OspreyReportWriter_WriteSummary_Per_replicate_protein_FDR_for_1_file
+                    : string.Format(OspreyTasksResources.OspreyReportWriter_WriteSummary_Per_replicate_protein_FDR_for__0__files, nFiles),
+                nFiles, progress =>
             {
                 foreach (var kvp in rescored.StreamFiles())
                 {
                     progress.Report(++runIdx);
                     AccumulatePrecursorsPeptides(kvp.Value, level, config, runLevel: false,
-                        expPrecSet, expPepSet);
+                        expPrecSet, expPepSet, excludedPeptides);
                     CountPrecursorsPeptides(new[] { kvp }, level, config, runLevel: true,
-                        out int precursors, out int peptides);
+                        out int precursors, out int peptides, excludedPeptides);
                     int proteins = ProteinFdrEngine.CountPassingProteinGroups(
                         new List<KeyValuePair<string, List<FdrEntry>>> { kvp }, fullLibrary, config, runLevel: true);
                     rows.Add(new[]
@@ -280,7 +331,7 @@ namespace pwiz.Osprey.Tasks
                         proteins.ToString(CultureInfo.InvariantCulture),
                     });
                 }
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
 
             // Experiment row: precursors + peptides passing EXPERIMENT-level FDR (a
             // precursor detected in any run counts once), folded above, and the
@@ -288,23 +339,26 @@ namespace pwiz.Osprey.Tasks
             int expPrec = expPrecSet.Count;
             int expPep = expPepSet.Count;
             int expProteins = 0;
-            foreach (var q in experimentResult.ProteinFdr.GroupQvalues.Values)
-                if (q <= config.EffectiveProteinFdr) expProteins++;
+            foreach (var kv in experimentResult.ProteinFdr.GroupQvalues)
+            {
+                if (kv.Value > config.EffectiveProteinFdr)
+                    continue;
+                if (excludedPeptides != null &&
+                    EntrapmentLibraryClassifier.IsEntrapmentOnly(experimentResult.Parsimony.Groups[(int)kv.Key].Accessions))
+                {
+                    continue;
+                }
+                expProteins++;
+            }
             rows.Add(new[]
             {
-                "Experiment",
+                @"Experiment",
                 expPrec.ToString(CultureInfo.InvariantCulture),
                 expPep.ToString(CultureInfo.InvariantCulture),
                 expProteins.ToString(CultureInfo.InvariantCulture),
             });
 
-            using (var w = new StreamWriter(path, false))
-            {
-                w.NewLine = "\n";
-                w.WriteLine(string.Join("\t", new[] { "Run", "Precursors", "Peptides", "Proteins" }));
-                foreach (var r in rows)
-                    w.WriteLine(string.Join("\t", r));
-            }
+            WriteTsv(path, new[] { @"Run", @"Precursors", @"Peptides", @"Proteins" }, rows);
         }
 
         // Distinct precursors (modseq + charge) and distinct peptides (modseq) among
@@ -313,12 +367,12 @@ namespace pwiz.Osprey.Tasks
         private static void CountPrecursorsPeptides(
             IEnumerable<KeyValuePair<string, List<FdrEntry>>> entries,
             FdrLevel level, OspreyConfig config, bool runLevel,
-            out int precursors, out int peptides)
+            out int precursors, out int peptides, HashSet<string> excludedPeptides = null)
         {
             var precSet = new HashSet<string>(StringComparer.Ordinal);
             var pepSet = new HashSet<string>(StringComparer.Ordinal);
             foreach (var kvp in entries)
-                AccumulatePrecursorsPeptides(kvp.Value, level, config, runLevel, precSet, pepSet);
+                AccumulatePrecursorsPeptides(kvp.Value, level, config, runLevel, precSet, pepSet, excludedPeptides);
             precursors = precSet.Count;
             peptides = pepSet.Count;
         }
@@ -327,17 +381,19 @@ namespace pwiz.Osprey.Tasks
         // writes the per-replicate rows instead of taking a second pass over the pool.
         private static void AccumulatePrecursorsPeptides(
             List<FdrEntry> entries, FdrLevel level, OspreyConfig config, bool runLevel,
-            HashSet<string> precSet, HashSet<string> pepSet)
+            HashSet<string> precSet, HashSet<string> pepSet, HashSet<string> excludedPeptides = null)
         {
             double gate = runLevel ? config.RunFdr : config.ExperimentFdr;
             foreach (var e in entries)
             {
                 if (e.IsDecoy)
                     continue;
+                if (excludedPeptides != null && excludedPeptides.Contains(e.ModifiedSequence))
+                    continue;
                 double q = runLevel ? e.EffectiveRunQvalue(level) : e.EffectiveExperimentQvalue(level);
                 if (q > gate)
                     continue;
-                precSet.Add(e.ModifiedSequence + "|" + e.Charge.ToString(CultureInfo.InvariantCulture));
+                precSet.Add(e.ModifiedSequence + @"|" + e.Charge.ToString(CultureInfo.InvariantCulture));
                 pepSet.Add(e.ModifiedSequence);
             }
         }
@@ -349,6 +405,28 @@ namespace pwiz.Osprey.Tasks
             if (string.IsNullOrEmpty(fileKey))
                 return fileKey;
             return Path.GetFileNameWithoutExtension(fileKey);
+        }
+
+        // ------------------------------------------------------------------ shared writer
+
+        // Both reports are the same file shape: a tab-joined header, tab-joined rows, "\n"
+        // newlines and UTF-8 without BOM (the StreamWriter default). The file is staged and
+        // committed through SimpleFileSaver so a kill mid-write leaves the previous report or none,
+        // never a truncated one (P8). Rows stream through; the report is never built as one
+        // string.
+        private static void WriteTsv(string path, string[] header, IEnumerable<string[]> rows)
+        {
+            using (var saver = new SimpleFileSaver(path))
+            {
+                using (var w = new StreamWriter(saver.SafeName, false))
+                {
+                    w.NewLine = TextUtil.LF;
+                    w.WriteLine(header.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var r in rows)
+                        w.WriteLine(r.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                }
+                saver.Commit();
+            }
         }
     }
 }

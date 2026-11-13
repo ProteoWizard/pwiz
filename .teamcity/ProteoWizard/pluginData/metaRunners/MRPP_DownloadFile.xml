@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE build-type SYSTEM "../../../project-config.dtd">
+
+<build-type>
+  <name>Download File</name>
+  <description />
+  <settings>
+    <parameters>
+      <param name="system.url" value="" spec="text description='HTTP or FTP URL' display='normal' label='File URL:' validationMode='not_empty'" />
+      <param name="system.username" value="" spec="text description='Username for HTTP Basic authentication' display='normal' label='Username:' validationMode='any'" />
+      <param name="system.password" value="zxx775d03cbe80d301b" spec="password description='Password for HTTP Basic authentication' display='normal' label='Password:'" />
+      <param name="system.dest.dir" value="" spec="text description='Directory where to place downloaded file (if empty - current working directory will be used)' display='normal' label='Destination directory:' validationMode='any'" />
+      <param name="system.clean.dest.dir" value="" spec="checkbox checkedValue='true' description='Enable if all files in destination directory must be cleaned before downloading' display='normal' label='Clean destination directory:' uncheckedValue='false'" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_14" name="" type="Ant">
+        <parameters>
+          <param name="build-file"><![CDATA[<project name="Download File">
+<condition property="dest.dir.set">
+  <matches pattern=".+" string="${dest.dir}"/>
+</condition>
+<condition property="clean.dest.dir.set">
+  <matches pattern="true" string="${clean.dest.dir}"/>
+</condition>
+
+<target name="getFile" depends="create-dest-dir, clean-dest-dir">
+
+<get src="${url}" dest="${dest.dir}"
+     username="${username}" 
+     password="${password}" 
+     verbose="on"/>
+
+</target>
+
+<target name="create-dest-dir" if="dest.dir.set">
+<mkdir dir="${dest.dir}"/>
+</target>
+
+<target name="clean-dest-dir" if="clean.dest.dir.set">
+  <delete includeemptydirs="true">
+    <fileset dir="${dest.dir}" includes="**/*"/>
+  </delete>
+</target>
+
+
+</project>]]></param>
+          <param name="build-file-path" value="build.xml" />
+          <param name="target" value="getFile" />
+          <param name="teamcity.coverage.emma.include.source" value="true" />
+          <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
+          <param name="teamcity.coverage.idea.includePatterns" value="*" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use-custom-build-file" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings checkout-mode="ON_SERVER" labeling-type="NONE" labeling-pattern="build-%system.build.number%" />
+    <requirements />
+    <build-triggers />
+    <cleanup />
+  </settings>
+</build-type>
+

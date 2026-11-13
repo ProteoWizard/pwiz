@@ -52,7 +52,19 @@ param(
     [int]$Threads = 0,   # 0 = auto: logical processors / lane count
     [switch]$NoBuild,
     [switch]$TeamCity,
-    [string]$LogDir
+    [string]$LogDir,
+    # Retention, forwarded to every regression.ps1 invocation (see $retainOutput there).
+    # One invocation per dataset means one run dir per dataset, so the keep count is
+    # per DATASET here: the default keeps the previous full run, whatever its size.
+    [int]$KeepRunDirs = -1,
+    [switch]$KeepOutput,
+    [switch]$CleanOutput,
+    # Forwarded to every regression.ps1 invocation; see its -ExtraOspreyFlags.
+    [string]$ExtraOspreyFlags,
+    # Forwarded to every regression.ps1 invocation: recapture each dataset's golden instead
+    # of comparing against it. The lanes write to distinct golden folders, so a recapture
+    # parallelizes like a comparison; see regression.ps1 -CreateGolden for what it refuses.
+    [switch]$CreateGolden
 )
 
 $ErrorActionPreference = 'Stop'
@@ -60,12 +72,26 @@ $ErrorActionPreference = 'Stop'
 
 $scriptRoot = Split-Path -Parent $PSCommandPath
 $regression = Join-Path $scriptRoot 'regression.ps1'
-$ospreyExe  = Join-Path $scriptRoot 'Osprey\bin\x64\Release\net8.0\Osprey.exe'
+$ospreyExe  = Join-Path $scriptRoot 'Osprey\bin\x64\Release\net10.0\Osprey.exe'
 if (-not $LogDir) { $LogDir = Join-Path $scriptRoot 'TestResults' }
 if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir -Force | Out-Null }
 
 $all = @('Stellar', 'StellarLibDecoy', 'StellarGenDecoyEntrap', 'Astral')
 $selected = if ($Dataset -contains 'All') { $all } else { @($Dataset) }
+# Not retaining (TeamCity / -CleanOutput without -KeepOutput) keeps no predecessors
+# either, mirroring regression.ps1's own default for an unbound -KeepRunDirs.
+if ($KeepRunDirs -lt 0) {
+    $KeepRunDirs = if (($TeamCity -or $CleanOutput) -and -not $KeepOutput) { 0 } else { $selected.Count }
+}
+# The same three retention switches on every regression.ps1 call this script makes,
+# staging included (the -StageOnly call runs the startup prune too).
+$retention = @{ KeepRunDirs = $KeepRunDirs }
+if ($KeepOutput)  { $retention['KeepOutput']  = $true }
+if ($CleanOutput) { $retention['CleanOutput'] = $true }
+$retentionArgs = " -KeepRunDirs $KeepRunDirs" + $(if ($KeepOutput) { ' -KeepOutput' } else { '' }) + $(if ($CleanOutput) { ' -CleanOutput' } else { '' })
+# Not part of $retention: staging runs no Osprey, so only the lanes and the serial path get it.
+$extraFlagsArg = if ($ExtraOspreyFlags) { " -ExtraOspreyFlags '$ExtraOspreyFlags'" } else { '' }
+$createGoldenArg = if ($CreateGolden) { ' -CreateGolden' } else { '' }
 
 # Astral leads one lane and takes StellarGenDecoyEntrap, the cheapest dataset under the
 # sparse matrix, as its partner; Stellar and StellarLibDecoy make the other. Derived from
@@ -91,8 +117,8 @@ Write-Host ("==> {0} lane(s), {1} thread(s) each, {2} logical processor(s)" -f
 
 # --- Build ONCE, here, so the lanes cannot race each other's build output ---------
 if (-not $NoBuild) {
-    Write-Host '==> Building Osprey (Release, net8.0) once for both lanes' -ForegroundColor Cyan
-    & (Join-Path $scriptRoot 'build.ps1') -Configuration Release -Framework net8.0 -NoTests
+    Write-Host '==> Building Osprey (Release, net10.0) once for both lanes' -ForegroundColor Cyan
+    & (Join-Path $scriptRoot 'build.ps1') -Configuration Release -NoTests
     if ($LASTEXITCODE -ne 0) { Write-Host "ERROR: Osprey build failed (exit $LASTEXITCODE)" -ForegroundColor Red; exit $LASTEXITCODE }
 }
 if (-not (Test-Path $ospreyExe)) {
@@ -106,7 +132,7 @@ if (-not (Test-Path $ospreyExe)) {
 if ($lanes.Count -ge 2) {
     Write-Host '==> Staging regression data once for both lanes' -ForegroundColor Cyan
     foreach ($ds in $selected) {
-        & $regression -Dataset $ds -NoBuild -StageOnly
+        & $regression -Dataset $ds -NoBuild -StageOnly @retention
         if ($LASTEXITCODE -ne 0) { Write-Host "ERROR: staging $ds failed (exit $LASTEXITCODE)" -ForegroundColor Red; exit $LASTEXITCODE }
     }
 }
@@ -115,8 +141,10 @@ if ($lanes.Count -lt 2) {
     Write-Host "==> One lane only ($($selected -join ', ')); running serially" -ForegroundColor Cyan
     # Splat a hashtable rather than appending a conditional array, which would arrive
     # as a POSITIONAL argument rather than as -TeamCity.
-    $serial = @{ Dataset = $selected; Threads = $Threads; NoBuild = $true }
+    $serial = @{ Dataset = $selected; Threads = $Threads; NoBuild = $true } + $retention
     if ($TeamCity) { $serial['TeamCity'] = $true }
+    if ($ExtraOspreyFlags) { $serial['ExtraOspreyFlags'] = $ExtraOspreyFlags }
+    if ($CreateGolden) { $serial['CreateGolden'] = $true }
     & $regression @serial
     exit $LASTEXITCODE
 }
@@ -143,7 +171,7 @@ foreach ($lane in $lanes) {
     $tcArg = if ($TeamCity) { " -TeamCity" } else { "" }
     $body = @("`$worst = 0")
     foreach ($ds in $lane) {
-        $body += "& `"$regression`" -Dataset $ds -Threads $Threads -NoBuild$tcArg"
+        $body += "& `"$regression`" -Dataset $ds -Threads $Threads -NoBuild$tcArg$retentionArgs$extraFlagsArg$createGoldenArg"
         $body += "if (`$LASTEXITCODE -ne 0) { `$worst = `$LASTEXITCODE }"
     }
     $body += "exit `$worst"
@@ -188,7 +216,9 @@ foreach ($r in $running) {
     if ($code -gt $worst) { $worst = $code }
     $colour = if ($code -eq 0 -and $fail -eq 0) { 'Green' } else { 'Red' }
     Write-Host ("  {0,-45} exit={1}  {2} PASS / {3} FAIL / {4} SKIP" -f $r.Name, $code, $pass, $fail, $skip) -ForegroundColor $colour
-    foreach ($line in ($text | Select-String -CaseSensitive -Pattern ': (PASS|FAIL|SKIP)')) {
+    # A -CreateGolden lane reports "golden CAPTURED" or "golden REFUSED" per dataset instead
+    # of PASS/FAIL legs; a REFUSED exits non-zero, which the exit code above already carries.
+    foreach ($line in ($text | Select-String -CaseSensitive -Pattern ': (PASS|FAIL|SKIP)|golden (CAPTURED|REFUSED)')) {
         Write-Host ("      " + $line.Line.Trim())
     }
     # Warnings still surface - they were only ever miscounted, not unwanted - but as

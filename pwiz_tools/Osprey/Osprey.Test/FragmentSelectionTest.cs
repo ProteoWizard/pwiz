@@ -167,6 +167,46 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(6, idx.Length);
             // Highest six intensities are 8,7,6,5,4,3 at indices 1,3,5,6,7,2.
             CollectionAssert.AreEqual(new[] { 1, 3, 5, 6, 7, 2 }, idx);
+
+            ValidateSelectionIgnoresLibraryOrderOnTies();
+        }
+
+        /// <summary>
+        /// Ties on intensity go to the lower m/z, then the ion, so a library listing the same
+        /// peaks in another order selects the same fragments.
+        /// </summary>
+        private static void ValidateSelectionIgnoresLibraryOrderOnTies()
+        {
+            // Four peaks tie at 0.5 for the last three of six slots.
+            double[] mzs = { 300.0, 350.0, 400.0, 450.0, 500.0, 550.0, 600.0, 650.0 };
+            float[] intens = { 1f, 0.9f, 0.8f, 0.5f, 0.5f, 0.5f, 0.5f, 0.1f };
+            var frags = new List<LibraryFragment>();
+            for (int i = 0; i < mzs.Length; i++)
+                frags.Add(new LibraryFragment { Mz = mzs[i], RelativeIntensity = intens[i] });
+            var expected = new[] { 300.0, 350.0, 400.0, 450.0, 500.0, 550.0 };
+            CollectionAssert.AreEqual(expected, SelectedMzs(frags));
+            frags.Reverse();
+            CollectionAssert.AreEqual(expected, SelectedMzs(frags));
+
+            // Two peaks at one m/z and intensity: the ion decides, in either order.
+            var b = new LibraryFragment { Mz = 225.6266, RelativeIntensity = 0.5f,
+                Annotation = new FragmentAnnotation { IonType = IonType.B, Ordinal = 4, Charge = 2 } };
+            var y = new LibraryFragment { Mz = 225.6266, RelativeIntensity = 0.5f,
+                Annotation = new FragmentAnnotation { IonType = IonType.Y, Ordinal = 3, Charge = 2 } };
+            foreach (var pair in new[] { new[] { b, y }, new[] { y, b } })
+            {
+                int[] top = TopFragmentExtractor.SelectTopFragmentIndices(pair, 1);
+                Assert.AreEqual(IonType.B, pair[top[0]].Annotation.IonType);
+            }
+        }
+
+        private static double[] SelectedMzs(IReadOnlyList<LibraryFragment> frags)
+        {
+            var selected = new List<double>();
+            foreach (int i in TopFragmentExtractor.SelectTopFragmentIndices(frags, 6))
+                selected.Add(frags[i].Mz);
+            selected.Sort();
+            return selected.ToArray();
         }
 
         [TestMethod]

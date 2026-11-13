@@ -99,13 +99,13 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (GraphSummary.IsHandleCreated)
             {
-                GraphSummary.BeginInvoke(new Action(() =>
+                GraphSummary.BeginInvoke(() =>
                 {
                     // Clear cache because newly initialized calculators require fresh computation.
                     // Without this, the cached partial result (with GraphData == null) would be returned.
                     _graphDataReceiver.ClearCache();
                     UpdateGraph(false);
-                }));
+                });
             }
         }
 

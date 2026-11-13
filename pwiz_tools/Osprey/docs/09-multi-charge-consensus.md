@@ -148,8 +148,7 @@ This stage has no dedicated on/off CLI flag — multi-charge consensus always ru
 | `--run-fdr <q>` | `0.01` (`OspreyConfig.RunFdr`) | The `fdrThreshold` passed to `SelectRescoreTargets` (`Stage6Planner.cs:115`, `FirstPassFdrTask.cs:146`). Gates which charge states are eligible to lead (`RunPrecursorQvalue <= threshold`) and, implicitly, whether a group produces any rescore target at all. |
 | `--no-prefilter` | prefilter ON (`PrefilterEnabled = true`) | Only relevant to the re-scoring pass: with the prefilter on it is still skipped for boundary-override candidates (`PeakDataExtractor.cs:117`), so this flag does not change consensus re-scoring behavior; it affects only free (non-override) scoring. |
 | `--reconciliation-compaction-fdr`, `--experiment-fdr`, reconciliation flags | see 08/10 docs | Do not gate consensus selection itself, but reconciliation targets computed later are merged with (and override) consensus targets in the shared re-scoring pass. |
-| `OSPREY_DUMP_MULTICHARGE=1` | off | Diagnostic. Writes `cs_stage6_multicharge.tsv` (per-file entries + selected rescore targets) for cross-impl bisection (`Stage6Planner.cs:124-134`, `OspreyFileDiagnostics.cs:261-264`). |
-| `OSPREY_MULTICHARGE_ONLY=1` | off | Diagnostic. Exits after the multicharge dump (`Stage6Planner.cs:135-136`, `OspreyFileDiagnostics.cs:266-267`). |
+| `OSPREY_DUMP_MULTICHARGE` / `OSPREY_MULTICHARGE_ONLY` | - | Rust-only. The `cs_stage6_multicharge.tsv` dump (per-file entries + selected rescore targets) and its early-exit gate were removed from C# on 2026-10-11 (each held or pulled every run's entries at once (O(files x entries)) only to serve a diagnostic); a cross-impl harness must set them only for the Rust process. |
 
 `MIN_RT_MATCH_TOLERANCE = 0.1` min is a compile-time constant (`MultiChargeConsensus.cs:43`), not a flag.
 

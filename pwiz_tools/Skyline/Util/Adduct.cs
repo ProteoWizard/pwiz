@@ -713,8 +713,18 @@ namespace pwiz.Skyline.Util
                     // ignored
                 }
             }
+            // In proteomic mode, plain protonation like "[M+6H]" is the same adduct as its charge alone
+            if (parserMode == ADDUCT_TYPE.proteomic && testAdduct.IsProtonated)
+            {
+                var protonated = FromCharge(testAdduct.AdductCharge, ADDUCT_TYPE.proteomic);
+                if (testAdduct.SameEffect(protonated))
+                {
+                    dict[value] = protonated;  // Cache this on the likely chance that we'll see this representation again
+                    return protonated;
+                }
+            }
             // Re-use the standard pre-allocated adducts when possible
-            foreach (var adduct in (parserMode == ADDUCT_TYPE.proteomic) ? COMMON_PROTONATED_ADDUCTS : COMMON_SMALL_MOL_ADDUCTS) 
+            foreach (var adduct in (parserMode == ADDUCT_TYPE.proteomic) ? COMMON_PROTONATED_ADDUCTS : COMMON_SMALL_MOL_ADDUCTS)
             {
                 if (testAdduct.SameEffect(adduct))
                 {
@@ -1203,7 +1213,7 @@ namespace pwiz.Skyline.Util
                 {BioMassCalc.Zn, 2}, // Metal adducts are useful in PFAS analysis
                 {BioMassCalc.Ag, 1}, // Metal adducts are useful in PFAS analysis
                 {@"CH3COO", -1}, // Deprotonated Hac
-                {@"CH­3CO2", -1}, // Deprotonated Hac
+                {@"CH3CO2", -1}, // Deprotonated Hac
                 {@"HCOO", -1}, // Formate (deprotonated FA)  
                 {@"COOH", -1}, // Formate (deprotonated FA)  
                 {@"HCO2", -1}, // Formate (deprotonated FA)  

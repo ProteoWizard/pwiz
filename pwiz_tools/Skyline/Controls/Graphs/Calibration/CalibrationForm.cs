@@ -196,13 +196,6 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             return null;
         }
 
-        protected override void OnClosed(EventArgs e)
-        {
-            base.OnClosed(e);
-            Dispose();
-        }
-
-
         public ToolStripMenuItem MakeExcludeStandardMenuItem(int replicateIndex)
         {
             return calibrationGraphControl1.MakeExcludeStandardMenuItem(replicateIndex);

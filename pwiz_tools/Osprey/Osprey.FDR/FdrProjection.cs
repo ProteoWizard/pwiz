@@ -303,8 +303,11 @@ namespace pwiz.Osprey.FDR
         /// (issue #4355 step b (iv-b)). The global distinct-peptide id assignment runs
         /// BEFORE any release, so the ordinal-id invariant is unaffected. The 2nd pass
         /// leaves it <c>false</c>: its survivor buffer must stay resident for Stage 7/8.
+        ///
+        /// <para>A TEST ORACLE, internal for the reason <c>PercolatorEngine.RunPercolatorFdr</c>
+        /// gives: every production producer publishes <see cref="CountsOnly"/>.</para>
         /// </summary>
-        public static FdrProjectionSet BuildFromEntries(
+        internal static FdrProjectionSet BuildFromEntries(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             Func<string, IReadOnlyDictionary<uint, uint>> parquetRowResolver = null,
             bool releaseStubs = false)
@@ -406,8 +409,10 @@ namespace pwiz.Osprey.FDR
         /// meaningful if files are added in a deterministic sequence. Callers must drive
         /// BeginFile/AddRow/EndFile from a single thread (PerFileScoringTask does, after
         /// its per-file scoring fan-out has already joined).
+        ///
+        /// <para>Test-only, like <see cref="BuildFromEntries"/>.</para>
         /// </summary>
-        public sealed class Builder
+        internal sealed class Builder
         {
             private readonly Dictionary<string, int> _insertionIdByPeptide =
                 new Dictionary<string, int>(StringComparer.Ordinal);

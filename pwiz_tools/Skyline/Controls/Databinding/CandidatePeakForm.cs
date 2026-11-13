@@ -162,7 +162,7 @@ namespace pwiz.Skyline.Controls.Databinding
         public void QueueUpdateRowSource()
         {
             _updatePending = true;
-            BeginInvoke(new Action(UpdateRowSource));
+            BeginInvoke(UpdateRowSource);
         }
 
         private void UpdateRowSource()

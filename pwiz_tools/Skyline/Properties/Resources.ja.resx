@@ -1414,9 +1414,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="ImportFastaControl_ImportFasta_Please_enter_a_valid_number_of_decoys_per_target_greater_than_0_" xml:space="preserve">
     <value>0を上回るターゲット毎にデコイの有効な数を入力してください。</value>
   </data>
-  <data name="UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_" xml:space="preserve">
-    <value>アップグレードに失敗しました。</value>
-  </data>
   <data name="IsolationWindow_DoValidate_Isolation_window_margins_cover_the_entire_isolation_window_at_the_extremes_of_the_instrument_range" xml:space="preserve">
     <value>単離ウィンドウのマージンは、装置範囲の極限で単離ウィンドウ全体に及びます。</value>
   </data>

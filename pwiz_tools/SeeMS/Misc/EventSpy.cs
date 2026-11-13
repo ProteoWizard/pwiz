@@ -60,11 +60,11 @@ namespace SpyTools
 			// create dynamic assembly
 			AssemblyName name = new AssemblyName();
 			name.Name = "EventSpy" + spyname;
-			AssemblyBuilder asm = AppDomain.CurrentDomain.DefineDynamicAssembly(name,
+			AssemblyBuilder asm = AssemblyBuilder.DefineDynamicAssembly(name,
 				AssemblyBuilderAccess.Run);
 
 			// create dynamic module
-			ModuleBuilder mod = asm.DefineDynamicModule("EventSpyModule",true);
+			ModuleBuilder mod = asm.DefineDynamicModule("EventSpyModule");
 
 			// What follows is a whole bunch of grody code, all of whose purpose
 			// is to generate a dynamic class that looks more or less like this: 

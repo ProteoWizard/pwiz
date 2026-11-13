@@ -1,115 +1,67 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Database;
+using pwiz.BiblioSpec.IO;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Lib.BlibData;
 
 namespace pwiz.SkylineTestUtil
 {
+    /// <summary>
+    /// Reads the spectra of a <c>.blib</c> a test wrote, for the test to check them one by one:
+    /// each record with its peak annotations, as <see cref="BlibReader"/> reads them.
+    /// </summary>
     public class SpectralLibraryTestUtil
     {
-        public static IList<DbRefSpectra> GetRefSpectraFromPath(string filename)
+        public static IList<BlibSpectrumRecord> GetRefSpectraFromPath(string filename)
         {
-            using (var connection = new SQLiteConnection(string.Format("Data Source='{0}';Version=3", filename)))
+            using (var reader = new BlibReader(filename))
             {
-                connection.Open();
-                return GetRefSpectra(connection);
+                return GetRefSpectra(reader);
             }
         }
 
-        private static double? ParseNullable(SQLiteDataReader reader, int ordinal)
+        public static IList<BlibSpectrumRecord> GetRefSpectra(SQLiteConnection connection)
         {
-            if (ordinal < 0)
-                return null;
-            var str = reader[ordinal].ToString();
-            if (string.IsNullOrEmpty(str))
-                return null;
-            return double.Parse(str);
-        }
-
-        public static IList<DbRefSpectra> GetRefSpectra(SQLiteConnection connection)
-        {
-            var list = new List<DbRefSpectra>();
-            var hasAnnotations = SqliteOperations.TableExists(connection, @"RefSpectraPeakAnnotations");
-            using var select = new SQLiteCommand(connection);
-            select.CommandText = "SELECT * FROM RefSpectra";
-            using (var reader = select.ExecuteReader())
+            using (var reader = new BlibReader(connection))
             {
-                var iAdduct = reader.GetOrdinal("precursorAdduct");
-                var iIonMobility = reader.GetOrdinal("ionMobility");
-                var iIonMobilityHighEnergyOffset = reader.GetOrdinal("ionMobilityHighEnergyOffset");
-                var iCCS = reader.GetOrdinal("collisionalCrossSectionSqA");
-                var noMoleculeDetails =
-                    reader.GetOrdinal("moleculeName") <
-                    0; // Also a cue for presence of chemicalFormula, inchiKey, and otherKeys
-                while (reader.Read())
-                {
-                    var refSpectrum = new DbRefSpectra
-                    {
-                        PeptideSeq = reader["peptideSeq"].ToString(),
-                        PeptideModSeq = reader["peptideModSeq"].ToString(),
-                        PrecursorCharge = int.Parse(reader["precursorCharge"].ToString()),
-                        PrecursorAdduct = iAdduct < 0 ? string.Empty : reader[iAdduct].ToString(),
-                        PrecursorMZ = double.Parse(reader["precursorMZ"].ToString()),
-                        RetentionTime = double.Parse(reader["retentionTime"].ToString()),
-                        IonMobility = ParseNullable(reader, iIonMobility),
-                        IonMobilityHighEnergyOffset = ParseNullable(reader, iIonMobilityHighEnergyOffset),
-                        CollisionalCrossSectionSqA = ParseNullable(reader, iCCS),
-                        MoleculeName = noMoleculeDetails ? string.Empty : reader["moleculeName"].ToString(),
-                        ChemicalFormula = noMoleculeDetails ? string.Empty : reader["chemicalFormula"].ToString(),
-                        InChiKey = noMoleculeDetails ? string.Empty : reader["inchiKey"].ToString(),
-                        OtherKeys = noMoleculeDetails ? string.Empty : reader["otherKeys"].ToString(),
-                        NumPeaks = ushort.Parse(reader["numPeaks"].ToString())
-                    };
-                    if (hasAnnotations)
-                    {
-                        var id = int.Parse(reader["id"].ToString());
-                        var annotations = GetRefSpectraPeakAnnotations(connection, refSpectrum, id);
-                        refSpectrum.PeakAnnotations = annotations;
-                    }
-
-                    list.Add(refSpectrum);
-                }
-
-                return list;
+                return GetRefSpectra(reader);
             }
         }
 
-        private static IList<DbRefSpectraPeakAnnotations> GetRefSpectraPeakAnnotations(SQLiteConnection connection,
-            DbRefSpectra refSpectrum, int refSpectraId)
+        private static IList<BlibSpectrumRecord> GetRefSpectra(BlibReader reader)
         {
-            var list = new List<DbRefSpectraPeakAnnotations>();
-            using var select = new SQLiteCommand(connection);
-            select.CommandText = "SELECT * FROM RefSpectraPeakAnnotations WHERE RefSpectraId = " + refSpectraId;
-            using (var reader = select.ExecuteReader())
+            var list = new List<BlibSpectrumRecord>();
+            foreach (var spectrum in reader.ReadSpectra(false))
             {
-                while (reader.Read())
-                {
-                    list.Add(new DbRefSpectraPeakAnnotations
-                    {
-                        RefSpectra = refSpectrum,
-                        Id = int.Parse(reader["id"].ToString()),
-                        PeakIndex = int.Parse(reader["peakIndex"].ToString()),
-                        Charge = int.Parse(reader["charge"].ToString()),
-                        Adduct = reader["adduct"].ToString(),
-                        mzTheoretical = double.Parse(reader["mzTheoretical"].ToString()),
-                        mzObserved = double.Parse(reader["mzObserved"].ToString()),
-                        Name = reader["name"].ToString(),
-                        Formula = reader["formula"].ToString(),
-                        InchiKey = reader["inchiKey"].ToString(),
-                        OtherKeys = reader["otherKeys"].ToString(),
-                        Comment = reader["comment"].ToString(),
-                    });
-                }
-
-                return list;
+                spectrum.Annotations = reader.ReadAnnotations(spectrum.Id);
+                list.Add(spectrum);
             }
+            return list;
         }
 
-        public static void CheckRefSpectra(IList<DbRefSpectra> spectra, string peptideSeq, string peptideModSeq,
-            int precursorCharge, double precursorMz, ushort numPeaks, double rT, IonMobilityAndCCS im = null)
+        public static void CheckRefSpectra(IList<BlibSpectrumRecord> spectra, string peptideSeq, string peptideModSeq,
+            int precursorCharge, double precursorMz, int numPeaks, double rT, IonMobilityAndCCS im = null)
         {
             for (var i = 0; i < spectra.Count; i++)
             {
@@ -118,7 +70,7 @@ namespace pwiz.SkylineTestUtil
                     spectrum.PeptideModSeq.Equals(peptideModSeq) &&
                     spectrum.PrecursorCharge.Equals(precursorCharge) &&
                     Math.Abs((spectrum.RetentionTime ?? 0) - rT) < 0.001 &&
-                    Math.Abs(spectrum.PrecursorMZ - precursorMz) < 0.001 &&
+                    Math.Abs(spectrum.PrecursorMz - precursorMz) < 0.001 &&
                     spectrum.NumPeaks.Equals(numPeaks))
                 {
                     spectra.RemoveAt(i);

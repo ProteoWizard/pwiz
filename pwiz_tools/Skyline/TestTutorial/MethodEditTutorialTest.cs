@@ -25,6 +25,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline;
@@ -51,8 +52,7 @@ namespace pwiz.SkylineTestTutorial
         private const string YEAST_ATLAS = "Yeast (Atlas)"; // Not L10N
         private const string YEAST_GPM = "Yeast (GPM)"; // Not L10N
 
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         public void TestMethodEditTutorial()
         {
             // Set true to look at tutorial screenshots.
@@ -538,14 +538,8 @@ namespace pwiz.SkylineTestTutorial
             if (pause)
             {
                 PauseForScreenShot<ScreenForm>("Tip for " + nodeText, null,
-                    bmp =>
-                    {
-                        var cropRect = SkylineWindow.SequenceTree.TipRect;
-                        // Remove lower-right shadow
-                        cropRect.Width -= 4;
-                        cropRect.Height -= 4;
-                        return ClipBitmap(bmp, cropRect);
-                    });
+                    // The tip's drop shadow is drawn by the OS outside TipRect, so no cropping is needed
+                    bmp => ClipBitmap(bmp, SkylineWindow.SequenceTree.TipRect));
             }
 
             SkylineWindow.SequenceTree.IgnoreFocus = false;
@@ -597,7 +591,7 @@ namespace pwiz.SkylineTestTutorial
                     {
                         var completeRect = statementCompletionForm.Bounds;
                         var skylineRect = ScreenshotManager.GetFramedWindowBounds(SkylineWindow);
-                        bmp = bmp.CleanupBorder(skylineRect, ScreenshotProcessingExtensions.CornerForm, completeRect);
+                        bmp = bmp.CleanupBorder(skylineRect, ScreenshotBorder.CornerForm, completeRect);
 
                         int top = completeRect.Top - aboveAutoComplete;
                         int bottom = Math.Max(skylineRect.Bottom, completeRect.Bottom);

@@ -49,8 +49,9 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>
         /// Whether the "#32770" is the common Open dialog, identified by its classic file-name combo (control id
-        /// 1148). The whole combo -- the ComboBoxEx32, its ComboBox and the Edit inside it -- carries that id; the
-        /// Save dialog has no such control, so the two never both match.
+        /// 1148). The whole combo -- the ComboBoxEx32, its ComboBox and the Edit inside it -- carries that id. The
+        /// Save dialog carries it too while the shell is building it, before it is shown; see
+        /// <see cref="NativeFileDialog.Classify"/>.
         /// </summary>
         public static bool IsOpenFileDialog(IntPtr hwnd)
         {

@@ -152,7 +152,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                     return new LibraryChromGroup
                         {
                             RetentionTime = retentionTime,
-                            CCS = (ccs == 0) ? (double?)null : ccs,
+                            CCS = (ccs == 0) ? null : ccs,
                             StartTime = startTime,
                             EndTime = endTime,
                             Times = timeIntensities?.Times ?? new float[0],

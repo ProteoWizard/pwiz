@@ -108,6 +108,7 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public ActionResult ClickMainMenuItem(string menuPath) { return CallClient(c => c.ClickMainMenuItem(menuPath)); }
     public ActionResult DismissWithAcceptButton(string formId) { return CallClient(c => c.DismissWithAcceptButton(formId)); }
     public ActionResult DismissWithCancelButton(string formId) { return CallClient(c => c.DismissWithCancelButton(formId)); }
+    public WindowSize ResizeWindow(string formId, int width, int height) { return CallClient(c => c.ResizeWindow(formId, width, height)); }
     public ActionResult DismissWithButton(string formId, string button) { return CallClient(c => c.DismissWithButton(formId, button)); }
 
     // 2-arg methods
@@ -245,6 +246,18 @@ public class SkylineConnection : IJsonToolService, IDisposable
         // All connections failed
         return (null, "No Skyline instance is connected. " +
                       "Start Skyline and choose Tools > AI Connector to connect.");
+    }
+
+    /// <summary>
+    /// The process ID of the Skyline instance <see cref="TryConnect"/> would connect to, without connecting,
+    /// or null when no Skyline instance is available.
+    /// </summary>
+    public static int? GetTargetProcessId()
+    {
+        var infos = FindConnectionFiles();
+        if (TargetProcessId.HasValue && infos.Any(i => i.ProcessId == TargetProcessId.Value))
+            return TargetProcessId;
+        return infos.OrderByDescending(i => i.ConnectedAt).FirstOrDefault()?.ProcessId;
     }
 
     /// <summary>

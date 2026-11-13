@@ -136,7 +136,7 @@
     <value>Both</value>
   </data>
   <data name="tbxFasta.Size" type="System.Drawing.Size, System.Drawing">
-    <value>282, 179</value>
+    <value>462, 179</value>
   </data>
   <data name="tbxFasta.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -166,7 +166,7 @@
     <value>Top, Right</value>
   </data>
   <data name="browseFastaBtn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>303, 80</value>
+    <value>483, 80</value>
   </data>
   <data name="browseFastaBtn.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -205,7 +205,7 @@
     <value>Vertical</value>
   </data>
   <data name="tbxError.Size" type="System.Drawing.Size, System.Drawing">
-    <value>282, 35</value>
+    <value>462, 35</value>
   </data>
   <data name="tbxError.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -226,7 +226,7 @@
     <value>14, 316</value>
   </data>
   <data name="panelError.Size" type="System.Drawing.Size, System.Drawing">
-    <value>282, 35</value>
+    <value>462, 35</value>
   </data>
   <data name="panelError.TabIndex" type="System.Int32, mscorlib">
     <value>22</value>
@@ -281,7 +281,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>Top, Right</value>
   </data>
   <data name="clearBtn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>303, 109</value>
+    <value>483, 109</value>
   </data>
   <data name="clearBtn.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -311,7 +311,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>11, 48</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>363, 29</value>
+    <value>543, 29</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -632,7 +632,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>0, 0, 0, 0</value>
   </data>
   <data name="tbxFastaTargets.Size" type="System.Drawing.Size, System.Drawing">
-    <value>282, 20</value>
+    <value>462, 20</value>
   </data>
   <data name="tbxFastaTargets.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -659,7 +659,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>NoControl</value>
   </data>
   <data name="browseFastaTargetsBtn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>303, 22</value>
+    <value>483, 22</value>
   </data>
   <data name="browseFastaTargetsBtn.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
@@ -698,7 +698,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>0, 0, 0, 0</value>
   </data>
   <data name="targetFastaPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 45</value>
+    <value>561, 45</value>
   </data>
   <data name="targetFastaPanel.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -722,7 +722,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>6, 13</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>392, 425</value>
+    <value>572, 425</value>
   </data>
   <data name="&gt;&gt;helpTipFasta.Name" xml:space="preserve">
     <value>helpTipFasta</value>
@@ -735,5 +735,83 @@ Can be a decimal number like 0.5 or 2.5.</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="groupBoxQValueFilter.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="groupBoxQValueFilter.Location" type="System.Drawing.Point, System.Drawing">
+    <value>302, 354</value>
+  </data>
+  <data name="groupBoxQValueFilter.Size" type="System.Drawing.Size, System.Drawing">
+    <value>176, 46</value>
+  </data>
+  <data name="groupBoxQValueFilter.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="groupBoxQValueFilter.Text" xml:space="preserve">
+    <value>Global cutoff</value>
+  </data>
+  <data name="groupBoxQValueFilter.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;groupBoxQValueFilter.Name" xml:space="preserve">
+    <value>groupBoxQValueFilter</value>
+  </data>
+  <data name="&gt;&gt;groupBoxQValueFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxQValueFilter.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;groupBoxQValueFilter.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="comboQValueLevel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 19</value>
+  </data>
+  <data name="comboQValueLevel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>108, 21</value>
+  </data>
+  <data name="comboQValueLevel.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="comboQValueLevel.ToolTip" xml:space="preserve">
+    <value>The library's experiment-wide value to filter the imported targets on</value>
+  </data>
+  <data name="&gt;&gt;comboQValueLevel.Name" xml:space="preserve">
+    <value>comboQValueLevel</value>
+  </data>
+  <data name="&gt;&gt;comboQValueLevel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboQValueLevel.Parent" xml:space="preserve">
+    <value>groupBoxQValueFilter</value>
+  </data>
+  <data name="&gt;&gt;comboQValueLevel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="textQValueCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>120, 19</value>
+  </data>
+  <data name="textQValueCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>50, 20</value>
+  </data>
+  <data name="textQValueCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="textQValueCutoff.ToolTip" xml:space="preserve">
+    <value>Only targets whose library entry has an experiment-wide value at or below this cutoff are imported. Leave empty to import every target.</value>
+  </data>
+  <data name="&gt;&gt;textQValueCutoff.Name" xml:space="preserve">
+    <value>textQValueCutoff</value>
+  </data>
+  <data name="&gt;&gt;textQValueCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textQValueCutoff.Parent" xml:space="preserve">
+    <value>groupBoxQValueFilter</value>
+  </data>
+  <data name="&gt;&gt;textQValueCutoff.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
 </root>

@@ -1,6 +1,7 @@
 /*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2015 University of Washington - Seattle, WA
  * 
@@ -424,6 +425,11 @@ namespace pwiz.Skyline.Model
         {
             return IsCanceledItem(filePath);
         }
+
+        public int DocumentChangeCount
+        {
+            get { return _chromatogramManager.DocumentChangeCount; }
+        }
     }
 
     public class SingleFileLoadMonitor : BackgroundLoader.LoadMonitor
@@ -431,6 +437,7 @@ namespace pwiz.Skyline.Model
         private readonly MultiFileLoadMonitor _loadMonitor;
         private readonly MsDataFileUri _dataFile;
         private DateTime _lastCancelCheck;
+        private int _lastChangeCount;
         private bool _isCanceled;
 
         public SingleFileLoadMonitor(MultiFileLoadMonitor loadMonitor, MsDataFileUri dataFile)
@@ -438,6 +445,7 @@ namespace pwiz.Skyline.Model
             _loadMonitor = loadMonitor;
             _dataFile = dataFile;
             _lastCancelCheck = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
+            _lastChangeCount = loadMonitor.DocumentChangeCount;
             HasUI = loadMonitor.HasUI;
         }
 
@@ -458,9 +466,18 @@ namespace pwiz.Skyline.Model
                 // we prevent this check from happening more than once every 10 ms
                 // which is actually long enough to get this under 1% of really huge
                 // extractions.
+                //
+                // Unless the document has changed since the last check. A file's import is
+                // cancelled by changing the document, so a check made after a change must
+                // be a real one: the throttle alone let a small import that finished within
+                // 10 ms of its cancel commit a complete .skyd, and the loader then reported
+                // "cancelled" with that file left on disk (ThermoCancelImportTest). Reading
+                // the count is one volatile load, so the hot path stays as cheap as before.
+                var changeCount = _loadMonitor.DocumentChangeCount;
                 var currentTime = DateTime.UtcNow;
-                if ((currentTime - _lastCancelCheck).TotalMilliseconds < 10)
+                if (changeCount == _lastChangeCount && (currentTime - _lastCancelCheck).TotalMilliseconds < 10)
                     return false;
+                _lastChangeCount = changeCount;
                 _lastCancelCheck = currentTime;
                 return _isCanceled = _loadMonitor.IsCanceledFile(_dataFile);
             }

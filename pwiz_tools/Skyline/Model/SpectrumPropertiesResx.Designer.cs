@@ -248,7 +248,25 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("Description_PeakCount", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Experiment-wide posterior error probability of this peptide.
+        /// </summary>
+        internal static string Description_PeptidePep {
+            get {
+                return ResourceManager.GetString("Description_PeptidePep", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Experiment-wide q-value of this peptide, the same for all of its charge states.
+        /// </summary>
+        internal static string Description_PeptideQValue {
+            get {
+                return ResourceManager.GetString("Description_PeptideQValue", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Precursor m/z used to select the ion.
         /// </summary>
@@ -257,7 +275,43 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("Description_PrecursorMz", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Experiment-wide posterior error probability of this precursor.
+        /// </summary>
+        internal static string Description_PrecursorPep {
+            get {
+                return ResourceManager.GetString("Description_PrecursorPep", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Experiment-wide q-value of this precursor.
+        /// </summary>
+        internal static string Description_PrecursorQValue {
+            get {
+                return ResourceManager.GetString("Description_PrecursorQValue", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Experiment-wide posterior error probability of the protein group with the protein q-value.
+        /// </summary>
+        internal static string Description_ProteinPep {
+            get {
+                return ResourceManager.GetString("Description_ProteinPep", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Experiment-wide q-value of this peptide&apos;s protein group, the lowest if it is in more than one group.
+        /// </summary>
+        internal static string Description_ProteinQValue {
+            get {
+                return ResourceManager.GetString("Description_ProteinQValue", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Retention time of the spectrum acquisition.
         /// </summary>
@@ -419,7 +473,25 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("PeakCount", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide PEP.
+        /// </summary>
+        internal static string PeptidePep {
+            get {
+                return ResourceManager.GetString("PeptidePep", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide Q Value.
+        /// </summary>
+        internal static string PeptideQValue {
+            get {
+                return ResourceManager.GetString("PeptideQValue", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Precursor m/z.
         /// </summary>
@@ -428,7 +500,43 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("PrecursorMz", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor PEP.
+        /// </summary>
+        internal static string PrecursorPep {
+            get {
+                return ResourceManager.GetString("PrecursorPep", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor Q Value.
+        /// </summary>
+        internal static string PrecursorQValue {
+            get {
+                return ResourceManager.GetString("PrecursorQValue", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Protein PEP.
+        /// </summary>
+        internal static string ProteinPep {
+            get {
+                return ResourceManager.GetString("ProteinPep", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Q Value.
+        /// </summary>
+        internal static string ProteinQValue {
+            get {
+                return ResourceManager.GetString("ProteinQValue", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Retention Time.
         /// </summary>

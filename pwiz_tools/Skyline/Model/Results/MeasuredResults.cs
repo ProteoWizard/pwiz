@@ -129,7 +129,7 @@ namespace pwiz.Skyline.Model.Results
 
         public CacheFormatVersion? CacheVersion
         {
-            get { return _cacheFinal != null ? _cacheFinal.Version : (CacheFormatVersion?) null; }
+            get { return _cacheFinal != null ? _cacheFinal.Version : null; }
         }
 
         public bool IsLoaded

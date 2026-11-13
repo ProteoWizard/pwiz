@@ -49,6 +49,9 @@ namespace pwiz.Osprey.FDR
         /// <summary>Posterior error probability.</summary>
         public double Pep { get; set; }
 
+        /// <summary>Experiment-wide peptide-level posterior error probability.</summary>
+        public double ExperimentPeptidePep { get; set; }
+
         /// <summary>
         /// The per-entry score the experiment-scope competitions ranked this entry on
         /// (sidecar v4, issue #4522); see <see cref="Core.FdrEntry.ExperimentAggregateScore"/>.
@@ -62,6 +65,7 @@ namespace pwiz.Osprey.FDR
             ExperimentPrecursorQvalue = 1.0;
             ExperimentPeptideQvalue = 1.0;
             Pep = 1.0;
+            ExperimentPeptidePep = 1.0;
         }
     }
 
@@ -70,6 +74,22 @@ namespace pwiz.Osprey.FDR
     /// </summary>
     public class PercolatorResults
     {
+        /// <summary>How a message names the linear classifier.</summary>
+        public const string CLASSIFIER_NAME_SVM = @"the linear SVM";
+
+        /// <summary>How a message names the tree classifier.</summary>
+        public const string CLASSIFIER_NAME_TREES = @"gradient-boosted trees";
+
+        /// <summary>
+        /// The classifier a message names, by what it is rather than by the command-line flag
+        /// that selects it: a message about a persisted model cannot know which flag the run
+        /// that trained it was given.
+        /// </summary>
+        public static string ClassifierName(bool gradientBoostedTrees)
+        {
+            return gradientBoostedTrees ? CLASSIFIER_NAME_TREES : CLASSIFIER_NAME_SVM;
+        }
+
         /// <summary>Per-entry results.</summary>
         public List<PercolatorResult> Entries { get; set; }
 
@@ -96,6 +116,14 @@ namespace pwiz.Osprey.FDR
         public List<GradientBoostedTrees> FoldGbtModels { get; set; }
 
         /// <summary>
+        /// True when this model is the gradient-boosted-tree ensemble
+        /// (<see cref="FoldGbtModels"/> populated), false for the linear SVM. The one test of
+        /// which classifier a trained or persisted model is, so a resume that must match the
+        /// model to the run cannot disagree with the score passes about it.
+        /// </summary>
+        public bool IsGradientBoostedTrees => FoldGbtModels != null && FoldGbtModels.Count > 0;
+
+        /// <summary>
         /// The Skyline-style per-feature percent-contribution decomposition of the
         /// trained averaged model, or <c>null</c> when scoring did not run (e.g. the
         /// <c>TrainOnly</c> early-return or the empty-population shortcut). Carries
@@ -103,11 +131,26 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public FeatureContributions FeatureContributions { get; set; }
 
+        /// <summary>
+        /// What training did with each feature on its own training subset, computed when
+        /// <see cref="PercolatorConfig.CollectTrainingAnalysis"/> is set and persisted with the
+        /// first-pass model; null otherwise. Never used for scoring.
+        /// </summary>
+        public TrainingSetAnalysis TrainingAnalysis { get; set; }
+
         /// <summary>Feature standardizer used during training.</summary>
         public FeatureStandardizer Standardizer { get; set; }
 
         /// <summary>Number of iterations used per fold.</summary>
         public List<int> IterationsPerFold { get; set; }
+
+        /// <summary>
+        /// Train-only tree runs with <see cref="PercolatorConfig.ReportTrainEntryFolds"/>
+        /// (OSPREY_GBT_OOF, or round 1 of the two-round training): the fold each input entry was held out of
+        /// (the one model that did not train on it), or -1 for an entry outside the training
+        /// subset. Null otherwise.
+        /// </summary>
+        public int[] TrainEntryFolds { get; set; }
 
         /// <summary>
         /// Set when <see cref="PercolatorTrainer.RunPercolator"/> wrote a

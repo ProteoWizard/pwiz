@@ -1,0 +1,20 @@
+<Project>
+
+  <!-- libtorch backend selection, shared by the CarafeSharp tree and the Osprey tree (whose
+       executable runs CarafeSharp's library prediction in-process). The CPU and CUDA libtorch
+       packages ship identically named native files, so one project cannot reference both. CPU
+       is the default; build with /p:CarafeSharpTorch=cuda for the CUDA 12.8 runtime (about 4 GB
+       installed). The native package is chosen for the build host unless a RuntimeIdentifier
+       says otherwise. The item groups that reference the packages and copy the pretrained models
+       are in LibTorch.targets, for projects that set UseLibTorch=true. -->
+  <PropertyGroup>
+    <CarafeSharpTorch Condition="'$(CarafeSharpTorch)' == ''">cpu</CarafeSharpTorch>
+    <TorchSharpVersion>0.106.0</TorchSharpVersion>
+    <LibTorchVersion>2.10.0</LibTorchVersion>
+    <CarafeSharpTargetIsWindows Condition="'$(RuntimeIdentifier)' != '' AND $(RuntimeIdentifier.StartsWith('win'))">true</CarafeSharpTargetIsWindows>
+    <CarafeSharpTargetIsWindows Condition="'$(CarafeSharpTargetIsWindows)' == '' AND '$(RuntimeIdentifier)' != ''">false</CarafeSharpTargetIsWindows>
+    <CarafeSharpTargetIsWindows Condition="'$(CarafeSharpTargetIsWindows)' == '' AND '$(OS)' == 'Windows_NT'">true</CarafeSharpTargetIsWindows>
+    <CarafeSharpTargetIsWindows Condition="'$(CarafeSharpTargetIsWindows)' == ''">false</CarafeSharpTargetIsWindows>
+  </PropertyGroup>
+
+</Project>

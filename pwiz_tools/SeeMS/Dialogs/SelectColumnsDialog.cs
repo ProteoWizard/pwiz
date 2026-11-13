@@ -28,7 +28,7 @@ using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
     public class SelectColumnsDialog : DockableForm
     {

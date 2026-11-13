@@ -233,7 +233,7 @@ function Compare-DiagnosticsGolden {
 
     -NoTrainedModel is for a report emitted by a run that ADOPTED first-pass
     q-values from the .1st-pass.fdr_scores.bin sidecars instead of training
-    Percolator (FirstPassFdrTask.Rehydrate -- regression.ps1 mode 5). Exactly one
+    Percolator (FirstPassFdrTask.Rehydrate). Exactly one
     metric is model-derived: featureCount comes from the FeatureContributions
     the trainer produces, and a run that never trained has none to report. The
     switch does NOT skip that metric -- it PINS it at 0, so the comparison stays
@@ -325,6 +325,77 @@ function Compare-DiagnosticsGolden {
     }
 
     return [pscustomobject]@{ Pass = ($issues.Count -eq 0); Issues = $issues }
+}
+
+function Compare-FdpViews {
+    <#
+    Route agreement on the entrapment FDP views: every view of both passes in two
+    reports, compared point by point within an absolute tolerance. Used by mode 3 to
+    hold the HPC chain's report to the straight-through one (issue #4645).
+
+    Every property of a view is compared - label, pass, scope and flags exactly, and
+    each parallel array (q, lowerBound, combined, paired, nTargetAccepted) element by
+    element with its length. Non-finite values compare by equality, so NaN = NaN and
+    NaN against a number is a difference (the same rule as Compare-DiagnosticsGolden).
+
+    PairedPoints counts the paired-estimator values compared, so the caller can tell a
+    real comparison from one over a dataset with no pairing.
+    #>
+    param([Parameter(Mandatory = $true)]$Expected, [Parameter(Mandatory = $true)]$Actual,
+          [double]$Tolerance = 1e-9)
+
+    $issues = [System.Collections.Generic.List[string]]::new()
+    $nViews = 0; $nPaired = 0
+    foreach ($pass in 1, 2) {
+        $ev = @(if ($pass -eq 2) { $Expected.pass2.fdpViews } else { $Expected.fdpViews }) | Where-Object { $null -ne $_ }
+        $av = @(if ($pass -eq 2) { $Actual.pass2.fdpViews } else { $Actual.fdpViews }) | Where-Object { $null -ne $_ }
+        $ev = @($ev); $av = @($av)
+        if ($ev.Count -ne $av.Count) {
+            $issues.Add("pass $pass has $($ev.Count) FDP view(s) expected, $($av.Count) actual")
+            continue
+        }
+        for ($i = 0; $i -lt $ev.Count; $i++) {
+            $nViews++
+            $where = "pass $pass fdpViews[$i] ($($ev[$i].label))"
+            $names = @(@($ev[$i].PSObject.Properties.Name) + @($av[$i].PSObject.Properties.Name) | Sort-Object -Unique)
+            foreach ($name in $names) {
+                $e = $ev[$i].$name; $a = $av[$i].$name
+                if ($e -is [System.Collections.IList] -or $a -is [System.Collections.IList]) {
+                    $e = @($e); $a = @($a)
+                    if ($e.Count -ne $a.Count) {
+                        $issues.Add("$where.$name length $($e.Count) expected, $($a.Count) actual")
+                        continue
+                    }
+                    if ($name -eq 'paired') { $nPaired += $e.Count }
+                    for ($j = 0; $j -lt $e.Count; $j++) {
+                        if (-not (Test-FdpValueEqual $e[$j] $a[$j] $Tolerance)) {
+                            $issues.Add("$where.$name[$j] expected $($e[$j]), actual $($a[$j])")
+                        }
+                    }
+                } elseif (-not (Test-FdpValueEqual $e $a $Tolerance)) {
+                    $issues.Add("$where.$name expected $e, actual $a")
+                }
+            }
+        }
+    }
+    return [pscustomobject]@{
+        Pass = ($issues.Count -eq 0); Issues = $issues; Views = $nViews; PairedPoints = $nPaired
+    }
+}
+
+function Test-FdpValueEqual($Expected, $Actual, [double]$Tolerance) {
+    if ($null -eq $Expected -or $null -eq $Actual) { return ($null -eq $Expected -and $null -eq $Actual) }
+    if (-not ((Test-FdpNumber $Expected) -and (Test-FdpNumber $Actual))) { return ($Expected -ceq $Actual) }
+    $e = [double]$Expected; $a = [double]$Actual
+    if (-not ([double]::IsFinite($e) -and [double]::IsFinite($a))) {
+        return ($e.Equals($a))
+    }
+    return ([math]::Abs($e - $a) -le $Tolerance)
+}
+
+function Test-FdpNumber($Value) {
+    return ($Value -is [double] -or $Value -is [single] -or $Value -is [long] -or
+            $Value -is [int] -or $Value -is [decimal])
 }
 
 function Test-DiagnosticsSanity {

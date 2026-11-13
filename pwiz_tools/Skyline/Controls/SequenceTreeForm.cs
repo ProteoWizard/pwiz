@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -41,10 +40,10 @@ namespace pwiz.Skyline.Controls
                 UpdateResultsUI(documentContainer.DocumentUI.Settings, null);
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
             SequenceTree.HideEffects();
-            base.OnClosing(e);
+            base.OnFormClosing(e);
         }
 
         protected override string GetPersistentString()

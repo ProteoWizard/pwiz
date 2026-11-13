@@ -99,6 +99,14 @@ namespace ResourcesOrganizer
                 languages = otherDb.GetLanguages().ToList();
             }
 
+            var missingLanguages = languages.Except(otherDb.GetLanguages()).ToList();
+            if (missingLanguages.Count > 0)
+            {
+                Console.Error.WriteLine("Error: {0} has no translations for language {1}", verb.OldDb,
+                    string.Join(", ", missingLanguages));
+                return -1;
+            }
+
             int errorCount = 0;
             foreach (var fileEntry in otherDb.ResourcesFiles)
             {

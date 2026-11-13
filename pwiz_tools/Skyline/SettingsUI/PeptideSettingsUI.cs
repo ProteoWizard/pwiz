@@ -781,16 +781,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             IsBuildingLibrary = true;
 
-            var warning = (builder as ILibraryBuildWarning)?.GetWarning();
-            if (!string.IsNullOrEmpty(warning))
-            {
-                if (MultiButtonMsgDlg.Show(this, warning, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
-                {
-                    IsBuildingLibrary = false;
-                    return;
-                }
-            }
-
             var buildState = new BuildState(builder.LibrarySpec, _libraryManager.BuildLibraryBackground);
 
             bool retry;
@@ -1771,7 +1761,7 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 var text = tbxIonRatioThreshold.Text.Trim();
-                return string.IsNullOrEmpty(text) ? (double?) null : double.Parse(text);
+                return string.IsNullOrEmpty(text) ? null : double.Parse(text);
             }
             set
             {
@@ -1813,7 +1803,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return string.IsNullOrEmpty(tbxMaxRtShift.Text) ? (double?) null : double.Parse(tbxMaxRtShift.Text);
+                return string.IsNullOrEmpty(tbxMaxRtShift.Text) ? null : double.Parse(tbxMaxRtShift.Text);
             }
             set
             {
@@ -1825,7 +1815,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return string.IsNullOrEmpty(tbxMaxPeakWidthVariation.Text) ? (double?)null : double.Parse(tbxMaxPeakWidthVariation.Text);
+                return string.IsNullOrEmpty(tbxMaxPeakWidthVariation.Text) ? null : double.Parse(tbxMaxPeakWidthVariation.Text);
             }
             set
             {

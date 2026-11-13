@@ -35,6 +35,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.ML;
 
 namespace pwiz.Osprey.FDR
 {
@@ -104,11 +105,11 @@ namespace pwiz.Osprey.FDR
 
     /// <summary>
     /// Result of picked-protein FDR computation. Only target winners appear in
-    /// <see cref="GroupQvalues"/> and <see cref="GroupScores"/>; decoy winners are
-    /// statistical machinery for the cumulative FDR computation and are not
-    /// exposed. Protein-level posterior error probability (PEP) is intentionally
-    /// not computed -- use peptide-level PEP for downstream confidence (matches
-    /// Rust <c>ProteinFdrResult</c>).
+    /// <see cref="GroupQvalues"/>, <see cref="GroupScores"/> and <see cref="GroupPeps"/>;
+    /// decoy winners are statistical machinery for the cumulative FDR computation and are not
+    /// exposed. Rust <c>ProteinFdrResult</c> computes no protein-level posterior error
+    /// probability; <see cref="GroupPeps"/> is a C# addition, filled only by
+    /// <see cref="ProteinFdr.ComputeLibraryPickedProteinFdr"/>.
     /// </summary>
     public class ProteinFdrResult
     {
@@ -118,6 +119,12 @@ namespace pwiz.Osprey.FDR
         /// <summary>Protein group ID to best peptide SVM score (target winners only).</summary>
         public Dictionary<uint, double> GroupScores { get; set; }
 
+        /// <summary>
+        /// Protein group ID to posterior error probability (target winners only); a group absent
+        /// from it has PEP 1.0. See <see cref="ProteinFdr.ComputeLibraryPickedProteinFdr"/>.
+        /// </summary>
+        public Dictionary<uint, double> GroupPeps { get; set; }
+
         /// <summary>Peptide (modified_sequence) to best protein q-value among its groups.</summary>
         public Dictionary<string, double> PeptideQvalues { get; set; }
 
@@ -125,6 +132,7 @@ namespace pwiz.Osprey.FDR
         {
             GroupQvalues = new Dictionary<uint, double>();
             GroupScores = new Dictionary<uint, double>();
+            GroupPeps = new Dictionary<uint, double>();
             PeptideQvalues = new Dictionary<string, double>();
         }
     }
@@ -192,6 +200,36 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
+        /// Folds in an accumulator that <see cref="Add"/> built over one file's rows alone - on a
+        /// file lane, while other files are read. Merged once per file in file order, this leaves
+        /// exactly the state <see cref="Add"/> would have reached row by row: the best score is a
+        /// maximum and the best q-value a minimum, which no grouping changes; a peptide keeps the
+        /// decoy flag of its first occurrence, which is in the earliest file that has it; and
+        /// both collections gain each peptide when its first file is merged, the order they
+        /// would have been inserted in. <paramref name="file"/> is consumed - its entries are
+        /// adopted, not copied - and must not be used again.
+        /// </summary>
+        public void Merge(FirstPassProteinFdrAccumulator file)
+        {
+            foreach (string peptide in file._detectedPeptides)
+                _detectedPeptides.Add(peptide);
+            foreach (var kv in file._bestScores)
+            {
+                if (_bestScores.TryGetValue(kv.Key, out PeptideScore ps))
+                {
+                    if (kv.Value.Score > ps.Score)
+                        ps.Score = kv.Value.Score;
+                    if (kv.Value.BestQvalue < ps.BestQvalue)
+                        ps.BestQvalue = kv.Value.BestQvalue;
+                }
+                else
+                {
+                    _bestScores[kv.Key] = kv.Value;
+                }
+            }
+        }
+
+        /// <summary>
         /// Fold one row into the detected-peptide set (targets passing peptide-level run FDR,
         /// matching Rust pipeline.rs:4301) and the per-peptide best (max) score / best (min)
         /// run peptide q-value reduction (matching
@@ -244,6 +282,116 @@ namespace pwiz.Osprey.FDR
     }
 
     /// <summary>
+    /// The best first-pass score of every library protein on each side of the target/decoy
+    /// competition, for <see cref="ProteinFdr.ComputeLibraryPickedProteinFdr"/>.
+    ///
+    /// <para>Fed one score per entry_id from the first pass's experiment-wide records, which
+    /// hold every scored precursor, targets and decoys, before compaction. The second-pass pool
+    /// cannot supply this: compaction has dropped most decoys that lost their competition, and
+    /// a decoy protein scored from the few that survived looks weaker than it is, so the
+    /// competition reports more proteins than its q-values allow.</para>
+    ///
+    /// <para>A decoy is filed under its target's proteins through the base id the two share,
+    /// never through its own sequence or accessions. Generated decoys are named
+    /// <c>DECOY_</c> + the target sequence, but decoys supplied by the library are not, and
+    /// looking them up by that name found none: every protein then won its competition
+    /// unopposed and every q-value was 0.</para>
+    /// </summary>
+    public sealed class LibraryProteinScores
+    {
+        private const uint BASE_ID_MASK = ~LibraryEntry.DECOY_ID_BIT;
+
+        private readonly IList<LibraryEntry> _library;
+        // Best score by base id, NaN where no precursor with that base id was scored.
+        private readonly double[] _targetBest;
+        private readonly double[] _decoyBest;
+
+        public LibraryProteinScores(IList<LibraryEntry> library)
+        {
+            _library = library;
+            uint maxBaseId = 0;
+            foreach (var entry in library)
+            {
+                uint baseId = entry.Id & BASE_ID_MASK;
+                if (baseId > maxBaseId)
+                    maxBaseId = baseId;
+            }
+            _targetBest = NewUnscored(maxBaseId + 1);
+            _decoyBest = NewUnscored(maxBaseId + 1);
+        }
+
+        /// <summary>
+        /// Fold in the score of one entry_id. A decoy's entry_id is its target's base id with
+        /// <see cref="LibraryEntry.DECOY_ID_BIT"/> set. An id the library does not hold is ignored.
+        /// </summary>
+        public void Add(uint entryId, double score)
+        {
+            uint baseId = entryId & BASE_ID_MASK;
+            var best = (entryId & LibraryEntry.DECOY_ID_BIT) != 0 ? _decoyBest : _targetBest;
+            if (baseId >= best.Length)
+                return;
+            if (double.IsNaN(best[baseId]) || score > best[baseId])
+                best[baseId] = score;
+        }
+
+        /// <summary>
+        /// Best target and decoy score of each accession named by a target library entry. A side
+        /// with no scored precursor is NaN.
+        /// </summary>
+        public Dictionary<string, ProteinScorePair> ByProtein()
+        {
+            var byProtein = new Dictionary<string, ProteinScorePair>(StringComparer.Ordinal);
+            foreach (var entry in _library)
+            {
+                if (entry.IsDecoy)
+                    continue;
+                uint baseId = entry.Id & BASE_ID_MASK;
+                foreach (string accession in entry.ProteinIds)
+                {
+                    if (!byProtein.TryGetValue(accession, out var pair))
+                    {
+                        pair = new ProteinScorePair();
+                        byProtein.Add(accession, pair);
+                    }
+                    pair.Include(_targetBest[baseId], _decoyBest[baseId]);
+                }
+            }
+            return byProtein;
+        }
+
+        private static double[] NewUnscored(uint length)
+        {
+            var scores = new double[length];
+            for (int i = 0; i < scores.Length; i++)
+                scores[i] = double.NaN;
+            return scores;
+        }
+    }
+
+    /// <summary>The best target and decoy score of a protein; NaN on a side with no score.</summary>
+    public sealed class ProteinScorePair
+    {
+        public double Target { get; private set; } = double.NaN;
+        public double Decoy { get; private set; } = double.NaN;
+
+        /// <summary>Raise each side to the given score where that is higher; NaN leaves a side as it is.</summary>
+        public void Include(double target, double decoy)
+        {
+            Target = MaxScored(Target, target);
+            Decoy = MaxScored(Decoy, decoy);
+        }
+
+        private static double MaxScored(double a, double b)
+        {
+            if (double.IsNaN(a))
+                return b;
+            if (double.IsNaN(b))
+                return a;
+            return Math.Max(a, b);
+        }
+    }
+
+    /// <summary>
     /// The computed artifacts of a second-pass / run-wide protein-FDR run, returned
     /// by <see cref="ProteinFdrEngine.RunSecondPass"/> so the Tasks-layer caller can
     /// emit the Stage-7 detected-peptides and protein-FDR diagnostic dumps (and the
@@ -280,7 +428,7 @@ namespace pwiz.Osprey.FDR
     /// </summary>
     public static class ProteinFdr
     {
-        private const string DECOY_PREFIX = "DECOY_";
+        private const string DECOY_PREFIX = @"DECOY_";
 
         /// <summary>
         /// Build protein parsimony from the spectral library.
@@ -333,7 +481,7 @@ namespace pwiz.Osprey.FDR
             {
                 var sortedPeptides = new List<string>(kvp.Value);
                 sortedPeptides.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to build a canonical "|"-joined set key; equal peptide strings are byte-identical so tie order does not change the key
-                string key = string.Join("|", sortedPeptides);
+                string key = string.Join(@"|", sortedPeptides);
 
                 List<string> accessions;
                 if (!peptideSetToAccessions.TryGetValue(key, out accessions))
@@ -732,7 +880,7 @@ namespace pwiz.Osprey.FDR
                 // Stage 7 diagnostic dump).
                 var sortedAccs = new List<string>(group.Accessions);
                 sortedAccs.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to build a canonical ";"-joined sortKey; equal accession strings are byte-identical so tie order does not change the key
-                string sortKey = string.Join(";", sortedAccs);
+                string sortKey = string.Join(@";", sortedAccs);
 
                 bool hasT = targetScore.TryGetValue(group.Id, out double t);
                 bool hasD = decoyScore.TryGetValue(group.Id, out double d);
@@ -839,6 +987,176 @@ namespace pwiz.Osprey.FDR
         {
             public uint GroupId;
             public string SortKey; // sorted-accessions string for cross-impl tiebreak
+            public double Score;
+            public bool IsDecoy;
+        }
+
+        /// <summary>
+        /// Picked-protein FDR (Savitski et al. 2015) over every protein in the library, scored
+        /// from <paramref name="proteinScores"/> - the first pass's best score of each protein on
+        /// each side, decoys paired with targets by base id (see <see cref="LibraryProteinScores"/>).
+        ///
+        /// <list type="number">
+        /// <item><description><b>Units.</b> Each parsimony group, plus each library protein in no
+        /// group. A group scores the best of its accessions on each side. Every protein competes,
+        /// whether or not anything was detected from it: a competition limited to proteins with a
+        /// detected target admits only the decoys that happen to share one, and that undercounts
+        /// false proteins.</description></item>
+        /// <item><description><b>Pairwise picking.</b> Each unit yields one winner, the target on
+        /// <c>target &gt;= decoy</c> and otherwise the decoy; a unit scored on one side only wins
+        /// that side. Neither side is gated on a q-value.</description></item>
+        /// <item><description><b>Cumulative FDR</b> over the winners sorted by score descending,
+        /// ties broken by the sorted-accessions key: <c>q = min(1, decoys / targets)</c>, then a
+        /// backward sweep for monotonicity.</description></item>
+        /// <item><description><b>Output</b> as <see cref="ComputeProteinFdr"/>: target-winning
+        /// groups get a q-value and score, the rest of the units are the null only, and each
+        /// peptide takes the best q-value of its groups.</description></item>
+        /// <item><description><b>PEP.</b> A <see cref="PepEstimator"/> fitted over every winner,
+        /// target and decoy, gives each target-winning group a posterior error probability at
+        /// its score. The competition treats both sides alike, so its winners are the right
+        /// population for the fit.</description></item>
+        /// </list>
+        ///
+        /// <para>Measured with foreign-species entrapment (Arabidopsis peptides in a human
+        /// library, three runs each of Astral and Stellar HeLa): protein groups at q &lt;= 0.01
+        /// had a false discovery proportion of 0.82% and 0.72%. On Astral, scoring the units
+        /// from the second-pass pool instead, with everything else the same, gave 6.6%.</para>
+        /// </summary>
+        public static ProteinFdrResult ComputeLibraryPickedProteinFdr(
+            ProteinParsimonyResult parsimony,
+            IReadOnlyDictionary<string, ProteinScorePair> proteinScores)
+        {
+            var winners = new List<LibraryProteinWinner>();
+            var grouped = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var group in parsimony.Groups)
+            {
+                var sortedAccs = new List<string>(group.Accessions);
+                sortedAccs.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to build a canonical ";"-joined key; equal accession strings are byte-identical so tie order does not change the key
+                var pair = new ProteinScorePair();
+                foreach (string accession in group.Accessions)
+                {
+                    grouped.Add(accession);
+                    if (proteinScores.TryGetValue(accession, out var accessionPair))
+                        pair.Include(accessionPair.Target, accessionPair.Decoy);
+                }
+                AddLibraryProteinWinner(winners, group.Id, string.Join(@";", sortedAccs), pair);
+            }
+            foreach (var kvp in proteinScores)
+            {
+                if (!grouped.Contains(kvp.Key))
+                    AddLibraryProteinWinner(winners, null, kvp.Key, kvp.Value);
+            }
+
+            // Keys are unique: a parsimony group's accession list is unique to it, and an
+            // ungrouped protein is a single accession no group holds.
+            winners.Sort((a, b) => // Array.Sort OK: SortKey is unique per winner, so the comparator never returns 0
+            {
+                int cmp = b.Score.CompareTo(a.Score);
+                if (cmp != 0)
+                    return cmp;
+                return string.CompareOrdinal(a.SortKey, b.SortKey);
+            });
+
+            var rawQvalues = new double[winners.Count];
+            int cumTargets = 0;
+            int cumDecoys = 0;
+            for (int i = 0; i < winners.Count; i++)
+            {
+                if (winners[i].IsDecoy)
+                    cumDecoys++;
+                else
+                    cumTargets++;
+                rawQvalues[i] = cumTargets > 0
+                    ? Math.Min(1.0, (double)cumDecoys / cumTargets)
+                    : 1.0;
+            }
+
+            var groupQvalues = new Dictionary<uint, double>();
+            var groupScores = new Dictionary<uint, double>();
+            var monotonicQvalues = new double[winners.Count];
+            double minQ = 1.0;
+            for (int i = winners.Count - 1; i >= 0; i--)
+            {
+                if (rawQvalues[i] < minQ)
+                    minQ = rawQvalues[i];
+                monotonicQvalues[i] = minQ;
+                var w = winners[i];
+                if (!w.IsDecoy && w.GroupId.HasValue)
+                {
+                    groupQvalues[w.GroupId.Value] = minQ;
+                    groupScores[w.GroupId.Value] = w.Score;
+                }
+            }
+
+            if (FdrDiagnostics.DumpStage7Winners)
+            {
+                FdrDiagnostics.WriteStage7WinnersDump(
+                    winners.Select(w => (w.Score, w.IsDecoy)).ToList(),
+                    rawQvalues, monotonicQvalues);
+            }
+
+            var peptideQvalues = new Dictionary<string, double>();
+            foreach (var kvp in parsimony.PeptideToGroupMap)
+            {
+                double bestQ = 1.0;
+                foreach (uint gid in kvp.Value)
+                {
+                    if (groupQvalues.TryGetValue(gid, out double q) && q < bestQ)
+                        bestQ = q;
+                }
+                peptideQvalues[kvp.Key] = bestQ;
+            }
+
+            return new ProteinFdrResult
+            {
+                GroupQvalues = groupQvalues,
+                GroupScores = groupScores,
+                GroupPeps = ComputeLibraryGroupPeps(winners, groupScores),
+                PeptideQvalues = peptideQvalues
+            };
+        }
+
+        /// <summary>
+        /// The posterior error probability of each target-winning group: a
+        /// <see cref="PepEstimator"/> fitted over all the competition's winners, evaluated at the
+        /// group's score. The winners are fed to the fit in sorted-accessions order, a key unique
+        /// to each unit, because the KDE sum is order-sensitive.
+        /// </summary>
+        private static Dictionary<uint, double> ComputeLibraryGroupPeps(
+            List<LibraryProteinWinner> winners, Dictionary<uint, double> groupScores)
+        {
+            var fitOrder = new List<LibraryProteinWinner>(winners);
+            fitOrder.Sort((a, b) => string.CompareOrdinal(a.SortKey, b.SortKey)); // Array.Sort OK: SortKey is unique per winner
+            var scores = new double[fitOrder.Count];
+            var isDecoy = new bool[fitOrder.Count];
+            for (int i = 0; i < fitOrder.Count; i++)
+            {
+                scores[i] = fitOrder[i].Score;
+                isDecoy[i] = fitOrder[i].IsDecoy;
+            }
+            var estimator = PepEstimator.FitDefault(scores, isDecoy);
+
+            var groupPeps = new Dictionary<uint, double>(groupScores.Count);
+            foreach (var kvp in groupScores)
+                groupPeps[kvp.Key] = estimator.PosteriorError(kvp.Value);
+            return groupPeps;
+        }
+
+        private static void AddLibraryProteinWinner(List<LibraryProteinWinner> winners,
+            uint? groupId, string sortKey, ProteinScorePair pair)
+        {
+            bool hasT = !double.IsNaN(pair.Target);
+            bool hasD = !double.IsNaN(pair.Decoy);
+            if (hasT && (!hasD || pair.Target >= pair.Decoy))
+                winners.Add(new LibraryProteinWinner { GroupId = groupId, SortKey = sortKey, Score = pair.Target, IsDecoy = false });
+            else if (hasD)
+                winners.Add(new LibraryProteinWinner { GroupId = groupId, SortKey = sortKey, Score = pair.Decoy, IsDecoy = true });
+        }
+
+        private struct LibraryProteinWinner
+        {
+            public uint? GroupId; // null for a library protein in no parsimony group
+            public string SortKey;
             public double Score;
             public bool IsDecoy;
         }

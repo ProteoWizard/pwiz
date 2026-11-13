@@ -32,9 +32,9 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     internal sealed class RtDeviationCalc : SummaryOspreyFeatureCalculator
     {
-        public override string Name { get { return "rt_deviation"; } }
+        public override string Name { get { return @"rt_deviation"; } }
 
-        public override string DisplayName { get { return "Retention time difference (signed)"; } }
+        public override string DisplayName { get { return OspreyScoringResources.RtDeviationCalc_DisplayName_Retention_time_difference__signed_; } }
 
         // SIGNED, centered near zero: neither tail is target-like (the magnitude
         // matters, not the sign), so the expected coefficient direction is ill-defined.
@@ -51,9 +51,9 @@ namespace pwiz.Osprey.Scoring
     /// <summary>abs_rt_deviation: the absolute value of rt_deviation.</summary>
     internal sealed class AbsRtDeviationCalc : SummaryOspreyFeatureCalculator
     {
-        public override string Name { get { return "abs_rt_deviation"; } }
+        public override string Name { get { return @"abs_rt_deviation"; } }
 
-        public override string DisplayName { get { return "Retention time difference (abs)"; } }
+        public override string DisplayName { get { return OspreyScoringResources.AbsRtDeviationCalc_DisplayName_Retention_time_difference__abs_; } }
 
         public override bool IsReversedScore { get { return true; } }   // lower is better
 

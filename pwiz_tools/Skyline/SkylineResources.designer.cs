@@ -251,15 +251,6 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Unexpected argument --{0}.
-        /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to No isolation list will be exported..
         /// </summary>
         public static string CommandArgs_ParseArgsInternal_No_isolation_list_will_be_exported_ {
@@ -354,7 +345,16 @@ namespace pwiz.Skyline {
                         "sition_list_export", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected argument {0}.
+        /// </summary>
+        public static string CommandArgs_UnknownArgumentMessage_Unexpected_argument__0_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_UnknownArgumentMessage_Unexpected_argument__0_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Error: Model cutoffs ({0}) must be in decreasing order greater than zero and less than {1}..
         /// </summary>
@@ -1704,6 +1704,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Looking for the latest Osprey build.
+        /// </summary>
+        public static string OspreyInstaller_EnsureInstalled_Looking_for_the_latest_Osprey_build {
+            get {
+                return ResourceManager.GetString("OspreyInstaller_EnsureInstalled_Looking_for_the_latest_Osprey_build", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Error: An unknown error occurred trying to verify access to Panorama folder &apos;{0}&apos; on the server {1}.
         ///{2}.
         /// </summary>
@@ -1813,15 +1822,6 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error copying external tools from previous installation.
-        /// </summary>
-        public static string Program_CopyOldTools_Error_copying_external_tools_from_previous_installation {
-            get {
-                return ResourceManager.GetString("Program_CopyOldTools_Error_copying_external_tools_from_previous_installation", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Copying external tools from a previous installation.
         /// </summary>
         public static string Program_Main_Copying_external_tools_from_a_previous_installation {
@@ -1839,6 +1839,15 @@ namespace pwiz.Skyline {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to The Parquet.dll at {0} is not the version {1} requires. Reinstall {1}..
+        /// </summary>
+        public static string Program_Main_The_Parquet_dll_at__0__is_not_the_version__1__requires__Reinstall__1__ {
+            get {
+                return ResourceManager.GetString("Program_Main_The_Parquet_dll_at__0__is_not_the_version__1__requires__Reinstall__1__", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to You are attempting to run a 64-bit version of {0} on a 32-bit OS. Please install the 32-bit version..
         /// </summary>
@@ -2107,6 +2116,42 @@ namespace pwiz.Skyline {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Download.
+        /// </summary>
+        public static string SkylineWindow_EnsureOspreyInstalled_Download {
+            get {
+                return ResourceManager.GetString("SkylineWindow_EnsureOspreyInstalled_Download", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading Osprey.
+        /// </summary>
+        public static string SkylineWindow_EnsureOspreyInstalled_Downloading_Osprey {
+            get {
+                return ResourceManager.GetString("SkylineWindow_EnsureOspreyInstalled_Downloading_Osprey", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to download Osprey..
+        /// </summary>
+        public static string SkylineWindow_EnsureOspreyInstalled_Failed_to_download_Osprey_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_EnsureOspreyInstalled_Failed_to_download_Osprey_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey {0} is not installed. Skyline can download it (about {1} MB) to its Tools folder..
+        /// </summary>
+        public static string SkylineWindow_EnsureOspreyInstalled_Osprey__0__is_not_installed__Skyline_can_download_it__about__1__MB__to_its_Tools_folder_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_EnsureOspreyInstalled_Osprey__0__is_not_installed__Skyline_can_download_it__about__1__MB__to_its_Tools_folder_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Failure attempting to save the window layout file {0}..
         /// </summary>
@@ -3692,23 +3737,14 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Upgrading to {0} (downloading {1} of {2}).
+        ///   Looks up a localized string similar to The update information at {0} could not be read..
         /// </summary>
-        public static string UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__ {
+        public static string UpdateChecker_DownloadPublishedVersion_The_update_information_at__0__could_not_be_read_ {
             get {
-                return ResourceManager.GetString("UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__", resourceCulture);
+                return ResourceManager.GetString("UpdateChecker_DownloadPublishedVersion_The_update_information_at__0__could_not_be_read_", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Upgrading {0}.
-        /// </summary>
-        public static string UpgradeManager_updateCheck_Complete_Upgrading__0_ {
-            get {
-                return ResourceManager.GetString("UpgradeManager_updateCheck_Complete_Upgrading__0_", resourceCulture);
-            }
-        }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1} which requires a comma-separated list of annotation targets {2}..
         /// </summary>

@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The contracts between Osprey and CarafeSharp: the training export Osprey writes and
+       CarafeSharp trains on, as one record type, one schema and one Parquet writer and reader.
+       Referenced by both tools, so a renamed column or a format bump changes both or fails the
+       build. It lives in the CarafeSharp tree because the dependency runs one way: Osprey links
+       CarafeSharp's assemblies, and CarafeSharp.exe references nothing in Osprey. It depends only
+       on CommonUtil (the atomic file writer) and Parquet.Net; no search code, no TorchSharp. -->
+  <PropertyGroup>
+    <RootNamespace>pwiz.CarafeSharp.Contracts</RootNamespace>
+    <AssemblyName>CarafeSharp.Contracts</AssemblyName>
+    <!-- Parquet.Net, as pwiz's patched build: see Shared\Lib\Parquet\ParquetNet.targets -->
+    <ReferenceParquetNet>true</ReferenceParquetNet>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CarafeSharp.Test" />
+    <InternalsVisibleTo Include="Osprey.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- User-facing text. The Designer is checked in; VS regenerates it when the .resx is saved. -->
+    <Compile Update="ContractsResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ContractsResources.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="ContractsResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>ContractsResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

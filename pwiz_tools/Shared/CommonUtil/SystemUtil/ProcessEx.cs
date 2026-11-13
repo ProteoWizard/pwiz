@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -27,6 +28,21 @@ namespace pwiz.Common.SystemUtil
 {
     public static class ProcessEx 
     {
+        /// <summary>
+        /// Hands a URL or a document to the shell, which opens it in whatever the user has
+        /// registered for it - a browser, a PDF reader. Use this rather than
+        /// <see cref="System.Diagnostics.Process.Start(string)"/>, whose UseShellExecute
+        /// default is true on .NET Framework but FALSE on .NET Core and later. With it
+        /// false the runtime tries to CreateProcess the target itself, so a URL raises
+        /// Win32Exception "The system cannot find the file specified" and a document
+        /// raises 193 "not a valid Win32 application". Callers keep their own error
+        /// handling: exceptions propagate exactly as they did before.
+        /// </summary>
+        public static void OpenInShell(string urlOrPath)
+        {
+            Process.Start(new ProcessStartInfo(urlOrPath) { UseShellExecute = true });
+        }
+
         /// <summary>
         /// Returns true iff the process is running under Wine (the "wine_get_version" function is exported by ntdll.dll)
         /// </summary>

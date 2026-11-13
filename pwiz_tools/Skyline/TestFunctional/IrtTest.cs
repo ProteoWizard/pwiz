@@ -44,8 +44,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class IrtTest : AbstractFunctionalTestEx
     {
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         public void IrtFunctionalTest()
         {
             TestFilesZip = @"TestFunctional\IrtTest.zip";

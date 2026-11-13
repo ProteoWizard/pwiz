@@ -34,9 +34,10 @@ using ZedGraph;
 
 using System.Diagnostics;
 using System.Linq;
-using SpyTools;
+// SpyTools (TraceWinListener.dll) was the cpp Skyline-debug helper; not ported.
+using Pwiz.Data.MsData.Processing;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
 	public partial class GraphForm : DockableForm, IDataView
 	{

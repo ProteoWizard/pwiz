@@ -31,8 +31,9 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
-using pwiz.CLI.msdata;
-using pwiz.Common.Collections;
+// pwiz.CLI.msdata, pwiz.Common.Collections types (MSData, MSDataFile, ReaderList, ReaderConfig,
+// Map<,>, ...) are provided by Compat.cs in this namespace — no using needed.
+using Pwiz.Data.MsData;
 using pwiz.CommonMsData;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
@@ -42,6 +43,8 @@ namespace MSConvertGUI
     public partial class MainForm : BaseForm
     {
         IList<string> cmdline_args;
+        private string _loadedPreset; // the preset whose settings the controls currently hold
+        private bool _revertingPresetSelection;
         string SetDefaultsDataType = ""; // watch last-added filetype, offer to set defaults for that type
         string AboutButtonHelpText = "Version: " + Application.ProductVersion + "\r\n\r\n" +
             "Each control has a \"tooltip\": let your cursor rest atop a control for a moment to see a help message for that control.\r\n\r\n" +
@@ -91,24 +94,25 @@ namespace MSConvertGUI
             if (presetName == String.Empty)
                 presetName = "Generic";
             presetName += " Defaults";
+            const string genericDefaults = "Generic Defaults";
 
-            try
+            if (presetComboBox.Items.Contains(presetName))
             {
                 SelectPreset(presetName);
+                // Done unless the preset was refused and Generic Defaults is still untried.
+                if (_loadedPreset == presetName || presetName == genericDefaults)
+                    return;
             }
-            catch (FileNotFoundException)
+
+            if (presetComboBox.Items.Contains(genericDefaults))
             {
-                try
-                {
-                    SelectPreset("Generic Defaults");
-                }
-                catch
-                {
-                    // generic defaults not found, so create it
-                    setCfgFromGUI(MakePresetFilename("Generic Defaults"));
-                    SelectPreset("Generic Defaults");
-                }
+                SelectPreset(genericDefaults);
+                return;
             }
+
+            // generic defaults not found, so create it
+            setCfgFromGUI(MakePresetFilename(genericDefaults));
+            SelectPreset(genericDefaults);
         }
 
         public MainForm(IList<string> args)
@@ -133,6 +137,11 @@ namespace MSConvertGUI
                 FileBox.Tag = msDataFileUri;
                 FileBox.Text = msDataFileUri.GetFileName();
             }
+            else if (item is CredentialUrl)
+            {
+                FileBox.Tag = item;
+                FileBox.Text = text;
+            }
             else if (text.Count(o => "?*".Contains(o)) > 0)
             {
                 string directory = Path.GetDirectoryName(text);
@@ -147,8 +156,9 @@ namespace MSConvertGUI
             }
             else if (IsNetworkSource(text))
             {
-                FileBox.Tag = text;
-                FileBox.Text = text;
+                // NB: set Tag first because setting Text triggers FileBox_TextChanged
+                FileBox.Tag = (object) CredentialUrl.TryCreate(text) ?? text;
+                FileBox.Text = FileBox.Tag.ToString();
             }
             else
             {
@@ -274,6 +284,8 @@ namespace MSConvertGUI
                 return DataSourceUtil.TYPE_WATERS_RAW; // remote sources are Waters data
             if (dataSource is MsDataFilePath msDataFilePath)
                 return ReaderList.FullReaderList.identify(msDataFilePath.FilePath);
+            if (dataSource is CredentialUrl credentialUrl)
+                return ReaderList.FullReaderList.identify(credentialUrl.Url);
             if (dataSource.ToString().StartsWith(WatersConnectUrl.UrlPrefix, StringComparison.InvariantCultureIgnoreCase))
                 return DataSourceUtil.TYPE_WATERS_RAW; // a typed waters_connect path, resolved at conversion time
             return ReaderList.FullReaderList.identify(dataSource.ToString());
@@ -297,10 +309,16 @@ namespace MSConvertGUI
                    !String.IsNullOrEmpty(IdentifySource(dataSource));
         }
 
+        /// <summary>The path the file box stands for: a browsed file is shown by name only.</summary>
+        private string FileBoxPath => FileBox.Tag is MsDataFilePath msDataFilePath ? msDataFilePath.FilePath : FileBox.Text;
+
         private void FileBox_TextChanged(object sender, EventArgs e)
         {
             string fileBoxText = FileBox.Text.Trim();
-            if (FileBox.Tag == null || FileBox.Tag is string) FileBox.Tag = fileBoxText;
+            // a browsed or listed source stays the Tag only while the box still shows it; once the
+            // text is cleared or edited, the text is the source
+            string shownText = FileBox.Tag is MsDataFileUri msDataFileUri ? msDataFileUri.GetFileName() : FileBox.Tag?.ToString();
+            if (FileBox.Tag == null || FileBox.Tag is string || fileBoxText != shownText) FileBox.Tag = fileBoxText;
             AddFileButton.Enabled = IsValidSource(FileBox.Tag);
         }
 
@@ -311,7 +329,7 @@ namespace MSConvertGUI
                 if (String.IsNullOrEmpty(OutputBox.Text))
                 {
                     if (!IsNetworkSource(FileBox.Tag))
-                        OutputBox.Text = Path.GetDirectoryName(FileBox.Text);
+                        OutputBox.Text = Path.GetDirectoryName(FileBoxPath);
                     else
                         OutputBox.Text = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
                 }
@@ -321,7 +339,8 @@ namespace MSConvertGUI
                 presetSetDefaultButton.Text = "Save as defaults for " + SetDefaultsDataType + " data";
                 //setToolTip(presetSetDefaultButton, "Saves the current settings and uses them as the defaults next time you open " + SetDefaultsDataType + " data with MSConvertGUI.");
                 // and add to the list
-                FileListBox.Items.Add(FileBox.Tag);
+                // a typed URL with credentials is listed without them
+                FileListBox.Items.Add(FileBox.Tag is string typed ? (object) CredentialUrl.TryCreate(typed) ?? typed : FileBox.Tag);
                 FileBox.Clear();
                 RemoveFileButton.Enabled = true;
             }
@@ -352,7 +371,7 @@ namespace MSConvertGUI
         {
             using (var browseToFileDialog = new MSConvertOpenDataSourceDialog())
             {
-                string initialDir = String.IsNullOrEmpty(FileBox.Text) ? lastFileboxText : FileBox.Text;
+                string initialDir = String.IsNullOrEmpty(FileBox.Text) ? lastFileboxText : FileBoxPath;
                 if (!String.IsNullOrEmpty(initialDir) && (File.Exists(initialDir) || Directory.Exists(initialDir)))
                     browseToFileDialog.InitialDirectory = new MsDataFilePath(Path.GetDirectoryName(initialDir) ?? initialDir);
 
@@ -448,6 +467,11 @@ namespace MSConvertGUI
 
                     if (DemuxRemoveNonOverlappingEdgesCheckbox.Checked)
                         demuxArgs += " removeNonOverlappingEdges=true";
+
+                    // The filter validates it, as it does the mass error.
+                    string solveThreads = DemuxSolveThreadsValue.Text.Trim();
+                    if (!String.IsNullOrEmpty(solveThreads) && solveThreads != "1")
+                        demuxArgs += String.Format(" solveThreads={0}", solveThreads);
 
                     FilterDGV.Rows.Add(new[]
                         {
@@ -614,7 +638,7 @@ namespace MSConvertGUI
             var commandLine = new StringBuilder();
             //Get config settings
 
-            if (!OutputExtensionBox.Text.IsNullOrEmpty() && OutputFormatBox.Text != OutputExtensionBox.Text)
+            if (!string.IsNullOrEmpty(OutputExtensionBox.Text) && OutputFormatBox.Text != OutputExtensionBox.Text)
                 commandLine.AppendFormat("--ext|{0}|", OutputExtensionBox.Text);
             ValidateNumpress(); // make sure numpress settings are reasonable
             switch (OutputFormatBox.Text)
@@ -625,14 +649,8 @@ namespace MSConvertGUI
                 case "mzMLb":
                     commandLine.Append("--mzMLb|");
                     break;
-                case "mz5":
-                    commandLine.Append("--mz5|");
-                    break;
                 case "mgf":
                     commandLine.Append("--mgf|");
-                    break;
-                case "text":
-                    commandLine.Append("--text|");
                     break;
                 case "ms1":
                     commandLine.Append("--ms1|");
@@ -727,9 +745,7 @@ namespace MSConvertGUI
                         break;
                     case "--mzXML":
                     case "--mzMLb":
-                    case "--mz5":
                     case "--mgf":
-                    case "--text":
                     case "--ms1":
                     case "--cms1":
                     case "--ms2":
@@ -800,6 +816,12 @@ namespace MSConvertGUI
         private void presetSaveButton_Click(object sender, EventArgs e)
         {
             string presetName = presetComboBox.SelectedItem as string;
+            if (presetName == null)
+            {
+                // No preset is loaded (one was refused), so ask for a name rather than guess one.
+                presetSaveAsButton_Click(sender, e);
+                return;
+            }
             setCfgFromGUI(MakePresetFilename(presetName));
             SelectPreset(presetName);
         }
@@ -840,15 +862,25 @@ namespace MSConvertGUI
             LoadPresets();
         }
 
-        private void SetGUIfromCfg(string cfgFileName) // populate buttons etc from config file
+        private bool SetGUIfromCfg(string cfgFileName) // populate buttons etc from config file
         {
             if (!File.Exists(cfgFileName))
             {
                 MessageBox.Show("Can't find config file \"" + cfgFileName + "\"");
-                return;
+                return false;
             }
             string cmdline = File.ReadAllText(cfgFileName);
+            foreach (var token in cmdline.Split('|'))
+            {
+                if (UnsupportedWriteFormats.TryGetReason(token, out var reason))
+                {
+                    MessageBox.Show("Preset \"" + Path.GetFileNameWithoutExtension(cfgFileName) + "\" uses " + token + ": " + reason + Environment.NewLine + Environment.NewLine +
+                                    "The preset was not loaded. To replace it, set the options you want and use Save As with the same name.");
+                    return false;
+                }
+            }
             SetControlsFromCommandline(cmdline);
+            return true;
         }
 
         private void StartButton_Click(object sender, EventArgs e)
@@ -867,14 +899,14 @@ namespace MSConvertGUI
 
                 filesToProcess.AddRange(from object item in FileListBox.Items select item);
             }
-            else if (String.IsNullOrEmpty(FileBox.Text) || !File.Exists(FileBox.Text))
+            else if (String.IsNullOrEmpty(FileBox.Text) || !File.Exists(FileBoxPath))
             {
                 MessageBox.Show("No files to process");
                 return;
             }
             else
             {
-                filesToProcess.Add(String.Format("--filelist|\"{0}\"", FileBox.Text));
+                filesToProcess.Add(String.Format("--filelist|\"{0}\"", FileBoxPath));
             }
 
             string outputFolder = String.IsNullOrEmpty(OutputBox.Text) ? Application.StartupPath
@@ -994,9 +1026,9 @@ namespace MSConvertGUI
             setToolTip(this.AddFileButton, "Adds the current file to the conversion list. You can drag the rows to reorder them.");
             setToolTip(this.FilterDGV, "Use the controls above to add conversion filters. The order can be significant. You can drag the rows to reorder them.");
             setToolTip(this.MakeTPPCompatibleOutputButton, "Check this to use TPP-compatible output settings, e.g. an MGF TITLE format like <basename>.<scan>.<scan>.<charge>.");
-            MSDataFile.WriteConfig mwc = new MSDataFile.WriteConfig(); // for obtaining default numpress tolerance
-            setToolTip(this.NumpressLinearBox, String.Format("Check this to use numpress linear prediction lossy compression for binary mz and rt data in mzML output (relative accuracy loss will not exceed {0}).  Note that not all mzML readers recognize this format.", mwc.numpressLinearErrorTolerance));
-            setToolTip(this.NumpressSlofBox, String.Format("Check this to use numpress short logged float lossy compression for binary intensities in mzML output (relative accuracy loss will not exceed  {0}).  Note that not all mzML readers recognize this format.", mwc.numpressSlofErrorTolerance));
+            var encoderDefaults = new Pwiz.Data.MsData.Encoding.BinaryEncoderConfig(); // for default numpress tolerances
+            setToolTip(this.NumpressLinearBox, String.Format("Check this to use numpress linear prediction lossy compression for binary mz and rt data in mzML output (relative accuracy loss will not exceed {0}).  Note that not all mzML readers recognize this format.", encoderDefaults.NumpressLinearErrorTolerance));
+            setToolTip(this.NumpressSlofBox, String.Format("Check this to use numpress short logged float lossy compression for binary intensities in mzML output (relative accuracy loss will not exceed  {0}).  Note that not all mzML readers recognize this format.", encoderDefaults.NumpressSlofErrorTolerance));
             setToolTip(this.NumpressPicBox, "Check this to use numpress positive integer lossy compression for binary intensities in mzML output (absolute accuracy loss will not exceed 0.5).  Note that not all mzML readers recognize this format.");
             setToolTip(this.CombineIonMobilitySpectraBox, "Check this to collapse the ion mobility dimension by combining mobility spectra together. When combining Bruker TDF data in the mzML format, the mobility of each scan is preserved in a new mobility binary data array. For PASEF data, the MS2s are combined on a per-precursor basis rather than per-frame.");
             setToolTip(this.SimSpectraBox, "Check this to request that SIM mode data be represented as spectra instead of chromatograms. Not all vendor formats support this mode.");
@@ -1076,6 +1108,9 @@ namespace MSConvertGUI
             setToolTip(this.DemuxMassErrorValue, massErrorHelp);
             setToolTip(this.DemuxMassErrorTypeBox, massErrorHelp);
             setToolTip(this.DemuxMassErrorLabel, massErrorHelp);
+            string solveThreadsHelp = "Threads solving each file's demultiplexing. Multiplies with the number of files converted in parallel.";
+            setToolTip(this.DemuxSolveThreadsValue, solveThreadsHelp);
+            setToolTip(this.DemuxSolveThreadsLabel, solveThreadsHelp);
             setToolTip(this.DemuxTypeBox, "Specify the type of multiplexing that was used to acquire the data.");
 
             string outputHelp = "Choose the directory for writing the converted file(s).";
@@ -1174,7 +1209,26 @@ namespace MSConvertGUI
 
         private void presetComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            SetGUIfromCfg(Path.Combine(PresetFolder, (presetComboBox.SelectedItem as string) + ".cmdline"));
+            var presetName = presetComboBox.SelectedItem as string;
+            if (_revertingPresetSelection || presetName == null)
+                return;
+            if (SetGUIfromCfg(Path.Combine(PresetFolder, presetName + ".cmdline")))
+            {
+                _loadedPreset = presetName;
+                return;
+            }
+
+            // The preset was rejected, so show the preset the controls still hold. Otherwise
+            // Save would write those settings into the rejected preset.
+            _revertingPresetSelection = true;
+            try
+            {
+                presetComboBox.SelectedIndex = _loadedPreset == null ? -1 : presetComboBox.Items.IndexOf(_loadedPreset);
+            }
+            finally
+            {
+                _revertingPresetSelection = false;
+            }
         }
 
         private void presetSetDefaultButton_Click(object sender, EventArgs e)

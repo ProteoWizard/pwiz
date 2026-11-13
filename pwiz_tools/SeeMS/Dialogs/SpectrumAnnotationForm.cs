@@ -24,10 +24,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
     public partial class SpectrumAnnotationForm : DigitalRune.Windows.Docking.DockableForm
     {
@@ -102,11 +103,13 @@ namespace seems
 
         private void removeAnnotationButton_Click( object sender, EventArgs e )
         {
-            int start = annotationsListView.SelectedIndices[0];
-            int count = annotationsListView.SelectedIndices.Count;
-            for (; start < count; ++start)
-                currentSpectrum.AnnotationList.RemoveAt(start);
-            annotationsListView.VirtualListSize -= count;
+            var selectedIndices = annotationsListView.SelectedIndices.Cast<int>().OrderByDescending(i => i).ToList();
+            foreach (int index in selectedIndices)
+                currentSpectrum.AnnotationList.RemoveAt(index);
+            clearing = true;
+            annotationsListView.SelectedIndices.Clear();
+            clearing = false;
+            annotationsListView.VirtualListSize -= selectedIndices.Count;
             annotationsListView_SelectedIndexChanged( sender, e );
             OnAnnotationChanged( sender, e );
         }

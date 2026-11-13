@@ -21,20 +21,24 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
 {
     /// <summary>
-    /// Unit tests for <see cref="EntrapmentPairing"/> -- the reconciliation of the
-    /// searched library against the entrapment pairing manifest. Verifies that the
-    /// ONLY entrapment peptides dropped are the understood N-terminal-Met-clip
-    /// artifacts (a clipped entrapment whose manifest-paired target cannot be
-    /// clipped, so no matching clipped target can exist), that legitimate matched
-    /// clip pairs are kept and paired, covered peptides keep their manifest pairing,
-    /// and anything unexplained is surfaced rather than silently dropped.
+    /// Unit tests for <see cref="PairingIds.Assign"/> and <see cref="EntrapmentPairing"/> - the
+    /// reconciliation of the searched library against the entrapment pairing manifest.
+    /// Verifies that the ONLY entrapment peptides dropped are the understood
+    /// N-terminal-Met-clip artifacts (a clipped entrapment whose manifest-paired target
+    /// cannot be clipped, so no matching clipped target can exist), that legitimate matched
+    /// clip pairs are kept and paired, covered peptides keep their manifest pairing, and
+    /// anything unexplained is surfaced rather than silently dropped. Every entry gets an id;
+    /// an orphan is one whose group holds no original target.
     /// </summary>
     [TestClass]
     public class EntrapmentPairingTest
@@ -75,7 +79,9 @@ namespace pwiz.Osprey.Test
                 Add(lib, ref id, "ENTD4K",  target: false);  //   its manifest partner (idx 4 is a valid covered pair)
                 Add(lib, ref id, "WEIRDK",  target: false);  // UNEXPLAINED: M+WEIRDK not in the manifest
 
-                var pairing = EntrapmentPairing.Build(lib, manifestPath);
+                // The ids are assigned at load, from the manifest; the pairing then reads the entries.
+                var summary = PairingIds.Assign(lib.Values.ToList(), DecoyPairingManifest.FromTsv(manifestPath));
+                var pairing = EntrapmentPairing.Build(lib);
 
                 // Only orphans and the unexplained entrapment are excluded.
                 Assert.IsTrue(pairing.ExcludedEntrapment.Contains("ENTBK"), "orphan must be dropped");
@@ -86,9 +92,9 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(3, pairing.ExcludedEntrapment.Count);
 
                 // The two orphans are Met-clip artifacts; WEIRDK is surfaced, not silently dropped.
-                Assert.AreEqual(2, pairing.MetClipDroppedCount);
-                Assert.AreEqual(1, pairing.UnexplainedEntrapment.Count);
-                Assert.AreEqual("WEIRDK", pairing.UnexplainedEntrapment[0]);
+                Assert.AreEqual(2, summary.MetClipDropped);
+                Assert.AreEqual(1, summary.Unexplained.Count);
+                Assert.AreEqual("WEIRDK", summary.Unexplained[0]);
                 // The covered collision pair keeps its own manifest index.
                 Assert.AreEqual(4u, pairing.PairIndexBySeq["TGTDK"]);
                 Assert.AreEqual(4u, pairing.PairIndexBySeq["ENTD4K"]);
@@ -104,19 +110,114 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(pairing.PairIndexBySeq["ENTCK"], pairing.PairIndexBySeq["TGTCK"]);
                 Assert.IsTrue(pairing.PairIndexBySeq["ENTCK"] > 2u, "clip index must sit above the manifest range");
 
-                // Dropped peptides get no pair index.
+                // Excluded peptides are not in the pairing, though each has an id of its own.
                 Assert.IsFalse(pairing.PairIndexBySeq.ContainsKey("ENTBK"));
                 Assert.IsFalse(pairing.PairIndexBySeq.ContainsKey("WEIRDK"));
+                Assert.AreEqual(3, lib.Values.Where(e => pairing.ExcludedEntrapment.Contains(e.Sequence)).Select(e => e.PairingId).Distinct().Count());
 
-                // No manifest -> nothing is classified as a Met-clip artifact (no reference to reconcile against).
-                var noManifest = EntrapmentPairing.Build(lib, null);
+                // No manifest and no entrapment (the loader refuses an entrapment library without
+                // its pairing): every peptide its own group, nothing excluded.
+                var plain = lib.Where(kv => !EntrapmentLibraryClassifier.IsEntrapment(kv.Value.ProteinIds))
+                    .ToDictionary(kv => kv.Key, kv => kv.Value);
+                var noManifestSummary = PairingIds.Assign(plain.Values.ToList(), null);
+                var noManifest = EntrapmentPairing.Build(plain);
                 Assert.AreEqual(0, noManifest.ExcludedEntrapment.Count);
-                Assert.AreEqual(0, noManifest.MetClipDroppedCount);
+                Assert.AreEqual(0, noManifestSummary.MetClipDropped);
+                Assert.AreEqual(plain.Count, noManifest.PairIndexBySeq.Count);
+                Assert.AreEqual(plain.Count, noManifest.PairIndexBySeq.Values.Distinct().Count());
             }
             finally
             {
                 File.Delete(manifestPath);
             }
+
+            TestEntrapmentOnTargetProtein();
+        }
+
+        /// <summary>
+        /// Entrapment placed on a real target protein, the protein-aware audit's design: its
+        /// manifest row is p_target but its accessions are the target's own, clean ones, so
+        /// nothing but the manifest says it is entrapment. The manifest's kind must set
+        /// <see cref="LibraryEntry.IsEntrapment"/>, and the classifier must read the entry, not
+        /// the accessions: entrapment, though not on an entrapment protein. Its p_decoy likewise.
+        /// A marked entrapment is both; a target and its decoy are neither.
+        /// </summary>
+        private static void TestEntrapmentOnTargetProtein()
+        {
+            const string cleanProtein = @"sp|P1|G1";
+            const string markedProtein = @"sp|P2_p_target|G2_p_target";
+            const string decoyPrefix = @"decoy_";
+            string manifestPath = WriteTempManifest(new (string seq, string type, string proteins, int idx)[]
+            {
+                ("TGTAK", "target",   cleanProtein,               0),
+                ("ENTAK", "p_target", cleanProtein,               0),   // on its target's protein: no marker
+                ("KATGT", "decoy",    decoyPrefix + cleanProtein, 0),
+                ("KATNE", "p_decoy",  decoyPrefix + cleanProtein, 0),
+                ("TGTBK", "target",   @"sp|P2|G2",                1),
+                ("ENTBK", "p_target", markedProtein,              1),   // the standard design: marked
+                ("KBTNE", "p_decoy",  decoyPrefix + markedProtein, 1),
+            });
+            try
+            {
+                var lib = new List<LibraryEntry>
+                {
+                    Entry(1, "TGTAK", false, cleanProtein),
+                    Entry(2, "ENTAK", false, cleanProtein),
+                    Entry(3, "KATGT", true, decoyPrefix + cleanProtein),
+                    Entry(4, "KATNE", true, decoyPrefix + cleanProtein),
+                    Entry(5, "TGTBK", false, @"sp|P2|G2"),
+                    Entry(6, "ENTBK", false, markedProtein),
+                    Entry(7, "KBTNE", true, decoyPrefix + markedProtein),
+                };
+                // Before the manifest, the accessions are all there is: the on-target rows read
+                // as a plain target and decoy, the marked ones as entrapment.
+                Assert.AreEqual(PeptideKind.Target, EntrapmentLibraryClassifier.Classify(lib[1]));
+                Assert.AreEqual(PeptideKind.Decoy, EntrapmentLibraryClassifier.Classify(lib[3]));
+                Assert.AreEqual(PeptideKind.PTarget, EntrapmentLibraryClassifier.Classify(lib[5]));
+                Assert.IsTrue(lib.All(e => !e.IsEntrapment));
+
+                var stats = DecoyPairingManifest.FromTsv(manifestPath).ApplyToLibrary(lib, new PairingState());
+                Assert.AreEqual(3, stats.NPaired, @"every decoy pairs with its target or entrapment");
+
+                AssertClass(lib[0], PeptideKind.Target, flagged: false, onEntrapmentProtein: false);
+                AssertClass(lib[1], PeptideKind.PTarget, flagged: true, onEntrapmentProtein: false);
+                AssertClass(lib[2], PeptideKind.Decoy, flagged: false, onEntrapmentProtein: false);
+                AssertClass(lib[3], PeptideKind.PDecoy, flagged: true, onEntrapmentProtein: false);
+                AssertClass(lib[4], PeptideKind.Target, flagged: false, onEntrapmentProtein: false);
+                AssertClass(lib[5], PeptideKind.PTarget, flagged: true, onEntrapmentProtein: true);
+                AssertClass(lib[6], PeptideKind.PDecoy, flagged: true, onEntrapmentProtein: true);
+                // The on-target entrapment keeps the clean accession the manifest gave it.
+                CollectionAssert.AreEqual(new[] { cleanProtein }, lib[1].ProteinIds.ToArray());
+                Assert.IsFalse(EntrapmentLibraryClassifier.IsEntrapment(lib[1].ProteinIds));
+
+                // The flag alone, with no manifest: the accession overloads still read the marker only.
+                var flaggedOnly = Entry(8, "ENTCK", false, cleanProtein);
+                flaggedOnly.IsEntrapment = true;
+                AssertClass(flaggedOnly, PeptideKind.PTarget, flagged: true, onEntrapmentProtein: false);
+                Assert.AreEqual(PeptideKind.Target, EntrapmentLibraryClassifier.Classify(flaggedOnly.ProteinIds));
+            }
+            finally
+            {
+                File.Delete(manifestPath);
+            }
+        }
+
+        private static void AssertClass(LibraryEntry entry, PeptideKind kind, bool flagged, bool onEntrapmentProtein)
+        {
+            Assert.AreEqual(flagged, entry.IsEntrapment, entry.Sequence);
+            Assert.AreEqual(PeptideKinds.IsEntrapment(kind), EntrapmentLibraryClassifier.IsEntrapment(entry), entry.Sequence);
+            Assert.AreEqual(onEntrapmentProtein, EntrapmentLibraryClassifier.IsOnEntrapmentProtein(entry), entry.Sequence);
+            Assert.AreEqual(kind, EntrapmentLibraryClassifier.Classify(entry), entry.Sequence);
+        }
+
+        private static LibraryEntry Entry(uint id, string seq, bool decoy, string protein)
+        {
+            var e = new LibraryEntry(id, seq, seq, 2, 500.0, 10.0);
+            e.ProteinIds = new List<string> { protein };
+            e.IsDecoy = decoy;
+            if (decoy)
+                e.Id |= LibraryEntry.DECOY_ID_BIT;
+            return e;
         }
 
         private static void Add(Dictionary<uint, LibraryEntry> lib, ref uint id, string seq, bool target)
@@ -131,11 +232,20 @@ namespace pwiz.Osprey.Test
 
         private static string WriteTempManifest((string seq, string type, int idx)[] rows)
         {
+            return WriteTempManifest(rows.Select(r => (r.seq, r.type, @"sp|X|X", r.idx)).ToArray());
+        }
+
+        private static string WriteTempManifest((string seq, string type, string proteins, int idx)[] rows)
+        {
             string path = Path.GetTempFileName();
             var sb = new StringBuilder();
             sb.Append("sequence\tdecoy\tproteins\tpeptide_type\tpeptide_pair_index\n");
             foreach (var r in rows)
-                sb.Append(r.seq).Append("\tNo\tsp|X|X\t").Append(r.type).Append('\t').Append(r.idx).Append('\n');
+            {
+                string decoy = r.type.EndsWith("decoy") ? "Yes" : "No";
+                sb.Append(r.seq).Append('\t').Append(decoy).Append('\t').Append(r.proteins).Append('\t')
+                    .Append(r.type).Append('\t').Append(r.idx).Append('\n');
+            }
             File.WriteAllText(path, sb.ToString());
             return path;
         }

@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
@@ -38,6 +39,10 @@ namespace pwiz.Osprey.FDR
     /// the numerators). All means are over the STANDARDIZED feature space the SVM
     /// scores in (the same space the average weights live in), so the product
     /// w_j*deltaMu_j is space-invariant.
+    ///
+    /// A gradient-boosted-tree model has no weights, so for it only the weight-free half is
+    /// filled - each feature's target-decoy mean gap and class histograms - and the rest is
+    /// NaN (<see cref="IsTreeEnsemble"/>).
     ///
     /// This is the pure calculation: a read of the averaged weights and the
     /// accumulated target/decoy feature sums. It performs no I/O and computes no
@@ -63,6 +68,9 @@ namespace pwiz.Osprey.FDR
             /// <c>feature_{index}</c>. Never null.
             /// </summary>
             public string Label { get; }
+
+            /// <summary>Invariant-culture label, for the model-diagnostics report.</summary>
+            public string ReportLabel { get; }
 
             /// <summary>Standardized averaged weight w_j (the trained coefficient).</summary>
             public double Coefficient { get; }
@@ -92,6 +100,40 @@ namespace pwiz.Osprey.FDR
             /// </summary>
             public bool IsUnexpectedDirection { get; }
 
+            /// <summary>
+            /// Sample standard deviation of the standardized weight across the cross-validation
+            /// folds (whose mean is <see cref="Coefficient"/>), or NaN with fewer than two folds or
+            /// no weights. With <see cref="FoldWeightMin"/> / <see cref="FoldWeightMax"/>, whether
+            /// the trained composition is reproducible from fold to fold.
+            /// </summary>
+            public double FoldWeightSd { get; private set; } = double.NaN;
+
+            /// <summary>Smallest per-fold standardized weight, or NaN with no weights.</summary>
+            public double FoldWeightMin { get; private set; } = double.NaN;
+
+            /// <summary>Largest per-fold standardized weight, or NaN with no weights.</summary>
+            public double FoldWeightMax { get; private set; } = double.NaN;
+
+            /// <summary>
+            /// Whether every fold's weight has the same sign (zero counts as either). A weight that
+            /// flips sign between folds is the collinearity tell: a correlated partner is carrying
+            /// the signal and the two trade weight.
+            /// </summary>
+            public bool IsFoldSignConsistent { get; private set; }
+
+            /// <summary>Set the fold-to-fold spread of this feature's weight.</summary>
+            internal void SetFoldWeights(IReadOnlyList<double[]> foldWeights)
+            {
+                if (foldWeights == null || foldWeights.Count == 0)
+                    return;
+                var w = foldWeights.Select(f => f[Index]).ToArray();
+                double mean = w.Average();
+                FoldWeightSd = w.Length > 1 ? Math.Sqrt(w.Sum(v => (v - mean) * (v - mean)) / (w.Length - 1)) : double.NaN;
+                FoldWeightMin = w.Min();
+                FoldWeightMax = w.Max();
+                IsFoldSignConsistent = FoldWeightMin >= 0 || FoldWeightMax <= 0;
+            }
+
             /// <param name="index">Zero-based feature index.</param>
             /// <param name="name">Internal feature name, or null.</param>
             /// <param name="label">Display label (already resolved through the fallback).</param>
@@ -101,13 +143,15 @@ namespace pwiz.Osprey.FDR
             /// <param name="percent">Percent of composite, or NaN when degenerate.</param>
             /// <param name="isReversedScore">Whether the feature is a declared reversed score.</param>
             /// <param name="isUnexpectedDirection">IsReversedScore XOR (coefficient &lt; 0).</param>
+            /// <param name="reportLabel">Invariant-culture label for the model-diagnostics report, or null for <paramref name="label"/>.</param>
             public FeatureContribution(int index, string name, string label,
                 double coefficient, double targetDecoyMeanGap, double weighted,
-                double percent, bool isReversedScore, bool isUnexpectedDirection)
+                double percent, bool isReversedScore, bool isUnexpectedDirection, string reportLabel = null)
             {
                 Index = index;
                 Name = name;
                 Label = label;
+                ReportLabel = reportLabel ?? label;
                 Coefficient = coefficient;
                 TargetDecoyMeanGap = targetDecoyMeanGap;
                 Weighted = weighted;
@@ -123,7 +167,8 @@ namespace pwiz.Osprey.FDR
         /// and builds the <see cref="FeatureContributions"/>. Owns BOTH the summing
         /// and the fold-averaging so the caller no longer hand-rolls either; the
         /// only public path to a <see cref="FeatureContributions"/> from a trained
-        /// model.
+        /// model (<see cref="Build"/> for the linear SVM, <see cref="BuildForTreeEnsemble"/>
+        /// for gradient-boosted trees, which have no weights to average).
         /// </summary>
         public sealed class Accumulator
         {
@@ -169,26 +214,101 @@ namespace pwiz.Osprey.FDR
             /// </summary>
             public void Add(double[] standardizedFeatures, bool isDecoy)
             {
+                AddSums(standardizedFeatures, 0, isDecoy);
+                AddHistogram(standardizedFeatures, 0, isDecoy);
+            }
+
+            /// <summary>
+            /// The class count and running per-feature sums half of <see cref="Add(double[],bool)"/>,
+            /// for the vector starting at <paramref name="offset"/>. Floating-point addition does
+            /// not associate, so the row order is part of the sums; a cross-run total adds whole
+            /// runs' shares in run order instead (<see cref="Add(FeatureSums)"/>).
+            /// </summary>
+            private void AddSums(double[] standardizedFeatures, int offset, bool isDecoy)
+            {
                 if (isDecoy)
                 {
                     _nDecoy++;
                     for (int j = 0; j < _sumDecoy.Length; j++)
-                        _sumDecoy[j] += standardizedFeatures[j];
+                        _sumDecoy[j] += standardizedFeatures[offset + j];
                 }
                 else
                 {
                     _nTarget++;
                     for (int j = 0; j < _sumTarget.Length; j++)
-                        _sumTarget[j] += standardizedFeatures[j];
+                        _sumTarget[j] += standardizedFeatures[offset + j];
                 }
-                if (_histTarget != null)
+            }
+
+            /// <summary>
+            /// The histogram half of <see cref="Add(double[],bool)"/>: bins the vector starting at
+            /// <paramref name="offset"/> into the per-feature class histograms, when this
+            /// accumulator collects them.
+            /// </summary>
+            private void AddHistogram(double[] standardizedFeatures, int offset, bool isDecoy)
+            {
+                if (_histTarget == null)
+                    return;
+                int[][] h = isDecoy ? _histDecoy : _histTarget;
+                for (int j = 0; j < h.Length; j++)
                 {
-                    int[][] h = isDecoy ? _histDecoy : _histTarget;
-                    for (int j = 0; j < h.Length; j++)
+                    double v = standardizedFeatures[offset + j];
+                    if (!double.IsNaN(v))   // a NaN std value would pile into bin 0
+                        h[j][HistBin(v)]++;
+                }
+            }
+
+            /// <summary>
+            /// This accumulator's counts, sums and histograms as one run's <see cref="FeatureSums"/>
+            /// share, for the run's first-pass FDR sidecar. Requires histograms.
+            /// </summary>
+            public FeatureSums ToFeatureSums()
+            {
+                if (_histTarget == null)
+                    throw new InvalidOperationException(@"A feature-sums share needs an accumulator that collects histograms.");
+                var share = new FeatureSums(_sumTarget.Length, HistBinCount)
+                {
+                    TargetCount = _nTarget,
+                    DecoyCount = _nDecoy
+                };
+                Array.Copy(_sumTarget, share.TargetSums, _sumTarget.Length);
+                Array.Copy(_sumDecoy, share.DecoySums, _sumDecoy.Length);
+                for (int j = 0; j < _histTarget.Length; j++)
+                {
+                    Array.Copy(_histTarget[j], share.TargetHistograms[j], HistBinCount);
+                    Array.Copy(_histDecoy[j], share.DecoyHistograms[j], HistBinCount);
+                }
+                return share;
+            }
+
+            /// <summary>
+            /// Add one run's <see cref="FeatureSums"/> share. Callers add the shares in run order:
+            /// the sums are floating-point, so that order is part of the result, and it is the
+            /// same whichever lanes scored the runs and whether a run was scored or resumed.
+            /// </summary>
+            public void Add(FeatureSums share)
+            {
+                if (share.FeatureCount != _sumTarget.Length || (_histTarget != null && share.BinCount != HistBinCount))
+                {
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture,
+                        @"A feature-sums share of {0} features x {1} bins cannot be added to {2} features x {3} bins.",
+                        share.FeatureCount, share.BinCount, _sumTarget.Length, HistBinCount));
+                }
+                _nTarget += share.TargetCount;
+                _nDecoy += share.DecoyCount;
+                for (int j = 0; j < _sumTarget.Length; j++)
+                {
+                    _sumTarget[j] += share.TargetSums[j];
+                    _sumDecoy[j] += share.DecoySums[j];
+                }
+                if (_histTarget == null)
+                    return;
+                for (int j = 0; j < _histTarget.Length; j++)
+                {
+                    for (int b = 0; b < HistBinCount; b++)
                     {
-                        double v = standardizedFeatures[j];
-                        if (!double.IsNaN(v))   // a NaN std value would pile into bin 0
-                            h[j][HistBin(v)]++;
+                        _histTarget[j][b] += share.TargetHistograms[j][b];
+                        _histDecoy[j][b] += share.DecoyHistograms[j][b];
                     }
                 }
             }
@@ -230,8 +350,11 @@ namespace pwiz.Osprey.FDR
             /// </summary>
             /// <param name="foldWeights">Per-fold standardized weight vectors.</param>
             /// <param name="featureInfos">Per-feature metadata (name / label / direction), or null.</param>
+            /// <param name="trainingAnalysis">What training did with each feature, or null when the
+            /// model carries none (<see cref="FeatureContributions.TrainingAnalysis"/>).</param>
             public FeatureContributions Build(
-                IReadOnlyList<double[]> foldWeights, OspreyFeatureInfo[] featureInfos)
+                IReadOnlyList<double[]> foldWeights, OspreyFeatureInfo[] featureInfos,
+                TrainingSetAnalysis trainingAnalysis = null)
             {
                 int p = _sumTarget.Length;
                 int nFolds = foldWeights.Count;
@@ -245,8 +368,35 @@ namespace pwiz.Osprey.FDR
                 double nFoldsD = nFolds;
                 for (int j = 0; j < p; j++)
                     avgWeights[j] /= nFoldsD;
-                return new FeatureContributions(avgWeights, _sumTarget, _sumDecoy,
-                    _nTarget, _nDecoy, featureInfos, _histTarget, _histDecoy);
+                var contributions = new FeatureContributions(avgWeights, _sumTarget, _sumDecoy,
+                    _nTarget, _nDecoy, featureInfos, _histTarget, _histDecoy)
+                {
+                    TrainingAnalysis = trainingAnalysis
+                };
+                foreach (var feature in contributions.Features)
+                    feature.SetFoldWeights(foldWeights);
+                return contributions;
+            }
+
+            /// <summary>
+            /// The report for a gradient-boosted-tree model, which has no weights to decompose:
+            /// the per-feature target-decoy mean gaps and the class histograms, which describe
+            /// the features rather than the classifier, with every weight-based value
+            /// (<see cref="FeatureContribution.Coefficient"/>, <see cref="FeatureContribution.Weighted"/>,
+            /// <see cref="FeatureContribution.Percent"/>, <see cref="Composite"/>) NaN and
+            /// <see cref="IsTreeEnsemble"/> set, so a reader can tell "not applicable" from
+            /// "degenerate".
+            /// </summary>
+            /// <param name="featureInfos">Per-feature metadata (name / label / direction), or null.</param>
+            /// <param name="trainingAnalysis">What training did with each feature, or null.</param>
+            public FeatureContributions BuildForTreeEnsemble(OspreyFeatureInfo[] featureInfos,
+                TrainingSetAnalysis trainingAnalysis = null)
+            {
+                return new FeatureContributions(null, _sumTarget, _sumDecoy,
+                    _nTarget, _nDecoy, featureInfos, _histTarget, _histDecoy)
+                {
+                    TrainingAnalysis = trainingAnalysis
+                };
             }
         }
 
@@ -255,11 +405,11 @@ namespace pwiz.Osprey.FDR
         // construction), wide enough to hold the discriminating tails; out-of-range
         // values clamp into the end bins. Shared by every feature so the HTML can
         // draw them on one axis.
-        private const int HistBinCount = 60;
+        internal const int HistBinCount = 60;
         private const double HistLo = -5.0;
         private const double HistHi = 7.0;
 
-        private static int HistBin(double v)
+        internal static int HistBin(double v)
         {
             double t = (v - HistLo) / (HistHi - HistLo);
             int b = (int)(t * HistBinCount);
@@ -297,6 +447,15 @@ namespace pwiz.Osprey.FDR
         public bool IsDegenerate { get; }
 
         /// <summary>
+        /// Whether this describes a gradient-boosted-tree model
+        /// (<see cref="Accumulator.BuildForTreeEnsemble"/>) rather than a linear one. A tree
+        /// ensemble has no coefficients, so every weight-based value is NaN - not applicable,
+        /// which is distinct from <see cref="IsDegenerate"/> - while the target-decoy mean gaps
+        /// and the histograms are populated as for a linear model.
+        /// </summary>
+        public bool IsTreeEnsemble { get; }
+
+        /// <summary>
         /// Shared bin edges (length <c>HistBinCount+1</c>) for the per-feature
         /// standardized-value histograms, or <c>null</c> when they were not
         /// collected (the model-diagnostics-only path). See <see cref="HistEdges"/>.
@@ -315,9 +474,20 @@ namespace pwiz.Osprey.FDR
         public IReadOnlyList<int[]> DecoyHistograms { get; }
 
         /// <summary>
-        /// Decompose the trained linear model into per-feature contributions.
+        /// What cross-validated training did with each feature on the rows it trained on - final
+        /// training-set separation, ROC curves, permutation importance, correlation groups - or
+        /// null when the model carries none (a model persisted by an older build). Unlike the rest
+        /// of this object it describes the training subset, not the full scored population.
         /// </summary>
-        /// <param name="avgWeights">Standardized averaged per-feature weights w_j.</param>
+        public TrainingSetAnalysis TrainingAnalysis { get; private set; }
+
+        /// <summary>
+        /// Decompose the trained linear model into per-feature contributions, or with no weights
+        /// (a tree ensemble) report only the class separation of each feature.
+        /// </summary>
+        /// <param name="avgWeights">Standardized averaged per-feature weights w_j, or null for a
+        /// model without them, which makes every weight-based value NaN and sets
+        /// <see cref="IsTreeEnsemble"/>.</param>
         /// <param name="sumTarget">Per-feature sum of standardized target values.</param>
         /// <param name="sumDecoy">Per-feature sum of standardized decoy values.</param>
         /// <param name="nTarget">Number of targets accumulated into <paramref name="sumTarget"/>.</param>
@@ -346,7 +516,11 @@ namespace pwiz.Osprey.FDR
             HistogramEdges = targetHistograms != null ? HistEdges() : null;
             TargetHistograms = targetHistograms;
             DecoyHistograms = decoyHistograms;
-            int p = avgWeights.Length;
+            // No weights: every weight-based value below comes out NaN (NaN times anything),
+            // and the direction flag, which reads the coefficient's sign, is not raised.
+            bool linear = avgWeights != null;
+            IsTreeEnsemble = !linear;
+            int p = avgWeights?.Length ?? sumTarget.Length;
             var weighted = new double[p];
             var deltaMu = new double[p];
             double composite = 0.0;
@@ -355,12 +529,13 @@ namespace pwiz.Osprey.FDR
                 double mt = nTarget > 0 ? sumTarget[j] / nTarget : 0.0;
                 double md = nDecoy > 0 ? sumDecoy[j] / nDecoy : 0.0;
                 deltaMu[j] = mt - md;
-                weighted[j] = avgWeights[j] * deltaMu[j];
+                weighted[j] = WeightAt(avgWeights, j) * deltaMu[j];
                 composite += weighted[j];   // == sum_k w_k*deltaMu_k == deltaMu_composite
             }
             Composite = composite;
             // Targets should score above decoys, so composite > 0. Guard /0 for a
             // degenerate model (percentages become NaN, which the report shows plainly).
+            // A NaN composite (no weights) is not degenerate: it is not applicable.
             bool degenerate = Math.Abs(composite) <= 1e-12;
             IsDegenerate = degenerate;
 
@@ -371,11 +546,12 @@ namespace pwiz.Osprey.FDR
                 bool haveInfo = featureInfos != null && j < featureInfos.Length;
                 var info = haveInfo ? featureInfos[j] : default(OspreyFeatureInfo);
                 bool reversed = haveInfo && info.IsReversedScore;
-                bool wrongSign = haveInfo && (info.IsReversedScore ^ (avgWeights[j] < 0.0));
+                bool wrongSign = linear && haveInfo && (info.IsReversedScore ^ (WeightAt(avgWeights, j) < 0.0));
                 string name = info.Name;
-                string label = info.Label ?? info.Name ?? string.Format("feature_{0}", j);
+                string label = info.Label ?? info.Name ?? string.Format(@"feature_{0}", j);
+                string reportLabel = info.ReportLabel ?? info.Name ?? string.Format(@"feature_{0}", j);
                 features[j] = new FeatureContribution(j, name, label,
-                    avgWeights[j], deltaMu[j], weighted[j], pct, reversed, wrongSign);
+                    WeightAt(avgWeights, j), deltaMu[j], weighted[j], pct, reversed, wrongSign, reportLabel);
             }
             Features = features;
         }
@@ -398,15 +574,16 @@ namespace pwiz.Osprey.FDR
             // investigate the library / calibration -- the analog of Skyline's mProphet
             // model view. The raw standardized coefficient is kept alongside for the
             // Compare-Peaks-style read of how the composite score was built.
-            yield return "  Model sanity check -- feature share of target-decoy separation (trained linear model, coefficients standardized):";
-            yield return string.Format("    {0,-36} {1,12} {2,9}", "feature", "coefficient", "share (%)");
+            yield return TextUtil.GetIndentation(1) + OspreyFDRResources.FeatureContributions_ToReportLines_Model_sanity_check___feature_share_of_target_decoy_separation__trained_linear_model__coefficients_standardized__;
+            yield return TextUtil.GetIndentation(2) + string.Format(@"{0,-36} {1,12} {2,9}", OspreyFDRResources.FeatureContributions_ToReportLines_feature,
+                OspreyFDRResources.FeatureContributions_ToReportLines_coefficient, OspreyFDRResources.FeatureContributions_ToReportLines_share____);
             foreach (var f in Features
                 .OrderByDescending(f => IsDegenerate ? 0.0 : Math.Abs(f.Percent))
                 .ThenBy(f => f.Index))
             {
-                yield return string.Format("    {0,-36} {1,12:F4} {2,8:F1}%{3}",
+                yield return TextUtil.GetIndentation(2) + string.Format(@"{0,-36} {1,12:F4} {2,8:F1}%{3}",
                     f.Label, f.Coefficient, f.Percent,
-                    f.IsUnexpectedDirection ? "  (unexpected direction)" : string.Empty);
+                    f.IsUnexpectedDirection ? @"  " + OspreyFDRResources.FeatureContributions_ToReportLines__unexpected_direction_ : string.Empty);
             }
         }
 
@@ -418,6 +595,12 @@ namespace pwiz.Osprey.FDR
         public override string ToString()
         {
             return string.Join(Environment.NewLine, ToReportLines());
+        }
+
+        /// <summary>Feature <paramref name="j"/>'s coefficient, or NaN when the model has none.</summary>
+        private static double WeightAt(double[] avgWeights, int j)
+        {
+            return avgWeights != null ? avgWeights[j] : double.NaN;
         }
     }
 }

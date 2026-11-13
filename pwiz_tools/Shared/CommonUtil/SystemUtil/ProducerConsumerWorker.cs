@@ -153,7 +153,8 @@ namespace pwiz.Common.SystemUtil
                     var item = _produce((int) threadIndex);
                     if (item == null)
                         break;
-                    _queue.Add(item);
+                    if (!AddToQueue(item))
+                        break;
                 }
             }
             catch (Exception ex)
@@ -177,10 +178,11 @@ namespace pwiz.Common.SystemUtil
                 // Take queued items and process them, until the QueueWorker is stopped.
                 while (Exception == null)
                 {
-                    //CONSIDER: observed a hang here with two file loader threads trying to take from 
+                    //CONSIDER: observed a hang here with two file loader threads trying to take from
                     //an empty queue. Maybe should use TryDequeue instead.
-                    var item = _queue?.Take();
-                    if (item == null)
+                    // TryTake returns false once a failure has completed the queue and it is empty
+                    var queue = _queue;
+                    if (queue == null || !queue.TryTake(out var item, Timeout.Infinite) || item == null)
                         break;
                     _consume(item, (int) threadIndex);
                     Interlocked.Decrement(ref _itemsWaiting);
@@ -208,8 +210,36 @@ namespace pwiz.Common.SystemUtil
         private void SetException(Exception ex)
         {
             // The first exception in wins
-            if (Interlocked.CompareExchange(ref _exception, ex, null) == null)
-                Abort();
+            if (Interlocked.CompareExchange(ref _exception, ex, null) != null || _consumeThreads == null)
+                return;
+            // Completing the queue, rather than adding a null per consumer, wakes every thread
+            // blocked adding to a full queue or taking from an empty one, and makes later calls
+            // to Add and DoneAdding return rather than block. A null added to a bounded queue
+            // could fill it after the failed consumer stopped taking, and the producer's own
+            // DoneAdding would then wait forever for room.
+            Clear();
+            _queue?.CompleteAdding();
+        }
+
+        /// <summary>
+        /// Adds an item to the queue, waiting for room. Returns false without adding it when a
+        /// failure has completed the queue, in which case <see cref="Exception"/> says why.
+        /// </summary>
+        private bool AddToQueue(TItem item)
+        {
+            var queue = _queue;
+            if (queue == null || queue.IsAddingCompleted)
+                return false;
+            try
+            {
+                queue.Add(item);
+                return true;
+            }
+            catch (InvalidOperationException) when (queue.IsAddingCompleted)
+            {
+                // Completed while this thread was waiting for room
+                return false;
+            }
         }
 
         private void Abort(bool wait = false)
@@ -244,7 +274,8 @@ namespace pwiz.Common.SystemUtil
             else
             {
                 Interlocked.Increment(ref _itemsWaiting);
-                _queue?.Add(item);
+                if (!AddToQueue(item))
+                    Interlocked.Decrement(ref _itemsWaiting);
             }
         }
 
@@ -269,8 +300,10 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public TItem Take()
         {
-            var item = (_produceThreads == null) ? _produce(0) : _queue.Take();
-            return item;
+            if (_produceThreads == null)
+                return _produce(0);
+            // Null, like the end of the items, once a failure has completed the queue
+            return _queue.TryTake(out var item, Timeout.Infinite) ? item : null;
         }
 
         /// <summary>
@@ -296,11 +329,14 @@ namespace pwiz.Common.SystemUtil
                 return;
             if (_consumeThreads == null)
             {
-                _queue.Add(null);
+                AddToQueue(null);
                 return;
             }
             for (int i = 0; i < _consumeThreads.Length; i++)
-                _queue.Add(null);
+            {
+                if (!AddToQueue(null))
+                    break;
+            }
             if (wait)
                 _threadExit.Wait();
         }

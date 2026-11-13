@@ -35,6 +35,11 @@ namespace pwiz.Skyline.ToolsUI
     /// file-name box: a folder is chosen in a tree. So set_value selects the folder by sending the dialog a
     /// BFFM_SETSELECTION message with the path, and the accept gesture clicks its OK button. See
     /// <see cref="NativeDialog"/> for the threading contract and how an instance is obtained.
+    ///
+    /// This only drives the classic dialog. .NET 8 would otherwise show the newer IFileDialog folder picker,
+    /// which ignores BFFM_SETSELECTION and would quietly return the folder it opened on instead of the one it
+    /// was asked for; <see cref="pwiz.Common.SystemUtil.FormUtil.CreateFolderBrowserDialog"/> is what keeps
+    /// every folder browser in the tree classic. Adopting the newer picker means rewriting this class.
     /// </summary>
     public class NativeFolderBrowserDialog : NativeDialog
     {
@@ -51,8 +56,8 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>
         /// Whether the "#32770" is the classic Browse-For-Folder dialog, identified by its folder tree. The
-        /// Open/Save file dialogs also have a tree (their navigation pane) but are matched first by their
-        /// file-name field (see <see cref="NativeDialog.Create"/>), so only the folder browser reaches this check.
+        /// Open/Save file dialogs also have a tree (their navigation pane) but are matched first by their classic
+        /// file list (see <see cref="NativeFileDialog.IsFileDialog"/>), so only the folder browser reaches this check.
         /// </summary>
         public static bool IsFolderBrowserDialog(IntPtr hwnd)
         {
@@ -73,7 +78,7 @@ namespace pwiz.Skyline.ToolsUI
             var pathPtr = Marshal.StringToHGlobalUni(value);
             try
             {
-                User32.SendMessage(Hwnd, (User32.WinMessageType)BFFM_SETSELECTIONW, (IntPtr)1, pathPtr);
+                User32.SendMessage(Hwnd, (User32.WinMessageType)BFFM_SETSELECTIONW, 1, pathPtr);
             }
             finally
             {

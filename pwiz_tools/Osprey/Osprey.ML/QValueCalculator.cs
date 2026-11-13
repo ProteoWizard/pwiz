@@ -49,7 +49,7 @@ namespace pwiz.Osprey.ML
         public static int ComputeQValues(bool[] isDecoy, double[] qValues)
         {
             if (isDecoy.Length != qValues.Length)
-                throw new ArgumentException("isDecoy and qValues must have same length");
+                throw new ArgumentException(@"isDecoy and qValues must have same length");
 
             int decoy = 0;
             int target = 0;

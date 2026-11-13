@@ -65,6 +65,26 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
+        /// Resolves the name of an executable that ships next to the running application (in
+        /// <see cref="AppContext.BaseDirectory"/>) to a rooted path. .NET Framework's Process.Start
+        /// searched the current working directory for a bare executable name; .NET 8 does not, so a
+        /// bundled tool invoked by bare name (e.g. "msconvert") fails to launch on net8 unless it also
+        /// happens to be on PATH. Rooting the path to the application directory makes the launch work on
+        /// both frameworks. If the executable is not found next to the application, the original name is
+        /// returned unchanged so a PATH-based lookup can still succeed.
+        /// </summary>
+        public static string ResolveBundledExe(string exeName)
+        {
+            if (string.IsNullOrEmpty(exeName) || Path.IsPathRooted(exeName))
+            {
+                return exeName;
+            }
+            var fileName = string.IsNullOrEmpty(Path.GetExtension(exeName)) ? exeName + @".exe" : exeName;
+            var candidate = Path.Combine(AppContext.BaseDirectory, fileName);
+            return File.Exists(candidate) ? candidate : exeName;
+        }
+
+        /// <summary>
         /// True if <paramref name="a"/> and <paramref name="b"/> refer to the same
         /// path on disk. Normalizes both sides (GetFullPath + trailing-separator trim)
         /// and compares case-insensitively, which is the right semantics on Windows.
@@ -227,6 +247,51 @@ namespace pwiz.Common.SystemUtil
             return PREFIX_LONG_PATH + path;
         }
 
+        public const string PREFIX_LONG_PATH_UNC = @"\\?\UNC\";
+
+        /// <summary>
+        /// Returns a path as it should be shown to a user: without long-path syntax, and with
+        /// <see cref="DisplayPathRoot"/> shown as <see cref="DisplayPathRootShown"/> when both are set.
+        /// </summary>
+        public static string DisplayPath(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return path;
+
+            if (path.StartsWith(PREFIX_LONG_PATH_UNC, StringComparison.OrdinalIgnoreCase))
+                path = @"\\" + path.Substring(PREFIX_LONG_PATH_UNC.Length);
+            else if (path.StartsWith(PREFIX_LONG_PATH))
+                path = path.Substring(PREFIX_LONG_PATH.Length);
+
+            var root = DisplayPathRoot?.TrimEnd(Path.DirectorySeparatorChar);
+            if (!string.IsNullOrEmpty(root) && DisplayPathRootShown != null &&
+                path.StartsWith(root, StringComparison.OrdinalIgnoreCase) &&
+                (path.Length == root.Length || path[root.Length] == Path.DirectorySeparatorChar))
+            {
+                path = DisplayPathRootShown.TrimEnd(Path.DirectorySeparatorChar) + path.Substring(root.Length);
+            }
+            return path;
+        }
+
+        /// <summary>
+        /// Returns text, such as a message, with every path under <see cref="DisplayPathRoot"/>
+        /// shown under <see cref="DisplayPathRootShown"/> when both are set.
+        /// </summary>
+        public static string DisplayPathsInText(string text)
+        {
+            var root = DisplayPathRoot?.TrimEnd(Path.DirectorySeparatorChar);
+            if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(root) || DisplayPathRootShown == null)
+                return text;
+
+            // Only whole folder names, so C:\proj\pwiz-work3 does not match C:\proj\pwiz-work30
+            return Regex.Replace(text, Regex.Escape(root) + @"(?![\w-])",
+                DisplayPathRootShown.TrimEnd(Path.DirectorySeparatorChar).Replace(@"$", @"$$"), RegexOptions.IgnoreCase);
+        }
+
+        // Test framework can set these so tutorial screenshots show the same folder from any checkout
+        public static string DisplayPathRoot { get; set; }
+        public static string DisplayPathRootShown { get; set; }
+
         /// <summary>
         /// Returns true if the path specified is relative to the current drive or working directory.
         /// Returns false if the path is fixed to a specific drive or UNC path.  This method does no
@@ -373,6 +438,12 @@ namespace pwiz.Common.SystemUtil
             return text;
         }
 
+        // Matches every ampersand, capturing a predefined XML entity or a complete decimal or
+        // hexadecimal character reference that follows it ([0-9] rather than \d, which matches
+        // non-ASCII digits)
+        private static readonly Regex REGEX_AMPERSAND =
+            new Regex(@"&(?:(?<entity>apos|quot|[gl]t|amp);|#(?<dec>[0-9]+);|#x(?<hex>[0-9A-Fa-f]+);)?", RegexOptions.Compiled);
+
         // Inspect a file path for characters that must be escaped for use in XML (currently just "&")
         // Return a suitably escaped version of the string
         public static string EscapePathForXML(string path)
@@ -380,9 +451,35 @@ namespace pwiz.Common.SystemUtil
             if (path.Contains(@"&")) // Valid windows filename character, may need escaping
             {
                 // But it may also be in use as an escape character - don't mess with &quot; etc
-                path = Regex.Replace(path, @"&(?!(?:apos|quot|[gl]t|amp);|#)", @"&amp;");
+                path = REGEX_AMPERSAND.Replace(path, match => IsValidXmlReference(match) ? match.Value : @"&amp;" + match.Value.Substring(1));
             }
             return path;
+        }
+
+        private static bool IsValidXmlReference(Match match)
+        {
+            if (match.Groups[@"entity"].Success)
+                return true;
+            long codePoint;
+            if (match.Groups[@"dec"].Success)
+            {
+                if (!long.TryParse(match.Groups[@"dec"].Value, NumberStyles.None, CultureInfo.InvariantCulture, out codePoint))
+                    return false;
+            }
+            else if (match.Groups[@"hex"].Success)
+            {
+                if (!long.TryParse(match.Groups[@"hex"].Value, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out codePoint))
+                    return false;
+            }
+            else
+            {
+                return false;   // A bare ampersand
+            }
+            // The XML 1.0 Char production
+            return codePoint == 0x9 || codePoint == 0xA || codePoint == 0xD ||
+                   (codePoint >= 0x20 && codePoint <= 0xD7FF) ||
+                   (codePoint >= 0xE000 && codePoint <= 0xFFFD) ||
+                   (codePoint >= 0x10000 && codePoint <= 0x10FFFF);
         }
 
         /// <summary>

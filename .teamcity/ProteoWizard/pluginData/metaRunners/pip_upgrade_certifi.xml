@@ -1,0 +1,49 @@
+<meta-runner name="Upgrade certifi and set SSL_CERT_FILE">
+  <description>Upgrade certifi and set SSL_CERT_FILE.</description>
+  <settings>
+    <parameters>
+      <param name="env.PYTHON_HOME" value="C:\Python38" spec="text orderNumber='5.0'" />
+    </parameters>
+    <build-runners>
+      <runner name="Upgrade certifi" type="python-runner">
+        <parameters>
+          <param name="command" value="module" />
+          <param name="coverageArgs" value="--omit=*lib*" />
+          <param name="envTool" value="none" />
+          <param name="installToolPackage" value="true" />
+          <param name="isCoverageEnabled" value="false" />
+          <param name="isTestReportingEnabled" value="true" />
+          <param name="module" value="pip" />
+          <param name="poetryExecutable" value="poetry" />
+          <param name="pythonVersion" value="python3" />
+          <param name="scriptArguments" value="install --upgrade certifi" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="virtualenvEnvName" value=".venv" />
+          <param name="virtualenvFile" value="requirements.txt" />
+        </parameters>
+      </runner>
+      <runner name="Set SSL_CERT_FILE" type="python-runner">
+        <parameters>
+          <param name="command" value="script" />
+          <param name="coverageArgs" value="--omit=*lib*" />
+          <param name="envTool" value="none" />
+          <param name="installToolPackage" value="true" />
+          <param name="isCoverageEnabled" value="false" />
+          <param name="isTestReportingEnabled" value="true" />
+          <param name="poetryExecutable" value="poetry" />
+          <param name="pythonVersion" value="python3" />
+          <param name="scriptContent"><![CDATA[import os, sys, re
+import certifi
+print("Setting SSL_CERT_FILE to: " + certifi.where())
+print(f"##teamcity[setParameter name='env.SSL_CERT_FILE' value='{certifi.where()}']")]]></param>
+          <param name="teamcity.step.mode" value="default" />
+          <param name="virtualenvEnvName" value=".venv" />
+          <param name="virtualenvFile" value="requirements.txt" />
+          <param name="virtualenvPipArgs" value="certifi" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
+

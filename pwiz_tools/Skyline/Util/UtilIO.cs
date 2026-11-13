@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
 using System.Management;
@@ -115,7 +116,7 @@ namespace pwiz.Skyline.Util
         void Finish(TextWriter writer);
 
         /// <summary>
-        /// Proxy for <see cref="File.GetAttributes"/>.
+        /// Proxy for <see cref="File.GetAttributes(string)"/>.
         /// </summary>
         /// <param name="path">Path to get file attributes for</param>
         /// <returns>The file attributes if the file system is on disk, or ?? if not</returns>
@@ -1047,15 +1048,21 @@ namespace pwiz.Skyline.Util
         {
         }
 
+        // Formatter-based serialization: obsolete on .NET 8, which dropped BinaryFormatter, but this
+        // constructor is part of the type's shape on both legs and subclasses chain to it.
+#pragma warning disable SYSLIB0051
         protected FileModifiedException(
             SerializationInfo info,
             StreamingContext context) : base(info, context)
         {
         }
+#pragma warning restore SYSLIB0051
     }
 
     public static class FileTimeEx
     {
+        private const string TIME_STAMP_FORMAT = @"yyyy-MM-dd_HH-mm-ss";
+
         /// <summary>
         /// Appends a time stamp value to the given Skyline file name.
         /// </summary>
@@ -1067,11 +1074,39 @@ namespace pwiz.Skyline.Util
             {
                 path = Path.Combine(Path.GetDirectoryName(fileName) ?? String.Empty,
                     Path.GetFileNameWithoutExtension(fileName) + @"_" +
-                    DateTime.Now.ToString(@"yyyy-MM-dd_HH-mm-ss") +
+                    DateTime.Now.ToString(TIME_STAMP_FORMAT) +
                     SrmDocumentSharing.EXT_SKY_ZIP);
             }
             while (File.Exists(path));
             return path;
+        }
+
+        /// <summary>
+        /// The path a file rolls to: its name with <paramref name="time"/> before the extension
+        /// (<c>name_yyyy-MM-dd_HH-mm-ss.ext</c>).
+        /// </summary>
+        public static string GetTimeStampedPath(string path, DateTime time)
+        {
+            return Path.Combine(Path.GetDirectoryName(path) ?? String.Empty,
+                Path.GetFileNameWithoutExtension(path) + @"_" + time.ToString(TIME_STAMP_FORMAT) + Path.GetExtension(path));
+        }
+
+        /// <summary>
+        /// Moves an existing file aside to <see cref="GetTimeStampedPath"/> stamped with its last
+        /// write rather than with now, so a rolled log is named for when its run ended, not for when
+        /// the next run started. A same-second collision takes a numeric suffix rather than
+        /// overwriting. Returns the path the file moved to, or null when there was no file.
+        /// </summary>
+        public static string RollWithTimeStamp(string path)
+        {
+            if (!File.Exists(path))
+                return null;
+            string rolled = GetTimeStampedPath(path, File.GetLastWriteTime(path));
+            string rolledStem = Path.Combine(Path.GetDirectoryName(rolled) ?? String.Empty, Path.GetFileNameWithoutExtension(rolled));
+            for (int n = 1; File.Exists(rolled); n++)
+                rolled = rolledStem + @"-" + n.ToString(CultureInfo.InvariantCulture) + Path.GetExtension(path);
+            File.Move(path, rolled);
+            return rolled;
         }
     }
 
@@ -1916,13 +1951,11 @@ namespace pwiz.Skyline.Util
             if (runAsAdministrator)
                 startInfo.Verb = @"runas";
 
-            var process = new Process {StartInfo = startInfo, EnableRaisingEvents = true};
+            var process = new Process {StartInfo = startInfo};
             string pipeName = @"SkylineProcessRunnerPipe" + guidSuffix;
 
             using (var pipeStream = new NamedPipeServerStream(pipeName))
             {
-                bool processFinished = false;
-                process.Exited += (sender, args) => processFinished = true;
                 try
                 {
                     process.Start();
@@ -1946,7 +1979,20 @@ namespace pwiz.Skyline.Util
 
                     using var registration = cancellationToken.Register(o =>
                     {
-                        KillProcessAndDescendants(process.Id);
+                        // Nothing may escape here. A token cancelled by a timer runs this on a
+                        // ThreadPool thread, where an exception is unhandled and takes the process
+                        // down; KillProcessAndDescendants queries WMI and calls Process.Kill, both of
+                        // which throw for reasons that have nothing to do with us (WMI busy, an
+                        // elevated child, a PID that exited in between). Failing to kill leaves the
+                        // wait below to run its course, which is the same place we were without it.
+                        try
+                        {
+                            KillProcessAndDescendants(process.Id);
+                        }
+                        catch (Exception x)
+                        {
+                            Messages.WriteAsyncDebugMessage(@"Could not kill process tree {0}: {1}", pipeName, x.Message);
+                        }
                     }, null);
 
                     while (reader.ReadLine() is { } line)
@@ -1954,10 +2000,14 @@ namespace pwiz.Skyline.Util
                         writer.WriteLine(line);
                     }
 
-                    while (!processFinished)
-                    {
-                        // wait for process to finish
-                    }
+                    // Block rather than spinning on a flag set from Process.Exited. That flag was a
+                    // non-volatile captured local written on a ThreadPool thread, so once this loop
+                    // got hot the JIT hoisted the read into a register and never observed the write.
+                    // The thread then spun on a core forever and RunProcess never returned, which
+                    // made everything downstream of the caller unreachable - including any caller's
+                    // timeout, which cannot fire from a call that never returns. A race, so it was intermittent: when Exited fired before the loop got
+                    // hot the flag was already set and the call returned normally.
+                    process.WaitForExit();
 
                     return process.ExitCode;
                 }

@@ -19,6 +19,7 @@
  */
 
 using pwiz.Common.SystemUtil.PInvoke;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 using System;
@@ -103,13 +104,13 @@ namespace pwiz.Skyline.ToolsUI
         /// it -- they are created, then displayed -- which is the gap this closes. Every dialog classified by a
         /// control it later acts on has that gap and overrides this (<see cref="NativeFileDialog"/> by its commit
         /// button, <see cref="NativeFolderBrowserDialog"/> by its tree). The default is for the generic message
-        /// box, which is classified by nothing and driven through buttons the caller reads by caption -- so it has
-        /// no control whose appearance it could wait on, and is ready when its window is shown.</para>
+        /// box, which is driven through buttons the caller reads by caption, so it is ready once it shows one:
+        /// a "#32770" the shell has only just created, with nothing in it yet, is not a message box to report.</para>
         ///
         /// <para>An override must key on something that, once true, stays true: this reports a dialog as NOT
         /// THERE.</para>
         /// </summary>
-        protected virtual bool IsOpenComplete => true;
+        protected virtual bool IsOpenComplete => FindDescendants(NativeControl.BUTTON_CLASS).Any(User32.IsWindowVisible);
 
         // The message body of a native dialog box (a Win32 #32770, e.g. a system message box), read from its child
         // controls, or null when none is found. The body is a "Static" control with text -- the icon's Static has
@@ -147,14 +148,14 @@ namespace pwiz.Skyline.ToolsUI
         {
             if (handle == IntPtr.Zero || User32.GetClassName(handle) != DIALOG_CLASS_NAME)
                 return null;
-            if (NativeOpenFileDialog.IsOpenFileDialog(handle))
-                return new NativeOpenFileDialog(handle, cancellationToken);
-            // Check Save after Open: the modern Open dialog has the classic file-name combo (control id 1148) that
-            // IsOpenFileDialog keys on; the Save dialog does not, so the two never both match.
-            if (NativeSaveFileDialog.IsSaveFileDialog(handle))
-                return new NativeSaveFileDialog(handle, cancellationToken);
+            // A file dialog is recognized by the classic file list it carries for its whole life, and reported as
+            // Open, Save, or -- while it has neither dialog's file-name field -- nothing at all. Falling through to
+            // the generic dialog in that gap is what made TestNativeMessageBox fail intermittently: the generic
+            // dialog is ready as soon as its window is shown, and refuses to take a file name.
+            if (NativeFileDialog.IsFileDialog(handle))
+                return NativeFileDialog.Classify(handle, cancellationToken);
             // The classic Browse-For-Folder dialog (a folder tree, no file-name field) -- checked after the file
-            // dialogs, whose navigation pane also has a tree but which match first on their file-name field.
+            // dialogs, whose navigation pane also has a tree.
             if (NativeFolderBrowserDialog.IsFolderBrowserDialog(handle))
                 return new NativeFolderBrowserDialog(handle, cancellationToken);
             // Any other "#32770" (a message box such as the Save dialog's "replace it?" confirm, or any other
@@ -320,7 +321,10 @@ namespace pwiz.Skyline.ToolsUI
                 @"Setting values is not supported for native dialog {0}.", FormId));
         }
 
-        public override System.Drawing.Bitmap CaptureImage() => JsonUiService.CaptureNativeWindow(Hwnd);
+        // A native dialog cannot be rendered off-screen the way a managed form can, so without a desktop to copy
+        // from there is no image.
+        public override System.Drawing.Bitmap CaptureImage() =>
+            ScreenCapture.IsDesktopAvailable() ? JsonUiService.CaptureNativeWindow(Hwnd) : null;
 
         private void VerifyNotBlocked()
         {

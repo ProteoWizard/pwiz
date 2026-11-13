@@ -238,4 +238,40 @@
   <data name="KoinaDotpMatchFull" xml:space="preserve">
     <value>Full Koina dot product</value>
   </data>
+  <data name="Description_PeptidePep" xml:space="preserve">
+    <value>Experiment-wide posterior error probability of this peptide</value>
+  </data>
+  <data name="Description_PeptideQValue" xml:space="preserve">
+    <value>Experiment-wide q-value of this peptide, the same for all of its charge states</value>
+  </data>
+  <data name="Description_PrecursorPep" xml:space="preserve">
+    <value>Experiment-wide posterior error probability of this precursor</value>
+  </data>
+  <data name="Description_PrecursorQValue" xml:space="preserve">
+    <value>Experiment-wide q-value of this precursor</value>
+  </data>
+  <data name="Description_ProteinPep" xml:space="preserve">
+    <value>Experiment-wide posterior error probability of the protein group with the protein q-value</value>
+  </data>
+  <data name="Description_ProteinQValue" xml:space="preserve">
+    <value>Experiment-wide q-value of this peptide's protein group, the lowest if it is in more than one group</value>
+  </data>
+  <data name="PeptidePep" xml:space="preserve">
+    <value>Peptide PEP</value>
+  </data>
+  <data name="PeptideQValue" xml:space="preserve">
+    <value>Peptide Q Value</value>
+  </data>
+  <data name="PrecursorPep" xml:space="preserve">
+    <value>Precursor PEP</value>
+  </data>
+  <data name="PrecursorQValue" xml:space="preserve">
+    <value>Precursor Q Value</value>
+  </data>
+  <data name="ProteinPep" xml:space="preserve">
+    <value>Protein PEP</value>
+  </data>
+  <data name="ProteinQValue" xml:space="preserve">
+    <value>Protein Q Value</value>
+  </data>
 </root>
