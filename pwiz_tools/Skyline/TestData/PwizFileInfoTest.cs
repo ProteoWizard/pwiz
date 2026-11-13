@@ -441,6 +441,25 @@ namespace pwiz.SkylineTestData
             }
         }
 
+        /// <summary>
+        /// The acquired time Skyline reads from a Thermo file must be the clock time the file stores, on any
+        /// computer and on any date. The reader converts the stored time to UTC with the host's offset and
+        /// <see cref="MsDataFileImpl.RunStartTime"/> converts it back, so both must use the offset on the
+        /// acquisition date.
+        /// </summary>
+        [TestMethod]
+        public void TestRunStartTime()
+        {
+            if (Skyline.Program.NoVendorReaders)
+                return;
+
+            // Stores 2009-07-02 10:36:38, a date in daylight saving time in North America and Europe
+            var path = TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Thermo, "090701-LTQVelos-unittest-01.raw");
+            using var msDataFile = new MsDataFileImpl(path);
+            AssertEx.AreEqual<DateTime?>(new DateTime(2009, 7, 2, 10, 36, 38), msDataFile.RunStartTime,
+                @"RunStartTime must be the clock time the file stores");
+        }
+
         [TestMethod]
         public void TestQcTraces()
         {

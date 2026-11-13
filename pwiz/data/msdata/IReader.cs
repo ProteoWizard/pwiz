@@ -285,7 +285,7 @@ public sealed class ReaderConfig
 
     /// <summary>
     /// Encodes <paramref name="sdkDate"/> as an mzML <c>startTimeStamp</c> attribute string
-    /// (<c>YYYY-MM-DDTHH:MM:SSZ</c>), applying the cpp-equivalent host-tz adjustment when
+    /// (<c>YYYY-MM-DDTHH:MM:SSZ</c>), applying the host time zone adjustment when
     /// <paramref name="adjustToHostTimeZone"/> is set. Returns <c>null</c> for the default
     /// <see cref="DateTime"/>.
     /// </summary>
@@ -301,13 +301,28 @@ public sealed class ReaderConfig
     /// <remarks>
     /// Mirrors cpp <c>ShimadzuReader.cpp:365-388</c> / <c>WiffFile.cpp::getSampleAcquisitionTime</c>:
     /// take the SDK's <see cref="DateTime"/> as a naive wall clock and - if the flag is set - add
-    /// <c>universal_time - local_time</c>, producing the local wall-clock value tagged with a
-    /// <c>Z</c> suffix. cpp's logic is questionable as a "real" UTC value but it's the canonical
-    /// msconvert behavior, so we match byte-for-byte. Note the conversion to UTC is NOT done
+    /// the host's offset from UTC, tagging the result with a <c>Z</c> suffix. cpp adds the offset
+    /// at the time of reading. This adds the offset on the acquisition date, so the result is the
+    /// same on either side of a DST change, and differs from cpp's only for a file read on the other
+    /// side of a DST change from its acquisition. Note the conversion to UTC is NOT done
     /// here: <c>ShimadzuReader.cpp:370</c> is the only cpp vendor reader that calls
     /// <c>ToUniversalTime</c>, and it does so before this point, so only Shimadzu's caller does.
     /// </remarks>
     public static string? FormatStartTimeStamp(DateTime sdkDate, bool adjustToHostTimeZone)
+    {
+        return FormatStartTimeStamp(sdkDate, adjustToHostTimeZone, TimeZoneInfo.Local, DateTime.Now);
+    }
+
+    /// <summary>
+    /// <see cref="FormatStartTimeStamp(DateTime, bool)"/> with the host time zone and the current time
+    /// supplied by the caller, so a test gives the same result on any computer and on any date.
+    /// </summary>
+    /// <param name="sdkDate">The vendor SDK's acquisition time, unmodified.</param>
+    /// <param name="adjustToHostTimeZone">See <see cref="FormatStartTimeStamp(DateTime, bool)"/>.</param>
+    /// <param name="hostZone">The time zone the file is read in.</param>
+    /// <param name="hostNow">The time the file is read.</param>
+    internal static string? FormatStartTimeStamp(DateTime sdkDate, bool adjustToHostTimeZone,
+        TimeZoneInfo hostZone, DateTime hostNow)
     {
         if (sdkDate == default) return null;
 
@@ -319,12 +334,12 @@ public sealed class ReaderConfig
         DateTime stamp = ClampToBoostDateRange(DateTime.SpecifyKind(sdkDate, DateTimeKind.Unspecified));
         if (adjustToHostTimeZone)
         {
-            // cpp: pt + (universal_time() - local_time()), i.e. plus the host's current offset
-            // from UTC. GetUtcOffset returns local-minus-UTC (-04:00 on EDT), so subtracting it
-            // adds the same amount. Both use "now" rather than the file's date, so a file
-            // acquired under the other side of DST gets today's offset - matching cpp, quirk
-            // and all.
-            stamp -= TimeZoneInfo.Local.GetUtcOffset(DateTime.Now);
+            // Adds the host's offset from UTC on the acquisition date. GetUtcOffset returns
+            // local-minus-UTC (-04:00 on EDT), so subtracting it adds the same amount. stamp has
+            // Kind=Unspecified, so it is read as a local clock time in hostZone. cpp used the
+            // offset at the time of reading, which shifted the result by an hour when the file
+            // was read on the other side of a DST change from its acquisition.
+            stamp -= hostZone.GetUtcOffset(stamp);
         }
         return $"{stamp.Year:D4}-{stamp.Month:D2}-{stamp.Day:D2}T{stamp.Hour:D2}:{stamp.Minute:D2}:{stamp.Second:D2}Z";
     }
