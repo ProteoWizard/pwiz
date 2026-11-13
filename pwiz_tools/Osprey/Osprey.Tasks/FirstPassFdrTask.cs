@@ -1201,8 +1201,7 @@ namespace pwiz.Osprey.Tasks
                 var fileNames = new List<string>(perFileEntries.Count);
                 foreach (var kvp in perFileEntries)
                     fileNames.Add(kvp.Key);
-                plan = planner.Plan(fileNames, LoadSurvivorsForPlanning, perFileCalibrations,
-                    perFileParquetPaths, config);
+                plan = planner.Plan(fileNames, LoadSurvivorsForPlanning, perFileCalibrations, config);
             }
             catch (InvalidDataException ex)
             {

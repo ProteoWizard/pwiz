@@ -29,6 +29,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.BiblioSpec.IO;
 using pwiz.CarafeSharp.Contracts;
@@ -823,6 +824,11 @@ namespace pwiz.Osprey.Test
             RunAnalysis(parallelDir, DataInputs(), FdrLanes(RUN_NAMES.Length),
                 OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText, RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture));
             AssertBlibsEqual(baseBlib, Path.Combine(parallelDir, BLIB_FILE));
+            // Planning computes its CWT candidates on the rescore's file lanes, so the parallel
+            // runs must plan exactly what the sequential ones did.
+            foreach (string run in RUN_NAMES)
+                AssertSameReconciliationActions(baseDir, parallelDir, run);
+            AssertCwtCandidatesComputed(baseDir, RUN_NAMES);
 
             // Each per-file stage resolves its own count: scoring and re-scoring on different lane
             // counts, over a shared --parallel-files they both override, still give the sequential
@@ -1033,6 +1039,7 @@ namespace pwiz.Osprey.Test
             RunOsprey(AstralArgs(parallelDir, OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText,
                 ASTRAL_RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture)), Verifier(false));
             AssertBlibsEqual(blib, Path.Combine(parallelDir, BLIB_FILE));
+            AssertCwtCandidatesComputed(straightDir, ASTRAL_RUN_NAMES);
         }
 
         /// <summary>
@@ -1610,6 +1617,9 @@ namespace pwiz.Osprey.Test
                 string log = RunTask(data, phaseDir, PerFileRescoreTask.TASK_NAME, run);
                 logs[PerFileRescoreTask.TASK_NAME] = log;
                 AssertHasLine(log, PathLine(LogKey.ROUTE_RESCORE_HYDRATE, @"per-run"));
+                // The worker computed its run's CWT candidates from the spectra cache and the
+                // calibration file it was shipped, and must plan what the straight run planned.
+                AssertSameReconciliationActions(straightDir, phaseDir, run);
             }
 
             // Phase 4, one node over every run: second-pass FDR and the library.
@@ -1808,6 +1818,40 @@ namespace pwiz.Osprey.Test
                 on[kvp.Key] = kvp.Value;
             on[DIANN_REPORTS] = @"1";
             return on;
+        }
+
+        /// <summary>
+        /// The two directories' plans for <paramref name="run"/> hold the same reconciliation
+        /// actions: the same peaks re-picked at the same CWT candidates, and the same boundaries
+        /// imputed.
+        /// </summary>
+        private static void AssertSameReconciliationActions(string expectedDir, string actualDir, string run)
+        {
+            var expected = ReconciliationFile.Load(Path.Combine(expectedDir, run + ReconciliationFile.EXT));
+            var actual = ReconciliationFile.Load(Path.Combine(actualDir, run + ReconciliationFile.EXT));
+            Assert.AreEqual(JsonConvert.SerializeObject(expected.UseCwtPeakActions),
+                JsonConvert.SerializeObject(actual.UseCwtPeakActions), run + @": the peaks re-picked differ");
+            Assert.AreEqual(JsonConvert.SerializeObject(expected.ForcedIntegrationActions),
+                JsonConvert.SerializeObject(actual.ForcedIntegrationActions), run + @": the boundaries imputed differ");
+        }
+
+        /// <summary>
+        /// Stage 6 planned from CWT candidates it computed, not stored ones (#5024): no
+        /// <c>.scores.parquet</c> carries a <c>cwt_candidates</c> column, and the plans still
+        /// re-pick peaks at candidates - candidates that were never computed would leave every
+        /// moved peak an imputed boundary.
+        /// </summary>
+        private static void AssertCwtCandidatesComputed(string workDir, IEnumerable<string> runs)
+        {
+            int rePicked = 0;
+            foreach (string run in runs)
+            {
+                string scores = Path.Combine(workDir, run + ParquetScoreCache.EXT_SCORES);
+                Assert.IsFalse(ParquetScoreCache.HasColumn(scores, @"cwt_candidates"), scores + @" stores CWT candidates");
+                var plan = ReconciliationFile.Load(Path.Combine(workDir, run + ReconciliationFile.EXT));
+                rePicked += plan.UseCwtPeakActions?.Count ?? 0;
+            }
+            Assert.IsTrue(rePicked > 0, @"no peak was re-picked at a CWT candidate in " + workDir);
         }
 
         /// <summary>

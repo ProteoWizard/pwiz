@@ -373,7 +373,12 @@ namespace pwiz.Osprey.Tasks
                 // model, so the classifier that trained it keys this task too (empty for the SVM).
                 + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config)
                 // The reconciled parquet carries the reference XIC only for the training export.
-                + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config);
+                + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config)
+                // Planning recomputes Stage 4's CWT peak candidates (#5024). The settings that
+                // change them are in the base key already (search hash, pick, ftolmin, fcorr,
+                // refxic, rtlocal, xic); the loaded calibration is the one added here, as in
+                // PerFileScoring's key.
+                + OspreyEnvironment.LoadCalibrationValidityKeySuffix();
         }
 
         /// <summary>
@@ -1157,12 +1162,13 @@ namespace pwiz.Osprey.Tasks
                 JoinFileStems = joinFileStems,
             };
             inputs.Pass2Worker = CreatePass2Worker(config, ctx, Name, inputs.TaskValidityKey);
-            var runPlanner = CreateRunPlanner(perFileCalibrations, perFileParquetPaths, fullLibrary, config, ctx);
+            var runPlanner = CreateRunPlanner(perFileCalibrations, fullLibrary, config, ctx);
             inputs.HydrateRun = BuildPerRunHydrate(perFileParquetPaths, config, ctx);
             var planStamp = OspreyVersion.Stamp(Name, inputs.TaskValidityKey);
             var sequencePool = ctx.Get<SequencePool>().Value;
-            inputs.PlanRun = run => RescoreHydration.ApplyPlan(run,
-                PlanAndWriteRun(runPlanner, run.FileName, run.InputPath, run.Survivors, planStamp),
+            inputs.PlanRun = (run, spectra) => RescoreHydration.ApplyPlan(run,
+                PlanAndWriteRun(runPlanner, run.FileName, run.InputPath, run.Survivors, planStamp,
+                    rows => ComputeCwtCandidates(rows, spectra, inputs, ctx)),
                 sequencePool);
 
             // Clean PERSISTENT floor entering reconciliation (post-GC, before the
@@ -1431,12 +1437,14 @@ namespace pwiz.Osprey.Tasks
 
             /// <summary>
             /// Plan ONE hydrated run from its survivors and the analysis-wide consensus, write its
-            /// <c>.reconciliation.json</c>, and apply the plan to it. Called from the file lanes
-            /// OUTSIDE <c>_survivorLoadLock</c> - planning holds only the run's survivors and its
-            /// CWT candidates, and serializing it would put the per-run planning this task took
-            /// over from the join back in a single file. Thread-safe.
+            /// <c>.reconciliation.json</c>, and apply the plan to it. The CWT candidates of the
+            /// survivors the plan would move are computed from the run's spectra, which the run's
+            /// rescore then reuses. Called from the file lanes OUTSIDE <c>_survivorLoadLock</c> -
+            /// planning holds only the run's survivors, its spectra index and the candidate
+            /// windows it is computing, and serializing it would put the per-run planning this
+            /// task took over from the join back in a single file. Thread-safe.
             /// </summary>
-            public Action<RunRescoreInputs> PlanRun;
+            public Action<RunRescoreInputs, RescoreRunSpectra> PlanRun;
         }
 
         /// <summary>
@@ -1511,9 +1519,12 @@ namespace pwiz.Osprey.Tasks
                 file.Value.Clear();
                 file.Value.AddRange(run.Survivors);
             }
+            // The run's spectra and mass calibrations, loaded when planning first computes a CWT
+            // candidate (or the rescore needs them) and shared by both.
+            var spectra = new RescoreRunSpectra(file.Key, InputFileOf(file.Key, inputs), ctx);
             try
             {
-                inputs.PlanRun(run);
+                inputs.PlanRun(run, spectra);
             }
             catch (InvalidDataException ex)
             {
@@ -1525,7 +1536,7 @@ namespace pwiz.Osprey.Tasks
             }
             try
             {
-                return RescoreOneFile(fileNum, nTotalFiles, file.Key, file.Value, inputs, ctx, run);
+                return RescoreOneFile(fileNum, nTotalFiles, file.Key, file.Value, inputs, ctx, run, spectra);
             }
             finally
             {
@@ -1554,7 +1565,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private (int Rescored, int GapCwt, int GapForced, bool Scored) RescoreOneFile(
             int fileNum, int nTotalFiles, string fileName, List<FdrEntry> fdrEntries,
-            RescorePassInputs inputs, PipelineContext ctx, RunRescoreInputs run)
+            RescorePassInputs inputs, PipelineContext ctx, RunRescoreInputs run, RescoreRunSpectra spectra)
         {
             int totalRescored = 0;
             int totalGapCwt = 0;
@@ -1585,24 +1596,7 @@ namespace pwiz.Osprey.Tasks
             var config = inputs.Config;
             var fullLibrary = inputs.FullLibrary;
 
-            // Clone the outer config for this file's ScoringContexts.
-            // RunCoelutionScoring reassigns config.FragmentTolerance to
-            // the MS2-calibrated tolerance (AnalysisPipeline.cs ~line 3552);
-            // without a per-file clone the mutation persists on the outer
-            // config, leaks into subsequent files, AND poisons the
-            // WriteReconciledParquet hash stamp (config.Identity.SearchParameterHash()
-            // would then reflect the calibrated tolerance, not the value
-            // a fresh --task SecondPassFDR invocation recomputes from CLI
-            // defaults -- causing search_hash mismatch errors). Mirrors
-            // the per-file clone pattern in ProcessFile.
-            var fileConfig = config.ShallowClone();
-
-            // Divide the inner main-search thread budget across concurrently rescored
-            // files so total demand stays near core count (mirrors ProcessFile under
-            // --parallel-files). The subset rescore is light, but this still avoids
-            // thread oversubscription when several files re-score at once.
-            if (ctx.RunPlan.RescoringFileParallelism > 1)
-                fileConfig.NThreads = Math.Max(1, config.NThreads / ctx.RunPlan.RescoringFileParallelism);
+            var fileConfig = FileConfig(config, ctx);
 
             // Build the per-file scoring subset: boundary_overrides keyed
             // by entry_id + the subset library RunCoelutionScoring scores.
@@ -1612,19 +1606,14 @@ namespace pwiz.Osprey.Tasks
             // Segment 1/3 (read): index this file's spectra cache -- the file's first
             // progress slice on the --parallel-files "[i] p%" aggregate line.
             MultiProgressReporter.Current?.BeginSegment();
-            // Stream this file's MS2 by isolation window from the .spectra.bin cache the
-            // original Stage 1-4 run wrote, instead of materializing the whole ~6 GB
-            // resident List<Spectrum>: build the seekable SpectraWindowIndex (MS1 + the
-            // isolation windows come from it too) and load each window on
-            // demand during the re-score. Stage 6 REQUIRES that cache; there is no mzML
-            // fallback -- a rescore without the cache is a deployment error, not a reason
-            // to re-read the 6 GB mzML (LoadSpectraForRescore throws).
-            SpectraWindowIndex spectraIndex = ScoringTaskShared.LoadSpectraForRescore(inputFile, fileName,
-                OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores_Re_scoring, true, ctx);
+            // This file's MS2, streamed by isolation window from the .spectra.bin cache the
+            // original Stage 1-4 run wrote (RescoreRunSpectra) - already loaded when planning
+            // computed CWT candidates from it.
+            SpectraWindowIndex spectraIndex = spectra.Index;
             ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(
                 OspreyTasksResources.PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectra_from_cache_for__2_,
                 spectraIndex.Ms2Count, spectraIndex.Ms1Spectra.Count, fileName));
-            var ms1Spectra = spectraIndex.Ms1Spectra.ToList();
+            var ms1Spectra = spectra.Ms1Spectra;
 
             // Load-boundary memory probe. With streaming this measures the small index +
             // MS1 on the reconciliation floor (library + this file's parquet stubs) -- the
@@ -1638,14 +1627,11 @@ namespace pwiz.Osprey.Tasks
             ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"perfile-rescore-loaded",
                 @"(post-GC, streaming index resident)");
 
-            // Load the sibling .calibration.json so the search uses the
-            // same MS2/MS1 mass calibrations the original Stage 1-4 run
-            // used. The file is written by the original ProcessFile call
-            // and read here -- same disk-roundtrip path the worker uses.
-            ScoringTaskShared.LoadMassCalibrations(inputFile, OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores_Re_scoring,
-                out MzCalibrationResult ms2Cal,
-                out MzCalibrationResult ms1Cal,
-                out double? rtMadFromCalJson);
+            // The MS2/MS1 mass calibrations the original Stage 1-4 run used, from the sibling
+            // .calibration.json.
+            var ms2Cal = spectra.Ms2Calibration;
+            var ms1Cal = spectra.Ms1Calibration;
+            double? rtMadFromCalJson = spectra.RtMadFromCalJson;
 
             // Pick the RT calibration: refined (from this run's Stage 6 plan, made in its
             // hydrate) wins; original first-pass falls back, which is this
@@ -1938,7 +1924,6 @@ namespace pwiz.Osprey.Tasks
             foreach (var entry in fdrEntries)
             {
                 entry.Features = null;
-                entry.CwtCandidates = null;
                 entry.ReferenceXicRts = null;
                 entry.ReferenceXicIntensities = null;
             }
@@ -2342,7 +2327,6 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private static RunReconciliationPlanner CreateRunPlanner(
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
-            IReadOnlyDictionary<string, string> perFileParquetPaths,
             List<LibraryEntry> fullLibrary,
             OspreyConfig config,
             PipelineContext ctx)
@@ -2351,7 +2335,7 @@ namespace pwiz.Osprey.Tasks
                 ? () => Stage6ConsensusFile.Load(config)
                 : () => null;
             return new RunReconciliationPlanner(loadConsensus, perFileCalibrations,
-                ctx.Get<PerFileIsolationMz>().Value, fullLibrary, perFileParquetPaths, config, ctx);
+                ctx.Get<PerFileIsolationMz>().Value, fullLibrary, config, ctx);
         }
 
         /// <summary>
@@ -2363,11 +2347,12 @@ namespace pwiz.Osprey.Tasks
         /// collects per run.
         /// </summary>
         private static ReconciliationFile PlanAndWriteRun(RunReconciliationPlanner runPlanner,
-            string fileName, string syntheticInput, List<FdrEntry> survivors, ArtifactStamp stamp)
+            string fileName, string syntheticInput, List<FdrEntry> survivors, ArtifactStamp stamp,
+            Func<IReadOnlyList<FdrEntry>, IReadOnlyList<IReadOnlyList<CwtCandidate>>> cwtCandidates)
         {
             // Never reached under --task ModelDiagnostics, which writes nothing but its report:
             // that task does not rescore (see willRescoreHere in RunRescore).
-            var plan = runPlanner.PlanRun(fileName, survivors);
+            var plan = runPlanner.PlanRun(fileName, survivors, cwtCandidates);
             try
             {
                 ReconciliationFile.Save(ReconciliationFile.PathForInput(syntheticInput), plan, stamp);
@@ -2379,6 +2364,46 @@ namespace pwiz.Osprey.Tasks
                     fileName, ex.Message), ex);
             }
             return plan;
+        }
+
+        /// <summary>
+        /// The CWT peak candidates of the survivors a run's plan would move, computed from the
+        /// run's spectra under the search Stage 4 ran: its first-pass calibration, not the
+        /// refined one this task rescores with (<see cref="CwtCandidateRecompute"/>).
+        /// </summary>
+        private static IReadOnlyList<IReadOnlyList<CwtCandidate>> ComputeCwtCandidates(IReadOnlyList<FdrEntry> rows,
+            RescoreRunSpectra spectra, RescorePassInputs inputs, PipelineContext ctx)
+        {
+            inputs.PerFileCalibrations.TryGetValue(spectra.FileName, out var firstPassCalibration);
+            return CwtCandidateRecompute.ForRows(rows, spectra, inputs.LibraryById, inputs.FullLibrary,
+                FileConfig(inputs.Config, ctx), firstPassCalibration, ctx);
+        }
+
+        /// <summary>
+        /// The configuration one run is rescored with: a clone of the outer one, because
+        /// RunCoelutionScoring reassigns <see cref="OspreyConfig.FragmentTolerance"/> to the
+        /// MS2-calibrated tolerance; without a per-file clone the mutation persists on the outer
+        /// config, leaks into subsequent files, AND poisons the WriteReconciledParquet hash stamp
+        /// (config.Identity.SearchParameterHash() would then reflect the calibrated tolerance,
+        /// not the value a fresh --task SecondPassFDR invocation recomputes from CLI defaults --
+        /// causing search_hash mismatch errors). Mirrors the per-file clone pattern in
+        /// ProcessFile. The inner thread budget is divided across concurrently rescored files so
+        /// total demand stays near core count.
+        /// </summary>
+        private static OspreyConfig FileConfig(OspreyConfig config, PipelineContext ctx)
+        {
+            var fileConfig = config.ShallowClone();
+            if (ctx.RunPlan.RescoringFileParallelism > 1)
+                fileConfig.NThreads = Math.Max(1, config.NThreads / ctx.RunPlan.RescoringFileParallelism);
+            return fileConfig;
+        }
+
+        /// <summary>The run's input, or null when it is not among this task's inputs.</summary>
+        private static string InputFileOf(string fileName, RescorePassInputs inputs)
+        {
+            return inputs.FileNameToIdx.TryGetValue(fileName, out int inputIdx)
+                ? inputs.Config.InputFiles[inputIdx]
+                : null;
         }
 
         /// <summary>

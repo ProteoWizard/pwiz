@@ -273,30 +273,6 @@
     <value>RT品質フィルタ（パス{0}）：{1:N0} -&gt; {2:N0}個のペプチド（S/N &lt; {4:F1}の{3:N0}個を除去）</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the_CWT_candidates_in__0__could_not_be_read___1___The__" xml:space="preserve">
-    <value>整合計画を停止しました：{0}のCWT候補を読み取れませんでした：{1}。{2}ファイルが破損しています。削除して再実行し、書き直してください。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the__scores_parquet_file_for__0__is_missing__Delete_any_" xml:space="preserve">
-    <value>整合計画を停止しました：{0}の{1}ファイルがありません。不完全な出力を削除して再実行し、書き直してください。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="CwtCandidateLoader_ThrowIfAnyInvalid_Reconciliation_planning_stopped__CWT_candidates_are_missing_or_damaged_in__0__of__1__" xml:space="preserve">
-    <value>整合計画を停止しました：{1:N0}個のファイルのうち{0:N0}個でCWT候補がないか破損しています：[{2}]。これらの入力の{3}ファイルを削除して再実行し、書き直してください。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="CwtCandidateLoader_ValidateFileInRange__0____scores_parquet_file_missing_" xml:space="preserve">
-    <value>{0}（{1}ファイルがありません）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="CwtCandidateLoader_ValidateFileInRange__0___a_CWT_candidate_refers_to_row__1___but_the__scores_parquet_file_has_only__2__rows_" xml:space="preserve">
-    <value>{0}（CWT候補が行{1:N0}を参照していますが、{3}ファイルには{2:N0}行しかありません）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="CwtCandidateLoader_ValidateFileInRange__0___unreadable___1__" xml:space="preserve">
-    <value>{0}（読み取れません：{1}）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="EntrapmentPairing_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair__an_N_terminal_Met_clip__from_the_" xml:space="preserve">
     <value>ターゲットペアのないエントラップメントペプチド1個（N末端Met除去）を、FDRBench入力と診断から除外しました。</value>
     <comment>Needs Review:New resource</comment>

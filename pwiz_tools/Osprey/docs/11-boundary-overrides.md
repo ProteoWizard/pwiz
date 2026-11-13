@@ -57,20 +57,22 @@ states, the best SVM-scoring charge defines the consensus `(apex, start, end)`; 
 other charge states are re-scored there. These targets are not written to
 `reconciliation.json`; FirstPassFDR only counts them (`Stage6Planner.ScanFiles`).
 
-### 2. UseCwtPeak (stored CWT candidate)
+### 2. UseCwtPeak (first-pass CWT candidate)
 
 `ReconcileAction.UseCwtPeak` - during reconciliation planning
 (`ReconciliationPlanner.FilePlanner.PlanFile`, called from
 `RunReconciliationPlanner.PlanRun`), if the
-current peak's apex is not at the expected consensus RT but a stored CWT
-candidate is, the planner switches to that candidate's `(start, apex, end)`. CWT
-candidates are stored during the first-pass search (up to
-`ReconciliationConfig.TopNPeaks`, default 5, `Osprey.Core/ReconciliationConfig.cs:36`)
-in the per-file `.scores.parquet` and loaded selectively by `CwtCandidateLoader`.
+current peak's apex is not at the expected consensus RT but one of the precursor's
+first-pass CWT candidates is, the planner switches to that candidate's
+`(start, apex, end)`. The candidates are the top-N peaks first-pass detection ranked (up
+to `ReconciliationConfig.TopNPeaks`, default 5, `Osprey.Core/ReconciliationConfig.cs:36`).
+They are not stored: the planner asks for them only for the precursors whose apex is
+away from the expected RT, and PerFileRescoring computes those from the run's spectra
+(`CwtCandidateRecompute.ForRows`), exactly as Stage 4 detected them (#5024).
 
 ### 3. ForcedIntegration (imputed boundaries)
 
-`ReconcileAction.ForcedIntegration` — when no stored CWT candidate contains the
+`ReconcileAction.ForcedIntegration` — when no CWT candidate contains the
 expected RT, the planner imputes boundaries from the expected RT and half the
 median peak width: `(expected_rt, expected_rt - half_width, expected_rt +
 half_width)`. `GroupReconciliationActionsByFile`
@@ -269,9 +271,9 @@ SecondPassFDR` node validates.
 
 Note: the per-row columns `reference_xic_rts`, `reference_xic_intensities`,
 `bounds_area` and `bounds_snr` are populated on the reconciled write path since PR #4188
-(`ParquetScoreCache.BuildFdrEntryColumns`). The reconciled parquet carries no
-`cwt_candidates` (planning reads them from `.scores.parquet`), and neither file carries
-Rust's `fragment_mzs` / `fragment_intensities` (#5023);
+(`ParquetScoreCache.BuildFdrEntryColumns`). Neither file carries Rust's `cwt_candidates`
+(planning computes the few it reads, #5024) or `fragment_mzs` / `fragment_intensities`
+(#5023);
 an older note here that they were written null/zero stood on a stale class summary in
 the since-removed `RescoreWorker.cs`. See DIVERGENCES.md U6 (resolved).
 
@@ -308,7 +310,7 @@ computed by Stage 6 planning. The flags that affect this stage:
 | `--reconciliation-compaction-fdr <v>` | 0.01 (`OspreyConfig.ReconciliationCompactionFdr`) | First-pass compaction predicate applied upstream in FirstPassFDR; determines which entries survive into the rescore set. |
 | `ReconciliationConfig.Enabled` | true | Gates the consensus input: PerFileRescoring declares and reads `<blib-stem>.1st-pass.consensus.json` only when on (`PerFileRescoreTask.Inputs`, `CreateRunPlanner`). When off, each run is still planned and its `reconciliation.json` written, but with no consensus the plan is empty. Disabling leaves only multi-charge consensus rescore. |
 | `ReconciliationConfig.ConsensusFdr` | 0.01 (`ReconciliationConfig.cs:39`) | Threshold for consensus peptide selection (`Stage6Planner.cs`), calibration refit, and reconciliation planning (`RunReconciliationPlanner.cs`). Not a CLI flag; config field. |
-| `ReconciliationConfig.TopNPeaks` | 5 (`ReconciliationConfig.cs:36`) | CWT candidates stored per precursor at first-pass; the pool `UseCwtPeak` overrides are drawn from. |
+| `ReconciliationConfig.TopNPeaks` | 5 (`ReconciliationConfig.cs:36`) | CWT candidates first-pass detection ranks per precursor, computed for the consulted ones at planning; the pool `UseCwtPeak` overrides are drawn from. |
 | `--no-prefilter` (`PrefilterEnabled`) | true | Only affects non-override entries; override entries always skip the pre-filter (`PeakDataExtractor.cs:117`). The gap-fill CWT pass forces prefilter off regardless (`PerFileRescoreTask.cs:1375`). |
 | `--parallel-files-rescoring [N]`, else `--parallel-files [N]` | off (sequential) | Runs per-file rescores concurrently under `RunPlan.RescoringFileParallelism`, which `PerFileRescoreTask` resolves for itself; output is byte-identical to sequential (gated by SubsetPipelineTest). |
 | `--threads <count>` | all cores | Inner window parallelism per file; divided across concurrent files under `--parallel-files` (`PerFileRescoreTask.cs:684`). |

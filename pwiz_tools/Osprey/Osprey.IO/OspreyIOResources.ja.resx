@@ -225,10 +225,6 @@
     <value>{0}はこのビルドが認識できないOspreyビルドで書き込まれている（{1}、現在は{2}）ため、再利用できません。このビルドでファイルを再度スコアリングしてください（{3}）。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="ParquetScoreCache_LoadCwtCandidatesFromParquet__0___the_stored_peak_candidates_in_row_group__1__have_an_unexpected_type___2____The_file_is_damaged_or_was_written_by_a_different_version_of_Osprey_" xml:space="preserve">
-    <value>{0}：行グループ{1}に保存されたピーク候補の型が想定外です（{2}）。ファイルが破損しているか、別のバージョンのOspreyで書き込まれています。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="ParquetScoreCache_RequireCharge__0__is_corrupt__row__1___entry_id__2___has_a_charge_of_0__which_is_not_a_possible_" xml:space="preserve">
     <value>{0}は破損しています：行グループ{5}の行{1}（{3} {2}）の電荷が0ですが、これはプリカーサーの電荷としてあり得ません。ファイルを削除し、{4}を再実行して書き直してください。</value>
     <comment>Needs Review:New resource</comment>

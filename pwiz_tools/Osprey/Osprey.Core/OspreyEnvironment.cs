@@ -308,6 +308,22 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly string LoadCalibrationPath = ENV_LOAD_CALIBRATION.Value;
 
+        /// <summary>
+        /// The validity-key term of <see cref="LoadCalibrationPath"/> for PerFileScoring, whose
+        /// searches it centres, and PerFileRescoring, which recomputes Stage 4's CWT peak
+        /// candidates and so must search a run with no RT calibration the way Stage 4 did: around
+        /// the library-to-run RT mapping when Stage 3 calibrated and failed, around the library
+        /// RT when a loaded calibration replaced it.
+        /// The loaded file's identity, so editing it counts too; empty when unset, so every
+        /// existing key is unchanged.
+        /// </summary>
+        public static string LoadCalibrationValidityKeySuffix()
+        {
+            return string.IsNullOrEmpty(LoadCalibrationPath)
+                ? string.Empty
+                : @";loadcal=" + SearchIdentity.FileIdentityTerm(LoadCalibrationPath);
+        }
+
         private static readonly EnvVar ENV_CROSS_IMPL_FDR_SIDECAR_OUT = new EnvVar(@"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT", EnvVarGroup.diagnostic,
             @"Test hook: the FDR score file round-trip unit test also copies its output here, for a byte " +
             @"comparison against Rust osprey.")
@@ -952,7 +968,7 @@ namespace pwiz.Osprey.Core
         /// peak as the fragment with the largest sum of correlations to the other fragments there, in place
         /// of the fragment with the largest total intensity over the whole extraction window. The reference
         /// sets the apex scan (and so every apex-spectrum feature), the recomputed bounds area and SNR, the
-        /// MS1 correlation reference, and the apex/area of the stored CWT candidates; the peak_apex,
+        /// MS1 correlation reference, and the apex/area of the CWT candidates; the peak_apex,
         /// peak_area and peak_sharpness features keep their own most-intense-fragment reference. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
         /// False when unset.
         /// </summary>

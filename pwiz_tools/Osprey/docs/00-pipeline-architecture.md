@@ -340,9 +340,9 @@ This is the shape every fan-out task has, and the reason batch size is free. Tak
         load   r.scores.parquet               |
         load   r.1st-pass.fdr_scores.bin      |
         load   r.calibration.json             |  O(entries in r)
-              ---- plan r ----                |
-        write  r.reconciliation.json          |
         load   r.spectra.bin (windowed)       |
+              ---- plan r ----                |  (CWT candidates of the rows it
+        write  r.reconciliation.json          |   would move, from r's windows)
               ---- rescore r ----             |
         write  r.scores-reconciled.parquet    |
         free   everything loaded for r        v
@@ -1272,7 +1272,10 @@ Per run, for each run in the node's batch:
 - `<stem>.1st-pass.fdr_scores.bin`
 - `<stem>.1st-pass.protein_best.bin`, under `--protein-best on` only
 - `<stem>.calibration.json`
-- `<stem>.spectra.bin`, with no data file beside it
+- `<stem>.spectra.bin`, with no data file beside it - read by planning as well as the
+  rescore: the CWT peak candidates a run's plan re-picks from are not stored in the scores
+  parquet but computed from the run's spectra, with its first-pass calibration, for the rows
+  the plan would move (#5024)
 
 No `<stem>.reconciliation.json`: the node plans each of its runs from the consensus below
 and writes the run's plan itself.
