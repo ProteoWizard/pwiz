@@ -45,8 +45,8 @@ public class DataSourceTest
         }
     }
 
-    /// <summary>Only an SDK build's output folder, bin\Debug|Release\&lt;framework&gt;, counts as a
-    /// development build; an installed or copied app does not.</summary>
+    /// <summary>Only an SDK build's output folder, bin\[platform\]Debug|Release\&lt;framework&gt;, counts
+    /// as a development build; an installed or copied app does not.</summary>
     [TestMethod]
     public void IsDevBuildDirectory_OnlyBuildOutput()
     {
@@ -54,6 +54,9 @@ public class DataSourceTest
                  {
                      (@"C:\dev\pwiz\pwiz_tools\MSConvertGUI\bin\Release\net10.0-windows\MSConvertGUI-sharp.exe", true),
                      (@"C:\dev\pwiz\pwiz_tools\MSConvertGUI\bin\Debug\net10.0-windows\MSConvertGUI-sharp.exe", true),
+                     (@"C:\dev\pwiz\pwiz_tools\MSConvertGUI\bin\x64\Release\net10.0-windows\MSConvertGUI-sharp.exe", true),
+                     (@"C:\dev\pwiz\pwiz_tools\MSConvertGUI\bin\x64\Debug\net10.0-windows\MSConvertGUI-sharp.exe", true),
+                     (@"C:\tools\x64\Release\net10.0-windows\MSConvertGUI-sharp.exe", false),
                      (@"C:\Program Files\ProteoWizard\MSConvertGUI-sharp.exe", false),
                      (@"C:\tools\bin\MSConvertGUI-sharp.exe", false),
                      (@"C:\dev\pwiz\scripts\installer\build\stage\MSConvertGUI-sharp.exe", false),

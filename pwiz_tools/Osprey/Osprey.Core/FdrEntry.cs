@@ -139,6 +139,14 @@ namespace pwiz.Osprey.Core
         public double ExperimentPrecursorQvalue { get; set; }
         public double ExperimentPeptideQvalue { get; set; }
         public double Pep { get; set; }
+
+        /// <summary>
+        /// Posterior error probability of this entry's PEPTIDE in the experiment-wide
+        /// peptide-level competition: one value per modified sequence and side, the same on
+        /// every charge state, 1.0 on the side that lost.
+        /// </summary>
+        public double ExperimentPeptidePep { get; set; }
+
         public string ModifiedSequence { get; set; }
 
         /// <summary>
@@ -187,25 +195,6 @@ namespace pwiz.Osprey.Core
         public List<CwtCandidate> CwtCandidates { get; set; }
 
         /// <summary>
-        /// Library fragment m/z list for this entry, mirroring Rust
-        /// CoelutionScoredEntry::fragment_mzs. Populated at scoring time
-        /// from the candidate's full fragment list (NOT just the top-N
-        /// used by XIC extraction). Null on stubs loaded from Parquet
-        /// before the column is read back. Carried through to the
-        /// reconciled .scores.parquet's `fragment_mzs` blob column for
-        /// downstream consumers (Skyline blib export, etc.).
-        /// </summary>
-        public double[] FragmentMzs { get; set; }
-
-        /// <summary>
-        /// Library fragment relative intensities for this entry, mirroring
-        /// Rust CoelutionScoredEntry::fragment_intensities. Same length /
-        /// ordering as <see cref="FragmentMzs"/>. f32 to match the
-        /// underlying LibraryFragment representation.
-        /// </summary>
-        public float[] FragmentIntensities { get; set; }
-
-        /// <summary>
         /// Reference XIC retention times across the WINNING peak's
         /// boundary (i.e. ref_xic[bestPeak.StartIndex..=bestPeak.EndIndex]).
         /// Mirrors Rust CoelutionScoredEntry::reference_xic's first
@@ -245,6 +234,7 @@ namespace pwiz.Osprey.Core
             ExperimentPeptideQvalue = 1.0;
             ExperimentProteinQvalue = 1.0;
             Pep = 1.0;
+            ExperimentPeptidePep = 1.0;
         }
 
         /// <summary>
@@ -268,6 +258,7 @@ namespace pwiz.Osprey.Core
             ExperimentPeptideQvalue = 1.0;
             ExperimentProteinQvalue = 1.0;
             Pep = 1.0;
+            ExperimentPeptidePep = 1.0;
         }
     }
 }

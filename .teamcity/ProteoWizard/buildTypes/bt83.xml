@@ -12,6 +12,10 @@
     <options>
       <option name="artifactRules" value="scripts/installer/build/ProteoWizard-*.exe&#xA;scripts/installer/build/installer-version.txt&#xA;**/*.blib.observed" />
     </options>
+    <parameters>
+      <param name="env.GITHUB_STATUS_TOKEN" value="%GitHubAuthToken%" />
+      <param name="env.INSPECTION_TARGET_URL" value="https://teamcity.labkey.org/buildConfiguration/%system.teamcity.buildType.id%/%teamcity.build.id%?guest=1" />
+    </parameters>
     <build-runners order="Set_PYTHON_HOME_if_unset_by_agent, RUNNER_simpleRunner_139, Set_PWIZ_VERSION_variable, RUNNER_73, RUNNER_85">
       <runner id="RUNNER_simpleRunner_139" name="" type="simpleRunner">
         <parameters>
@@ -78,7 +82,30 @@ echo ##teamcity[setParameter name='env.PWIZ_VERSION' value='%%PWIZ_VERSION%%']]]
           <param name="withBuildAnchor" value="true" />
         </parameters>
       </extension>
+      <extension id="KEEP_RULE_9" type="keepRules">
+        <parameters>
+          <param name="filters.1.pattern" value="+:&lt;default&gt;" />
+          <param name="filters.1.type" value="branchPattern" />
+          <param name="filters.2.status" value="successful" />
+          <param name="filters.2.type" value="buildStatus" />
+          <param name="keepData.1.type" value="everything" />
+          <param name="limit.buildsCount" value="30" />
+          <param name="limit.type" value="lastNBuilds" />
+          <param name="partitions.1.type" value="perBranch" />
+          <param name="preserveArtifacts" value="true" />
+          <param name="ruleDisabled" value="false" />
+        </parameters>
+      </extension>
     </build-extensions>
+    <cleanup>
+      <policy type="daysAndBuilds" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepBuilds.count" value="1" />
+          <param name="keepDays.count" value="3" />
+        </parameters>
+      </policy>
+    </cleanup>
   </settings>
 </build-type>
 

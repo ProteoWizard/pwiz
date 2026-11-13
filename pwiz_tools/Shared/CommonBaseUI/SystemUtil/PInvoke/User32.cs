@@ -98,7 +98,8 @@ namespace pwiz.Common.SystemUtil.PInvoke
             WM_PRINT = 0x0317,
             EM_SETSEL = 0x00B1,
             EM_REPLACESEL = 0x00C2,
-            BM_CLICK = 0x00F5
+            BM_CLICK = 0x00F5,
+            TCM_SETCURSEL = 0x130C
             // ReSharper restore InconsistentNaming IdentifierTypo
         }
 

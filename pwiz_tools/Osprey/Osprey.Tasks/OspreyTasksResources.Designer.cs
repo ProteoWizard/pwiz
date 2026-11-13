@@ -674,6 +674,15 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No precursor passed the first pass against {0}: none has a run-level peptide q-value at or below {1} [rest of string was truncated]";.
+        /// </summary>
+        public static string FirstPassFdrTask_CompactFromSidecars_No_precursor_passed_the_first_pass_against__0___none_has_a_run_level_peptide_q_value_at_or_below__1_ {
+            get {
+                return ResourceManager.GetString("FirstPassFdrTask_CompactFromSidecars_No_precursor_passed_the_first_pass_against__0___none_has_a_run_level_peptide_q_value_at_or_below__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot locate the first-pass intermediate files for &apos;{0}&apos;..
         /// </summary>
         public static string FirstPassFdrTask_ComputeFirstPassBaseIds_Cannot_locate_the_first_pass_intermediate_files_for___0___ {
@@ -813,6 +822,16 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Across {0:N0} files: {1:N0} of {2:N0} target precursors at {3:P1} experiment-level {4} FDR.
+        /// </summary>
+        public static string FirstPassFdrTask_LogExperimentLevelTotal_Across__0__files___1__of__2__target_precursors_at__3__experiment_level__4__FDR {
+            get {
+                return ResourceManager.GetString("FirstPassFdrTask_LogExperimentLevelTotal_Across__0__files___1__of__2__target_prec" +
+                        "ursors_at__3__experiment_level__4__FDR", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}: {1:N0} precursors at {2:P1} run-level FDR.
         /// </summary>
         public static string FirstPassFdrTask_LogFirstPassResultsProjection____0____1__precursors_at__2__run_level_FDR {
@@ -829,16 +848,6 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("FirstPassFdrTask_LogIntermediateWriteFailures___task_FirstPassFDR___0__of__1__fir" +
                         "st_pass_intermediate_files_could_not_be_written__so_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Total: {0:N0} precursors pass run-level FDR across {1:N0} files.
-        /// </summary>
-        public static string FirstPassFdrTask_LogRunLevelTotal_Total___0__precursors_pass_run_level_FDR_across__1__files {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_LogRunLevelTotal_Total___0__precursors_pass_run_level_FDR_across" +
-                        "__1__files", resourceCulture);
             }
         }
         
@@ -1199,26 +1208,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} requires at least 2 input files ({3}), but {1:N0} were given. The intermediate files it writes for {2} are only useful when there are other runs to reconcile against..
-        /// </summary>
-        public static string FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____input___but__1__were_given__The_ {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____" +
-                        "input___but__1__were_given__The_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} requires cross-run reconciliation, which the configuration turns off. The intermediate files it writes for {1} are only useful when cross-run reconciliation runs..
-        /// </summary>
-        public static string FirstPassFdrTask_ValidateSelection___task__0__requires_cross_run_reconciliation__which_the_configuration_turns_off__The_ {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_ValidateSelection___task__0__requires_cross_run_reconciliation__" +
-                        "which_the_configuration_turns_off__The_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Failed to write {0}: {1}.
         /// </summary>
         public static string FirstPassFdrTask_WriteExperimentSidecar_Failed_to_write__0____1_ {
@@ -1368,6 +1357,17 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0:N0} of {1:N0} entrapment peptides sit on a target protein; the model diagnostics report splits the entrapment FDP by protein placement..
+        /// </summary>
+        public static string ModelDiagnosticsReport_BuildClassificationFromLibrary__0__of__1__entrapment_peptides_sit_on_a_target_protein__the_model_diagnostics_report_splits_the_entrapment_FDP_by_protein_placement_ {
+            get {
+                return ResourceManager.GetString("ModelDiagnosticsReport_BuildClassificationFromLibrary__0__of__1__entrapment_pepti" +
+                        "des_sit_on_a_target_protein__the_model_diagnostics_report_splits_the_entrapment_F" +
+                        "DP_by_protein_placement_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Classifying {0:N0} precursor candidates for first-pass model diagnostics....
         /// </summary>
         public static string ModelDiagnosticsReport_BuildClassificationFromLibrary_Classifying__0__precursor_candidates_for_first_pass_model_diagnostics___ {
@@ -1406,7 +1406,17 @@ namespace pwiz.Osprey.Tasks {
                         "sults_were_not_found__so_the_report_keeps_its_first_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to The saved protein-group entrapment results ({0}) belong to a different analysis, so the report leaves that card out..
+        /// </summary>
+        public static string ModelDiagnosticsReport_ReadProteinEntrapment_The_saved_protein_group_entrapment_results___0___belong_to_a_different_analysis__so_the_report_leaves_that_card_out_ {
+            get {
+                return ResourceManager.GetString("ModelDiagnosticsReport_ReadProteinEntrapment_The_saved_protein_group_entrapment_r" +
+                        "esults___0___belong_to_a_different_analysis__so_the_report_leaves_that_card_out_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Rebuilt the model diagnostics report from the completed analysis: {0}.
         /// </summary>
@@ -1767,7 +1777,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR: recomputing q-values for {1:N0} precursor candidates from proteins with 2 or more detections; other candidates keep their first-pass q-values..
+        ///   Looks up a localized string similar to Second-pass FDR: recomputing q-values for {1:N0} precursor candidates from proteins with 2 or more detections, and separately for the other candidates, each against its own decoys..
         /// </summary>
         public static string Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR__recomputing_q_values_for__1__precursor_candidates_from_proteins_with_2_ {
             get {
@@ -1787,7 +1797,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR over {0:N0} files: recomputing q-values for {1:N0} precursor candidates from proteins with 2 or more detections; other candidates keep their first-pass q-values..
+        ///   Looks up a localized string similar to Second-pass FDR over {0:N0} files: recomputing q-values for {1:N0} precursor candidates from proteins with 2 or more detections, and separately for the other candidates, each against its own decoys..
         /// </summary>
         public static string Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_over__0__files__recomputing_q_values_for__1__precursor_candidates_from_ {
             get {
@@ -3600,7 +3610,16 @@ namespace pwiz.Osprey.Tasks {
                 return ResourceManager.GetString("SecondPassFdrTask_RunProteinFdr_Collecting_best_scores_for_protein_FDR", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Protein FDR could not read the first-pass scores in {0}. Run the FirstPassFDR task again to rewrite it..
+        /// </summary>
+        public static string SecondPassFdrTask_ReadFirstPassProteinScores_Protein_FDR_could_not_read_the_first_pass_scores_in__0___Run_the_FirstPassFDR_task_again_to_rewrite_it_ {
+            get {
+                return ResourceManager.GetString("SecondPassFdrTask_ReadFirstPassProteinScores_Protein_FDR_could_not_read_the_first_pass_scores_in__0___Run_the_FirstPassFDR_task_again_to_rewrite_it_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to {0:N0} peptides passed peptide-level FDR with no single charge state passing precursor-level FDR; their best charge state is reported..
         /// </summary>
@@ -3612,12 +3631,21 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No precursors pass the FDR threshold. Writing an empty {0}..
+        ///   Looks up a localized string similar to Left {0:N0} entrapment precursors ({1:N0} observations) out of the result..
         /// </summary>
-        public static string SecondPassFdrTask_WriteBlibOutput_No_precursors_pass_the_FDR_threshold__Writing_an_empty__blib_ {
+        public static string SecondPassFdrTask_StripEntrapment_Left__0__entrapment_precursors___1__observations__out_of_the_result_ {
             get {
-                return ResourceManager.GetString("SecondPassFdrTask_WriteBlibOutput_No_precursors_pass_the_FDR_threshold__Writing_a" +
-                        "n_empty__blib_", resourceCulture);
+                return ResourceManager.GetString("SecondPassFdrTask_StripEntrapment_Left__0__entrapment_precursors___1__observation" +
+                        "s__out_of_the_result_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No precursor passed the second pass against {0}: none has an experiment-level q-value at or below {1 [rest of string was truncated]";.
+        /// </summary>
+        public static string SecondPassFdrTask_WriteBlibOutput_No_precursor_passed_the_second_pass_against__0___none_has_an_experiment_level_q_value_at_or_below__1_ {
+            get {
+                return ResourceManager.GetString("SecondPassFdrTask_WriteBlibOutput_No_precursor_passed_the_second_pass_against__0___none_has_an_experiment_level_q_value_at_or_below__1_", resourceCulture);
             }
         }
         

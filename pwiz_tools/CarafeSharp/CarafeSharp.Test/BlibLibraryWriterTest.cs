@@ -392,9 +392,10 @@ namespace pwiz.CarafeSharp.Test
             CollectionAssert.AreEqual(new object[] { spectrum.RetentionTime, 1L, 1L }, retentionTime.Take(3).ToArray());
             Assert.IsTrue(retentionTime[3] is DBNull && retentionTime[4] is DBNull);
 
-            // The ion mobility, in both tables: 1/K0 with -ccs, else NULL of type none; the CCS NULL either way, as Carafe writes it.
+            // The ion mobility, in both tables: with -ccs the 1/K0 and the CCS it was converted from
+            // (Skyline reads the CCS, Osprey the 1/K0), else NULL of type none.
             var expectedMobility = spectrum.IonMobility.HasValue
-                ? new object[] { spectrum.IonMobility.Value, DBNull.Value, (long)BlibLibraryWriter.ION_MOBILITY_TYPE_INVERSE_K0 }
+                ? new object[] { spectrum.IonMobility.Value, spectrum.CollisionalCrossSection.Value, (long)BlibLibraryWriter.ION_MOBILITY_TYPE_INVERSE_K0 }
                 : new object[] { DBNull.Value, DBNull.Value, (long)BlibLibraryWriter.ION_MOBILITY_TYPE_NONE };
             foreach (string table in new[] { @"RefSpectra WHERE id", @"RetentionTimes WHERE RefSpectraID" })
             {

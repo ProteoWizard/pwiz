@@ -50,6 +50,8 @@ namespace pwiz.Osprey.IO
         public const string KEY_VERSION = @"osprey.version";
         /// <summary>The full command line of the run that wrote the library.</summary>
         public const string KEY_COMMAND = @"osprey.command";
+        /// <summary>A one-command output's tuning runs (<c>--training-input</c>), separated by <c>;</c>.</summary>
+        public const string KEY_TRAINING_INPUT = @"osprey.training_input";
         /// <summary>A search output's search mode (<c>coelution</c>).</summary>
         public const string KEY_SEARCH_MODE = @"osprey.search_mode";
         /// <summary>A search output's run-level FDR threshold.</summary>
@@ -107,21 +109,23 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Adds the experiment-level columns a search result fills, the optional BiblioSpec
-        /// columns Skyline filters on: the precursor's q-value and PEP
-        /// (<see cref="BlibSchema.PrecursorQValue"/>, <see cref="BlibSchema.PrecursorPep"/>), the
-        /// peptide's q-value (<see cref="BlibSchema.PeptideQValue"/>) and the protein group's
-        /// q-value (<see cref="BlibSchema.ProteinQValue"/>). A blib gets these columns only when
-        /// it has values for them, so a library export never calls this. Once it is called, every
-        /// <c>Proteins</c> row is a protein group written by <see cref="AddProteinGroup"/> and
-        /// every spectrum carries its <see cref="SearchGlobalValues"/>. Call before
-        /// <see cref="BeginBatch"/>.
+        /// columns Skyline filters on: a q-value and a PEP at each of the three levels, the
+        /// precursor's (<see cref="BlibSchema.PrecursorQValue"/>, <see cref="BlibSchema.PrecursorPep"/>),
+        /// the peptide's (<see cref="BlibSchema.PeptideQValue"/>, <see cref="BlibSchema.PeptidePep"/>)
+        /// and the protein group's (<see cref="BlibSchema.ProteinQValue"/>, <see cref="BlibSchema.ProteinPep"/>).
+        /// A blib gets these columns only when it has values for them, so a library export never
+        /// calls this. Once it is called, every <c>Proteins</c> row is a protein group written by
+        /// <see cref="AddProteinGroup"/> and every spectrum carries its
+        /// <see cref="SearchGlobalValues"/>. Call before <see cref="BeginBatch"/>.
         /// </summary>
         public void AddSearchGlobalColumns()
         {
             _writer.AddOptionalColumn(BlibSchema.PrecursorQValue);
             _writer.AddOptionalColumn(BlibSchema.PrecursorPep);
             _writer.AddOptionalColumn(BlibSchema.PeptideQValue);
+            _writer.AddOptionalColumn(BlibSchema.PeptidePep);
             _writer.AddOptionalColumn(BlibSchema.ProteinQValue);
+            _writer.AddOptionalColumn(BlibSchema.ProteinPep);
         }
 
         /// <summary>
@@ -161,13 +165,14 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Adds a protein group as one <c>Proteins</c> row: <paramref name="accessions"/> is the
-        /// group's members joined by semicolons, <paramref name="qValue"/> its experiment-level
-        /// protein group q-value. Returns the row id, for <see cref="AddSpectrumProtein"/>; a
-        /// group already added is returned as it is. Requires <see cref="AddSearchGlobalColumns"/>.
+        /// group's members joined by semicolons, <paramref name="qValue"/> and <paramref name="pep"/>
+        /// its experiment-level protein group q-value and posterior error probability. Returns the
+        /// row id, for <see cref="AddSpectrumProtein"/>; a group already added is returned as it
+        /// is. Requires <see cref="AddSearchGlobalColumns"/>.
         /// </summary>
-        public long AddProteinGroup(string accessions, double qValue)
+        public long AddProteinGroup(string accessions, double qValue, double pep)
         {
-            return _writer.AddProtein(accessions, qValue);
+            return _writer.AddProtein(accessions, qValue, pep);
         }
 
         /// <summary>Links a spectrum to a <c>Proteins</c> row; a spectrum may link to several rows and a row to several spectra.</summary>
@@ -254,6 +259,7 @@ namespace pwiz.Osprey.IO
                 PrecursorQValue = globalValues?.PrecursorQValue,
                 PrecursorPep = globalValues?.PrecursorPep,
                 PeptideQValue = globalValues?.PeptideQValue,
+                PeptidePep = globalValues?.PeptidePep,
                 PeptideSeq = BlibPeptideText.StripFlankingChars(peptideSeq),
                 PeptideModSeq = BlibPeptideText.ConvertUnimodToMass(BlibPeptideText.StripFlankingChars(peptideModSeq)),
                 PrecursorMz = precursorMz,
@@ -297,20 +303,22 @@ namespace pwiz.Osprey.IO
     /// A search result's experiment-level values for one spectrum, written to the columns
     /// <see cref="OspreyBlibWriter.AddSearchGlobalColumns"/> adds: the precursor q-value (the
     /// same value as <c>score</c>), the precursor PEP (one value per entry for the whole
-    /// analysis) and the peptide q-value (one value per modified sequence, the same on every
-    /// charge state's row).
+    /// analysis) and the peptide q-value and PEP (one value each per modified sequence, the same
+    /// on every charge state's row).
     /// </summary>
     public sealed class SearchGlobalValues
     {
-        public SearchGlobalValues(double precursorQValue, double precursorPep, double peptideQValue)
+        public SearchGlobalValues(double precursorQValue, double precursorPep, double peptideQValue, double peptidePep)
         {
             PrecursorQValue = precursorQValue;
             PrecursorPep = precursorPep;
             PeptideQValue = peptideQValue;
+            PeptidePep = peptidePep;
         }
 
         public double PrecursorQValue { get; }
         public double PrecursorPep { get; }
         public double PeptideQValue { get; }
+        public double PeptidePep { get; }
     }
 }

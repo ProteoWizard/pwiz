@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
@@ -37,15 +38,16 @@ namespace pwiz.Osprey.Test
         /// A library is the same object in memory whichever file it came from: the subset .tsv
         /// loaded directly, and loaded back from its .blib export, are compared entry by entry
         /// and field by field - identity, modifications, every fragment's m/z, intensity and
-        /// annotation, proteins - and every difference is listed. The library-decoy subset goes
+        /// annotation, proteins - and every difference is listed. So are the .tsv read with LF
+        /// line endings, as DIA-NN writes it on Linux, and with CRLF. The library-decoy subset goes
         /// through <see cref="LibraryLoader"/> as well: the .tsv with its pairing manifest,
         /// and its export loaded with no manifest at all, must agree on every entry's pairing id
         /// and on the entrapment pairing built from them. The regression's
         /// <c>-LibraryAsBlib</c> legs prove the same thing at the search's output, forty
         /// minutes later; this is the seconds-long form of that gate, and the one to run first
-        /// when a loader changes. The derived library the loader keeps of a .tsv in place of
-        /// the <c>.libcache</c> is the same round trip made by the loader itself
-        /// (<see cref="DerivedLibraryDifferences"/>), its lean loads included.
+        /// when a loader changes. The derived library the loader keeps of a .tsv is the same
+        /// round trip made by the loader itself (<see cref="DerivedLibraryDifferences"/>), its
+        /// lean loads included.
         /// </summary>
         [TestMethod]
         public void TestLibraryLoadsIdenticallyFromTsvAndBlib()
@@ -53,7 +55,9 @@ namespace pwiz.Osprey.Test
             var report = new List<string>();
             report.AddRange(RoundTripDifferences(_dataDir, LIBRARY_FILE, FragmentToleranceConfig.UnitResolution(0.5)));
             report.AddRange(RoundTripDifferences(ExtractAstral(), ASTRAL_LIBRARY_FILE, FragmentToleranceConfig.Hram(10)));
+            report.AddRange(LineEndingDifferences());
             report.AddRange(LoaderRoundTripDifferences());
+            report.AddRange(EntrapmentOnTargetProteinDifferences());
             report.AddRange(DerivedLibraryDifferences());
             // The same library with its modifications printed as masses, as DIA-NN prints them:
             // identified by residue and mass, so the entries read the same as from the UniMod text.
@@ -94,6 +98,33 @@ namespace pwiz.Osprey.Test
             LibraryBlibWriter.Write(blib, fromTsv, Path.GetFileName(tsv));
             var fromBlib = new BlibLoader(tolerance).Load(blib);
             return DescribeDifferences(libraryFile, LibraryDifferences(fromTsv, fromBlib), fromTsv.Count);
+        }
+
+        /// <summary>
+        /// The differences between the subset library read from LF-only bytes, as DIA-NN writes
+        /// it on Linux, and read from the same bytes with CRLF endings. The two files differ in
+        /// nothing but the CR before each LF; the loader must read them to the same entries.
+        /// </summary>
+        private List<string> LineEndingDifferences()
+        {
+            var tolerance = FragmentToleranceConfig.UnitResolution(0.5);
+            string text = File.ReadAllText(Path.Combine(_dataDir, LIBRARY_FILE)).Replace(TextUtil.CRLF, TextUtil.LF);
+            string lfPath = Path.Combine(_testDir, @"lf-" + LIBRARY_FILE);
+            string crlfPath = Path.Combine(_testDir, @"crlf-" + LIBRARY_FILE);
+            File.WriteAllText(lfPath, text);
+            File.WriteAllText(crlfPath, text.Replace(TextUtil.LF, TextUtil.CRLF));
+            byte[] lfBytes = File.ReadAllBytes(lfPath);
+            byte[] crlfBytes = File.ReadAllBytes(crlfPath);
+            Assert.AreEqual(-1, Array.IndexOf(lfBytes, (byte) '\r'), lfPath);
+            int lineCount = lfBytes.Count(b => b == '\n');
+            Assert.IsTrue(lineCount > 1, lfPath);
+            CollectionAssert.AreEqual(lfBytes, crlfBytes.Where(b => b != '\r').ToArray(), @"the two files differ in more than line endings");
+            Assert.AreEqual(lfBytes.Length + lineCount, crlfBytes.Length);
+
+            var fromLf = new DiannTsvLoader(tolerance).Load(lfPath);
+            var fromCrlf = new DiannTsvLoader(tolerance).Load(crlfPath);
+            Assert.IsTrue(fromLf.Count > 0, lfPath);
+            return DescribeDifferences(@"LF vs CRLF " + LIBRARY_FILE, LibraryDifferences(fromCrlf, fromLf), fromCrlf.Count);
         }
 
         /// <summary>
@@ -160,16 +191,120 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Entrapment placed on target proteins (the protein-aware audit): the library-decoy
+        /// subset loaded with a manifest that puts every other entrapment quartet on its
+        /// target's clean accessions. Nothing but the manifest's kind says those peptides are
+        /// entrapment, so the loaded entries must carry <see cref="LibraryEntry.IsEntrapment"/>
+        /// without the accession marker, and the .blib export of that library, loaded back
+        /// with no manifest, must give the identical entries - the flag included, which the
+        /// <c>DecoyPairs</c> table is the only record of.
+        /// </summary>
+        private List<string> EntrapmentOnTargetProteinDifferences()
+        {
+            var tolerance = FragmentToleranceConfig.UnitResolution(0.5);
+            string tsv = Path.Combine(_dataDir, LIBDECOY_FILE);
+            string manifest = WriteEntrapmentOnTargetManifest(Path.Combine(_dataDir, LIBDECOY_PAIRING_FILE),
+                Path.Combine(_testDir, @"on-target-" + LIBDECOY_PAIRING_FILE), out var onTargetSequences);
+            var fromTsv = LibraryLoader.Load(new OspreyConfig
+            {
+                LibrarySource = LibrarySource.FromPath(tsv),
+                FragmentTolerance = tolerance,
+                DecoysInLibrary = true,
+                DecoyPairingManifestPath = manifest,
+            }, null, null);
+            var differences = new List<string>();
+            int onTarget = 0, onOwn = 0;
+            foreach (var entry in fromTsv)
+            {
+                string what = string.Format(@"{0}/{1}", entry.ModifiedSequence, entry.Charge);
+                bool expectOnTarget = onTargetSequences.Contains(entry.Sequence);
+                if (expectOnTarget != (EntrapmentLibraryClassifier.IsEntrapment(entry) && !EntrapmentLibraryClassifier.IsOnEntrapmentProtein(entry)))
+                    differences.Add(string.Format(@"{0}: on-target entrapment: {1} vs {2}", what, expectOnTarget, !expectOnTarget));
+                if (expectOnTarget && EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds))
+                    differences.Add(string.Format(@"{0}: accessions still marked: {1}", what, string.Join(@";", entry.ProteinIds)));
+                if (expectOnTarget)
+                    onTarget++;
+                else if (EntrapmentLibraryClassifier.IsOnEntrapmentProtein(entry))
+                    onOwn++;
+            }
+            if (onTarget == 0 || onOwn == 0)
+                differences.Add(string.Format(@"placement: {0} entrapment on target proteins, {1} on their own, so the split proves nothing", onTarget, onOwn));
+
+            string blib = Path.Combine(_testDir, @"on-target-" + Path.GetFileNameWithoutExtension(LIBDECOY_FILE) + @".blib");
+            LibraryBlibWriter.Write(blib, fromTsv, Path.GetFileName(tsv));
+            var fromBlib = LibraryLoader.Load(new OspreyConfig
+            {
+                LibrarySource = LibrarySource.FromPath(blib),
+                FragmentTolerance = tolerance,
+                DecoysInLibrary = true,
+            }, null, null);
+            differences.AddRange(LibraryDifferences(fromTsv, fromBlib));
+            return DescribeDifferences(LIBDECOY_FILE + @" (LibraryLoader, entrapment on target proteins)", differences, fromTsv.Count);
+        }
+
+        /// <summary>
+        /// A copy of the pairing manifest at <paramref name="manifest"/> with every other
+        /// entrapment quartet placed on its target protein, the protein-aware audit's design:
+        /// the p_target row takes its target's accessions and the p_decoy row the target
+        /// decoy's, so nothing but the manifest's kind says they are entrapment. Written to
+        /// <paramref name="path"/>; <paramref name="onTargetSequences"/> receives the sequences
+        /// moved, p_target and p_decoy.
+        /// </summary>
+        private static string WriteEntrapmentOnTargetManifest(string manifest, string path, out HashSet<string> onTargetSequences)
+        {
+            var lines = File.ReadAllLines(manifest);
+            var header = lines[0].Split('\t');
+            int sequenceColumn = Array.IndexOf(header, @"sequence");
+            int proteinsColumn = Array.IndexOf(header, @"proteins");
+            int typeColumn = Array.IndexOf(header, @"peptide_type");
+            int pairColumn = Array.IndexOf(header, @"peptide_pair_index");
+            Assert.IsTrue(sequenceColumn >= 0 && proteinsColumn >= 0 && typeColumn >= 0 && pairColumn >= 0, lines[0]);
+            var proteinsByPairAndKind = new Dictionary<string, string>();
+            var entrapmentPairs = new SortedSet<int>();
+            for (int i = 1; i < lines.Length; i++)
+            {
+                var fields = lines[i].Split('\t');
+                proteinsByPairAndKind[fields[pairColumn] + @"|" + fields[typeColumn]] = fields[proteinsColumn];
+                if (fields[typeColumn] == PeptideKinds.Name(PeptideKind.PTarget))
+                    entrapmentPairs.Add(int.Parse(fields[pairColumn], CultureInfo.InvariantCulture));
+            }
+            var movedPairs = new HashSet<int>(entrapmentPairs.Where((pair, i) => i % 2 == 1));
+            onTargetSequences = new HashSet<string>(StringComparer.Ordinal);
+            for (int i = 1; i < lines.Length; i++)
+            {
+                var fields = lines[i].Split('\t');
+                if (!movedPairs.Contains(int.Parse(fields[pairColumn], CultureInfo.InvariantCulture)))
+                    continue;
+                string kind = fields[typeColumn];
+                string placedAs;
+                if (kind == PeptideKinds.Name(PeptideKind.PTarget))
+                    placedAs = PeptideKinds.Name(PeptideKind.Target);
+                else if (kind == PeptideKinds.Name(PeptideKind.PDecoy))
+                    placedAs = PeptideKinds.Name(PeptideKind.Decoy);
+                else
+                    continue;
+                fields[proteinsColumn] = proteinsByPairAndKind[fields[pairColumn] + @"|" + placedAs];
+                onTargetSequences.Add(fields[sequenceColumn]);
+                lines[i] = string.Join("\t", fields);
+            }
+            Assert.IsTrue(onTargetSequences.Count > 0, @"no entrapment moved onto a target protein");
+            File.WriteAllLines(path, lines);
+            return path;
+        }
+
+        /// <summary>
         /// The derived library. The first <see cref="LibraryLoader"/> load of the library-decoy
-        /// subset from its .tsv writes <c>&lt;library&gt;.blib</c> where the <c>.libcache</c> was
-        /// kept, and no <c>.libcache</c>; the next load says it read the derived library and
-        /// gives the identical library, entry by entry; a load under another configuration says
-        /// the derived library no longer matches and rebuilds it. The two lean loads through the
-        /// derived library have the cache route's shape: under <c>OmitFragments</c> every entry
-        /// keeps its scalars with a readable empty spectrum, and under <c>RetainFragmentsFor</c>
-        /// the library is exactly what a full load followed by
-        /// <see cref="LibraryFragmentRelease.ReleaseFragments"/> leaves - released, not empty,
-        /// where the set does not name the entry's base id, decoys following their targets.
+        /// subset from its .tsv writes <c>&lt;library&gt;.blib</c> in the cache directory, and
+        /// a <c>.libcache</c> left there by the reload cache it replaced is deleted, at exactly
+        /// that path, once the derived library is written (a cache is rebuilt from its source,
+        /// never carried forward); the next load says it read the derived library and gives
+        /// the identical library, entry by entry; a load under another configuration says the
+        /// derived library no longer matches and rebuilds it. The two lean loads through the
+        /// derived library: under <c>OmitFragments</c> every entry keeps its scalars with a
+        /// readable empty spectrum, and under <c>RetainFragmentsFor</c> the library is exactly
+        /// what a full load followed by <see cref="LibraryFragmentRelease.ReleaseFragments"/>
+        /// leaves - released, not empty, where the set does not name the entry's base id, decoys
+        /// following their targets.
         /// </summary>
         private List<string> DerivedLibraryDifferences()
         {
@@ -180,26 +315,42 @@ namespace pwiz.Osprey.Test
             File.Copy(Path.Combine(_dataDir, LIBDECOY_PAIRING_FILE), manifest);
             string cacheDir = ArtifactPaths.ResolveCacheDir(tsv);
             string derived = Path.Combine(cacheDir, LIBDECOY_FILE + LibraryLoader.DERIVED_LIBRARY_EXT);
+            // The reload cache an earlier build left beside the library: its bytes are never
+            // read, so any file at the path stands in for one.
+            string retiredCache = Path.Combine(cacheDir, LIBDECOY_FILE + LibraryLoader.RETIRED_CACHE_EXT);
+            File.WriteAllText(retiredCache, @"OSPRLBR");
             var differences = new List<string>();
 
             var firstLog = new StringBuilder();
             var first = LoadDerived(tsv, manifest, FragmentToleranceConfig.UnitResolution(0.5), LibraryLoadOptions.Default, firstLog);
             if (!File.Exists(derived))
                 differences.Add(@"derived: no derived library written at " + derived);
-            if (File.Exists(Path.Combine(cacheDir, LIBDECOY_FILE + LibraryCache.EXT)))
-                differences.Add(@"derived: a .libcache was written");
+            if (File.Exists(retiredCache))
+                differences.Add(@"derived: the .libcache was not removed at " + retiredCache);
             string saved = string.Format(OspreyIOResources.LibraryLoader_Load_Saved_the_derived_library___0__precursors__to___1__,
                 first.Count, derived);
             string loaded = string.Format(OspreyIOResources.LibraryLoader_Load_Loaded__0__library_precursors_from_the_derived_library___1__,
                 first.Count, derived);
+            string removed = string.Format(OspreyIOResources.LibraryLoader_DeleteRetiredCache_Removed_the_library_cache___0____the_derived_library_replaces_it_,
+                retiredCache);
             StringAssert.Contains(firstLog.ToString(), saved);
+            StringAssert.Contains(firstLog.ToString(), removed);
             Assert.IsFalse(firstLog.ToString().Contains(loaded), firstLog.ToString());
 
-            // The second load reads the derived library and gives the same library.
+            // The second load reads the derived library and gives the same library, and removes
+            // a .libcache too: the derived library is in place whether this load wrote or read it.
+            File.WriteAllText(retiredCache, @"OSPRLBR");
             var secondLog = new StringBuilder();
             var second = LoadDerived(tsv, manifest, FragmentToleranceConfig.UnitResolution(0.5), LibraryLoadOptions.Default, secondLog);
             StringAssert.Contains(secondLog.ToString(), loaded);
+            StringAssert.Contains(secondLog.ToString(), removed);
             Assert.IsFalse(secondLog.ToString().Contains(saved), secondLog.ToString());
+            if (File.Exists(retiredCache))
+                differences.Add(@"derived: the .libcache was not removed by the read at " + retiredCache);
+            // With none left, a load says nothing about one.
+            var thirdLog = new StringBuilder();
+            LoadDerived(tsv, manifest, FragmentToleranceConfig.UnitResolution(0.5), LibraryLoadOptions.Default, thirdLog);
+            Assert.IsFalse(thirdLog.ToString().Contains(removed), thirdLog.ToString());
             differences.AddRange(LibraryDifferences(first, second));
 
             // Every entry's scalars with a readable empty spectrum: the FirstPassFDR worker's load.
@@ -316,6 +467,7 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(a.RetentionTime, b.RetentionTime, 1e-10, what);
             Assert.AreEqual(a.RtCalibrated, b.RtCalibrated, what);
             Assert.AreEqual(a.IsDecoy, b.IsDecoy, what);
+            Assert.AreEqual(a.IsEntrapment, b.IsEntrapment, what);
             Assert.AreEqual(a.PairingId, b.PairingId, what);
             Assert.AreEqual(a.Modifications.Count, b.Modifications.Count, what);
             CollectionAssert.AreEqual(a.ProteinIds.ToArray(), b.ProteinIds.ToArray(), what);
@@ -329,8 +481,7 @@ namespace pwiz.Osprey.Test
         /// untouched on both sides, a skipped spectrum RELEASED (asked through
         /// <see cref="LibraryEntry.IsSpectrumReleased"/>, and the throw on reading it asserted
         /// rather than inferred, since equality would also hold if both sides had quietly become
-        /// readable-empty), a retained one carrying the identical peaks. The cache route's
-        /// <c>IOTest.TestLibraryCacheRetainMatchesRelease</c>, for the derived library.
+        /// readable-empty), a retained one carrying the identical peaks.
         /// </summary>
         private static void AssertRetainMatchesRelease(IReadOnlyList<LibraryEntry> released, IReadOnlyList<LibraryEntry> skipped,
             HashSet<uint> retained)
@@ -399,6 +550,7 @@ namespace pwiz.Osprey.Test
                 Compare(lines, entry, @"RetentionTime", ea.RetentionTime, eb.RetentionTime);
                 Compare(lines, entry, @"RtCalibrated", ea.RtCalibrated, eb.RtCalibrated);
                 Compare(lines, entry, @"IsDecoy", ea.IsDecoy, eb.IsDecoy);
+                Compare(lines, entry, @"IsEntrapment", ea.IsEntrapment, eb.IsEntrapment);
                 Compare(lines, entry, @"PairingId", ea.PairingId, eb.PairingId);
                 CompareLists(lines, entry, @"Modifications", ea.Modifications, eb.Modifications,
                     m => string.Format(CultureInfo.InvariantCulture, @"{0}@{1} {2:R} {3} {4}", m.Name, m.Position, m.MassDelta, m.UnimodId, string.Empty).TrimEnd());

@@ -389,10 +389,6 @@
     <value>“{2}”：{1:N0} 个第一轮中间文件中有 {0:N0} 个无法写入，因此下一个任务无法运行。有关每个文件的信息，请参见上方警告。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_LogRunLevelTotal_Total___0__precursors_pass_run_level_FDR_across__1__files" xml:space="preserve">
-    <value>总计：{1:N0} 个文件中有 {0:N0} 个母离子通过运行水平 FDR</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_OnlyDiagnosticsProductOutstanding_Model_diagnostics___0__is_missing__so_the_first_pass_is_re_run_to_build_the_report_" xml:space="preserve">
     <value>模型诊断：缺少 {0}，因此重新运行第一轮以构建报告。</value>
     <comment>Needs Review:New resource</comment>
@@ -519,14 +515,6 @@
   </data>
   <data name="FirstPassFdrTask_StreamFirstPassFileScores_Failed_to_read_the_first_pass_intermediate_file_for___0_____1_" xml:space="preserve">
     <value>读取“{0}”的第一轮中间文件失败：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____input___but__1__were_given__The_" xml:space="preserve">
-    <value>“{0}”需要至少 2 个输入文件（“{3}”），但只提供了 {1:N0} 个。仅当有其他运行可供协调时，它为 {2} 写入的中间文件才有用。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_ValidateSelection___task__0__requires_cross_run_reconciliation__which_the_configuration_turns_off__The_" xml:space="preserve">
-    <value>“{0}”需要跨运行协调，但配置已将其关闭。仅当运行跨运行协调时，它为 {1} 写入的中间文件才有用。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_WriteExperimentSidecar_Failed_to_write__0____1_" xml:space="preserve">
@@ -1431,10 +1419,6 @@
   </data>
   <data name="SecondPassFdrTask_Run___task_ModelDiagnostics__skipping_the__blib_write__report_only__" xml:space="preserve">
     <value>“{0}”：跳过写入 {1}（仅报告）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="SecondPassFdrTask_WriteBlibOutput_No_precursors_pass_the_FDR_threshold__Writing_an_empty__blib_" xml:space="preserve">
-    <value>没有母离子通过 FDR 阈值。正在写入空的 {0}。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="SecondPassFdrTask_WriteBlibOutput_Wrote__1__library_spectra_with__2__peaks_across__0__runs_to__3_" xml:space="preserve">

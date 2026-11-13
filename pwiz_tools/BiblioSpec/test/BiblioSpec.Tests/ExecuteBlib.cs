@@ -106,7 +106,8 @@ public static class ExecuteBlib
     /// <summary>
     /// Resolve the absolute path of the tool exe by walking up from the test
     /// runner's base directory until we find a sibling <c>src/</c> tree, then
-    /// looking under <c>BiblioSpec/src/&lt;Tool&gt;/bin/&lt;Config&gt;/net8.0/</c>.
+    /// looking under <c>BiblioSpec/src/&lt;Tool&gt;/bin/[&lt;Platform&gt;/]&lt;Config&gt;/net10.0/</c>,
+    /// in the same output layout as this test assembly.
     /// </summary>
     /// <param name="tool">Which CLI tool to resolve.</param>
     /// <returns>The absolute exe path, or null if no candidate exists. Returning
@@ -118,23 +119,28 @@ public static class ExecuteBlib
         // per CLI tool, matching the cpp BiblioSpec tool exe names.
         string projectName = tool.ToString();
 
-        // The build config can be Debug or Release; prefer the same config as the
-        // test runner itself. AppContext.BaseDirectory ends with bin/<Config>/net8.0/.
-        string config = InferConfig() ?? "Debug";
+        // Match the test runner's own layout: bin/<Config>/net10.0/ for an AnyCPU build,
+        // bin/<Platform>/<Config>/net10.0/ for a platform build (build.bat builds x64). The
+        // platform folder is never mixed in either direction, so a test never picks up a tool
+        // left over from a build of the other kind.
+        var (platform, config) = InferPlatformAndConfig();
+        config ??= "Debug";
+        string otherConfig = config == "Debug" ? "Release" : "Debug";
 
         // Walk up looking for a sibling src/ tree.
         string? dir = AppContext.BaseDirectory;
         while (!string.IsNullOrEmpty(dir))
         {
-            string candidate = Path.Combine(
-                dir, "src", projectName, "bin", config, "net10.0", exeName);
+            string binDir = Path.Combine(dir, "src", projectName, "bin");
+            if (platform != null)
+                binDir = Path.Combine(binDir, platform);
+
+            string candidate = Path.Combine(binDir, config, "net10.0", exeName);
             if (File.Exists(candidate))
                 return candidate;
 
             // Also try the opposite config in case the user only built one of them.
-            string otherConfig = config == "Debug" ? "Release" : "Debug";
-            string altCandidate = Path.Combine(
-                dir, "src", projectName, "bin", otherConfig, "net10.0", exeName);
+            string altCandidate = Path.Combine(binDir, otherConfig, "net10.0", exeName);
             if (File.Exists(altCandidate))
                 return altCandidate;
 
@@ -143,10 +149,14 @@ public static class ExecuteBlib
         return null;
     }
 
-    private static string? InferConfig()
+    private static (string? Platform, string? Config) InferPlatformAndConfig()
     {
-        // bin/<Config>/<tfm>/  →  walk back two levels and grab the directory name.
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        return dir.Parent?.Name; // <Config>
+        // .../bin/<Config>/<tfm>/ or .../bin/<Platform>/<Config>/<tfm>/
+        var configDir = new DirectoryInfo(AppContext.BaseDirectory).Parent;
+        var platformDir = configDir?.Parent;
+        string? platform = platformDir == null || platformDir.Name.Equals("bin", StringComparison.OrdinalIgnoreCase)
+            ? null
+            : platformDir.Name;
+        return (platform, configDir?.Name);
     }
 }

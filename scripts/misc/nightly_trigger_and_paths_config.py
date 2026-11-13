@@ -33,6 +33,8 @@ matchPaths = [
     (".*/smartBuildTrigger.py", {}),
     (".*/nightly_trigger_and_paths_config.py", {}),
     (".*/vcs_trigger_and_paths_config.py", {}),
+    # Run only by the "Publish monthly release" config, which no build depends on
+    (".*/publish_monthly_release.py", {}),
     (".*/ai/.*", {}),
     ("libraries/.*", targets['All']),
     ("pwiz/.*", targets['All']),

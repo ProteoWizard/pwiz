@@ -151,11 +151,29 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}: {1} of its {2} output files were written by Osprey {3}, not by this build ({4}), and will be recomputed. To reuse them instead, run with {5}={3}..
+        /// </summary>
+        public static string AnalysisPipeline_WarnOtherBuildOutputs__0____1__of_its__2__output_files_were_written_by_Osprey__3__ {
+            get {
+                return ResourceManager.GetString("AnalysisPipeline_WarnOtherBuildOutputs__0____1__of_its__2__output_files_were_written_by_Osprey__3__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Searching the predicted library {0}.
         /// </summary>
         public static string LibraryBuildWorkflow_Run_Searching_the_predicted_library__0_ {
             get {
                 return ResourceManager.GetString("LibraryBuildWorkflow_Run_Searching_the_predicted_library__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Searching the tuning runs with {0}.
+        /// </summary>
+        public static string LibraryBuildWorkflow_Run_Searching_the_tuning_runs_with__0_ {
+            get {
+                return ResourceManager.GetString("LibraryBuildWorkflow_Run_Searching_the_tuning_runs_with__0_", resourceCulture);
             }
         }
         
@@ -337,7 +355,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Osprey is a peptide-centric DIA search tool from the MacCoss lab. It reads DIA mzML files plus a spectral library and writes a BiblioSpecLite ({0}) library of FDR-controlled results that imports directly into Skyline. It runs as a standalone executable on Windows and Linux..
+        ///   Looks up a localized string similar to Osprey is a peptide-centric DIA search tool from the MacCoss lab. It reads DIA mass spectrometry data files (mzML, or instrument vendor files such as Thermo .raw) plus a spectral library and writes a BiblioSpecLite ({0}) library of FDR-controlled results that imports directly into Skyline. It runs as a standalone executable on Windows and Linux..
         /// </summary>
         public static string OspreyCommandArgs_AppendUsageHtmlIntro_Osprey_is_a_peptide_centric_DIA_search_tool_from_the_MacCoss_lab {
             get {
@@ -431,6 +449,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} runs as one process, or task by task: {1} {2}; the four search stages with {3}; {1} {4}; {1} {5}; th [rest of string was truncated]";.
+        /// </summary>
+        public static string OspreyCommandArgs_GROUP_HPC__0__runs_as_one_process_or_task_by_task {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_GROUP_HPC__0__runs_as_one_process_or_task_by_task", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Library Build.
         /// </summary>
         public static string OspreyCommandArgs_Group_Library_Build {
@@ -476,6 +503,24 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Library Tuning.
+        /// </summary>
+        public static string OspreyCommandArgs_Group_Library_Tuning {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_Group_Library_Tuning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0}: how the models are tuned on its runs. These are CarafeSharp's options under their standard names..
+        /// </summary>
+        public static string OspreyCommandArgs_GROUP_LIBRARY_TUNING_With__0___how_the_models_are_tuned_on_its_runs {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_GROUP_LIBRARY_TUNING_With__0___how_the_models_are_tuned_on_its_runs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Logging.
         /// </summary>
         public static string OspreyCommandArgs_Group_Logging {
@@ -512,6 +557,51 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;integer&gt;.
+        /// </summary>
+        public static string OspreyCommandArgs_INT_VALUE {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_INT_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;number&gt;.
+        /// </summary>
+        public static string OspreyCommandArgs_NUM_VALUE {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_NUM_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to path/to/file.
+        /// </summary>
+        public static string OspreyCommandArgs_PATH_TO_FILE_path_to_file {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_PATH_TO_FILE_path_to_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to path/to/folder.
+        /// </summary>
+        public static string OspreyCommandArgs_PATH_TO_FOLDER {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_PATH_TO_FOLDER", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;ratio&gt;.
+        /// </summary>
+        public static string OspreyCommandArgs_RATIO_VALUE {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_RATIO_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} file not found: {1}.
         /// </summary>
         public static string OspreyCommandArgs_ReadInputList__0__file_not_found___1_ {
@@ -526,6 +616,15 @@ namespace pwiz.Osprey {
         public static string OspreyCommandArgs_ReadInputList_The__0__file_lists_no_input_files___1_ {
             get {
                 return ResourceManager.GetString("OspreyCommandArgs_ReadInputList_The__0__file_lists_no_input_files___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;threshold&gt;.
+        /// </summary>
+        public static string OspreyCommandArgs_THRESHOLD_VALUE {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_THRESHOLD_VALUE", resourceCulture);
             }
         }
         
@@ -640,7 +739,160 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("OspreyCommandArgs_UsageBlocks_USAGE___0_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to no NVIDIA GPU was found; predicting on the GPU needs an NVIDIA GPU and its driver.
+        /// </summary>
+        public static string OspreyTorchRuntimes_DescribeGpuUnavailable_no_NVIDIA_GPU_was_found__predicting_on_the_GPU_needs_an_NVIDIA_GPU_and_its_driver {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_DescribeGpuUnavailable_no_NVIDIA_GPU_was_found__predicting_on_the_GPU_needs_an_NVIDIA_GPU_and_its_driver", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to the NVIDIA CUDA runtime is not installed in {0}; run {1} to download it (about {2} GB).
+        /// </summary>
+        public static string OspreyTorchRuntimes_DescribeGpuUnavailable_the_NVIDIA_CUDA_runtime_is_not_installed_in__0___run__1__to_download_it__about__2__GB_ {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_DescribeGpuUnavailable_the_NVIDIA_CUDA_runtime_is_not_installed_in__0___run__1__to_download_it__about__2__GB_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to the NVIDIA driver supports CUDA {0}, but predicting on the GPU needs a driver for CUDA {1} or later.
+        /// </summary>
+        public static string OspreyTorchRuntimes_DescribeGpuUnavailable_the_NVIDIA_driver_supports_CUDA__0___but_predicting_on_the_GPU_needs_a_driver_for_CUDA__1__or_later {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_DescribeGpuUnavailable_the_NVIDIA_driver_supports_CUDA__0___but_predicting_on_the_GPU_needs_a_driver_for_CUDA__1__or_later", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to the {0} has compute capability {1}, but predicting on the GPU needs {2} or later.
+        /// </summary>
+        public static string OspreyTorchRuntimes_DescribeGpuUnavailable_the__0__has_compute_capability__1___but_predicting_on_the_GPU_needs__2__or_later {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_DescribeGpuUnavailable_the__0__has_compute_capability__1___but_predicting_on_the_GPU_needs__2__or_later", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to this build of Osprey lists no NVIDIA CUDA runtime packages.
+        /// </summary>
+        public static string OspreyTorchRuntimes_DescribeGpuUnavailable_this_build_of_Osprey_lists_no_NVIDIA_CUDA_runtime_packages {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_DescribeGpuUnavailable_this_build_of_Osprey_lists_no_NVIDIA_CUDA_runtime_packages", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading the NVIDIA CUDA runtime, package {0} of {1}.
+        /// </summary>
+        public static string OspreyTorchRuntimes_GetDownloadingMessage_Downloading_the_NVIDIA_CUDA_runtime__package__0__of__1_ {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_GetDownloadingMessage_Downloading_the_NVIDIA_CUDA_runtime__package__0__of__1_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Installing the NVIDIA CUDA runtime.
+        /// </summary>
+        public static string OspreyTorchRuntimes_GetInstallingMessage_Installing_the_NVIDIA_CUDA_runtime {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_GetInstallingMessage_Installing_the_NVIDIA_CUDA_runtime", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading the NVIDIA CUDA runtime (about {0} GB) into {1}.
+        /// </summary>
+        public static string OspreyTorchRuntimes_Install_Downloading_the_NVIDIA_CUDA_runtime__about__0__GB__into__1_ {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_Install_Downloading_the_NVIDIA_CUDA_runtime__about__0__GB__into__1_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to install the NVIDIA CUDA runtime: {0}.
+        /// </summary>
+        public static string OspreyTorchRuntimes_Install_Failed_to_install_the_NVIDIA_CUDA_runtime___0_ {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_Install_Failed_to_install_the_NVIDIA_CUDA_runtime___0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Installed the NVIDIA CUDA runtime in {0}.
+        /// </summary>
+        public static string OspreyTorchRuntimes_Install_Installed_the_NVIDIA_CUDA_runtime_in__0_ {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_Install_Installed_the_NVIDIA_CUDA_runtime_in__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The NVIDIA CUDA runtime is already installed in {0}.
+        /// </summary>
+        public static string OspreyTorchRuntimes_Install_The_NVIDIA_CUDA_runtime_is_already_installed_in__0_ {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_Install_The_NVIDIA_CUDA_runtime_is_already_installed_in__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to This build of Osprey lists no NVIDIA CUDA runtime packages to download..
+        /// </summary>
+        public static string OspreyTorchRuntimes_Install_This_build_of_Osprey_lists_no_NVIDIA_CUDA_runtime_packages_to_download_ {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_Install_This_build_of_Osprey_lists_no_NVIDIA_CUDA_runtime_packages_to_download_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to This computer cannot predict on the GPU ({0}); the runtime is installed all the same, for a computer that can..
+        /// </summary>
+        public static string OspreyTorchRuntimes_Install_This_computer_cannot_predict_on_the_GPU___0___the_runtime_is_installed_all_the_same__for_a_computer_that_can_ {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_Install_This_computer_cannot_predict_on_the_GPU___0___the_runtime_is_installed_all_the_same__for_a_computer_that_can_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to NVIDIA GPU.
+        /// </summary>
+        public static string OspreyTorchRuntimes_Load_NVIDIA_GPU {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_Load_NVIDIA_GPU", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Predicting on the CPU.
+        /// </summary>
+        public static string OspreyTorchRuntimes_Load_Predicting_on_the_CPU {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_Load_Predicting_on_the_CPU", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Predicting on the CPU: {0}.
+        /// </summary>
+        public static string OspreyTorchRuntimes_Load_Predicting_on_the_CPU___0_ {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_Load_Predicting_on_the_CPU___0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Predicting on the GPU ({0}) with the NVIDIA CUDA runtime in {1}.
+        /// </summary>
+        public static string OspreyTorchRuntimes_Load_Predicting_on_the_GPU___0___with_the_NVIDIA_CUDA_runtime_in__1_ {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_Load_Predicting_on_the_GPU___0___with_the_NVIDIA_CUDA_runtime_in__1_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to off.
         /// </summary>
@@ -708,6 +960,24 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} and {1} both name what to predict; give one or the other..
+        /// </summary>
+        public static string Program_LibraryBuildError__0__and__1__both_name_what_to_predict__give_one_or_the_other_ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError__0__and__1__both_name_what_to_predict__give_one_or_the_other_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} predicts a library and searches nothing, so {1} cannot be given with it..
+        /// </summary>
+        public static string Program_LibraryBuildError__0__predicts_a_library_and_searches_nothing__so__1__cannot_be_given_with_it_ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError__0__predicts_a_library_and_searches_nothing__so__1__cannot_be_given_with_it_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to {0} builds the library and {1} names one; give one or the other..
         /// </summary>
         public static string Program_LibraryBuildError__0__builds_the_library_and__1__names_one__give_one_or_the_other_ {
@@ -726,15 +996,6 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} cannot be combined with {1} yet. Run the command without {1}, then search the library it writ [rest of string was truncated]";.
-        /// </summary>
-        public static string Program_LibraryBuildError__0__cannot_be_combined_with__1__yet__Run_the_command_without__1___then_search_the_library_it_writes___2___with__3__and__1__ {
-            get {
-                return ResourceManager.GetString("Program_LibraryBuildError__0__cannot_be_combined_with__1__yet__Run_the_command_without__1___then_search_the_library_it_writes___2___with__3__and__1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {0} is not read with {1}: the library it builds carries its pairing..
         /// </summary>
         public static string Program_LibraryBuildError__0__is_not_read_with__1___the_library_it_builds_carries_its_pairing_ {
@@ -749,6 +1010,15 @@ namespace pwiz.Osprey {
         public static string Program_LibraryBuildError__0__must_be_in___1____2__ {
             get {
                 return ResourceManager.GetString("Program_LibraryBuildError__0__must_be_in___1____2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} names the model this run writes: {1}. Copy it, or choose another {2}..
+        /// </summary>
+        public static string Program_LibraryBuildError__0__names_the_model_this_run_writes___1___Copy_it__or_choose_another__2__ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError__0__names_the_model_this_run_writes___1___Copy_it__or_choose_another__2__", resourceCulture);
             }
         }
         
@@ -778,6 +1048,24 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("Program_LibraryBuildError_Model_file_not_found___0_", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor table not found: {0}.
+        /// </summary>
+        public static string Program_LibraryBuildError_Precursor_table_not_found___0_ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError_Precursor_table_not_found___0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Training input file not found: {0}.
+        /// </summary>
+        public static string Program_LibraryBuildError_Training_input_file_not_found___0_ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError_Training_input_file_not_found___0_", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Error:.
@@ -787,7 +1075,61 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("Program_LogError_Error_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} measures as {1} ({2:0.###} m/z), unlike {3}; it is searched at {4} with the other inputs. Search runs of different resolution separately..
+        /// </summary>
+        public static string Program_LogResolution__0__measures_as__1____2__m_z___unlike__3___it_is_searched_at__4__with_the_other_inputs__Search_runs_of_different_resolution_separately_ {
+            get {
+                return ResourceManager.GetString("Program_LogResolution__0__measures_as__1____2__m_z___unlike__3___it_is_searched_at__4__with_the_other_inputs__Search_runs_of_different_resolution_separately_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Measured from the first {0} MS2 spectra of {1}: {2} of adjacent peaks are within {3:0.###} m/z of each other, closer than the {4} m/z a unit-resolution analyzer separates. Give {5} to choose it yourself..
+        /// </summary>
+        public static string Program_LogResolution_Measured_from_the_first__0__MS2_spectra_of__1____2__of_adjacent_peaks_are_within__3__m_z_of_each_other__closer_than_the__4__m_z_a_unit_resolution_analyzer_separates__Give__5__to_choose_it_yourself_ {
+            get {
+                return ResourceManager.GetString("Program_LogResolution_Measured_from_the_first__0__MS2_spectra_of__1____2__of_adjacent_peaks_are_within__3__m_z_of_each_other__closer_than_the__4__m_z_a_unit_resolution_analyzer_separates__Give__5__to_choose_it_yourself_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Measured from the first {0} MS2 spectra of {1}: the closest {2} of adjacent peaks are {3:0.###} m/z apart, no closer than {4} m/z, as at unit resolution. Give {5} to choose it yourself..
+        /// </summary>
+        public static string Program_LogResolution_Measured_from_the_first__0__MS2_spectra_of__1___the_closest__2__of_adjacent_peaks_are__3__m_z_apart__no_closer_than__4__m_z__as_at_unit_resolution__Give__5__to_choose_it_yourself_ {
+            get {
+                return ResourceManager.GetString("Program_LogResolution_Measured_from_the_first__0__MS2_spectra_of__1___the_closest__2__of_adjacent_peaks_are__3__m_z_apart__no_closer_than__4__m_z__as_at_unit_resolution__Give__5__to_choose_it_yourself_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No spectra or scores file of the inputs shows the resolution; searching at {0}. Give {1} to choose it yourself..
+        /// </summary>
+        public static string Program_LogResolution_No_spectra_or_scores_file_of_the_inputs_shows_the_resolution__searching_at__0___Give__1__to_choose_it_yourself_ {
+            get {
+                return ResourceManager.GetString("Program_LogResolution_No_spectra_or_scores_file_of_the_inputs_shows_the_resolution__searching_at__0___Give__1__to_choose_it_yourself_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Read from the search settings recorded in {0}, since no spectra of the inputs are at hand to measure. Give {1} to choose it yourself..
+        /// </summary>
+        public static string Program_LogResolution_Read_from_the_search_settings_recorded_in__0___since_no_spectra_of_the_inputs_are_at_hand_to_measure__Give__1__to_choose_it_yourself_ {
+            get {
+                return ResourceManager.GetString("Program_LogResolution_Read_from_the_search_settings_recorded_in__0___since_no_spectra_of_the_inputs_are_at_hand_to_measure__Give__1__to_choose_it_yourself_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The MS2 spectra of {0} hold too few peaks to measure the resolution ({1} adjacent peaks in {2} spectra); searching at {3}. Give {4} to choose it yourself..
+        /// </summary>
+        public static string Program_LogResolution_The_MS2_spectra_of__0__hold_too_few_peaks_to_measure_the_resolution___1__adjacent_peaks_in__2__spectra___searching_at__3___Give__4__to_choose_it_yourself_ {
+            get {
+                return ResourceManager.GetString("Program_LogResolution_The_MS2_spectra_of__0__hold_too_few_peaks_to_measure_the_resolution___1__adjacent_peaks_in__2__spectra___searching_at__3___Give__4__to_choose_it_yourself_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Warning:.
         /// </summary>
@@ -823,7 +1165,16 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("Program_Run_Input_file_not_found__and_its_demultiplexed_spectra_cache_cannot_stand_in_for_it___0____1____It_can_be_rebuilt_only_from_the_source_file__restore_it_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} asks for the GPU, but {1}.
+        /// </summary>
+        public static string Program_Run__0__asks_for_the_GPU__but__1_ {
+            get {
+                return ResourceManager.GetString("Program_Run__0__asks_for_the_GPU__but__1_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to {0:N0} of {1:N0} input files are not present; using the intermediate scores file written for each one..
         /// </summary>
@@ -1102,6 +1453,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Tuning: the models are tuned on {0} first, and saved as {1}.
+        /// </summary>
+        public static string Program_Run_Tuning__the_models_are_tuned_on__0__first__and_saved_as__1_ {
+            get {
+                return ResourceManager.GetString("Program_Run_Tuning__the_models_are_tuned_on__0__first__and_saved_as__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Saved {0:N0} library precursors to {1}.
         /// </summary>
         public static string Program_RunExportLibrary_Saved__0_N0__library_precursors_to__1_ {
@@ -1237,6 +1597,24 @@ namespace pwiz.Osprey {
         public static string Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_ {
             get {
                 return ResourceManager.GetString("Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} predicts the library with the tuned model {1}, which is not there. Run {2} first..
+        /// </summary>
+        public static string LibraryBuildWorkflow_Run__0__predicts_the_library_with_the_tuned_model__1___which_is_not_there__Run__2__first_ {
+            get {
+                return ResourceManager.GetString("LibraryBuildWorkflow_Run__0__predicts_the_library_with_the_tuned_model__1___which_is_not_there__Run__2__first_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} makes a stage task a stage of the tuning runs&apos; search: give it with {1} and one of {2}..
+        /// </summary>
+        public static string Program_LibraryBuildError__0__makes_a_stage_task_a_stage_of_the_tuning_runs__search__give_it_with__1__and_one_of__2__ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError__0__makes_a_stage_task_a_stage_of_the_tuning_runs__search__give_it_with__1__and_one_of__2__", resourceCulture);
             }
         }
     }

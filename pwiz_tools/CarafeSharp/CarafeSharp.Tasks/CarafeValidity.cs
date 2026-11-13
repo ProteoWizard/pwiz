@@ -85,7 +85,7 @@ namespace pwiz.CarafeSharp.Tasks
             return name.StartsWith(SimpleFileSaver.TEMP_PREFIX, StringComparison.Ordinal) ||
                    name.EndsWith(@".blib", StringComparison.OrdinalIgnoreCase) ||
                    name.EndsWith(@".tsv", StringComparison.OrdinalIgnoreCase) ||
-                   name.EndsWith(CarafeModelFile.EXTENSION, StringComparison.OrdinalIgnoreCase);
+                   CarafeModelFile.IsModelFileName(name);
         }
 
         private static string Sha256(string text)

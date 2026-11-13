@@ -82,7 +82,7 @@ namespace pwiz.SkylineTestFunctional
             });
             // Should start out in document order
             var chromatograms = SkylineWindow.Document.MeasuredResults.Chromatograms;
-            CollectionAssert.AreEqual(chromatograms.Select(c=>c.Name).ToList(), GetAreaAxisLabels());
+            WaitForAreaAxisLabels(chromatograms.Select(c=>c.Name).ToList());
             
             // Order by acquired time
             RunUI(()=>SkylineWindow.ShowReplicateOrder(SummaryReplicateOrder.time));
@@ -90,7 +90,7 @@ namespace pwiz.SkylineTestFunctional
             var orderedByRunStartTime =
                 chromatograms.OrderBy(c => c.MSDataFileInfos.First().RunStartTime).ToList();
             CollectionAssert.AreNotEqual(chromatograms.ToList(), orderedByRunStartTime);
-            CollectionAssert.AreEqual(orderedByRunStartTime.Select(c=>c.Name).ToList(), GetAreaAxisLabels());
+            WaitForAreaAxisLabels(orderedByRunStartTime.Select(c=>c.Name).ToList());
             
             // Group by Name
             var annotationSubjectId =
@@ -103,14 +103,14 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>SkylineWindow.GroupByReplicateValue(replicateValueName));
             WaitForGraphs();
             var ratNamesByRunStartTime = orderedByRunStartTime.Select(GetRatName).Distinct().ToList();
-            CollectionAssert.AreEqual(ratNamesByRunStartTime, GetAreaAxisLabels());
+            WaitForAreaAxisLabels(ratNamesByRunStartTime);
             
             // Order by rat name
             RunUI(()=>SkylineWindow.OrderByReplicateAnnotation(replicateValueName));
             WaitForGraphs();
             var alphabeticalRatNames =
                 ratNamesByRunStartTime.OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase).ToList();
-            CollectionAssert.AreEqual(alphabeticalRatNames, GetAreaAxisLabels());
+            WaitForAreaAxisLabels(alphabeticalRatNames);
             
             // Set SampleType and Concentration on Replicates and use those to define a group comparison
             RunUI(()=>SkylineWindow.ShowDocumentGrid(true));
@@ -163,15 +163,29 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(48, proteinsBySampleTypeGrid.DataboundGridControl.RowCount);
         }
 
-        private List<string> GetAreaAxisLabels()
+        /// <summary>
+        /// Waits for the area replicate graph to show the expected replicate labels. The graph
+        /// pane and its labels are updated asynchronously after the graph is shown or the
+        /// replicate ordering or grouping changes, and can briefly hold earlier labels.
+        /// </summary>
+        private void WaitForAreaAxisLabels(IList<string> expectedLabels)
         {
-            return CallUI(() =>
-            {
-                var graphSummary = FindGraphSummaryByGraphType<AreaReplicateGraphPane>();
-                Assert.IsNotNull(graphSummary);
-                Assert.IsTrue(graphSummary.TryGetGraphPane(out AreaReplicateGraphPane areaReplicateGraphPane));
-                return areaReplicateGraphPane.XAxis.Scale.TextLabels.ToList();
-            });
+            WaitForConditionUI(() => expectedLabels.SequenceEqual(GetAreaAxisLabels() ?? Array.Empty<string>()),
+                () => string.Format(@"Expected area graph labels [{0}] but found [{1}]",
+                    string.Join(@", ", expectedLabels),
+                    string.Join(@", ", GetAreaAxisLabels() ?? Array.Empty<string>())));
+        }
+
+        /// <summary>
+        /// Returns the unabbreviated X axis labels of the area replicate graph, or null if the
+        /// graph pane does not exist yet. Must be called on the UI thread.
+        /// </summary>
+        private string[] GetAreaAxisLabels()
+        {
+            var graphSummary = FindGraphSummaryByGraphType<AreaReplicateGraphPane>();
+            if (graphSummary == null || !graphSummary.TryGetGraphPane(out AreaReplicateGraphPane areaReplicateGraphPane))
+                return null;
+            return areaReplicateGraphPane.GetOriginalXAxisLabels();
         }
 
         private string GetRatName(ChromatogramSet chromatogramSet)

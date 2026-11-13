@@ -124,7 +124,11 @@ tr.sel td{background:color-mix(in srgb,var(--accent) 15%,transparent)}
 /* Collapsed = a compact scrollable panel (scroll the rows in place); the toggle
    expands to the full table (e.g. for print / an at-a-glance overview). */
 .collapsewrap.collapsed{max-height:330px;overflow-y:auto}
-#modelTable table{max-width:700px}
+#modelTable table{max-width:1080px}
+#modelTable th[title],#corrGroups th[title]{cursor:help;text-decoration:underline dotted}
+.grp{display:inline-block;margin-left:6px;padding:0 5px;border-radius:4px;font-size:10.5px;font-weight:600;
+  background:var(--grid);color:var(--muted)}
+.flip{color:var(--bad);font-weight:600;margin-left:4px}
 /* Keep the header row fixed while the body scrolls in the collapsed panel. */
 #modelTable thead th{position:sticky;top:0;background:var(--panel);z-index:1}
 #fileTable table{max-width:640px}
@@ -232,7 +236,12 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <p class="desc" id="modelDesc">The averaged cross-validated linear (Percolator/SVM) model, decomposed Skyline-style
       into each feature's percent contribution to the composite target&ndash;decoy separation.
       Rows in <b style="color:var(--bad)">red</b> have a trained coefficient whose sign is opposite the
-      feature's expected direction (behaving against expectation).</p>
+      feature's expected direction (behaving against expectation).
+      <span id="modelTrainDesc">Contribution (and the target-decoy mean gap) describe every scored precursor. The columns to
+      their right measure each feature on the <b>final training set</b> (the rows the fold models were trained on; see the
+      <a href="#rocCard">ROC card</a>): fold-to-fold weight spread, its own AUROC and Cohen's d, its TPR at 1% FPR, and
+      permutation importance. A tag such as <span class="grp">G1</span> marks a group of correlated features
+      (<a href="#corrCard">correlation card</a>). Hover a column heading for its definition.</span></p>
     <div id="modelNa" class="na" style="display:none"></div>
     <div id="modelWrap" class="collapsewrap collapsed"><div id="modelTable"></div></div>
   </div>
@@ -243,6 +252,37 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
       <span id="scoreTip"><b>Click any feature row above</b> to see that individual score's target/decoy distribution (the mProphet "Feature Scores" view).</span></p>
     <div class="legend" id="scoreLegend"></div>
     <div class="chartbox" id="scoreChart"></div>
+  </div>
+  <div class="card" id="rocCard">
+    <h2 id="rocHdr">Final training set &mdash; ROC</h2>
+    <p class="desc">How well the composite score, and each feature alone, separate the rows the model was trained on.
+      The <b>final training set</b> is three nested selections: the training subset (best observation per precursor,
+      subsampled by peptide to at most <code>MaxTrainSize</code>), the cross-validation fold split within it, and per
+      fold the confident targets (q at or below the training FDR) plus every decoy that the fold's returned model was
+      trained on. Curves are averaged over folds at fixed false-positive rates; the FPR axis is logarithmic because
+      acceptance at q &lt;= 0.01 lives in the low-FPR corner. <b>Training</b>: each fold's model on its own training
+      set. <b>In-sample</b> vs <b>held-out</b>: all subset targets against all subset decoys, scored by the fold that
+      trained on them vs the fold they were held out of &mdash; the gap between the two is the overfitting readout.
+      Read the gap, not the level: when most library targets are absent from the sample, all targets against all decoys
+      sits not far above 0.5, because the absent targets score like decoys.
+      <b>Click a feature row</b> in the table above to overlay that feature on its own.</p>
+    <div class="kpis" id="rocKpis"></div>
+    <div class="legend" id="rocLegend"></div>
+    <div class="chartbox" id="rocChart"></div>
+    <p class="note" id="rocNote"></p>
+  </div>
+  <div class="card" id="corrCard">
+    <h2>Feature correlation and grouped contribution</h2>
+    <p class="desc">Pearson correlation of the standardized features over the training subset (every row once,
+      targets and decoys together). Features linked at |r| &gt;= <span id="corrThreshold"></span> (single linkage) form
+      a group. A linear SVM spreads weight across a correlated group, so each member's share and permutation drop can
+      look small while the group matters: the group's <b>summed contribution</b> and its <b>joint permutation drop</b>
+      (every member shuffled with one shared row order, so the members stay correlated with each other but not with
+      the class) are the honest reading. Compare the joint drop with the sum of the members' own drops: a joint drop
+      much larger than that sum means the members stand in for each other.</p>
+    <div id="corrGroups" style="overflow-x:auto"></div>
+    <div class="chartbox" id="corrChart"></div>
+    <p class="note" id="corrNote"></p>
   </div>
   <div class="card print-only" id="featPrintCard">
     <h2>Per-feature score distributions</h2>
@@ -339,6 +379,31 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <p class="note" id="fdpNote"></p>
     <div class="print-only" id="fdpPrintAll"></div>
   </div>
+  <div class="card" id="placementCard">
+    <h2>Entrapment FDP by protein placement</h2>
+    <p class="desc">The same combined estimate, split by where the entrapment sits: on <b>target proteins</b> (an
+      entrapment peptide that can receive the protein evidence a false target would) against on <b>entrapment
+      proteins of its own</b> (the standard design, which no protein-aware step can boost). Each half is scaled by
+      its own entrapment-to-target ratio. A step that uses no protein information gives the same curve for both;
+      a protein-aware step that is not calibrated shows as the target-protein half rising above the other.
+      The expected count is what a calibrated q would let through at that threshold, with a Poisson
+      interval, so a thin entrapment arm's noise reads as noise.</p>
+    <div class="kpis" id="placementKpis"></div>
+    <div class="legend" id="placementLegend"></div>
+    <div class="chartbox" id="placementChart"></div>
+    <p class="note" id="placementNote"></p>
+  </div>
+  <div class="card" id="proteinEntrapCard">
+    <h2>Protein-group FDP from entrapment proteins</h2>
+    <p class="desc">The reported protein groups against the groups made only of entrapment proteins, on the
+      experiment-level picked-protein q. The combined estimate uses the library's entrapment-protein to
+      target-protein ratio. Entrapment placed on target proteins is not counted here: it belongs to a target
+      protein's group by design, and is read at the precursor level above.</p>
+    <div class="kpis" id="proteinEntrapKpis"></div>
+    <div class="legend" id="proteinEntrapLegend"></div>
+    <div class="chartbox" id="proteinEntrapChart"></div>
+    <p class="note" id="proteinEntrapNote"></p>
+  </div>
   <div class="card" id="yieldCard">
     <h2>Identification yield</h2>
     <p class="desc">Accepted real-target precursors as the reported q-value threshold sweeps, at the scope
@@ -405,7 +470,11 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
       library is present, the amber curve on the <b>right axis</b> is the <b>entrapment-measured FDP of each k-slice</b>
       &mdash; the contamination fraction of the precursors detected in exactly k runs (dashed line = the nominal run FDR).
       It rises at low k and falls toward the reproducible k=N peak, and it is the adjudicator for whether the singletons
-      that survive the experiment-wide gate are real rare biology or over-admitted 1-hit-wonders.</p>
+      that survive the experiment-wide gate are real rare biology or over-admitted 1-hit-wonders. The dashed indigo curve is
+      the same per-slice FDP <b>estimated from the decoys</b>, on every dataset: decoys detected in exactly k runs (each
+      counted by its own per-run detections, by the same rule as the targets) over the targets detected in exactly k runs.
+      Where an entrapment library is present the two curves should roughly agree. Pass&nbsp;1 only: in Pass&nbsp;2, gap-fill
+      moves passing targets to higher k and not decoys.</p>
     <div class="legend" id="runHistLegend"></div>
     <div class="chartbox" id="runHistChart"></div>
     <p class="note" id="runHistNote"></p>
@@ -454,6 +523,22 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <div class="legend" id="unionFdpLegend"></div>
     <div class="chartbox" id="unionFdpChart"></div>
     <p class="note" id="unionFdpNote"></p>
+  </div>
+  <div class="card" id="decoyFloorCard" style="display:none">
+    <h2>Decoy-estimated FDP vs required reproducibility</h2>
+    <p class="desc">The FDP of the precursors you would keep by requiring detection in <b>&ge;&nbsp;k runs</b>, estimated from
+      the <b>decoys</b> &mdash; so it needs no entrapment library. Each decoy is counted by its <b>own</b> per-run detections
+      under the same gate and rule as the targets, so decoys pile up at low k as false targets do;
+      the decoy count over the target count of the retained set estimates its contamination:
+      FDP(&ge;k)&nbsp;=&nbsp;&Sigma;<sub>j&ge;k</sub>N<sub>D</sub>(j)&nbsp;/&nbsp;&Sigma;<sub>j&ge;k</sub>N<sub>T</sub>(j).
+      At k=1 this is the plain decoy/target ratio of everything reported; it falls as the floor rises and false single-run
+      detections drop out. Both q scopes are shown at once (the panel does not follow the toggle). Dashed line = the nominal
+      run FDR. The per-k form is the decoy curve on the histogram above. An estimate to read as a trend, not a q-value, and
+      Pass&nbsp;1 only (Pass&nbsp;2 gap-fill moves targets, not decoys, to higher k).</p>
+    <div class="kpis" id="decoyFloorKpis"></div>
+    <div class="legend" id="decoyFloorLegend"></div>
+    <div class="chartbox" id="decoyFloorChart"></div>
+    <p class="note" id="decoyFloorNote"></p>
   </div>
   <!-- CAL content for the Reproducibility tab: an ALL-FILES overview (not per-file
        selection) to spot an outlier file across 82-500 files. Per-file scalars are
@@ -507,6 +592,15 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
       A large gap means the pool the decoys are drawn from has been selected - read it as a
       warning about the pool, <b>not</b> as a bar to lower: the target+entrapment and decoy counts
       beside it rise together, so a lower score buys IDs at the error rate it buys decoys.</div>
+    <div id="caRunCutWrap" style="margin-top:14px">
+      <h2 style="font-size:14px;margin:0 0 3px">Run-level acceptance boundary, per run</h2>
+      <p class="desc">The composite score of the worst precursor each run accepts at its run-level
+        q - the bar that run's decoy row is counted against. The decoy row is the only one gated by
+        score rather than by its own q, so a boundary that drifts shows up here as an outlier rather
+        than as an implausible rate. The dashed line is the experiment-wide boundary.</p>
+      <div class="legend" id="caRunCutLegend"></div>
+      <div class="chartbox" id="caRunCut"></div>
+    </div>
     <p class="note" id="caNote"></p>
     <div class="grid2" style="margin-top:16px">
       <div>
@@ -553,6 +647,18 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <p class="desc">Best-per-precursor <b>population counts</b> &mdash; not q-gated, so these are the same
       regardless of the Pass&nbsp;1&nbsp;/&nbsp;Pass&nbsp;2 switch.</p>
     <div class="kpis" id="sumKpis"></div>
+  </div>
+  <div class="card" id="ecCard">
+    <h2>Equal-chance alarms</h2>
+    <p class="desc">Automated checks of the target-decoy <b>equal-chance</b> assumption (an incorrect match is as
+      likely to land on a decoy as on a false target), which fails silently when it fails. <b>Null alignment</b>
+      compares the decoys with <i>f_false</i>, the lower component of a two-Gaussian fit to the <b>target</b>
+      composite scores alone (so decoy-independent); <b>q-band balance</b> is diagFDR's decoy fraction in the
+      low-confidence q band; the <b>paired coin</b> is the entrapment-pair decoy-win fraction; <b>decoy support</b>
+      is the decoys each run accepts at the run FDR. Diagnostic only &mdash; no FDR result reads these.</p>
+    <div class="kpis" id="ecKpis"></div>
+    <div id="ecTable"></div>
+    <p class="note" id="ecNote"></p>
   </div>
   <div class="card">
     <h2>Per-file passing precursors</h2>
@@ -685,22 +791,26 @@ const HAS_FEATHIST = !!(D.featureHistEdges && D.featureHistEdges.length>1);
 function passBundle(p){
   if(p===1)return {pass:1,label:"1st pass",desc:"pre-compaction first-pass training set",
     hasStructural:true,treeModel:!!D.modelIsTreeEnsemble,
-    features:D.model||[],modelDegenerate:D.modelDegenerate,scores:D.scores,
+    features:D.model||[],modelDegenerate:D.modelDegenerate,scores:D.scores,trainingSet:D.trainingSet||null,
     densityRatio:D.densityRatio,winFraction:D.winFraction,
     fdpViews:D.fdpViews,idYield:D.idYield,crossRun:D.crossRun,perFile:D.perFile,
-    coAssignment:D.coAssignment};
+    coAssignment:D.coAssignment,equalChance:D.equalChance?D.equalChance.pass1:null,
+    proteinEntrapment:null};
   const m=D.pass2.model;   // null under confidence-transfer mode
   return {pass:2,label:"2nd pass",desc:"post-reconciliation reported pool",
     hasStructural:!!m,
     features:m?(m.features||[]):[],modelDegenerate:m?m.degenerate:false,scores:m?m.scores:null,
+    trainingSet:m?(m.trainingSet||null):null,
     densityRatio:D.pass2.densityRatio,winFraction:D.pass2.winFraction,
     fdpViews:D.pass2.fdpViews,idYield:D.pass2.idYield,crossRun:D.pass2.crossRun,perFile:D.pass2.perFile,
-    coAssignment:D.pass2.coAssignment};
+    coAssignment:D.pass2.coAssignment,equalChance:D.equalChance?D.equalChance.pass2:null,
+    proteinEntrapment:D.pass2.proteinEntrapment||null};
 }
 const PASSES=[passBundle(1)];
 if(D.pass2)PASSES.push(passBundle(2));
 let PI=0;
 const B=()=>PASSES[PI];   // the active pass bundle
+let ROC_FEATURE=null;     // the feature row whose own ROC the training-set card overlays, or null
 if(!HAS_FEATHIST){const tip=document.getElementById("scoreTip");if(tip)tip.style.display="none";}
 
 // The per-card "n/a for this pass" copy (structural cards under transfer mode).
@@ -717,7 +827,8 @@ const LINEAR_MODEL_DESC=document.getElementById("modelDesc").innerHTML;
 const TREE_MODEL_DESC="The first-pass model is gradient-boosted trees (<code>OSPREY_FDR_MODEL=gbdt</code>, experimental), the fold "+
   "ensembles' margins averaged per row. A tree ensemble has no coefficients, so there is no contribution "+
   "decomposition; each feature's standardized target&ndash;decoy mean gap is listed instead, and its "+
-  "target/decoy distribution is one click away.";
+  "target/decoy distribution is one click away. "+
+  ((document.getElementById("modelTrainDesc")||{}).outerHTML||"");
 // Replace a chart with a graceful n/a note and clear its legend.
 function naChart(hostId,legId,msgHtml){
   const h=document.getElementById(hostId);
@@ -797,6 +908,7 @@ function renderPass(){
   renderReproTab(b);
   renderCompetitionTab(b);
   renderPerFile(b);
+  renderEqualChance(b);
 }
 
 // Shared feature-contribution table (Feature | Coefficient | Contribution bar).
@@ -808,14 +920,16 @@ function buildFeatureTable(host,rows,opts){
   const maxP=Math.max(1,...rows.map(r=>Math.abs(r.percent)||0));
   const t=H(host,"table",{});const htr=H(H(t,"thead",{}),"tr",{});
   [["Feature","l"],["Coefficient",""],["Contribution",""]].forEach(h=>H(htr,"th",{class:h[1]},h[0]));
+  if(opts.training)trainingHeads(htr,true);
   const tb=H(t,"tbody",{});
   rows.forEach(r=>{const handler=opts.onRowClick?opts.onRowClick(r):null;
     const tr=H(tb,"tr",{class:(r.unexpected?"neg ":"")+(handler?"clk":"")});
-    H(tr,"td",{class:"l"},r.label);
+    featureLabelCell(tr,r);
     H(tr,"td",{class:"num"},fmt(r.coefficient,4));
     const td=H(tr,"td",{class:"num bar"});
     H(td,"i",{style:"width:"+(Math.abs(r.percent)/maxP*100).toFixed(1)+"%"});
     H(td,"span",{},pct(r.percent/100,1));
+    if(opts.training)trainingCells(tr,r,true);
     if(handler)tr.onclick=()=>handler(tr);
   });
   if(!rows.length && opts.emptyNote)H(host,"p",{class:"note"},opts.emptyNote);
@@ -823,17 +937,53 @@ function buildFeatureTable(host,rows,opts){
 
 // The Model tab's table for a gradient-boosted-tree model (Feature | Target-decoy mean gap):
 // no coefficient or contribution column, since a tree ensemble has neither, and each row still
-// opens that feature's target/decoy distribution.
-function buildTreeFeatureTable(host,rows,onRowClick){
+// opens that feature's target/decoy distribution. The training-set columns apply to trees as
+// to the SVM, except the fold weight spread (trees have no weights).
+function buildTreeFeatureTable(host,rows,onRowClick,training){
   const t=H(host,"table",{});const htr=H(H(t,"thead",{}),"tr",{});
   [["Feature","l"],["Target-decoy mean gap",""]].forEach(h=>H(htr,"th",{class:h[1]},h[0]));
+  if(training)trainingHeads(htr,false);
   const tb=H(t,"tbody",{});
   rows.forEach(r=>{const handler=onRowClick(r);
     const tr=H(tb,"tr",{class:handler?"clk":""});
-    H(tr,"td",{class:"l"},r.label);
+    featureLabelCell(tr,r);
     H(tr,"td",{class:"num"},fmt(r.deltaMu,4));
+    if(training)trainingCells(tr,r,false);
     if(handler)tr.onclick=()=>handler(tr);
   });
+}
+
+// ---------- training-set columns (#4550 / #4467) ----------
+// The columns right of Contribution are measured on the final training set, not the scored
+// population the contribution decomposes; each heading's tooltip says what it is.
+const TRAINING_HEADS=[
+  ["weights","Fold weights","Standardized weight of each cross-validation fold, smallest .. largest (the Coefficient is "+
+    "their mean). \"flip\" marks a weight whose sign differs between folds: the collinearity tell, a correlated partner "+
+    "trading weight with this feature (see the correlation card)."],
+  ["auroc","AUROC","This feature alone as a score, on the final training set (pooled over folds): the probability that a "+
+    "training positive has a higher value than a training decoy, ties counted half. 0.5 is no separation; below 0.5 "+
+    "lower values are the target-like ones. Range of the per-fold values in the tooltip; the curve is in the ROC card."],
+  ["d","Cohen's d","(mean positive - mean decoy) / pooled standard deviation, on the final training set."],
+  ["tpr","TPR@1%FPR","Fraction of training positives above the threshold that admits 1% of training decoys: this feature "+
+    "alone in the low-FPR corner where q <= 0.01 acceptance happens."],
+  ["perm","Perm. drop","Permutation importance: the fractional drop in held-out targets passing the training FDR "+
+    "(paired target-decoy competition, each subset row scored by the fold model it was held out of) when this "+
+    "feature's values are shuffled across rows. Frozen models, no retraining. Understates a feature whose correlated "+
+    "partner carries the same signal: read the group's joint drop in the correlation card."]];
+function trainingHeads(htr,linear){
+  TRAINING_HEADS.forEach(h=>{if(h[0]==="weights"&&!linear)return;H(htr,"th",{title:h[2]},h[1]);});
+}
+function trainingCells(tr,r,linear){
+  if(linear){const td=H(tr,"td",{class:"num"},fmt(r.foldWeightMin,3)+" .. "+fmt(r.foldWeightMax,3));
+    if(!r.foldSignConsistent && !isNaN(r.foldWeightMin))H(td,"span",{class:"flip",title:"the weight changes sign between folds"},"flip");}
+  H(tr,"td",{class:"num",title:"per fold "+fmt(r.aurocFoldMin,3)+" .. "+fmt(r.aurocFoldMax,3)},fmt(r.auroc,3));
+  H(tr,"td",{class:"num"},fmt(r.cohenD,2));
+  H(tr,"td",{class:"num"},pct(r.tprAtReferenceFpr,1));
+  H(tr,"td",{class:"num"},pct(r.permutationDrop,1));
+}
+function featureLabelCell(tr,r){
+  const td=H(tr,"td",{class:"l"},r.label);
+  if(r.group!=null && r.group>=0)H(td,"span",{class:"grp",title:"correlated group (see the correlation card)"},"G"+(r.group+1));
 }
 
 // (Re)render the Model tab for the active pass: feature table, print grid, and the
@@ -849,18 +999,21 @@ function renderModelTab(b){
     document.getElementById("scoreDesc").innerHTML="";
     document.getElementById("scoreBack").style.display="none";
     naChart("scoreChart","scoreLegend",PASS2_NA_COMPOSITE);
+    ROC_FEATURE=null;renderTrainingCards(b);
     return;
   }
   na.style.display="none";wrap.style.display="";
   document.getElementById("modelDesc").innerHTML=b.treeModel?TREE_MODEL_DESC:LINEAR_MODEL_DESC;
+  const trainDesc=document.getElementById("modelTrainDesc");if(trainDesc)trainDesc.style.display=b.trainingSet?"":"none";
   const rows=b.features||[];const host=document.getElementById("modelTable");host.innerHTML="";
   const rowClick=r=>(HAS_FEATHIST&&r.targetHist)?(tr=>selectFeature(r,tr)):null;
+  const training=!!b.trainingSet;
   if(b.treeModel){
-    buildTreeFeatureTable(host,rows,rowClick);
+    buildTreeFeatureTable(host,rows,rowClick,training);
     H(host,"p",{class:"note"},"Contribution table unavailable for gradient-boosted trees: a tree ensemble has no "+
       "coefficients to decompose. The model was trained on this run; the per-feature distributions are shown.");
   }else{
-    buildFeatureTable(host,rows,{onRowClick:rowClick});
+    buildFeatureTable(host,rows,{onRowClick:rowClick,training:training});
     if(b.modelDegenerate)H(host,"p",{class:"note"},"Composite separation is degenerate; percentages unavailable.");
     if(!rows.length)H(host,"p",{class:"note"},"Model table unavailable \u2014 the first-pass model or a run's first-pass FDR file is missing or from another analysis.");
   }
@@ -890,7 +1043,7 @@ function renderModelTab(b){
     if(fpc)fpc.style.display="";
   } else if(fpc){ fpc.style.display="none"; }
 
-  showComposite();   // reset the bottom chart to this pass's composite
+  showComposite();   // reset the bottom chart to this pass's composite (and the ROC card)
 }
 
 // ---------- Model: composite <-> per-feature distribution swap ----------
@@ -909,6 +1062,7 @@ function selectFeature(r,tr){
         " &middot; contribution "+pct(r.percent/100,1)+(r.unexpected?" &middot; <b style='color:var(--bad)'>unexpected direction</b>":"")+".");
   document.getElementById("scoreBack").style.display="";
   featureHist("scoreChart","scoreLegend",r);
+  ROC_FEATURE=r;drawRoc(B());
 }
 
 // Static (non-interactive) per-feature target/decoy distribution, for the print
@@ -947,6 +1101,7 @@ function showComposite(){
     'distribution (the mProphet "Feature Scores" view).</span>';
   document.getElementById("scoreBack").style.display="none";
   classHist(B().scores,"scoreChart","scoreLegend",false);
+  ROC_FEATURE=null;renderTrainingCards(B());
 }
 document.getElementById("scoreBack").onclick=(e)=>{e.preventDefault();showComposite();};
 
@@ -954,9 +1109,14 @@ document.getElementById("scoreBack").onclick=(e)=>{e.preventDefault();showCompos
 // styled to match the composite view (target blue, decoy red, filled step areas).
 function featureHist(hostId,legId,r){
   const edges=D.featureHistEdges,nb=edges.length-1;
-  const series=[{k:"target",name:"target",color:COL.target,v:r.targetHist||[]},
-                {k:"decoy",name:"decoy",color:COL.decoy,v:r.decoyHist||[]}];
-  const off={target:false,decoy:false};
+  // With a training-set analysis, the final training set is drawn solid over the full scored
+  // population ghosted, so "which targets dropped out of training" is visible.
+  const train=!!(r.trainTargetHist&&r.trainDecoyHist);
+  const series=[{k:"target",name:train?"all targets":"target",color:COL.target,v:r.targetHist||[],ghost:train},
+                {k:"decoy",name:train?"all decoys":"decoy",color:COL.decoy,v:r.decoyHist||[],ghost:train}];
+  if(train){series.push({k:"tpos",name:"training positives",color:COL.target,v:r.trainTargetHist});
+    series.push({k:"tdec",name:"training decoys",color:COL.decoy,v:r.trainDecoyHist});}
+  const off={};series.forEach(se=>off[se.k]=false);
   const width=(i)=>edges[i+1]-edges[i];
   const dens=series.map(s=>{const tot=s.v.reduce((a,b)=>a+b,0)||1;return s.v.map((c,i)=>c/tot/width(i));});
   const W=680,Hh=330,box={l:52,t:14,w:W-70,h:Hh-58};
@@ -971,10 +1131,11 @@ function featureHist(hostId,legId,r){
       for(let i=0;i<nb;i++){const x0=sc.x(edges[i]),x1=sc.x(edges[i+1]),yy=sc.y(d[i]);
         up+="L"+x0.toFixed(1)+" "+yy.toFixed(1)+"L"+x1.toFixed(1)+" "+yy.toFixed(1)+" ";}
       up+="L"+sc.x(edges[nb]).toFixed(1)+" "+sc.y(0).toFixed(1)+"Z";
-      E(s,"path",{d:up,fill:se.color,opacity:.16,stroke:"none"});
+      E(s,"path",{d:up,fill:se.color,opacity:se.ghost?.05:.16,stroke:"none"});
       let ln="";for(let i=0;i<nb;i++){const x0=sc.x(edges[i]),x1=sc.x(edges[i+1]),yy=sc.y(d[i]);
         ln+=(i?"L":"M")+x0.toFixed(1)+" "+yy.toFixed(1)+"L"+x1.toFixed(1)+" "+yy.toFixed(1)+" ";}
-      E(s,"path",{d:ln,fill:"none",stroke:se.color,"stroke-width":1.7,"stroke-linejoin":"round"});
+      E(s,"path",{d:ln,fill:"none",stroke:se.color,"stroke-width":se.ghost?1.1:1.7,"stroke-linejoin":"round",
+        "stroke-dasharray":se.ghost?"4 3":"none",opacity:se.ghost?.55:1});
     });
     const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
     ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();
@@ -986,6 +1147,117 @@ function featureHist(hostId,legId,r){
   }
   legend(document.getElementById(legId),series.map(se=>({name:se.name,color:se.color,toggle:o=>{off[se.k]=o;draw();}})));
   draw();
+}
+
+// ---------- Final training set (#4550) and feature correlation (#4467) cards ----------
+// Both read the active pass's trainingSet (TrainingSetView) plus the per-feature values on its
+// feature rows. Absent when the model on disk predates the analysis, and for a pass-2 model.
+const TRAINING_NA="Training-set analysis n/a &mdash; the first-pass model this report read was written by a build that "+
+  "did not record its training sets. Re-running the first-pass FDR with this build adds it.";
+const PASS2_NA_TRAINING="Pass-2 training-set analysis n/a &mdash; the 2nd pass trained no model of its own. "+
+  "Switch to <b>Pass 1</b> for the model's training set.";
+function renderTrainingCards(b){drawRoc(b);drawCorr(b);}
+function drawRoc(b){
+  const T=b.hasStructural?b.trainingSet:null;
+  const kp=document.getElementById("rocKpis");kp.innerHTML="";
+  const note=document.getElementById("rocNote");note.innerHTML="";
+  if(!T){naChart("rocChart","rocLegend",b.pass===1?TRAINING_NA:PASS2_NA_TRAINING);return;}
+  const fpr=T.rocFpr,n=fpr.length,lx=v=>Math.log10(v);
+  kpi(kp,"training subset targets",fmt(T.subsetTargets,0));
+  kpi(kp,"training subset decoys",fmt(T.subsetDecoys,0));
+  kpi(kp,"composite AUROC, final training set",fmt(T.trainingComposite.auroc,4));
+  kpi(kp,"composite AUROC, in-sample",fmt(T.inSampleComposite.auroc,4));
+  kpi(kp,"composite AUROC, held-out",fmt(T.heldOutComposite.auroc,4));
+  const folds=T.foldPositives.map((p,f)=>"fold "+(f+1)+": "+fmt(p,0)+" positives / "+fmt(T.foldDecoys[f],0)+
+    " decoys, iteration "+T.foldIterations[f]);
+  note.innerHTML="Final training set &mdash; "+esc(folds.join("; "))+". Positives selected at "+pct(T.trainFdr,1)+
+    " FDR. These are training rows: each subset row trains in "+(T.nFolds-1)+" of the "+T.nFolds+
+    " folds, so the per-fold counts are not precursor counts. Per-feature AUROC, Cohen's d and TPR at "+pct(T.referenceFpr,0)+
+    " FPR in the model table pool the folds' training sets.";
+  const series=[{k:"train",name:"composite, final training set",color:COL.accent,v:T.trainingComposite.tpr},
+    {k:"in",name:"composite, in-sample (all targets vs decoys)",color:COL.target,v:T.inSampleComposite.tpr,dash:"5 3"},
+    {k:"out",name:"composite, held-out (all targets vs decoys)",color:COL.warn,v:T.heldOutComposite.tpr}];
+  const fr=ROC_FEATURE&&ROC_FEATURE.rocTpr?ROC_FEATURE:null;
+  if(fr){series.push({k:"feat",name:fr.label+" alone (AUROC "+fmt(fr.auroc,3)+")",color:COL.ptarget,v:fr.rocTpr});
+    if(Number(fr.auroc)<0.5)note.innerHTML+=" "+esc(fr.label)+" has AUROC below 0.5: lower values are its target-like ones, "+
+      "so its curve runs below the diagonal.";}
+  const off={};series.forEach(se=>off[se.k]=false);
+  const W=680,Hh=330,box={l:52,t:14,w:W-70,h:Hh-58},xd=[lx(fpr[0]),0];
+  const host=document.getElementById("rocChart");
+  function draw(){
+    host.innerHTML="";const s=svg(W,Hh);host.appendChild(s);
+    const xt=[];for(let k=Math.ceil(xd[0]);k<=0;k++)xt.push(k);
+    const sc=axes(s,box,xd,[0,1],{xticks:xt,xfmt:v=>v===0?"1":"1e"+v,
+      xlab:"false-positive rate (log scale)",ylab:"true-positive rate",yfmt:v=>(+v.toFixed(1))});
+    let dg="";for(let i=0;i<n;i++)dg+=(i?"L":"M")+sc.x(lx(fpr[i])).toFixed(1)+" "+sc.y(fpr[i]).toFixed(1)+" ";
+    E(s,"path",{d:dg,fill:"none",stroke:COL.muted,"stroke-width":1,"stroke-dasharray":"2 3"});
+    const rx=sc.x(lx(T.referenceFpr));
+    E(s,"line",{x1:rx,x2:rx,y1:box.t,y2:box.t+box.h,stroke:COL.muted,"stroke-width":1,"stroke-dasharray":"4 3"});
+    E(s,"text",{x:rx+4,y:box.t+11,class:"axtitle"}).textContent=pct(T.referenceFpr,0)+" FPR";
+    series.forEach(se=>{if(off[se.k]||!se.v)return;let d="",pen=false;
+      for(let i=0;i<n;i++){const v=Number(se.v[i]);if(isNaN(v)){pen=false;continue;}
+        d+=(pen?"L":"M")+sc.x(lx(fpr[i])).toFixed(1)+" "+sc.y(v).toFixed(1)+" ";pen=true;}
+      E(s,"path",{d:d,fill:"none",stroke:se.color,"stroke-width":1.8,"stroke-linejoin":"round","stroke-dasharray":se.dash||"none"});});
+    const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
+    ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();const px=(ev.clientX-rb.left)/rb.width*W;
+      const xv=xd[0]+(px-box.l)/box.w*(xd[1]-xd[0]);let bi=0;
+      for(let i=1;i<n;i++)if(Math.abs(lx(fpr[i])-xv)<Math.abs(lx(fpr[bi])-xv))bi=i;
+      let html="<b>FPR "+fpr[bi].toPrecision(2)+"</b>";
+      series.forEach(se=>{if(off[se.k]||!se.v)return;html+="<br><span style='color:"+se.color+"'>■</span> "+esc(se.name)+": TPR "+pct(Number(se.v[bi]),1);});
+      showTip(ev,html);});
+    ov.addEventListener("mouseleave",hideTip);
+  }
+  legend(document.getElementById("rocLegend"),series.map(se=>({name:se.name,color:se.color,line:true,toggle:o=>{off[se.k]=o;draw();}})));
+  draw();
+}
+function drawCorr(b){
+  const T=b.hasStructural?b.trainingSet:null;
+  const host=document.getElementById("corrGroups");host.innerHTML="";
+  const note=document.getElementById("corrNote");note.innerHTML="";
+  const thr=document.getElementById("corrThreshold");
+  if(!T||!T.correlation){thr.textContent="(a threshold)";naChart("corrChart",null,b.pass===1?TRAINING_NA:PASS2_NA_TRAINING);return;}
+  thr.textContent=fmt(T.correlationThreshold,2);
+  const byIndex={};(b.features||[]).forEach(r=>byIndex[r.index]=r);
+  const groups=T.groups||[];
+  if(groups.length){
+    const t=H(host,"table",{});const htr=H(H(t,"thead",{}),"tr",{});
+    [["Group","l",null],["Features","l",null],
+     ["min |r|","","The weakest absolute correlation between two members."],
+     ["Summed contribution","","The members' Contribution values (model table) added: the share of the composite separation the group carries together."],
+     ["Joint perm. drop","","Drop in held-out passing targets with every member shuffled by one shared row order."],
+     ["Sum of own drops","","The members' individual permutation drops added up. A joint drop well above this means the members stand in for each other."]]
+      .forEach(h=>H(htr,"th",h[2]?{class:h[1],title:h[2]}:{class:h[1]},h[0]));
+    const tb=H(t,"tbody",{});
+    groups.forEach((g,gi)=>{const tr=H(tb,"tr",{});
+      H(tr,"td",{class:"l"},"G"+(gi+1));
+      H(tr,"td",{class:"l"},(g.labels||[]).join(", "));
+      H(tr,"td",{class:"num"},fmt(g.minAbsCorrelation,2));
+      H(tr,"td",{class:"num"},pct(Number(g.sharePercent)/100,1));
+      H(tr,"td",{class:"num"},pct(g.permutationDrop,1));
+      const own=g.members.reduce((a,j)=>a+(byIndex[j]?Number(byIndex[j].permutationDrop):NaN),0);
+      H(tr,"td",{class:"num"},pct(own,1));});
+  } else H(host,"p",{class:"note"},"No two features reach |r| >= "+fmt(T.correlationThreshold,2)+" on this training subset.");
+  // Heatmap, grouped features first so each group is a contiguous block.
+  const C=T.correlation,p=C.length,labels=T.correlationLabels||[];
+  const order=[];groups.forEach(g=>g.members.forEach(j=>order.push(j)));
+  for(let j=0;j<p;j++)if(order.indexOf(j)<0)order.push(j);
+  const cell=Math.max(10,Math.min(22,Math.floor(560/Math.max(1,p)))),labW=230,top=22;
+  const W=labW+p*cell+12,Hh=top+p*cell+8;
+  const chart=document.getElementById("corrChart");chart.innerHTML="";const s=svg(W,Hh);chart.appendChild(s);
+  order.forEach((ja,ra)=>{
+    E(s,"text",{x:labW-6,y:top+ra*cell+cell*0.7,"text-anchor":"end","font-size":10.5,fill:COL.ink}).textContent=(ra+1)+"  "+(labels[ja]||("feature "+ja));
+    E(s,"text",{x:labW+ra*cell+cell/2,y:top-6,"text-anchor":"middle","font-size":9.5,fill:COL.muted}).textContent=String(ra+1);
+    order.forEach((jb,rb)=>{const r=Number(C[ja][jb]);
+      const rect=E(s,"rect",{x:labW+rb*cell,y:top+ra*cell,width:cell-1,height:cell-1,
+        fill:isNaN(r)?COL.muted:(r>=0?COL.decoy:COL.target),"fill-opacity":isNaN(r)?0.15:Math.abs(r).toFixed(3)});
+      rect.addEventListener("mousemove",ev=>showTip(ev,"<b>"+esc(labels[ja]||ja)+"</b><br><b>"+esc(labels[jb]||jb)+"</b><br>r = "+fmt(r,3)));
+      rect.addEventListener("mouseleave",hideTip);});
+  });
+  let at=0;groups.forEach(g=>{const k=g.members.length;
+    E(s,"rect",{x:labW+at*cell-1,y:top+at*cell-1,width:k*cell+1,height:k*cell+1,fill:"none",stroke:COL.ink,"stroke-width":1.5});
+    at+=k;});
+  note.innerHTML="Cell shade is |r|: red for positive correlation, blue for negative, grey where a feature is constant. "+
+    "Outlined blocks are the groups above, in table order.";
 }
 
 // ---------- shared class histogram builder (H0 = a ScoreHistogram) ----------
@@ -1200,7 +1472,75 @@ function renderFdrTab(b){
     const btn=H(ssel,"button",{class:"vbtn"+(k===fdrScope?" on":"")},sc[1]);
     btn.onclick=()=>{if(fdrScope===k)return;fdrScope=k;renderFdrTab(B());};});
   drawFdpCard(b);
+  drawPlacementCard(b);
+  drawProteinEntrapmentCard(b);
   drawYield(b);
+}
+
+// The entrapment FDP split by protein placement, for the active pass + scope. Hidden unless
+// the library carries entrapment on target proteins (the protein-aware audit design).
+const PLACEMENT_SERIES=[{k:"combined",name:"combined FDP (all entrapment)",color:COL.target,key:"combined"},
+                        {k:"onTargets",name:"on target proteins",color:COL.ptarget,key:"combinedOnTargetProteins"},
+                        {k:"own",name:"on entrapment proteins",color:COL.pdecoy,key:"combinedOnEntrapmentProteins"}];
+const placementOff={combined:false,onTargets:false,own:false};
+function expectedText(n,e){
+  const half=1.96*Math.sqrt(Math.max(e,0));
+  return fmt(n,0)+" (expected "+fmt(e,1)+" &plusmn; "+fmt(half,1)+")";
+}
+function drawPlacementCard(b){
+  const card=document.getElementById("placementCard");
+  const views=b.fdpViews||[];
+  const f=views.find(v=>v.scope===fdrScopeKey())||null;
+  if(!f||!f.hasPlacementSplit||!f.combinedOnTargetProteins){card.style.display="none";return;}
+  card.style.display="";
+  const host=document.getElementById("placementChart");host.innerHTML="";
+  const wrap=H(host,"div",{style:"display:flex;gap:14px;flex-wrap:wrap"});
+  const maxq=f.q[f.q.length-1]||1;
+  drawFdpPanel(H(wrap,"div",{}),f,0.02,"zoom  q in [0, 2%]",PLACEMENT_SERIES,placementOff);
+  drawFdpPanel(H(wrap,"div",{}),f,Math.max(0.02,maxq),"full extent",PLACEMENT_SERIES,placementOff);
+  const i1=opIdx(f,0.01);const kp=document.getElementById("placementKpis");kp.innerHTML="";
+  kpi(kp,"discoveries @1% q",fmt(f.nTargetAccepted[i1],0),"");
+  const kpE=H(kp,"div",{class:"kpi"});
+  H(kpE,"div",{class:"v",html:expectedText(f.nEntrapmentAccepted[i1],f.expectedEntrapment[i1])});
+  H(kpE,"div",{class:"k"},"entrapment @1% q, all");
+  kpi(kp,"on target proteins @1% q",fmt(f.nEntrapmentOnTargetProteins[i1],0)+" / FDP "+pct(f.combinedOnTargetProteins[i1],2),cls(f.combinedOnTargetProteins[i1],0.01));
+  kpi(kp,"on entrapment proteins @1% q",fmt(f.nEntrapmentOnEntrapmentProteins[i1],0)+" / FDP "+pct(f.combinedOnEntrapmentProteins[i1],2),cls(f.combinedOnEntrapmentProteins[i1],0.01));
+  const ratio=(f.combinedOnEntrapmentProteins[i1]>0)?f.combinedOnTargetProteins[i1]/f.combinedOnEntrapmentProteins[i1]:NaN;
+  kpi(kp,"target-protein / own-protein FDP @1% q",isNaN(ratio)?"-":fmt(ratio,2)+"x",isNaN(ratio)?"":(ratio<=1.25?"good":ratio<=2?"warn":"bad"));
+  document.getElementById("placementNote").innerHTML=
+    "Library ratios: on target proteins r = "+fmt(f.ratioOnTargetProteins,3)+", on entrapment proteins r = "+fmt(f.ratioOnEntrapmentProteins,3)+
+    " (total r = "+fmt(f.entrapmentRatio,3)+"). "+
+    "Inside detected proteins the entrapment shares the protein with every absent target peptide, so the target-protein half is read as a lower bound there; "+
+    "the two halves diverging is the signal, not either value alone (<a href='https://github.com/ProteoWizard/pwiz/blob/master/pwiz_tools/Osprey/docs/protein-shuffled-entrapment.md' target='_blank' rel='noopener'>the audit design</a>).";
+  legend(document.getElementById("placementLegend"),PLACEMENT_SERIES.filter(se=>f[se.key]).map(se=>({name:se.name,color:se.color,toggle:o=>{placementOff[se.k]=o;drawPlacementCard(B());}})));
+}
+
+// Protein-group FDP from the entrapment-only groups, pass 2 only (the reported protein q).
+const PROTEIN_ENTRAP_SERIES=[{k:"combined",name:"combined protein-group FDP",color:COL.target,key:"combined"}];
+const proteinEntrapOff={combined:false};
+function drawProteinEntrapmentCard(b){
+  const card=document.getElementById("proteinEntrapCard");
+  const pe=b.proteinEntrapment;
+  if(!pe||!pe.q||!pe.q.length){card.style.display="none";return;}
+  card.style.display="";
+  // The precursor panel's shape, so the same drawing serves: q, accepted targets, the series.
+  const f={q:pe.q,nTargetAccepted:pe.nTargetGroups,combined:pe.combined};
+  const host=document.getElementById("proteinEntrapChart");host.innerHTML="";
+  const wrap=H(host,"div",{style:"display:flex;gap:14px;flex-wrap:wrap"});
+  const maxq=pe.q[pe.q.length-1]||1;
+  drawFdpPanel(H(wrap,"div",{}),f,0.02,"zoom  protein q in [0, 2%]",PROTEIN_ENTRAP_SERIES,proteinEntrapOff);
+  drawFdpPanel(H(wrap,"div",{}),f,Math.max(0.02,maxq),"full extent",PROTEIN_ENTRAP_SERIES,proteinEntrapOff);
+  const i1=opIdx(f,0.01);const kp=document.getElementById("proteinEntrapKpis");kp.innerHTML="";
+  kpi(kp,"protein groups @1% protein q",fmt(pe.nTargetGroups[i1],0),"");
+  const kpE=H(kp,"div",{class:"kpi"});
+  H(kpE,"div",{class:"v",html:expectedText(pe.nEntrapmentGroups[i1],pe.expectedEntrapment[i1])});
+  H(kpE,"div",{class:"k"},"entrapment groups @1% protein q");
+  kpi(kp,"combined protein-group FDP @1% q",pct(pe.combined[i1],2),cls(pe.combined[i1],0.01));
+  kpi(kp,"max protein q",pct(maxq,1),"");
+  document.getElementById("proteinEntrapNote").innerHTML=
+    "Library: "+fmt(pe.nLibraryEntrapmentProteins,0)+" entrapment proteins against "+fmt(pe.nLibraryTargetProteins,0)+
+    " target proteins, r = "+fmt(pe.entrapmentRatio,3)+". Groups with no picked-protein q (decoy winners) are not counted.";
+  legend(document.getElementById("proteinEntrapLegend"),PROTEIN_ENTRAP_SERIES.map(se=>({name:se.name,color:se.color,toggle:o=>{proteinEntrapOff[se.k]=o;drawProteinEntrapmentCard(B());}})));
 }
 
 // The entrapment "q vs true FDP" calibration card for the active pass + scope. Hidden
@@ -1307,7 +1647,7 @@ function renderReproTab(b){
   const sel0=document.getElementById("reproScopeSel");
   if(!hasCross){
     if(sel0)sel0.style.display="none";
-    ["detByRunCard","runHistCard","frontierCard","yieldCutoffCard","unionFdpCard"].forEach(id=>{const c=document.getElementById(id);if(c)c.style.display="none";});
+    ["detByRunCard","runHistCard","frontierCard","yieldCutoffCard","unionFdpCard","decoyFloorCard"].forEach(id=>{const c=document.getElementById(id);if(c)c.style.display="none";});
     return;
   }
   if(sel0)sel0.style.display="";
@@ -1317,7 +1657,7 @@ function renderReproTab(b){
   const N=cr.perRun.perRunCount.length;
   const view=()=>scope===0?cr.experiment:cr.perRun;                       // CrossRunView for current scope
   const detOff={bars:false,union:false,inter:false,half:false};
-  const histOff={ent:false};   // entrapment overlay on the run-count histogram
+  const histOff={ent:false,dec:false};   // entrapment / decoy FDP overlays on the run-count histogram
 
   function drawDet(){
     if(!hasCross)return;
@@ -1363,10 +1703,15 @@ function renderReproTab(b){
     // manifest is present (both arrays null on a plain target+decoy run).
     const eh=v.entrapmentRunCountHistogram, fdp=v.entrapmentFdpByRunCount, hasEnt=!!(eh&&fdp);
     const showEnt=hasEnt&&!histOff.ent;
+    // Decoy-estimated per-k FDP (#4489): decoys counted by their OWN per-run detections under
+    // the same gate, so it needs no entrapment library. Absent only in a report written before it.
+    const dh=v.decoyRunCountHistogram, dfdp=v.decoyFdpByRunCount, hasDec=!!(dh&&dfdp);
+    const showDec=hasDec&&!histOff.dec;
+    const hasRight=hasEnt||hasDec;
     // Reserve a wider right margin when the FDP axis is present so its tick labels
-    // ("40%") and rotated title clear the SVG edge. Keyed on hasEnt (not showEnt) so
-    // toggling the curve off via the legend doesn't reflow the chart.
-    const W=700,Hh=330,rm=hasEnt?62:20,box={l:64,t:16,w:W-64-rm,h:Hh-64};
+    // ("40%") and rotated title clear the SVG edge. Keyed on hasRight (not showEnt/showDec)
+    // so toggling a curve off via the legend doesn't reflow the chart.
+    const W=700,Hh=330,rm=hasRight?62:20,box={l:64,t:16,w:W-64-rm,h:Hh-64};
     const host=document.getElementById("runHistChart");host.innerHTML="";const s=svg(W,Hh);host.appendChild(s);
     // Left axis: real-target counts only (the entrapment counts are far smaller and
     // would be invisible on this scale -- they get their own right axis below, as a rate).
@@ -1385,31 +1730,37 @@ function renderReproTab(b){
     // where the raw entrapment counts (dwarfed by the real bars) could not. High at low k,
     // ~0 at the reproducible k=N peak; a faint dashed line marks the nominal run FDR -- the
     // curve towering over it IS the miscalibration. Empty k-slices (NaN) break the curve.
-    if(showEnt){
-      // Scale the FDP axis to the max across BOTH scopes (not just the current view), so
-      // the axis is stable and flipping the toggle makes the curve visibly rise/fall
+    if(showEnt||showDec){
+      // Scale the FDP axis to the max across BOTH scopes (not just the current view) and both
+      // curves, so the axis is stable and flipping the toggle makes a curve visibly rise/fall
       // rather than both scopes filling the plot identically (a comparison toggle needs a
       // shared axis to read as a change).
       let fmax=D.runFdr*2;
-      [cr.perRun,cr.experiment].forEach(vv=>{const a=vv&&vv.entrapmentFdpByRunCount;if(!a)return;
-        for(let k=0;k<a.length;k++){const f=a[k]==null?NaN:Number(a[k]);if(!isNaN(f))fmax=Math.max(fmax,f);}});
+      [cr.perRun,cr.experiment].forEach(vv=>{if(!vv)return;
+        [vv.entrapmentFdpByRunCount,vv.decoyFdpByRunCount].forEach(a=>{if(!a)return;
+          for(let k=0;k<a.length;k++){const f=a[k]==null?NaN:Number(a[k]);if(!isNaN(f))fmax=Math.max(fmax,f);}});});
       const fdpMax=fmax*1.15;
       const yR=f=>box.t+box.h-(f/fdpMax)*box.h;
+      // The axis takes the entrapment amber when that curve is there, else the decoy curve's color.
+      const axC=hasEnt?COL.warn:COL.accent;
       ticks(0,fdpMax,5).forEach(t=>{if(t<0)return;
-        E(s,"text",{x:box.l+box.w+7,y:yR(t)+3,"text-anchor":"start",fill:COL.warn,"font-size":"10"})
+        E(s,"text",{x:box.l+box.w+7,y:yR(t)+3,"text-anchor":"start",fill:axC,"font-size":"10"})
           .textContent=pct(t,fdpMax<0.1?1:0);});
-      E(s,"line",{x1:box.l+box.w,x2:box.l+box.w,y1:box.t,y2:box.t+box.h,stroke:COL.warn,opacity:.5});
+      E(s,"line",{x1:box.l+box.w,x2:box.l+box.w,y1:box.t,y2:box.t+box.h,stroke:axC,opacity:.5});
       const tx=box.l+box.w+40;   // right of the numeric tick labels
-      E(s,"text",{class:"axtitle",x:tx,y:box.t+box.h/2,"text-anchor":"middle",fill:COL.warn,
-        transform:"rotate(90 "+tx+" "+(box.t+box.h/2)+")"}).textContent="entrapment FDP";
+      E(s,"text",{class:"axtitle",x:tx,y:box.t+box.h/2,"text-anchor":"middle",fill:axC,
+        transform:"rotate(90 "+tx+" "+(box.t+box.h/2)+")"}).textContent=hasEnt&&hasDec?"FDP":hasEnt?"entrapment FDP":"decoy FDP";
       if(D.runFdr<=fdpMax)E(s,"line",{x1:box.l,x2:box.l+box.w,y1:yR(D.runFdr),y2:yR(D.runFdr),
-        stroke:COL.warn,"stroke-dasharray":"2 4",opacity:.55});
-      let p="",started=false;
-      for(let k=0;k<N;k++){const f=fdp[k]==null?NaN:Number(fdp[k]);
-        if(isNaN(f)){started=false;continue;}
-        p+=(started?"L":"M")+sc.x(k+1).toFixed(1)+" "+yR(f).toFixed(1)+" ";started=true;
-        if(N<=40)E(s,"circle",{cx:sc.x(k+1),cy:yR(f),r:2.6,fill:COL.warn});}
-      E(s,"path",{d:p,fill:"none",stroke:COL.warn,"stroke-width":2});}
+        stroke:axC,"stroke-dasharray":"2 4",opacity:.55});
+      // One rate curve per k; empty k-slices (NaN) break it.
+      function fdpCurve(arr,color,dash){let p="",started=false;
+        for(let k=0;k<N;k++){const f=arr[k]==null?NaN:Number(arr[k]);
+          if(isNaN(f)){started=false;continue;}
+          p+=(started?"L":"M")+sc.x(k+1).toFixed(1)+" "+yR(f).toFixed(1)+" ";started=true;
+          if(N<=40)E(s,"circle",{cx:sc.x(k+1),cy:yR(f),r:2.6,fill:color});}
+        E(s,"path",{d:p,fill:"none",stroke:color,"stroke-width":2,"stroke-dasharray":dash||""});}
+      if(showEnt)fdpCurve(fdp,COL.warn);
+      if(showDec)fdpCurve(dfdp,COL.accent,"5 3");}
     const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
     ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();
       const px=(ev.clientX-rb.left)/rb.width*W;
@@ -1417,6 +1768,8 @@ function renderReproTab(b){
       let html="<b>"+(k+1)+" of "+N+" run"+(k+1===1?"":"s")+"</b><br>"+fmt(h[k],0)+" precursors";
       if(hasEnt){html+="<br><span style='color:"+COL.warn+"'>■</span> entrapment: "+fmt(eh[k],0);
         if(fdp[k]!=null&&!isNaN(fdp[k]))html+="<br>entrapment FDP: "+pct(fdp[k],1);}
+      if(hasDec){html+="<br><span style='color:"+COL.accent+"'>■</span> decoys: "+fmt(dh[k],0);
+        if(dfdp[k]!=null&&!isNaN(dfdp[k]))html+="<br>decoy FDP: "+pct(dfdp[k],1);}
       showTip(ev,html);});
     ov.addEventListener("mouseleave",hideTip);
     const k1=h[0], kN=h[N-1], tot=h.reduce((a,b)=>a+b,0)||1;
@@ -1433,6 +1786,11 @@ function renderReproTab(b){
             " nominal, so these singletons read as real rare / donor-specific precursors, not FDR escapees."
           : " <b>Entrapment adjudication:</b> the k=1 set measures "+pct(f1,1)+" FDP — well above the "+pct(nom,0)+
             " nominal, so the "+SCOPES[scope].name+" q is admitting excess 1-hit-wonders (a calibration gap one level up); read low-k detections with caution.");}
+    // The same read from the decoys, available on any dataset: FDP at k=1 and at k=N, and their ratio.
+    if(hasDec&&N>=2){const d1=Number(dfdp[0]), dN=Number(dfdp[N-1]);
+      if(!isNaN(d1))
+        note += " <b>Decoy estimate:</b> k=1 FDP "+pct(d1,1)+(isNaN(dN)?"":" vs "+pct(dN,1)+" at k="+N+
+          (dN>0?" ("+fmt(d1/dN,1)+"&times;)":""))+(hasEnt?" &mdash; it should agree with the entrapment curve.":".");}
     document.getElementById("runHistNote").innerHTML=note;
   }
 
@@ -1622,6 +1980,56 @@ function renderReproTab(b){
         : "The two track closely here; the gap is expected to widen at higher run counts.");
   }
 
+  // Decoy-estimated FDP of a run-count floor, FDP(>=k), for BOTH scopes on one axis (#4489).
+  // Scope-independent like the union-FDP panel, so drawn once. Needs no entrapment.
+  function drawDecoyFloor(){
+    const card=document.getElementById("decoyFloorCard");
+    const pr=hasCross&&cr.perRun&&cr.perRun.decoyFdpAtLeastRunCount, ex=hasCross&&cr.experiment&&cr.experiment.decoyFdpAtLeastRunCount;
+    if(!pr||!ex||N<2){if(card)card.style.display="none";return;}
+    card.style.display="";
+    const kp=document.getElementById("decoyFloorKpis");kp.innerHTML="";
+    const at=(a,k)=>{const f=a[k]==null?NaN:Number(a[k]);return isNaN(f)?"n/a":pct(f,1);};
+    const exK=cr.experiment.decoyFdpByRunCount, prK=cr.perRun.decoyFdpByRunCount;
+    kpi(kp,"decoy FDP, k=1 slice (experiment-wide)",at(exK,0));
+    kpi(kp,"decoy FDP, k=1 slice (per-run)",at(prK,0));
+    kpi(kp,"decoy FDP, k="+N+" slice (experiment-wide)",at(exK,N-1));
+    kpi(kp,"decoy FDP, all reported (experiment-wide)",at(ex,0));
+    const host=document.getElementById("decoyFloorChart");host.innerHTML="";
+    const W=700,Hh=320,box={l:56,t:16,w:W-76,h:Hh-64};
+    const s=svg(W,Hh);host.appendChild(s);
+    let ymax=D.runFdr*2;
+    for(let i=0;i<N;i++)[pr[i],ex[i]].forEach(x=>{const f=x==null?NaN:Number(x);if(!isNaN(f))ymax=Math.max(ymax,f);});
+    ymax*=1.15;
+    const xt=N<=20?Array.from({length:N},(_,i)=>i+1):null;
+    const sc=axes(s,box,[1,N],[0,ymax],{xlab:"minimum runs a precursor must appear in (≥ k)",ylab:"decoy FDP",
+      xticks:xt,xfmt:v=>String(Math.round(v)),yfmt:v=>pct(v,ymax<0.1?1:0)});
+    if(D.runFdr<=ymax)E(s,"line",{x1:box.l,x2:box.l+box.w,y1:sc.y(D.runFdr),y2:sc.y(D.runFdr),
+      stroke:COL.muted,"stroke-dasharray":"2 4",opacity:.6});
+    function line(arr,color){let p="",started=false;
+      for(let i=0;i<N;i++){const f=arr[i]==null?NaN:Number(arr[i]);if(isNaN(f)){started=false;continue;}
+        p+=(started?"L":"M")+sc.x(i+1).toFixed(1)+" "+sc.y(f).toFixed(1)+" ";started=true;
+        if(N<=40)E(s,"circle",{cx:sc.x(i+1),cy:sc.y(f),r:2.3,fill:color});}
+      E(s,"path",{d:p,fill:"none",stroke:color,"stroke-width":2});}
+    line(ex,COL.accent);
+    line(pr,COL.decoy);
+    const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
+    ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();
+      const px=(ev.clientX-rb.left)/rb.width*W;
+      const i=Math.min(N-1,Math.max(0,Math.round((px-box.l)/box.w*(N-1))));
+      showTip(ev,"<b>detected in ≥ "+(i+1)+" run"+(i+1===1?"":"s")+"</b>"+
+        "<br><span style='color:"+COL.accent+"'>■</span> experiment-wide: "+at(ex,i)+
+        "<br><span style='color:"+COL.decoy+"'>■</span> per-run: "+at(pr,i));});
+    ov.addEventListener("mouseleave",hideTip);
+    let cstar=null;for(let c=1;c<=N;c++){const f=ex[c-1]==null?NaN:Number(ex[c-1]);if(!isNaN(f)&&f<=D.runFdr){cstar=c;break;}}
+    document.getElementById("decoyFloorNote").innerHTML=
+      "Experiment-wide, the full reported set reads "+at(ex,0)+" decoy FDP and the k=1 slice alone "+at(exK,0)+". "+
+      (cstar===null
+        ? "No run-count floor brings the experiment-wide set to the "+pct(D.runFdr,0)+" nominal."
+        : cstar===1
+          ? "The whole experiment-wide set is already at or below the "+pct(D.runFdr,0)+" nominal."
+          : "Requiring ≥ "+cstar+" runs brings the experiment-wide set to the "+pct(D.runFdr,0)+" nominal.");
+  }
+
   function renderRepro(){drawDet();drawHist();drawFrontier();}
   legend(document.getElementById("detLegend"),[
     {name:"detected / run",color:COL.target,toggle:o=>{detOff.bars=o;drawDet();}},
@@ -1629,14 +2037,22 @@ function renderReproTab(b){
     {name:"cumulative intersection",color:COL.ink,line:true,toggle:o=>{detOff.inter=o;drawDet();}},
     {name:"detected in ≥ half the runs",color:COL.decoy,line:true,toggle:o=>{detOff.half=o;drawDet();}},
   ]);
-  // Run-count histogram legend, only when the entrapment overlay exists (both scopes
-  // carry the entrapment arrays when a manifest is present).
-  if(cr.experiment && cr.experiment.entrapmentRunCountHistogram)
-    legend(document.getElementById("runHistLegend"),[
-      {name:"real targets",color:COL.target},
-      {name:"entrapment FDP (right axis)",color:COL.warn,line:true,toggle:o=>{histOff.ent=o;drawHist();}},
-    ]);
+  // Run-count histogram legend, when an FDP overlay exists: the decoy curve on every report
+  // that carries it, the entrapment curve when a manifest is present (both scopes carry the
+  // arrays when either does).
+  const histHasEnt=!!(cr.experiment && cr.experiment.entrapmentRunCountHistogram);
+  const histHasDec=!!(cr.experiment && cr.experiment.decoyFdpByRunCount);
+  if(histHasEnt||histHasDec){
+    const items=[{name:"real targets",color:COL.target}];
+    if(histHasEnt)items.push({name:"entrapment FDP (right axis)",color:COL.warn,line:true,toggle:o=>{histOff.ent=o;drawHist();}});
+    if(histHasDec)items.push({name:"decoy FDP (right axis)",color:COL.accent,line:true,toggle:o=>{histOff.dec=o;drawHist();}});
+    legend(document.getElementById("runHistLegend"),items);
+  }
   else legend(document.getElementById("runHistLegend"),[]);
+  legend(document.getElementById("decoyFloorLegend"),[
+    {name:"experiment-wide",color:COL.accent,line:true},
+    {name:"per-run",color:COL.decoy,line:true},
+  ]);
   if(cr.perRun && cr.perRun.unionFdp && N>=2)
     legend(document.getElementById("unionFdpLegend"),[
       {name:"per-run union FDP",color:COL.decoy,line:true},
@@ -1648,6 +2064,7 @@ function renderReproTab(b){
   renderRepro();    // drawDet + drawHist + drawFrontier (all follow the per-run/experiment-wide selector)
   drawYieldCutoff();// scope-independent (both gates on one count axis); drawn once
   drawUnionFdp();   // scope-independent (shows both curves); drawn once
+  drawDecoyFloor(); // scope-independent (shows both curves); drawn once
 }
 
 // ========== Competition tab: paired decoy-win fraction ==========
@@ -1777,6 +2194,8 @@ function renderCoAssignment(ca){
     }
   }
 
+  drawCaRunCutoffs(ca);
+
   // ---- per-class table ----
   const host=document.getElementById("caTable");host.innerHTML="";
   const tb=H(host,"table"),th=H(H(tb,"thead"),"tr");
@@ -1823,6 +2242,57 @@ function renderCoAssignment(ca){
   drawCaHist(ca,s);
   drawCaLadder(ca,s);
   drawCaOffenders(s);
+}
+
+// The run-scope acceptance boundary of every run on the run axis, with the experiment boundary as
+// a reference line (issue #4672). These were one log line per run, which at cohort scale hid the
+// outlier they existed to expose; a gap in the line is a run that accepted nothing.
+function drawCaRunCutoffs(ca){
+  const wrap=document.getElementById("caRunCutWrap");
+  if(!wrap)return;
+  const v=ca.runCutoffs||[],names=ca.runNames||[];
+  const fin=v.filter(x=>x!=null&&isFinite(x));
+  if(!fin.length){wrap.style.display="none";return;}
+  wrap.style.display="";
+  const host=document.getElementById("caRunCut");host.innerHTML="";
+  const N=v.length,W=1000,Hh=240,box={l:62,t:14,w:W-82,h:Hh-58};
+  const ref=isFinite(ca.experimentCutoff)?ca.experimentCutoff:null;
+  let lo=Math.min(...fin),hi=Math.max(...fin);
+  if(ref!=null){lo=Math.min(lo,ref);hi=Math.max(hi,ref);}
+  const pad=(hi-lo)*0.08||Math.abs(hi)*0.1||1;
+  const xd=N>1?[1,N]:[0,2];
+  const step=Math.max(1,Math.round(nice((N-1)/6)));
+  const xt=[];for(let i=1;i<=N;i+=step)xt.push(i);
+  const sv=svg(W,Hh);host.appendChild(sv);
+  const sc=axes(sv,box,xd,[lo-pad,hi+pad],{xticks:xt,xlab:"run (input order)",ylab:"composite score",
+    xfmt:x=>fmt(x,0)});
+  if(ref!=null){
+    E(sv,"line",{x1:box.l,x2:box.l+box.w,y1:sc.y(ref),y2:sc.y(ref),stroke:COL.warn,"stroke-width":1.5,
+      "stroke-dasharray":"5 4"});
+  }
+  let path="",started=false;
+  for(let i=0;i<N;i++){
+    if(v[i]==null||!isFinite(v[i])){started=false;continue;}
+    path+=(started?"L":"M")+sc.x(i+1).toFixed(1)+" "+sc.y(v[i]).toFixed(1)+" ";started=true;
+  }
+  E(sv,"path",{d:path,fill:"none",stroke:COL.decoy,"stroke-width":1.3});
+  if(N<=120){
+    for(let i=0;i<N;i++){
+      if(v[i]!=null&&isFinite(v[i]))E(sv,"circle",{cx:sc.x(i+1),cy:sc.y(v[i]),r:2.4,fill:COL.decoy});
+    }
+  }
+  const ov=E(sv,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
+  ov.addEventListener("mousemove",ev=>{const rb=sv.getBoundingClientRect();
+    const xv=xd[0]+((ev.clientX-rb.left)/rb.width*W-box.l)/box.w*(xd[1]-xd[0]);
+    const i=Math.max(0,Math.min(N-1,Math.round(xv)-1));
+    let html="<b>run "+(i+1)+"</b>"+(names[i]?" &middot; "+esc(names[i]):"")+
+      "<br>boundary: "+(v[i]!=null&&isFinite(v[i])?fmt(v[i],4):"none (no accepted precursor)");
+    if(ref!=null)html+="<br>experiment: "+fmt(ref,4);
+    showTip(ev,html);});
+  ov.addEventListener("mouseleave",hideTip);
+  const items=[{name:"run boundary",color:COL.decoy}];
+  if(ref!=null)items.push({name:"experiment boundary",color:COL.warn,line:true});
+  legend(document.getElementById("caRunCutLegend"),items);
 }
 
 // |dRT| histogram over the FULL scanned window, each class normalized to its own total.
@@ -1945,6 +2415,65 @@ function renderPerFile(b){
   const fd=document.getElementById("fileDesc");
   if(fd)fd.innerHTML="Precursors passing the run-level FDR, per input file"+
     (PASSES.length>1?" &mdash; <b>"+b.label+"</b> ("+(b.pass===2?"final reported pool":"pre-compaction first-pass pool")+").":".");
+}
+
+// ---------- summary: equal-chance alarms (issue #4464) for the active pass ----------
+// The verdicts are computed in C# (EqualChanceAlarms) and carried in D.equalChance; this only
+// shows them. Each check is ok / alarm / cannot_assess (input present, too weak to judge) /
+// not_applicable (input absent for this pass - e.g. pass 2 has no retrained model).
+const EC_LABEL={ok:"ok",alarm:"ALARM",cannot_assess:"cannot assess",not_applicable:"n/a"};
+const EC_CLASS={ok:"good",alarm:"bad",cannot_assess:"warn",not_applicable:""};
+const EC_GUARD={too_few_targets:"too few targets to fit a mixture",degenerate:"the target scores fill fewer than two bins",not_converged:"the mixture fit did not converge",
+  component_weight:"one mixture component is negligible",not_separated:"insufficient separation to assess: the two components overlap"};
+function renderEqualChance(b){
+  const card=document.getElementById("ecCard");const ec=b.equalChance;
+  if(!ec){if(card)card.style.display="none";return;}
+  if(card)card.style.display="";
+  const na=ec.nullAlignment,qb=ec.qBandBalance,pc=ec.pairedCoin,ds=ec.decoySupport;
+  const sg=v=>(Number(v)>0?"+":"")+fmt(v,2);
+  const rows=[
+    {name:"Null alignment (decoy vs f_false)",c:na,
+      measured:na.status==="not_applicable"?"no composite score distribution or no decoys for this pass":
+        na.status==="cannot_assess"?(EC_GUARD[na.guard]||"")+
+        (na.fit?" (Ashman D "+fmt(na.fit.separation,2)+")":""):
+        "location "+sg(na.locationShift)+"σ, scale ×"+fmt(na.scaleRatio,2)+", J "+fmt(na.symmetricDivergence,3),
+      threshold:"|location| > "+fmt(na.locationThreshold,1)+"σ or scale beyond ×"+fmt(na.scaleThreshold,1)},
+    {name:"q-band balance (diagFDR)",c:qb,
+      measured:"decoy fraction "+pct(qb.pooledDecoyFraction,1)+" in q "+fmt(qb.pooledLo,1)+" to "+fmt(qb.pooledHi,1)+
+        " (n "+fmt(qb.pooledN,0)+"), Δ "+sg(qb.deltaBalance),
+      threshold:"|Δ| > "+fmt(qb.threshold,2)},
+    {name:"Paired coin (entrapment pairs)",c:pc,
+      measured:pc.status==="not_applicable"?"no entrapment pairs (real-pair coin "+pct(pc.realCoin,1)+", confounded by true hits)":
+        "decoy wins "+pct(pc.entrapmentCoin,1)+" of "+fmt(pc.entrapmentPairs,0)+" null-band pairs",
+      threshold:"|coin - 50%| > "+pct(pc.threshold,0)},
+    {name:"Decoy support at the cutoff",c:ds,
+      measured:ds.status==="not_applicable"?"":
+        "fewest decoys accepted per run "+fmt(ds.minRunDecoys,0)+" ("+ds.minRunFile+"), FDP CV ≈ "+pct(ds.fdpCvBenchmark,0),
+      threshold:"granular below "+fmt(ds.threshold,0)+" decoys at "+pct(ds.alpha,0)+" run FDR"}];
+  const kp=document.getElementById("ecKpis");kp.innerHTML="";
+  kpi(kp,"equal-chance alarms",fmt(ec.alarmCount,0),ec.alarmCount>0?"bad":"good");
+  rows.forEach(r=>kpi(kp,r.name,EC_LABEL[r.c.status]||r.c.status,EC_CLASS[r.c.status]||""));
+  const host=document.getElementById("ecTable");host.innerHTML="";
+  const t=H(host,"table",{});const htr=H(H(t,"thead",{}),"tr",{});
+  [["Check","l"],["Verdict","l"],["Measured","l"],["Alarm when","l"]].forEach(h=>H(htr,"th",{class:h[1]},h[0]));
+  const tb=H(t,"tbody",{});
+  rows.forEach(r=>{const tr=H(tb,"tr",{});H(tr,"td",{class:"l"},r.name);
+    H(tr,"td",{class:"l"},EC_LABEL[r.c.status]||r.c.status);
+    H(tr,"td",{class:"l"},r.measured);H(tr,"td",{class:"l"},r.threshold);});
+  let note="";
+  if(na.status==="ok"||na.status==="alarm"){
+    note+="f_false = N("+fmt(na.fit.falseMean,2)+", "+fmt(na.fit.falseStd,2)+"), weight "+pct(na.fit.piFalse,1)+
+      "; decoys N("+fmt(na.decoyMean,2)+", "+fmt(na.decoyStd,2)+").";
+    if(isFinite(Number(na.entrapmentLocationShift)))
+      note+=" Entrapment (a pure null) sits at "+sg(na.entrapmentLocationShift)+"σ from f_false, the decoys at "+
+        sg(na.decoyVsEntrapmentShift)+"σ from the entrapment.";
+    note+=" A negative location means decoys score below the false targets: the decoy count undercounts them and q is "+
+      "anti-conservative. ";
+  }
+  if(b.pass===2&&na.status==="not_applicable")
+    note+="The null-alignment and q-band checks read the composite score distribution, which only a retrained pass "+
+      "has; switch to <b>Pass 1</b> for them. ";
+  document.getElementById("ecNote").innerHTML=note;
 }
 
 function kpi(host,label,val,c){const d=H(host,"div",{class:"kpi"});H(d,"div",{class:"v "+(c||"")},val);H(d,"div",{class:"k"},label);}

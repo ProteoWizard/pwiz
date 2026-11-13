@@ -266,6 +266,10 @@ namespace TestPerf
                 //searchDlg.SetAdditionalSetting("MinNumOfQuantitativePeaks", "20");
                 //searchDlg.SetAdditionalSetting("FilterPeaklists", "true");
                 //searchDlg.SetAdditionalSetting("NumberOfThreadsUsed", "16");
+                // One thread, because the search result depends on thread order: a borderline peptide crosses the
+                // Percolator q-value cutoff in some multi-threaded runs, changing FinalTargetCounts by one peptide.
+                // Single-threaded, FinalTargetCounts is the same on every run.
+                searchDlg.SetAdditionalSetting("NumberOfThreadsUsed", "1");
             });
             PauseForScreenShot<EncyclopeDiaSearchDlg.SearchSettingsPage>("EncyclopeDIA Settings page");
             RunUI(searchDlg.NextPage); // start search

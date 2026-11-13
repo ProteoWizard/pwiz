@@ -13,12 +13,12 @@ tests feed it the exact command lines of recorded Carafe runs (`CarafeReferenceR
 whether or not these modes read it.
 
 ```
-CarafeSharp --build-entrapment-fasta <out.fasta> --db <proteins.fasta> [options]
-CarafeSharp --reconcile-manifest <out.tsv> --manifest <in.tsv> --predicted-library <library.tsv|.blib>
-CarafeSharp --db <peptides.fasta|proteins.fasta> --o <folder> [options]            (library prediction)
-CarafeSharp --i <osprey.blib> --ms <runs> --o <folder> [--db <fasta>] [options]     (training)
-CarafeSharp --i <run.training.parquet|folder> [--ms <runs>] --o <folder> [--db <fasta>] [options]
-CarafeSharp --model-info <file.carafemodel>
+CarafeSharp --build-entrapment-fasta path/to/file.fasta --db path/to/file.fasta [options]
+CarafeSharp --reconcile-manifest path/to/file.tsv --manifest path/to/file.tsv --predicted-library path/to/file.tsv|.blib
+CarafeSharp --db path/to/file.fasta --o path/to/folder [options]   (library prediction)
+CarafeSharp --i path/to/file.blib --ms <runs> --o path/to/folder [--db path/to/file.fasta] [options]   (training)
+CarafeSharp --i path/to/file.training.parquet|path/to/folder [--ms <runs>] --o path/to/folder [--db path/to/file.fasta] [options]
+CarafeSharp --model-info path/to/file.model.zip
 CarafeSharp -h [ascii|unicode|sections|html|<Section>]
 ```
 
@@ -28,9 +28,10 @@ Carafe's own spelling is accepted for every option - its single dash and its und
 (`-lf_type`, `--miss_c`) - so a recorded Carafe run's command line is accepted whole (cross-impl
 compatibility with Noble-Lab/Carafe), and the help ends with a paragraph saying so. The words of a
 name stay Carafe's (`miss-c`, not `missed-cleavages`), because they are the names a Carafe user
-knows; the camel-case names (`--minLength`, `--fixMod`, `--I2L`) are unchanged, having no
-separator to standardise. The rule is one grammar setting (`NameSeparatorsEquivalent` on the
-shared `CommandLineGrammar`), not an alias per option.
+knows; Carafe's camel-case names are hyphenated the same way (`--min-length`, `--fix-mod`,
+`--i2l`), and its spelling (`-minLength`, `-fixMod`, `-I2L`) is accepted. The rule is one grammar
+setting (`NameSeparatorsEquivalent` on the shared `CommandLineGrammar`: an underscore, a hyphen and
+a lower-to-upper case boundary are one separator, and case is ignored), not an alias per option.
 
 ---
 
@@ -74,7 +75,7 @@ The mode is decided from the options given, in Carafe's order of precedence:
 |---|---|---|
 | nothing, or `-h` | help | prints the usage |
 | `--build-entrapment-fasta` | entrapment FASTA build | `EntrapmentFastaBuilder`: digest `--db`, add decoys and entrapment, write the pairing manifest of `--manifest` |
-| `--model-info` | model info | describes a saved `.carafemodel` |
+| `--model-info` | model info | describes a saved `.model.zip` |
 | `--reconcile-manifest` | manifest reconciliation | `PairingManifestReconciler` against `--predicted-library` |
 | `--ms`, or `--i` naming training exports, without `--model-dir` | training | `ModelTrainer` on Osprey's `.training.parquet` exports, then the library of `--db` with the fine-tuned models when `--db` is given |
 | `--db` | library prediction | `LibraryGenerator` with the pretrained models, a `--model-dir` folder or a saved `--model` |
@@ -93,7 +94,7 @@ The help's last section lists them. Each is accepted so a Carafe command line ru
 - Diagnostic files (`--ez`, `--xic`, `--export-mgf`, `--skyline`): reported and ignored.
 - Checked for the one value supported: `--se Osprey`, `--mode general`, `--ai-version v2`,
   `--na 0`; `--lf-format parquet` and `--lf-type mzSpecLib` are refused.
-- Not ported, refused: `--printPTM`, `--build-koina-library`, `--mod2mass`, `--user-var-mods`,
+- Not ported, refused: `--print-ptm`, `--build-koina-library`, `--mod2mass`, `--user-var-mods`,
   and for training `--cs`, `--use-all-peaks`, `--y1`.
 - Silently ignored, as Carafe ignores them in these modes: `--ptm-site-prob`,
   `--ptm-site-qvalue`, `--data-type`, `--koina-url`, `--koina-ms2-model`, `--koina-rt-model`,
@@ -107,6 +108,21 @@ reads, `--log-file`, `--timestamp` and `--memstamp` (Osprey's `--log-file`, `--t
 `--memstamp`). Their semantics are in
 `01-model-spec.md`, `06-saved-models.md` and `07-chronologer.md`; the help has the one-line
 version of each.
+
+The entrapment FASTA build has one option of its own, `--entrapment-in-targets <ratio>` (with
+`--entrapment`). Carafe puts every entrapment peptide on an entrapment protein of its own (the
+`_p_target` accession), which no protein-aware scoring step can ever count as detected, so such
+a step is invisible to the entrapment estimate. This option adds, for that fraction of the
+targets, an entrapment peptide placed on a target protein drawn uniformly from the proteins in
+the library: `--entrapment-ratio 0.1 --entrapment-in-targets 0.1` is 20% entrapment, half of it
+on target proteins (the two together at most 1.0 and at least 0.1). The targets that carry
+entrapment are drawn as before from the total ratio, so a build without the option is
+byte-identical to Carafe's; which of them go on a target protein, and which protein, is a seeded
+draw of its own (default seed 20261101). The peptide and its decoy carry that protein's label
+without the suffix, its FASTA header advances that protein's `_pepNNNNN` counter, and only the
+manifest's `peptide_type` (`p_target`) marks it as entrapment. The FASTA and manifest formats
+do not change. The design and what it found are in
+`pwiz_tools/Osprey/docs/protein-shuffled-entrapment.md`.
 
 ## The same declarations on Osprey's command line
 
