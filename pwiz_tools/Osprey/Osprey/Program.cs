@@ -734,13 +734,12 @@ namespace pwiz.Osprey
                         @"OSPREY_FEATURE_MASK", unknownMaskedFeature, OspreyEnvironment.FEATURE_MASK_NONE));
                     return EXIT_CODE_FAILURE_TO_START;
                 }
-                // The default feature set is a hand-kept list of names, resolved when the FDR stage
-                // first loads features: a stale name would otherwise surface only after Stages 1-4.
-                string unknownDefaultFeature = PinFeatureMask.UnknownDefaultFeatureName();
-                if (unknownDefaultFeature != null)
+                // The efficient and default feature sets are hand-kept lists of names, resolved when the FDR
+                // stage first loads features: a stale name would otherwise surface only after Stages 1-4.
+                string invalidNamedSet = PinFeatureMask.UnknownNamedSetFeature();
+                if (invalidNamedSet != null)
                 {
-                    LogError(string.Format(@"PinFeatureMask.DEFAULT_FEATURES names an unknown PIN feature or leaves out a core one: '{0}'.",
-                        unknownDefaultFeature));
+                    LogError(invalidNamedSet);
                     return EXIT_CODE_FAILURE_TO_START;
                 }
                 // Always printed: the default set depends on the resolution, and a warm resume skips

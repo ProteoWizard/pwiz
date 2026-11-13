@@ -903,6 +903,14 @@ namespace pwiz.Osprey.Test
             CollectionAssert.AreEqual(PinFeatureMask.FeatureSetIndices(OspreyFeatureSet.@default), defaultHram);
             CollectionAssert.AreEqual(defaultHram.Where(f => f < firstHramOnly).ToArray(), defaultUnit);
             Assert.IsTrue(defaultUnit.Length < defaultHram.Length, @"the default set has HRAM-only members");
+            var byEfficient = PinFeatureMask.FeatureSetMask(OspreyFeatureSet.efficient);
+            int[] efficientHram = PinFeatureMask.UnmaskedIndices(PinFeatureMask.MaskAtResolution(byEfficient, hram));
+            int[] efficientUnit = PinFeatureMask.UnmaskedIndices(PinFeatureMask.MaskAtResolution(byEfficient, unit));
+            CollectionAssert.AreEqual(PinFeatureMask.FeatureSetIndices(OspreyFeatureSet.efficient), efficientHram);
+            CollectionAssert.AreEqual(efficientHram.Where(f => f < firstHramOnly).ToArray(), efficientUnit);
+            // Unit resolution drops each hand-kept set's five HRAM-only members.
+            Assert.AreEqual(PinFeatureMask.EFFICIENT_FEATURES.Length - 5, efficientUnit.Length);
+            Assert.AreEqual(PinFeatureMask.DEFAULT_FEATURES.Length - 5, defaultUnit.Length);
 
             // Recording everything available keys as all at either resolution, and HRAM also counts the
             // features, so its outputs from before the families are not adopted. Unit keys do not change.
@@ -926,6 +934,20 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(setKey(defaultHram), PinFeatureMask.ValidityKeySuffix(null, hram));
             Assert.AreEqual(setKey(defaultHram), PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.@default, hram));
             Assert.AreEqual(setKey(defaultUnit), PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.@default, unit));
+            Assert.AreEqual(setKey(efficientHram), PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.efficient, hram));
+            Assert.AreEqual(setKey(efficientUnit), PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.efficient, unit));
+            var allSets = (OspreyFeatureSet[])Enum.GetValues(typeof(OspreyFeatureSet));
+            foreach (var mode in new[] { hram, unit })
+            {
+                var setKeys = allSets.Select(set => PinFeatureMask.ValidityKeySuffix(null, set, mode)).ToArray();
+                Assert.AreEqual(setKeys.Length, setKeys.Distinct().Count(), @"every set keys the FDR tasks differently");
+                var recordedKeys = allSets.Select(set =>
+                {
+                    bool[] recorded = PinFeatureMask.RecordedFeatures(PinFeatureMask.FeatureSetMask(set), false, mode);
+                    return PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => recorded[f], mode);
+                }).ToArray();
+                Assert.AreEqual(recordedKeys.Length, recordedKeys.Distinct().Count(), @"every set keys the scoring tasks differently");
+            }
             Assert.AreEqual(@";featset=all;featavail=109;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.all, hram));
             Assert.AreEqual(@";featset=all;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.all, unit));
             Assert.AreEqual(@";featmask=none;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix(Array.Empty<string>(), OspreyFeatureSet.core, unit),

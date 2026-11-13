@@ -472,7 +472,7 @@ namespace pwiz.Osprey
                 DescriptionArgs = () => new object[]
                 {
                     OspreyFeatureSet.core, OspreyFeatureSet.@default, OspreyFeatureSet.all,
-                    RESOLUTION_HRAM, RESOLUTION_UNIT
+                    RESOLUTION_HRAM, RESOLUTION_UNIT, OspreyFeatureSet.efficient
                 }
             };
 

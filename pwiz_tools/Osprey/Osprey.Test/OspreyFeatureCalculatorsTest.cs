@@ -1502,9 +1502,10 @@ namespace pwiz.Osprey.Test
         /// The parquet feature columns and the calculators are two hand-kept lists in lockstep:
         /// each new feature adds to both, so a calculator whose name differs from its column
         /// would write one feature under another's name. The named feature sets resolve names
-        /// against the columns and nest: core within default within all. The default set is a
-        /// hand-kept list (<see cref="PinFeatureMask.DEFAULT_FEATURES"/>), so every name must be a
-        /// column, listed once, in PIN order, and it must hold the 21 core features.
+        /// against the columns and nest strictly: core within efficient within default within all.
+        /// The efficient and default sets are hand-kept lists (<see cref="PinFeatureMask.EFFICIENT_FEATURES"/>,
+        /// <see cref="PinFeatureMask.DEFAULT_FEATURES"/>), so every name must be a column, listed once,
+        /// in PIN order, and each must hold the 21 core features.
         /// </summary>
         [TestMethod]
         public void TestFeatureNamesAndDefaultMask()
@@ -1514,18 +1515,36 @@ namespace pwiz.Osprey.Test
             for (int i = 0; i < names.Length; i++)
                 Assert.AreEqual(names[i], OspreyFeatureCalculators.Get(i).Name, string.Format("Feature {0}", i));
 
-            Assert.IsNull(PinFeatureMask.UnknownDefaultFeatureName());
+            Assert.IsNull(PinFeatureMask.UnknownNamedSetFeature());
             int[] core = PinFeatureMask.FeatureSetIndices(OspreyFeatureSet.core);
+            int[] efficient = PinFeatureMask.FeatureSetIndices(OspreyFeatureSet.efficient);
             int[] byDefault = PinFeatureMask.FeatureSetIndices(OspreyFeatureSet.@default);
             int[] all = PinFeatureMask.FeatureSetIndices(OspreyFeatureSet.all);
             CollectionAssert.AreEqual(Enumerable.Range(0, PinFeatureMask.CORE_FEATURE_COUNT).ToArray(), core);
             CollectionAssert.AreEqual(Enumerable.Range(0, names.Length).ToArray(), all);
-            Assert.AreEqual(PinFeatureMask.DEFAULT_FEATURES.Length, byDefault.Length, @"each default name is a column, listed once");
-            CollectionAssert.AreEqual(byDefault.Select(f => names[f]).ToArray(), PinFeatureMask.DEFAULT_FEATURES,
-                @"the default set is listed in PIN order");
-            CollectionAssert.IsSubsetOf(core, byDefault, @"the default set holds the core");
-            CollectionAssert.IsSubsetOf(byDefault, all);
-            Assert.IsTrue(core.Length < byDefault.Length && byDefault.Length < all.Length, @"the sets are strictly nested");
+            AssertHandKeptSet(names, efficient, PinFeatureMask.EFFICIENT_FEATURES);
+            AssertHandKeptSet(names, byDefault, PinFeatureMask.DEFAULT_FEATURES);
+
+            // The enum order is the nesting order: core within efficient within default within all.
+            var nested = ((OspreyFeatureSet[])Enum.GetValues(typeof(OspreyFeatureSet))).Select(PinFeatureMask.FeatureSetIndices).ToArray();
+            Assert.AreEqual(4, nested.Length);
+            for (int i = 1; i < nested.Length; i++)
+            {
+                CollectionAssert.IsSubsetOf(nested[i - 1], nested[i], @"set " + i + @" holds set " + (i - 1));
+                Assert.IsTrue(nested[i - 1].Length < nested[i].Length, @"the sets are strictly nested");
+            }
+            CollectionAssert.AreEqual(new[] { 21, 57, 70, 109 }, nested.Select(set => set.Length).ToArray(),
+                @"core, efficient, default and all at HRAM");
+            CollectionAssert.AreEqual(new[] { 21, 52, 65, 101 },
+                nested.Select(set => set.Count(f => PinFeatureMask.IsAvailable(f, ResolutionMode.UnitResolution))).ToArray(),
+                @"the set sizes at unit resolution, without their HRAM-only members");
+        }
+
+        // A hand-kept set resolves to every name of its list, once, in PIN order.
+        private static void AssertHandKeptSet(string[] names, int[] resolved, string[] members)
+        {
+            Assert.AreEqual(members.Length, resolved.Length, @"each name is a column, listed once");
+            CollectionAssert.AreEqual(resolved.Select(f => names[f]).ToArray(), members, @"the set is listed in PIN order");
         }
 
         private static LibraryFragment Frag(double mz, IonType ionType, byte ordinal)

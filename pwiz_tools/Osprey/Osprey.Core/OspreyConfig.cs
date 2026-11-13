@@ -724,13 +724,16 @@ namespace pwiz.Osprey.Core
 
     /// <summary>
     /// The named PIN feature sets the FDR classifier can train on (<c>--feature-set</c>), nested:
-    /// <see cref="core"/> within <see cref="@default"/> within <see cref="all"/>. The member names are
+    /// <see cref="core"/> within <see cref="efficient"/> within <see cref="@default"/> within <see cref="all"/>.
+    /// The member names are
     /// the command-line values. Osprey-only; there is no Rust counterpart.
     /// </summary>
     public enum OspreyFeatureSet
     {
         /// <summary>The 21 core features, PIN 0 to 20: the features Osprey had before the families.</summary>
         core,
+        /// <summary>The core features and fewer family features than the default's, for fewer columns at a small detection cost (<c>PinFeatureMask.EFFICIENT_FEATURES</c>).</summary>
+        efficient,
         /// <summary>The core features and the family features chosen for the default search (<c>PinFeatureMask.DEFAULT_FEATURES</c>).</summary>
         @default,
         /// <summary>Every PIN feature the resolution can use.</summary>

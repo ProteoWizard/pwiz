@@ -38,6 +38,7 @@ namespace pwiz.Osprey.Test
         /// its parquets then hold exactly the default set's columns the resolution can use - not the
         /// rest of the families it computes. Searched again, every task is cached. A first-pass FDR
         /// alone under a wider set, over scores that lack its columns, must not read them as zeros.
+        /// Last, the efficient set scores again and records its own, smaller set of columns.
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetFeatureSets()
@@ -66,6 +67,11 @@ namespace pwiz.Osprey.Test
             string error = SplitLines(log).Single(CommandStatusWriter.IsErrorLine);
             StringAssert.Contains(error, ParquetScoreCache.PIN_FEATURE_NAMES[missing]);
             StringAssert.Contains(error, ParquetScoreCache.EXT_SCORES);
+
+            // The efficient set, within the default: fewer columns is another file too, so it scores again.
+            log = RunAnalysis(workDir, DataInputs(), Verifier(false), FeatureSetArgs(OspreyFeatureSet.efficient));
+            AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
+            AssertFeatureSetRun(workDir, log, OspreyFeatureSet.efficient, OspreyFeatureSet.efficient);
         }
 
         private static string[] FeatureSetArgs(OspreyFeatureSet featureSet)

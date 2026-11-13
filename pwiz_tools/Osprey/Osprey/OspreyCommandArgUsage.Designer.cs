@@ -285,7 +285,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The PIN features the FDR classifier trains on: {0} (the 21 core features), {1} (the core features and the family features chosen for the default search) or {2} (every feature). [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to The PIN features the FDR classifier trains on, each set within the next: {0} (the original 21 core features), {5} (the core and fewer family features: fewer feature columns for a small detection cost), {1} (the closest to {2} at HRAM) [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _feature_set {
             get {

@@ -33,8 +33,9 @@ namespace pwiz.Osprey.IO
     /// unmasked features cost and not what all of them would.
     ///
     /// <para>What the classifier uses is a named feature set (<c>--feature-set</c>,
-    /// <see cref="OspreyFeatureSet"/>): <c>core</c>, the 21 core features; <c>default</c>, the core
-    /// and the family features in <see cref="DEFAULT_FEATURES"/>; or <c>all</c>. Without the
+    /// <see cref="OspreyFeatureSet"/>), nested: <c>core</c>, the 21 core features; <c>efficient</c>
+    /// and <c>default</c>, the core and the family features in <see cref="EFFICIENT_FEATURES"/> and
+    /// <see cref="DEFAULT_FEATURES"/>; or <c>all</c>. Without the
     /// option the resolution chooses (<see cref="FeatureSetFor"/>): <c>default</c> for HRAM data,
     /// <c>core</c> at unit resolution. OSPREY_FEATURE_MASK, a research switch, overrides the set:
     /// when it is set, it alone names what is masked.</para>
@@ -58,10 +59,44 @@ namespace pwiz.Osprey.IO
     public static class PinFeatureMask
     {
         /// <summary>
+        /// The members of the <c>efficient</c> feature set (<see cref="OspreyFeatureSet.efficient"/>), in
+        /// PIN order: the 21 core features and fewer family features than the default's, for fewer
+        /// columns at a small cost in detections. It must hold every core feature and lie within
+        /// <see cref="DEFAULT_FEATURES"/>; Program checks every name at startup (<see cref="UnknownNamedSetFeature"/>).
+        /// </summary>
+        public static readonly string[] EFFICIENT_FEATURES =
+        {
+            // The 21 core features
+            @"fragment_coelution_sum", @"fragment_coelution_max", @"n_coeluting_fragments",
+            @"peak_apex", @"peak_area", @"peak_sharpness",
+            @"xcorr", @"consecutive_ions", @"explained_intensity",
+            @"mass_accuracy_deviation_mean", @"abs_mass_accuracy_deviation_mean",
+            @"rt_deviation", @"abs_rt_deviation",
+            @"ms1_precursor_coelution", @"ms1_isotope_cosine",
+            @"median_polish_cosine", @"median_polish_residual_ratio",
+            @"sg_weighted_xcorr", @"sg_weighted_cosine",
+            @"median_polish_min_fragment_r2", @"median_polish_residual_correlation",
+            // The family features
+            @"peak_coelution_margin", @"peak_rank_margin", @"peak_candidate_count",
+            @"context_peptide_length", @"context_precursor_charge", @"context_precursor_mz",
+            @"peak_spectrum_cosine_mean", @"peak_spectrum_cosine_sd",
+            @"ref_corr_rank2", @"apex_log_intensity_excl_top",
+            @"window_share_rank1", @"window_share_rank2", @"window_share_rank3",
+            @"window_share_rank4", @"window_share_rank5",
+            @"tc_sum6", @"tc_corr_rank1", @"tc_corr_rank2", @"tc_corr_rank3", @"tc_corr_rank4",
+            @"tc_corr_rank5", @"tc_corr_rank6", @"tc_res_sum", @"tc_res_mean",
+            @"heavy_sum6", @"heavy_n_good", @"tight45_sum6", @"tight20_sum6", @"tc_best_sum6",
+            @"shadow_corr_sum6", @"shadow_frac6",
+            @"lib_cosine_coel", @"lib_entropy_sim", @"lib_coel_share",
+            @"spec_match_prob_max", @"spec_proj_cosine_xt_max",
+        };
+
+        /// <summary>
         /// The members of the <c>default</c> feature set (<see cref="OspreyFeatureSet.@default"/>), in
         /// PIN order: the 21 core features and the family features chosen for the default search.
-        /// The one list to edit to change the default set; it must hold every core feature, and
-        /// Program checks every name at startup (<see cref="UnknownDefaultFeatureName"/>).
+        /// The one list to edit to change the default set; it must hold every core feature and every
+        /// <see cref="EFFICIENT_FEATURES"/> name, and Program checks every name at startup
+        /// (<see cref="UnknownNamedSetFeature"/>).
         /// </summary>
         public static readonly string[] DEFAULT_FEATURES =
         {
@@ -184,28 +219,26 @@ namespace pwiz.Osprey.IO
             {
                 case OspreyFeatureSet.core:
                     return Enumerable.Range(0, CORE_FEATURE_COUNT).ToArray();
+                case OspreyFeatureSet.efficient:
                 case OspreyFeatureSet.@default:
-                    return Enumerable.Range(0, names.Length).Where(f => DEFAULT_FEATURES.Contains(names[f])).ToArray();
+                    var members = NamedSetMembers(featureSet);
+                    return Enumerable.Range(0, names.Length).Where(f => members.Contains(names[f])).ToArray();
                 default:
                     return Enumerable.Range(0, names.Length).ToArray();
             }
         }
 
         /// <summary>
-        /// The mask a named feature set implies: every PIN feature outside it is masked. Throws for a
-        /// <see cref="DEFAULT_FEATURES"/> name that is not a PIN feature.
+        /// The mask a named feature set implies: every PIN feature outside it is masked. Throws when a
+        /// hand-kept list (<see cref="EFFICIENT_FEATURES"/>, <see cref="DEFAULT_FEATURES"/>) is not a valid set.
         /// </summary>
         public static Func<int, bool> FeatureSetMask(OspreyFeatureSet featureSet)
         {
-            if (featureSet == OspreyFeatureSet.@default)
+            string invalid = UnknownNamedSetFeature();
+            if (invalid != null)
             {
-                string unknown = UnknownDefaultFeatureName();
-                if (unknown != null)
-                {
-                    // Exception text for internal diagnostics; Program reports it to the user at startup
-                    throw new InvalidOperationException(
-                        string.Format(@"PinFeatureMask.DEFAULT_FEATURES names an unknown feature: {0}", unknown));
-                }
+                // Exception text for internal diagnostics; Program reports it to the user at startup
+                throw new InvalidOperationException(invalid);
             }
             var inSet = new bool[ParquetScoreCache.NUM_PIN_FEATURES];
             foreach (int f in FeatureSetIndices(featureSet))
@@ -412,17 +445,36 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// The first name in <see cref="DEFAULT_FEATURES"/> that is not a PIN feature, or a core
-        /// feature it leaves out; null when it is a valid set. Checked at startup, and by a unit test,
-        /// because the list is edited by hand.
+        /// What makes the hand-kept lists (<see cref="EFFICIENT_FEATURES"/>, <see cref="DEFAULT_FEATURES"/>)
+        /// not valid nested sets - a name that is not a PIN feature, a core feature a list leaves out, or
+        /// a feature of the efficient list the default leaves out - or null when they are. Checked at
+        /// startup, and by a unit test, because the lists are edited by hand.
         /// </summary>
-        public static string UnknownDefaultFeatureName()
+        public static string UnknownNamedSetFeature()
         {
-            string unknown = DEFAULT_FEATURES.FirstOrDefault(IsUnknownName);
-            if (unknown != null)
-                return unknown;
-            return ParquetScoreCache.PIN_FEATURE_NAMES.Take(CORE_FEATURE_COUNT)
-                .FirstOrDefault(name => !DEFAULT_FEATURES.Contains(name));
+            var lists = new[]
+            {
+                (Name: nameof(EFFICIENT_FEATURES), Members: EFFICIENT_FEATURES),
+                (Name: nameof(DEFAULT_FEATURES), Members: DEFAULT_FEATURES),
+            };
+            for (int i = 0; i < lists.Length; i++)
+            {
+                var list = lists[i];
+                string unknown = list.Members.FirstOrDefault(IsUnknownName);
+                if (unknown != null)
+                    return string.Format(@"PinFeatureMask.{0} names an unknown PIN feature: {1}", list.Name, unknown);
+                string core = ParquetScoreCache.PIN_FEATURE_NAMES.Take(CORE_FEATURE_COUNT)
+                    .FirstOrDefault(name => !list.Members.Contains(name));
+                if (core != null)
+                    return string.Format(@"PinFeatureMask.{0} leaves out the core feature {1}", list.Name, core);
+                if (i == 0)
+                    continue;
+                var inner = lists[i - 1];
+                string notNested = inner.Members.FirstOrDefault(name => !list.Members.Contains(name));
+                if (notNested != null)
+                    return string.Format(@"PinFeatureMask.{0} holds {1}, which {2} leaves out", inner.Name, notNested, list.Name);
+            }
+            return null;
         }
 
         /// <summary>
@@ -478,9 +530,8 @@ namespace pwiz.Osprey.IO
         /// is not adopted. Without a mask, the feature set: <c>core</c> keeps the term the default mask
         /// had when it left the core alone (<c>featmask=default</c>), so no output of a core search is
         /// invalidated; <c>all</c> carries the count like a mask; any other set lists the features it
-        /// uses beyond the core (<c>;featset=</c>), so an edit of <see cref="DEFAULT_FEATURES"/> changes
-        /// the key. A set is keyed by what it resolves to, so one that is the same at a resolution
-        /// keys the same.
+        /// uses beyond the core (<c>;featset=</c>), so an edit of a hand-kept list changes the key. A set
+        /// is keyed by what it resolves to, so one that is the same at a resolution keys the same.
         /// </summary>
         public static string ValidityKeySuffix(string[] featureMask, OspreyFeatureSet? featureSet, ResolutionMode mode)
         {
@@ -546,6 +597,18 @@ namespace pwiz.Osprey.IO
         public static string RescoreValidityKeySuffix(Func<int, bool> isMasked)
         {
             return UsesRunnerUpFeatures(isMasked) ? @";runnerup=override-candidates" : string.Empty;
+        }
+
+        // The hand-kept member list of a named set; the core and all sets have none.
+        private static string[] NamedSetMembers(OspreyFeatureSet featureSet)
+        {
+            switch (featureSet)
+            {
+                case OspreyFeatureSet.efficient:
+                    return EFFICIENT_FEATURES;
+                default:
+                    return DEFAULT_FEATURES;
+            }
         }
 
         private static bool IsUnknownName(string name)

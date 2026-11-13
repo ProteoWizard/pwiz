@@ -366,21 +366,23 @@ peak's cosine rises and falls with its signal across the peak while noise stays 
 #### Feature sets (`--feature-set`) and the feature mask (`OSPREY_FEATURE_MASK`)
 
 The features the classifier trains on are a named, nested set (`OspreyFeatureSet`,
-`--feature-set core|default|all`):
+`--feature-set core|efficient|default|all`), each within the next:
 
-| Set | Features | Chosen by default for |
-|---|---|---|
-| `core` | the 21 core features, PIN 0-20 | unit resolution |
-| `default` | the core and the family features in `PinFeatureMask.DEFAULT_FEATURES` (70 in all) | HRAM data |
-| `all` | every PIN feature (109) | - |
+| Set | Features (HRAM) | At unit resolution | Intent |
+|---|---|---|---|
+| `all` | every PIN feature: 109 | 101 | research: every score |
+| `default` | the core and `PinFeatureMask.DEFAULT_FEATURES`: 70 | 65 | the closest to `all` at HRAM (-0.33% detections at 82 files); the HRAM default |
+| `efficient` | the core and `PinFeatureMask.EFFICIENT_FEATURES`: 57 | 52 | 19% fewer feature bytes than `default` for -0.73% detections |
+| `core` | the 21 core features, PIN 0-20 | 21 | the original 21; the unit-resolution default |
 
 Without `--feature-set` the resolution chooses (`PinFeatureMask.FeatureSetFor`): `default` for HRAM
 data, `core` at unit resolution, where the families add little and every computed family costs.
-At unit resolution the HRAM-only families (below) are masked whatever the set, so `default` there
-is its non-HRAM-only members and `all` is 101 features. `DEFAULT_FEATURES` is the one list to edit
-to change the default set; Program refuses to start if a name in it is not a PIN feature or a core
-feature is missing (`PinFeatureMask.UnknownDefaultFeatureName`), and `OspreyFeatureCalculatorsTest`
-checks the nesting. The run log always names the set in force and its feature count
+At unit resolution the HRAM-only families (below) are masked whatever the set, so each set there is
+its non-HRAM-only members (the counts above). `DEFAULT_FEATURES` and `EFFICIENT_FEATURES` are
+the lists to edit; Program refuses to start if a name in either is not a PIN feature, a core
+feature is missing, or the efficient list is not within the default
+(`PinFeatureMask.UnknownNamedSetFeature`), and `OspreyFeatureCalculatorsTest` checks the nesting
+and the counts. The run log always names the set in force and its feature count
 (`PinFeatureMask.DescribeFeatures`).
 
 `OSPREY_FEATURE_MASK` is the research route: a comma-separated list of PIN feature names the
@@ -403,8 +405,8 @@ key; what scoring records is (below), so:
   same columns. The features used are in the validity keys of FirstPassFDR, PerFileRescoring and
   SecondPassFDR: `;featmask=none|<names>` for a mask; for a set, `;featmask=default` for `core`
   (the term the core-only default had, so no core output is invalidated), `;featset=all` for
-  `all`, and `;featset=<names>` listing the features beyond the core for any other set, so an
-  edit of `DEFAULT_FEATURES` rekeys. Pointing a new set at scores that hold its features re-runs
+  `all`, and `;featset=<names>` listing the features beyond the core for `efficient` and
+  `default`, so each keys differently and an edit of a list rekeys. Pointing a new set at scores that hold its features re-runs
   only the FDR stages (minutes on three runs, against the whole search). See
   `14-intermediate-files.md`. When a
   runner-up feature is used (the `default` set uses all three), PerFileRescoring and SecondPassFDR
@@ -635,7 +637,7 @@ Flags affecting THIS stage (defaults from `Osprey.Core/OspreyConfig.cs` /
 | RT calibration `MinRtTolerance` / `MaxRtTolerance` / `FallbackRtTolerance` | config | Clamp the scan-window half-width; the Gaussian rank sigma uses the UNCLAMPED `5×MAD×1.4826` (`ScoringPipeline.cs:170-187`). |
 | `Reconciliation.TopNPeaks` | config | How many CWT candidates `BuildFdrEntry` captures for Stage-6 (`CoelutionScorer.cs:322`). |
 | `OSPREY_XIC_FRAGMENTS` (env) | unset = 6 | How many top library fragments get XICs (2-20). Changes peak picking and the XIC-based features; in every task's validity key, and checked against the scores' own record when an FDR task loads existing scores. 12 on Astral with GBDT, 6 elsewhere (B.7). |
-| `--feature-set core\|default\|all` | `default` for HRAM, `core` at unit resolution | The PIN features the FDR classifier trains on: the 21 core, the core and `PinFeatureMask.DEFAULT_FEATURES` (70), or all 109. Decides which families scoring computes and which columns it records. In the FDR tasks' validity keys (B.7, "Feature sets"). |
+| `--feature-set core\|efficient\|default\|all` | `default` for HRAM, `core` at unit resolution | The PIN features the FDR classifier trains on, nested: 21 / 57 / 70 / 109 (`PinFeatureMask.EFFICIENT_FEATURES` and `DEFAULT_FEATURES` for the middle two). Decides which families scoring computes and which columns it records. In the FDR tasks' validity keys (B.7, "Feature sets"). |
 | `OSPREY_FEATURE_MASK` (env) | unset = the feature set decides | Research route: PIN features the FDR classifier must not use (comma-separated names, or `none`); set, it overrides `--feature-set`. Applied when the FDR stage loads features; also decides which feature families scoring computes and which columns it records. In the FDR tasks' validity keys (B.7). |
 | `OSPREY_RECORD_ALL_FEATURES=1` (env) | unset = record the set's columns | Developer and research switch: compute and record every PIN feature, so arms that differ only in the set or mask can share one scoring. In the PerFileScoring and PerFileRescoring validity keys (`;featrec=all`). Not for release use (B.7, "What scoring records"). |
 
