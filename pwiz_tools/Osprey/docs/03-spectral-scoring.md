@@ -281,8 +281,9 @@ reused across candidates with `ClearByproducts` between them
 
 `BuildFdrEntry` (`CoelutionScorer.cs:389`) sets both `CoelutionSum` and `Score` to
 `features[0]` (the raw coelution sum is the pre-SVM ranking score), serializes the full
-library fragment list and the reference-XIC slice, and stores the top-N CWT candidates
-for Stage-6 reconciliation. After scoring, `ScoringPipeline` runs two dedup passes:
+library fragment list and the reference-XIC slice. It stores no CWT candidates: Stage 6
+computes the top-N list for the few precursors reconciliation consults
+(`CoelutionScorer.RecomputeCwtCandidates`, #5024). After scoring, `ScoringPipeline` runs two dedup passes:
 `DeduplicateDoubleCounting` (`:324`; drops same-class entries whose top-6 fragments
 overlap ≥50% within ±5 spectra, keeping the higher coelution sum) and
 `DeduplicatePairs` (`:526`; one best target + one best decoy per `base_id`, sorted by
@@ -329,8 +330,8 @@ the candidates. The boundary-override path (Stage 6: reconciliation and gap-fill
 someone else chose, so it runs the first-pass detection once more over the normal search window
 (`PeakDataExtractor.OverrideRunnerUpCandidates`) and compares the imposed peak with the
 candidates found there, the imposed peak standing in for any candidate whose apex falls inside
-its bounds. A peak moved off a stronger candidate then shows a negative margin. The Stage 6
-candidate list (`cwt_candidates`) stays empty on that path, as in Rust. That second detection
+its bounds. A peak moved off a stronger candidate then shows a negative margin. No Stage 6
+CWT candidate list is computed on that path, as Rust leaves it empty. That second detection
 makes the re-score step 15-20% slower (about 2.5 s per file on the Astral test runs, 0.5 s on
 Stellar; a few percent of PerFileRescoring), so it runs only when a runner-up feature is unmasked (`PinFeatureMask.UsesRunnerUpFeatures`, passed in as
 `ScoringContext.OverrideRunnerUpCandidates`). Under the default mask, an override-path peak
@@ -635,7 +636,7 @@ Flags affecting THIS stage (defaults from `Osprey.Core/OspreyConfig.cs` /
 | `--threads <count>` | all cores | INNER parallelism: `MaxDegreeOfParallelism` over isolation windows (`ScoringPipeline.cs:271`). Affects speed only, not results. |
 | `--parallel-files [N]` | off (sequential) | OUTER parallelism across files; no effect on per-candidate feature values. |
 | RT calibration `MinRtTolerance` / `MaxRtTolerance` / `FallbackRtTolerance` | config | Clamp the scan-window half-width; the Gaussian rank sigma uses the UNCLAMPED `5×MAD×1.4826` (`ScoringPipeline.cs:170-187`). |
-| `Reconciliation.TopNPeaks` | config | How many CWT candidates `BuildFdrEntry` captures for Stage-6 (`CoelutionScorer.cs:322`). |
+| `Reconciliation.TopNPeaks` | config | How many CWT candidates `CaptureCwtCandidates` keeps when Stage 6 computes a precursor's list. |
 | `OSPREY_XIC_FRAGMENTS` (env) | unset = 6 | How many top library fragments get XICs (2-20). Changes peak picking and the XIC-based features; in every task's validity key, and checked against the scores' own record when an FDR task loads existing scores. 12 on Astral with GBDT, 6 elsewhere (B.7). |
 | `--feature-set core\|efficient\|default\|all` | `default` for HRAM, `core` at unit resolution | The PIN features the FDR classifier trains on, nested: 21 / 57 / 70 / 109 (`PinFeatureMask.EFFICIENT_FEATURES` and `DEFAULT_FEATURES` for the middle two). Decides which families scoring computes and which columns it records. In the FDR tasks' validity keys (B.7, "Feature sets"). |
 | `OSPREY_FEATURE_MASK` (env) | unset = the feature set decides | Research route: PIN features the FDR classifier must not use (comma-separated names, or `none`); set, it overrides `--feature-set`. Applied when the FDR stage loads features; also decides which feature families scoring computes and which columns it records. In the FDR tasks' validity keys (B.7). |

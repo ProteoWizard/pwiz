@@ -28,7 +28,7 @@ experiment-wide. There is no third scope: experiment-wide content is written onc
 | `<stem>.calibration.json` | run | JSON (Newtonsoft) | `Osprey.Chromatography/CalibrationIO.cs` | RT + MS1/MS2 mass calibration parameters, and `model_diagnostics`: the run's row of the report's calibration view (`CalFileRow`) and mass unit, written by `ModelDiagnosticsReport.CalibrationDiagnosticsToJson` on every calibrated run, with or without `--model-diagnostics`, because only Stage 3 holds the calibration matches it is binned from (00, P16). Opaque to `Osprey.Chromatography`, which cannot see the row type |
 | `<stem>.spectra.bin` | run | Custom binary v4 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload - and the only copy once the source is deleted |
 | `<stem>.demux.spectra.bin` | run | Custom binary v4, own magic + descriptor | `Osprey.IO/SpectraCache.cs`, `Osprey.Tasks/DemuxCache.cs` | `--demux auto` on a multiplexed run only: the demultiplexed spectra the search reads in place of `.spectra.bin`, built from the source (section 2, [23-demultiplexing](23-demultiplexing.md)) |
-| `<stem>.scores.parquet` | run | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | Scored entries: 21 PIN features, fragments, CWT candidates + footer metadata |
+| `<stem>.scores.parquet` | run | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | Scored entries: identity and peak boundaries, the recorded PIN features + footer metadata |
 | `<stem>.scores-reconciled.parquet` | run | Apache Parquet (ZSTD) | `Osprey.Tasks/ReconciledParquetWriter.cs` | Stage 6 reconciled rewrite (separate file, not in-place) |
 | `<stem>.1st-pass.fdr_scores.bin` | run | Custom binary **v9**, 32-byte header + 36-byte records + feature sums + validity stamp trailer | `Osprey.IO/FdrScoresSidecar.cs` | entry_id, SVM score, run precursor q, run peptide q, detection apex RT. The experiment-scope columns moved OUT at v5 (#4486) - see the experiment sidecar row; apex RT arrived at v7 (#4522), so the diagnostics co-assignment panel stops opening every `.scores.parquet` a second time for it; the embedded validity stamp at v8 (section 8). At v9 the run's `FeatureSums` (`Osprey.Core/FeatureSums.cs`, ~10 KB): its share of the report's Model tab - class counts, standardized feature sums in row order, fixed-bin histograms - written on every run, so a report asked for later, or over runs that resumed, adds the shares in run order and needs no re-scoring (00, P16) |
 | `<stem>.2nd-pass.fdr_scores.bin` | run | Custom binary **v9**, same layout, no feature sums | `Osprey.IO/FdrScoresSidecar.cs` | Same record shape after second-pass Percolator |
@@ -296,12 +296,12 @@ binary blob columns, boundary columns, and a footer of key-value metadata. Writt
 
 ### Schema
 
-`WriteFields` (`ParquetScoreCache.cs`) writes 15 fixed columns followed by the 21 PIN
-feature columns (14 in `.scores-reconciled.parquet`, plus its `score_index`; 2 more in each
-with `--training-export`; see below). Column types are deliberately aligned with Rust: `entry_id` and `scan_number`
+`WriteFields` (`ParquetScoreCache.cs`) writes 14 fixed columns followed by the 21 PIN
+feature columns (plus `score_index` in `.scores-reconciled.parquet`; 2 more in each with
+`--training-export`; see below). Column types are deliberately aligned with Rust: `entry_id` and `scan_number`
 are `UInt32`, `charge` is `UInt8`, so a C#-written parquet loads under Rust's strict downcasts
 and vice versa (`ParquetScoreCache.cs:90`). The column SET is no longer the same: C# leaves out
-Rust's `fragment_mzs` / `fragment_intensities`, the reconciled `cwt_candidates`, and without
+Rust's `fragment_mzs` / `fragment_intensities` (#5023), `cwt_candidates` (#5024), and without
 `--training-export` the reference XIC (#5023). No gate feeds a C#-written parquet to Rust; the
 cross-implementation comparison runs each implementation end to end. Pre-2026-04-19 C#-written parquets used `Int32` and
 must be regenerated.
@@ -309,13 +309,17 @@ must be regenerated.
 - **Identity (8)**: `entry_id`, `is_decoy`, `sequence`, `modified_sequence`, `charge`,
   `precursor_mz`, `protein_ids` (nullable, `;`-joined), `file_name`.
 - **Boundary (6)**: `scan_number`, `apex_rt`, `start_rt`, `end_rt`, `bounds_area`, `bounds_snr`.
-- **Binary (1-3)**: `cwt_candidates` (`.scores.parquet` only), and `reference_xic_rts`,
-  `reference_xic_intensities` (with `--training-export` only).
+- **Binary (0 or 2)**: `reference_xic_rts`, `reference_xic_intensities` (with
+  `--training-export` only).
 
 Rust also writes `fragment_mzs` and `fragment_intensities`, a verbatim copy of each row's
 library spectrum. C# stopped writing them (#5023): nothing read them back, and they were about
-10% of a SEA-AD scoring parquet. `cwt_candidates` is read only from `.scores.parquet`, by
-Stage 6 reconciliation planning, so `.scores-reconciled.parquet` does not carry it either.
+10% of a SEA-AD scoring parquet. Rust also writes `cwt_candidates`, each row's top-N CWT peak
+candidates for its reconciliation planner, which reads them for under 1% of rows. C# stopped
+writing them too (#5024): PerFileRescoring computes the consulted rows' candidates from the
+spectra when it plans the run (`CwtCandidateRecompute`, 10-cross-run-reconciliation.md), bit for
+bit what Stage 4 would have stored. On the Stellar subset that took the scoring parquet from
+219 KB to 127 KB.
 `reference_xic_*` is read only by the training export, so both files carry it only when
 `--training-export` is given (`ParquetScoreCache.WritesReferenceXic`).
 Every read is by column name, so an older file holding these columns still reads; they are
@@ -330,10 +334,7 @@ regardless of which implementation wrote them. Compression is ZSTD
 
 **Binary blob encoding.** The `FdrEntry` write overload (`BuildFdrEntryColumns`) encodes the
 blobs exactly as Rust: `reference_xic_*` as little-endian f64 with no length
-prefix (`EncodeF64Blob`); `cwt_candidates` via `CwtCandidateCodec`
-with a mandatory 4-byte count prefix so an empty candidate list is a zero-length blob, never a
-null cell (`ParquetScoreCache.cs:399`–`:422`). Length is recovered on read as `bytes /
-sizeof(element)`.
+prefix (`EncodeF64Blob`). Length is recovered on read as `bytes / sizeof(element)`.
 
 > **Note:** the older `CoelutionScoredEntry` write overload, used only by tests, still
 > writes the binary columns as null placeholders. The pipeline's actual per-file writes go through the
@@ -347,14 +348,14 @@ Mirroring Rust's specialized loaders, the C# side never loads the full parquet u
 |---|---|---|
 | `LoadFdrStubsFromParquet` (`:723`) | 10 identity/boundary scalars | Lightweight `FdrEntry` stubs for FDR; sets `ParquetIndex = row` |
 | `ReadFdrStubScalars` (`:788`) | 5 scalar columns, zero-alloc callback | Streams stub scalars for the first-pass FDR projection without materializing `FdrEntry`s |
-| `LoadCwtCandidatesFromParquet` (`:835`) | `cwt_candidates` only | Stage 6 reconciliation planning |
 | `LoadPinFeaturesFromParquet` (`:981`) | 21 feature columns | SVM re-scoring |
-| `LoadFullFdrEntries` | all scalar + feature + blob columns | Full rehydration (tests); the Stage 6 reconciled write-back streams the same columns but the CWT candidates |
+| `LoadFullFdrEntries` | all scalar + feature + blob columns | Full rehydration (tests); the Stage 6 reconciled write-back streams the same columns |
 
 `ParquetIndex` bookkeeping is essential: both write overloads and every loader assign
-`ParquetIndex` to the post-sort row so Stage 5's per-file CWT lookup indexes each entry's own
-candidate list. A code comment (`ParquetScoreCache.cs:364`) documents a bisected bug where the
-in-memory path once left `ParquetIndex = 0` and force-integrated nearly every entry.
+`ParquetIndex` to the post-sort row, the key Stage 6 overlays rescored rows and features on.
+A code comment in `BuildFdrEntryColumns` documents a bisected bug where the in-memory path once
+left `ParquetIndex = 0` and, while the CWT candidates were stored and looked up by it,
+force-integrated nearly every entry.
 
 ### Footer metadata and cache invalidation (SHA-256 hashes)
 

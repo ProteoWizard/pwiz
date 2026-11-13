@@ -30,8 +30,18 @@ using pwiz.Osprey.Core;
 namespace pwiz.Osprey.FDR.Reconciliation
 {
     /// <summary>
-    /// Plans inter-replicate peak reconciliation using consensus RTs and stored
-    /// CWT candidates. Ports <c>plan_reconciliation</c> and
+    /// Supplies the CWT peak candidates of some of one run's entries: one list per index in
+    /// <paramref name="entryIndices"/> (indices into the entries being planned, ascending), in
+    /// that order, each in first-pass rank order. The planner asks once per run, and only for
+    /// the entries whose current peak is away from the consensus RT - the only ones whose
+    /// candidates it reads - so a source can compute them from the run's spectra rather than
+    /// store them for every entry.
+    /// </summary>
+    public delegate IReadOnlyList<IReadOnlyList<CwtCandidate>> CwtCandidateSource(IReadOnlyList<int> entryIndices);
+
+    /// <summary>
+    /// Plans inter-replicate peak reconciliation using consensus RTs and the
+    /// CWT candidates of the entries it would move. Ports <c>plan_reconciliation</c> and
     /// <c>determine_reconcile_action</c> from
     /// <c>osprey/crates/osprey/src/reconciliation.rs</c>.
     /// </summary>
@@ -55,11 +65,11 @@ namespace pwiz.Osprey.FDR.Reconciliation
         private const int SIGMA_CLIP_MIN_SURVIVORS = 20;
 
         /// <summary>
-        /// Plan inter-replicate peak reconciliation for all entries across all runs.
-        /// In-memory / test overload: takes the per-file CWT candidate lists as a
-        /// materialized dictionary and adapts it to the streaming overload below.
-        /// Production (Stage 6) uses the streaming overload so it never holds all
-        /// files' candidates resident.
+        /// Plan inter-replicate peak reconciliation for all entries across all runs, with each
+        /// run's CWT candidate lists given in memory, indexed by <see cref="FdrEntry.ParquetIndex"/>
+        /// (a run absent from <paramref name="perFileCwtCandidates"/> has none). Production plans
+        /// one run at a time through <see cref="FilePlanner"/> and computes the candidates it
+        /// asks for; this whole-experiment form is for tests.
         /// </summary>
         /// <returns>
         /// A dictionary keyed by (fileName, entryIndex) for entries that need
@@ -74,46 +84,12 @@ namespace pwiz.Osprey.FDR.Reconciliation
             IReadOnlyDictionary<string, RTCalibration> perFileOriginalCal,
             double experimentFdr)
         {
-            if (perFileCwtCandidates == null)
-                throw new ArgumentNullException(nameof(perFileCwtCandidates));
-            return Plan(consensus, perFileEntries,
-                fileName => perFileCwtCandidates.TryGetValue(fileName, out var fileCwt)
-                    ? fileCwt
-                    : null,
-                perFileRefinedCal, perFileOriginalCal, experimentFdr);
-        }
-
-        /// <summary>
-        /// Plan inter-replicate peak reconciliation for all entries across all runs.
-        /// Streaming entry point: <paramref name="loadFileCwt"/> supplies one file's
-        /// CWT candidate lists (indexed by <see cref="FdrEntry.ParquetIndex"/>) on
-        /// demand -- it is called once per file inside the per-file loop and its
-        /// result falls out of scope before the next file, so no more than one file's
-        /// candidates are resident at a time (the streaming fix for the 82-file
-        /// Stage-6 planning OOM). It may return null for a file with no candidates
-        /// (treated as empty). The cross-file inputs (the passing-base-id set, the
-        /// consensus map) never touch CWT candidates, so the streamed result is
-        /// element-for-element identical to loading them all up front.
-        /// </summary>
-        /// <returns>
-        /// A dictionary keyed by (fileName, entryIndex) for entries that need
-        /// re-scoring. Entries absent from the map implicitly retain their
-        /// current peak (ReconcileAction.Keep).
-        /// </returns>
-        public static IReadOnlyDictionary<(string File, int Index), ReconcileAction> Plan(
-            IReadOnlyList<PeptideConsensusRT> consensus,
-            IReadOnlyList<KeyValuePair<string, IReadOnlyList<FdrEntry>>> perFileEntries,
-            Func<string, IReadOnlyList<IReadOnlyList<CwtCandidate>>> loadFileCwt,
-            IReadOnlyDictionary<string, RTCalibration> perFileRefinedCal,
-            IReadOnlyDictionary<string, RTCalibration> perFileOriginalCal,
-            double experimentFdr)
-        {
             if (consensus == null)
                 throw new ArgumentNullException(nameof(consensus));
             if (perFileEntries == null)
                 throw new ArgumentNullException(nameof(perFileEntries));
-            if (loadFileCwt == null)
-                throw new ArgumentNullException(nameof(loadFileCwt));
+            if (perFileCwtCandidates == null)
+                throw new ArgumentNullException(nameof(perFileCwtCandidates));
             if (perFileRefinedCal == null)
                 throw new ArgumentNullException(nameof(perFileRefinedCal));
             if (perFileOriginalCal == null)
@@ -139,7 +115,8 @@ namespace pwiz.Osprey.FDR.Reconciliation
                 {
                     planProgress.Report(++planIdx);
                     fileActions.Clear();
-                    planner.PlanFile(fileKvp.Key, fileKvp.Value, loadFileCwt(fileKvp.Key), fileActions);
+                    perFileCwtCandidates.TryGetValue(fileKvp.Key, out var fileCwt);
+                    planner.PlanFile(fileKvp.Key, fileKvp.Value, ByParquetIndex(fileKvp.Value, fileCwt), fileActions);
                     foreach (var action in fileActions)
                         actions[(fileKvp.Key, action.Key)] = action.Value;
                 }
@@ -197,9 +174,6 @@ namespace pwiz.Osprey.FDR.Reconciliation
         /// </summary>
         public sealed class FilePlanner
         {
-            private static readonly IReadOnlyList<IReadOnlyList<CwtCandidate>> EMPTY_CWT =
-                new List<IReadOnlyList<CwtCandidate>>();
-
             private readonly Dictionary<(string, bool), PeptideConsensusRT> _consensusMap;
             private readonly double _globalWithinPeptideMadLib;
             private readonly HashSet<(uint, byte)> _passingBaseIds;
@@ -268,8 +242,10 @@ namespace pwiz.Osprey.FDR.Reconciliation
             /// <summary>
             /// Plan one file's reconciliation actions, appending them to
             /// <paramref name="fileActions"/> as (entry index, action) pairs. The caller may
-            /// release <paramref name="entries"/> and <paramref name="fileCwt"/> as soon as
-            /// this returns. Only non-Keep actions are appended; absence means Keep.
+            /// release <paramref name="entries"/> as soon as this returns. Only non-Keep actions
+            /// are appended; absence means Keep. <paramref name="candidates"/> is asked once, for
+            /// the entries whose peak is away from the consensus RT; null gives every entry no
+            /// candidates.
             ///
             /// <para>Appends to a PER-FILE list rather than writing into the join-wide
             /// dictionary, so a caller that needs this file's actions on their own - to write
@@ -279,15 +255,15 @@ namespace pwiz.Osprey.FDR.Reconciliation
             public void PlanFile(
                 string fileName,
                 IReadOnlyList<FdrEntry> entries,
-                IReadOnlyList<IReadOnlyList<CwtCandidate>> fileCwt,
+                CwtCandidateSource candidates,
                 IList<KeyValuePair<int, ReconcileAction>> fileActions)
             {
                 _perFileRefinedCal.TryGetValue(fileName, out RTCalibration refined);
-                PlanFile(fileName, refined, entries, fileCwt, fileActions);
+                PlanFile(fileName, refined, entries, candidates, fileActions);
             }
 
             /// <summary>
-            /// <see cref="PlanFile(string,IReadOnlyList{FdrEntry},IReadOnlyList{IReadOnlyList{CwtCandidate}},IList{KeyValuePair{int,ReconcileAction}})"/>
+            /// <see cref="PlanFile(string,IReadOnlyList{FdrEntry},CwtCandidateSource,IList{KeyValuePair{int,ReconcileAction}})"/>
             /// with the file's refined calibration passed in (null when it was not refit) rather
             /// than looked up. The lookup reads the shared refit map, which a caller planning
             /// several files at once is still filling; passing the file's own refit lets it plan
@@ -297,7 +273,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
                 string fileName,
                 RTCalibration refinedCalibration,
                 IReadOnlyList<FdrEntry> entries,
-                IReadOnlyList<IReadOnlyList<CwtCandidate>> fileCwt,
+                CwtCandidateSource candidates,
                 IList<KeyValuePair<int, ReconcileAction>> fileActions)
             {
                 if (entries == null)
@@ -341,7 +317,11 @@ namespace pwiz.Osprey.FDR.Reconciliation
                     Math.Max(_globalWithinPeptideMadLib * MAD_TO_SIGMA * SIGMA_FACTOR, MIN_RT_TOLERANCE),
                     fileCalToleranceCeiling);
 
-                var cwtByIndex = fileCwt ?? EMPTY_CWT;
+                // First the entries whose peak would move: an entry already at its expected RT
+                // keeps its peak whatever its candidates, so only the others' are asked for.
+                var moved = new List<int>();
+                var expectedRts = new List<double>();
+                var halfWidths = new List<double>();
                 for (int entryIdx = 0; entryIdx < entries.Count; entryIdx++)
                 {
                     var entry = entries[entryIdx];
@@ -362,23 +342,25 @@ namespace pwiz.Osprey.FDR.Reconciliation
                         continue;
 
                     double expectedRt = cal.Predict(consensusEntry.ConsensusLibraryRt);
+                    if (IsAtExpectedRt(entry.ApexRt, expectedRt, peptideTolerance))
+                        continue;   // Keep, which is implicit absence
+                    moved.Add(entryIdx);
+                    expectedRts.Add(expectedRt);
+                    halfWidths.Add(consensusEntry.MedianPeakWidth / 2.0);
+                }
+                if (moved.Count == 0)
+                    return;
 
-                    IReadOnlyList<CwtCandidate> cwt;
-                    if (entry.ParquetIndex < (uint)cwtByIndex.Count)
-                        cwt = cwtByIndex[(int)entry.ParquetIndex];
-                    else
-                        cwt = Array.Empty<CwtCandidate>();
-
+                var movedCandidates = candidates?.Invoke(moved);
+                for (int i = 0; i < moved.Count; i++)
+                {
                     var action = DetermineAction(
-                        apexRt: entry.ApexRt,
-                        cwtCandidates: cwt,
-                        expectedMeasuredRt: expectedRt,
+                        apexRt: entries[moved[i]].ApexRt,
+                        cwtCandidates: movedCandidates?[i] ?? Array.Empty<CwtCandidate>(),
+                        expectedMeasuredRt: expectedRts[i],
                         rtTolerance: peptideTolerance,
-                        halfWidth: consensusEntry.MedianPeakWidth / 2.0);
-
-                    // Only store non-Keep actions (Keep is implicit absence).
-                    if (!ReferenceEquals(action, ReconcileAction.Keep))
-                        fileActions.Add(new KeyValuePair<int, ReconcileAction>(entryIdx, action));
+                        halfWidth: halfWidths[i]);
+                    fileActions.Add(new KeyValuePair<int, ReconcileAction>(moved[i], action));
                 }
             }
         }
@@ -391,7 +373,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
         /// <c>osprey/crates/osprey/src/reconciliation.rs</c>.
         /// </summary>
         /// <param name="apexRt">Current peak's apex RT (measured space, minutes).</param>
-        /// <param name="cwtCandidates">Stored CWT candidates for this entry.</param>
+        /// <param name="cwtCandidates">The entry's first-pass CWT candidates, in rank order.</param>
         /// <param name="expectedMeasuredRt">Expected RT from the refined calibration.</param>
         /// <param name="rtTolerance">Allowed RT deviation from expected.</param>
         /// <param name="halfWidth">Half of consensus median peak width (for forced integration).</param>
@@ -403,7 +385,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
             double halfWidth)
         {
             // Current peak already at expected RT?
-            if (Math.Abs(apexRt - expectedMeasuredRt) <= rtTolerance)
+            if (IsAtExpectedRt(apexRt, expectedMeasuredRt, rtTolerance))
                 return ReconcileAction.Keep;
 
             // Pick the CWT candidate whose apex is closest to expectedMeasuredRt,
@@ -438,6 +420,36 @@ namespace pwiz.Osprey.FDR.Reconciliation
             return new ReconcileAction.ForcedIntegration(
                 expectedRt: expectedMeasuredRt,
                 halfWidth: halfWidth);
+        }
+
+        /// <summary>
+        /// True when a peak at <paramref name="apexRt"/> is within <paramref name="rtTolerance"/>
+        /// of <paramref name="expectedMeasuredRt"/>: <see cref="DetermineAction"/> keeps it without
+        /// reading its CWT candidates.
+        /// </summary>
+        public static bool IsAtExpectedRt(double apexRt, double expectedMeasuredRt, double rtTolerance)
+        {
+            return Math.Abs(apexRt - expectedMeasuredRt) <= rtTolerance;
+        }
+
+        // A candidate source over lists stored by ParquetIndex: the in-memory form of Plan.
+        private static CwtCandidateSource ByParquetIndex(IReadOnlyList<FdrEntry> entries,
+            IReadOnlyList<IReadOnlyList<CwtCandidate>> fileCwt)
+        {
+            if (fileCwt == null)
+                return null;
+            return indices =>
+            {
+                var lists = new IReadOnlyList<CwtCandidate>[indices.Count];
+                for (int i = 0; i < indices.Count; i++)
+                {
+                    var parquetIndex = entries[indices[i]].ParquetIndex;
+                    lists[i] = parquetIndex < (uint)fileCwt.Count
+                        ? fileCwt[(int)parquetIndex.Value]
+                        : Array.Empty<CwtCandidate>();
+                }
+                return lists;
+            };
         }
 
         /// <summary>

@@ -729,17 +729,6 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0}: the stored peak candidates in row group {1} have an unexpected type ({2}). The file is damaged or was written by a different version of Osprey..
-        /// </summary>
-        public static string ParquetScoreCache_LoadCwtCandidatesFromParquet__0___the_stored_peak_candidates_in_row_group__1__have_an_unexpected_type___2____The_file_is_damaged_or_was_written_by_a_different_version_of_Osprey_ {
-            get {
-                return ResourceManager.GetString("ParquetScoreCache_LoadCwtCandidatesFromParquet__0___the_stored_peak_candidates_in" +
-                        "_row_group__1__have_an_unexpected_type___2____The_file_is_damaged_or_was_written" +
-                        "_by_a_different_version_of_Osprey_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {0} has no reference XIC, which the training export reads. It was written by a run that did not request the export. Run the analysis again with the export requested..
         /// </summary>
         public static string ParquetScoreCache_LoadTrainingExportRows__0__has_no_reference_XIC__which_the_training_export_reads__It_was_written_by_a_run_that_did_not_request_the_export__Run_the_analysis_again_with_the_export_requested_ {

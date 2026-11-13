@@ -49,12 +49,12 @@ namespace pwiz.Osprey.FDR.Reconciliation
         }
 
         /// <summary>
-        /// Use an alternate stored CWT candidate whose apex is closest to the
+        /// Use an alternate first-pass CWT candidate whose apex is closest to the
         /// expected RT (within tolerance).
         /// </summary>
         public sealed class UseCwtPeak : ReconcileAction
         {
-            /// <summary>Index into the entry's stored CWT candidates.</summary>
+            /// <summary>Index into the entry's first-pass CWT candidates, in rank order.</summary>
             public int CandidateIndex { get; }
 
             /// <summary>Selected CWT peak start RT (measured space, minutes).</summary>
@@ -76,7 +76,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
         }
 
         /// <summary>
-        /// No stored CWT candidate lies within tolerance of the expected RT —
+        /// No CWT candidate lies within tolerance of the expected RT —
         /// integrate at the consensus RT with a fixed half-width.
         /// </summary>
         public sealed class ForcedIntegration : ReconcileAction
