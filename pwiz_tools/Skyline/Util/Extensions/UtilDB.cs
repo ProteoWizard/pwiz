@@ -88,15 +88,31 @@ namespace pwiz.Skyline.Util.Extensions
             if (compressed.Length == sizeUncompressed)
                 return compressed;
             byte[] uncompressed;
+            bool sizeMatches;
             try
             {
-                uncompressed = ZlibStream.UncompressBuffer(compressed);
+                using var zlibStream = new System.IO.Compression.ZLibStream(new MemoryStream(compressed),
+                    System.IO.Compression.CompressionMode.Decompress);
+                if (checkSizeDifference && sizeUncompressed >= 0)
+                {
+                    // The size is known, so the data is read straight into an array of that size
+                    uncompressed = new byte[sizeUncompressed];
+                    zlibStream.ReadExactly(uncompressed);
+                    sizeMatches = zlibStream.ReadByte() < 0;
+                }
+                else
+                {
+                    var memoryStream = new MemoryStream(Math.Max(sizeUncompressed, 0));
+                    zlibStream.CopyTo(memoryStream);
+                    uncompressed = memoryStream.ToArray();
+                    sizeMatches = uncompressed.Length == sizeUncompressed;
+                }
             }
             catch (Exception x)
             {
                 throw new IOException(Resources.UtilDB_Uncompress_Failure_uncompressing_data, x);
             }
-            if (checkSizeDifference && (uncompressed.Length != sizeUncompressed))
+            if (checkSizeDifference && !sizeMatches)
                 throw new IOException(Resources.UtilDB_Uncompress_Failure_uncompressing_data);
             return uncompressed;
         }

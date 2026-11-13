@@ -1,121 +1,165 @@
-using System;
+using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Databinding
 {
+    /// <summary>
+    /// Remembers the chromatogram groups of the most recently used precursors, in every replicate and file
+    /// that has been asked for, and the scan ids of one file, so that report cells for the same precursor do
+    /// not read them again. Several precursors are kept because report exporters calculate rows on several
+    /// threads at once, and those threads are usually working on different precursors.
+    /// </summary>
     public class ChromDataCache
     {
-        private Tuple<Key, ChromatogramGroupInfo> _withoutPoints;
-        private Tuple<Key, ChromatogramGroupInfo> _withPoints;
-        private Tuple<Key, MsDataFileScanIds> _scanIds;
+        // Each thread calculating report rows (see ParallelEx) works on one precursor at a time. Twice as many
+        // are kept so that a precursor still in use is not forgotten when the other threads move on to new ones.
+        private static readonly int MAX_PRECURSORS = ParallelEx.GetThreadCount() * 2;
+
+        /// <summary>
+        /// Identifies one of a precursor's chromatogram groups: the replicate, the file within it, and whether
+        /// the group still has its time and intensity points.
+        /// </summary>
+        private readonly record struct ChromatogramGroupKey(string Replicate, MsDataFileUri File, bool LoadPoints);
+
+        private readonly object _lock = new object();
+        private object _documentReference;
+        private readonly Dictionary<IdentityPath, Dictionary<ChromatogramGroupKey, ChromatogramGroupInfo>> _precursors =
+            new Dictionary<IdentityPath, Dictionary<ChromatogramGroupKey, ChromatogramGroupInfo>>();
+        private readonly Queue<IdentityPath> _precursorOrder = new Queue<IdentityPath>();
+        private object _scanIdsDocumentReference;
+        private MsDataFileUri _scanIdsFile;
+        private MsDataFileScanIds _scanIds;
 
         public MsDataFileScanIds GetScanIds(SrmDocument document, MsDataFileUri msDataFileUri)
         {
-            var key = new Key(document, null, msDataFileUri, IdentityPath.ROOT);
-            if (_scanIds != null && Equals(key, _scanIds.Item1))
+            lock (_lock)
             {
-                return _scanIds.Item2;
-            }
+                if (ReferenceEquals(_scanIdsDocumentReference, document.ReferenceId) && Equals(_scanIdsFile, msDataFileUri))
+                {
+                    return _scanIds;
+                }
 
-            var measuredResults = document.MeasuredResults;
-            if (measuredResults == null)
-            {
-                return null;
-            }
+                var measuredResults = document.MeasuredResults;
+                if (measuredResults == null)
+                {
+                    return null;
+                }
 
-            var msDataFileScanIds = measuredResults.LoadMSDataFileScanIds(msDataFileUri, out _);
-            _scanIds = Tuple.Create(key, msDataFileScanIds);
-            return msDataFileScanIds;
+                _scanIds = measuredResults.LoadMSDataFileScanIds(msDataFileUri, out _);
+                _scanIdsDocumentReference = document.ReferenceId;
+                _scanIdsFile = msDataFileUri;
+                return _scanIds;
+            }
         }
 
-        public ChromatogramGroupInfo GetChromatogramGroupInfo(SrmDocument document, 
+        /// <summary>
+        /// Returns the chromatogram group of a precursor in one file of a replicate. When more precursors than
+        /// the cache holds have been asked for, the groups of the one asked for first are forgotten; asking for
+        /// a different document forgets them all.
+        /// The groups are loaded without holding the lock, so that other threads can use the cache meanwhile.
+        /// When two threads load the same replicate at once, the groups stored first are kept.
+        /// When loadPoints is false, the group's time and intensity points have been discarded, which makes it
+        /// cheaper to hold on to.
+        /// </summary>
+        public ChromatogramGroupInfo GetChromatogramGroupInfo(SrmDocument document,
             ChromatogramSet chromatogramSet, MsDataFileUri filePath,
             IdentityPath precursorIdentityPath, bool loadPoints)
         {
-            var key = new Key(document, chromatogramSet, filePath, precursorIdentityPath);
-            var cacheSlot = loadPoints ? _withPoints : _withoutPoints;
-            if (cacheSlot != null && Equals(key, cacheSlot.Item1))
+            var key = new ChromatogramGroupKey(chromatogramSet.Name, filePath, loadPoints);
+            lock (_lock)
             {
-                return cacheSlot.Item2;
+                var cachedGroups = GetGroups(document, precursorIdentityPath, false);
+                if (cachedGroups != null && cachedGroups.TryGetValue(key, out var cached))
+                {
+                    return cached;
+                }
             }
-            var chromatogramGroupInfo = LoadChromatogramInfo(document, chromatogramSet, filePath, precursorIdentityPath);
-            if (!loadPoints)
+
+            var loaded = LoadReplicate(document, precursorIdentityPath, chromatogramSet, loadPoints);
+            lock (_lock)
             {
-                chromatogramGroupInfo?.DiscardData();
+                var groups = GetGroups(document, precursorIdentityPath, true);
+                foreach (var entry in loaded)
+                {
+                    if (!groups.ContainsKey(entry.Key))
+                    {
+                        groups.Add(entry.Key, entry.Value);
+                    }
+                }
+                if (!groups.TryGetValue(key, out var result))
+                {
+                    // Remember that this file has no chromatogram group, so it is not looked for again
+                    groups.Add(key, null);
+                }
+                return result;
             }
-            cacheSlot = Tuple.Create(key, chromatogramGroupInfo);
-            if (loadPoints)
-            {
-                _withPoints = cacheSlot;
-            }
-            else
-            {
-                _withoutPoints = cacheSlot;
-            }
-            return chromatogramGroupInfo;
         }
 
-        private ChromatogramGroupInfo LoadChromatogramInfo(SrmDocument document, ChromatogramSet chromatogramSet, MsDataFileUri filePath,
-            IdentityPath precursorIdentityPath)
+        /// <summary>
+        /// Returns the groups held for the precursor, or null if there are none. Must be called while holding
+        /// the lock. When create is true, this starts holding groups for the precursor if there are none,
+        /// forgetting the precursor asked for first if the cache is full, and clears the cache if it holds a
+        /// different document; it then never returns null.
+        /// </summary>
+        private Dictionary<ChromatogramGroupKey, ChromatogramGroupInfo> GetGroups(
+            SrmDocument document, IdentityPath precursorIdentityPath, bool create)
         {
+            if (!ReferenceEquals(_documentReference, document.ReferenceId))
+            {
+                if (!create)
+                {
+                    return null;
+                }
+                _documentReference = document.ReferenceId;
+                _precursors.Clear();
+                _precursorOrder.Clear();
+            }
+            if (_precursors.TryGetValue(precursorIdentityPath, out var groups) || !create)
+            {
+                return groups;
+            }
+            if (_precursorOrder.Count >= MAX_PRECURSORS)
+            {
+                _precursors.Remove(_precursorOrder.Dequeue());
+            }
+            groups = new Dictionary<ChromatogramGroupKey, ChromatogramGroupInfo>();
+            _precursors.Add(precursorIdentityPath, groups);
+            _precursorOrder.Enqueue(precursorIdentityPath);
+            return groups;
+        }
+
+        /// <summary>
+        /// Returns the precursor's chromatogram groups in every file of the replicate. When a file has more than
+        /// one, the first one is used.
+        /// </summary>
+        private static Dictionary<ChromatogramGroupKey, ChromatogramGroupInfo> LoadReplicate(
+            SrmDocument document, IdentityPath precursorIdentityPath, ChromatogramSet chromatogramSet, bool loadPoints)
+        {
+            var groups = new Dictionary<ChromatogramGroupKey, ChromatogramGroupInfo>();
             var peptideDocNode = (PeptideDocNode) document.FindNode(precursorIdentityPath.Parent);
             var precursorDocNode = (TransitionGroupDocNode) peptideDocNode.FindNode(precursorIdentityPath.Child);
-            ChromatogramGroupInfo[] chromatogramGroupInfos;
-            var measuredResults = document.Settings.MeasuredResults;
             var tolerance = (float) document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            if (!measuredResults.TryLoadChromatogram(chromatogramSet, peptideDocNode, precursorDocNode, tolerance, out chromatogramGroupInfos))
+            if (!document.Settings.MeasuredResults.TryLoadChromatogram(chromatogramSet, peptideDocNode, precursorDocNode,
+                    tolerance, out var chromatogramGroupInfos))
             {
-                return null;
+                return groups;
             }
             foreach (var chromatogramGroupInfo in chromatogramGroupInfos)
             {
-                if (Equals(chromatogramGroupInfo.FilePath, filePath))
+                var key = new ChromatogramGroupKey(chromatogramSet.Name, chromatogramGroupInfo.FilePath, loadPoints);
+                if (groups.ContainsKey(key))
                 {
-                    return chromatogramGroupInfo;
+                    continue;
                 }
-            }
-            return null;
-        }
-
-        private class Key
-        {
-            private object _documentReference;
-            private ChromatogramSet _chromatogramSet;
-            private MsDataFileUri _filePath;
-            private IdentityPath _precursorIdentityPath;
-            
-            public Key(SrmDocument document, ChromatogramSet chromatogramSet, MsDataFileUri filePath, IdentityPath precursorIdentityPath)
-            {
-                _documentReference = document.ReferenceId;
-                _chromatogramSet = chromatogramSet;
-                _filePath = filePath;
-                _precursorIdentityPath = precursorIdentityPath;
-            }
-
-            private bool Equals(Key other)
-            {
-                return ReferenceEquals(_documentReference, other._documentReference) && ReferenceEquals(_chromatogramSet, other._chromatogramSet)
-                    && _filePath.Equals(other._filePath) && _precursorIdentityPath.Equals(other._precursorIdentityPath);
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
-                return Equals((Key) obj);
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
+                if (!loadPoints)
                 {
-                    var hashCode = _filePath.GetHashCode();
-                    hashCode = (hashCode * 397) ^ _precursorIdentityPath.GetHashCode();
-                    return hashCode;
+                    chromatogramGroupInfo.DiscardData();
                 }
+                groups.Add(key, chromatogramGroupInfo);
             }
+            return groups;
         }
     }
 }

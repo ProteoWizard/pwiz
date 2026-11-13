@@ -29,6 +29,7 @@ using System.ComponentModel;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -96,9 +97,9 @@ namespace pwiz.Skyline.Model.Databinding
         /// <summary>
         /// Runs one export as three stages on separate threads: a reader which pulls rows from the
         /// <see cref="RowItemEnumerator"/> into chunks, the calling thread which calculates the column
-        /// values of each chunk on the ParallelEx workers, and a writer which encodes and compresses each
-        /// chunk into a row group. Each stage hands its output to the next through a queue holding one
-        /// chunk, so a stage never gets more than one chunk ahead of the one after it.
+        /// values of each chunk on the ParallelEx workers, and a writer which packs, encodes and compresses
+        /// each chunk into a row group, or several if the chunk is very large. Each stage hands its output
+        /// to the next through a queue holding one chunk, so a stage never gets more than one chunk ahead of the one after it.
         /// The first exception from any stage cancels the others and is rethrown by <see cref="Run"/>.
         /// </summary>
         private class ExportPipeline : IDisposable
@@ -119,6 +120,15 @@ namespace pwiz.Skyline.Model.Databinding
             /// </summary>
             private readonly BlockingCollection<ColumnBuffer[]> _freeBuffers = new BlockingCollection<ColumnBuffer[]>();
             private const int MAX_BUFFER_SETS = 3;
+            /// <summary>
+            /// A chunk is written as several row groups if any of its columns would otherwise hold more bytes than this.
+            /// </summary>
+            private const long MAX_COLUMN_BYTES_PER_GROUP = 1L << 29;
+            /// <summary>
+            /// The most bytes one row of a column can hold. Encoding a larger value would come too close to the
+            /// largest array Parquet.Net can encode a column into.
+            /// </summary>
+            private const long MAX_COLUMN_BYTES_PER_ROW = 1L << 30;
             private int _bufferSetCount;
             private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
             private readonly CancellationToken _cancellationToken;
@@ -261,36 +271,85 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 foreach (var buffers in _rowGroups.GetConsumingEnumerable(_cancellationToken))
                 {
-                    using (var groupWriter = _writer.CreateRowGroup())
+                    foreach (var (startRow, endRow) in SplitIntoRowGroups(buffers))
                     {
-                        // Encoding and compressing the columns is the expensive part, and Parquet.Net
-                        // can do it for several columns at once into memory. Only appending them to the
-                        // file has to happen one after another, in schema order.
-                        var preparedColumns = new PreparedColumn[buffers.Length];
-                        try
-                        {
-                            ParallelEx.For(0, buffers.Length, colIndex =>
-                            {
-                                preparedColumns[colIndex] = buffers[colIndex]
-                                    .PrepareAsync(groupWriter, _cancellationToken).GetAwaiter().GetResult();
-                            }, threadName: @"Parquet Column Compression");
-                            foreach (var preparedColumn in preparedColumns)
-                            {
-                                groupWriter.WritePreparedColumnAsync(preparedColumn, _cancellationToken).GetAwaiter().GetResult();
-                            }
-                        }
-                        finally
-                        {
-                            // Columns prepared but not written when something went wrong
-                            foreach (var preparedColumn in preparedColumns)
-                            {
-                                preparedColumn?.Dispose();
-                            }
-                        }
+                        WriteRowGroup(buffers, startRow, endRow);
                     }
                     // Nothing refers to the buffers any more, so the next chunk can be stored in them
                     _freeBuffers.Add(buffers);
                 }
+            }
+
+            private void WriteRowGroup(ColumnBuffer[] buffers, int startRow, int endRow)
+            {
+                using var groupWriter = _writer.CreateRowGroup();
+                // Packing, encoding and compressing the columns is the expensive part, and Parquet.Net
+                // can do it for several columns at once into memory. Only appending them to the
+                // file has to happen one after another, in schema order.
+                var preparedColumns = new PreparedColumn[buffers.Length];
+                try
+                {
+                    ParallelEx.For(0, buffers.Length, colIndex =>
+                    {
+                        buffers[colIndex].Pack(startRow, endRow);
+                        preparedColumns[colIndex] = buffers[colIndex]
+                            .PrepareAsync(groupWriter, _cancellationToken).GetAwaiter().GetResult();
+                    }, threadName: @"Parquet Column Compression");
+                    foreach (var preparedColumn in preparedColumns)
+                    {
+                        groupWriter.WritePreparedColumnAsync(preparedColumn, _cancellationToken).GetAwaiter().GetResult();
+                    }
+                }
+                finally
+                {
+                    // Columns prepared but not written when something went wrong
+                    foreach (var preparedColumn in preparedColumns)
+                    {
+                        preparedColumn?.Dispose();
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Divides a chunk into ranges of rows to be written as separate row groups, so that no column of a
+            /// row group holds more than <see cref="MAX_COLUMN_BYTES_PER_GROUP"/> bytes. Parquet.Net encodes each
+            /// column of a row group in one array, so a column of a few rows with very long lists or strings
+            /// could otherwise be more than an array can hold.
+            /// </summary>
+            private List<(int StartRow, int EndRow)> SplitIntoRowGroups(ColumnBuffer[] buffers)
+            {
+                var ranges = new List<(int StartRow, int EndRow)>();
+                int rowCount = buffers.FirstOrDefault()?.RowCount ?? 0;
+                var groupByteCounts = new long[buffers.Length];
+                var rowByteCounts = new long[buffers.Length];
+                int startRow = 0;
+                for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
+                {
+                    bool full = false;
+                    for (int colIndex = 0; colIndex < buffers.Length; colIndex++)
+                    {
+                        rowByteCounts[colIndex] = buffers[colIndex].GetByteCount(rowIndex);
+                        if (rowByteCounts[colIndex] > MAX_COLUMN_BYTES_PER_ROW)
+                        {
+                            throw new IOException(string.Format(
+                                DatabindingResources.ParquetReportExporter_A_value_in_the_column___0___is_too_large_to_export_to_Parquet_,
+                                _columns[colIndex].Name));
+                        }
+                        full |= groupByteCounts[colIndex] + rowByteCounts[colIndex] > MAX_COLUMN_BYTES_PER_GROUP;
+                    }
+                    if (full && rowIndex > startRow)
+                    {
+                        ranges.Add((startRow, rowIndex));
+                        startRow = rowIndex;
+                        Array.Clear(groupByteCounts, 0, groupByteCounts.Length);
+                    }
+                    for (int colIndex = 0; colIndex < buffers.Length; colIndex++)
+                    {
+                        groupByteCounts[colIndex] += rowByteCounts[colIndex];
+                    }
+                }
+                ranges.Add((startRow, rowCount));
+                return ranges;
             }
 
             /// <summary>
@@ -303,8 +362,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
 
             /// <summary>
-            /// Calculates every column's value for every row in the chunk into the buffers and packs
-            /// them, ready to be written as one row group.
+            /// Calculates every column's value for every row in the chunk into the buffers.
             /// </summary>
             private void PopulateChunk(IList<RowItem> rowItems, ColumnBuffer[] buffers)
             {
@@ -379,17 +437,6 @@ namespace pwiz.Skyline.Model.Databinding
                         rowItems[rowIndex] = null;
                     }
                 }, threadName: nameof(PopulateChunk));
-                if (IsStopping)
-                {
-                    return;
-                }
-                // A column with nulls has to be packed, and a list column flattened, so the columns are
-                // packed in parallel rather than one after another on this thread while the workers wait
-                // for the next chunk
-                ParallelEx.For(0, _columns.Count, colIndex =>
-                {
-                    buffers[colIndex].Pack();
-                }, threadName: nameof(ColumnBuffer.Pack));
             }
         }
 
@@ -598,8 +645,8 @@ namespace pwiz.Skyline.Model.Databinding
 
             /// <summary>
             /// Converts a value which the column's property descriptor returned to something
-            /// that can be stored in a <see cref="ColumnBuffer"/>, or null. For a list column
-            /// that is an array of <see cref="ListElementType"/>.
+            /// that can be stored in a <see cref="ColumnBuffer"/>, or null. For a list column that is
+            /// an array of <see cref="ListElementType"/>, or of its underlying type if it is Nullable.
             /// </summary>
             public object ConvertToStorageValue(object value)
             {
@@ -654,8 +701,14 @@ namespace pwiz.Skyline.Model.Databinding
                     return null;
                 }
 
-                if (array.GetType().GetElementType() == ListElementType.Type && ListElementType.Type != typeof(DateTime?))
+                var arrayElementType = array.GetType().GetElementType();
+                if (arrayElementType == ListElementType.Type && ListElementType.Type != typeof(DateTime?))
                 {
+                    return array;
+                }
+                if (arrayElementType == ListElementType.NullableUnderlyingType && arrayElementType != typeof(DateTime))
+                {
+                    // For example float[] for a column of float?, which ListColumnBuffer packs as it is
                     return array;
                 }
 
@@ -689,12 +742,23 @@ namespace pwiz.Skyline.Model.Databinding
             /// </summary>
             public abstract void Store(int rowIndex, object value);
             /// <summary>
-            /// Arranges the chunk's values the way Parquet wants them written, once every row has been stored:
-            /// the values which are not null packed together, with definition levels saying where the nulls were.
+            /// The number of rows in the chunk, set by <see cref="Reset"/>.
             /// </summary>
-            public abstract void Pack();
+            public abstract int RowCount { get; }
             /// <summary>
-            /// Encodes and compresses the packed chunk into memory, ready to be written as a column of the row group.
+            /// Returns roughly how many bytes the row's value takes up in the arrays which Parquet.Net encodes
+            /// a column into.
+            /// </summary>
+            public abstract long GetByteCount(int rowIndex);
+            /// <summary>
+            /// Arranges a range of the chunk's rows the way Parquet wants them written, once every row has been
+            /// stored: the values which are not null packed together, with definition levels saying where the
+            /// nulls were. Ranges must be packed in order, each one after the previous one has been written,
+            /// because packing a range may overwrite the rows before it.
+            /// </summary>
+            public abstract void Pack(int startRow, int endRow);
+            /// <summary>
+            /// Encodes and compresses the packed range into memory, ready to be written as a column of the row group.
             /// </summary>
             public abstract Task<PreparedColumn> PrepareAsync(ParquetRowGroupWriter groupWriter, CancellationToken cancellationToken);
 
@@ -726,6 +790,8 @@ namespace pwiz.Skyline.Model.Databinding
             /// After <see cref="Pack"/>, the number of values at the start of <see cref="_values"/>.
             /// </summary>
             private int _valueCount;
+            private int _packedStartRow;
+            private int _packedEndRow;
 
             public ColumnBuffer(DataField field, int capacity)
             {
@@ -750,12 +816,33 @@ namespace pwiz.Skyline.Model.Databinding
                 _definitionLevels[rowIndex] = 1;
             }
 
-            public override void Pack()
+            public override int RowCount
+            {
+                get { return _rowCount; }
+            }
+
+            public override long GetByteCount(int rowIndex)
+            {
+                if (_definitionLevels[rowIndex] == 0)
+                {
+                    return sizeof(int);
+                }
+                if (typeof(T) == typeof(ReadOnlyMemory<char>))
+                {
+                    // A character can take up to three bytes in UTF-8
+                    return sizeof(int) + 3L * ((ReadOnlyMemory<char>) (object) _values[rowIndex]).Length;
+                }
+                return sizeof(int) + Unsafe.SizeOf<T>();
+            }
+
+            public override void Pack(int startRow, int endRow)
             {
                 // The values which are not null are moved towards the start of the array, in place:
                 // a value never moves past a row which has not been looked at yet
+                _packedStartRow = startRow;
+                _packedEndRow = endRow;
                 _valueCount = 0;
-                for (int i = 0; i < _rowCount; i++)
+                for (int i = startRow; i < endRow; i++)
                 {
                     if (_definitionLevels[i] != 0)
                     {
@@ -767,7 +854,8 @@ namespace pwiz.Skyline.Model.Databinding
             public override Task<PreparedColumn> PrepareAsync(ParquetRowGroupWriter groupWriter, CancellationToken cancellationToken)
             {
                 return groupWriter.PrepareColumnAsync(_field, new ReadOnlyMemory<T>(_values, 0, _valueCount),
-                    new ReadOnlyMemory<int>(_definitionLevels, 0, _rowCount), null, cancellationToken);
+                    new ReadOnlyMemory<int>(_definitionLevels, _packedStartRow, _packedEndRow - _packedStartRow), null,
+                    cancellationToken);
             }
         }
 
@@ -812,18 +900,44 @@ namespace pwiz.Skyline.Model.Databinding
                 _lists[rowIndex] = (Array) value;
             }
 
-            public override void Pack()
+            public override int RowCount
             {
-                int levelCount = 0;
-                for (int rowIndex = 0; rowIndex < _rowCount; rowIndex++)
+                get { return _rowCount; }
+            }
+
+            public override long GetByteCount(int rowIndex)
+            {
+                // Each element has a value, a definition level and a repetition level, which are encoded
+                // separately, so the largest of them is what could get too big
+                var list = _lists[rowIndex];
+                long elementCount = Math.Max(1, list?.Length ?? 0);
+                long byteCount = elementCount * Math.Max(Unsafe.SizeOf<T>(), sizeof(int));
+                // The elements of a string list are strings until Pack converts them. A character can take up
+                // to three bytes in UTF-8.
+                if (list is string[] strings)
+                {
+                    foreach (var value in strings)
+                    {
+                        byteCount += 3L * (value?.Length ?? 0);
+                    }
+                }
+                return byteCount;
+            }
+
+            public override void Pack(int startRow, int endRow)
+            {
+                long levelCount = 0;
+                for (int rowIndex = startRow; rowIndex < endRow; rowIndex++)
                 {
                     levelCount += Math.Max(1, _lists[rowIndex]?.Length ?? 0);
                 }
                 if (levelCount > _definitionLevels.Length)
                 {
-                    _values = new T[levelCount];
-                    _definitionLevels = new int[levelCount];
-                    _repetitionLevels = new int[levelCount];
+                    // Throws OverflowException rather than allocating arrays which are too small
+                    int length = checked((int) levelCount);
+                    _values = new T[length];
+                    _definitionLevels = new int[length];
+                    _repetitionLevels = new int[length];
                 }
                 // The element's definition level counts the levels of nesting which are present: the
                 // list, the list's repeated group (so at least one element), and the element's value
@@ -833,13 +947,43 @@ namespace pwiz.Skyline.Model.Databinding
                 int nullListLevel = valueLevel - 3;
                 _valueCount = 0;
                 _levelCount = 0;
-                for (int rowIndex = 0; rowIndex < _rowCount; rowIndex++)
+                for (int rowIndex = startRow; rowIndex < endRow; rowIndex++)
                 {
                     var list = _lists[rowIndex];
                     if (list == null || list.Length == 0)
                     {
                         _repetitionLevels[_levelCount] = 0;
                         _definitionLevels[_levelCount++] = list == null ? nullListLevel : emptyListLevel;
+                        continue;
+                    }
+                    // Typed copies, instead of boxing every element, which costs more than everything else for
+                    // long lists
+                    if (list is T[] values)
+                    {
+                        Array.Copy(values, 0, _values, _valueCount, values.Length);
+                        _valueCount += values.Length;
+                        Array.Fill(_definitionLevels, valueLevel, _levelCount, values.Length);
+                        _repetitionLevels[_levelCount] = 0;
+                        Array.Fill(_repetitionLevels, 1, _levelCount + 1, values.Length - 1);
+                        _levelCount += values.Length;
+                        continue;
+                    }
+                    if (list is T?[] nullableValues)
+                    {
+                        for (int i = 0; i < nullableValues.Length; i++)
+                        {
+                            var element = nullableValues[i];
+                            _repetitionLevels[_levelCount] = i == 0 ? 0 : 1;
+                            if (element.HasValue)
+                            {
+                                _definitionLevels[_levelCount++] = valueLevel;
+                                _values[_valueCount++] = element.Value;
+                            }
+                            else
+                            {
+                                _definitionLevels[_levelCount++] = nullElementLevel;
+                            }
+                        }
                         continue;
                     }
                     for (int i = 0; i < list.Length; i++)
@@ -966,15 +1110,23 @@ namespace pwiz.Skyline.Model.Databinding
 
         /// <summary>
         /// Returns the number of rows that should be in each row group based on the
-        /// set of columns that are going to be written.
-        /// 
+        /// set of columns that are going to be written, between <see cref="MIN_ROWS_PER_GROUP"/>
+        /// and <see cref="MAX_ROWS_PER_GROUP"/>.
         /// </summary>
         public static int DecideRowCountPerGroup(ItemProperties itemProperties)
         {
             var targetGroupSize = 1 << 28; // Try to have row groups that are 256MB on disk
             int rowCount = targetGroupSize / EstimateRowByteCount(itemProperties);
-            return Math.Max(rowCount, 1000);
+            return Math.Min(Math.Max(rowCount, MIN_ROWS_PER_GROUP), MAX_ROWS_PER_GROUP);
         }
+
+        private const int MIN_ROWS_PER_GROUP = 1000;
+        /// <summary>
+        /// The estimate of a list column's size cannot tell how long its lists are, and a chunk of rows with
+        /// long lists (such as chromatograms) can hold more elements than an array can. Smaller chunks also
+        /// let one chunk be compressed and written while the next one is being calculated.
+        /// </summary>
+        private const int MAX_ROWS_PER_GROUP = 50000;
 
         /// <summary>
         /// Returns a loose estimate of the number of bytes each row will take up.

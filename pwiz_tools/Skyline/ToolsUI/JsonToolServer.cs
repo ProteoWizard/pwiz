@@ -820,7 +820,8 @@ namespace pwiz.Skyline.ToolsUI
         {
             var document = Program.MainWindow.Document;
             var dataSchema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT, Program.MainWindow.ModeUI);
-            var viewSpec = ResolveReportDefinition(definition, dataSchema);
+            var viewSpecLayout = ResolveReportDefinition(definition, dataSchema);
+            var viewSpec = viewSpecLayout.ViewSpec;
 
             if (string.IsNullOrEmpty(viewSpec.Name) || viewSpec.Name == JsonToolConstants.DEFAULT_REPORT_NAME)
             {
@@ -830,8 +831,7 @@ namespace pwiz.Skyline.ToolsUI
 
             var groupId = PersistedViews.MainGroup.Id;
             var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(groupId);
-            var layout = new ViewSpecLayout(viewSpec, ViewLayoutList.EMPTY);
-            viewSpecList = viewSpecList.ReplaceView(viewSpec.Name, layout);
+            viewSpecList = viewSpecList.ReplaceView(viewSpec.Name, viewSpecLayout);
             Settings.Default.PersistedViews.SetViewSpecList(groupId, viewSpecList);
             Log(string.Format(@"Saved report '{0}' to {1}", viewSpec.Name, groupId));
         }
@@ -1218,26 +1218,9 @@ namespace pwiz.Skyline.ToolsUI
             var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer, Program.MainWindow.ModeUI);
             var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
 
-            var viewSpec = ResolveReportDefinition(definition, dataSchema);
-            var sortSpecs = ParseSortSpecs(definition);
-            var rowTransforms = new List<IRowTransform>();
-            if (sortSpecs != null && sortSpecs.Count > 0)
-                rowTransforms.Add(RowFilter.Empty.SetColumnSorts(sortSpecs));
-            if (viewSpec.HasTotals && rowTransforms.Count == 0)
-            {
-                var groupByCol = viewSpec.Columns.FirstOrDefault(c => c.Total == TotalOperation.GroupBy);
-                if (groupByCol != null)
-                {
-                    rowTransforms.Add(RowFilter.Empty.SetColumnSorts(new[]
-                    {
-                        new RowFilter.ColumnSort(new ColumnId(groupByCol.PropertyPath.ToString()),
-                            ListSortDirection.Ascending)
-                    }));
-                }
-            }
-            ViewLayout layout = rowTransforms.Count > 0
-                ? new ViewLayout(string.Empty).ChangeRowTransforms(rowTransforms)
-                : null;
+            var viewSpecLayout = ResolveReportDefinition(definition, dataSchema);
+            var viewSpec = viewSpecLayout.ViewSpec;
+            var layout = GetReportLayout(definition, viewSpecLayout);
 
             string reportName = viewSpec.Name ?? JsonToolConstants.DEFAULT_REPORT_NAME;
             return MaterializeReportRows(viewSpec, layout, rowFactories, dataSchema,
@@ -1428,43 +1411,14 @@ namespace pwiz.Skyline.ToolsUI
             var document = Program.MainWindow.Document;
             var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer, Program.MainWindow.ModeUI);
 
-            var viewSpec = ResolveReportDefinition(definition, dataSchema);
-            var sortSpecs = ParseSortSpecs(definition);
+            var viewSpecLayout = ResolveReportDefinition(definition, dataSchema);
+            var viewSpec = viewSpecLayout.ViewSpec;
+            var layout = GetReportLayout(definition, viewSpecLayout);
 
             var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
 
             string ext = Path.GetExtension(filePath);
             var exporter = ReportExporters.ForFilenameExtension(localizer, ext, TextUtil.EXT_CSV);
-
-            var rowTransforms = new List<IRowTransform>();
-            if (sortSpecs != null && sortSpecs.Count > 0)
-            {
-                rowTransforms.Add(RowFilter.Empty.SetColumnSorts(sortSpecs));
-            }
-            // When the viewSpec has pivot operations (PivotKey/PivotValue), the export
-            // must use BindingListSource instead of streaming to process cross-tab totals.
-            // RowFactories.ExportReport uses streaming when layout has no row transforms,
-            // bypassing pivot processing. Force BindingListSource by adding
-            // a no-op sort on the first GroupBy column.
-            if (viewSpec.HasTotals && rowTransforms.Count == 0)
-            {
-                Log(@"Pivot detected: injecting sort for BindingListSource path");
-                var groupByCol = viewSpec.Columns.FirstOrDefault(c => c.Total == TotalOperation.GroupBy);
-                if (groupByCol != null)
-                {
-                    rowTransforms.Add(RowFilter.Empty.SetColumnSorts(new[]
-                    {
-                        new RowFilter.ColumnSort(new ColumnId(groupByCol.PropertyPath.ToString()),
-                            ListSortDirection.Ascending)
-                    }));
-                }
-            }
-
-            ViewLayout layout = null;
-            if (rowTransforms.Count > 0)
-            {
-                layout = new ViewLayout(string.Empty).ChangeRowTransforms(rowTransforms);
-            }
 
             DirectoryEx.CreateForFilePath(filePath);
 
@@ -1490,8 +1444,15 @@ namespace pwiz.Skyline.ToolsUI
             return DataSchemaLocalizer.INVARIANT;
         }
 
-        private ViewSpec ResolveReportDefinition(ReportDefinition definition, SkylineDataSchema dataSchema)
+        /// <summary>
+        /// Returns the report and its layouts. Only a report read from ReportXml has layouts.
+        /// </summary>
+        private ViewSpecLayout ResolveReportDefinition(ReportDefinition definition, SkylineDataSchema dataSchema)
         {
+            if (!string.IsNullOrEmpty(definition.ReportXml))
+            {
+                return ReadReportXml(definition.ReportXml);
+            }
             string reportName = definition.Name ?? JsonToolConstants.DEFAULT_REPORT_NAME;
             Log(string.Format(@"Resolving report '{0}' with {1} columns: {2}",
                 reportName, definition.Select?.Length ?? 0,
@@ -1500,7 +1461,74 @@ namespace pwiz.Skyline.ToolsUI
             var reader = new ReportDefinitionReader(dataSchema);
             var viewSpec = reader.CreateViewSpec(definition, definition.DataSource);
             Log(string.Format(@"Resolved via {0} row source", viewSpec.RowSource));
-            return viewSpec;
+            return new ViewSpecLayout(viewSpec, ViewLayoutList.EMPTY);
+        }
+
+        /// <summary>
+        /// Returns the layout to show the report with: the default layout of a report read from ReportXml,
+        /// otherwise the sorts in the definition. When the report has totals and the layout has no row
+        /// transforms, a sort on the first GroupBy column is added, because the totals are only calculated
+        /// for a layout with row transforms.
+        /// </summary>
+        private static ViewLayout GetReportLayout(ReportDefinition definition, ViewSpecLayout viewSpecLayout)
+        {
+            ViewLayout layout;
+            if (!string.IsNullOrEmpty(definition.ReportXml))
+            {
+                layout = viewSpecLayout.DefaultViewLayout;
+            }
+            else
+            {
+                var sortSpecs = ParseSortSpecs(definition);
+                layout = sortSpecs == null
+                    ? null
+                    : new ViewLayout(string.Empty).ChangeRowTransforms(new[] { RowFilter.Empty.SetColumnSorts(sortSpecs) });
+            }
+
+            var viewSpec = viewSpecLayout.ViewSpec;
+            if (viewSpec.HasTotals && (layout == null || layout.RowTransforms.Count == 0))
+            {
+                var groupByCol = viewSpec.Columns.FirstOrDefault(c => c.Total == TotalOperation.GroupBy);
+                if (groupByCol != null)
+                {
+                    layout = (layout ?? new ViewLayout(string.Empty)).ChangeRowTransforms(new[]
+                    {
+                        RowFilter.Empty.SetColumnSorts(new[]
+                        {
+                            new RowFilter.ColumnSort(new ColumnId(groupByCol.PropertyPath.ToString()),
+                                ListSortDirection.Ascending)
+                        })
+                    });
+                }
+            }
+            return layout;
+        }
+
+        /// <summary>
+        /// Reads the one report in the text, which is in the XML format of a .skyr file, with its layouts.
+        /// </summary>
+        private ViewSpecLayout ReadReportXml(string reportXml)
+        {
+            List<ReportOrViewSpec> reports;
+            using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(reportXml)))
+            {
+                reports = ReportSharing.DeserializeReportList(stream);
+            }
+            if (reports.Count != 1)
+            {
+                throw new ArgumentException(new LlmInstruction(string.Format(
+                    @"The 'report_xml' field must hold exactly one report, but it has {0}.", reports.Count)));
+            }
+            var viewSpecLayout = reports[0].ViewSpecLayout;
+            if (viewSpecLayout == null)
+            {
+                throw new ArgumentException(new LlmInstruction(
+                    @"The 'report_xml' field uses the old report format. Use the <views> format of a .skyr file."));
+            }
+            var viewSpec = viewSpecLayout.ViewSpec;
+            Log(string.Format(@"Read report '{0}' from XML with {1} columns, row source {2}",
+                viewSpec.Name, viewSpec.Columns.Count, viewSpec.RowSource));
+            return viewSpecLayout;
         }
 
         private static List<RowFilter.ColumnSort> ParseSortSpecs(ReportDefinition definition)

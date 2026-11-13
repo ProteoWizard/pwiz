@@ -173,6 +173,12 @@ namespace SkylineTool
         public bool? PivotIsotopeLabel { get; set; }
         public string Uimode { get; set; }
         public string DataSource { get; set; }
+        /// <summary>
+        /// The report in the XML format of a .skyr file, holding exactly one report. When this is
+        /// set, the report and its layouts are read from it, the report's default layout is used,
+        /// and all other properties are ignored.
+        /// </summary>
+        public string ReportXml { get; set; }
     }
 
     /// <summary>
