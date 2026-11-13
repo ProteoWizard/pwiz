@@ -209,7 +209,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to More than one waters_connect account has been saved. Add &apos;&amp;server=&lt;server URL&gt;&apos; or &apos;&amp;username=&lt;user name&gt;&apos; to choose one..
+        ///   Looks up a localized string similar to More than one waters_connect account has been saved. Add &apos;{0}&apos; or &apos;{1}&apos; to choose one..
         /// </summary>
         public static string WatersConnectUrl_FindOnlyAccount_More_than_one_waters_connect_account_has_been_saved__Add_a_server_or_username_to_choose_one_ {
             get {
@@ -254,7 +254,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Name a waters_connect acquisition method by its path, or by its id as &apos;methodId=&lt;id&gt;&apos;..
+        ///   Looks up a localized string similar to Name a waters_connect acquisition method by its path, or by its id as &apos;{0}&apos;..
         /// </summary>
         public static string WatersConnectUrl_ResolveAcquisitionMethod_Name_a_waters_connect_acquisition_method_by_its_path_or_its_id_ {
             get {
@@ -281,20 +281,11 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Name a waters_connect injection by its path, or by its ids as &apos;sampleSetId=&lt;id&gt;&amp;injectionId=&lt;id&gt;&apos;..
+        ///   Looks up a localized string similar to Name a waters_connect injection by its path, or by its ids as &apos;{0}&apos;..
         /// </summary>
         public static string WatersConnectUrl_ResolveInjection_Name_a_waters_connect_injection_by_its_path_or_its_ids_ {
             get {
                 return ResourceManager.GetString("WatersConnectUrl_ResolveInjection_Name_a_waters_connect_injection_by_its_path_or_its_ids_", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to A waters_connect method named &apos;{0}&apos; already exists in the folder &apos;{1}&apos;..
-        /// </summary>
-        public static string WatersConnectUrl_ResolveMethodDestination_A_waters_connect_method_named___0___already_exists_in_the_folder___1___ {
-            get {
-                return ResourceManager.GetString("WatersConnectUrl_ResolveMethodDestination_A_waters_connect_method_named___0___already_exists_in_the_folder___1___", resourceCulture);
             }
         }
 
@@ -308,7 +299,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Name the waters_connect method to export by its folder path and name, as &apos;&lt;account alias&gt;/Folder/MethodName&apos;, or by its folder id and name, as &apos;folderId=&lt;id&gt;&amp;methodName=&lt;name&gt;&apos;..
+        ///   Looks up a localized string similar to Name the waters_connect method to export by its folder path and name, as &apos;{0}&apos;, or by its folder id and name, as &apos;{1}&apos;..
         /// </summary>
         public static string WatersConnectUrl_ResolveMethodDestination_Name_the_waters_connect_method_by_its_folder_path_and_name__or_by_its_folder_id_and_name_ {
             get {

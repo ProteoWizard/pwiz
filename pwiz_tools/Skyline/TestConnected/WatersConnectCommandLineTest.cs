@@ -105,7 +105,7 @@ namespace pwiz.SkylineTestConnected
                     "--in=" + docPath,
                     "--import-file=" + WatersConnectUrl.UrlPrefix + incompleteIdUrl);
                 AssertEx.Contains(output,
-                    WatersConnectResources.WatersConnectUrl_ResolveInjection_Name_a_waters_connect_injection_by_its_path_or_its_ids_);
+                    WatersConnectUrl.NameInjectionMessage);
             }
 
             var chromatograms = ResultsUtil.DeserializeDocument(docPath).Settings.MeasuredResults.Chromatograms;

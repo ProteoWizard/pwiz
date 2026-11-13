@@ -857,6 +857,9 @@ If you want to inspect the raw data, use a viewer like SeeMS (download from prot
   <data name="ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___installed_" xml:space="preserve">
     <value>Unknown Thermo instrument type '{0}' installed.</value>
   </data>
+  <data name="WatersConnectMethodExporter_ExportMethod_A_waters_connect_method_named___0___already_exists_in_the_folder___1___" xml:space="preserve">
+    <value>A waters_connect method named '{0}' already exists in the folder '{1}'.</value>
+  </data>
   <data name="WatersConnectMethodExporter_ExportMethod_Folder_ID_is_missing" xml:space="preserve">
     <value>Folder ID is missing. Cannot upload the method. Folder info: {0}</value>
   </data>

@@ -359,20 +359,36 @@ namespace pwiz.SkylineTestFunctional
             output = ExportMethodCommand(false, docPath, skylineFolderPath + @"/Test Method 37",
                 WatersConnectUrl.UrlPrefix + @"folderId=" + FOLDER_A_ID);
             AssertEx.Contains(output,
-                WatersConnectResources.WatersConnectUrl_ResolveMethodDestination_Name_the_waters_connect_method_by_its_folder_path_and_name__or_by_its_folder_id_and_name_);
+                WatersConnectUrl.NameMethodDestinationMessage);
 
             // The mock lists the same methods in every folder, so FolderA already has "Test Method 37"
             output = ExportMethodCommand(false, docPath, skylineFolderPath + @"/Test Method 37",
                 skylineFolderPath + @"/FolderA/Test Method 37");
             AssertEx.Contains(output, string.Format(
-                WatersConnectResources.WatersConnectUrl_ResolveMethodDestination_A_waters_connect_method_named___0___already_exists_in_the_folder___1___,
+                ModelResources.WatersConnectMethodExporter_ExportMethod_A_waters_connect_method_named___0___already_exists_in_the_folder___1___,
                 @"Test Method 37", @"Company/Skyline/FolderA"));
+
+            // A split export checks every generated name before uploading any: 34 transitions at most 20
+            // per method make RevisedMethod_0001 and RevisedMethod_0002, and the second one exists
+            _uploadedTemplateVersionId = null;
+            output = RunCommand(false,
+                "--in=" + docPath,
+                "--exp-method-instrument=" + ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT,
+                "--exp-template=" + skylineFolderPath + @"/Test Method 37",
+                "--exp-file=" + skylineFolderPath + @"/FolderA/RevisedMethod",
+                "--exp-method-type=" + ExportMethodType.Standard,
+                "--exp-strategy=" + ExportStrategy.Buckets,
+                "--exp-max-trans=20");
+            AssertEx.Contains(output, string.Format(
+                ModelResources.WatersConnectMethodExporter_ExportMethod_A_waters_connect_method_named___0___already_exists_in_the_folder___1___,
+                REVISED_METHOD_NAME, @"Company/Skyline/FolderA"));
+            Assert.IsNull(_uploadedTemplateVersionId, "No part of a conflicting split export may be uploaded.");
 
             // A local template file cannot be used with the waters_connect instrument
             output = ExportMethodCommand(false, docPath, TestFilesDir.GetTestPath(@"template.exp"),
                 skylineFolderPath + @"/FolderA/TestMethod");
             AssertEx.Contains(output,
-                WatersConnectResources.WatersConnectUrl_ResolveAcquisitionMethod_Name_a_waters_connect_acquisition_method_by_its_path_or_its_id_);
+                WatersConnectUrl.NameAcquisitionMethodMessage);
             Assert.IsNull(_uploadedTemplateVersionId);
         }
 
@@ -559,7 +575,8 @@ namespace pwiz.SkylineTestFunctional
         private const string TEST_METHOD_37_VERSION_ID = "93b20227-832b-4b26-a816-1d9b7826d086";
         // The extra method BuildMethodsResponse adds is a revised method: its method id, which stays the
         // same across versions, differs from the id of its published version
-        private const string REVISED_METHOD_NAME = "BehaviorSwapMethod";
+        // Named as the second part of a split export of "RevisedMethod" would be
+        private const string REVISED_METHOD_NAME = "RevisedMethod_0002";
         private const string REVISED_METHOD_ID = "00000000-0000-0000-0000-000000000abd";
         private const string REVISED_METHOD_VERSION_ID = "00000000-0000-0000-0000-000000000def";
 

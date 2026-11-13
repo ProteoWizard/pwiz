@@ -5121,6 +5121,17 @@ namespace pwiz.Skyline.Model
                 throw new IOException(string.Format(ModelResources.WatersConnectMethodExporter_ExportMethod_Folder_ID_is_missing, targetFolderUrl.ToString()));
             }
 
+            // Never replace an existing method, and check every name before the first upload so that
+            // a conflict partway through a split export cannot leave some of its methods uploaded
+            var existingNames = new HashSet<string>(wcSession.GetPublishedMethods(targetFolderUrl.FolderOrSampleSetId).Select(m => m.Name));
+            var conflictName = MemoryOutput.Keys.Select(GetUploadName).FirstOrDefault(existingNames.Contains);
+            if (conflictName != null)
+            {
+                throw new IOException(string.Format(
+                    ModelResources.WatersConnectMethodExporter_ExportMethod_A_waters_connect_method_named___0___already_exists_in_the_folder___1___,
+                    conflictName, string.Join(@"/", targetFolderUrl.GetPathParts())));
+            }
+
             var sbUploadResult = new StringBuilder();
             foreach (var methodData in MemoryOutput)
             {
@@ -5145,10 +5156,7 @@ namespace pwiz.Skyline.Model
                     Details = string.Format(CultureInfo.CurrentCulture,
                         ModelResources.WatersConnectMethodExporter_ExportMethod_Creating_MRM_method___0___from_Skyline_document___1__, _methodName, SkylineDocumentFileName),
                 };
-                if (MemoryOutput.Count == 1)
-                    method.Name = _methodName;
-                else
-                    method.Name = methodData.Key.Replace(MEMORY_KEY_ROOT, _methodName);
+                method.Name = GetUploadName(methodData.Key);
                 JsonSerializer serializer = new JsonSerializer();
                 var json = JsonConvert.SerializeObject(method,
                     Newtonsoft.Json.Formatting.Indented,
@@ -5158,6 +5166,15 @@ namespace pwiz.Skyline.Model
                 UploadSuccessful = true;
             }
             UploadResult = sbUploadResult.ToString();
+        }
+
+        /// <summary>
+        /// The name a generated method is uploaded under: the method name itself for a single method, and
+        /// the method name with the generated suffix when the export is split into several.
+        /// </summary>
+        private string GetUploadName(string memoryKey)
+        {
+            return MemoryOutput.Count == 1 ? _methodName : memoryKey.Replace(MEMORY_KEY_ROOT, _methodName);
         }
 
         [SuppressMessage("ReSharper", "RedundantNameQualifier")]

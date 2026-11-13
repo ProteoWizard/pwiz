@@ -200,18 +200,20 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         /// see <see cref="FindAccount"/> for how each picks its account. A path names the injection by its
         /// folder, sample set and injection names. An id form needs the sample set id as well as the
         /// injection id, because the server cannot look an injection up by its id alone. Returns this URL
-        /// unchanged if it is already resolved (has a server, a path and both ids). Throws
+        /// unchanged if it is already resolved (has a server, a username, a path and both ids). Throws
         /// <see cref="RemoteServerException"/> if the account or injection cannot be found or the server
         /// does not respond.
         /// </summary>
         public WatersConnectUrl ResolveInjection()
         {
-            if (InjectionId != null && FolderOrSampleSetId != null && ServerUrl != null && EncodedPath != null)
+            // Without a username, opening the data would pick the first account on the server, so a URL
+            // without one is resolved, which reports an ambiguous account and fills the username in
+            if (InjectionId != null && FolderOrSampleSetId != null && ServerUrl != null && Username != null && EncodedPath != null)
                 return this;
 
             // An injection id needs its sample set id, and a URL with no injection id needs a path
             if (InjectionId != null ? FolderOrSampleSetId == null : EncodedPath == null)
-                throw new RemoteServerException(WatersConnectResources.WatersConnectUrl_ResolveInjection_Name_a_waters_connect_injection_by_its_path_or_its_ids_);
+                throw new RemoteServerException(NameInjectionMessage);
 
             var account = FindAccount(out var dataPathParts);
             using (var session = (WatersConnectSession) RemoteSession.CreateSession(account))
@@ -285,7 +287,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         public static WatersConnectAcquisitionMethodUrl ResolveAcquisitionMethod(string value)
         {
             if (value == null || !value.StartsWith(UrlPrefix))
-                throw new RemoteServerException(WatersConnectResources.WatersConnectUrl_ResolveAcquisitionMethod_Name_a_waters_connect_acquisition_method_by_its_path_or_its_id_);
+                throw new RemoteServerException(NameAcquisitionMethodMessage);
 
             string methodId = null;
             WatersConnectUrl url;
@@ -302,7 +304,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 methodId = GetQueryValue(value, PARAM_METHOD_ID);
             }
             if (methodId == null && url.EncodedPath == null)
-                throw new RemoteServerException(WatersConnectResources.WatersConnectUrl_ResolveAcquisitionMethod_Name_a_waters_connect_acquisition_method_by_its_path_or_its_id_);
+                throw new RemoteServerException(NameAcquisitionMethodMessage);
 
             var account = url.FindAccount(out var dataPathParts);
             using (var session = new WatersConnectSessionAcquisitionMethod(account))
@@ -341,14 +343,15 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         /// the method's name. Accepts a friendly path ("waters_connect:&lt;account alias&gt;/Folder/MethodName"),
         /// a path-form URL with a server, or an id form ("waters_connect:folderId=...&amp;methodName=...").
         /// Throws <see cref="RemoteServerException"/> if the account or folder cannot be found, the folder is
-        /// not on the template's account or cannot be written to, it already has a method with that name, the
-        /// account does not support method development, or the server does not respond.
+        /// not on the template's account or cannot be written to, the account does not support method
+        /// development, or the server does not respond. The exporter checks the names it will upload against
+        /// the folder's methods, since only it knows the names of a split export.
         /// </summary>
         public static WatersConnectUrl ResolveMethodDestination(string value, WatersConnectAcquisitionMethodUrl templateUrl,
             out string methodName)
         {
             if (value == null || !value.StartsWith(UrlPrefix))
-                throw new RemoteServerException(WatersConnectResources.WatersConnectUrl_ResolveMethodDestination_Name_the_waters_connect_method_by_its_folder_path_and_name__or_by_its_folder_id_and_name_);
+                throw new RemoteServerException(NameMethodDestinationMessage);
 
             var url = IsFriendlyUrl(value) ? ParseFriendly(value) : new WatersConnectUrl(value);
             var account = url.FindAccount(out var dataPathParts);
@@ -357,21 +360,18 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             var folderPathParts = dataPathParts.Take(Math.Max(0, dataPathParts.Count - 1)).ToList();
             methodName = (folderId != null ? GetQueryValue(value, PARAM_METHOD_NAME) : dataPathParts.LastOrDefault())?.Trim();
             if (string.IsNullOrEmpty(methodName) || folderId == null && folderPathParts.Count == 0)
-                throw new RemoteServerException(WatersConnectResources.WatersConnectUrl_ResolveMethodDestination_Name_the_waters_connect_method_by_its_folder_path_and_name__or_by_its_folder_id_and_name_);
+                throw new RemoteServerException(NameMethodDestinationMessage);
             // The method is created by the folder's account from the template, so both need the same account
             if (!templateUrl.BelongsToAccount(account))
                 throw new RemoteServerException(WatersConnectResources.WatersConnectUrl_ResolveMethodDestination_The_template_and_the_exported_method_must_be_on_the_same_waters_connect_account_);
 
             WatersConnectFolderObject folder;
-            IList<WatersConnectAcquisitionMethodObject> folderMethods = null;
-            using (var session = new WatersConnectSessionAcquisitionMethod(account))
+            using (var session = new WatersConnectSession(account))
             {
                 var folders = session.GetFolderTree();
                 folder = folderId != null
                     ? folders.FirstOrDefault(f => WatersConnectObject.IdEquals(f.Id, folderId))
                     : FindFolderByPath(folders, folderPathParts);
-                if (folder != null && folder.CanWrite)
-                    folderMethods = session.GetPublishedMethods(folder.Id);
             }
             if (folder == null)
             {
@@ -384,14 +384,6 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 throw new RemoteServerException(string.Format(
                     WatersConnectResources.WatersConnectUrl_ResolveMethodDestination_You_do_not_have_permission_to_write_to_the_waters_connect_folder___0__,
                     folder.Path));
-            }
-            // Like the Export Method dialog, never replace an existing method
-            var existingName = methodName;
-            if (folderMethods.Any(m => Equals(m.Name, existingName)))
-            {
-                throw new RemoteServerException(string.Format(
-                    WatersConnectResources.WatersConnectUrl_ResolveMethodDestination_A_waters_connect_method_named___0___already_exists_in_the_folder___1___,
-                    methodName, folder.Path));
             }
             if (!account.SupportsMethodDevelopment(out var reason))
             {
@@ -420,7 +412,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                     .Where(account => account.CanHandleUrl(this) && (Username == null || Equals(account.Username, Username)))
                     .ToArray();
                 if (serverAccounts.Length > 1)
-                    throw new RemoteServerException(WatersConnectResources.WatersConnectUrl_FindOnlyAccount_More_than_one_waters_connect_account_has_been_saved__Add_a_server_or_username_to_choose_one_);
+                    throw new RemoteServerException(MoreThanOneAccountMessage);
                 if (serverAccounts.Length == 1)
                     return serverAccounts[0];
                 throw new RemoteServerException(string.Format(
@@ -457,7 +449,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             if (accounts.Length == 0)
                 throw new RemoteServerException(WatersConnectResources.WatersConnectUrl_FindOnlyAccount_No_waters_connect_account_has_been_saved_);
             if (accounts.Length > 1)
-                throw new RemoteServerException(WatersConnectResources.WatersConnectUrl_FindOnlyAccount_More_than_one_waters_connect_account_has_been_saved__Add_a_server_or_username_to_choose_one_);
+                throw new RemoteServerException(MoreThanOneAccountMessage);
             return accounts[0];
         }
 
@@ -466,6 +458,46 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         private const string PARAM_METHOD_ID = "methodId";
         private const string PARAM_FOLDER_ID = "folderId";
         private const string PARAM_METHOD_NAME = "methodName";
+
+        // Command-line syntax quoted in messages. It is typed exactly as shown, so it is a format
+        // argument rather than part of the text to translate.
+        private const string INJECTION_IDS_SYNTAX = @"sampleSetId=<id>&injectionId=<id>";
+        private const string SERVER_SYNTAX = @"&server=<server URL>";
+        private const string USERNAME_SYNTAX = @"&username=<user name>";
+        private const string METHOD_ID_SYNTAX = @"methodId=<id>";
+        private const string METHOD_PATH_SYNTAX = @"<account alias>/Folder/MethodName";
+        private const string METHOD_FOLDER_ID_SYNTAX = @"folderId=<id>&methodName=<name>";
+
+        /// <summary>Error telling the user how to name an injection on the command line.</summary>
+        public static string NameInjectionMessage
+        {
+            get { return string.Format(WatersConnectResources.WatersConnectUrl_ResolveInjection_Name_a_waters_connect_injection_by_its_path_or_its_ids_, INJECTION_IDS_SYNTAX); }
+        }
+
+        /// <summary>Error telling the user how to name a method template on the command line.</summary>
+        public static string NameAcquisitionMethodMessage
+        {
+            get { return string.Format(WatersConnectResources.WatersConnectUrl_ResolveAcquisitionMethod_Name_a_waters_connect_acquisition_method_by_its_path_or_its_id_, METHOD_ID_SYNTAX); }
+        }
+
+        /// <summary>Error telling the user how to name an exported method on the command line.</summary>
+        public static string NameMethodDestinationMessage
+        {
+            get
+            {
+                return string.Format(WatersConnectResources.WatersConnectUrl_ResolveMethodDestination_Name_the_waters_connect_method_by_its_folder_path_and_name__or_by_its_folder_id_and_name_,
+                    METHOD_PATH_SYNTAX, METHOD_FOLDER_ID_SYNTAX);
+            }
+        }
+
+        private static string MoreThanOneAccountMessage
+        {
+            get
+            {
+                return string.Format(WatersConnectResources.WatersConnectUrl_FindOnlyAccount_More_than_one_waters_connect_account_has_been_saved__Add_a_server_or_username_to_choose_one_,
+                    SERVER_SYNTAX, USERNAME_SYNTAX);
+            }
+        }
 
         private static string GetQueryValue(string value, string name)
         {
