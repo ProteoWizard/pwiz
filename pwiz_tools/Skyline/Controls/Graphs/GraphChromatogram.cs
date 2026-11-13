@@ -3352,6 +3352,40 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
+        /// Shows the spectrum at <paramref name="retentionTime"/> (a measured time), as clicking that point would.
+        /// The point is on the chromatogram of <paramref name="transitionId"/>, or, when that is null, of the
+        /// transition most intense at that time. Returns false when no displayed transition chromatogram spans
+        /// the time and can show a spectrum.
+        /// </summary>
+        public bool ShowFullScan(double retentionTime, Identity transitionId)
+        {
+            if (!_enableTrackingDot || _showPeptideTotals)
+                return false;
+            FullScanPoint mostIntense = null;
+            foreach (var graphPane in GraphPanes)
+            {
+                foreach (var curve in GetCurves(graphPane))
+                {
+                    var graphItem = (ChromGraphItem) curve.Tag;
+                    if (graphItem.TransitionNode == null || curve.NPts == 0)
+                        continue;
+                    if (transitionId != null && !ReferenceEquals(graphItem.TransitionNode.Id, transitionId))
+                        continue;
+                    double displayTime = graphItem.MeasuredTimeToDisplayTime(retentionTime);
+                    if (displayTime < curve.Points[0].X || displayTime > curve.Points[curve.NPts - 1].X)
+                        continue;
+                    var point = curve.Points[graphItem.GetNearestMeasuredIndex(retentionTime)];
+                    if (mostIntense == null || point.Y > mostIntense.Intensity)
+                        mostIntense = new FullScanPoint(graphPane, curve, point.X, point.Y);
+                }
+            }
+            if (mostIntense == null)
+                return false;
+            FireClickedChromatogram(mostIntense);
+            return true;
+        }
+
+        /// <summary>
         /// Display the tracking dot at a point on a chromatogram curve.
         /// </summary>
         private void ShowTrackingDot(FullScanPoint fullScanPoint)

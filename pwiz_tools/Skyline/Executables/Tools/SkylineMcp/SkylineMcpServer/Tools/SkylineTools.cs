@@ -955,6 +955,31 @@ public static class SkylineTools
         });
     }
 
+    [McpServerTool(Name = "skyline_show_full_scan"),
+     Description("Show the Full-Scan graph (the spectrum) for the scan at a retention time, exactly as clicking " +
+        "the selected precursor's chromatogram at that time would, and mark that scan with the selection circle " +
+        "on the chromatogram. Needs full-scan chromatograms (DDA, DIA, PRM or MS1 filtering) and a precursor " +
+        "or peptide selected (skyline_set_selection), unless a transition is given. Given a transition, it is " +
+        "selected, the circle is on its chromatogram and the Full-Scan graph zooms to its m/z. Without one, the " +
+        "circle is on the transition most intense at that time and the graph shows the whole spectrum, though " +
+        "its zoom (magnifier) button then zooms to that transition. Read the result with skyline_get_open_forms " +
+        "and skyline_get_graph_data or skyline_get_graph_image on the 'GraphFullScan' form.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.ShowFullScan))]
+    public static string ShowFullScan(
+        [Description("Measured retention time in minutes, e.g. from a report's RetentionTime column")] double retentionTime,
+        [Description("Replicate to show; omit for the active replicate")] string replicateName = null,
+        [Description("ElementLocator of a transition (e.g. from a report's TransitionLocator column) to zoom to; " +
+            "omit to use the most intense transition, unzoomed")] string transitionLocator = null)
+    {
+        return Invoke(connection =>
+        {
+            var result = connection.ShowFullScan(retentionTime,
+                string.IsNullOrEmpty(replicateName) ? null : replicateName,
+                string.IsNullOrEmpty(transitionLocator) ? null : transitionLocator);
+            return DescribeAction(result, $"Showing the full scan at {Coordinate(retentionTime)} minutes.");
+        });
+    }
+
     [McpServerTool(Name = "skyline_send_text"),
      Description("Type text into one control on a form. Named for what it does: it delivers the CHARACTERS " +
         "to that control's own window, it does not simulate key presses - so the control does NOT need the " +

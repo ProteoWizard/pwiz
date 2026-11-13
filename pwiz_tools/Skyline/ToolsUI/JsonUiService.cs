@@ -375,6 +375,67 @@ namespace pwiz.Skyline.ToolsUI
             });
         }
 
+        /// <summary>
+        /// Brings up the chromatogram graph that <see cref="ShowFullScan"/> will click: the replicate's (the active one
+        /// when <paramref name="replicateName"/> is null), with the precursor of <paramref name="transitionLocator"/>
+        /// selected when one is given. The graph redraws a moment later, so wait for the graphs before calling
+        /// <see cref="ShowFullScan"/>.
+        /// </summary>
+        public static void PrepareFullScan(string replicateName, string transitionLocator)
+        {
+            if (replicateName != null)
+                SetReplicate(replicateName);
+            if (transitionLocator != null)
+            {
+                ParseTransitionRef(transitionLocator);
+                SetSelection(transitionLocator, null);
+            }
+            InvokeOnUiThread(() =>
+            {
+                var skylineWindow = RequireMainWindow();
+                if (!skylineWindow.DocumentUI.Settings.HasResults)
+                    throw new InvalidOperationException(@"Document has no results");
+                skylineWindow.ShowGraphChrom(skylineWindow.SelectedGraphChromName, true);
+            });
+        }
+
+        /// <summary>
+        /// Shows the Full-Scan graph at <paramref name="retentionTime"/> in the active replicate, as clicking its
+        /// chromatogram there would, which marks the scan with the selection circle on the chromatogram. Given a
+        /// transition, the circle is on its chromatogram and the graph zooms to it; without one, the circle is on
+        /// the transition most intense at that time and the graph is not zoomed, but its zoom button zooms to that
+        /// transition. Call on the UI thread, after <see cref="PrepareFullScan"/> and a wait for the graphs.
+        /// </summary>
+        public static void ShowFullScan(SkylineWindow skylineWindow, double retentionTime, string transitionLocator)
+        {
+            Identity transitionId = null;
+            if (transitionLocator != null)
+            {
+                var path = ParseTransitionRef(transitionLocator).ToIdentityPath(skylineWindow.DocumentUI)
+                           ?? throw NoSuchElement(transitionLocator);
+                transitionId = path.Child;
+            }
+            string replicateName = skylineWindow.SelectedGraphChromName;
+            var graphChrom = skylineWindow.GetGraphChrom(replicateName);
+            if (graphChrom == null || !graphChrom.ShowFullScan(retentionTime, transitionId))
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"No chromatogram in replicate '{0}' can show a full scan at retention time {1}{2}. The time may be outside the chromatogram, the transition may not be displayed, or the replicate may have no full-scan chromatograms (PRM, DDA, DIA or MS1 filtering). Select a precursor with skyline_set_selection and read its chromatogram with skyline_get_graph_data.",
+                    replicateName, retentionTime, transitionLocator != null ? @" for " + transitionLocator : string.Empty));
+            }
+            // A click leaves the zoom as the user last set it, but this sets it: zoomed to the transition when one
+            // was asked for, and otherwise not zoomed, with the zoom button ready to zoom to the most intense one.
+            skylineWindow.GraphFullScan?.SetZoom(transitionId != null);
+        }
+
+        private static TransitionRef ParseTransitionRef(string transitionLocator)
+        {
+            return ElementRefs.FromObjectReference(ElementLocator.Parse(transitionLocator)) as TransitionRef
+                   ?? throw new ArgumentException(LlmInstruction.Format(
+                       @"'{0}' is not a transition locator. Take one from a report's TransitionLocator column or from skyline_get_selection with a transition selected.",
+                       transitionLocator));
+        }
+
         public static ActionResult InvokeOnMainWindow(Action<SkylineStandaloneForm> action, CancellationToken cancellationToken)
         {
             var mainWindow = RequireMainWindow();
