@@ -33,6 +33,8 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
     {
         public static readonly string GET_METHODS_ENDPOINT = @"/waters_connect/v2.0/published-methods?methodTypeIds=17C19CE93BBA488A975B1E14AAAA0B9B";
         public static readonly string UPLOAD_METHOD_ENDPOINT = @"/waters_connect/method-develop/v1.0/tandem/create-mrm-methods";
+        public static readonly string SEARCH_ENDPOINT = @"/waters_connect/v2.0/search";
+        private const string ACQUISITION_METHOD_TYPE_ID = @"17C19CE93BBA488A975B1E14AAAA0B9B";
 
         public WatersConnectSessionAcquisitionMethod(WatersConnectAccount account) : base(account)
         {
@@ -78,6 +80,50 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             }
             return ImmutableList.ValueOf(itemsValue.OfType<JObject>()
                 .Select(f => new WatersConnectAcquisitionMethodObject(f)));
+        }
+
+        /// <summary>
+        /// Gets the published acquisition methods in a folder, synchronously and bypassing the cache.
+        /// Each is the method's current published version.
+        /// </summary>
+        public IList<WatersConnectAcquisitionMethodObject> GetPublishedMethods(string folderId)
+        {
+            return GetAcquisitionMethods(new Uri(WatersConnectAccount.ServerUrl + GET_METHODS_ENDPOINT +
+                                                 string.Format(@"&folderId={0}", Uri.EscapeDataString(folderId))));
+        }
+
+        /// <summary>
+        /// Finds the folder holding the acquisition method with the given method id (the id that stays
+        /// the same across the method's versions) using the analytical data search, which is the only way
+        /// the server can look a method up without its folder. Returns null if there is no acquisition
+        /// method with that id. The search returns only a method's latest version, which may be a draft,
+        /// so callers take the version itself from <see cref="GetPublishedMethods"/>.
+        /// </summary>
+        public string FindMethodFolderId(string methodId)
+        {
+            // The search matches ids in the hyphenated form only, and a GUID cannot break the filter's quoting
+            if (!Guid.TryParse(methodId, out var methodGuid))
+                return null;
+            var requestBody = new JObject
+            {
+                [@"filter"] = string.Format(@"RecordId eq ""{0}""", methodGuid.ToString(@"D")),
+                [@"top"] = 1,
+                [@"skip"] = 0
+            }.ToString();
+            string responseBody;
+            try
+            {
+                responseBody = _httpClient.UploadString(new Uri(WatersConnectAccount.ServerUrl + SEARCH_ENDPOINT),
+                    @"POST", requestBody, @"application/json");
+            }
+            catch (NetworkRequestException e)
+            {
+                throw MapToRemoteServerException(e);
+            }
+            var record = (JObject.Parse(responseBody)[@"items"] as JArray)?.OfType<JObject>().FirstOrDefault();
+            if (record == null || !WatersConnectObject.IdEquals(WatersConnectObject.GetProperty(record, @"dataRecordTypeId"), ACQUISITION_METHOD_TYPE_ID))
+                return null;
+            return WatersConnectObject.GetProperty(record, @"folderId");
         }
 
         public string UploadMethod(string methodName, string methodJson, IProgressMonitor progressMonitor)

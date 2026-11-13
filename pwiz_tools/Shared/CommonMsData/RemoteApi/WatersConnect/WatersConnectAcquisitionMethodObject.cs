@@ -163,7 +163,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             //  Sub object in JSON
             var readOnlyPropertiesSubObject = jobject["readOnlyProperties"] as JObject;
 
-            MethodId = GetProperty(readOnlyPropertiesSubObject, "methodVersionId");
+            MethodId = GetProperty(readOnlyPropertiesSubObject, "methodId");
 
             Id = MethodId; // Id is in parent class
 

@@ -2680,6 +2680,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A waters_connect method named &apos;{0}&apos; already exists in the folder &apos;{1}&apos;..
+        /// </summary>
+        public static string WatersConnectMethodExporter_ExportMethod_A_waters_connect_method_named___0___already_exists_in_the_folder___1___ {
+            get {
+                return ResourceManager.GetString("WatersConnectMethodExporter_ExportMethod_A_waters_connect_method_named___0___already_exists_in_the_folder___1___", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Creating MRM method &apos;{0}&apos; from Skyline document &apos;{1}&apos;.
         /// </summary>
         public static string WatersConnectMethodExporter_ExportMethod_Creating_MRM_method___0___from_Skyline_document___1__ {
