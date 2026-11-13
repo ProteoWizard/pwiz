@@ -31,11 +31,10 @@
       </extension>
       <extension id="BUILD_EXT_87" type="pullRequests">
         <parameters>
-          <param name="authenticationType" value="token" />
+          <param name="authenticationType" value="vcsRoot" />
           <param name="filterAuthorRole" value="MEMBER" />
           <param name="filterBuildBranches" value="head" />
           <param name="providerType" value="github" />
-          <param name="secure:accessToken" value="credentialsJSON:88dce2ab-2e65-4a33-81f9-d7c6ce6b01a9" />
         </parameters>
       </extension>
     </build-extensions>
