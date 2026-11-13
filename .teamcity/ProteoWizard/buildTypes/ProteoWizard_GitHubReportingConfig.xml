@@ -29,6 +29,14 @@
           <param name="secure:github_access_token" value="credentialsJSON:b3f6322b-e1d2-4bd3-9b40-b7048111ad01" />
         </parameters>
       </extension>
+      <extension id="BUILD_EXT_87" type="pullRequests">
+        <parameters>
+          <param name="authenticationType" value="vcsRoot" />
+          <param name="filterAuthorRole" value="MEMBER" />
+          <param name="filterBuildBranches" value="head" />
+          <param name="providerType" value="github" />
+        </parameters>
+      </extension>
     </build-extensions>
   </settings>
 </template>
