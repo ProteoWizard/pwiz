@@ -264,6 +264,11 @@ namespace SkylineTool
             return CallTyped<ActionResult>(nameof(ClickGraph), formId, bounds);
         }
 
+        public ActionResult ShowFullScan(double retentionTime, string replicateName = null, string transitionLocator = null)
+        {
+            return CallTyped<ActionResult>(nameof(ShowFullScan), retentionTime, replicateName, transitionLocator);
+        }
+
         public ActionResult SendText(string formId, string controlId, string text)
         {
             return CallTyped<ActionResult>(nameof(SendText), formId, controlId, text);

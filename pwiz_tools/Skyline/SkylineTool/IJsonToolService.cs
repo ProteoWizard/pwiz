@@ -569,6 +569,19 @@ namespace SkylineTool
         ActionResult ClickGraph(string formId, Rectangle bounds);
 
         /// <summary>
+        /// Shows the Full-Scan graph for the scan at a retention time, as clicking the selected precursor's
+        /// chromatogram at that time would, and marks the scan with the selection circle on the chromatogram.
+        /// Given a transition, the circle is on its chromatogram and the Full-Scan graph zooms to it; without
+        /// one, the circle is on the transition most intense at that time and the graph is not zoomed, though
+        /// its zoom button zooms to that transition.
+        /// </summary>
+        /// <param name="retentionTime">Measured retention time, in minutes.</param>
+        /// <param name="replicateName">Replicate to show; null for the active replicate.</param>
+        /// <param name="transitionLocator">ElementLocator of a transition, which is selected; null for the
+        /// most intense transition of the current selection.</param>
+        ActionResult ShowFullScan(double retentionTime, string replicateName = null, string transitionLocator = null);
+
+        /// <summary>
         /// Types text into one control on a form, whether or not it has the focus. Named for what it does: it
         /// delivers the CHARACTERS to that control's own window, it does not simulate key presses - so the
         /// caller never has to arrange focus first, and the control is verified enabled first.

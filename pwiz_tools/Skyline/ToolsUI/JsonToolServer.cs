@@ -1145,6 +1145,14 @@ namespace pwiz.Skyline.ToolsUI
                 UiActions.ClickGraph.InvokeNow(form.FindGraph(), bounds));
         }
 
+        public ActionResult ShowFullScan(double retentionTime, string replicateName = null, string transitionLocator = null)
+        {
+            JsonUiService.PrepareFullScan(replicateName, transitionLocator);
+            WaitForGraphs();
+            return InvokeOnMainWindow(mainWindow =>
+                JsonUiService.ShowFullScan(mainWindow.SkylineWindow, retentionTime, transitionLocator));
+        }
+
         // Both find the control the way set_value does (by the label/type GetControls reports). InvokeNow gates
         // it - a missing, blocked or disabled control throws - before anything is sent, and runs the gesture
         // on the form's UI thread.
