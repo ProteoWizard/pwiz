@@ -1,10 +1,7 @@
 /*
- * Original author: Brendan MacLean <brendanx .at. uw.edu>,
+ * Original author: Michael MacCoss <maccoss .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
- *
- * The Eclipse staggered-DIA fixture (Data/Demux) was made by Michael MacCoss for
- * ProteoWizard/pwiz PR #4710, and the cache checks follow that PR's DemuxTest.
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -23,176 +20,670 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Pwiz.Analysis;
-using Pwiz.Data.Common.Cv;
-using Pwiz.Data.MsData.Mzml;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.Demux;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
 {
     /// <summary>
-    /// <c>--demux auto</c>: Osprey reading a multiplexed run through ProteoWizard's own
-    /// demultiplexer (<see cref="SpectrumListDemux"/>), on a slice of a real staggered-window
-    /// Orbitrap Eclipse acquisition (Data/Demux/README.md), and leaving ordinary DIA alone.
+    /// Tests for <see cref="Demultiplexer"/> and its parts, against exact synthetic truth:
+    /// narrow-bin spectra are re-multiplexed into staggered windows, demultiplexed, and
+    /// compared with the bins they came from.
     /// </summary>
     [TestClass]
     public class DemuxTest
     {
-        // The real-data fixture (Data/Demux/README.md).
+        private const double BIN_WIDTH = 4.0;
+        private const double WINDOW_WIDTH = 8.0;
+        private const double RANGE_LOW = 500.0;
+        private const double RANGE_HIGH = 540.0;
+        private const double SCAN_MINUTES = 0.1 / 60.0;
+
+        // A fragment shared by four consecutive bins. A target whose seven-bin slice stops
+        // inside this run sees the outside bin's signal through pwiz's cut edge row, and with
+        // every bin of the run positive, nothing clips the error before it reaches the target.
+        // Two adjacent bins without the fragment still make the exact solution unique.
+        private const double SHARED_FRAGMENT_MZ = 650.321;
+        private static readonly int[] SHARED_FRAGMENT_BINS = { 4, 5, 6, 7 };
+        private static readonly float[] SHARED_FRAGMENT_INTENSITIES = { 1000f, 2000f, 2000f, 300f };
+
+        // The real-data fixture and its golden (Data/Demux/README.md).
         private const string FIXTURE_FOLDER = @"pwiz_tools/Osprey/Osprey.Test/Data/Demux";
         private const string FIXTURE_STAGGERED = @"eclipse-ev13-staggered-slice.mzML";
         private const string FIXTURE_MSCONVERT = @"eclipse-ev13-msconvert-demux-slice.mzML";
+        private const string FIXTURE_GOLDEN = @"eclipse-ev13-osprey-demux.golden.tsv";
+        private const string REBLESS_VARIABLE = @"OSPREY_REBLESS_DEMUX_FIXTURE";
 
-        // The slice: 204 MS2 spectra in cycles of 8 staggered 12 Th windows, each window covering
-        // 2 of the 9 6 Th demux windows, so demultiplexing gives 2 x 204 = 408 MS2 spectra.
-        private const int SLICE_MS2_COUNT = 204;
-        private const int SLICE_WINDOWS = 8;
-        private const int SLICE_OVERLAPS = 2;
-        private const int SLICE_DEMUX_WINDOWS = 9;
-        private const int SLICE_DEMUX_MS2_COUNT = 408;
-        private const double DEMUX_WINDOW_WIDTH = 6.0;
+        // Where a demultiplexed cache's descriptor length sits: after the magic (8), version (4),
+        // source size and mtime (8 each), and the MS2 and MS1 counts (4 each).
+        private const int DESCRIPTOR_LENGTH_OFFSET = 36;
 
-        // Ordinary DIA subsets that SubsetPipelineTest searches.
-        private const string STELLAR_ZIP = @"StellarSubset.zip";
-        private const string STELLAR_MZML = @"Ste-2024-12-02_HeLa_4mz_sDIA_400-900_20.mzML";
-        private const string ASTRAL_ZIP = @"AstralSubset.zip";
-        private const string ASTRAL_MZML = @"Ast-2024-12-05_HeLa_3mzDIA_6mIIT_400-900_49.mzML";
+        // Agreement floors against msconvert's demultiplexing of the fixture. Measured on
+        // 2026-09-25: default median cosine 0.9987 with 93.6% of spectra at 0.95 or better;
+        // msconvert-like settings median 0.9991 (93.4%). The full runs agree similarly (median
+        // 0.997 / 0.999). A drop below these means Osprey moved away from msconvert, which is
+        // either a regression or a deliberate change that should say so.
+        private const double FIXTURE_MIN_MEDIAN_COSINE = 0.995;
+        private const double FIXTURE_MIN_FRACTION_95 = 0.90;
+        private const double FIXTURE_MIN_MEDIAN_COSINE_MSCONVERT_LIKE = 0.997;
+        // The weighted engine against msconvert, measured 0.9949 and 0.855: further from it than the msconvert
+        // engine, since it pools each channel over a block of spectra and weights the fit, and on the whole
+        // Eclipse runs it identifies more (40,009 precursors against the msconvert engine's 39,355).
+        private const double FIXTURE_MIN_MEDIAN_COSINE_WEIGHTED = 0.99;
+        private const double FIXTURE_MIN_FRACTION_95_WEIGHTED = 0.80;
 
         /// <summary>
-        /// Detection and reading: the staggered scheme of the Eclipse slice, its demultiplexed
-        /// read against ProteoWizard's demultiplexer applied directly and against msconvert's
-        /// (C++) output, the same read without demultiplexing, and ordinary DIA left alone.
+        /// NNLS: exact and constrained cases, then agreement with an independent brute-force
+        /// active-set enumeration over random small systems (spec gate G1.3).
         /// </summary>
         [TestMethod]
-        public void TestPwizDemuxEclipseFixture()
+        public void TestDemuxNnlsSolver()
+        {
+            // Full rank, feasible: the unconstrained path returns the exact solution.
+            var identityLike = new double[,] { { 1, 1, 0 }, { 0, 1, 1 }, { 0, 0, 1 } };
+            var solver = new NnlsSolver(identityLike);
+            Assert.IsTrue(solver.IsFullColumnRank);
+            var x = new double[3];
+            var path = solver.Solve(new[] { 3.0, 5.0, 2.0 }, x, new NnlsSolver.Workspace(3));
+            Assert.AreEqual(NnlsPath.unconstrained, path);
+            AssertArrayNear(new[] { 0.0, 3.0, 2.0 }, x, 1e-12);
+
+            // The constraint binds: the unconstrained answer has a negative component.
+            path = solver.Solve(new[] { 1.0, 5.0, 2.0 }, x, new NnlsSolver.Workspace(3));
+            Assert.AreEqual(NnlsPath.active_set, path);
+            Assert.IsTrue(x.All(v => v >= 0));
+
+            // All-zero right-hand side.
+            path = solver.Solve(new double[3], x, new NnlsSolver.Workspace(3));
+            Assert.AreEqual(NnlsPath.zero, path);
+            AssertArrayNear(new double[3], x, 0);
+
+            // Underdetermined (the covered-bins block shape): no pseudo-inverse, still solvable.
+            var ladder = new double[,] { { 1, 1, 0 }, { 0, 1, 1 } };
+            var ladderSolver = new NnlsSolver(ladder);
+            Assert.IsFalse(ladderSolver.IsFullColumnRank);
+            ladderSolver.Solve(new[] { 2.0, 0.0 }, x, new NnlsSolver.Workspace(3));
+            // Only the first bin can explain signal in window 1 and none in window 2.
+            AssertArrayNear(new[] { 2.0, 0.0, 0.0 }, x, 1e-12);
+
+            CompareWithBruteForce(3000, 12345);
+        }
+
+        /// <summary>
+        /// PortableMath: the same bits on every operating system, pinned here so the Linux and Windows builds both check
+        /// them (two of the arguments are ones where the C libraries' exp and log disagree), and within a few units in the
+        /// last place of Math.Exp and Math.Log.
+        /// </summary>
+        [TestMethod]
+        public void TestDemuxPortableMath()
+        {
+            var expected = new (string Function, double X, ulong Bits)[]
+            {
+                (@"exp", -0.5, 0x3FE368B2FC6F960AUL),
+                (@"exp", -4.710385710268998, 0x3F826F46B55AC868UL),
+                (@"exp", 1.0, 0x4005BF0A8B14576AUL),
+                (@"exp", -41.40463204448576, 0x3C333C6F85FDB7A6UL),
+                (@"exp", -700.0, 0x00D14F2B0FB9307FUL),
+                (@"exp", -745.0, 0x0000000000000001UL),
+                (@"exp", 709.0, 0x7FDD422D2BE5DC9BUL),
+                (@"log", 2.0, 0x3FE62E42FEFA39EFUL),
+                (@"log", 1.8675521641060904, 0x3FE3FCF50E27F9EAUL),
+                (@"log", 600.5234, 0x401997594E079217UL),
+                (@"log", 0.75, 0xBFD269621134DB92UL),
+                (@"log", 1e-310, 0xC0864E69394D9508UL),
+                (@"log", 1e300, 0x4085963447F87FB5UL),
+            };
+            foreach (var (function, x, bits) in expected)
+            {
+                double value = function == @"exp" ? PortableMath.Exp(x) : PortableMath.Log(x);
+                Assert.AreEqual(bits, (ulong)BitConverter.DoubleToInt64Bits(value), string.Format(@"{0}({1:R})", function, x));
+            }
+
+            Assert.AreEqual(1.0, PortableMath.Exp(0));
+            Assert.AreEqual(0.0, PortableMath.Exp(-800));
+            Assert.AreEqual(double.PositiveInfinity, PortableMath.Exp(710));
+            Assert.IsTrue(double.IsNaN(PortableMath.Exp(double.NaN)));
+            Assert.AreEqual(0.0, PortableMath.Log(1));
+            Assert.AreEqual(double.NegativeInfinity, PortableMath.Log(0));
+            Assert.AreEqual(double.PositiveInfinity, PortableMath.Log(double.PositiveInfinity));
+            Assert.IsTrue(double.IsNaN(PortableMath.Log(-1)));
+
+            var random = new Random(4711);
+            for (int i = 0; i < 100000; i++)
+            {
+                double x = 1400 * random.NextDouble() - 700;
+                Assert.IsTrue(UlpDistance(PortableMath.Exp(x), Math.Exp(x)) <= 2, string.Format(@"exp({0:R})", x));
+                double y = Math.ScaleB(1 + random.NextDouble(), random.Next(-1070, 1020));
+                double log = Math.Log(y);
+                Assert.IsTrue(Math.Abs(PortableMath.Log(y) - log) <= 4e-16 * Math.Max(1, Math.Abs(log)), string.Format(@"log({0:R})", y));
+            }
+        }
+
+        /// <summary>
+        /// The RT interpolants: exactness where they must be exact, holding at the ends, and the
+        /// apex-bias ordering behind the choice of makima as the default.
+        /// </summary>
+        [TestMethod]
+        public void TestDemuxInterpolation()
+        {
+            var methods = new[]
+            {
+                RtInterpolation.makima, RtInterpolation.pchip,
+                RtInterpolation.natural_three_point, RtInterpolation.linear,
+            };
+            var times = new[] { 1.0, 2.0, 3.5, 4.0, 5.0, 6.5 };
+            var linearValues = times.Select(t => 3 * t + 2).ToArray();
+            foreach (var method in methods)
+            {
+                // Linear data is reproduced exactly between the samples.
+                foreach (double t in new[] { 1.5, 2.7, 3.9, 4.4, 6.0 })
+                    Assert.AreEqual(3 * t + 2, RtInterpolator.Interpolate(method, times, linearValues, times.Length, t), 1e-9);
+                // Nodes are reproduced exactly, and the ends are held, not extrapolated.
+                Assert.AreEqual(linearValues[2], RtInterpolator.Interpolate(method, times, linearValues, times.Length, times[2]), 1e-12);
+                Assert.AreEqual(linearValues[0], RtInterpolator.Interpolate(method, times, linearValues, times.Length, 0.0));
+                Assert.AreEqual(linearValues[5], RtInterpolator.Interpolate(method, times, linearValues, times.Length, 9.0));
+            }
+
+            // PCHIP never overshoots a step.
+            var step = new[] { 0.0, 0.0, 0.0, 10.0, 10.0, 10.0 };
+            for (double t = 1.0; t <= 6.5; t += 0.05)
+            {
+                double v = RtInterpolator.Interpolate(RtInterpolation.pchip, times, step, times.Length, t);
+                Assert.IsTrue(v >= -1e-12 && v <= 10 + 1e-12);
+            }
+
+            // Apex bias on a Gaussian sampled 4 times per FWHM, evaluated half a cycle off the
+            // samples: makima beats PCHIP and the pwiz 3-point natural spline.
+            double makima = MeanApexError(RtInterpolation.makima, 4.0);
+            double pchip = MeanApexError(RtInterpolation.pchip, 4.0);
+            double natural = MeanApexError(RtInterpolation.natural_three_point, 4.0);
+            double linear = MeanApexError(RtInterpolation.linear, 4.0);
+            Assert.IsTrue(makima < pchip, string.Format(@"makima {0} vs pchip {1}", makima, pchip));
+            Assert.IsTrue(makima < natural, string.Format(@"makima {0} vs natural {1}", makima, natural));
+            Assert.IsTrue(pchip < linear, string.Format(@"pchip {0} vs linear {1}", pchip, linear));
+        }
+
+        /// <summary>
+        /// Scheme detection: k=2 and k=3 staggers, boundary jitter, variable widths, a
+        /// non-overlapping scheme, and a window that first appears late in the run.
+        /// </summary>
+        [TestMethod]
+        public void TestDemuxSchemeDetection()
+        {
+            // k=2 staggered: set A tiles 500-540, set B is offset by half a window and extends
+            // one half-window past each end, so the two edge bins are covered once.
+            var staggered = StaggeredCycle(RANGE_LOW, RANGE_HIGH, WINDOW_WIDTH, 2);
+            var scheme = DemuxSchemeDetector.Detect(Repeat(staggered, 3));
+            Assert.AreEqual(DemuxSchemeKind.overlapping, scheme.Kind);
+            Assert.AreEqual(2, scheme.OverlapFactor);
+            Assert.AreEqual(11, scheme.Windows.Count);
+            Assert.AreEqual(12, scheme.Bins.Count);
+            Assert.AreEqual(496.0, scheme.Bins[0].LowerBound, 1e-9);
+            Assert.AreEqual(544.0, scheme.Bins[11].UpperBound, 1e-9);
+            foreach (var bin in scheme.Bins)
+                Assert.AreEqual(BIN_WIDTH, bin.Width, 1e-9);
+            foreach (var window in scheme.Windows)
+                Assert.AreEqual(2, window.BinCount);
+            // Window indices follow m/z, whatever the acquisition order.
+            Assert.AreEqual(3 * staggered.Count, scheme.WindowOfSpectrum.Length);
+            Assert.AreEqual(496.0, scheme.Windows[scheme.WindowOfSpectrum[5]].LowerBound, 1e-9);
+
+            // Reported edges jittered by 10 mTh give the same bins.
+            var jittered = Repeat(staggered, 3).Select((w, i) =>
+                new IsolationWindow(w.Center + ((i % 3) - 1) * 0.01, w.LowerOffset, w.UpperOffset)).ToList();
+            var jitterScheme = DemuxSchemeDetector.Detect(jittered);
+            Assert.AreEqual(12, jitterScheme.Bins.Count);
+            Assert.AreEqual(2, jitterScheme.OverlapFactor);
+            Assert.AreEqual(11, jitterScheme.Windows.Count);
+
+            // k=3: 12 Th windows stepped by 4 Th.
+            var k3 = StaggeredCycle(RANGE_LOW, RANGE_HIGH, 12.0, 3);
+            var k3Scheme = DemuxSchemeDetector.Detect(Repeat(k3, 2));
+            Assert.AreEqual(3, k3Scheme.OverlapFactor);
+            Assert.IsTrue(k3Scheme.Bins.All(b => Math.Abs(b.Width - BIN_WIDTH) < 1e-9));
+
+            // Variable widths (spec G4.3): no zero or negative width bins.
+            var variable = new List<IsolationWindow>();
+            var edges = new[] { 400.0, 406.0, 414.0, 424.0, 436.0 };
+            for (int i = 0; i + 1 < edges.Length; i++)
+                variable.Add(Window(edges[i], edges[i + 1]));
+            for (int i = 0; i + 1 < edges.Length; i++)
+            {
+                double half = (edges[i + 1] - edges[i]) / 2;
+                variable.Add(Window(edges[i] + half, edges[i + 1] + half));
+            }
+            var variableScheme = DemuxSchemeDetector.Detect(Repeat(variable, 2));
+            Assert.AreEqual(2, variableScheme.OverlapFactor);
+            Assert.IsTrue(variableScheme.Bins.All(b => b.Width > DemuxSchemeDetector.DEFAULT_MINIMUM_BIN_WIDTH));
+
+            // Non-overlapping: nothing to do, and the input comes back unchanged.
+            var plain = new List<IsolationWindow>();
+            for (double lo = RANGE_LOW; lo < RANGE_HIGH; lo += WINDOW_WIDTH)
+                plain.Add(Window(lo, lo + WINDOW_WIDTH));
+            Assert.AreEqual(DemuxSchemeKind.non_overlapping, DemuxSchemeDetector.Detect(Repeat(plain, 2)).Kind);
+            var plainSpectra = Repeat(plain, 2).Select((w, i) => MakeSpectrum((uint)i, i * SCAN_MINUTES, w,
+                new[] { 300.0 }, new[] { 1.0f })).ToList();
+            var passthrough = Demultiplexer.Demultiplex(plainSpectra, new DemuxParams());
+            Assert.AreSame(plainSpectra, passthrough.Spectra);
+
+            // Ordinary DIA whose neighbors overlap by a 1 Th margin is not a stagger.
+            var margins = new List<IsolationWindow>();
+            for (double lo = 400; lo < 500; lo += 11)
+                margins.Add(Window(lo, lo + 12));
+            var marginScheme = DemuxSchemeDetector.Detect(Repeat(margins, 2));
+            Assert.AreEqual(DemuxSchemeKind.non_overlapping, marginScheme.Kind);
+            Assert.AreEqual(1, marginScheme.OverlapFactor);
+            Assert.AreEqual(2, marginScheme.MaxCoverage);
+
+            // A window seen only after several cycles is still a window.
+            var late = Repeat(plain, 4);
+            late.Add(Window(RANGE_HIGH, RANGE_HIGH + WINDOW_WIDTH));
+            Assert.AreEqual(plain.Count + 1, DemuxSchemeDetector.Detect(late).Windows.Count);
+        }
+
+        /// <summary>
+        /// Channel extraction: two split channels share an edge, and a peak exactly on it counts
+        /// in one of them only (the upper), while the last channel keeps its upper edge.
+        /// </summary>
+        [TestMethod]
+        public void TestDemuxChannelEdges()
+        {
+            var low = new[] { 99.0, 100.0 };
+            var high = new[] { 100.0, 101.0 };
+            var spectrum = MakeSpectrum(0, 1, Window(90, 110),
+                new[] { 98.0, 99.0, 99.5, 100.0, 101.0, 102.0 },
+                new[] { 1f, 2f, 4f, 8f, 16f, 32f });
+            var channels = new double[2];
+            OverlapDemultiplexer.ExtractChannels(spectrum, low, high, 2, channels, 0);
+            Assert.AreEqual(2 + 4, channels[0]);
+            Assert.AreEqual(8 + 16, channels[1]);
+        }
+
+        /// <summary>
+        /// End-to-end on re-multiplexed synthetic data with constant elution, where every
+        /// interpolant is exact, so any error is the block and the solver (spec G1.1, G1.2,
+        /// G1.4). Also checks thread-count independence.
+        /// </summary>
+        [TestMethod]
+        public void TestDemuxStaggeredRoundTrip()
+        {
+            var run = BuildStaggeredRun(20);
+
+            foreach (var outputMode in new[] { DemuxOutputMode.apportioned, DemuxOutputMode.solution })
+            {
+                var parameters = new DemuxParams { Engine = DemuxEngine.msconvert, OutputMode = outputMode };
+                var result = Demultiplexer.Demultiplex(run.Spectra, parameters);
+                Assert.AreEqual(2 * run.Spectra.Count, result.Spectra.Count);
+                Assert.AreEqual(0, result.Statistics.IterationCapSolves);
+                double maxError = MaxRelativeError(result, run, out int missing, out int spurious);
+                Assert.IsTrue(maxError < 1e-5, string.Format(@"{0}: max relative error {1}", outputMode, maxError));
+                Assert.AreEqual(0, missing);
+                Assert.AreEqual(0, spurious);
+                Assert.IsTrue(result.Spectra.All(s => s.Intensities.All(v => v > 0)));
+                AssertStructure(result, run);
+            }
+
+            // pwiz's truncated block gets the shared fragment wrong. Apportioning then hides
+            // it wherever the target's other bin solved to zero, so look at the solution itself.
+            var truncated = Demultiplexer.Demultiplex(run.Spectra, new DemuxParams
+            {
+                Engine = DemuxEngine.msconvert,
+                BlockMode = DemuxBlockMode.truncated_slice,
+                OutputMode = DemuxOutputMode.solution,
+            });
+            double truncatedError = MaxRelativeError(truncated, run, out _, out _);
+            Assert.IsTrue(truncatedError > 0.01, string.Format(@"truncated error {0}", truncatedError));
+
+            // Thread count changes scheduling only, never the output.
+            var single = Demultiplexer.Demultiplex(run.Spectra, new DemuxParams { Engine = DemuxEngine.msconvert, Threads = 1 });
+            var multi = Demultiplexer.Demultiplex(run.Spectra, new DemuxParams { Engine = DemuxEngine.msconvert, Threads = 4 });
+            AssertIdentical(single, multi);
+        }
+
+        /// <summary>
+        /// The conditions the constant-elution round trip cannot see: centroid m/z jitter (so
+        /// channels must be matched within the ppm tolerance, not by equality), k=3 and variable
+        /// window widths end to end, and elution that changes between acquisitions (so every
+        /// neighboring window's value must be interpolated from the right samples of the right
+        /// window). A stencil that read the wrong cycle, or the wrong side of the target time,
+        /// passes constant elution and fails here.
+        /// </summary>
+        [TestMethod]
+        public void TestDemuxRealisticSynthetic()
+        {
+            const double jitterPpm = 3;
+
+            // Jittered m/z, constant elution: still exact, in both output modes.
+            var k2 = BuildRun(new RunOptions
+            {
+                Cycle = StaggeredCycle(RANGE_LOW, RANGE_HIGH, WINDOW_WIDTH, 2),
+                JitterPpm = jitterPpm,
+            });
+            AssertExact(@"k=2 jittered", k2, 2);
+
+            // k=3: 12 Th windows stepped by 4 Th, each spectrum splitting into three bins.
+            var k3 = BuildRun(new RunOptions
+            {
+                Cycle = StaggeredCycle(RANGE_LOW, RANGE_HIGH, 12.0, 3),
+                JitterPpm = jitterPpm,
+            });
+            Assert.AreEqual(3, Demultiplexer.DetectScheme(k3.Spectra).OverlapFactor);
+            AssertExact(@"k=3 jittered", k3, 3);
+
+            // Variable widths: each window offset by half its own width, so bins range from 1 to
+            // 6 Th and windows cover two or three of them.
+            var variable = new List<IsolationWindow>();
+            var edges = new[] { 500.0, 506.0, 514.0, 524.0, 536.0, 550.0 };
+            for (int i = 0; i + 1 < edges.Length; i++)
+                variable.Add(Window(edges[i], edges[i + 1]));
+            for (int i = 0; i + 1 < edges.Length; i++)
+            {
+                double half = (edges[i + 1] - edges[i]) / 2;
+                variable.Add(Window(edges[i] + half, edges[i + 1] + half));
+            }
+            var variableRun = BuildRun(new RunOptions
+            {
+                Cycle = variable,
+                SharedFragment = false,
+                JitterPpm = jitterPpm,
+            });
+            AssertExact(@"variable width jittered", variableRun, 0);
+
+            // Elution that moves: sigma of 2.5 cycles is about 6 samples per FWHM per window, the
+            // regime DIA methods are designed for. In solution mode a unique fragment's value is
+            // the fit of the target's own measurement and its partner window's interpolated one,
+            // so any stencil error shows directly.
+            var eluting = BuildRun(new RunOptions
+            {
+                Cycle = StaggeredCycle(RANGE_LOW, RANGE_HIGH, WINDOW_WIDTH, 2),
+                Cycles = 30,
+                ElutionSigmaCycles = 2.5,
+                JitterPpm = jitterPpm,
+            });
+            // Measured: makima max 0.77% / median 0.008% / leak 0.033%; PCHIP 1.48% / 0.006% /
+            // 0.072%. The pwiz 3-point natural spline and linear interpolation each lose a few
+            // peaks on elution tails (the spline undershoots to zero, or the chord cuts the
+            // apex), so their bound is on the median and the leak only. The leak, intensity put
+            // in a bin that has no such fragment, must rank makima < PCHIP < natural < linear:
+            // that ordering is why makima is the default.
+            var bounds = new[]
+            {
+                (RtInterpolation.makima, 0.02, 0.0005, 0.001),
+                (RtInterpolation.pchip, 0.03, 0.0005, 0.002),
+                (RtInterpolation.natural_three_point, double.NaN, 0.001, 0.003),
+                (RtInterpolation.linear, double.NaN, 0.003, 0.01),
+            };
+            double previousLeak = 0;
+            foreach (var (interpolation, maxError, medianError, maxLeak) in bounds)
+            {
+                var errors = MeasureErrors(Demultiplexer.Demultiplex(eluting.Spectra, new DemuxParams
+                {
+                    Engine = DemuxEngine.msconvert,
+                    Interpolation = interpolation,
+                    OutputMode = DemuxOutputMode.solution,
+                }), eluting);
+                if (!double.IsNaN(maxError))
+                {
+                    Assert.IsTrue(errors.Max < maxError,
+                        string.Format(@"{0}: max error {1:P2} of apex", interpolation, errors.Max));
+                    Assert.AreEqual(0, errors.Missing, interpolation + @": missing");
+                }
+                Assert.IsTrue(errors.Median < medianError,
+                    string.Format(@"{0}: median error {1:P3} of apex", interpolation, errors.Median));
+                Assert.IsTrue(errors.SpuriousFraction < maxLeak,
+                    string.Format(@"{0}: leak {1:P3} of intensity", interpolation, errors.SpuriousFraction));
+                Assert.IsTrue(errors.SpuriousFraction > previousLeak,
+                    string.Format(@"{0}: leak {1:P3} does not rank after {2:P3}", interpolation,
+                        errors.SpuriousFraction, previousLeak));
+                previousLeak = errors.SpuriousFraction;
+            }
+
+            // The default configuration end to end, apportioned output: no peak lost.
+            var defaults = MeasureErrors(Demultiplexer.Demultiplex(eluting.Spectra, new DemuxParams { Engine = DemuxEngine.msconvert }), eluting);
+            Assert.AreEqual(0, defaults.Missing, @"default apportioned: missing");
+            Assert.IsTrue(defaults.Max < 0.02, string.Format(@"default apportioned: max error {0:P2}", defaults.Max));
+        }
+
+        /// <summary>
+        /// Osprey's demultiplexing of a real staggered acquisition: a slice of an Orbitrap
+        /// Eclipse run (see Data/Demux/README.md). Pins the output against a committed golden
+        /// summary, checks it against msconvert's demultiplexing of the same slice, and checks
+        /// that the msconvert-like settings reproduce msconvert more closely still.
+        /// </summary>
+        [TestMethod]
+        public void TestDemuxEclipseFixture()
         {
             string folder = Path.Combine(IOTest.FindPwizRoot(), FIXTURE_FOLDER);
-            string staggeredPath = Path.Combine(folder, FIXTURE_STAGGERED);
-            string msconvertPath = Path.Combine(folder, FIXTURE_MSCONVERT);
+            var staggered = SpectrumFileReader.LoadAllSpectra(Path.Combine(folder, FIXTURE_STAGGERED)).Ms2Spectra;
+            var msconvert = SpectrumFileReader.LoadAllSpectra(Path.Combine(folder, FIXTURE_MSCONVERT)).Ms2Spectra;
+            Assert.AreEqual(204, staggered.Count);
+            Assert.AreEqual(408, msconvert.Count);
 
-            var scheme = CheckDetectedScheme(staggeredPath);
-            // msconvert's output is 9 abutting 6 Th windows: demultiplexed already, so nothing
-            // more to demultiplex.
-            Assert.IsNull(SpectrumFileReader.DetectDemultiplexScheme(msconvertPath));
+            // The real geometry: 12 Th windows staggered by 6, reported edges a few mTh apart.
+            var scheme = Demultiplexer.DetectScheme(staggered);
+            Assert.AreEqual(DemuxSchemeKind.overlapping, scheme.Kind);
+            Assert.AreEqual(2, scheme.OverlapFactor);
+            Assert.AreEqual(8, scheme.Windows.Count);
+            Assert.AreEqual(9, scheme.Bins.Count);
+            foreach (var bin in scheme.Bins)
+                Assert.AreEqual(6.0, bin.Width, 0.01);
 
-            var asAcquired = CheckReadAsAcquired(staggeredPath, scheme);
-            var demuxParams = DemuxCache.CreateParams(AutoConfig(4));
-            Assert.IsNotNull(demuxParams);
-            var demuxed = SpectrumFileReader.LoadAllSpectra(staggeredPath, demuxParams);
-            Assert.AreEqual(scheme, demuxed.DemultiplexScheme);
-            Assert.IsNull(demuxed.MultiplexedSchemeNotDemultiplexed);
-            Assert.AreEqual(SLICE_DEMUX_MS2_COUNT, demuxed.Ms2Spectra.Count);
-            Assert.AreEqual(asAcquired.Ms1Spectra.Count, demuxed.Ms1Spectra.Count);
-            Assert.AreEqual(SLICE_DEMUX_WINDOWS, DistinctWindows(demuxed.Ms2Spectra).Count);
-            foreach (var spectrum in demuxed.Ms2Spectra)
-                Assert.AreEqual(DEMUX_WINDOW_WIDTH, spectrum.IsolationWindow.UpperBound - spectrum.IsolationWindow.LowerBound, 0.01);
+            var result = Demultiplexer.Demultiplex(staggered, new DemuxParams { Engine = DemuxEngine.msconvert, Threads = 4 });
+            Assert.AreEqual(408, result.Spectra.Count);
+            Assert.AreEqual(0, result.Statistics.IterationCapSolves);
+            AssertIdentical(result, Demultiplexer.Demultiplex(staggered, new DemuxParams { Engine = DemuxEngine.msconvert, Threads = 1 }));
+            CheckGolden(Path.Combine(folder, FIXTURE_GOLDEN), result);
 
-            // The output does not depend on the threads that solved it.
-            var serial = SpectrumFileReader.LoadAllSpectra(staggeredPath, demuxParams with { SolveThreads = 1 });
-            AssertSpectraIdentical(serial.Ms2Spectra, demuxed.Ms2Spectra);
+            // Against msconvert: close, by design not identical (block layout and interpolant).
+            var agreement = MeasureAgreement(msconvert, result.Spectra);
+            Assert.AreEqual(408, agreement.Paired);
+            Assert.IsTrue(agreement.MedianCosine >= FIXTURE_MIN_MEDIAN_COSINE,
+                string.Format(@"median cosine vs msconvert {0:F4}", agreement.MedianCosine));
+            Assert.IsTrue(agreement.FractionAbove95 >= FIXTURE_MIN_FRACTION_95,
+                string.Format(@"fraction >= 0.95 vs msconvert {0:F3}", agreement.FractionAbove95));
+            Assert.AreEqual(1.0, agreement.IntensityRatio, 0.01);
 
-            CheckAgainstPwizDemux(staggeredPath, demuxParams, demuxed.Ms2Spectra);
-            CheckAgainstMsconvert(msconvertPath, demuxed.Ms2Spectra);
-
-            // Ordinary DIA, real data: never demultiplexed, never reported as multiplexed.
-            CheckNotMultiplexed(STELLAR_ZIP, STELLAR_MZML);
-            CheckNotMultiplexed(ASTRAL_ZIP, ASTRAL_MZML);
+            // msconvert's own settings bring Osprey's typical spectrum closer to it.
+            var msconvertLike = Demultiplexer.Demultiplex(staggered, new DemuxParams
+            {
+                Engine = DemuxEngine.msconvert,
+                BlockMode = DemuxBlockMode.truncated_slice,
+                Interpolation = RtInterpolation.natural_three_point,
+                Threads = 4,
+            });
+            var likeAgreement = MeasureAgreement(msconvert, msconvertLike.Spectra);
+            Assert.IsTrue(likeAgreement.MedianCosine >= FIXTURE_MIN_MEDIAN_COSINE_MSCONVERT_LIKE,
+                string.Format(@"msconvert-like median cosine {0:F4}", likeAgreement.MedianCosine));
+            Assert.IsTrue(likeAgreement.MedianCosine >= agreement.MedianCosine,
+                string.Format(@"msconvert-like median {0:F4} vs default {1:F4}",
+                    likeAgreement.MedianCosine, agreement.MedianCosine));
         }
 
         /// <summary>
-        /// The demultiplexed cache through the entry point Stages 1-4 and <c>--task SpectraCache</c>
-        /// use: demux off writes the <c>.spectra.bin</c> and warns; demux auto then ignores that
-        /// cache, writes <c>.demux.spectra.bin</c> with every demux window, reuses it, rescores from
-        /// it, refuses to rescore from the <c>.spectra.bin</c> alone, and rebuilds it when its
-        /// settings descriptor changes. Also the task validity-key suffix.
+        /// The weighted engine, the default: each parent into its bins with its scan number and time, the
+        /// constant-elution truth recovered, the output independent of the thread count, and on the Eclipse
+        /// fixture close to msconvert's demultiplexing with the intensity it measured.
         /// </summary>
         [TestMethod]
-        public void TestPwizDemuxCache()
+        public void TestDemuxWeightedEngine()
         {
-            string dir = Path.Combine(Path.GetTempPath(), @"OspreyPwizDemuxCache" + Guid.NewGuid().ToString(@"N"));
+            var run = BuildStaggeredRun(20);
+            var result = Demultiplexer.Demultiplex(run.Spectra, new DemuxParams { Threads = 4 });
+            Assert.AreEqual(2 * run.Spectra.Count, result.Spectra.Count);
+            AssertStructure(result, run);
+            double maxError = MaxRelativeError(result, run, out int missing, out int spurious);
+            Assert.IsTrue(maxError < 1e-5, string.Format(@"max relative error {0}", maxError));
+            Assert.AreEqual(0, missing);
+            Assert.AreEqual(0, spurious);
+            Assert.AreEqual(result.Statistics.Channels, result.Statistics.ChannelsSolved);
+            Assert.AreEqual(0, result.Statistics.IonsPassedThrough);
+            AssertIdentical(result, Demultiplexer.Demultiplex(run.Spectra, new DemuxParams { Threads = 1 }));
+
+            string folder = Path.Combine(IOTest.FindPwizRoot(), FIXTURE_FOLDER);
+            var staggered = SpectrumFileReader.LoadAllSpectra(Path.Combine(folder, FIXTURE_STAGGERED)).Ms2Spectra;
+            var msconvert = SpectrumFileReader.LoadAllSpectra(Path.Combine(folder, FIXTURE_MSCONVERT)).Ms2Spectra;
+            var eclipse = Demultiplexer.Demultiplex(staggered, new DemuxParams { Threads = 4 });
+            Assert.AreEqual(408, eclipse.Spectra.Count);
+            AssertIdentical(eclipse, Demultiplexer.Demultiplex(staggered, new DemuxParams { Threads = 1 }));
+            var agreement = MeasureAgreement(msconvert, eclipse.Spectra);
+            Assert.AreEqual(408, agreement.Paired);
+            Assert.IsTrue(agreement.MedianCosine >= FIXTURE_MIN_MEDIAN_COSINE_WEIGHTED,
+                string.Format(@"median cosine vs msconvert {0:F4}", agreement.MedianCosine));
+            Assert.IsTrue(agreement.FractionAbove95 >= FIXTURE_MIN_FRACTION_95_WEIGHTED,
+                string.Format(@"fraction >= 0.95 vs msconvert {0:F3}", agreement.FractionAbove95));
+            Assert.AreEqual(1.0, agreement.IntensityRatio, 0.01);
+            // Apportioning divides each measured peak among its bins, so the intensity is what was measured.
+            double input = staggered.Sum(s => s.Intensities.Sum(v => (double)v));
+            double output = eclipse.Spectra.Sum(s => s.Intensities.Sum(v => (double)v));
+            Assert.AreEqual(1.0, output / input, 0.01);
+        }
+
+        /// <summary>
+        /// The elution fit (<see cref="ElutionDemultiplexer"/>) on runs whose peaks are only a few passes wide, where
+        /// each window's own series (one sample every k passes) is too sparse to interpolate: a fragment from one bin
+        /// is recovered exactly at every pass, the output does not depend on the thread count, and at 4-fold overlap
+        /// it beats the interpolating engine by an order of magnitude. Also the unit-resolution fragment channels it
+        /// is used with: matched in Th on a linear axis.
+        /// </summary>
+        [TestMethod]
+        public void TestDemuxElutionFit()
+        {
+            foreach (var (k, fwhmPasses) in new[] { (2, 2.0), (3, 2.0), (4, 3.0) })
+            {
+                var run = BuildElutingRun(k, fwhmPasses, out double fwhmSeconds);
+                var fit = new ElutionDemuxParams { FwhmSeconds = fwhmSeconds };
+                var result = Demultiplexer.Demultiplex(run.Spectra, new DemuxParams { Threads = 4, Elution = fit });
+                var errors = PassRateErrors(result, run);
+                string label = string.Format(CultureInfo.InvariantCulture, @"k={0}, FWHM {1} passes", k, fwhmPasses);
+                Assert.IsTrue(errors.UniqueApexMax < 1e-4,
+                    string.Format(CultureInfo.InvariantCulture, @"{0}: max apex error {1:P3}", label, errors.UniqueApexMax));
+                Assert.IsTrue(errors.Leak < 0.02,
+                    string.Format(CultureInfo.InvariantCulture, @"{0}: leak {1:P3}", label, errors.Leak));
+                AssertIdentical(result, Demultiplexer.Demultiplex(run.Spectra, new DemuxParams { Threads = 1, Elution = fit }));
+            }
+
+            // Measured: k=4 with peaks two passes wide, apex error 0.9% against 28% interpolated, leak 0.5% against 30%.
+            var k4 = BuildElutingRun(4, 2.0, out double k4Fwhm);
+            var fitted = PassRateErrors(Demultiplexer.Demultiplex(k4.Spectra,
+                new DemuxParams { Threads = 4, Elution = new ElutionDemuxParams { FwhmSeconds = k4Fwhm } }), k4);
+            var interpolated = PassRateErrors(Demultiplexer.Demultiplex(k4.Spectra, new DemuxParams { Threads = 4 }), k4);
+            Assert.IsTrue(fitted.UniqueApex * 10 < interpolated.UniqueApex,
+                string.Format(CultureInfo.InvariantCulture, @"k=4 apex error {0:P2} against {1:P2} interpolated",
+                    fitted.UniqueApex, interpolated.UniqueApex));
+            Assert.IsTrue(fitted.Leak * 10 < interpolated.Leak,
+                string.Format(CultureInfo.InvariantCulture, @"k=4 leak {0:P2} against {1:P2} interpolated", fitted.Leak,
+                    interpolated.Leak));
+
+            // Unit-resolution channels: three fragments 1 and 1.5 Th apart, each centroid off by up to +/-0.25 Th.
+            var random = new Random(11);
+            var nominal = new[] { 500.0, 501.0, 502.5 };
+            var mz = new double[300];
+            var ions = new double[300];
+            for (int i = 0; i < mz.Length; i++)
+            {
+                mz[i] = nominal[i % 3] + (2 * random.NextDouble() - 1) * 0.25;
+                ions[i] = 10;
+            }
+            var channel = new int[mz.Length];
+            Assert.AreEqual(3, FragmentChannelFinder.FindLinear(mz, ions, 0.4, 8, channel));
+            for (int i = 0; i < mz.Length; i++)
+                Assert.AreEqual(i % 3, channel[i], string.Format(CultureInfo.InvariantCulture, @"peak at {0:F3}", mz[i]));
+            Assert.IsTrue(FragmentChannelFinder.Find(mz, ions, 10, 8, channel) > 3, @"10 ppm channels split them");
+        }
+
+        /// <summary>
+        /// The pipeline wiring around the demultiplexer, through the same entry point Stages 1-4
+        /// and --task SpectraCache use: the demux-off guard, building and then reusing the
+        /// demultiplexed cache, searching from it alone, rebuilding it when its settings change,
+        /// leaving a non-overlapping run alone, and the Stage-6 rule for a missing demux cache.
+        /// </summary>
+        [TestMethod]
+        public void TestDemuxPipelineWiring()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), @"OspreyDemuxWiring" + Guid.NewGuid().ToString(@"N"));
             Directory.CreateDirectory(dir);
             try
             {
-                string source = Path.Combine(dir, FIXTURE_STAGGERED);
-                File.Copy(Path.Combine(IOTest.FindPwizRoot(), FIXTURE_FOLDER, FIXTURE_STAGGERED), source);
-                string plainCache = SpectraCache.GetCachePath(source);
-                string demuxCache = SpectraCache.GetDemuxCachePath(source);
-                string fileName = Path.GetFileName(source);
-                Assert.AreNotEqual(plainCache, demuxCache);
+                // Stand-in sources: a cache hit precedes the reader, so the bytes are never read,
+                // and saving with the source path makes the fingerprint check real. The fill times
+                // are saved beside the cache, as a parse saves them, so they are not read either.
+                string staggeredSource = Path.Combine(dir, @"staggered.raw");
+                File.WriteAllBytes(staggeredSource, new byte[] { 1, 2, 3, 4 });
+                var run = BuildStaggeredRun(6);
+                string rawCache = SpectraCache.GetCachePath(staggeredSource);
+                string demuxCache = SpectraCache.GetDemuxCachePath(staggeredSource);
+                SpectraCache.SaveSpectraCache(rawCache, run.Spectra, new List<MS1Spectrum>(), staggeredSource);
+                AcquisitionSidecar.Save(AcquisitionSidecar.PathFor(rawCache), AstralAcquisition(run.Spectra),
+                    staggeredSource);
 
-                // Demux off: searched as acquired, from the .spectra.bin, with a warning.
-                var offConfig = new OspreyConfig { DemuxMode = DemuxMode.off, NThreads = 2 };
-                var offLog = new TestLog();
-                var off = offLog.Context(offConfig);
-                var index = ScoringTaskShared.EnsureSpectraCache(source, false, out _, off);
-                Assert.AreEqual(plainCache, index.CachePath);
-                Assert.AreEqual(SLICE_MS2_COUNT, index.Ms2Count);
-                Assert.AreEqual(SLICE_WINDOWS, index.IsolationWindows.Count);
-                Assert.IsTrue(File.Exists(plainCache));
+                // Demux off: an overlapping run is refused rather than searched as acquired.
+                var off = WiringContext(DemuxMode.off);
+                Assert.ThrowsException<InvalidOperationException>(() =>
+                    ScoringTaskShared.EnsureSpectraCache(staggeredSource, false, out _, off));
                 Assert.IsFalse(File.Exists(demuxCache));
-                CollectionAssert.Contains(offLog.Warnings, string.Format(
-                    OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache__0__was_acquired_with_overlapping_isolation_windows_and_is_searched_as_acquired,
-                    fileName, OspreyArgNames.Text(OspreyArgNames.DEMUX)));
-                Assert.AreEqual(plainCache, ScoringTaskShared.LoadSpectraForRescore(source, fileName, fileName, false, off).CachePath);
-                Assert.AreEqual(SpectraCacheRejection.Absent, DemuxCache.Check(source, offConfig));
-                Assert.AreEqual(string.Empty, DemuxCache.ValidityKeySuffix(offConfig));
 
-                // Demux auto, with the plain cache of the multiplexed run present: that cache is
-                // not what this search reads, so the run is read again, demultiplexed.
-                var autoConfig = AutoConfig(2);
-                var autoLog = new TestLog();
-                var auto = autoLog.Context(autoConfig);
-                index = ScoringTaskShared.EnsureSpectraCache(source, false, out _, auto);
+                // Demux auto: the demultiplexed cache is built and is what gets searched.
+                var auto = WiringContext(DemuxMode.auto);
+                var index = ScoringTaskShared.EnsureSpectraCache(staggeredSource, false, out _, auto);
                 Assert.AreEqual(demuxCache, index.CachePath);
-                Assert.AreEqual(SLICE_DEMUX_MS2_COUNT, index.Ms2Count);
-                // Every demux window, including any that first appears after others repeat.
-                Assert.AreEqual(SLICE_DEMUX_WINDOWS, index.IsolationWindows.Count);
+                Assert.AreEqual(2 * run.Spectra.Count, index.Ms2Count);
+                Assert.AreEqual(run.Bins.Count, index.IsolationWindows.Count);
                 Assert.IsTrue(File.Exists(demuxCache));
-                Assert.AreEqual(0, autoLog.Warnings.Count);
-                Assert.AreEqual(SpectraCacheRejection.None, DemuxCache.Check(source, autoConfig));
+                DateTime built = File.GetLastWriteTimeUtc(demuxCache);
 
-                // A second call reuses the demultiplexed cache rather than demultiplexing again.
-                var stamp = new DateTime(2001, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-                File.SetLastWriteTimeUtc(demuxCache, stamp);
-                index = ScoringTaskShared.EnsureSpectraCache(source, false, out _, auto);
+                // A second run reuses it rather than demultiplexing again.
+                index = ScoringTaskShared.EnsureSpectraCache(staggeredSource, false, out _, auto);
                 Assert.AreEqual(demuxCache, index.CachePath);
-                Assert.AreEqual(SLICE_DEMUX_MS2_COUNT, index.Ms2Count);
-                Assert.AreEqual(stamp, File.GetLastWriteTimeUtc(demuxCache));
-                CollectionAssert.Contains(autoLog.Infos, string.Format(
-                    OspreyTasksResources.DemuxCache_TryOpen_Streaming_demultiplexed_spectra_from_cache___0_, demuxCache));
+                Assert.AreEqual(built, File.GetLastWriteTimeUtc(demuxCache));
 
-                // Rescoring reads the same demultiplexed cache.
-                index = ScoringTaskShared.LoadSpectraForRescore(source, fileName, fileName, true, auto);
+                // The demultiplexed cache alone is enough, as for a cohort staged with demux.
+                File.Delete(rawCache);
+                index = ScoringTaskShared.EnsureSpectraCache(staggeredSource, false, out _, auto);
                 Assert.AreEqual(demuxCache, index.CachePath);
-                Assert.AreEqual(SLICE_DEMUX_MS2_COUNT, index.Ms2Count);
 
-                // The validity key carries the descriptor, which does not depend on threads.
-                string descriptor = DemuxCache.Descriptor(DemuxCache.CreateParams(autoConfig));
-                StringAssert.Contains(DemuxCache.ValidityKeySuffix(autoConfig), descriptor);
-                Assert.AreEqual(DemuxCache.ValidityKeySuffix(autoConfig), DemuxCache.ValidityKeySuffix(AutoConfig(8)));
+                // A demultiplexed cache written with other settings is rebuilt from .spectra.bin.
+                SpectraCache.SaveSpectraCache(rawCache, run.Spectra, new List<MS1Spectrum>(), staggeredSource);
+                SpectraCache.SaveSpectraCache(demuxCache, run.Spectra, new List<MS1Spectrum>(), staggeredSource,
+                    @"osprey-demux/0;stale");
+                index = ScoringTaskShared.EnsureSpectraCache(staggeredSource, false, out _, auto);
+                Assert.AreEqual(2 * run.Spectra.Count, index.Ms2Count);
+                Assert.IsNotNull(SpectraWindowIndex.BuildFromCache(demuxCache, staggeredSource,
+                    DemuxCacheBuilder.CreateParams(auto.Config).Descriptor));
 
-                // A demultiplexed cache written with other settings is rebuilt.
-                var stale = SpectraCache.LoadSpectraCache(demuxCache, source, descriptor);
-                Assert.IsNotNull(stale);
-                SpectraCache.SaveSpectraCache(demuxCache, stale.Ms2Spectra, stale.Ms1Spectra, source, @"pwiz-demux/0;stale");
-                Assert.AreEqual(SpectraCacheRejection.DemuxSettingsChanged, DemuxCache.Check(source, autoConfig));
-                index = ScoringTaskShared.EnsureSpectraCache(source, false, out _, auto);
-                Assert.AreEqual(demuxCache, index.CachePath);
-                Assert.AreEqual(SLICE_DEMUX_MS2_COUNT, index.Ms2Count);
-                Assert.AreEqual(SpectraCacheRejection.None, DemuxCache.Check(source, autoConfig));
-
-                // Rescoring with only the .spectra.bin of a multiplexed run is an error: the
-                // earlier stages searched the demultiplexed cache.
-                File.Delete(demuxCache);
-                Assert.IsTrue(File.Exists(plainCache));
+                // Stage 6: with only the .spectra.bin of an overlapping run, demux on is an error
+                // (the earlier stages searched the demultiplexed cache) and demux off is the guard.
+                var rawIndex = SpectraWindowIndex.BuildFromCache(rawCache, staggeredSource);
+                Assert.IsNotNull(rawIndex);
                 Assert.ThrowsException<SpectraCacheException>(() =>
-                    ScoringTaskShared.LoadSpectraForRescore(source, fileName, fileName, false, auto));
+                    DemuxCacheBuilder.ThrowIfDemuxCacheMissing(staggeredSource, rawIndex, auto));
+                Assert.ThrowsException<InvalidOperationException>(() =>
+                    DemuxCacheBuilder.ThrowIfDemuxCacheMissing(staggeredSource, rawIndex, off));
+
+                // A run whose windows do not overlap is searched as acquired, even with demux on.
+                string plainSource = Path.Combine(dir, @"plain.raw");
+                File.WriteAllBytes(plainSource, new byte[] { 5, 6, 7, 8 });
+                var plain = new List<Spectrum>();
+                for (int c = 0; c < 6; c++)
+                {
+                    for (double lo = RANGE_LOW; lo < RANGE_HIGH; lo += WINDOW_WIDTH)
+                    {
+                        plain.Add(MakeSpectrum((uint)plain.Count, plain.Count * SCAN_MINUTES,
+                            Window(lo, lo + WINDOW_WIDTH), new[] { 300.0 + lo }, new[] { 10.0f }));
+                    }
+                }
+                SpectraCache.SaveSpectraCache(SpectraCache.GetCachePath(plainSource), plain,
+                    new List<MS1Spectrum>(), plainSource);
+                index = ScoringTaskShared.EnsureSpectraCache(plainSource, false, out _, auto);
+                Assert.AreEqual(SpectraCache.GetCachePath(plainSource), index.CachePath);
+                Assert.IsFalse(File.Exists(SpectraCache.GetDemuxCachePath(plainSource)));
+                DemuxCacheBuilder.ThrowIfDemuxCacheMissing(plainSource, index, auto);
+                ScoringTaskShared.EnsureSpectraCache(plainSource, false, out _, off);
             }
             finally
             {
@@ -200,126 +691,52 @@ namespace pwiz.Osprey.Test
             }
         }
 
-        private static SpectrumListDemux.Scheme CheckDetectedScheme(string staggeredPath)
-        {
-            var scheme = SpectrumFileReader.DetectDemultiplexScheme(staggeredPath);
-            Assert.IsNotNull(scheme);
-            Assert.AreEqual(SLICE_WINDOWS, scheme.SpectraPerCycle);
-            Assert.AreEqual(1, scheme.PrecursorsPerSpectrum);
-            Assert.AreEqual(SLICE_OVERLAPS, scheme.OverlapsPerSpectrum);
-            Assert.AreEqual(SLICE_DEMUX_WINDOWS, scheme.DemuxWindows);
-            Assert.AreEqual(SpectrumListDemux.Optimization.OverlapOnly, scheme.Optimization);
-            return scheme;
-        }
-
-        private static SpectrumFileResult CheckReadAsAcquired(string staggeredPath, SpectrumListDemux.Scheme scheme)
-        {
-            var asAcquired = SpectrumFileReader.LoadAllSpectra(staggeredPath);
-            Assert.IsNull(asAcquired.DemultiplexScheme);
-            Assert.AreEqual(scheme, asAcquired.MultiplexedSchemeNotDemultiplexed);
-            Assert.AreEqual(SLICE_MS2_COUNT, asAcquired.Ms2Spectra.Count);
-            Assert.AreEqual(SLICE_WINDOWS, DistinctWindows(asAcquired.Ms2Spectra).Count);
-            return asAcquired;
-        }
-
         /// <summary>
-        /// The demultiplexed read is exactly ProteoWizard's demultiplexer applied to the mzML
-        /// directly, as msconvert's demultiplex filter applies it.
+        /// The demultiplexed cache: round trip, refusal on any mismatch between the cache kind or
+        /// descriptor and what the reader expects, and window detection over every bin. Also
+        /// the settings that select demux: the CLI switch and the search hash.
         /// </summary>
-        private static void CheckAgainstPwizDemux(string path, SpectrumListDemux.Params demuxParams,
-            IReadOnlyList<Spectrum> actual)
-        {
-            using var stream = File.OpenRead(path);
-            var msData = new MzmlReader().Read(stream);
-            var spectrumList = msData.Run.SpectrumList;
-            Assert.IsNotNull(spectrumList);
-            using var demux = new SpectrumListDemux(spectrumList, demuxParams);
-            int ms2 = 0;
-            for (int i = 0; i < demux.Count; i++)
-            {
-                var expected = demux.GetSpectrum(i, true);
-                if (expected.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0) != 2)
-                    continue;
-                Assert.IsTrue(ms2 < actual.Count);
-                var spectrum = actual[ms2++];
-                var window = expected.Precursors[0].IsolationWindow;
-                double center = window.CvParam(CVID.MS_isolation_window_target_m_z).ValueAs<double>();
-                Assert.AreEqual(center, spectrum.IsolationWindow.Center, 0.0);
-                Assert.AreEqual(window.CvParam(CVID.MS_isolation_window_lower_offset).ValueAs<double>(),
-                    spectrum.IsolationWindow.LowerOffset, 0.0);
-                Assert.AreEqual(window.CvParam(CVID.MS_isolation_window_upper_offset).ValueAs<double>(),
-                    spectrum.IsolationWindow.UpperOffset, 0.0);
-                var mzs = expected.GetMZArray()?.Data.ToArray() ?? Array.Empty<double>();
-                var intensities = expected.GetIntensityArray()?.Data.Select(v => (float)v).ToArray() ?? Array.Empty<float>();
-                CollectionAssert.AreEqual(mzs, spectrum.Mzs);
-                CollectionAssert.AreEqual(intensities, spectrum.Intensities);
-            }
-            Assert.AreEqual(actual.Count, ms2);
-        }
-
         /// <summary>
-        /// Against msconvert's (C++) demultiplexing of the same slice: the same spectra in the
-        /// same order, with the same isolation windows and retention times. Peaks are not compared:
-        /// the C# demultiplexer searches each bin's full tolerance window where C++ searches only
-        /// part of it (pwiz #4814), and its parity with C++ otherwise is tested in pwiz/analysis.
+        /// The acquisition sidecar: each MS2 spectrum's fill time and analyzer round-trip beside the
+        /// spectra cache, a fill time the file did not report stays NaN, and a sidecar written for
+        /// another version of the source is refused, as the cache is.
         /// </summary>
-        private static void CheckAgainstMsconvert(string msconvertPath, IReadOnlyList<Spectrum> actual)
+        [TestMethod]
+        public void TestAcquisitionSidecar()
         {
-            var reference = SpectrumFileReader.LoadAllSpectra(msconvertPath).Ms2Spectra;
-            Assert.AreEqual(SLICE_DEMUX_MS2_COUNT, reference.Count);
-            Assert.AreEqual(reference.Count, actual.Count);
-            for (int i = 0; i < reference.Count; i++)
-            {
-                Assert.AreEqual(reference[i].IsolationWindow.LowerBound, actual[i].IsolationWindow.LowerBound, 1e-6);
-                Assert.AreEqual(reference[i].IsolationWindow.UpperBound, actual[i].IsolationWindow.UpperBound, 1e-6);
-                Assert.AreEqual(reference[i].RetentionTime, actual[i].RetentionTime, 1e-6);
-            }
-            CollectionAssert.AreEqual(DistinctWindows(reference), DistinctWindows(actual));
-        }
-
-        private static void AssertSpectraIdentical(IReadOnlyList<Spectrum> expected, IReadOnlyList<Spectrum> actual)
-        {
-            Assert.AreEqual(expected.Count, actual.Count);
-            for (int i = 0; i < expected.Count; i++)
-            {
-                Assert.AreEqual(expected[i].ScanNumber, actual[i].ScanNumber);
-                Assert.AreEqual(expected[i].RetentionTime, actual[i].RetentionTime, 0.0);
-                Assert.AreEqual(expected[i].IsolationWindow.Center, actual[i].IsolationWindow.Center, 0.0);
-                CollectionAssert.AreEqual(expected[i].Mzs, actual[i].Mzs);
-                CollectionAssert.AreEqual(expected[i].Intensities, actual[i].Intensities);
-            }
-        }
-
-        /// <summary>The distinct isolation windows, as (lower, upper) bounds rounded to 0.01 m/z,
-        /// in ascending order.</summary>
-        private static List<(double Lower, double Upper)> DistinctWindows(IEnumerable<Spectrum> spectra)
-        {
-            return spectra.Select(s => (Math.Round(s.IsolationWindow.LowerBound, 2), Math.Round(s.IsolationWindow.UpperBound, 2)))
-                .Distinct().OrderBy(w => w.Item1).ToList();
-        }
-
-        private static OspreyConfig AutoConfig(int threads)
-        {
-            return new OspreyConfig { DemuxMode = DemuxMode.auto, NThreads = threads };
-        }
-
-        /// <summary>
-        /// Ordinary DIA from a <c>TestData</c> subset zip is not detected as multiplexed.
-        /// </summary>
-        private static void CheckNotMultiplexed(string zipName, string entryName)
-        {
-            string dir = Path.Combine(Path.GetTempPath(), @"OspreyDemuxSubset" + Guid.NewGuid().ToString(@"N"));
+            string dir = Path.Combine(Path.GetTempPath(), @"OspreyAcquisition" + Guid.NewGuid().ToString(@"N"));
             Directory.CreateDirectory(dir);
             try
             {
-                string path = Path.Combine(dir, entryName);
-                using (var zip = ZipFile.OpenRead(Path.Combine(AppContext.BaseDirectory, @"TestData", zipName)))
-                {
-                    var entry = zip.GetEntry(entryName);
-                    Assert.IsNotNull(entry, entryName);
-                    entry.ExtractToFile(path);
-                }
-                Assert.IsNull(SpectrumFileReader.DetectDemultiplexScheme(path), entryName);
+                string source = Path.Combine(dir, @"run.raw");
+                File.WriteAllBytes(source, new byte[] { 1, 2, 3, 4 });
+                string path = AcquisitionSidecar.PathFor(SpectraCache.GetCachePath(source));
+                Assert.AreEqual(Path.Combine(dir, @"run" + AcquisitionSidecar.EXT), path);
+                Assert.IsNull(AcquisitionSidecar.Load(path, source));
+
+                var info = new AcquisitionInfo();
+                info.Add(3, 12.5, ASTRAL_ANALYZER);
+                info.Add(7, double.NaN, null);
+                info.Add(9, 4, @"orbitrap");
+                AcquisitionSidecar.Save(path, info, source);
+
+                var loaded = AcquisitionSidecar.Load(path, source);
+                Assert.IsNotNull(loaded);
+                Assert.AreEqual(3, loaded.Count);
+                Assert.IsTrue(loaded.TryGet(3, out double fillTimeMs, out string analyzer));
+                Assert.AreEqual(12.5, fillTimeMs);
+                Assert.AreEqual(MassAnalyzerKind.astral, IonResponse.KindOf(analyzer));
+                Assert.IsTrue(loaded.TryGet(7, out fillTimeMs, out analyzer));
+                Assert.IsTrue(double.IsNaN(fillTimeMs));
+                Assert.AreEqual(MassAnalyzerKind.unknown, IonResponse.KindOf(analyzer));
+                Assert.IsTrue(loaded.TryGet(9, out fillTimeMs, out analyzer));
+                Assert.AreEqual(4, fillTimeMs);
+                Assert.AreEqual(MassAnalyzerKind.orbitrap, IonResponse.KindOf(analyzer));
+                Assert.IsFalse(loaded.TryGet(4, out _, out _));
+
+                // A source rewritten since is another run: its sidecar is refused.
+                File.WriteAllBytes(source, new byte[] { 1, 2, 3, 4, 5 });
+                Assert.IsNull(AcquisitionSidecar.Load(path, source));
             }
             finally
             {
@@ -327,16 +744,810 @@ namespace pwiz.Osprey.Test
             }
         }
 
-        /// <summary>Collects what a <see cref="PipelineContext"/> logs.</summary>
-        private class TestLog
+        [TestMethod]
+        public void TestDemuxCache()
         {
-            public List<string> Infos { get; } = new List<string>();
-            public List<string> Warnings { get; } = new List<string>();
-
-            public PipelineContext Context(OspreyConfig config)
+            string dir = Path.Combine(Path.GetTempPath(), @"OspreyDemuxCache" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(dir);
+            try
             {
-                return new PipelineContext(config, new OspreyTask[0], Infos.Add, Warnings.Add, null);
+                var run = BuildStaggeredRun(6);
+                var ms1 = new List<MS1Spectrum>();
+                string rawPath = Path.Combine(dir, @"run.spectra.bin");
+                string demuxPath = Path.Combine(dir, @"run.demux.spectra.bin");
+                var parameters = new DemuxParams();
+                string descriptor = parameters.Descriptor;
+                var result = Demultiplexer.Demultiplex(run.Spectra, parameters);
+                SpectraCache.SaveSpectraCache(rawPath, run.Spectra, ms1);
+                SpectraCache.SaveSpectraCache(demuxPath, result.Spectra, ms1, null, descriptor);
+
+                var index = SpectraWindowIndex.BuildFromCache(demuxPath, null, descriptor);
+                Assert.IsNotNull(index);
+                Assert.AreEqual(result.Spectra.Count, index.Ms2Count);
+                Assert.AreEqual(demuxPath, index.CachePath);
+                // Every bin is a window, including the top edge bin that only the offset set
+                // covers and that first appears after other bins have repeated.
+                Assert.AreEqual(run.Bins.Count, index.IsolationWindows.Count);
+                var loaded = SpectraCache.LoadSpectraCache(demuxPath, null, descriptor);
+                Assert.IsNotNull(loaded);
+                AssertIdentical(result, new DemuxResult(result.Scheme, loaded.Ms2Spectra, result.Statistics));
+
+                // The undemultiplexed cache lists its acquisition windows.
+                var rawIndex = SpectraWindowIndex.BuildFromCache(rawPath);
+                Assert.IsNotNull(rawIndex);
+                Assert.AreEqual(run.Spectra.Count, rawIndex.Ms2Count);
+                Assert.AreEqual(result.Scheme.Windows.Count, rawIndex.IsolationWindows.Count);
+
+                // A PLAIN cache of already-demultiplexed spectra is what searching an
+                // msconvert-demultiplexed mzML produces. Its top bin also first appears after
+                // other bins repeat, and must still be a window (it once was silently dropped).
+                string plainDemuxPath = Path.Combine(dir, @"msconvert.spectra.bin");
+                SpectraCache.SaveSpectraCache(plainDemuxPath, result.Spectra, ms1);
+                var plainDemuxIndex = SpectraWindowIndex.BuildFromCache(plainDemuxPath);
+                Assert.IsNotNull(plainDemuxIndex);
+                Assert.AreEqual(run.Bins.Count, plainDemuxIndex.IsolationWindows.Count);
+
+                // Refusals: a demultiplexed cache read as plain, a plain one read as
+                // demultiplexed, and a descriptor from other settings.
+                AssertRefused(demuxPath, null);
+                AssertRefused(rawPath, descriptor);
+                AssertRefused(demuxPath, new DemuxParams { Engine = DemuxEngine.msconvert }.Descriptor);
+                Assert.IsNull(SpectraCache.LoadSpectraCache(demuxPath));
+
+                // The same rules from the header alone, as the start-up input check reads it.
+                string otherDescriptor = new DemuxParams { Engine = DemuxEngine.msconvert }.Descriptor;
+                Assert.AreEqual(SpectraCacheRejection.None, SpectraCache.CheckHeader(demuxPath, null, descriptor));
+                Assert.AreEqual(SpectraCacheRejection.DemuxSettingsChanged,
+                    SpectraCache.CheckHeader(demuxPath, null, otherDescriptor));
+                Assert.AreEqual(SpectraCacheRejection.DemuxSettingsChanged, SpectraCache.CheckHeader(demuxPath, null, null));
+                Assert.AreEqual(SpectraCacheRejection.Absent,
+                    SpectraCache.CheckHeader(Path.Combine(dir, @"missing.demux.spectra.bin"), null, descriptor));
+
+                // A corrupt descriptor length, or a header that ends inside the descriptor, is a
+                // truncated header: neither a descriptor to compare nor a crash.
+                byte[] bytes = File.ReadAllBytes(demuxPath);
+                string corruptPath = Path.Combine(dir, @"corrupt.demux.spectra.bin");
+                var corrupt = (byte[])bytes.Clone();
+                BitConverter.GetBytes(uint.MaxValue).CopyTo(corrupt, DESCRIPTOR_LENGTH_OFFSET);
+                File.WriteAllBytes(corruptPath, corrupt);
+                Assert.AreEqual(SpectraCacheRejection.TruncatedHeader, SpectraCache.CheckHeader(corruptPath, null, descriptor));
+                Assert.IsNull(SpectraWindowIndex.BuildFromCache(corruptPath, null, out var corruptReason, descriptor));
+                Assert.AreEqual(SpectraCacheRejection.TruncatedHeader, corruptReason);
+                File.WriteAllBytes(corruptPath, bytes.Take(DESCRIPTOR_LENGTH_OFFSET + 4 + 5).ToArray());
+                Assert.AreEqual(SpectraCacheRejection.TruncatedHeader, SpectraCache.CheckHeader(corruptPath, null, descriptor));
+
+                // The start-up check of an input whose source and .spectra.bin are gone: its
+                // demultiplexed cache stands in while it matches the current settings, and is
+                // refused, with the reason, once a demux version or override has changed.
+                var auto = new OspreyConfig { DemuxMode = DemuxMode.auto };
+                string goneSource = Path.Combine(dir, @"run.raw");
+                Assert.AreEqual(demuxPath, SpectraCache.GetDemuxCachePath(goneSource));
+                Assert.AreEqual(SpectraCacheRejection.None, DemuxCacheBuilder.CheckDemuxCache(goneSource, auto));
+                SpectraCache.SaveSpectraCache(demuxPath, result.Spectra, ms1, null, otherDescriptor);
+                Assert.AreEqual(SpectraCacheRejection.DemuxSettingsChanged,
+                    DemuxCacheBuilder.CheckDemuxCache(goneSource, auto));
             }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+
+            // Descriptors are stable and distinguish every output-changing setting, but not threads.
+            // The msconvert engine's own settings do not change the weighted engine's output.
+            Assert.AreEqual(DemuxEngine.weighted, new DemuxParams().Engine);
+            Assert.AreEqual(new DemuxParams().Descriptor, new DemuxParams { Threads = 8 }.Descriptor);
+            Assert.AreNotEqual(new DemuxParams().Descriptor, new DemuxParams { Engine = DemuxEngine.msconvert }.Descriptor);
+            Assert.AreNotEqual(new DemuxParams().Descriptor, new DemuxParams { ChannelTolerance = 20 }.Descriptor);
+            Assert.AreNotEqual(new DemuxParams().Descriptor, new DemuxParams { CountsPerIon = 50 }.Descriptor);
+            Assert.AreEqual(new DemuxParams().Descriptor,
+                new DemuxParams { BlockMode = DemuxBlockMode.truncated_slice }.Descriptor);
+            var msconvertEngine = new DemuxParams { Engine = DemuxEngine.msconvert };
+            Assert.AreNotEqual(msconvertEngine.Descriptor,
+                new DemuxParams { Engine = DemuxEngine.msconvert, BlockMode = DemuxBlockMode.truncated_slice }.Descriptor);
+            Assert.AreNotEqual(msconvertEngine.Descriptor,
+                new DemuxParams { Engine = DemuxEngine.msconvert, OutputMode = DemuxOutputMode.solution }.Descriptor);
+
+            // --demux selects the mode, and only an enabled mode enters the search hash, so every
+            // existing hash is unchanged while it is off.
+            Assert.AreEqual(DemuxMode.off, new OspreyConfig().DemuxMode);
+            Assert.AreEqual(DemuxMode.auto,
+                OspreyCommandArgs.ParseArgs(ArgTokens.Split(OspreyCommandArgs.ARG_DEMUX + @"auto")).DemuxMode);
+            Assert.AreEqual(DemuxMode.off,
+                OspreyCommandArgs.ParseArgs(ArgTokens.Split(OspreyCommandArgs.ARG_DEMUX + @"off")).DemuxMode);
+            var config = new OspreyConfig();
+            string offHash = config.Identity.SearchParameterHash();
+            config.DemuxMode = DemuxMode.auto;
+            Assert.AreNotEqual(offHash, config.Identity.SearchParameterHash());
+            config.DemuxMode = DemuxMode.off;
+            Assert.AreEqual(offHash, config.Identity.SearchParameterHash());
+
+            // The task validity key carries the settings descriptor the search hash cannot see,
+            // so a new algorithm version or an override re-scores along with the rebuilt cache.
+            Assert.AreEqual(string.Empty, DemuxCacheBuilder.ValidityKeySuffix(config));
+            config.DemuxMode = DemuxMode.auto;
+            StringAssert.Contains(DemuxCacheBuilder.ValidityKeySuffix(config), new DemuxParams().Descriptor);
+            Assert.AreNotEqual(DemuxCacheBuilder.ValidityKeySuffix(DemuxMode.auto, new DemuxParams().Descriptor),
+                DemuxCacheBuilder.ValidityKeySuffix(DemuxMode.auto,
+                    new DemuxParams { Engine = DemuxEngine.msconvert }.Descriptor));
+        }
+
+        private static void AssertRefused(string cachePath, string descriptor)
+        {
+            var index = SpectraWindowIndex.BuildFromCache(cachePath, null, out var reason, descriptor);
+            Assert.IsNull(index);
+            Assert.AreEqual(SpectraCacheRejection.DemuxSettingsChanged, reason);
+        }
+
+        private static void CompareWithBruteForce(int systems, int seed)
+        {
+            var random = new Random(seed);
+            var workspace = new NnlsSolver.Workspace(8);
+            for (int s = 0; s < systems; s++)
+            {
+                int rows = random.Next(2, 10);
+                int columns = random.Next(1, 8);
+                bool mask = random.Next(2) == 0;
+                var a = new double[rows, columns];
+                for (int r = 0; r < rows; r++)
+                {
+                    for (int c = 0; c < columns; c++)
+                        a[r, c] = mask ? random.Next(2) : random.NextDouble();
+                }
+                var b = new double[rows];
+                for (int r = 0; r < rows; r++)
+                    b[r] = random.NextDouble() * 2 - 0.5;
+
+                var solver = new NnlsSolver(a);
+                var x = new double[columns];
+                var path = solver.Solve(b, x, workspace);
+                Assert.AreNotEqual(NnlsPath.iteration_cap, path);
+                Assert.IsTrue(x.All(v => v >= 0));
+                double objective = Objective(a, b, x);
+                double best = BruteForceObjective(a, b);
+                Assert.AreEqual(best, objective, 1e-9 * Math.Max(1, best),
+                    string.Format(@"system {0}: {1} x {2}", s, rows, columns));
+
+                // The normal-equations path with the incremental factor, from x = 0 and warm-started
+                // from a feasible point near the answer, reaches the same optimum.
+                var (ata, atb) = NormalEquations(a, b);
+                var cold = new double[columns];
+                Assert.AreNotEqual(NnlsPath.iteration_cap, NnlsSolver.SolveNormal(ata, atb, columns, cold, workspace));
+                Assert.AreEqual(best, Objective(a, b, cold), 1e-9 * Math.Max(1, best), @"cold, system " + s);
+                var start = x.Select(v => random.Next(3) == 0 ? 0 : v + random.NextDouble() * 0.1).ToArray();
+                var warm = new double[columns];
+                Assert.AreNotEqual(NnlsPath.iteration_cap,
+                    NnlsSolver.SolveNormal(ata, atb, columns, warm, workspace, 0, start));
+                Assert.AreEqual(best, Objective(a, b, warm), 1e-9 * Math.Max(1, best), @"warm, system " + s);
+            }
+        }
+
+        private static (double[] Ata, double[] Atb) NormalEquations(double[,] a, double[] b)
+        {
+            int rows = a.GetLength(0), columns = a.GetLength(1);
+            var ata = new double[columns * columns];
+            var atb = new double[columns];
+            for (int i = 0; i < columns; i++)
+            {
+                for (int r = 0; r < rows; r++)
+                    atb[i] += a[r, i] * b[r];
+                for (int j = 0; j < columns; j++)
+                {
+                    for (int r = 0; r < rows; r++)
+                        ata[i * columns + j] += a[r, i] * a[r, j];
+                }
+            }
+            return (ata, atb);
+        }
+
+        /// <summary>
+        /// The NNLS optimum by exhaustion: the best non-negative unconstrained least-squares
+        /// solution over every column subset, solved by Gaussian elimination with partial
+        /// pivoting. Deliberately shares no code with <see cref="NnlsSolver"/>.
+        /// </summary>
+        private static double BruteForceObjective(double[,] a, double[] b)
+        {
+            int rows = a.GetLength(0), columns = a.GetLength(1);
+            double best = Objective(a, b, new double[columns]);
+            for (int subset = 1; subset < 1 << columns; subset++)
+            {
+                var index = Enumerable.Range(0, columns).Where(c => (subset & (1 << c)) != 0).ToArray();
+                int p = index.Length;
+                var m = new double[p, p + 1];
+                for (int i = 0; i < p; i++)
+                {
+                    for (int j = 0; j < p; j++)
+                    {
+                        for (int r = 0; r < rows; r++)
+                            m[i, j] += a[r, index[i]] * a[r, index[j]];
+                    }
+                    for (int r = 0; r < rows; r++)
+                        m[i, p] += a[r, index[i]] * b[r];
+                }
+                var z = SolveGaussian(m, p);
+                if (z == null || z.Any(v => v < 0))
+                    continue;
+                var x = new double[columns];
+                for (int i = 0; i < p; i++)
+                    x[index[i]] = z[i];
+                best = Math.Min(best, Objective(a, b, x));
+            }
+            return best;
+        }
+
+        private static double[] SolveGaussian(double[,] m, int p)
+        {
+            for (int col = 0; col < p; col++)
+            {
+                int pivot = col;
+                for (int r = col + 1; r < p; r++)
+                {
+                    if (Math.Abs(m[r, col]) > Math.Abs(m[pivot, col]))
+                        pivot = r;
+                }
+                if (Math.Abs(m[pivot, col]) < 1e-9)
+                    return null;
+                for (int j = 0; j <= p; j++)
+                {
+                    double tmp = m[col, j];
+                    m[col, j] = m[pivot, j];
+                    m[pivot, j] = tmp;
+                }
+                for (int r = 0; r < p; r++)
+                {
+                    if (r == col)
+                        continue;
+                    double f = m[r, col] / m[col, col];
+                    for (int j = col; j <= p; j++)
+                        m[r, j] -= f * m[col, j];
+                }
+            }
+            var z = new double[p];
+            for (int i = 0; i < p; i++)
+                z[i] = m[i, p] / m[i, i];
+            return z;
+        }
+
+        private static double Objective(double[,] a, double[] b, double[] x)
+        {
+            double sum = 0;
+            for (int r = 0; r < a.GetLength(0); r++)
+            {
+                double residual = -b[r];
+                for (int c = 0; c < a.GetLength(1); c++)
+                    residual += a[r, c] * x[c];
+                sum += residual * residual;
+            }
+            return sum;
+        }
+
+        /// <summary>
+        /// Mean absolute error at the apex region, as a fraction of peak height, for a Gaussian
+        /// sampled <paramref name="pointsPerFwhm"/> times per FWHM and evaluated at the
+        /// half-cycle offsets, over evenly spaced apex phases.
+        /// </summary>
+        private static double MeanApexError(RtInterpolation method, double pointsPerFwhm)
+        {
+            const double fwhm = 1.0;
+            double sigma = fwhm / 2.3548;
+            double cycle = fwhm / pointsPerFwhm;
+            int perSide = RtInterpolator.SamplesPerSide(method);
+            double total = 0;
+            int count = 0;
+            for (int phase = 0; phase < 20; phase++)
+            {
+                double apex = phase * cycle / 20.0;
+                // The sample interval containing the apex, target at its midpoint.
+                double target = Math.Floor(apex / cycle) * cycle + cycle / 2;
+                var times = new double[2 * perSide];
+                var values = new double[2 * perSide];
+                for (int s = 0; s < 2 * perSide; s++)
+                {
+                    times[s] = target - cycle / 2 + (s - perSide + 1) * cycle;
+                    values[s] = Math.Exp(-0.5 * Math.Pow((times[s] - apex) / sigma, 2));
+                }
+                double truth = Math.Exp(-0.5 * Math.Pow((target - apex) / sigma, 2));
+                total += Math.Abs(RtInterpolator.Interpolate(method, times, values, times.Length, target) - truth);
+                count++;
+            }
+            return total / count;
+        }
+
+        private static List<IsolationWindow> StaggeredCycle(double low, double high, double width, int k)
+        {
+            // Set j is offset by j*width/k and shifted down so that every bin in [low, high]
+            // is covered k times; windows beyond the range edges supply the edge coverage.
+            var cycle = new List<IsolationWindow>();
+            double step = width / k;
+            for (int set = 0; set < k; set++)
+            {
+                for (double lo = low - set * step; lo < high; lo += width)
+                {
+                    if (lo + width <= low)
+                        continue;
+                    cycle.Add(Window(lo, lo + width));
+                }
+            }
+            return cycle;
+        }
+
+        private static List<IsolationWindow> Repeat(List<IsolationWindow> cycle, int times)
+        {
+            var result = new List<IsolationWindow>();
+            for (int i = 0; i < times; i++)
+                result.AddRange(cycle);
+            return result;
+        }
+
+        private static IsolationWindow Window(double low, double high)
+        {
+            return IsolationWindow.Symmetric((low + high) / 2, (high - low) / 2);
+        }
+
+        private static Spectrum MakeSpectrum(uint scan, double rt, IsolationWindow window,
+            double[] mzs, float[] intensities)
+        {
+            return new Spectrum
+            {
+                ScanNumber = scan,
+                RetentionTime = rt,
+                PrecursorMz = window.Center,
+                IsolationWindow = window,
+                Mzs = mzs,
+                Intensities = intensities,
+            };
+        }
+
+        /// <summary>
+        /// The k=2, 8 Th staggered run the exactness tests use: constant elution, exact m/z, and
+        /// the fragment shared by four consecutive bins.
+        /// </summary>
+        private const string ASTRAL_ANALYZER = @"quadrupole asymmetric track lossless time-of-flight analyzer";
+
+        /// <summary>Spectra as an Astral fills them, each for 10 ms.</summary>
+        private static AcquisitionInfo AstralAcquisition(IEnumerable<Spectrum> spectra)
+        {
+            var info = new AcquisitionInfo();
+            foreach (var spectrum in spectra)
+                info.Add(spectrum.ScanNumber, 10, ASTRAL_ANALYZER);
+            return info;
+        }
+
+        private static SyntheticRun BuildStaggeredRun(int cycles)
+        {
+            return BuildRun(new RunOptions
+            {
+                Cycle = StaggeredCycle(RANGE_LOW, RANGE_HIGH, WINDOW_WIDTH, 2),
+                Cycles = cycles,
+            });
+        }
+
+        /// <summary>
+        /// A synthetic run re-multiplexed from narrow-bin truth. Each bin holds one precursor with
+        /// three unique fragments, optionally plus the fragment shared by four consecutive bins.
+        /// With a non-zero elution width every bin elutes as a Gaussian, with apexes offset from
+        /// bin to bin; with jitter every acquired peak's m/z is perturbed, as real centroids are.
+        /// </summary>
+        private static SyntheticRun BuildRun(RunOptions options)
+        {
+            var cycle = options.Cycle;
+            var bins = DemuxSchemeDetector.Detect(cycle).Bins;
+            var truth = new Dictionary<double, float>[bins.Count];
+            for (int j = 0; j < bins.Count; j++)
+            {
+                truth[j] = new Dictionary<double, float>();
+                foreach (double offset in new[] { 0.0, 5.13, 11.71 })
+                    truth[j][Math.Round(300 + 37.1 * j + offset, 4)] = 1000f * (j + 1) + (float)(offset * 10);
+            }
+            if (options.SharedFragment)
+            {
+                for (int i = 0; i < SHARED_FRAGMENT_BINS.Length; i++)
+                    truth[SHARED_FRAGMENT_BINS[i]][SHARED_FRAGMENT_MZ] = SHARED_FRAGMENT_INTENSITIES[i];
+            }
+
+            double cycleMinutes = cycle.Count * SCAN_MINUTES;
+            double middle = options.Cycles * cycleMinutes / 2;
+            double sigma = options.ElutionSigmaCycles * cycleMinutes;
+            Func<int, double, double> profile = (j, t) =>
+            {
+                if (sigma <= 0)
+                    return 1.0;
+                double apex = middle + ((j % 3) - 1) * 1.5 * cycleMinutes;
+                double value = Math.Exp(-0.5 * Math.Pow((t - apex) / sigma, 2));
+                return value < 1e-4 ? 0 : value;
+            };
+
+            var random = new Random(options.Seed);
+            var spectra = new List<Spectrum>();
+            uint scan = 0;
+            for (int c = 0; c < options.Cycles; c++)
+            {
+                foreach (var window in cycle)
+                {
+                    double t = scan * SCAN_MINUTES;
+                    var peaks = new SortedDictionary<double, double>();
+                    for (int j = 0; j < bins.Count; j++)
+                    {
+                        if (bins[j].Center <= window.LowerBound || bins[j].Center >= window.UpperBound)
+                            continue;
+                        double level = profile(j, t);
+                        foreach (var peak in truth[j])
+                        {
+                            peaks.TryGetValue(peak.Key, out double existing);
+                            peaks[peak.Key] = existing + peak.Value * level;
+                        }
+                    }
+                    var mzs = new List<double>();
+                    var intensities = new List<float>();
+                    foreach (var peak in peaks)
+                    {
+                        if (peak.Value <= 0)
+                            continue;
+                        double jitter = (2 * random.NextDouble() - 1) * options.JitterPpm * 1e-6;
+                        mzs.Add(peak.Key * (1 + jitter));
+                        intensities.Add((float)peak.Value);
+                    }
+                    spectra.Add(MakeSpectrum(scan, t, window, mzs.ToArray(), intensities.ToArray()));
+                    scan++;
+                }
+            }
+            return new SyntheticRun(spectra, bins, truth, profile);
+        }
+
+        /// <summary>
+        /// A k-fold staggered run, every bin eluting as a Gaussian <paramref name="fwhmPasses"/> passes wide (a pass
+        /// being one set of windows tiling the range), and that FWHM in seconds.
+        /// </summary>
+        private static SyntheticRun BuildElutingRun(int k, double fwhmPasses, out double fwhmSeconds)
+        {
+            double sigmaCycles = fwhmPasses / 2.3548 / k;
+            var cycle = StaggeredCycle(RANGE_LOW, RANGE_HIGH, WINDOW_WIDTH, k);
+            fwhmSeconds = 2.3548 * sigmaCycles * cycle.Count * SCAN_MINUTES * 60;
+            return BuildRun(new RunOptions
+            {
+                Cycle = cycle,
+                Cycles = Math.Max(30, (int)Math.Ceiling(12 * sigmaCycles + 12)),
+                ElutionSigmaCycles = sigmaCycles,
+            });
+        }
+
+        /// <summary>
+        /// Recovery of each bin's truth at every pass: mean and max error at the apex (truth at least half its apex)
+        /// of fragments unique to one bin, as a fraction of their apex; the same for the fragment several bins share;
+        /// and the leak, the fraction of the output in bins without such a fragment.
+        /// </summary>
+        private static (double UniqueApex, double UniqueApexMax, double UniqueAll, double SharedApex, double SharedAll, double Leak)
+            PassRateErrors(DemuxResult result, SyntheticRun run)
+        {
+            double uApex = 0, uApexMax = 0, uAll = 0, sApex = 0, sAll = 0, leak = 0, total = 0;
+            int nuApex = 0, nuAll = 0, nsApex = 0, nsAll = 0;
+            foreach (var spectrum in result.Spectra)
+            {
+                int bin = BinOf(run.Bins, spectrum.IsolationWindow.Center);
+                double level = run.Profile(bin, spectrum.RetentionTime);
+                var observed = new Dictionary<double, double>();
+                for (int p = 0; p < spectrum.Mzs.Length; p++)
+                {
+                    total += spectrum.Intensities[p];
+                    double nominal = run.Truth[bin].Keys.FirstOrDefault(mz => Math.Abs(mz - spectrum.Mzs[p]) <= mz * 10e-6);
+                    if (nominal == 0)
+                        leak += spectrum.Intensities[p];
+                    else
+                        observed[nominal] = spectrum.Intensities[p];
+                }
+                foreach (var peak in run.Truth[bin])
+                {
+                    observed.TryGetValue(peak.Key, out double value);
+                    double error = Math.Abs(value - peak.Value * level) / peak.Value;
+                    bool shared = peak.Key == SHARED_FRAGMENT_MZ;
+                    if (shared)
+                    {
+                        sAll += error;
+                        nsAll++;
+                    }
+                    else
+                    {
+                        uAll += error;
+                        nuAll++;
+                    }
+                    if (level < 0.5)
+                        continue;
+                    if (shared)
+                    {
+                        sApex += error;
+                        nsApex++;
+                    }
+                    else
+                    {
+                        uApex += error;
+                        uApexMax = Math.Max(uApexMax, error);
+                        nuApex++;
+                    }
+                }
+            }
+            return (uApex / Math.Max(1, nuApex), uApexMax, uAll / Math.Max(1, nuAll), sApex / Math.Max(1, nsApex),
+                sAll / Math.Max(1, nsAll), leak / Math.Max(total, 1e-30));
+        }
+
+        private static double MaxRelativeError(DemuxResult result, SyntheticRun run,
+            out int missing, out int spurious)
+        {
+            var errors = MeasureErrors(result, run);
+            missing = errors.Missing;
+            spurious = errors.Spurious;
+            return errors.Max;
+        }
+
+        /// <summary>
+        /// Error of every output peak against its bin's truth at the parent's time, as a fraction
+        /// of that fragment's apex intensity. Output peaks are matched to truth fragments within
+        /// 10 ppm, since they carry the parent's (possibly jittered) m/z. Also counts truth peaks
+        /// above 0.1% of apex that an output spectrum lacks, and output peaks with no truth.
+        /// </summary>
+        private static RunErrors MeasureErrors(DemuxResult result, SyntheticRun run)
+        {
+            var errors = new List<double>();
+            int missing = 0, spurious = 0;
+            double spuriousIntensity = 0, totalIntensity = 0;
+            foreach (var spectrum in result.Spectra)
+            {
+                int bin = BinOf(run.Bins, spectrum.IsolationWindow.Center);
+                double level = run.Profile(bin, spectrum.RetentionTime);
+                var expected = run.Truth[bin];
+                var seen = new HashSet<double>();
+                for (int p = 0; p < spectrum.Mzs.Length; p++)
+                {
+                    totalIntensity += spectrum.Intensities[p];
+                    double nominal = expected.Keys.FirstOrDefault(mz =>
+                        Math.Abs(mz - spectrum.Mzs[p]) <= mz * 10e-6);
+                    if (nominal == 0)
+                    {
+                        spurious++;
+                        spuriousIntensity += spectrum.Intensities[p];
+                        continue;
+                    }
+                    seen.Add(nominal);
+                    double apex = expected[nominal];
+                    errors.Add(Math.Abs(spectrum.Intensities[p] - apex * level) / apex);
+                }
+                foreach (var peak in expected)
+                {
+                    if (!seen.Contains(peak.Key) && level >= 1e-3)
+                    {
+                        missing++;
+                        errors.Add(1.0);
+                    }
+                }
+            }
+            errors.Sort();
+            return new RunErrors
+            {
+                Max = errors.Count > 0 ? errors[errors.Count - 1] : 0,
+                Median = errors.Count > 0 ? errors[errors.Count / 2] : 0,
+                Missing = missing,
+                Spurious = spurious,
+                SpuriousFraction = totalIntensity > 0 ? spuriousIntensity / totalIntensity : 0,
+            };
+        }
+
+        /// <summary>
+        /// Constant elution: both output modes recover the truth exactly, with no peak missing or
+        /// invented, and each parent yields <paramref name="binsPerSpectrum"/> spectra (0 skips
+        /// that count, for layouts where it varies by window).
+        /// </summary>
+        private static void AssertExact(string name, SyntheticRun run, int binsPerSpectrum)
+        {
+            foreach (var outputMode in new[] { DemuxOutputMode.apportioned, DemuxOutputMode.solution })
+            {
+                string label = string.Format(@"{0}, {1}", name, outputMode);
+                var result = Demultiplexer.Demultiplex(run.Spectra, new DemuxParams { Engine = DemuxEngine.msconvert, OutputMode = outputMode });
+                if (binsPerSpectrum > 0)
+                    Assert.AreEqual(binsPerSpectrum * run.Spectra.Count, result.Spectra.Count, label);
+                var errors = MeasureErrors(result, run);
+                Assert.IsTrue(errors.Max < 1e-5, string.Format(@"{0}: max relative error {1}", label, errors.Max));
+                Assert.AreEqual(0, errors.Missing, label + @": missing");
+                Assert.AreEqual(0, errors.Spurious, label + @": spurious");
+            }
+        }
+
+        private static PipelineContext WiringContext(DemuxMode mode)
+        {
+            var config = new OspreyConfig { DemuxMode = mode, NThreads = 2 };
+            return new PipelineContext(config, new OspreyTask[0], null, null, null);
+        }
+
+        /// <summary>
+        /// Per-bin summary of a demultiplexing (spectra, peaks, summed intensity) against the
+        /// committed golden. With the rebless variable set, rewrites the golden and fails, so a
+        /// changed output is never accepted silently.
+        /// </summary>
+        private static void CheckGolden(string path, DemuxResult result)
+        {
+            var ic = CultureInfo.InvariantCulture;
+            const string tab = "\t";
+            var lines = new List<string> { string.Join(tab, @"bin_lower", @"bin_upper", @"spectra", @"peaks", @"intensity") };
+            foreach (var group in result.Spectra.GroupBy(s => s.IsolationWindow.LowerBound).OrderBy(g => g.Key))
+            {
+                var first = group.First().IsolationWindow;
+                lines.Add(string.Join(tab,
+                    first.LowerBound.ToString(@"F4", ic), first.UpperBound.ToString(@"F4", ic),
+                    group.Count().ToString(ic), group.Sum(s => s.Mzs.Length).ToString(ic),
+                    group.Sum(s => s.Intensities.Sum(v => (double)v)).ToString(@"R", ic)));
+            }
+            if (Environment.GetEnvironmentVariable(REBLESS_VARIABLE) == @"1")
+            {
+                File.WriteAllLines(path, lines);
+                Assert.Fail(@"Reblessed {0} ({1} was set); review the diff and commit it.",
+                    path, REBLESS_VARIABLE);
+            }
+            Assert.IsTrue(File.Exists(path), path);
+            var expected = File.ReadAllLines(path).Where(l => l.Length > 0).ToArray();
+            Assert.AreEqual(expected.Length, lines.Count, @"bin count");
+            for (int i = 1; i < lines.Count; i++)
+            {
+                var want = expected[i].Split('\t');
+                var have = lines[i].Split('\t');
+                for (int f = 0; f < 4; f++)
+                    Assert.AreEqual(want[f], have[f], string.Format(@"bin {0} field {1}", i, f));
+                double wantIntensity = double.Parse(want[4], ic);
+                double haveIntensity = double.Parse(have[4], ic);
+                Assert.AreEqual(wantIntensity, haveIntensity, Math.Abs(wantIntensity) * 1e-9,
+                    string.Format(@"bin {0} intensity", i));
+            }
+        }
+
+        /// <summary>
+        /// Pairs two demultiplexings by parent retention time and nearest bin center, and compares
+        /// each pair's peaks (matched within 1 ppm) by cosine similarity over their union.
+        /// </summary>
+        private static Agreement MeasureAgreement(IReadOnlyList<Spectrum> reference, IReadOnlyList<Spectrum> test)
+        {
+            var byTime = test.GroupBy(s => Math.Round(s.RetentionTime, 6)).ToDictionary(g => g.Key, g => g.ToList());
+            var cosines = new List<double>();
+            double referenceTotal = 0, testTotal = 0;
+            foreach (var spectrum in reference)
+            {
+                if (!byTime.TryGetValue(Math.Round(spectrum.RetentionTime, 6), out var candidates))
+                    continue;
+                var partner = candidates.OrderBy(s => Math.Abs(s.IsolationWindow.Center - spectrum.IsolationWindow.Center)).First();
+                if (Math.Abs(partner.IsolationWindow.Center - spectrum.IsolationWindow.Center) > 0.5)
+                    continue;
+                cosines.Add(Cosine(spectrum, partner));
+                referenceTotal += spectrum.Intensities.Sum(v => (double)v);
+                testTotal += partner.Intensities.Sum(v => (double)v);
+            }
+            cosines.Sort();
+            return new Agreement
+            {
+                Paired = cosines.Count,
+                MedianCosine = cosines.Count > 0 ? cosines[cosines.Count / 2] : 0,
+                FractionAbove95 = cosines.Count > 0 ? cosines.Count(c => c >= 0.95) / (double)cosines.Count : 0,
+                IntensityRatio = referenceTotal > 0 ? testTotal / referenceTotal : 0,
+            };
+        }
+
+        private static double Cosine(Spectrum a, Spectrum b)
+        {
+            double dot = 0, aa = 0, bb = 0;
+            int j = 0;
+            for (int i = 0; i < a.Mzs.Length; i++)
+            {
+                double x = a.Intensities[i];
+                aa += x * x;
+                while (j < b.Mzs.Length && b.Mzs[j] < a.Mzs[i] * (1 - 1e-6))
+                    j++;
+                if (j < b.Mzs.Length && Math.Abs(b.Mzs[j] - a.Mzs[i]) <= a.Mzs[i] * 1e-6)
+                    dot += x * b.Intensities[j];
+            }
+            foreach (float y in b.Intensities)
+                bb += (double)y * y;
+            if (aa == 0 && bb == 0)
+                return 1;
+            return aa > 0 && bb > 0 ? dot / Math.Sqrt(aa * bb) : 0;
+        }
+
+        private static void AssertStructure(DemuxResult result, SyntheticRun run)
+        {
+            // Each parent yields its two bins, in bin order, carrying its scan number and time.
+            for (int i = 0; i < run.Spectra.Count; i++)
+            {
+                var parent = run.Spectra[i];
+                var first = result.Spectra[2 * i];
+                var second = result.Spectra[2 * i + 1];
+                Assert.AreEqual(parent.ScanNumber, first.ScanNumber);
+                Assert.AreEqual(parent.ScanNumber, second.ScanNumber);
+                Assert.AreEqual(parent.RetentionTime, first.RetentionTime);
+                Assert.AreEqual(parent.IsolationWindow.LowerBound, first.IsolationWindow.LowerBound, 1e-9);
+                Assert.AreEqual(first.IsolationWindow.UpperBound, second.IsolationWindow.LowerBound, 1e-9);
+                Assert.AreEqual(parent.IsolationWindow.UpperBound, second.IsolationWindow.UpperBound, 1e-9);
+                Assert.AreEqual(BIN_WIDTH, first.IsolationWindow.Width, 1e-9);
+            }
+        }
+
+        private static void AssertIdentical(DemuxResult expected, DemuxResult actual)
+        {
+            Assert.AreEqual(expected.Spectra.Count, actual.Spectra.Count);
+            for (int i = 0; i < expected.Spectra.Count; i++)
+            {
+                CollectionAssert.AreEqual(expected.Spectra[i].Mzs, actual.Spectra[i].Mzs);
+                CollectionAssert.AreEqual(expected.Spectra[i].Intensities, actual.Spectra[i].Intensities);
+            }
+        }
+
+        private static int BinOf(IReadOnlyList<DemuxBin> bins, double mz)
+        {
+            for (int j = 0; j < bins.Count; j++)
+            {
+                if (bins[j].LowerBound < mz && mz < bins[j].UpperBound)
+                    return j;
+            }
+            throw new AssertFailedException(string.Format(@"No bin contains {0}", mz));
+        }
+
+        private static long UlpDistance(double a, double b)
+        {
+            return Math.Abs(BitConverter.DoubleToInt64Bits(a) - BitConverter.DoubleToInt64Bits(b));
+        }
+
+        private static void AssertArrayNear(double[] expected, double[] actual, double tolerance)
+        {
+            Assert.AreEqual(expected.Length, actual.Length);
+            for (int i = 0; i < expected.Length; i++)
+                Assert.AreEqual(expected[i], actual[i], tolerance);
+        }
+
+        private sealed class RunOptions
+        {
+            public List<IsolationWindow> Cycle { get; set; }
+            public int Cycles { get; set; } = 20;
+            public bool SharedFragment { get; set; } = true;
+
+            /// <summary>Gaussian elution width in cycles; 0 means constant elution.</summary>
+            public double ElutionSigmaCycles { get; set; }
+
+            /// <summary>Uniform per-peak m/z jitter, +/- this many ppm.</summary>
+            public double JitterPpm { get; set; }
+
+            public int Seed { get; set; } = 7;
+        }
+
+        private sealed class Agreement
+        {
+            public int Paired { get; set; }
+            public double MedianCosine { get; set; }
+            public double FractionAbove95 { get; set; }
+            public double IntensityRatio { get; set; }
+        }
+
+        private sealed class RunErrors
+        {
+            public double Max { get; set; }
+            public double Median { get; set; }
+            public int Missing { get; set; }
+            public int Spurious { get; set; }
+
+            /// <summary>Intensity in peaks placed in a bin that has no such fragment, of all output.</summary>
+            public double SpuriousFraction { get; set; }
+        }
+
+        private sealed class SyntheticRun
+        {
+            public SyntheticRun(List<Spectrum> spectra, IReadOnlyList<DemuxBin> bins,
+                Dictionary<double, float>[] truth, Func<int, double, double> profile)
+            {
+                Spectra = spectra;
+                Bins = bins;
+                Truth = truth;
+                Profile = profile;
+            }
+
+            public List<Spectrum> Spectra { get; }
+            public IReadOnlyList<DemuxBin> Bins { get; }
+
+            /// <summary>Per bin: fragment m/z -> intensity at the elution apex.</summary>
+            public Dictionary<double, float>[] Truth { get; }
+
+            /// <summary>Elution level of a bin at a time, 1 at its apex.</summary>
+            public Func<int, double, double> Profile { get; }
         }
     }
 }

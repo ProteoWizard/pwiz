@@ -928,7 +928,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static long EstimateInputBytes(IEnumerable<string> inputFiles)
         {
-            return FileParallelismResolver.EstimatePerFileBytes(inputFiles, DemuxCache.GetLargestCachePath);
+            return FileParallelismResolver.EstimatePerFileBytes(inputFiles, DemuxCacheBuilder.GetLargestCachePath);
         }
 
         /// <summary>
