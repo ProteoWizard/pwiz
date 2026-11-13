@@ -22,7 +22,7 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Database.NHibernate;
+using pwiz.Common.Database;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
@@ -81,7 +81,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var entries = new List<Tuple<string, PeakBounds>>();
             using (var connection = new SQLiteConnection(
-                SessionFactoryFactory.SQLiteConnectionStringBuilderFromFilePath(blibFile).ToString())
+                SqliteOperations.ConnectionStringBuilderFromFilePath(blibFile).ToString())
                 .OpenAndReturn())
             {
                 using (var cmd = connection.CreateCommand())

@@ -68,4 +68,64 @@
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
   </ItemGroup>
 
+  <!-- slicevfs.dll, the native SQLite extension SqliteSliceVfs loads to open a database stored
+       uncompressed inside a .zip in place. It has to be native: the System.Data.SQLite interop
+       does not export sqlite3_vfs_register, so a VFS cannot be registered from managed code.
+       Compiled here by Visual Studio MSBuild (the .NET SDK's MSBuild cannot import the C++
+       targets), as Mobilion.csproj does MobilionShim. A host that cannot compile it (not Windows)
+       takes it from $(PwizPrebuiltNativeShimDir), the artifact of tcbuild-native-shims.bat.
+       Content flows to every project that references this one, so it lands next to
+       pwiz.Common.dll, where SqliteSliceVfs looks for it. -->
+  <PropertyGroup>
+    <SliceVfsDir>$(MSBuildThisFileDirectory)SliceVfs</SliceVfsDir>
+    <SliceVfsPlatform>x64</SliceVfsPlatform>
+    <SliceVfsPlatform Condition="'$(Platform)' == 'x86'">Win32</SliceVfsPlatform>
+    <SliceVfsDll>$(SliceVfsDir)\bin\$(SliceVfsPlatform)\$(Configuration)\slicevfs.dll</SliceVfsDll>
+    <_SliceVfsPrebuilt Condition="'$(_PwizPrebuiltNativeShimDir)' != ''">true</_SliceVfsPrebuilt>
+    <_SliceVfsCompiled Condition="'$(_SliceVfsPrebuilt)' != 'true' AND '$(OS)' == 'Windows_NT'">true</_SliceVfsCompiled>
+  </PropertyGroup>
+
+  <Target Name="LocateSliceVfsMSBuild"
+          Condition="'$(_SliceVfsCompiled)' == 'true' AND '$(VsMSBuildExe)' == ''">
+    <!-- vswhere.exe is always under Program Files (x86); see Mobilion.csproj -->
+    <Exec Command="&quot;C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe&quot; -latest -prerelease -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find MSBuild\**\Bin\MSBuild.exe"
+          ConsoleToMSBuild="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="VsMSBuildExe" />
+    </Exec>
+    <Error Condition="'$(VsMSBuildExe)' == ''"
+           Text="Could not locate Visual Studio MSBuild.exe via vswhere; needed to build slicevfs.vcxproj. Install Visual Studio 2022+ with the Desktop C++ workload." />
+  </Target>
+
+  <!-- -nodeReuse:false: a VS MSBuild node left running can mis-evaluate a later .NET SDK build
+       (see tcbuild-native-shims.bat). -->
+  <Target Name="BuildSliceVfs"
+          Condition="'$(_SliceVfsCompiled)' == 'true'"
+          DependsOnTargets="LocateSliceVfsMSBuild"
+          BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
+          Inputs="$(SliceVfsDir)\slicevfs.c;$(SliceVfsDir)\sqlite3.h;$(SliceVfsDir)\sqlite3ext.h;$(SliceVfsDir)\slicevfs.vcxproj"
+          Outputs="$(SliceVfsDll)">
+    <Exec Command="&quot;$(VsMSBuildExe)&quot; &quot;$(SliceVfsDir)\slicevfs.vcxproj&quot; -p:Configuration=$(Configuration) -p:Platform=$(SliceVfsPlatform) -nologo -v:minimal -nodeReuse:false" />
+  </Target>
+
+  <Target Name="WarnSliceVfsMissing"
+          Condition="'$(_SliceVfsPrebuilt)' != 'true' AND '$(_SliceVfsCompiled)' != 'true'"
+          BeforeTargets="Build">
+    <Warning Text="slicevfs.dll cannot be compiled on $(OS) and no -p:PwizPrebuiltNativeShimDir was given, so the build output cannot read a .blib or .protdb in place from a .sky.zip." />
+  </Target>
+
+  <ItemGroup Condition="'$(_SliceVfsCompiled)' == 'true'">
+    <Content Include="$(SliceVfsDll)">
+      <Link>slicevfs.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+  <ItemGroup Condition="'$(_SliceVfsPrebuilt)' == 'true'">
+    <Content Include="$(_PwizPrebuiltNativeShimDir)slicevfs.dll">
+      <Link>slicevfs.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
 </Project>

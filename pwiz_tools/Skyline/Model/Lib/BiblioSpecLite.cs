@@ -31,6 +31,8 @@ using pwiz.BiblioSpec;
 using pwiz.BiblioSpec.IO;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.Database;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Crosslinking;
@@ -134,7 +136,9 @@ namespace pwiz.Skyline.Model.Lib
 
         public static BiblioSpecLiteLibrary Load(BiblioSpecLiteSpec spec, ILoadMonitor loader)
         {
-            if (File.Exists(spec.FilePath) && new FileInfo(spec.FilePath).Length > 0)
+            // spec.FilePath may be a .blib stored inside an in-place .sky.zip, so go through FilePath.
+            var filePath = new FilePath(spec.FilePath);
+            if (filePath.Exists() && filePath.GetLength() > 0)
             {
                 var library = new BiblioSpecLiteLibrary(spec);
                 if (library.Load(loader))
@@ -338,7 +342,8 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         public static bool IsRedundantLibrary(string filepath)
         {
-            using var reader = new BlibReader(filepath);
+            using var connection = SqliteSliceVfs.OpenConnection(filepath);
+            using var reader = new BlibReader(connection);
             return !reader.HasTable(BlibReader.TABLE_RETENTION_TIMES);
         }
 
@@ -470,7 +475,8 @@ namespace pwiz.Skyline.Model.Lib
             ParallelEx.For(0, threadCount, threadIndex =>
             {
                 // Each thread scans its own range of ids on a reader of its own
-                using var reader = new BlibReader(FilePath);
+                using var connection = SqliteSliceVfs.OpenConnection(FilePath);
+                using var reader = new BlibReader(connection);
                 foreach (var row in reader.ReadSpectra(false, threadCount, threadIndex))
                 {
                     lock (lockObject)
@@ -1595,7 +1601,8 @@ namespace pwiz.Skyline.Model.Lib
                 ParallelEx.For(0, threadCount, threadIndex =>
                 {
                     // Each thread scans its own range of spectrum ids on a reader of its own
-                    using var reader = new BlibReader(_dbPath);
+                    using var connection = SqliteSliceVfs.OpenConnection(_dbPath);
+                    using var reader = new BlibReader(connection);
                     ReadSubset(reader, threadCount, threadIndex);
                 }, maxThreads: threadCount);
                 status = _progressStatus;

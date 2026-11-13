@@ -29,6 +29,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Serialization;
@@ -279,13 +280,14 @@ namespace pwiz.SkylineTestUtil
 
         public static void FileExists(string filePath, string message = null)
         {
-            if (!File.Exists(filePath))
+            // FilePath also finds files stored inside a .zip which is a component of the path
+            if (!new FilePath(filePath).Exists())
                 Fail(TextUtil.LineSeparate(string.Format("Missing file {0}", filePath), message ?? string.Empty));
         }
 
         public static void FileNotExists(string filePath, string message = null)
         {
-            if (File.Exists(filePath))
+            if (new FilePath(filePath).Exists())
                 Fail(TextUtil.LineSeparate(string.Format("Unexpected file exists {0}", filePath), message ?? string.Empty));
         }
 

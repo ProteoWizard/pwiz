@@ -1464,5 +1464,23 @@ namespace pwiz.Common.Properties {
                 return ResourceManager.GetString("ZScore_ZScore_Z_Score", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The entry {0} was not found in the zip file {1}..
+        /// </summary>
+        public static string FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_ {
+            get {
+                return ResourceManager.GetString("FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to load {0}..
+        /// </summary>
+        public static string SqliteSliceVfs_EnsureVfsRegistered_Unable_to_load__0_ {
+            get {
+                return ResourceManager.GetString("SqliteSliceVfs_EnsureVfsRegistered_Unable_to_load__0_", resourceCulture);
+            }
+        }
     }
 }
