@@ -13,7 +13,7 @@ feature set is under study as the eventual default (issue #5018).
 | `OSPREY_FDR_MODEL` | `gbdt` (or `svm`) | `svm` | First-pass classifier ([07](07-fdr-control.md)) |
 | `OSPREY_GBT_OOF` | `1` (gbdt) | off | Out-of-fold tree scoring |
 | `OSPREY_PASS2_QVALUE` | `transfer` | protein-compact | Second pass carries the pass-1 experiment q and reconciles only reported precursors ([12](12-second-pass-fdr.md)) |
-| `OSPREY_FEATURE_MASK` | `none` | 20 features under evaluation masked | Every one of the 109 PIN features reaches the classifier (and is recorded in the scores parquet) |
+| `OSPREY_FEATURE_MASK` | `none` | unset: `--feature-set core|efficient|default|all` decides (`default`, 70 features, for HRAM; `core` at unit resolution) | Every one of the 109 PIN features reaches the classifier (and is recorded in the scores parquet); `--feature-set all` does the same without the research switch |
 | `OSPREY_XIC_FRAGMENTS` | `12` | `6` | Fragment XICs per candidate ([03](03-spectral-scoring.md)) |
 | `OSPREY_CORR_FRAGMENT_TOLERANCE` | `7` (ppm) | the calibrated tolerance | A second, wider XIC set for the correlation features |
 | `OSPREY_REF_XIC` | `corr` | most intense fragment | Correlation-chosen reference XIC |

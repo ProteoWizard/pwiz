@@ -541,7 +541,7 @@ namespace pwiz.Osprey
                     resolutionDetection = ResolutionDetector.Detect(config);
                     config.ApplyResolutionMode(resolutionDetection?.Mode ?? ResolutionMode.HRAM);
                 }
-                PinFeatureMask.ApplyResolutionMode(config.ResolutionMode);
+                PinFeatureMask.ApplySearchSettings(config.ResolutionMode, config.FeatureSet);
 
                 // Log startup info
                 LogInfo(string.Format(OspreyResources.Program_Run_Osprey_v_0_, OspreyVersion.DisplayVersion));
@@ -734,6 +734,17 @@ namespace pwiz.Osprey
                         @"OSPREY_FEATURE_MASK", unknownMaskedFeature, OspreyEnvironment.FEATURE_MASK_NONE));
                     return EXIT_CODE_FAILURE_TO_START;
                 }
+                // The efficient and default feature sets are hand-kept lists of names, resolved when the FDR
+                // stage first loads features: a stale name would otherwise surface only after Stages 1-4.
+                string invalidNamedSet = PinFeatureMask.UnknownNamedSetFeature();
+                if (invalidNamedSet != null)
+                {
+                    LogError(invalidNamedSet);
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
+                // Always printed: the default set depends on the resolution, and a warm resume skips
+                // the FDR stage that would show which features trained.
+                LogInfo(PinFeatureMask.DescribeFeatures());
                 // A masked feature is absent from the classifier's vectors, so a mask with nothing
                 // left would hand it vectors of no features at all.
                 if (PinFeatureMask.FdrFeatureIndices.Length == 0)
