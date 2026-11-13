@@ -15,8 +15,9 @@ REM #   MascotShim.dll   - links msparser.lib; msparser returns std::string and
 REM #                      std::vector BY VALUE across the DLL boundary.
 REM #   MobilionShim.dll - MBI_SDK.dll exports `class MBI_DLLCPP MBIFile` whose
 REM #                      methods return std::shared_ptr<std::vector<double>>.
-REM #   Hardklor.exe     - no vendor SDK; the only genuinely cross-compilable
-REM #                      one, built here so all three ship together.
+REM #   Hardklor.exe     - no vendor SDK; genuinely cross-compilable, built
+REM #                      here so all of them ship together.
+REM #   slicevfs.dll     - plain C SQLite extension; same reason as Hardklor.
 REM #
 REM # The first two cross the MSVC C++ ABI, which rules out mingw-w64: it links
 REM # cleanly (COFF import libs are readable by GNU ld) and then corrupts memory,
@@ -78,6 +79,12 @@ echo ##teamcity[progressMessage 'Hardklor.exe ^(Hardklor.vcxproj^)']
 "%VS_MSBUILD%" "%ROOT%\pwiz_tools\Skyline\Executables\Hardklor\Hardklor.vcxproj" -p:Configuration=%CONFIG% -p:Platform=x64 -m -nologo -v:minimal -nodeReuse:false
 if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=MSBuild Hardklor.vcxproj failed" & goto error)
 
+REM # slicevfs.dll is plain C with no vendor SDK, so like Hardklor it is here only so a
+REM # host that cannot compile it gets the whole set from one artifact.
+echo ##teamcity[progressMessage 'slicevfs.dll ^(slicevfs.vcxproj^)']
+dotnet build "%ROOT%\pwiz_tools\Shared\Common\Common.csproj" -t:BuildSliceVfs -p:Configuration=%CONFIG% -p:Platform=x64 -nologo -v:minimal
+if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=BuildSliceVfs failed" & goto error)
+
 echo ##teamcity[progressMessage 'staging artifacts/native-shims']
 call :stage "%ROOT%\pwiz_tools\BiblioSpec\native\MascotShim\build\%CONFIG%\MascotShim.dll"
 if %EXIT% NEQ 0 goto error
@@ -99,6 +106,8 @@ if %EXIT% NEQ 0 goto error
 call :stage "%ROOT%\vendor-assemblies\Mobilion\MBI_SDK.dll"
 if %EXIT% NEQ 0 goto error
 call :stage "%ROOT%\pwiz_tools\Skyline\Executables\Hardklor\bin\x64\%CONFIG%\Hardklor.exe"
+if %EXIT% NEQ 0 goto error
+call :stage "%ROOT%\pwiz_tools\Shared\Common\SliceVfs\bin\x64\%CONFIG%\slicevfs.dll"
 if %EXIT% NEQ 0 goto error
 
 echo Staged native shims in %STAGE%:

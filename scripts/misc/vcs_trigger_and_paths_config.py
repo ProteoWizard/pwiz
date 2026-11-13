@@ -183,6 +183,7 @@ matchPaths = [
     ("pwiz_tools/Skyline/.*WatersConnect.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Skyline/.*DataSource.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Skyline/Executables/Hardklor/.*", merge(targets['NativeShims'], targets['Skyline'])),
+    ("pwiz_tools/Shared/Common/SliceVfs/.*", merge(targets['NativeShims'], targets['Skyline'], targets['CoreNet'], targets['Container'])),
     ("pwiz_tools/Skyline/.*", merge(targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Shared/CommonMsData/RemoteApi/.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     # Osprey and CarafeSharp import Shared/Lib/Parquet/ParquetNet.targets and its patched Parquet.dll.

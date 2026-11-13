@@ -20,9 +20,9 @@ using System;
 using System.Data.SQLite;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using pwiz.Common.Database.FileSystems;
 using pwiz.Common.Properties;
-using pwiz.Common.SystemUtil.PInvoke;
 
 namespace pwiz.Common.Database
 {
@@ -93,7 +93,7 @@ namespace pwiz.Common.Database
                     return;
                 var dllPath = GetExtensionDllPath();
                 // Pin the DLL so it is never unloaded (the registered VFS struct/functions live in it).
-                if (Kernel32.LoadLibrary(dllPath) == IntPtr.Zero)
+                if (!NativeLibrary.TryLoad(dllPath, out _))
                     throw new IOException(string.Format(
                         Resources.SqliteSliceVfs_EnsureVfsRegistered_Unable_to_load__0_, dllPath));
                 using (var connection = new SQLiteConnection(@"Data Source=:memory:;Version=3;"))

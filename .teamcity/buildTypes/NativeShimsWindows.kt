@@ -25,7 +25,7 @@ object NativeShimsWindows : BuildType({
     // relative id so the value the trigger map has to match is greppable from here.
     id = AbsoluteId("ProteoWizard_VersionedConfigs_NativeShimsWindows")
     name = "Native shims (Windows x86_64)"
-    description = "MascotShim.dll, MobilionShim.dll and Hardklor.exe, prebuilt for consumers that cannot compile them (see scripts/misc/tcbuild-native-shims.bat)"
+    description = "MascotShim.dll, MobilionShim.dll, Hardklor.exe and slicevfs.dll, prebuilt for consumers that cannot compile them (see scripts/misc/tcbuild-native-shims.bat)"
 
     // Consumers take an artifact dependency on this and pass the unpacked
     // directory as -p:PwizPrebuiltNativeShimDir=<dir>. The vendor companions
