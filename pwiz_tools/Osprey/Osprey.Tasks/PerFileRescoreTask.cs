@@ -1166,10 +1166,8 @@ namespace pwiz.Osprey.Tasks
             inputs.HydrateRun = BuildPerRunHydrate(perFileParquetPaths, config, ctx);
             var planStamp = OspreyVersion.Stamp(Name, inputs.TaskValidityKey);
             var sequencePool = ctx.Get<SequencePool>().Value;
-            inputs.PlanRun = (run, spectra) => RescoreHydration.ApplyPlan(run,
-                PlanAndWriteRun(runPlanner, run.FileName, run.InputPath, run.Survivors, planStamp,
-                    rows => ComputeCwtCandidates(rows, spectra, inputs, ctx)),
-                sequencePool);
+            inputs.PlanRun = run => PlanOneRun(runPlanner, run, planStamp, sequencePool);
+            inputs.SavePlan = (run, actions) => SaveRunPlan(runPlanner, run, actions, planStamp);
 
             // Clean PERSISTENT floor entering reconciliation (post-GC, before the
             // rescore loop repopulates the heavy per-entry arrays) -- fires early,
@@ -1436,15 +1434,22 @@ namespace pwiz.Osprey.Tasks
             public Func<string, RunRescoreInputs> HydrateRun;
 
             /// <summary>
-            /// Plan ONE hydrated run from its survivors and the analysis-wide consensus, write its
-            /// <c>.reconciliation.json</c>, and apply the plan to it. The CWT candidates of the
-            /// survivors the plan would move are computed from the run's spectra, which the run's
-            /// rescore then reuses. Called from the file lanes OUTSIDE <c>_survivorLoadLock</c> -
-            /// planning holds only the run's survivors, its spectra index and the candidate
-            /// windows it is computing, and serializing it would put the per-run planning this
-            /// task took over from the join back in a single file. Thread-safe.
+            /// Plan ONE hydrated run from its survivors and the analysis-wide consensus and apply
+            /// the plan to it. A run whose plan moves no survivor has its
+            /// <c>.reconciliation.json</c> written here; the moved survivors' new peaks are chosen
+            /// in the run's rescore, from the spectra it loads (<see cref="CwtCandidateRecompute"/>),
+            /// and <see cref="SavePlan"/> writes the plan then. Called from the file lanes OUTSIDE
+            /// <c>_survivorLoadLock</c> - serializing it would put the per-run planning this task
+            /// took over from the join back in a single file. Thread-safe.
             /// </summary>
-            public Action<RunRescoreInputs, RescoreRunSpectra> PlanRun;
+            public Action<RunRescoreInputs> PlanRun;
+
+            /// <summary>
+            /// Write a run's <c>.reconciliation.json</c> once its moved survivors' actions, keyed by
+            /// entry_id, are known. Throws <see cref="InvalidDataException"/> when the write fails.
+            /// Thread-safe.
+            /// </summary>
+            public Action<RunRescoreInputs, IReadOnlyDictionary<uint, ReconcileAction>> SavePlan;
         }
 
         /// <summary>
@@ -1519,24 +1524,24 @@ namespace pwiz.Osprey.Tasks
                 file.Value.Clear();
                 file.Value.AddRange(run.Survivors);
             }
-            // The run's spectra and mass calibrations, loaded when planning first computes a CWT
-            // candidate (or the rescore needs them) and shared by both.
+            // The run's spectra and mass calibrations, loaded when the rescore first needs them.
             var spectra = new RescoreRunSpectra(file.Key, InputFileOf(file.Key, inputs), ctx);
             try
             {
-                inputs.PlanRun(run, spectra);
+                inputs.PlanRun(run);
+                // A moved survivor's new peak is chosen from the run's spectra, which a run that is
+                // not among this task's inputs does not have.
+                if (run.Plan != null && spectra.InputFile == null)
+                    throw CwtCandidateRecompute.NotReproduced(file.Key, run.Plan.Moves.Count, run.Plan.Moves.Count);
+                return RescoreOneFile(fileNum, nTotalFiles, file.Key, file.Value, inputs, ctx, run, spectra);
             }
             catch (InvalidDataException ex)
             {
                 // Reported, not thrown, for the reason the hydrate's failure is: the loop reports
-                // every bad run. The run is not rescored, so its entries are dropped here.
+                // every bad run. The run is not done, so its entries are dropped here.
                 loadError = ex.Message;
                 file.Value.Clear();
                 return (0, 0, 0, false);
-            }
-            try
-            {
-                return RescoreOneFile(fileNum, nTotalFiles, file.Key, file.Value, inputs, ctx, run, spectra);
             }
             finally
             {
@@ -1598,17 +1603,26 @@ namespace pwiz.Osprey.Tasks
 
             var fileConfig = FileConfig(config, ctx);
 
+            // The moved survivors' new peaks are chosen in the rescore's own window loop, from the
+            // spectra it loads to score them, so each window is read once.
+            CwtCandidateRecompute resolver = null;
+            if (run.Plan != null)
+            {
+                inputs.PerFileCalibrations.TryGetValue(fileName, out var firstPassCalibration);
+                resolver = new CwtCandidateRecompute(run.Plan.Moves, spectra, fullLibrary, fileConfig,
+                    firstPassCalibration, ctx);
+            }
+
             // Build the per-file scoring subset: boundary_overrides keyed
             // by entry_id + the subset library RunCoelutionScoring scores.
             var (boundaryOverrides, subsetLibrary) =
-                BuildScoringSubset(combinedTargets, fdrEntries, fullLibrary);
+                BuildScoringSubset(combinedTargets, fdrEntries, fullLibrary, resolver);
 
             // Segment 1/3 (read): index this file's spectra cache -- the file's first
             // progress slice on the --parallel-files "[i] p%" aggregate line.
             MultiProgressReporter.Current?.BeginSegment();
             // This file's MS2, streamed by isolation window from the .spectra.bin cache the
-            // original Stage 1-4 run wrote (RescoreRunSpectra) - already loaded when planning
-            // computed CWT candidates from it.
+            // original Stage 1-4 run wrote (RescoreRunSpectra).
             SpectraWindowIndex spectraIndex = spectra.Index;
             ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(
                 OspreyTasksResources.PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectra_from_cache_for__2_,
@@ -1659,6 +1673,7 @@ namespace pwiz.Osprey.Tasks
             // peak-construction path.
             var context = new ScoringContext(fileConfig, fileName);
             context.BoundaryOverrides = boundaryOverrides;
+            context.BoundaryResolver = resolver;
             context.OverrideRunnerUpCandidates = PinFeatureMask.UsesRunnerUpFeatures();
             context.OriginalRtMad = rtMadFromCalJson;
 
@@ -1703,6 +1718,17 @@ namespace pwiz.Osprey.Tasks
                 rescored = new List<FdrEntry>();
             }
             swRescore.Stop();
+
+            // The moved survivors' actions, as the windows holding their Stage 4 apex scans chose
+            // them, complete the run's plan; it is saved before the reconciled parquet.
+            if (resolver != null)
+            {
+                var actions = resolver.Verify(out int multiWindow);
+                ctx.LogInfo(LogTag.COUNT, string.Format(
+                    @"Moved peaks resolved in more than one isolation window: {0} of {1}",
+                    multiWindow, actions.Count));
+                inputs.SavePlan(run, actions);
+            }
 
             // Overlay the re-scored subset back onto the per-file stubs,
             // resetting discriminant fields to Rust to_fdr_entry defaults.
@@ -2077,6 +2103,16 @@ namespace pwiz.Osprey.Tasks
                 combinedTargets[t.Index] = (t.Apex, t.Start, t.End);
             foreach (var t in reconTargets)
                 combinedTargets[t.Index] = (t.Apex, t.Start, t.End);
+            // The moved survivors, whose boundaries each window that scores them chooses from its
+            // own spectra (CwtCandidateRecompute): targets with no fixed boundaries.
+            if (run.Plan != null)
+            {
+                var idxById = new Dictionary<uint, int>(run.Survivors.Count);
+                for (int i = 0; i < run.Survivors.Count; i++)
+                    idxById[run.Survivors[i].EntryId] = i;
+                foreach (var move in run.Plan.Moves)
+                    combinedTargets[idxById[move.Survivor.EntryId]] = default;
+            }
 
             // Skip files with no work to do.
             if (combinedTargets.Count == 0 && gapFillTargets.Count == 0)
@@ -2339,23 +2375,47 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Plan one run and write its plan to its <c>.reconciliation.json</c>, stamped with the
-        /// stamp its reconciled parquet will carry, so the run's outputs are current together
-        /// (<see cref="IsFileRescored"/>). Written before the rescore that executes it, so a
-        /// kill mid-rescore leaves a plan whose parquet is missing - a run that is not done.
-        /// A write failure is reported as <see cref="InvalidDataException"/>, which the loop
-        /// collects per run.
+        /// Plan one run and apply the plan to it: its refined calibration and gap-fill targets now,
+        /// and its moved survivors as <see cref="RunRescoreInputs.Plan"/>, whose new peaks the
+        /// rescore chooses. A plan that moves no survivor is complete, and is saved here.
         /// </summary>
-        private static ReconciliationFile PlanAndWriteRun(RunReconciliationPlanner runPlanner,
-            string fileName, string syntheticInput, List<FdrEntry> survivors, ArtifactStamp stamp,
-            Func<IReadOnlyList<FdrEntry>, IReadOnlyList<IReadOnlyList<CwtCandidate>>> cwtCandidates)
+        private static void PlanOneRun(RunReconciliationPlanner runPlanner, RunRescoreInputs run,
+            ArtifactStamp stamp, LibraryStringInterner sequencePool)
         {
             // Never reached under --task ModelDiagnostics, which writes nothing but its report:
             // that task does not rescore (see willRescoreHere in RunRescore).
-            var plan = runPlanner.PlanRun(fileName, survivors, cwtCandidates);
+            var plan = runPlanner.PlanRun(run.FileName, run.Survivors);
+            RescoreHydration.ApplyPlan(run, RunReconciliationPlanner.PartialRun(plan), sequencePool);
+            if (plan.Moves.Count > 0)
+                run.Plan = plan;
+            else
+                SaveRunPlan(runPlanner, run.FileName, run.InputPath, plan, new Dictionary<uint, ReconcileAction>(), stamp);
+        }
+
+        /// <summary>
+        /// Save a run's plan once its moved survivors' <paramref name="actions"/> are known.
+        /// </summary>
+        private static void SaveRunPlan(RunReconciliationPlanner runPlanner, RunRescoreInputs run,
+            IReadOnlyDictionary<uint, ReconcileAction> actions, ArtifactStamp stamp)
+        {
+            SaveRunPlan(runPlanner, run.FileName, run.InputPath, run.Plan, actions, stamp);
+        }
+
+        /// <summary>
+        /// Write a run's plan to its <c>.reconciliation.json</c>, stamped with the stamp its
+        /// reconciled parquet will carry, so the run's outputs are current together
+        /// (<see cref="IsFileRescored"/>). Written before that parquet, so a kill mid-rescore
+        /// leaves at most a plan whose parquet is missing - a run that is not done. A write
+        /// failure is reported as <see cref="InvalidDataException"/>, which the loop collects
+        /// per run.
+        /// </summary>
+        private static void SaveRunPlan(RunReconciliationPlanner runPlanner, string fileName, string syntheticInput,
+            RescorePlan plan, IReadOnlyDictionary<uint, ReconcileAction> actions, ArtifactStamp stamp)
+        {
+            var file = runPlanner.CompleteRun(fileName, plan, actions);
             try
             {
-                ReconciliationFile.Save(ReconciliationFile.PathForInput(syntheticInput), plan, stamp);
+                ReconciliationFile.Save(ReconciliationFile.PathForInput(syntheticInput), file, stamp);
             }
             catch (Exception ex)
             {
@@ -2363,20 +2423,6 @@ namespace pwiz.Osprey.Tasks
                     OspreyTasksResources.FirstPassFdrTask_WriteReconciliationFile_Could_not_write_the_cross_run_reconciliation_file_for__0____1_,
                     fileName, ex.Message), ex);
             }
-            return plan;
-        }
-
-        /// <summary>
-        /// The CWT peak candidates of the survivors a run's plan would move, computed from the
-        /// run's spectra under the search Stage 4 ran: its first-pass calibration, not the
-        /// refined one this task rescores with (<see cref="CwtCandidateRecompute"/>).
-        /// </summary>
-        private static IReadOnlyList<IReadOnlyList<CwtCandidate>> ComputeCwtCandidates(IReadOnlyList<FdrEntry> rows,
-            RescoreRunSpectra spectra, RescorePassInputs inputs, PipelineContext ctx)
-        {
-            inputs.PerFileCalibrations.TryGetValue(spectra.FileName, out var firstPassCalibration);
-            return CwtCandidateRecompute.ForRows(rows, spectra, inputs.LibraryById, inputs.FullLibrary,
-                FileConfig(inputs.Config, ctx), firstPassCalibration, ctx);
         }
 
         /// <summary>
@@ -2553,13 +2599,15 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="ScoringPipeline"/>.RunCoelutionScoring so it
         /// doesn't waste work on entries we're not re-scoring. The subset
         /// is the same library entries the original Stage 1-4 scoring used,
-        /// just a smaller list.
+        /// just a smaller list. A target <paramref name="resolver"/> resolves gets no override
+        /// here: each window that scores it chooses its boundaries.
         /// </summary>
         private static (Dictionary<uint, (double Apex, double Start, double End)> BoundaryOverrides,
             List<LibraryEntry> SubsetLibrary) BuildScoringSubset(
                 Dictionary<int, (double Apex, double Start, double End)> combinedTargets,
                 List<FdrEntry> fdrEntries,
-                List<LibraryEntry> fullLibrary)
+                List<LibraryEntry> fullLibrary,
+                IWindowBoundaryResolver resolver)
         {
             // Build boundary_overrides keyed by entry_id. Also collect the
             // subset of library ids the search engine needs to score.
@@ -2569,7 +2617,8 @@ namespace pwiz.Osprey.Tasks
             {
                 int idx = kvp.Key;
                 uint entryId = fdrEntries[idx].EntryId;
-                boundaryOverrides[entryId] = kvp.Value;
+                if (resolver == null || !resolver.Resolves(entryId))
+                    boundaryOverrides[entryId] = kvp.Value;
                 subsetIds.Add(entryId);
             }
 

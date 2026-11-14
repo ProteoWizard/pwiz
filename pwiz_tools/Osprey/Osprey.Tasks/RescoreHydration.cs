@@ -89,6 +89,13 @@ namespace pwiz.Osprey.Tasks
         /// <summary>This run's refined RT calibration; null when its refit failed.</summary>
         public RTCalibration RefinedCalibration { get; set; }
 
+        /// <summary>
+        /// This run's plan while its moved survivors still await their new peaks, which the
+        /// rescore chooses from the run's spectra and then saves with the plan; null when the plan
+        /// moved no survivor and was saved as planned.
+        /// </summary>
+        internal RescorePlan Plan { get; set; }
+
         /// <summary>This run's PRE-compaction tally, reduced while its full pool was resident.</summary>
         public PreCompactionTally Tally { get; set; }
     }

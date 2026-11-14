@@ -25,144 +25,145 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR.Reconciliation;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
 
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
-    /// Computes, for the survivors Stage 6 reconciliation would move, the CWT peak candidates
-    /// first-pass scoring ranked for them (issue #5024). Rust stores the top-N list of every row
-    /// in its scores parquet for its planner, which reads it for under 1% of rows; Osprey
-    /// computes those rows' lists from the run's spectra when the planner asks, with the
-    /// detection Stage 4 ran (<see cref="CoelutionScorer.RecomputeCwtCandidates"/>) under the
-    /// search settings Stage 4 resolved, so the lists are the ones Stage 4 would have stored, bit
-    /// for bit.
+    /// Resolves the new peak of each survivor Stage 6 reconciliation moves, inside the rescore's
+    /// own window loop (issue #5024): the CWT peak candidates first-pass scoring ranked for the
+    /// survivor are computed from the window's spectra as the rescore loads them, the planner's
+    /// rule picks a candidate or imputes boundaries, and the window scores the survivor there.
+    /// Rust stores the top-N list of every row in its scores parquet for its planner, which reads
+    /// it for under 1% of rows; Osprey computes those rows' lists where the rescore already holds
+    /// the spectra, so each run's spectra are read once.
     ///
-    /// <para>What Stage 4 searched with, and so what this searches with: the run's FIRST-PASS RT
-    /// calibration (not the refined one the rescore uses) - or, for a run whose calibration
-    /// failed, the library-to-run RT range mapping calibration starts from
+    /// <para>The candidates are computed with the detection Stage 4 ran
+    /// (<see cref="CoelutionScorer.RecomputeCwtCandidates"/>) under the search settings Stage 4
+    /// resolved, so they are the ones Stage 4 would have stored, bit for bit: the run's FIRST-PASS
+    /// RT calibration (not the refined one the rescore scores with) - or, for a run whose
+    /// calibration failed, the library-to-run RT range mapping calibration starts from
     /// (<see cref="RtRangeMapping.FallbackRtMap"/>) - and the run's MS2 mass calibration. The
     /// OSPREY_* settings that change detection must be the ones Stage 4 ran under;
     /// <see cref="PerFileRescoreTask"/> carries them in its validity key.</para>
     ///
-    /// <para>Memory: the windows holding a consulted precursor are loaded a few at a time
-    /// (the run's thread share), each released when its rows are computed, as Stage 4 scores
-    /// them.</para>
+    /// <para>Stage 4 stored a survivor's row from one window, the one whose spectra hold its apex
+    /// scan; that window's action is the run's plan, and it must find the peak again at that
+    /// scan (<see cref="Verify"/>). A precursor that falls in two overlapping windows is scored in
+    /// both, as Stage 4 scored it; the other window resolves it from its own spectra, which Stage
+    /// 4 also did. Isolation schemes with margins produce such precursors (issue #5034).</para>
     /// </summary>
-    internal static class CwtCandidateRecompute
+    internal sealed class CwtCandidateRecompute : IWindowBoundaryResolver
     {
-        /// <summary>
-        /// The CWT peak candidates of each of <paramref name="rows"/>, in order: Stage 4's top-N
-        /// list for the row. Throws <see cref="InvalidDataException"/> when the run's input is not
-        /// available here, or when any row's peak is not found again at its apex scan.
-        /// </summary>
-        internal static IReadOnlyList<IReadOnlyList<CwtCandidate>> ForRows(
-            IReadOnlyList<FdrEntry> rows,
+        private readonly string _fileName;
+        private readonly Dictionary<uint, MovedSurvivor> _moved;
+        private readonly ScoringContext _context;
+        private readonly RTCalibration _searchCalibration;
+        private readonly double _rtTolerance;
+        private readonly double _rtSigma;
+        private readonly List<MS1Spectrum> _ms1Spectra;
+        private readonly MzCalibrationResult _ms1Calibration;
+        private readonly CoelutionScorer _scorer = new CoelutionScorer(null);
+
+        /// <param name="moves">The survivors the run's plan moves, each with its move.</param>
+        /// <param name="spectra">The run's spectra, as the rescore reads them.</param>
+        /// <param name="fullLibrary">The library, for a failed calibration's fallback map.</param>
+        /// <param name="config">The run's rescore configuration (cloned here).</param>
+        /// <param name="firstPassCalibration">The run's Stage 3 RT calibration, null when it
+        /// failed.</param>
+        /// <param name="ctx">The pipeline, for the search settings.</param>
+        internal CwtCandidateRecompute(
+            IReadOnlyList<(FdrEntry Survivor, ReconcileMove Move)> moves,
             RescoreRunSpectra spectra,
-            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             IReadOnlyList<LibraryEntry> fullLibrary,
             OspreyConfig config,
             RTCalibration firstPassCalibration,
             PipelineContext ctx)
         {
-            var lists = new IReadOnlyList<CwtCandidate>[rows.Count];
-            if (rows.Count == 0)
-                return lists;
-            if (spectra.InputFile == null)
-                throw NotReproduced(spectra.FileName, rows.Count, rows.Count);
+            _fileName = spectra.FileName;
+            _moved = new Dictionary<uint, MovedSurvivor>(moves.Count);
+            foreach (var move in moves)
+                _moved[move.Survivor.EntryId] = new MovedSurvivor(move.Survivor, move.Move);
 
-            var spectraIndex = spectra.Index;
             // The settings first-pass scoring resolved: a fresh clone, because resolving them writes
             // the calibrated fragment tolerance into the configuration.
-            var context = new ScoringContext(config.ShallowClone(), spectra.FileName);
-            ScoringTaskShared.Pipeline(ctx).ApplySearchSettings(firstPassCalibration, spectra.Ms2Calibration, context,
-                string.Empty, false, out double rtTolerance, out double rtSigma);
-            var searchCalibration = firstPassCalibration ?? FallbackRtMap(config, fullLibrary, spectraIndex);
-            var scorer = new CoelutionScorer(null);
+            _context = new ScoringContext(config.ShallowClone(), _fileName);
+            ScoringTaskShared.Pipeline(ctx).ApplySearchSettings(firstPassCalibration, spectra.Ms2Calibration, _context,
+                string.Empty, false, out _rtTolerance, out _rtSigma);
+            _searchCalibration = firstPassCalibration ?? FallbackRtMap(config, fullLibrary, spectra.Index);
+            _ms1Spectra = spectra.Ms1Spectra;
+            _ms1Calibration = spectra.Ms1Calibration;
+        }
 
-            // The windows each row could have been scored in, by precursor m/z.
-            var windows = spectraIndex.IsolationWindows;
-            var rowsByWindow = new List<int>[windows.Count];
-            var libraryEntries = new LibraryEntry[rows.Count];
-            for (int r = 0; r < rows.Count; r++)
-            {
-                if (!libraryById.TryGetValue(rows[r].EntryId, out var libraryEntry) ||
-                    libraryEntry.Fragments == null || libraryEntry.Fragments.Count == 0)
-                {
-                    continue;
-                }
-                libraryEntries[r] = libraryEntry;
-                for (int w = 0; w < windows.Count; w++)
-                {
-                    if (windows[w].Contains(libraryEntry.PrecursorMz))
-                        (rowsByWindow[w] ?? (rowsByWindow[w] = new List<int>())).Add(r);
-                }
-            }
+        public bool Resolves(uint entryId)
+        {
+            return _moved.ContainsKey(entryId);
+        }
 
-            // Compute each row in the window whose spectra hold its apex scan - Stage 4 kept the
-            // row it scored there. Overlapping windows sharing a scan would share its spectra, so
-            // the lowest such window is taken, whatever order the windows finish in.
-            var fromWindow = new int[rows.Count];
-            var apexScans = new uint?[rows.Count];
-            for (int r = 0; r < rows.Count; r++)
-                fromWindow[r] = int.MaxValue;
-            var lockObj = new object();
-            var provider = new StreamingWindowSpectraProvider(spectraIndex, spectra.Ms2Calibration);
-            var windowIndices = Enumerable.Range(0, windows.Count).Where(w => rowsByWindow[w] != null).ToList();
-            Parallel.ForEach(windowIndices, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, config.NThreads) },
-                w =>
-                {
-                    var windowSpectra = provider.GetCalibratedWindow((int)Math.Round(windows[w].Center * 10.0));
-                    if (windowSpectra == null || windowSpectra.Count == 0)
-                        return;
-                    CoelutionScorer.SortWindowSpectra(windowSpectra);
-                    double[] windowRts = CoelutionScorer.WindowRetentionTimes(windowSpectra);
-                    var scans = new HashSet<uint>(windowSpectra.Select(s => s.ScanNumber));
-                    foreach (int r in rowsByWindow[w])
-                    {
-                        if (!scans.Contains(rows[r].ScanNumber))
-                            continue;
-                        var list = scorer.RecomputeCwtCandidates(libraryEntries[r], windowSpectra, windowRts,
-                            searchCalibration, rtTolerance, rtSigma, spectra.Ms1Spectra, spectra.Ms1Calibration,
-                            context, out uint? apexScan);
-                        lock (lockObj)
-                        {
-                            if (w < fromWindow[r])
-                            {
-                                fromWindow[r] = w;
-                                lists[r] = list;
-                                apexScans[r] = apexScan;
-                            }
-                        }
-                    }
-                });
+        public (double Apex, double Start, double End) Resolve(LibraryEntry entry, IsolationWindow window,
+            List<Spectrum> windowSpectra, double[] windowRts)
+        {
+            var moved = _moved[entry.Id];
+            var candidates = _scorer.RecomputeCwtCandidates(entry, windowSpectra, windowRts,
+                _searchCalibration, _rtTolerance, _rtSigma, _ms1Spectra, _ms1Calibration, _context,
+                out uint? apexScan);
+            var action = moved.Move.Resolve(moved.Survivor.ApexRt, candidates);
+            uint stage4Scan = moved.Survivor.ScanNumber;
+            moved.Record(window, windowSpectra.Any(s => s.ScanNumber == stage4Scan), action,
+                apexScan == stage4Scan);
+            return OverrideBounds(action);
+        }
 
-            // Every row is one Stage 4 stored, so the search that reproduces Stage 4 finds its
-            // peak at its apex scan. A row it does not is a search that has drifted from Stage 4's -
-            // a setting Stage 4 read that this one did not, or a calibration that is not the one
-            // Stage 4 searched with - and candidates from it would plan the run wrong without a
-            // sign. On SEA-AD and the subsets every row reproduces; a wrong calibration moved
-            // about half of them.
+        /// <summary>
+        /// The run's plan: each moved survivor's action, keyed by entry_id, as the window holding its
+        /// Stage 4 apex scan resolved it. Throws <see cref="InvalidDataException"/>, reported per
+        /// run, when any survivor was not resolved there or its peak was not found again at that
+        /// scan: a search that has drifted from Stage 4's - a setting Stage 4 read that this one
+        /// did not, or a calibration that is not the one Stage 4 searched with - would plan the
+        /// run wrong without a sign. On SEA-AD and the subsets every survivor reproduces; a wrong
+        /// calibration moved about half of them.
+        /// </summary>
+        internal IReadOnlyDictionary<uint, ReconcileAction> Verify(out int multiWindow)
+        {
+            var actions = new Dictionary<uint, ReconcileAction>(_moved.Count);
             int notReproduced = 0;
-            for (int r = 0; r < rows.Count; r++)
+            multiWindow = 0;
+            foreach (var kvp in _moved)
             {
-                if (lists[r] == null || apexScans[r] != rows[r].ScanNumber)
+                var moved = kvp.Value;
+                if (moved.Action == null || !moved.Reproduced)
                     notReproduced++;
+                else
+                    actions[kvp.Key] = moved.Action;
+                if (moved.WindowCount > 1)
+                    multiWindow++;
             }
             if (notReproduced > 0)
-                throw NotReproduced(spectra.FileName, notReproduced, rows.Count);
-            return lists;
+                throw NotReproduced(_fileName, notReproduced, _moved.Count);
+            return actions;
+        }
+
+        /// <summary>
+        /// The (apex, start, end) boundaries the rescore scores <paramref name="action"/> at: a
+        /// re-picked candidate's own, or boundaries imputed around the expected RT.
+        /// </summary>
+        internal static (double Apex, double Start, double End) OverrideBounds(ReconcileAction action)
+        {
+            if (action is ReconcileAction.UseCwtPeak useCwt)
+                return (useCwt.ApexRt, useCwt.StartRt, useCwt.EndRt);
+            var forced = (ReconcileAction.ForcedIntegration)action;
+            return (forced.ExpectedRt, forced.ExpectedRt - forced.HalfWidth, forced.ExpectedRt + forced.HalfWidth);
         }
 
         /// <summary>
         /// The error for a run whose first-pass peaks this cannot reproduce - reported per run,
         /// as a damaged input is, rather than planned from candidates Stage 4 never found.
         /// </summary>
-        private static InvalidDataException NotReproduced(string fileName, int notReproduced, int rowCount)
+        internal static InvalidDataException NotReproduced(string fileName, int notReproduced, int rowCount)
         {
             return new InvalidDataException(string.Format(
                 OspreyTasksResources.CwtCandidateRecompute_ForRows_Could_not_reproduce_the_first_pass_peaks_of__0__of__1__precursors_in__2___Score_this_run_again_from_the_start_,
@@ -185,13 +186,58 @@ namespace pwiz.Osprey.Tasks
                 return null;
             return RtRangeMapping.Measure(fullLibrary, spectraIndex.AllMs2Rts).FallbackRtMap();
         }
+
+        /// <summary>
+        /// One moved survivor and what the windows scoring it resolved. Written from the window
+        /// threads, so <see cref="Record"/> locks.
+        /// </summary>
+        private sealed class MovedSurvivor
+        {
+            private readonly object _lock = new object();
+            private double _homeCenter = double.PositiveInfinity;
+
+            public MovedSurvivor(FdrEntry survivor, ReconcileMove move)
+            {
+                Survivor = survivor;
+                Move = move;
+            }
+
+            public FdrEntry Survivor { get; }
+            public ReconcileMove Move { get; }
+
+            /// <summary>The action the window holding the Stage 4 apex scan resolved.</summary>
+            public ReconcileAction Action { get; private set; }
+
+            /// <summary>True when that window found the peak again at the Stage 4 apex scan.</summary>
+            public bool Reproduced { get; private set; }
+
+            /// <summary>The number of windows that resolved this survivor.</summary>
+            public int WindowCount { get; private set; }
+
+            /// <summary>
+            /// Record one window's resolution. Of windows holding the apex scan - overlapping
+            /// windows sharing a scan would share its spectra - the lowest is taken, whatever order
+            /// the windows finish in.
+            /// </summary>
+            public void Record(IsolationWindow window, bool holdsApexScan, ReconcileAction action, bool reproduced)
+            {
+                lock (_lock)
+                {
+                    WindowCount++;
+                    if (!holdsApexScan || window.Center >= _homeCenter)
+                        return;
+                    _homeCenter = window.Center;
+                    Action = action;
+                    Reproduced = reproduced;
+                }
+            }
+        }
     }
 
     /// <summary>
     /// One run's spectra cache index, MS1 spectra and mass calibrations, as PerFileRescoring
-    /// reads them - loaded on first use and then shared by the run's planning, which computes
-    /// CWT candidates from them, and its rescore. A run whose planning asks for nothing and that
-    /// has nothing to rescore never loads them.
+    /// reads them - loaded when the run's rescore first needs them. A run with nothing to rescore
+    /// never loads them.
     /// </summary>
     internal sealed class RescoreRunSpectra
     {
@@ -199,7 +245,7 @@ namespace pwiz.Osprey.Tasks
 
         /// <param name="fileName">The run's stem.</param>
         /// <param name="inputFile">The run's input, or null when it is not among this task's
-        /// inputs - then nothing can be loaded, and the run's candidates are empty.</param>
+        /// inputs - then nothing can be loaded.</param>
         /// <param name="ctx">For the loaders' messages.</param>
         public RescoreRunSpectra(string fileName, string inputFile, PipelineContext ctx)
         {

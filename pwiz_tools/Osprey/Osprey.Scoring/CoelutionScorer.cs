@@ -170,6 +170,11 @@ namespace pwiz.Osprey.Scoring
 
             double[] windowRts = WindowRetentionTimes(windowSpectra);
 
+            // Stage 6 targets whose new peak is picked from this window's spectra get their
+            // boundaries here, from the spectra already loaded; the window then scores with them
+            // like any other override.
+            context = WithResolvedBoundaries(context, window, candidates, windowSpectra, windowRts);
+
             // The window's XCorr cache (see IResolutionStrategy.PreprocessWindowSpectra);
             // released once all candidates for this window are scored.
             var preprocessedXcorr = context.Resolution.PreprocessWindowSpectra(
@@ -313,6 +318,41 @@ namespace pwiz.Osprey.Scoring
             return CaptureCwtCandidates(ext.CapturedPeaks, ext.Xics, ext.RefXicIdx, ext.RefXicIntensities, context);
         }
 
+
+        /// <summary>
+        /// <paramref name="context"/> as one window scores with it: unchanged when it has no
+        /// <see cref="ScoringContext.BoundaryResolver"/> or none of the window's
+        /// <paramref name="candidates"/> is resolved per window; otherwise a copy whose overrides
+        /// are those of the window's candidates, with the resolved ones added.
+        /// </summary>
+        private static ScoringContext WithResolvedBoundaries(ScoringContext context, IsolationWindow window,
+            List<LibraryEntry> candidates, List<Spectrum> windowSpectra, double[] windowRts)
+        {
+            var resolver = context.BoundaryResolver;
+            if (resolver == null)
+                return context;
+            Dictionary<uint, (double Apex, double Start, double End)> windowOverrides = null;
+            foreach (var candidate in candidates)
+            {
+                if (!resolver.Resolves(candidate.Id))
+                    continue;
+                if (windowOverrides == null)
+                {
+                    windowOverrides = new Dictionary<uint, (double Apex, double Start, double End)>();
+                    var shared = context.BoundaryOverrides;
+                    if (shared != null)
+                    {
+                        foreach (var c in candidates)
+                        {
+                            if (shared.TryGetValue(c.Id, out var bounds))
+                                windowOverrides[c.Id] = bounds;
+                        }
+                    }
+                }
+                windowOverrides[candidate.Id] = resolver.Resolve(candidate, window, windowSpectra, windowRts);
+            }
+            return windowOverrides != null ? context.WithBoundaryOverrides(windowOverrides) : context;
+        }
 
         /// <summary>
         /// Score one candidate: ask the <see cref="PeakDataExtractor"/> for the
