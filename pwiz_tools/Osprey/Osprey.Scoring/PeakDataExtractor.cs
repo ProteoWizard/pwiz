@@ -51,10 +51,19 @@ namespace pwiz.Osprey.Scoring
         private const int PREFILTER_MIN_PASS = 3;
 
         private readonly IScoringDiagnostics _diagnostics;
+        private readonly bool _correlationCandidates;
 
-        public PeakDataExtractor(IScoringDiagnostics diagnostics)
+        /// <summary>
+        /// An extractor reporting to <paramref name="diagnostics"/> (nullable). Under
+        /// OSPREY_CORR_FRAGMENT_TOLERANCE, <paramref name="correlationCandidates"/> says whether a
+        /// computed correlation-shape feature reads the runner-up candidates by their coelution over
+        /// the wider-tolerance XICs (<see cref="ExtractedPeak.CorrelationRunnerUpPeaks"/>); when false
+        /// they are not scored, and on the override path not re-extracted.
+        /// </summary>
+        public PeakDataExtractor(IScoringDiagnostics diagnostics, bool correlationCandidates = true)
         {
             _diagnostics = diagnostics;
+            _correlationCandidates = correlationCandidates;
         }
 
         /// <summary>
@@ -80,6 +89,7 @@ namespace pwiz.Osprey.Scoring
             WindowPrefilter prefilter,
             int prefilterIndex,
             List<XicData> precomputedXics,
+            List<XicData> precomputedCorrXics,
             out ExtractedPeak extracted)
         {
             extracted = default;
@@ -89,8 +99,13 @@ namespace pwiz.Osprey.Scoring
                 return false;
 
             // Use the global tolerance passed from RunCoelutionScoring (matches
-            // Rust's single rt_tolerance for all entries in run_search).
-            double rtTolerance = globalRtTolerance;
+            // Rust's single rt_tolerance for all entries in run_search), unless
+            // OSPREY_LOCAL_RT_TOLERANCE widens it for this library RT. The RT-penalty
+            // sigma then widens in proportion, so a peak at the far side of the wider
+            // window is not ranked out by a penalty sized for the narrow one.
+            double rtTolerance = CandidateRtTolerance(candidate, globalRtTolerance, context);
+            if (rtTolerance != globalRtTolerance)
+                rtSigma *= rtTolerance / globalRtTolerance;
             (double Apex, double Start, double End)? overrideBounds;
             double expectedRt;
             int startScan, endScan;
@@ -202,6 +217,7 @@ namespace pwiz.Osprey.Scoring
 
             XICPeakBounds bestPeak = null;
             double bestRankScore = double.MinValue;
+            double bestCoelutionScore = 0.0;
             int bestPeakIdx = -1;
 
             // Peak-pick model selection. The pure product form is the DEFAULT (Rust parity +
@@ -273,58 +289,9 @@ namespace pwiz.Osprey.Scoring
                     continue;
                 diagNScored++;
 
-                double sum = 0.0;
-                int count = 0;
-                for (int ii = 0; ii < xics.Count; ii++)
-                {
-                    for (int jj = ii + 1; jj < xics.Count; jj++)
-                    {
-                        double corr = ScoringMath.PearsonCorrelationInRange(
-                            xics[ii].Intensities, xics[jj].Intensities,
-                            p.StartIndex, p.EndIndex);
-                        if (!double.IsNaN(corr))
-                        {
-                            sum += corr;
-                            count++;
-                        }
-                    }
-                }
-                double coelutionScore = count > 0 ? sum / count : 0.0;
-
-                double rtPenalty = Math.Exp(-(rtResidual * rtResidual) / twoSigmaSq);
-
-                // Intensity tiebreaker (Rust pipeline.rs:6753-6758, added in
-                // v26.3.1 commit 4d0119d): log(1 + apex_intensity) breaks ties
-                // between main peak and shoulder without dominating the
-                // coelution ranking.
-                double apexIntensity = refXicIntensities[p.ApexIndex];
-                double intensityWeight = Math.Log(1.0 + apexIntensity);
-
-                // Per-candidate median-polish cosine (feature 15 computed per candidate, not
-                // only for the winner). Computed ONCE here and reused by the linear model and
-                // the candidate dump. Neutral 1.0 when neither is active, so it costs nothing on
-                // the legacy product path. Same value the dump records.
-                double medianPolish = needMedianPolish
-                    ? CandidateLibCosine(xics, candidate, p)
-                    : 1.0;
-
-                double rankScore;
-                if (modelActive)
-                {
-                    // Learned linear pick model (default, or OSPREY_PICK_LDA_MODEL): replace the
-                    // product form with a standardized linear combination of the same four raw
-                    // terms -- median_polish is a proper weighted feature here. The argmax +
-                    // total-order tie-break below are unchanged.
-                    rankScore = pickModel.Score(coelutionScore, intensityWeight, rtPenalty, medianPolish);
-                }
-                else
-                {
-                    // Default (product-form) pick: the pure product form, exactly
-                    // coelution * rt_penalty * ln_intensity, with no median-polish factor. This is
-                    // the default (the learned model is opt-in via OSPREY_PICK_LDA) and the Rust
-                    // cross-impl-parity / regression-golden pick.
-                    rankScore = coelutionScore * rtPenalty * intensityWeight;
-                }
+                double rankScore = ScoreCandidatePeak(candidate, xics, refXicIntensities, p, rtResidual,
+                    twoSigmaSq, pickModel, needMedianPolish,
+                    out double coelutionScore, out double rtPenalty, out double intensityWeight, out double medianPolish);
 
                 // Per-candidate capture (OSPREY_PICK_DUMP_CANDIDATES). is_picked is filled in
                 // after the loop once the winning index is known. Records the EXACT raw terms
@@ -358,6 +325,7 @@ namespace pwiz.Osprey.Scoring
                 if (TotalOrder.Greater(rankScore, bestRankScore))
                 {
                     bestRankScore = rankScore;
+                    bestCoelutionScore = coelutionScore;
                     bestPeak = p;
                     bestPeakIdx = pi;
                 }
@@ -472,6 +440,13 @@ namespace pwiz.Osprey.Scoring
             // on the two-window Stellar subset).
             int si = bestPeak.StartIndex;
             int ei = bestPeak.EndIndex;
+            if (OspreyEnvironment.RefXicByCorrelation)
+            {
+                // OSPREY_REF_XIC=corr: the reference is the fragment that agrees best with the others
+                // inside the chosen peak, so an intense interfered fragment does not set the apex.
+                refXicIdx = ReferenceCorrelations.ChooseReference(xics, si, ei, refXicIdx);
+                refXicIntensities = xics[refXicIdx].Intensities;
+            }
             int newApexIdx = si;
             double newApexVal = refXicIntensities[si];
             for (int i = si + 1; i <= ei; i++)
@@ -565,9 +540,197 @@ namespace pwiz.Osprey.Scoring
                     diagNCwtPeaks, peaks.Count, diagNScored, true, xics);
             }
 
+            // The candidates the runner-up features compare the chosen peak with. A first-pass pick
+            // chose among capturedPeaks; a peak rescored at override bounds was chosen elsewhere, so
+            // it is compared with the candidates the first pass would have chosen among - when a
+            // runner-up feature is in use. Otherwise capturedPeaks is null here and the masked
+            // features report a lone candidate without the second detection.
+            // OSPREY_CORR_FRAGMENT_TOLERANCE: the correlation-shape features read the same fragments
+            // over the same scans re-extracted at the wider tolerance, and - when one that reads them
+            // is computed - compare the chosen peak with the same candidates by their coelution over
+            // those XICs. Taken from the window scorer's scan-major pass when it extracted them over
+            // this same range, otherwise extracted here once the peak is chosen; released with it.
+            var corrConfig = context.CorrelationConfig;
+            var corrXics = corrConfig != null
+                ? precomputedCorrXics ?? TopFragmentExtractor.ExtractFragmentXics(candidate, windowSpectra, windowRts,
+                    startScan, endScan, corrConfig)
+                : null;
+            var corrCandidateConfig = _correlationCandidates ? corrConfig : null;
+            List<(XICPeakBounds peak, double coelutionScore, double rankScore)> corrRunnerUpPeaks = null;
+            var runnerUpPeaks = overrideBounds.HasValue && context.OverrideRunnerUpCandidates
+                ? OverrideRunnerUpCandidates(candidate, windowSpectra, windowRts, expectedRt, rtTolerance,
+                    twoSigmaSq, pickModel, config, overrideBounds.Value, bestPeak, bestCoelutionScore, bestRankScore,
+                    corrCandidateConfig, corrXics, out corrRunnerUpPeaks)
+                : capturedPeaks;
+            if (corrCandidateConfig != null && !overrideBounds.HasValue)
+                corrRunnerUpPeaks = WithCoelutionOver(corrXics, capturedPeaks);
+
             extracted = new ExtractedPeak(
-                xics, refXicIdx, refXicIntensities, bestPeak, startScan, apexSpectrum, capturedPeaks);
+                xics, refXicIdx, refXicIntensities, bestPeak, startScan, apexSpectrum, capturedPeaks, runnerUpPeaks);
+            if (corrXics != null)
+                extracted.SetCorrelationXics(corrXics, corrRunnerUpPeaks);
             return true;
+        }
+
+        // The candidates with each one's coelution score replaced by the mean pairwise correlation of
+        // xics over its bounds, which must index the same scans; the pick (rank) scores are kept.
+        private static List<(XICPeakBounds peak, double coelutionScore, double rankScore)> WithCoelutionOver(
+            List<XicData> xics, List<(XICPeakBounds peak, double coelutionScore, double rankScore)> candidates)
+        {
+            var result = new List<(XICPeakBounds peak, double coelutionScore, double rankScore)>(candidates.Count);
+            foreach (var c in candidates)
+                result.Add((c.peak, MeanPairCorrelation(xics, c.peak.StartIndex, c.peak.EndIndex), c.rankScore));
+            return result;
+        }
+
+        /// <summary>
+        /// Scores one candidate peak for the pick: mean pairwise fragment coelution over the peak,
+        /// a Gaussian RT penalty, the log apex intensity of the reference XIC and (when
+        /// <paramref name="needMedianPolish"/>) the candidate's library cosine, combined by the
+        /// pick model or, without one, as the product coelution * rt_penalty * ln_intensity.
+        /// Returns the pick (rank) score.
+        /// </summary>
+        private static double ScoreCandidatePeak(LibraryEntry candidate, List<XicData> xics,
+            double[] refXicIntensities, XICPeakBounds p, double rtResidual, double twoSigmaSq,
+            PickLdaModel pickModel, bool needMedianPolish,
+            out double coelutionScore, out double rtPenalty, out double intensityWeight, out double medianPolish)
+        {
+            coelutionScore = MeanPairCorrelation(xics, p.StartIndex, p.EndIndex);
+
+            rtPenalty = Math.Exp(-(rtResidual * rtResidual) / twoSigmaSq);
+
+            // Intensity tiebreaker (Rust pipeline.rs:6753-6758, added in
+            // v26.3.1 commit 4d0119d): log(1 + apex_intensity) breaks ties
+            // between main peak and shoulder without dominating the
+            // coelution ranking.
+            double apexIntensity = refXicIntensities[p.ApexIndex];
+            intensityWeight = Math.Log(1.0 + apexIntensity);
+
+            // Per-candidate median-polish cosine (feature 15 computed per candidate, not
+            // only for the winner). Computed ONCE here and reused by the linear model and
+            // the candidate dump. Neutral 1.0 when neither is active, so it costs nothing on
+            // the legacy product path. Same value the dump records.
+            medianPolish = needMedianPolish
+                ? CandidateLibCosine(xics, candidate, p)
+                : 1.0;
+
+            if (pickModel != null)
+            {
+                // Learned linear pick model (OSPREY_PICK_LDA / OSPREY_PICK_LDA_MODEL): replace the
+                // product form with a standardized linear combination of the same four raw
+                // terms -- median_polish is a proper weighted feature here. The argmax +
+                // total-order tie-break are unchanged.
+                return pickModel.Score(coelutionScore, intensityWeight, rtPenalty, medianPolish);
+            }
+            // Default (product-form) pick: the pure product form, exactly
+            // coelution * rt_penalty * ln_intensity, with no median-polish factor. This is
+            // the default (the learned model is opt-in via OSPREY_PICK_LDA) and the Rust
+            // cross-impl-parity / regression-golden pick.
+            return coelutionScore * rtPenalty * intensityWeight;
+        }
+
+        /// <summary>
+        /// The runner-up candidates for a peak rescored at override bounds (reconciliation or
+        /// gap-fill): the chosen peak first, with the scores it was rescored with, then every
+        /// candidate the first-pass search would have chosen among - CWT detection over the
+        /// normal search window, the same apex acceptance and the same pick score - except those
+        /// whose apex falls inside the imposed bounds, which the chosen peak stands for. So the
+        /// runner-up features mean what they mean in the first pass, and a peak moved off a
+        /// stronger candidate shows a negative margin. Only the runner-up features read this;
+        /// the Stage 6 candidate list stays empty on this path.
+        /// </summary>
+        internal static List<(XICPeakBounds peak, double coelutionScore, double rankScore)> OverrideRunnerUpCandidates(
+            LibraryEntry candidate, List<Spectrum> windowSpectra, double[] windowRts, double expectedRt,
+            double rtTolerance, double twoSigmaSq, PickLdaModel pickModel, OspreyConfig config,
+            (double Apex, double Start, double End) bounds, XICPeakBounds chosen, double chosenCoelution,
+            double chosenRank, OspreyConfig corrConfig, List<XicData> chosenCorrXics,
+            out List<(XICPeakBounds peak, double coelutionScore, double rankScore)> corrResult)
+        {
+            // Chosen first: PeakCandidatesByproduct takes the first bounds match as the chosen
+            // peak, and these candidates index a different window, so one could match by chance.
+            var result = new List<(XICPeakBounds peak, double coelutionScore, double rankScore)>
+            {
+                (chosen, chosenCoelution, chosenRank)
+            };
+            // The same list with each coelution score over the correlation XICs (corrConfig), when set.
+            corrResult = corrConfig != null
+                ? new List<(XICPeakBounds peak, double coelutionScore, double rankScore)>
+                {
+                    (chosen, MeanPairCorrelation(chosenCorrXics, chosen.StartIndex, chosen.EndIndex), chosenRank)
+                }
+                : null;
+            FindScanRange(null, windowRts, windowRts.Length, expectedRt, rtTolerance,
+                out int startScan, out int endScan);
+            if (startScan < 0 || endScan - startScan + 1 < 5)
+                return result;
+            // The first pass's signal prefilter (TryExtract) gates detection on the top-6 fragments
+            // however many XICs are extracted. A window it would reject gave the first pass no
+            // candidates to choose among, so the imposed peak stands alone.
+            if (config.PrefilterEnabled &&
+                !HasPrefilterSignal(candidate, windowSpectra, startScan, endScan, config.FragmentTolerance))
+            {
+                return result;
+            }
+            var xics = TopFragmentExtractor.ExtractFragmentXics(candidate, windowSpectra, windowRts,
+                startScan, endScan, config);
+            if (xics.Count < 2)
+                return result;
+            var peaks = DetectCandidatePeaks(null, xics, out _);
+            if (peaks == null || peaks.Count == 0)
+                return result;
+            var corrXics = corrConfig != null
+                ? TopFragmentExtractor.ExtractFragmentXics(candidate, windowSpectra, windowRts, startScan, endScan, corrConfig)
+                : null;
+
+            int refXicIdx = 0;
+            double refXicBestTotal = -1.0;
+            for (int f = 0; f < xics.Count; f++)
+            {
+                double total = 0.0;
+                for (int i = 0; i < xics[f].Intensities.Length; i++)
+                    total += xics[f].Intensities[i];
+                if (total >= refXicBestTotal) { refXicBestTotal = total; refXicIdx = f; }
+            }
+            double[] refXicIntensities = xics[refXicIdx].Intensities;
+
+            foreach (var p in peaks)
+            {
+                if (p.EndIndex - p.StartIndex + 1 < 3)
+                    continue;
+                double apexRt = windowRts[startScan + p.ApexIndex];
+                double rtResidual = Math.Abs(apexRt - expectedRt);
+                if (rtResidual > rtTolerance || (apexRt >= bounds.Start && apexRt <= bounds.End))
+                    continue;
+                double rankScore = ScoreCandidatePeak(candidate, xics, refXicIntensities, p, rtResidual,
+                    twoSigmaSq, pickModel, pickModel != null, out double coelutionScore, out _, out _, out _);
+                result.Add((p, coelutionScore, rankScore));
+                if (corrXics != null)
+                    corrResult.Add((p, MeanPairCorrelation(corrXics, p.StartIndex, p.EndIndex), rankScore));
+            }
+            return result;
+        }
+
+        // Mean of the valid pairwise fragment correlations over [start, end], 0 when none: the pick's
+        // coelution score.
+        private static double MeanPairCorrelation(List<XicData> xics, int start, int end)
+        {
+            double sum = 0.0;
+            int count = 0;
+            for (int ii = 0; ii < xics.Count; ii++)
+            {
+                for (int jj = ii + 1; jj < xics.Count; jj++)
+                {
+                    double corr = ScoringMath.PearsonCorrelationInRange(
+                        xics[ii].Intensities, xics[jj].Intensities,
+                        start, end);
+                    if (!double.IsNaN(corr))
+                    {
+                        sum += corr;
+                        count++;
+                    }
+                }
+            }
+            return count > 0 ? sum / count : 0.0;
         }
 
         /// <summary>
@@ -614,8 +777,8 @@ namespace pwiz.Osprey.Scoring
             for (int c = 0; c < nCandidates; c++)
             {
                 startScans[c] = -1;
-                if (!TryResolveScanRange(candidates[c], windowRts, rtCalibration, globalRtTolerance,
-                        context, out var overrideBounds, out double expectedRt, out int startScan, out int endScan) ||
+                if (!TryResolveScanRange(candidates[c], windowRts, rtCalibration,
+                        CandidateRtTolerance(candidates[c], globalRtTolerance, context), context, out var overrideBounds, out double expectedRt, out int startScan, out int endScan) ||
                     overrideBounds.HasValue)
                 {
                     continue;
@@ -702,6 +865,11 @@ namespace pwiz.Osprey.Scoring
         /// <para>Returns one XIC list per block candidate (index c - blockStart), null for a
         /// candidate that did not pass, which TryExtract then handles as before. The block bounds
         /// how many candidates' XICs are alive at once.</para>
+        /// <para>With a <paramref name="corrConfig"/> (<see cref="ScoringContext.CorrelationConfig"/>),
+        /// the same pass also extracts the wider-tolerance XICs TryExtract would otherwise
+        /// re-extract candidate by candidate once a peak is chosen, into
+        /// <paramref name="blockCorrXics"/>; null without one. Probing each spectrum for both
+        /// windows while it is in cache is what makes the second set cheap.</para>
         /// </summary>
         public static List<XicData>[] ExtractXicsScanMajor(
             List<LibraryEntry> candidates,
@@ -710,7 +878,9 @@ namespace pwiz.Osprey.Scoring
             WindowPrefilter prefilter,
             List<Spectrum> windowSpectra,
             double[] windowRts,
-            OspreyConfig config)
+            OspreyConfig config,
+            OspreyConfig corrConfig,
+            out List<XicData>[] blockCorrXics)
         {
             var verdicts = prefilter.Verdicts;
             var startScans = prefilter.StartScans;
@@ -719,13 +889,18 @@ namespace pwiz.Osprey.Scoring
             var blockXics = new List<XicData>[blockSize];
             // One target per (passing candidate, top fragment): its m/z window and XIC array,
             // at slot b * MAX_FRAGS + t for block candidate b and its t-th top fragment.
-            const int MAX_FRAGS = TopFragmentExtractor.CAL_TOP_N_FRAGMENTS;
+            int MAX_FRAGS = TopFragmentExtractor.SearchTopNFragments;
             var targetMzs = new double[blockSize * MAX_FRAGS];
             var targetLowers = new double[blockSize * MAX_FRAGS];
             var targetUppers = new double[blockSize * MAX_FRAGS];
             var targetIntensities = new double[blockSize * MAX_FRAGS][];
             var targetCounts = new int[blockSize];
             var fragmentTolerance = config.FragmentTolerance;
+            // The wider-tolerance targets, at the same slots: same fragments, same scans.
+            blockCorrXics = corrConfig != null ? new List<XicData>[blockSize] : null;
+            var corrLowers = corrConfig != null ? new double[blockSize * MAX_FRAGS] : null;
+            var corrUppers = corrConfig != null ? new double[blockSize * MAX_FRAGS] : null;
+            var corrIntensities = corrConfig != null ? new double[blockSize * MAX_FRAGS][] : null;
             int firstScan = int.MaxValue;
             int lastScan = -1;
             int nPassing = 0;
@@ -745,6 +920,17 @@ namespace pwiz.Osprey.Scoring
                     targetIntensities[b * MAX_FRAGS + t] = xics[t].Intensities;
                 targetCounts[b] = xics.Count;
                 blockXics[b] = xics;
+                if (corrConfig != null)
+                {
+                    var corrXics = TopFragmentExtractor.CreateFragmentXics(candidates[c], windowRts,
+                        startScans[c], endScans[c], corrConfig.FragmentTolerance,
+                        new Span<double>(targetMzs, b * MAX_FRAGS, MAX_FRAGS),
+                        new Span<double>(corrLowers, b * MAX_FRAGS, MAX_FRAGS),
+                        new Span<double>(corrUppers, b * MAX_FRAGS, MAX_FRAGS));
+                    for (int t = 0; t < corrXics.Count; t++)
+                        corrIntensities[b * MAX_FRAGS + t] = corrXics[t].Intensities;
+                    blockCorrXics[b] = corrXics;
+                }
                 firstScan = Math.Min(firstScan, startScans[c]);
                 lastScan = Math.Max(lastScan, endScans[c]);
                 nPassing++;
@@ -786,12 +972,28 @@ namespace pwiz.Osprey.Scoring
                     int c = blockStart + b;
                     int offset = s - startScans[c];
                     int targetEnd = b * MAX_FRAGS + targetCounts[b];
-                    for (int target = b * MAX_FRAGS; target < targetEnd; target++)
+                    if (corrIntensities == null)
                     {
-                        int best = TopFragmentExtractor.FindClosestPeakInWindow(spectrum,
-                            targetMzs[target], targetLowers[target], targetUppers[target]);
-                        if (best >= 0)
-                            targetIntensities[target][offset] = spectrumIntensities[best];
+                        for (int target = b * MAX_FRAGS; target < targetEnd; target++)
+                        {
+                            int best = TopFragmentExtractor.FindClosestPeakInWindow(spectrum,
+                                targetMzs[target], targetLowers[target], targetUppers[target]);
+                            if (best >= 0)
+                                targetIntensities[target][offset] = spectrumIntensities[best];
+                        }
+                    }
+                    else
+                    {
+                        for (int target = b * MAX_FRAGS; target < targetEnd; target++)
+                        {
+                            int best = TopFragmentExtractor.FindClosestPeakInWindows(spectrum, targetMzs[target],
+                                targetLowers[target], targetUppers[target], corrLowers[target], corrUppers[target],
+                                out int corrBest);
+                            if (best >= 0)
+                                targetIntensities[target][offset] = spectrumIntensities[best];
+                            if (corrBest >= 0)
+                                corrIntensities[target][offset] = spectrumIntensities[corrBest];
+                        }
                     }
                     // Past its range: swap the last active candidate into this slot.
                     if (s == endScans[c])
@@ -801,6 +1003,20 @@ namespace pwiz.Osprey.Scoring
                 }
             }
             return blockXics;
+        }
+
+        /// <summary>
+        /// The RT search half-width for <paramref name="candidate"/>: the global one, or the
+        /// library-RT-dependent one when <see cref="ScoringContext.LocalRtTolerance"/> is set
+        /// (OSPREY_LOCAL_RT_TOLERANCE). <see cref="TryExtract"/> and
+        /// <see cref="ComputePrefilterScanMajor"/> both resolve it here, so the prefilter's scan
+        /// range and the extraction's apex window agree.
+        /// </summary>
+        internal static double CandidateRtTolerance(LibraryEntry candidate, double globalRtTolerance,
+            ScoringContext context)
+        {
+            var local = context.LocalRtTolerance;
+            return local != null ? local.HalfWidth(candidate.RetentionTime) : globalRtTolerance;
         }
 
         /// <summary>
@@ -944,24 +1160,12 @@ namespace pwiz.Osprey.Scoring
             if (peakLen < 3 || xics.Count == 0)
                 return 1.0;
 
-            var peakXics = new List<KeyValuePair<int, double[]>>(xics.Count);
-            var peakRts = new double[peakLen];
-            for (int s = 0; s < peakLen; s++)
-                peakRts[s] = xics[0].RetentionTimes[p.StartIndex + s];
-            for (int xi = 0; xi < xics.Count; xi++)
+            // The fit over the peak's scans, in place: the pick fits every candidate peak.
+            if (!TukeyMedianPolish.TryLibCosineOverScans(xics, p.StartIndex, peakLen, candidate.Fragments,
+                    TukeyMedianPolish.SCORING_MAX_ITERATIONS, TukeyMedianPolish.SCORING_TOLERANCE, out double lc))
             {
-                var src = xics[xi].Intensities;
-                var slice = new double[peakLen];
-                for (int s = 0; s < peakLen; s++)
-                    slice[s] = src[p.StartIndex + s];
-                peakXics.Add(new KeyValuePair<int, double[]>(xics[xi].FragmentIndex, slice));
-            }
-
-            var polish = TukeyMedianPolish.Compute(peakXics, peakRts,
-                TukeyMedianPolish.SCORING_MAX_ITERATIONS, TukeyMedianPolish.SCORING_TOLERANCE);
-            if (polish == null)
                 return 1.0;
-            double lc = TukeyMedianPolish.LibCosine(polish, candidate.Fragments);
+            }
             return !double.IsNaN(lc) && lc > 0.0 ? lc : 1.0;
         }
 
@@ -1164,6 +1368,8 @@ namespace pwiz.Osprey.Scoring
                     total += inten[k];
                 if (total >= bestTotal) { bestTotal = total; refXicIdx = f; }
             }
+            if (OspreyEnvironment.RefXicByCorrelation)
+                refXicIdx = ReferenceCorrelations.ChooseReference(xics, start, end, refXicIdx);
 
             // MS1 calibration: reverse-calibrate search m/z and use calibrated tolerance.
             // Matches Rust pipeline.rs:5363-5370 (reverse_calibrate_mz + calibrated_tolerance_ppm).
@@ -1298,7 +1504,7 @@ namespace pwiz.Osprey.Scoring
             if (Verdicts[c] != PrefilterVerdict.passed)
                 return 0;
             long rangeLen = EndScans[c] - StartScans[c] + 1;
-            return (TopFragmentExtractor.CAL_TOP_N_FRAGMENTS + 1) * rangeLen * sizeof(double);
+            return (TopFragmentExtractor.SearchTopNFragments + 1) * rangeLen * sizeof(double);
         }
     }
 
@@ -1320,11 +1526,34 @@ namespace pwiz.Osprey.Scoring
         public Spectrum ApexSpectrum { get; }
         public List<(XICPeakBounds peak, double coelutionScore, double rankScore)> CapturedPeaks { get; }
 
+        /// <summary>
+        /// The candidates the runner-up features compare <see cref="BestPeak"/> with:
+        /// <see cref="CapturedPeaks"/> for a first-pass pick, and for a peak rescored at
+        /// override bounds the candidates the first pass would have chosen among.
+        /// </summary>
+        public List<(XICPeakBounds peak, double coelutionScore, double rankScore)> RunnerUpPeaks { get; }
+
+        /// <summary>
+        /// The same fragments' XICs over the same scans at the wider correlation tolerance
+        /// (<see cref="ScoringContext.CorrelationConfig"/>), which the correlation-shape features
+        /// score; null when that tolerance is off, and those features then score <see cref="Xics"/>.
+        /// </summary>
+        public List<XicData> CorrelationXics { get; private set; }
+
+        /// <summary>
+        /// <see cref="RunnerUpPeaks"/> with each coelution score taken over the correlation XICs
+        /// (the pick scores unchanged); null when <see cref="CorrelationXics"/> or <see cref="RunnerUpPeaks"/>
+        /// is, or when no computed feature reads it.
+        /// </summary>
+        public List<(XICPeakBounds peak, double coelutionScore, double rankScore)> CorrelationRunnerUpPeaks { get; private set; }
+
         public ExtractedPeak(
             List<XicData> xics, int refXicIdx, double[] refXicIntensities,
             XICPeakBounds bestPeak, int startScan, Spectrum apexSpectrum,
-            List<(XICPeakBounds peak, double coelutionScore, double rankScore)> capturedPeaks)
+            List<(XICPeakBounds peak, double coelutionScore, double rankScore)> capturedPeaks,
+            List<(XICPeakBounds peak, double coelutionScore, double rankScore)> runnerUpPeaks)
         {
+            RunnerUpPeaks = runnerUpPeaks;
             Xics = xics;
             RefXicIdx = refXicIdx;
             RefXicIntensities = refXicIntensities;
@@ -1332,6 +1561,13 @@ namespace pwiz.Osprey.Scoring
             StartScan = startScan;
             ApexSpectrum = apexSpectrum;
             CapturedPeaks = capturedPeaks;
+        }
+
+        public void SetCorrelationXics(List<XicData> correlationXics,
+            List<(XICPeakBounds peak, double coelutionScore, double rankScore)> correlationRunnerUpPeaks)
+        {
+            CorrelationXics = correlationXics;
+            CorrelationRunnerUpPeaks = correlationRunnerUpPeaks;
         }
     }
 }

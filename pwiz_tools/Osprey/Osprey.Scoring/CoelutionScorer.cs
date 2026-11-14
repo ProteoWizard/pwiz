@@ -57,13 +57,69 @@ namespace pwiz.Osprey.Scoring
         private const int XIC_BLOCK_SIZE = 512;
         private const long XIC_BLOCK_BYTES = 4L * 1024 * 1024;
 
+        // The correlation-shape features that read a byproduct the scorer publishes for them over the
+        // wider-tolerance XICs (OSPREY_CORR_FRAGMENT_TOLERANCE): the median-polish fit over those XICs,
+        // and the runner-up candidates by their coelution over them. Each is computed only when a
+        // feature that reads it is.
+        private static readonly string[] CORRELATION_POLISH_READERS =
+        {
+            @"mp_fragment_r2_rank2", @"mp_fragment_r2_rank3", @"mp_fragment_r2_rank4",
+            @"mp_fragment_r2_top3_mean", @"mp_fragment_r2_median", @"mp_n_fragments_good_fit",
+            @"top3_ref_n_corr_good", @"top3_mp_min_r2", @"top3_mp_r2_median", @"top3_coelution_min",
+        };
+        private static readonly string[] CORRELATION_CANDIDATE_READERS =
+        {
+            @"peak_coelution_margin",
+            @"wide_coelution_sum", @"wide_n_coeluting", @"wide_coelution_margin", @"wide_top3_coelution_min",
+        };
+
+        /// <summary>
+        /// Sort a window's spectra into the order <see cref="ScoreWindow"/> extracts XICs in: by
+        /// RT, with ScanNumber as a unique secondary key so the comparator never returns 0 -- an
+        /// allocation-free total order that matches Rust's stable slice::sort_by on the
+        /// scan-ordered window (tie hazard #4362).
+        /// </summary>
+        public static void SortWindowSpectra(List<Spectrum> windowSpectra)
+        {
+            windowSpectra.Sort((a, b) => // Array.Sort OK: (RetentionTime, ScanNumber) is a unique total order (ScanNumber unique per scan), so the comparator never ties
+            {
+                int byRt = a.RetentionTime.CompareTo(b.RetentionTime);
+                return byRt != 0 ? byRt : a.ScanNumber.CompareTo(b.ScanNumber);
+            });
+        }
+
+        /// <summary>The retention times of a window's spectra, in their order.</summary>
+        public static double[] WindowRetentionTimes(List<Spectrum> windowSpectra)
+        {
+            double[] windowRts = new double[windowSpectra.Count];
+            for (int i = 0; i < windowSpectra.Count; i++)
+                windowRts[i] = windowSpectra[i].RetentionTime;
+            return windowRts;
+        }
+
         private readonly IScoringDiagnostics _diagnostics;  // nullable by contract; invoked null-conditionally
         private readonly PeakDataExtractor _extractor;
+        private readonly bool[] _recordedFeatures;   // null computes every feature
+        private readonly bool _correlationPolish;    // A computed feature reads the wider-XIC median polish
 
-        public CoelutionScorer(IScoringDiagnostics diagnostics)
+        /// <summary>
+        /// A scorer that computes every PIN feature, or, when <paramref name="recordedFeatures"/> is
+        /// given, only the features it flags beyond the first <see cref="OspreyFeatureCalculators.CORE_FEATURE_COUNT"/>,
+        /// which are always computed. An unflagged feature is left 0 in the vector and is not
+        /// written to the scores parquet (<c>PinFeatureMask.IsRecorded</c> decides both).
+        /// </summary>
+        public CoelutionScorer(IScoringDiagnostics diagnostics, bool[] recordedFeatures = null)
         {
+            if (recordedFeatures != null && recordedFeatures.Length != OspreyFeatureCalculators.FeatureCount)
+            {
+                // Exception text for internal diagnostics, not displayed to user
+                throw new ArgumentException(string.Format(@"Expected {0} recorded-feature flags, not {1}",
+                    OspreyFeatureCalculators.FeatureCount, recordedFeatures.Length), nameof(recordedFeatures));
+            }
             _diagnostics = diagnostics;
-            _extractor = new PeakDataExtractor(diagnostics);
+            _recordedFeatures = recordedFeatures;
+            _correlationPolish = AnyComputed(CORRELATION_POLISH_READERS);
+            _extractor = new PeakDataExtractor(diagnostics, AnyComputed(CORRELATION_CANDIDATE_READERS));
         }
 
 
@@ -96,15 +152,7 @@ namespace pwiz.Osprey.Scoring
             if (windowSpectra == null || windowSpectra.Count == 0)
                 return entries;
 
-            // Sort spectra by RT for XIC extraction, with ScanNumber as a unique
-            // secondary key so the comparator never returns 0 -- an allocation-free
-            // total order that matches Rust's stable slice::sort_by on the scan-ordered
-            // window (tie hazard #4362).
-            windowSpectra.Sort((a, b) => // Array.Sort OK: (RetentionTime, ScanNumber) is a unique total order (ScanNumber unique per scan), so the comparator never ties
-            {
-                int byRt = a.RetentionTime.CompareTo(b.RetentionTime);
-                return byRt != 0 ? byRt : a.ScanNumber.CompareTo(b.ScanNumber);
-            });
+            SortWindowSpectra(windowSpectra);
 
             // Find candidate library entries whose precursor m/z falls in this window.
             // No minimum fragment count filter - matches Rust which scores all entries.
@@ -120,10 +168,7 @@ namespace pwiz.Osprey.Scoring
             if (candidates.Count == 0)
                 return entries;
 
-            // Build RT array for this window
-            double[] windowRts = new double[windowSpectra.Count];
-            for (int i = 0; i < windowSpectra.Count; i++)
-                windowRts[i] = windowSpectra[i].RetentionTime;
+            double[] windowRts = WindowRetentionTimes(windowSpectra);
 
             // The window's XCorr cache (see IResolutionStrategy.PreprocessWindowSpectra);
             // released once all candidates for this window are scored.
@@ -140,6 +185,12 @@ namespace pwiz.Osprey.Scoring
             ospreyContext.SetWindow(context.Resolution, preprocessedXcorr, scorer,
                 context.XcorrScratchPool);
             var ospreyPeakData = new OspreyPeakData();
+            // The correlation-shape features' context and view over the wider-tolerance XICs, when
+            // OSPREY_CORR_FRAGMENT_TOLERANCE sets one (ScoringContext.CorrelationConfig).
+            var corrScoring = context.CorrelationConfig != null
+                ? new CorrelationScoring(context.CorrelationConfig, context, preprocessedXcorr, scorer,
+                    _correlationPolish)
+                : null;
 
             try
             {
@@ -163,17 +214,24 @@ namespace pwiz.Osprey.Scoring
                     blockEnd = scanMajorXics
                         ? prefilter.NextXicBlockEnd(blockStart, XIC_BLOCK_SIZE, XIC_BLOCK_BYTES)
                         : candidates.Count;
+                    List<XicData>[] blockCorrXics = null;
                     var blockXics = scanMajorXics
                         ? PeakDataExtractor.ExtractXicsScanMajor(candidates, blockStart, blockEnd,
-                            prefilter, windowSpectra, windowRts, config)
+                            prefilter, windowSpectra, windowRts, config, context.CorrelationConfig, out blockCorrXics)
                         : null;
                     for (int c = blockStart; c < blockEnd; c++)
                     {
                         List<XicData> precomputedXics = null;
+                        List<XicData> precomputedCorrXics = null;
                         if (blockXics != null)
                         {
                             precomputedXics = blockXics[c - blockStart];
                             blockXics[c - blockStart] = null;    // Released with the candidate's scoring
+                        }
+                        if (blockCorrXics != null)
+                        {
+                            precomputedCorrXics = blockCorrXics[c - blockStart];
+                            blockCorrXics[c - blockStart] = null;
                         }
 
                         var fdrEntry = ScoreCandidate(
@@ -182,8 +240,8 @@ namespace pwiz.Osprey.Scoring
                             globalRtTolerance, rtSigma,
                             ms1Spectra, ms1Calibration,
                             context,
-                            ospreyContext, ospreyPeakData,
-                            prefilter, c, precomputedXics);
+                            ospreyContext, ospreyPeakData, corrScoring,
+                            prefilter, c, precomputedXics, precomputedCorrXics);
 
                         if (fdrEntry != null)
                             entries.Add(fdrEntry);
@@ -196,6 +254,63 @@ namespace pwiz.Osprey.Scoring
             {
                 context.Resolution.ReleaseWindowCache(preprocessedXcorr, context.XcorrScratchPool);
             }
+        }
+
+        /// <summary>
+        /// The CWT peak candidates first-pass detection ranks for one precursor - the Stage 6
+        /// reconciliation input, which Rust stores in every row of its scores parquet - computed
+        /// without scoring the precursor: the same first-pass detection (the scan-major
+        /// prefilter and XIC extraction when those are on, as <see cref="ScoreWindow"/> runs
+        /// them), then the same top-N capture, in the same order. No PIN feature is computed.
+        ///
+        /// <para>The caller supplies what the first pass scored the window with:
+        /// <paramref name="windowSpectra"/> calibrated and in <see cref="SortWindowSpectra"/>
+        /// order, <paramref name="windowRts"/> from <see cref="WindowRetentionTimes"/>, and a
+        /// <paramref name="context"/> with no boundary overrides whose search settings
+        /// <see cref="ScoringPipeline.ApplySearchSettings"/> resolved for
+        /// <paramref name="rtCalibration"/>. Returns null when the first pass would have found no
+        /// scorable peak (and so stored no row), with <paramref name="apexScanNumber"/> null;
+        /// otherwise <paramref name="apexScanNumber"/> is the scan of the peak it would pick.</para>
+        /// </summary>
+        public List<CwtCandidate> RecomputeCwtCandidates(
+            LibraryEntry candidate,
+            List<Spectrum> windowSpectra,
+            double[] windowRts,
+            RTCalibration rtCalibration,
+            double globalRtTolerance,
+            double rtSigma,
+            List<MS1Spectrum> ms1Spectra,
+            MzCalibrationResult ms1Calibration,
+            ScoringContext context,
+            out uint? apexScanNumber)
+        {
+            apexScanNumber = null;
+            var candidates = new List<LibraryEntry> { candidate };
+            var prefilter = OspreyEnvironment.ScanMajorPrefilter
+                ? _extractor.ComputePrefilterScanMajor(candidates, windowSpectra, windowRts,
+                    rtCalibration, globalRtTolerance, context)
+                : null;
+            List<XicData> precomputedXics = null;
+            List<XicData> precomputedCorrXics = null;
+            if (prefilter != null && OspreyEnvironment.ScanMajorXic)
+            {
+                var blockXics = PeakDataExtractor.ExtractXicsScanMajor(candidates, 0, 1,
+                    prefilter, windowSpectra, windowRts, context.Config, context.CorrelationConfig, out var blockCorrXics);
+                precomputedXics = blockXics[0];
+                precomputedCorrXics = blockCorrXics?[0];
+            }
+
+            if (!_extractor.TryExtract(
+                    candidate, windowSpectra, windowRts, rtCalibration,
+                    globalRtTolerance, rtSigma, ms1Spectra, ms1Calibration,
+                    context, new OspreyPeakData(), prefilter, 0, precomputedXics, precomputedCorrXics,
+                    out var ext))
+            {
+                return null;
+            }
+
+            apexScanNumber = ext.ApexSpectrum.ScanNumber;
+            return CaptureCwtCandidates(ext.CapturedPeaks, ext.Xics, ext.RefXicIdx, ext.RefXicIntensities, context);
         }
 
 
@@ -221,14 +336,17 @@ namespace pwiz.Osprey.Scoring
             ScoringContext context,
             OspreyScoringContext ospreyContext,
             OspreyPeakData ospreyPeakData,
+            CorrelationScoring corrScoring,
             WindowPrefilter prefilter,
             int prefilterIndex,
-            List<XicData> precomputedXics)
+            List<XicData> precomputedXics,
+            List<XicData> precomputedCorrXics)
         {
             if (!_extractor.TryExtract(
                     candidate, windowSpectra, windowRts, rtCalibration,
                     globalRtTolerance, rtSigma, ms1Spectra, ms1Calibration,
-                    context, ospreyPeakData, prefilter, prefilterIndex, precomputedXics, out var ext))
+                    context, ospreyPeakData, prefilter, prefilterIndex, precomputedXics, precomputedCorrXics,
+                    out var ext))
                 return null;
 
             var bestPeak = ext.BestPeak;
@@ -253,18 +371,7 @@ namespace pwiz.Osprey.Scoring
             int peakLen = bestPeak.EndIndex - bestPeak.StartIndex + 1;
             if (peakLen >= 3)
             {
-                var peakXics = new List<KeyValuePair<int, double[]>>(xics.Count);
-                var peakRts = new double[peakLen];
-                for (int s = 0; s < peakLen; s++)
-                    peakRts[s] = xics[0].RetentionTimes[bestPeak.StartIndex + s];
-                for (int xi = 0; xi < xics.Count; xi++)
-                {
-                    var src = xics[xi].Intensities;
-                    var slice = new double[peakLen];
-                    for (int s = 0; s < peakLen; s++)
-                        slice[s] = src[bestPeak.StartIndex + s];
-                    peakXics.Add(new KeyValuePair<int, double[]>(xics[xi].FragmentIndex, slice));
-                }
+                var peakXics = CropToPeak(xics, bestPeak, peakLen, out var peakRts);
 
                 // Bisection seam: dump (frag_pos, frag_idx, scan_idx, rt,
                 // intensity) for every median-polish call. Mirrors the
@@ -285,29 +392,30 @@ namespace pwiz.Osprey.Scoring
                     ospreyContext.AddInfo(new MedianPolishByproduct(polish, peakXics));
             }
 
-            // Build full 21-element PIN feature vector
+            // The candidate peaks the runner-up features compare the chosen peak with: the ones the
+            // pick chose among, or for a peak rescored at override bounds, the ones the first pass
+            // would have chosen among.
+            if (ext.RunnerUpPeaks != null)
+                ospreyContext.AddInfo(new PeakCandidatesByproduct(ext.RunnerUpPeaks, bestPeak));
+
+            // The correlation-shape features score the wider-tolerance XICs, with their own median-polish
+            // fit and runner-up coelution; null when there are none, and every feature scores xics.
+            bool corrActive = corrScoring != null && ext.CorrelationXics != null;
+            if (corrActive)
+                corrScoring.Set(ospreyPeakData, ext, peakLen);
+
+            // Build the full PIN feature vector
             double[] features = new double[OspreyFeatureCalculators.FeatureCount];
-            features[0] = OspreyFeatureCalculators.Get(0).Calculate(ospreyContext, ospreyPeakData);
-            features[1] = OspreyFeatureCalculators.Get(1).Calculate(ospreyContext, ospreyPeakData);
-            features[2] = OspreyFeatureCalculators.Get(2).Calculate(ospreyContext, ospreyPeakData);
-            features[3] = OspreyFeatureCalculators.Get(3).Calculate(ospreyContext, ospreyPeakData);
-            features[4] = OspreyFeatureCalculators.Get(4).Calculate(ospreyContext, ospreyPeakData);
-            features[5] = OspreyFeatureCalculators.Get(5).Calculate(ospreyContext, ospreyPeakData);
-            features[6] = OspreyFeatureCalculators.Get(6).Calculate(ospreyContext, ospreyPeakData);
-            features[7] = OspreyFeatureCalculators.Get(7).Calculate(ospreyContext, ospreyPeakData);
-            features[8] = OspreyFeatureCalculators.Get(8).Calculate(ospreyContext, ospreyPeakData);
-            features[9] = OspreyFeatureCalculators.Get(9).Calculate(ospreyContext, ospreyPeakData);
-            features[10] = OspreyFeatureCalculators.Get(10).Calculate(ospreyContext, ospreyPeakData);
-            features[11] = OspreyFeatureCalculators.Get(11).Calculate(ospreyContext, ospreyPeakData);
-            features[12] = OspreyFeatureCalculators.Get(12).Calculate(ospreyContext, ospreyPeakData);
-            features[13] = OspreyFeatureCalculators.Get(13).Calculate(ospreyContext, ospreyPeakData);
-            features[14] = OspreyFeatureCalculators.Get(14).Calculate(ospreyContext, ospreyPeakData);
-            features[15] = OspreyFeatureCalculators.Get(15).Calculate(ospreyContext, ospreyPeakData);
-            features[16] = OspreyFeatureCalculators.Get(16).Calculate(ospreyContext, ospreyPeakData);
-            features[17] = OspreyFeatureCalculators.Get(17).Calculate(ospreyContext, ospreyPeakData);
-            features[18] = OspreyFeatureCalculators.Get(18).Calculate(ospreyContext, ospreyPeakData);
-            features[19] = OspreyFeatureCalculators.Get(19).Calculate(ospreyContext, ospreyPeakData);
-            features[20] = OspreyFeatureCalculators.Get(20).Calculate(ospreyContext, ospreyPeakData);
+            // The core features, and of the feature families only those that are recorded. Each
+            // computes its own byproduct on first use, so skipping one changes no other feature's value.
+            for (int f = 0; f < features.Length; f++)
+            {
+                if (!IsComputed(f))
+                    continue;
+                features[f] = corrActive && OspreyFeatureCalculators.ReadsCorrelationXics(f)
+                    ? OspreyFeatureCalculators.Get(f).Calculate(corrScoring.Context, corrScoring.PeakData)
+                    : OspreyFeatureCalculators.Get(f).Calculate(ospreyContext, ospreyPeakData);
+            }
 
             // Median-polish bisection dump (after the feature vector so the four
             // values are available). Reads the polish + cropped inputs from the
@@ -325,25 +433,108 @@ namespace pwiz.Osprey.Scoring
                     mpByproduct.Polish, mpByproduct.PeakXics);
             }
 
-            // Stage 6 reconciliation input: capture the top-N CWT peak
-            // candidates ranked by penalized rank score, with each kept
-            // candidate's apex/area/snr recomputed over the reference XIC
-            // slice. Mirrors Rust run_search at pipeline.rs:6852-6879.
-            // The stored coelution_score is the raw mean (NOT the RT-
-            // penalized rank score) -- reconciliation has its own RT
-            // tolerance logic via consensus RT comparison.
-            List<CwtCandidate> cwtCandidatesOut = CaptureCwtCandidates(
-                ext.CapturedPeaks, xics, ext.RefXicIdx, ext.RefXicIntensities, context);
+            // No top-N CWT candidate list: Rust stores one in every row (pipeline.rs:6852-6879)
+            // for reconciliation, which consults it for under 1% of rows. Stage 6 recomputes
+            // those rows' lists with RecomputeCwtCandidates when it plans them.
 
             // Build FdrEntry from the winning peak + feature vector (frag
             // blobs, reference-XIC slice, bounds). Extracted to BuildFdrEntry.
             var entry = BuildFdrEntry(
-                candidate, bestPeak, features, cwtCandidatesOut,
+                candidate, bestPeak, features,
                 xics, ext.RefXicIdx, ext.RefXicIntensities, windowRts, ext.StartScan, apexSpectrum);
 
             return entry;
         }
 
+
+        // True when ScoreCandidate computes the PIN feature at featureIndex: a core feature, or a
+        // recorded one.
+        private bool IsComputed(int featureIndex)
+        {
+            return featureIndex < OspreyFeatureCalculators.CORE_FEATURE_COUNT || _recordedFeatures == null ||
+                   _recordedFeatures[featureIndex];
+        }
+
+        // True when ScoreCandidate computes any of the named PIN features.
+        private bool AnyComputed(string[] featureNames)
+        {
+            var remaining = new HashSet<string>(featureNames);
+            bool any = false;
+            for (int f = 0; f < OspreyFeatureCalculators.FeatureCount; f++)
+            {
+                if (remaining.Remove(OspreyFeatureCalculators.Get(f).Name) && IsComputed(f))
+                    any = true;
+            }
+            if (remaining.Count > 0)
+            {
+                // Exception text for internal diagnostics, not displayed to user
+                throw new InvalidOperationException(string.Format(@"Unknown feature names: {0}",
+                    string.Join(@", ", remaining)));
+            }
+            return any;
+        }
+
+        // The fragment XICs cropped to the peak [StartIndex, StartIndex + peakLen), keyed by fragment
+        // index, with their retention times: the median-polish input.
+        private static List<KeyValuePair<int, double[]>> CropToPeak(List<XicData> xics, XICPeakBounds bestPeak,
+            int peakLen, out double[] peakRts)
+        {
+            var peakXics = new List<KeyValuePair<int, double[]>>(xics.Count);
+            peakRts = new double[peakLen];
+            for (int s = 0; s < peakLen; s++)
+                peakRts[s] = xics[0].RetentionTimes[bestPeak.StartIndex + s];
+            for (int xi = 0; xi < xics.Count; xi++)
+            {
+                var src = xics[xi].Intensities;
+                var slice = new double[peakLen];
+                for (int s = 0; s < peakLen; s++)
+                    slice[s] = src[bestPeak.StartIndex + s];
+                peakXics.Add(new KeyValuePair<int, double[]>(xics[xi].FragmentIndex, slice));
+            }
+            return peakXics;
+        }
+
+        /// <summary>
+        /// The window-local scoring state of the correlation-shape features under
+        /// OSPREY_CORR_FRAGMENT_TOLERANCE: a second <see cref="OspreyScoringContext"/>, configured at
+        /// the wider tolerance (so the 0.45 x / 0.2 x re-extractions are fractions of it), and a second
+        /// <see cref="OspreyPeakData"/> presenting the candidate with its wider-tolerance XICs. Reused
+        /// across a window's candidates like the primary pair; <see cref="Set"/> fills it per candidate
+        /// with the byproducts the harness publishes for the primary context - the median-polish fit and
+        /// the runner-up candidates - computed over the wider XICs.
+        /// </summary>
+        private sealed class CorrelationScoring
+        {
+            private readonly bool _polish;
+
+            public CorrelationScoring(OspreyConfig corrConfig, ScoringContext context,
+                WindowXcorrCache preprocessedXcorr, SpectralScorer scorer, bool polish)
+            {
+                _polish = polish;
+                Context = new OspreyScoringContext(corrConfig);
+                Context.SetWindow(context.Resolution, preprocessedXcorr, scorer, context.XcorrScratchPool);
+                PeakData = new OspreyPeakData();
+            }
+
+            public OspreyScoringContext Context { get; }
+            public OspreyPeakData PeakData { get; }
+
+            public void Set(OspreyPeakData primary, ExtractedPeak ext, int peakLen)
+            {
+                PeakData.SetFrom(primary, ext.CorrelationXics);
+                Context.ClearByproducts();
+                if (_polish && peakLen >= 3)
+                {
+                    var peakXics = CropToPeak(ext.CorrelationXics, ext.BestPeak, peakLen, out var peakRts);
+                    var polish = TukeyMedianPolish.Compute(peakXics, peakRts,
+                        TukeyMedianPolish.SCORING_MAX_ITERATIONS, TukeyMedianPolish.SCORING_TOLERANCE);
+                    if (polish != null)
+                        Context.AddInfo(new MedianPolishByproduct(polish, peakXics));
+                }
+                if (ext.CorrelationRunnerUpPeaks != null)
+                    Context.AddInfo(new PeakCandidatesByproduct(ext.CorrelationRunnerUpPeaks, ext.BestPeak));
+            }
+        }
 
         /// <summary>
         /// Capture the top-N CWT peak candidates (Stage 6 reconciliation input),
@@ -432,7 +623,6 @@ namespace pwiz.Osprey.Scoring
             LibraryEntry candidate,
             XICPeakBounds bestPeak,
             double[] features,
-            List<CwtCandidate> cwtCandidatesOut,
             List<XicData> xics,
             int refXicIdx,
             double[] refXicIntensities,
@@ -484,7 +674,6 @@ namespace pwiz.Osprey.Scoring
                 Score = features[0],
                 ModifiedSequence = candidate.ModifiedSequence,
                 Features = features,
-                CwtCandidates = cwtCandidatesOut,
                 ReferenceXicRts = refXicRts,
                 ReferenceXicIntensities = refXicInts,
                 BoundsArea = bestPeak.Area,

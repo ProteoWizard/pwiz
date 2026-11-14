@@ -192,15 +192,12 @@ namespace pwiz.Osprey.Tasks
 
         // Phase B resume surface: the library and every input mzML are
         // read; per-file .scores.parquet + .calibration.json are written.
-        // ValidityKey is the default: the search and library hashes, plus
-        // the peak-pick arm the base key carries. The pick belongs to THIS
-        // stage - it chooses which candidate peak each precursor's row
-        // describes - so a re-run under a different pick model must not
-        // adopt these parquets. The override adds whether the parquets carry
-        // the reference XIC, which only the training export reads.
-        public override string ValidityKey(PipelineContext ctx) =>
-            base.ValidityKey(ctx) + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config);
-
+        // ValidityKey is the default - the search and library hashes, plus
+        // the peak-pick arm the base key carries - and the recorded features.
+        // The pick belongs to THIS stage - it chooses which candidate peak each
+        // precursor's row describes - so a re-run under a different pick model
+        // must not adopt these parquets.
+        //
         // The data file is declared as the input it is, and a node that holds only its
         // <stem>.spectra.bin satisfies it: the cache stands in for an absent source (doc 00,
         // "HPC relay checklist"), so a harness ships the cache in its place.
@@ -211,6 +208,21 @@ namespace pwiz.Osprey.Tasks
             if (ctx.Config.InputFiles != null)
                 foreach (var input in ctx.Config.InputFiles)
                     yield return input;
+        }
+
+        /// <summary>
+        /// The default key and the recorded-feature term: the scores parquet holds a column for
+        /// each recorded feature only, so a run that needs a feature these scores lack (a wider
+        /// mask, or OSPREY_RECORD_ALL_FEATURES=1) must score again rather than adopt them. Empty
+        /// under the default mask (<see cref="PinFeatureMask.RecordedFeaturesValidityKeySuffix()"/>).
+        /// </summary>
+        public override string ValidityKey(PipelineContext ctx)
+        {
+            return base.ValidityKey(ctx) + PinFeatureMask.RecordedFeaturesValidityKeySuffix()
+                // Whether the parquets carry the reference XIC, which only the training export reads.
+                + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config)
+                // A loaded calibration replaces Stage 3's, which centres every search here.
+                + OspreyEnvironment.LoadCalibrationValidityKeySuffix();
         }
 
         public override IEnumerable<string> Outputs(PipelineContext ctx)
@@ -255,9 +267,8 @@ namespace pwiz.Osprey.Tasks
             // calibration so Stage 6 gap-fill filters candidates by isolation
             // coverage (essential for GPF datasets with disjoint m/z ranges).
             var perFileIsolationMz = new ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>>();
-            // fileName -> .scores.parquet path, populated below so Stage 6
-            // reconciliation can lazily load CWT candidates per file via
-            // ParquetScoreCache.LoadCwtCandidatesFromParquet.
+            // fileName -> .scores.parquet path, populated below so the later stages
+            // can find each file's scores.
             var perFileParquetPaths = new Dictionary<string, string>();
             // Decouple scoring from FirstPassFDR (issue #4355): during the scoring
             // loop below we record ONLY each scored file's name, in original
@@ -278,11 +289,10 @@ namespace pwiz.Osprey.Tasks
             // file and mutates FragmentTolerance during MS2 calibration,
             // so reading config.Identity.SearchParameterHash() inside ProcessFile
             // would produce a hash that the --input-scores validator would
-            // not recognize. Built unconditionally because Stage 6
-            // reconciliation needs the per-file .scores.parquet on disk to
-            // lazily load CWT candidates -- matches Rust's end-to-end
-            // behavior, which always writes the parquet sidecar regardless
-            // of --task PerFileScoring.
+            // not recognize. Built unconditionally because the later stages
+            // read the per-file .scores.parquet from disk -- matches Rust's
+            // end-to-end behavior, which always writes the parquet sidecar
+            // regardless of --task PerFileScoring.
             string validityKey = ValidityKey(ctx);
             _outputStamp = OspreyVersion.Stamp(Name, validityKey);
             var parquetFooterMetadata = ParquetScoreCache.WithStamp(new Dictionary<string, string>
@@ -291,6 +301,7 @@ namespace pwiz.Osprey.Tasks
                 { @"osprey.search_hash", config.Identity.SearchParameterHash() },
                 { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
                 { ParquetScoreCache.META_RECONCILED, @"false" },
+                { ParquetScoreCache.META_XIC_FRAGMENTS, ParquetScoreCache.XicFragmentsText(OspreyEnvironment.SearchXicFragments) },
             }, _outputStamp);
 
             // Resolve how many input files score concurrently for this invocation
@@ -399,10 +410,10 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(LogTag.TIMING, @"All files processed: {0:F1}s",
                 swAllFiles.Elapsed.TotalSeconds);
 
-            // Populate perFileParquetPaths from config.InputFiles so Stage 6
-            // reconciliation can locate each file's freshly-written
-            // .scores.parquet to lazy-load CWT candidates from. ProcessFile
-            // always writes the parquet (parquetFooterMetadata is non-null).
+            // Populate perFileParquetPaths from config.InputFiles so the later
+            // stages can locate each file's freshly-written .scores.parquet.
+            // ProcessFile always writes the parquet (parquetFooterMetadata is
+            // non-null).
             foreach (string inputFile in config.InputFiles)
             {
                 string fileName = Path.GetFileNameWithoutExtension(inputFile);
@@ -1368,7 +1379,7 @@ namespace pwiz.Osprey.Tasks
                     // waste the resume path carried, on the node that can least afford it.
                     //
                     // It also read that footer TWICE and used neither count: HasPinFeatureColumns
-                    // above opened the file for the schema, ProbeCwtRowMetadata opened it again
+                    // above opened the file for the schema, a CWT-row probe opened it again
                     // for NumRows, and the resulting hint was handed to BeginFile - which
                     // returns before touching capacityHint in counts-only mode, because there is
                     // no row list to pre-size. ProbeResumeSchemaAndRows answers both in one open.
@@ -1919,8 +1930,7 @@ namespace pwiz.Osprey.Tasks
 
             // Retention snapshot at the in-scoring PEAK -- this is the moment the memory
             // work targets. Here scoredEntries still hold every heavy per-entry array
-            // (Features / CwtCandidates /
-            // ReferenceXic*) and the library is still resident, but the resident MS2 is
+            // (Features / ReferenceXic*) and the library is still resident, but the resident MS2 is
             // gone on the streaming path (dropped above), which is the reduction this
             // snapshot exists to confirm. Those per-entry arrays are dropped a few lines
             // below (the #4355 write-then-null), so the later
@@ -1933,8 +1943,8 @@ namespace pwiz.Osprey.Tasks
             ProfilerHooks.CaptureRetentionSnapshot(@"perfile-scoring-peak");
 
             // Persist the full FdrEntry results (with features) to
-            // {stem}.scores.parquet so (a) Stage 6 reconciliation can lazy-load
-            // CWT candidates per file, and (b) a subsequent --task FirstPassFDR
+            // {stem}.scores.parquet so (a) Stage 5 and 6 can reload each file's
+            // rows, and (b) a subsequent --task FirstPassFDR
             // invocation can pick them up without re-running Stages 1-4.
             // Same path convention as Rust (`scores_path_for_input`).
             // Snappy-compressed; cross-impl ZSTD/Snappy compatibility tracked
@@ -1965,14 +1975,13 @@ namespace pwiz.Osprey.Tasks
                 // the parquet above and are reloadable by ParquetIndex, so drop them from
                 // the retained buffer to bound memory -- all N files' entries are held at
                 // once for FirstPassFDR, and these arrays dominate. Features is reloaded before
-                // first-pass Percolator (FirstPassFdrTask); CWT / ref-XIC are
+                // first-pass Percolator (FirstPassFdrTask); ref-XIC is
                 // reloaded from parquet in Stage 6 / 7. This brings the cold buffer to the
                 // same stub shape LoadFdrStubsFromParquet produces (see the FdrEntry field
                 // docs, which already document these as null on parquet-loaded stubs).
                 foreach (var entry in scoredEntries)
                 {
                     entry.Features = null;
-                    entry.CwtCandidates = null;
                     entry.ReferenceXicRts = null;
                     entry.ReferenceXicIntensities = null;
                 }

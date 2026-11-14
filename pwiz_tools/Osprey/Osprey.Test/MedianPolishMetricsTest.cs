@@ -21,8 +21,10 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.Scoring;
 
@@ -57,6 +59,51 @@ namespace pwiz.Osprey.Test
             Assert.IsNotNull(polish, "Compute should fit the additive fixture");
             return polish;
         }
+
+        #region Top-k fragment fits
+
+        [TestMethod]
+        public void TestTopKFragmentFitsTolerateOneInterferedFragment()
+        {
+            // Four fragments follow the profile; a fifth carries an interferer that peaks at the
+            // edges. The worst-fragment R^2 is set by the interfered one, while the top-k
+            // features, which keep the best fragments, still see four clean fits.
+            var scales = new[] { 100.0, 80.0, 50.0, 25.0 };
+            var xics = new List<KeyValuePair<int, double[]>>();
+            for (int f = 0; f < scales.Length; f++)
+            {
+                var row = new double[PROFILE.Length];
+                for (int s = 0; s < PROFILE.Length; s++)
+                    row[s] = scales[f] * PROFILE[s];
+                xics.Add(new KeyValuePair<int, double[]>(f, row));
+            }
+            xics.Add(new KeyValuePair<int, double[]>(4, new[] { 400.0, 60.0, 30.0, 60.0, 400.0 }));
+            var polish = TukeyMedianPolish.Compute(xics, RTS, 20, 1e-6);
+            Assert.IsNotNull(polish, "Compute should fit the fixture");
+
+            var context = new OspreyScoringContext(null);
+            context.AddInfo(new MedianPolishByproduct(polish, null));
+            var fits = MedianPolishFragmentFits.GetOrCompute(context);
+
+            double minR2 = TukeyMedianPolish.MinFragmentR2(polish);
+            Assert.IsTrue(minR2 < 0.5, string.Format("The interfered fragment should set min R^2 low, got {0:F4}", minR2));
+            Assert.AreEqual(5, fits.SortedR2.Length);
+            Assert.IsTrue(fits.KthBest(4) > 0.95, string.Format("4th best R^2 should be clean, got {0:F4}", fits.KthBest(4)));
+            Assert.IsTrue(fits.Median() > 0.95, string.Format("Median R^2 should be clean, got {0:F4}", fits.Median()));
+            Assert.AreEqual(4, fits.CountGood());
+            Assert.AreEqual(minR2, fits.KthBest(5), 1e-12);
+            Assert.AreEqual(0.0, fits.KthBest(6), 1e-12);
+            Assert.AreSame(fits, MedianPolishFragmentFits.GetOrCompute(context), "The fits are computed once per candidate");
+
+            // No published fit: every top-k value is 0.
+            var empty = MedianPolishFragmentFits.GetOrCompute(new OspreyScoringContext(null));
+            Assert.AreEqual(0.0, empty.KthBest(2), 1e-12);
+            Assert.AreEqual(0.0, empty.TopMean(3), 1e-12);
+            Assert.AreEqual(0.0, empty.Median(), 1e-12);
+            Assert.AreEqual(0, empty.CountGood());
+        }
+
+        #endregion
 
         #region Null-input guards
 
@@ -123,6 +170,72 @@ namespace pwiz.Osprey.Test
             double cosine = TukeyMedianPolish.LibCosine(polish, library);
             Assert.IsTrue(cosine > 0.99,
                 string.Format("LibCosine for a parallel library should be ~1, got {0:F4}", cosine));
+        }
+
+        /// <summary>
+        /// The peak pick's in-place fit (<see cref="TukeyMedianPolish.TryLibCosineOverScans"/>)
+        /// gives the LibCosine of Compute over the same scans bit for bit, and declines exactly
+        /// where Compute returns null, over noisy XICs with missing scans and fragments and
+        /// reused per-thread buffers of changing shape.
+        /// </summary>
+        [TestMethod]
+        public void TestLibCosineOverScansMatchesCompute()
+        {
+            var random = new Random(4401);
+            int nCompared = 0, nDeclined = 0;
+            for (int trial = 0; trial < 2000; trial++)
+            {
+                int nFrags = random.Next(1, 14);
+                int nScans = random.Next(3, 60);
+                int start = random.Next(0, Math.Min(5, nScans));
+                int peakLen = random.Next(1, nScans - start + 1);
+                var library = new List<LibraryFragment>();
+                for (int f = 0; f < nFrags + 2; f++)
+                    library.Add(new LibraryFragment { Mz = 200.0 + f, RelativeIntensity = (float)random.NextDouble() });
+                var rts = new double[nScans];
+                for (int s = 0; s < nScans; s++)
+                    rts[s] = s * 0.01;
+                var xics = new List<XicData>();
+                for (int f = 0; f < nFrags; f++)
+                {
+                    var intensities = new double[nScans];
+                    bool absent = random.NextDouble() < 0.15;
+                    for (int s = 0; s < nScans; s++)
+                    {
+                        if (!absent && random.NextDouble() > 0.2)
+                            intensities[s] = random.NextDouble() * 1e5;
+                    }
+                    // Index past the library now and then, which LibCosine skips.
+                    int fragmentIndex = random.NextDouble() < 0.05 ? nFrags + 5 : f;
+                    xics.Add(new XicData(fragmentIndex, rts, intensities));
+                }
+
+                var peakXics = new List<KeyValuePair<int, double[]>>();
+                foreach (var xic in xics)
+                {
+                    var slice = new double[peakLen];
+                    Array.Copy(xic.Intensities, start, slice, 0, peakLen);
+                    peakXics.Add(new KeyValuePair<int, double[]>(xic.FragmentIndex, slice));
+                }
+                var peakRts = new double[peakLen];
+                Array.Copy(rts, start, peakRts, 0, peakLen);
+                var polish = TukeyMedianPolish.Compute(peakXics, peakRts,
+                    TukeyMedianPolish.SCORING_MAX_ITERATIONS, TukeyMedianPolish.SCORING_TOLERANCE);
+
+                bool fitted = TukeyMedianPolish.TryLibCosineOverScans(xics, start, peakLen, library,
+                    TukeyMedianPolish.SCORING_MAX_ITERATIONS, TukeyMedianPolish.SCORING_TOLERANCE, out double actual);
+                Assert.AreEqual(polish != null, fitted, string.Format("trial {0}", trial));
+                if (polish == null)
+                {
+                    nDeclined++;
+                    continue;
+                }
+                double expected = TukeyMedianPolish.LibCosine(polish, library);
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(actual),
+                    string.Format("trial {0}: {1} vs {2}", trial, expected, actual));
+                nCompared++;
+            }
+            Assert.IsTrue(nCompared > 1000 && nDeclined > 50, string.Format("{0} compared, {1} declined", nCompared, nDeclined));
         }
 
         #endregion

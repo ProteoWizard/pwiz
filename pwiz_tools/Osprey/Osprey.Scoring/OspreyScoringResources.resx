@@ -175,6 +175,12 @@
   <data name="FragmentCoelutionSumCalc_DisplayName_Fragment_co_elution__sum_" xml:space="preserve">
     <value>Fragment co-elution (sum)</value>
   </data>
+  <data name="FragmentRankIntensityShareCalc_DisplayName_Fragment__0__intensity_share" xml:space="preserve">
+    <value>Fragment {0} intensity share</value>
+  </data>
+  <data name="FragmentRankMassErrorCalc_DisplayName_Fragment__0__mass_error__abs_" xml:space="preserve">
+    <value>Fragment {0} mass error (abs)</value>
+  </data>
   <data name="MassAccuracyMeanCalc_DisplayName_Mass_error__signed_mean_" xml:space="preserve">
     <value>Mass error (signed mean)</value>
   </data>
@@ -205,8 +211,56 @@
   <data name="PeakAreaCalc_DisplayName_Peak_area__log10_" xml:space="preserve">
     <value>Peak area (log10)</value>
   </data>
+  <data name="PeakCandidateCountCalc_DisplayName_Candidate_peaks_in_window" xml:space="preserve">
+    <value>Candidate peaks in window</value>
+  </data>
+  <data name="PeakCoelutionMarginCalc_DisplayName_Coelution_margin_over_runner_up_peak" xml:space="preserve">
+    <value>Coelution margin over runner-up peak</value>
+  </data>
+  <data name="PeakRankMarginCalc_DisplayName_Pick_score_margin_over_runner_up_peak" xml:space="preserve">
+    <value>Pick score margin over runner-up peak</value>
+  </data>
   <data name="PeakSharpnessCalc_DisplayName_Peak_sharpness__log10_" xml:space="preserve">
     <value>Peak sharpness (log10)</value>
+  </data>
+  <data name="PeakSpectrumCosineMeanCalc_DisplayName_Library_cosine_across_peak__mean_" xml:space="preserve">
+    <value>Library cosine across peak (mean)</value>
+  </data>
+  <data name="PeakSpectrumCosineSdCalc_DisplayName_Library_cosine_across_peak__SD_" xml:space="preserve">
+    <value>Library cosine across peak (SD)</value>
+  </data>
+  <data name="MedianPolishKthFragmentR2Calc_DisplayName_Median_polish_fragment_R2__rank__0__" xml:space="preserve">
+    <value>Median polish fragment R^2 (rank {0})</value>
+  </data>
+  <data name="MedianPolishTop3MeanR2Calc_DisplayName_Median_polish_fragment_R2__top_3_mean_" xml:space="preserve">
+    <value>Median polish fragment R^2 (top 3 mean)</value>
+  </data>
+  <data name="MedianPolishMedianR2Calc_DisplayName_Median_polish_fragment_R2__median_" xml:space="preserve">
+    <value>Median polish fragment R^2 (median)</value>
+  </data>
+  <data name="MedianPolishGoodFitCountCalc_DisplayName_Median_polish_fragments_with_good_fit" xml:space="preserve">
+    <value>Median polish fragments with good fit</value>
+  </data>
+  <data name="ReferenceKthCorrelationCalc_DisplayName_Reference_fragment_correlation__rank__0__" xml:space="preserve">
+    <value>Reference fragment correlation (rank {0})</value>
+  </data>
+  <data name="ReferenceGoodCountCalc_DisplayName_Fragments_correlating_with_reference" xml:space="preserve">
+    <value>Fragments correlating with reference</value>
+  </data>
+  <data name="ReferenceMinFilteredTop3Calc_DisplayName_Spike_filtered_reference_correlation__top_3_mean_" xml:space="preserve">
+    <value>Spike-filtered reference correlation (top 3 mean)</value>
+  </data>
+  <data name="ApexIntensityExcludingTopCalc_DisplayName_Apex_intensity_without_top_fragment" xml:space="preserve">
+    <value>Apex intensity without top fragment</value>
+  </data>
+  <data name="PeptideLengthCalc_DisplayName_Peptide_length" xml:space="preserve">
+    <value>Peptide length</value>
+  </data>
+  <data name="PrecursorChargeCalc_DisplayName_Precursor_charge" xml:space="preserve">
+    <value>Precursor charge</value>
+  </data>
+  <data name="PrecursorMzCalc_DisplayName_Precursor_m_z" xml:space="preserve">
+    <value>Precursor m/z</value>
   </data>
   <data name="RtDeviationCalc_DisplayName_Retention_time_difference__signed_" xml:space="preserve">
     <value>Retention time difference (signed)</value>
@@ -226,6 +280,9 @@
   <data name="ScoringPipeline_RunCoelutionScoring_Coelution_search_using_calibrated_fragment_tolerance___0___1_" xml:space="preserve">
     <value>Coelution search using calibrated fragment tolerance: {0:F4} {1}</value>
   </data>
+  <data name="ScoringPipeline_RunCoelutionScoring_Local_RT_tolerance" xml:space="preserve">
+    <value>Local RT tolerance ({0} nearest calibration points): up to {1:F2} min, wider than global at {2:P1} of points</value>
+  </data>
   <data name="ScoringPipeline_RunCoelutionScoring_Scoring_isolation_windows" xml:space="preserve">
     <value>Scoring isolation windows</value>
   </data>
@@ -243,5 +300,119 @@
   </data>
   <data name="XcorrCalc_DisplayName_Cross_correlation__xcorr_" xml:space="preserve">
     <value>Cross-correlation (xcorr)</value>
+  </data>
+  <data name="PeakWidthCalc_DisplayName_Peak_width" xml:space="preserve">
+    <value>Peak width</value>
+  </data>
+  <data name="ElutionShapeBinCalc_DisplayName_Elution_shape__bin__0__of_5_" xml:space="preserve">
+    <value>Elution shape (bin {0} of 5)</value>
+  </data>
+  <data name="LocalCorrelationTop3Calc_DisplayName_Apex_local_reference_correlation__top_3_mean_" xml:space="preserve">
+    <value>Apex-local reference correlation (top 3 mean)</value>
+  </data>
+  <data name="LibraryRelativeIntensityCalc_DisplayName_Library_intensity_of_fragment__0__relative_to_fragment_1" xml:space="preserve">
+    <value>Library intensity of fragment {0} relative to fragment 1</value>
+  </data>
+  <data name="WindowShareCalc_DisplayName_Fragment__0__share_across_peak" xml:space="preserve">
+    <value>Fragment {0} share across peak</value>
+  </data>
+  <data name="TimeCorrelationSumCalc_DisplayName_Time_correlation_with_reference__top_6_sum_" xml:space="preserve">
+    <value>Time correlation with reference (top 6 sum)</value>
+  </data>
+  <data name="TimeCorrelationRankCalc_DisplayName_Time_correlation_of_fragment__0_" xml:space="preserve">
+    <value>Time correlation of fragment {0}</value>
+  </data>
+  <data name="TimeCorrelationResidualCalc_DisplayName_Time_correlation_beyond_top_6__sum_" xml:space="preserve">
+    <value>Time correlation beyond top 6 (sum)</value>
+  </data>
+  <data name="TimeCorrelationResidualCalc_DisplayName_Time_correlation_beyond_top_6__mean_" xml:space="preserve">
+    <value>Time correlation beyond top 6 (mean)</value>
+  </data>
+  <data name="HeavyIsotopeSumCalc_DisplayName_Fragment_M_1_isotope_correlation__top_6_sum_" xml:space="preserve">
+    <value>Fragment M+1 isotope correlation (top 6 sum)</value>
+  </data>
+  <data name="HeavyIsotopeGoodCountCalc_DisplayName_Fragment_M_1_isotopes_co_eluting" xml:space="preserve">
+    <value>Fragment M+1 isotopes co-eluting</value>
+  </data>
+  <data name="TightToleranceSumCalc_DisplayName_Time_correlation_at_0_45x_tolerance__top_6_sum_" xml:space="preserve">
+    <value>Time correlation at 0.45x tolerance (top 6 sum)</value>
+  </data>
+  <data name="TightToleranceSumCalc_DisplayName_Time_correlation_at_0_2x_tolerance__top_6_sum_" xml:space="preserve">
+    <value>Time correlation at 0.2x tolerance (top 6 sum)</value>
+  </data>
+  <data name="TimeCorrelationBestSumCalc_DisplayName_Time_correlation_best_tolerance__top_6_sum_" xml:space="preserve">
+    <value>Time correlation, best tolerance (top 6 sum)</value>
+  </data>
+  <data name="DominanceBestCorrDeltaCalc_DisplayName_Time_correlation_minus_best_apex_correlation_sum" xml:space="preserve">
+    <value>Time correlation minus best apex correlation sum</value>
+  </data>
+  <data name="DominanceTotalCorrSumCalc_DisplayName_Time_correlation_over_total_apex_correlation_sum__log_" xml:space="preserve">
+    <value>Time correlation over total apex correlation sum (log)</value>
+  </data>
+  <data name="DominanceApexCountCalc_DisplayName_Correlated_apexes_in_XIC_range" xml:space="preserve">
+    <value>Correlated apexes in XIC range</value>
+  </data>
+  <data name="DominanceCorrMarginCalc_DisplayName_Apex_correlation_margin_over_best_other_apex" xml:space="preserve">
+    <value>Apex correlation margin over best other apex</value>
+  </data>
+  <data name="TopFragmentRefGoodCountCalc_DisplayName_Top_3_fragments_correlating_with_reference" xml:space="preserve">
+    <value>Top 3 fragments correlating with reference</value>
+  </data>
+  <data name="TopFragmentMpMinR2Calc_DisplayName_Median_polish_min_R2__top_3_fragments_" xml:space="preserve">
+    <value>Median polish min R2 (top 3 fragments)</value>
+  </data>
+  <data name="TopFragmentMpMedianR2Calc_DisplayName_Median_polish_median_R2__top_3_fragments_" xml:space="preserve">
+    <value>Median polish median R2 (top 3 fragments)</value>
+  </data>
+  <data name="TopFragmentCoelutionMinCalc_DisplayName_Fragment_co_elution_min__top_3_fragments_" xml:space="preserve">
+    <value>Fragment co-elution min (top 3 fragments)</value>
+  </data>
+  <data name="WideCoelutionSumCalc_DisplayName_Fragment_co_elution__sum__widened_span_" xml:space="preserve">
+    <value>Fragment co-elution (sum, widened span)</value>
+  </data>
+  <data name="WideCoelutingCountCalc_DisplayName_Co_eluting_fragment_count__widened_span_" xml:space="preserve">
+    <value>Co-eluting fragment count (widened span)</value>
+  </data>
+  <data name="WideCoelutionMarginCalc_DisplayName_Coelution_margin_over_runner_up_peak__widened_span_" xml:space="preserve">
+    <value>Coelution margin over runner-up peak (widened span)</value>
+  </data>
+  <data name="WideTop3CoelutionMinCalc_DisplayName_Fragment_co_elution_min__top_3_fragments__widened_span_" xml:space="preserve">
+    <value>Fragment co-elution min (top 3 fragments, widened span)</value>
+  </data>
+  <data name="ShadowIsotopeCorrSumCalc_DisplayName_Fragment_M_1_shadow_correlation__top_6_sum_" xml:space="preserve">
+    <value>Fragment M-1 shadow correlation (top 6 sum)</value>
+  </data>
+  <data name="ShadowIsotopeFractionCalc_DisplayName_Fragment_M_1_shadow_intensity_fraction__top_6_mean_" xml:space="preserve">
+    <value>Fragment M-1 shadow intensity fraction (top 6 mean)</value>
+  </data>
+  <data name="CleanedTimeCorrelationSumCalc_DisplayName_Time_correlation_interference_removed__top_6_sum_" xml:space="preserve">
+    <value>Time correlation, interference removed (top 6 sum)</value>
+  </data>
+  <data name="CleanedTimeCorrelationSumCalc_DisplayName_Time_correlation_interference_capped__top_6_sum_" xml:space="preserve">
+    <value>Time correlation, interference capped (top 6 sum)</value>
+  </data>
+  <data name="CoelutingLibraryCosineCalc_DisplayName_Library_cosine__co_eluting_fragments_" xml:space="preserve">
+    <value>Library cosine (co-eluting fragments)</value>
+  </data>
+  <data name="LibraryEntropySimilarityCalc_DisplayName_Library_spectral_entropy_similarity" xml:space="preserve">
+    <value>Library spectral entropy similarity</value>
+  </data>
+  <data name="CoelutingLibraryShareCalc_DisplayName_Co_eluting_library_intensity_share" xml:space="preserve">
+    <value>Co-eluting library intensity share</value>
+  </data>
+  <data name="ApexMatchProbabilityCalc_DisplayName_Fragment_match_probability__apex_" xml:space="preserve">
+    <value>Fragment match probability (apex)</value>
+  </data>
+  <data name="ApexProjectedCosineScoreCalc_DisplayName_Projected_cosine_score__apex_" xml:space="preserve">
+    <value>Projected cosine score (apex)</value>
+  </data>
+  <data name="ApexHyperscoreCalc_DisplayName_Hyperscore__apex_" xml:space="preserve">
+    <value>Hyperscore (apex)</value>
+  </data>
+  <data name="PeakMaxMatchProbabilityCalc_DisplayName_Fragment_match_probability__peak_maximum_" xml:space="preserve">
+    <value>Fragment match probability (peak maximum)</value>
+  </data>
+  <data name="PeakMaxProjectedCosineScoreCalc_DisplayName_Projected_cosine_score__peak_maximum_" xml:space="preserve">
+    <value>Projected cosine score (peak maximum)</value>
   </data>
 </root>

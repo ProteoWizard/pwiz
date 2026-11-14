@@ -109,6 +109,13 @@ namespace pwiz.Osprey.Tasks
             /// degradation.</summary>
             public string ExperimentAgg { get; set; }
 
+            /// <summary>The name of each feature the model was trained on, in vector order
+            /// (<see cref="PercolatorResults.FeatureNames"/>), so the file says which columns its
+            /// weights belong to. Additive like <see cref="ExperimentAgg"/>, and omitted when
+            /// null.</summary>
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public string[] FeatureNames { get; set; }
+
             /// <summary>The <see cref="TrainingSetAnalysis"/> of the trained folds, which a report
             /// written by a later process reads back because the fold training sets exist nowhere
             /// else (doc 00, P16). Optional and additive like <see cref="ExperimentAgg"/>: omitted
@@ -247,6 +254,7 @@ namespace pwiz.Osprey.Tasks
                 Means = model.Standardizer.Means,
                 Stds = model.Standardizer.Stds,
                 ExperimentAgg = experimentAgg,
+                FeatureNames = model.FeatureNames,
                 TrainingAnalysis = model.TrainingAnalysis == null ? null
                     : JToken.Parse(JsonConvert.SerializeObject(model.TrainingAnalysis,
                         new JsonSerializerSettings { FloatFormatHandling = FloatFormatHandling.String })),
@@ -342,6 +350,11 @@ namespace pwiz.Osprey.Tasks
         /// null there means "unknown", never "max" - a caller that gates on the arm must treat it
         /// as unknown rather than assuming the default. <see cref="Sidecar.StratumBaseIds"/> is
         /// null under every mode but protein-compact, and likewise on an older sidecar.
+        ///
+        /// A model whose recorded feature names are not this run's FDR features
+        /// (<see cref="PinFeatureMask.FdrFeatureNames"/>) is unusable too, and loads as null: the
+        /// frozen scorer would weigh each column of a vector as some other feature. The validity
+        /// key already keeps out a model trained under another mask; this checks the file itself.
         /// </summary>
         /// <param name="path">Sidecar path to read.</param>
         public static Sidecar Load(string path)
@@ -358,7 +371,8 @@ namespace pwiz.Osprey.Tasks
                 var dto = JsonConvert.DeserializeObject<ModelDto>(File.ReadAllText(path), settings);
                 if (dto == null || dto.SchemaVersion != 1 ||
                     dto.Means == null || dto.Stds == null || dto.Means.Length != dto.Stds.Length ||
-                    dto.NumFeatures != dto.Means.Length)
+                    dto.NumFeatures != dto.Means.Length ||
+                    (dto.FeatureNames != null && dto.FeatureNames.Length != dto.NumFeatures))
                     return null;
 
                 var model = dto.FoldGbtModels != null && dto.FoldGbtModels.Length > 0
@@ -366,7 +380,10 @@ namespace pwiz.Osprey.Tasks
                     : LoadLinearModel(dto);
                 if (model == null)
                     return null;
+                model.FeatureNames = dto.FeatureNames;
                 model.TrainingAnalysis = ReadTrainingAnalysis(dto.TrainingAnalysis);
+                if (!HasFdrFeatureLayout(model))
+                    return null;
 
                 return new Sidecar
                 {
@@ -466,6 +483,24 @@ namespace pwiz.Osprey.Tasks
         {
             return data != null && data.FeatureCount == numFeatures &&
                    data.Objective == GbtObjective.LogisticBinary;
+        }
+
+        /// <summary>
+        /// Whether <paramref name="model"/> was trained on this run's FDR feature vectors: its
+        /// names, when it records them, are <see cref="PinFeatureMask.FdrFeatureNames"/> in order.
+        /// A model without names (written before they were recorded) is judged by its stamp alone.
+        /// A model of <c>--protein-best</c> has those names and then its column
+        /// (<see cref="ProteinBestFeature.FEATURE_NAME"/>), which the second pass supplies from the
+        /// first pass's per-run column files.
+        /// </summary>
+        private static bool HasFdrFeatureLayout(PercolatorResults model)
+        {
+            var names = model.FeatureNames;
+            if (names == null)
+                return true;
+            if (ProteinBestFeature.IsAppendedTo(names))
+                names = names[..^1];
+            return names.SequenceEqual(PinFeatureMask.FdrFeatureNames, StringComparer.Ordinal);
         }
 
         /// <summary>

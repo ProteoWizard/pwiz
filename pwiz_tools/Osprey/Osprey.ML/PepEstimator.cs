@@ -35,6 +35,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.ML
 {
@@ -127,10 +128,21 @@ namespace pwiz.Osprey.ML
             // cross-impl bit-equality budget untouched.  Default
             // nBins is 1000, so 16 cores get ~62 iterations each --
             // well above the Parallel.For overhead floor.
+            // OSPREY_PEP_FORMULA=ratio: with paired competition the expected false target winners at a
+            // score equal the decoy winners there, so PEP(s) = (D/T) fD(s) / fT(s) with fT the density of
+            // every target winner. The default form below uses fT as if it were the true-match density.
+            bool ratioForm = OspreyEnvironment.PepRatioForm;
+            double decoyPerTarget = (double)decoyScores.Count / targetScores.Count;
             var bins = new double[nBins];
             Parallel.For(0, nBins, i =>
             {
                 double score = minScore + i * scoreStep;
+                if (ratioForm)
+                {
+                    double fT = targetKde.Pdf(score);
+                    bins[i] = fT > 0.0 ? Math.Min(1.0, decoyPerTarget * decoyKde.Pdf(score) / fT) : 1.0;
+                    return;
+                }
                 double fDecoy = decoyKde.Pdf(score) * pi0;
                 double fTarget = targetKde.Pdf(score) * (1.0 - pi0);
                 double denom = fDecoy + fTarget;

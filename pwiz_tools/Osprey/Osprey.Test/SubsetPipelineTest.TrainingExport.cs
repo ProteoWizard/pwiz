@@ -279,7 +279,7 @@ namespace pwiz.Osprey.Test
             variables[@"OSPREY_PASS2_QVALUE"] = pass2Mode;
             string output;
             int exitCode;
-            using (OspreyEnvironment.OverrideVariables(variables))
+            using (EnvVar.OverrideVariables(variables))
             {
                 exitCode = InProcessOsprey.Run(args, out output);
             }
@@ -304,7 +304,7 @@ namespace pwiz.Osprey.Test
 
             string output;
             int exitCode;
-            using (OspreyEnvironment.OverrideVariables(Verifier(false)))
+            using (EnvVar.OverrideVariables(Verifier(false)))
             {
                 exitCode = InProcessOsprey.Run(ExportAnalysisArgs(workDir), out output);
             }

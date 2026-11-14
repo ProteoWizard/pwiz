@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -785,6 +786,107 @@ namespace pwiz.Osprey.Test
                 actions[(@"f1", 1)], typeof(ReconcileAction.ForcedIntegration));
         }
 
+        /// <summary>
+        /// A planner told not to reconcile decoys (the transfer second pass, which carries every
+        /// decoy's first-pass values forward) moves a misplaced target but leaves its misplaced
+        /// paired decoy where the first pass put it; the default planner moves both.
+        /// </summary>
+        [TestMethod]
+        public void TestPlanLeavesDecoysWhenNotReconcilingThem()
+        {
+            var cal = IdentityCalibration();
+            var cals = new Dictionary<string, RTCalibration> { { @"f1", cal } };
+            var consensus = new[]
+            {
+                new PeptideConsensusRT
+                {
+                    ModifiedSequence = @"PEPTIDE1", IsDecoy = false,
+                    ConsensusLibraryRt = 10.0, MedianPeakWidth = 0.6,
+                    NRunsDetected = 3, ApexLibraryRtMad = 0.02,
+                },
+                new PeptideConsensusRT
+                {
+                    ModifiedSequence = @"DECOY_PEPTIDE1", IsDecoy = true,
+                    ConsensusLibraryRt = 10.0, MedianPeakWidth = 0.6,
+                    NRunsDetected = 3, ApexLibraryRtMad = 0.02,
+                },
+            };
+            var entries = new[]
+            {
+                MakeEntry(@"PEPTIDE1", apexRt: 20.0, score: 3.0, isDecoy: false, precursorQ: 0.0, peptideQ: 0.0),
+                MakeEntry(@"DECOY_PEPTIDE1", apexRt: 25.0, score: -1.0, isDecoy: true, precursorQ: 1.0, peptideQ: 1.0),
+            };
+            var passing = new HashSet<(uint, byte)>();
+            ReconciliationPlanner.CollectPassingBaseIds(entries, 0.01, passing);
+
+            foreach (bool reconcileDecoys in new[] { true, false })
+            {
+                var planner = new ReconciliationPlanner.FilePlanner(consensus, passing, cals, cals, reconcileDecoys);
+                var fileActions = new List<KeyValuePair<int, ReconcileAction>>();
+                planner.PlanFile(@"f1", entries, null, fileActions);
+                var moved = fileActions.Select(a => a.Key).ToArray();
+                if (reconcileDecoys)
+                    CollectionAssert.AreEqual(new[] { 0, 1 }, moved);
+                else
+                    CollectionAssert.AreEqual(new[] { 0 }, moved);
+            }
+        }
+
+        /// <summary>
+        /// The transfer reconciliation set is the blib's reported precursors from first-pass
+        /// experiment q-values: a precursor passing only at run level in some run is left out
+        /// (the any-level rule admitted it), a failing charge of a passing peptide is left out
+        /// when another charge passes, a peptide with no passing charge keeps its best one,
+        /// decoys never enter, and each precursor maps to its base id for decoy pairing.
+        /// </summary>
+        [TestMethod]
+        public void TestExperimentOutputSetIsTheBlibGate()
+        {
+            FdrEntry Target(string peptide, byte charge, uint entryId, double expPrecursorQ, double expPeptideQ,
+                double runQ = 1.0, bool isDecoy = false)
+            {
+                return new FdrEntry
+                {
+                    EntryId = isDecoy ? entryId | 0x80000000u : entryId,
+                    IsDecoy = isDecoy,
+                    Charge = charge,
+                    ModifiedSequence = peptide,
+                    RunPrecursorQvalue = runQ,
+                    RunPeptideQvalue = runQ,
+                    ExperimentPrecursorQvalue = expPrecursorQ,
+                    ExperimentPeptideQvalue = expPeptideQ,
+                };
+            }
+
+            var run1 = new[]
+            {
+                Target(@"PEPA", 2, 1, 0.005, 0.005),
+                Target(@"PEPA", 3, 2, 0.02, 0.005),
+                Target(@"PEPB", 2, 3, 0.03, 0.008),
+                Target(@"PEPC", 2, 5, 0.5, 0.5, runQ: 0.0),
+                Target(@"DECOYA", 2, 1, 0.0, 0.0, isDecoy: true),
+            };
+            var run2 = new[]
+            {
+                Target(@"PEPB", 3, 4, 0.02, 0.008),
+                Target(@"PEPD", 2, 6, 0.004, 0.02),
+            };
+
+            var set = new ExperimentOutputSet(FdrLevel.Peptide, 0.01);
+            set.AddFile(run1);
+            set.AddFile(run2);
+            set.Finish(out var precursors, out var baseIds);
+
+            CollectionAssert.AreEquivalent(new[] { (@"PEPA", (byte)2), (@"PEPB", (byte)3) }, precursors.ToArray());
+            CollectionAssert.AreEquivalent(new[] { (1u, (byte)2), (4u, (byte)3) }, baseIds.ToArray());
+
+            // The old rule admits the run-level passer PEPC and every passing peptide's charges.
+            var anyLevel = new HashSet<(string ModifiedSequence, byte Charge)>();
+            GapFillTargetIdentifier.CollectPassingPrecursors(run1, 0.01, anyLevel);
+            Assert.IsTrue(anyLevel.Contains((@"PEPC", 2)));
+            Assert.IsFalse(precursors.Contains((@"PEPC", 2)));
+        }
+
         [TestMethod]
         public void TestPlanLibraryDecoyReconciledByBaseId()
         {
@@ -1034,6 +1136,33 @@ namespace pwiz.Osprey.Test
             var cal = CalibrationRefit.Refit(consensus, entries, consensusFdr: 0.01);
             Assert.IsNotNull(cal);
             Assert.IsTrue(Math.Abs(cal.Predict(10.0) - 10.0) < 1.0);
+        }
+
+        [TestMethod]
+        public void TestRefitFollowsGradientEndAtConfiguredBandwidth()
+        {
+            // 200 consensus points, measured RT tracking library RT until the last 20, where the
+            // gradient end bends to slope 3. The first pass needed a narrow span for such a bend;
+            // the refit must use the span it is given, not a fixed 0.3 that smooths the bend away.
+            const int n = 200, bend = 180;
+            var consensus = MakeConsensus(n);
+            var entries = MakeRefitEntries(n, measuredOffset: 0.0);
+            for (int i = bend; i < n; i++)
+                entries[i].ApexRt = i + 2.0 * (i - bend);
+            double truth = (n - 1) + 2.0 * (n - 1 - bend);
+
+            var narrow = CalibrationRefit.Refit(consensus, entries, consensusFdr: 0.01, bandwidth: 0.1);
+            var wide = CalibrationRefit.Refit(consensus, entries, consensusFdr: 0.01, bandwidth: 0.3);
+            var unspecified = CalibrationRefit.Refit(consensus, entries, consensusFdr: 0.01);
+            Assert.IsNotNull(narrow);
+            Assert.IsNotNull(wide);
+            double errNarrow = Math.Abs(narrow.Predict(n - 1) - truth);
+            double errWide = Math.Abs(wide.Predict(n - 1) - truth);
+            Assert.IsTrue(errNarrow < 0.5, string.Format(@"span 0.1 misses the gradient end by {0}", errNarrow));
+            Assert.IsTrue(errWide > 4 * errNarrow, string.Format(@"span 0.3 error {0} vs span 0.1 error {1}", errWide, errNarrow));
+            // Unspecified keeps the historical span, so a run that does not set the bandwidth is unchanged
+            for (int i = 0; i < n; i += 7)
+                Assert.AreEqual(wide.Predict(i), unspecified.Predict(i));
         }
 
         #endregion

@@ -1617,5 +1617,14 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("Program_LibraryBuildError__0__makes_a_stage_task_a_stage_of_the_tuning_runs__search__give_it_with__1__and_one_of__2__", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} names an unknown feature: '{1}'. Use PIN feature names separated by commas, or '{2}' to mask nothing..
+        /// </summary>
+        public static string Program_Run__0__names_an_unknown_feature___1____Use_PIN_feature_names_separated_by_commas__or___2___to_mask_nothing_ {
+            get {
+                return ResourceManager.GetString("Program_Run__0__names_an_unknown_feature___1____Use_PIN_feature_names_separated_by_commas__or___2___to_mask_nothing_", resourceCulture);
+            }
+        }
     }
 }

@@ -259,7 +259,7 @@ namespace pwiz.Osprey.Test
             var isolated = STARTUP_VARIABLES.ToDictionary(name => name, name => string.Empty);
             foreach (var pair in variables)
                 isolated[pair.Key] = pair.Value;
-            using (OspreyEnvironment.OverrideVariables(isolated))
+            using (EnvVar.OverrideVariables(isolated))
             {
                 exitCode = InProcessOsprey.Run(args, writer);
             }

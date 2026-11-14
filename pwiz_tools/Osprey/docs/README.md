@@ -23,7 +23,7 @@ writes, or keeps.** It has no Rust counterpart and no "Divergences" section: it 
 architecture the C# pipeline is built to, rather than porting a Rust source doc. **21** is
 exempt the same way: it is a C#-only review checklist for the log's vocabulary, with no
 Rust counterpart and no "Divergences" section. So is **22**, the schema of the training
-export, a C#-only file, and **23**, demultiplexing, an Osprey-only option.
+export, a C#-only file, **23**, demultiplexing, an Osprey-only option, and **25**, the opt-in DIA-NN-gap settings.
 
 Three documents divide the file-and-orchestration subject, and none repeats another: **00**
 owns scope, contract, principles and relay (which file, whose, when, who may read it);
@@ -57,6 +57,7 @@ owns operations (CLI flags, how a task names its runs and in what order, orchest
 | 22 | [training-export](22-training-export.md) | The `--training-export` product of `PerFileRescoring` and the schema of `<stem>.training.parquet` - the contract CarafeSharp reads: every identified target's full b/y ladder with per-ion interference evidence from Osprey's own boundaries, median polish and shared-peak logic. |
 | 23 | [demultiplexing](23-demultiplexing.md) | `--demux auto`: overlapping-window (staggered) DIA read through ProteoWizard's demultiplexer straight from the vendor file into `<stem>.demux.spectra.bin` - detection, settings descriptor, rescoring and staging rules, performance, and what was ported from #4710. |
 | 24 | [library-contract](24-library-contract.md) | What a correct Osprey spectral library is - one row per precursor, clean accessions, decoys and entrapment marked, the pairing manifest authoritative, pairs whole - checked by one validator (`LibraryContract` in CarafeSharp.Contracts) that CarafeSharp runs in `--library_contract` mode before it keeps a library and Osprey runs at load on a library that claims it, failing with every violation by class. |
+| 25 | [diann-gap-settings](25-diann-gap-settings.md) | The opt-in settings that bring Osprey within ~5% of DIA-NN on SEA-AD Astral (GBDT) and ahead of DIA-NN `--no-nn` (SVM), each with its default, and their measured detections, time and disk. The defaults stay master's analysis. |
 
 ## Supplementary
 

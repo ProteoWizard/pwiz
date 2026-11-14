@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.Pipeline;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
@@ -72,6 +73,12 @@ namespace pwiz.Osprey.Tasks
         private readonly Action<string> _logWarning;
 
         /// <summary>
+        /// The stamp of the first pass whose model this worker scores with, which each run's
+        /// protein-best column must carry when the model scores with one; null when it does not.
+        /// </summary>
+        private readonly ArtifactStamp _firstPassStamp;
+
+        /// <summary>
         /// True under <c>OSPREY_PASS2_QVALUE=transfer</c>: re-map run q through the file's own
         /// 1st-pass table instead of competing. There is no competition, so no decoy side is
         /// written either.
@@ -85,6 +92,13 @@ namespace pwiz.Osprey.Tasks
         private Pass2FdrSidecar.TransferTally _transferTally;
 
         private readonly object _transferTallyLock = new object();
+
+        // The protein-best no-row tallies (a measurement), summed across the parallel file loop.
+        private long _proteinBestSurvivors;
+        private long _proteinBestNoRow;
+        private long _proteinBestNoRowDecoys;
+        private long _proteinBestNoRowWithSibling;
+        private long _proteinBestNoRowWouldDiffer;
 
         /// <summary>
         /// One seeder PER WORKER THREAD, not per file and not one shared.
@@ -130,16 +144,19 @@ namespace pwiz.Osprey.Tasks
         /// <param name="writeAnswer">Persists one file's records, and its competition decoys
         /// when there was a competition (null under transfer).</param>
         /// <param name="logWarning">Where a per-file warning goes.</param>
+        /// <param name="firstPassStamp">The frozen model's stamp, which every run's protein-best
+        /// column must carry when the model scores with one (<c>--protein-best</c>).</param>
         public Pass2PerFileWorker(
             FrozenModelScorer scorer, bool transfer, HashSet<uint> stratumBaseIds,
             IReadOnlyDictionary<uint, FdrExperimentRecord> pass1Experiment,
             Action<string, IReadOnlyList<FdrScoreRecord>,
                 IReadOnlyDictionary<uint, (double score, uint entryId)>> writeAnswer,
-            Action<string> logWarning)
+            Action<string> logWarning, ArtifactStamp firstPassStamp = null)
         {
+            _firstPassStamp = firstPassStamp;
             _writeAnswer = writeAnswer ?? throw new ArgumentNullException(nameof(writeAnswer));
             _scorer = scorer ?? throw new ArgumentNullException(nameof(scorer));
-            _nFeatures = scorer.NumFeatures;
+            _nFeatures = scorer.InputFeatures;
             _transfer = transfer;
             _stratumBaseIds = stratumBaseIds;
             _pass1Experiment = pass1Experiment ?? throw new ArgumentNullException(nameof(pass1Experiment));
@@ -203,7 +220,7 @@ namespace pwiz.Osprey.Tasks
 
             Pass2FdrSidecar.ReadOneFilePass2Inputs(
                 pass1SidecarPath, effectiveParquetPath, survivors,
-                _scorer, _nFeatures, _seeders.Value, _logWarning,
+                _scorer, _nFeatures, ProteinBestFor(fileName, pass1SidecarPath, survivors), _seeders.Value, _logWarning,
                 survivorIds, pass1Records,
                 out uint[] entryIds, out double[] scores, out var survivorScores);
 
@@ -281,7 +298,7 @@ namespace pwiz.Osprey.Tasks
                         fileName, survivors.Count - nMapped, survivors.Count, effectiveParquetPath));
                 }
                 Pass2FdrSidecar.TransferOneFile(fileName, pass1SidecarPath, survivors, _scorer,
-                    _pass1Experiment, _logWarning, ref tally);
+                    ProteinBestFor(fileName, pass1SidecarPath, survivors), _pass1Experiment, _logWarning, ref tally);
             }
             finally
             {
@@ -305,6 +322,71 @@ namespace pwiz.Osprey.Tasks
                 _transferTally.GapFill += tally.GapFill;
             }
             return new Pass2FileResult(null, BuildRecords(survivors, fileName, effectiveParquetPath));
+        }
+
+        /// <summary>
+        /// This run's protein-best column when the frozen model scores with one, else null. Its
+        /// rescored rows - moved, gap-filled, CWT - read their entry's first-pass value: the
+        /// column is what the entry's siblings scored, which a move of its own peak does not
+        /// change.
+        /// </summary>
+        private ProteinBestRunValues ProteinBestFor(string fileName, string pass1SidecarPath, List<FdrEntry> survivors)
+        {
+            var proteinBest = Pass2FdrSidecar.LoadProteinBestForRun(_scorer, pass1SidecarPath, fileName, _firstPassStamp);
+            if (proteinBest != null)
+                CountNoRowFloor(proteinBest, survivors);
+            return proteinBest;
+        }
+
+        /// <summary>
+        /// A measurement only: how many of this run's survivors have no first-pass row in its
+        /// protein-best column, and so read the run's floor, and how many of those have a sibling
+        /// whose value the first pass recorded - the entry of the same base_id on the other side,
+        /// or a target of the same modified sequence - which is the value the first pass would have
+        /// given them. A lower bound on the entries a sibling-aware value would move: a peptide with
+        /// no row of its own in the run also has protein siblings the column does not record.
+        /// </summary>
+        private void CountNoRowFloor(ProteinBestRunValues proteinBest, List<FdrEntry> survivors)
+        {
+            long floorBits = BitConverter.DoubleToInt64Bits(proteinBest.Floor);
+            Dictionary<string, double> targetValueBySequence = null;
+            long noRow = 0, noRowDecoys = 0, withSibling = 0, wouldDiffer = 0;
+            foreach (var e in survivors)
+            {
+                if (proteinBest.TryGetValue(e.EntryId, out _))
+                    continue;
+                noRow++;
+                if (e.IsDecoy)
+                    noRowDecoys++;
+                if (!proteinBest.TryGetValue(e.EntryId ^ LibraryEntry.DECOY_ID_BIT, out double sibling))
+                {
+                    if (e.IsDecoy || e.ModifiedSequence == null)
+                        continue;
+                    targetValueBySequence ??= TargetValuesBySequence(proteinBest, survivors);
+                    if (!targetValueBySequence.TryGetValue(e.ModifiedSequence, out sibling))
+                        continue;
+                }
+                withSibling++;
+                if (BitConverter.DoubleToInt64Bits(sibling) != floorBits)
+                    wouldDiffer++;
+            }
+            Interlocked.Add(ref _proteinBestSurvivors, survivors.Count);
+            Interlocked.Add(ref _proteinBestNoRow, noRow);
+            Interlocked.Add(ref _proteinBestNoRowDecoys, noRowDecoys);
+            Interlocked.Add(ref _proteinBestNoRowWithSibling, withSibling);
+            Interlocked.Add(ref _proteinBestNoRowWouldDiffer, wouldDiffer);
+        }
+
+        private static Dictionary<string, double> TargetValuesBySequence(ProteinBestRunValues proteinBest,
+            List<FdrEntry> survivors)
+        {
+            var bySequence = new Dictionary<string, double>(StringComparer.Ordinal);
+            foreach (var e in survivors)
+            {
+                if (!e.IsDecoy && e.ModifiedSequence != null && proteinBest.TryGetValue(e.EntryId, out double value))
+                    bySequence[e.ModifiedSequence] = value;
+            }
+            return bySequence;
         }
 
         /// <summary>
@@ -443,6 +525,14 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public void LogSummary(PipelineContext ctx)
         {
+            if (_scorer.ScoresProteinBest)
+            {
+                ctx.LogInfo(LogTag.COUNT,
+                    @"Second-pass protein-best: {0} of {1} survivors have no first-pass row and read the run's floor ({2} of them decoys); {3} of those have a recorded sibling value, {4} of which differ from the floor",
+                    Interlocked.Read(ref _proteinBestNoRow), Interlocked.Read(ref _proteinBestSurvivors),
+                    Interlocked.Read(ref _proteinBestNoRowDecoys), Interlocked.Read(ref _proteinBestNoRowWithSibling),
+                    Interlocked.Read(ref _proteinBestNoRowWouldDiffer));
+            }
             if (_transfer)
             {
                 // The transfer seeds nothing - every survivor takes its values from the transfer

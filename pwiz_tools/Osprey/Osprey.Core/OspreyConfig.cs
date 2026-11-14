@@ -224,6 +224,17 @@ namespace pwiz.Osprey.Core
         public FdrClassifier FdrClassifier { get; set; } = FdrClassifier.LinearSvm;
 
         /// <summary>
+        /// The protein-best training column (<c>--protein-best</c>, issue #4580), off by default. On, round 2
+        /// of the two-round first-pass training and every score pass after it read, for each candidate,
+        /// the best round-1 score among the other peptides of its protein in that run (a paired decoy
+        /// reads its target's value; the floor is the run's decoy median). It needs the two-round
+        /// training, so with it on and <c>OSPREY_GBT_PREFILTER_SIZE</c> unset the first pass trains two
+        /// rounds at <see cref="OspreyEnvironment.PROTEIN_BEST_PREFILTER_SIZE"/> rows. Off is the
+        /// one-round first pass that preceded it, bit for bit. Keyed in every FDR validity key when on.
+        /// </summary>
+        public bool ProteinBest { get; set; }
+
+        /// <summary>
         /// Write the protein-group report (<c>&lt;output&gt;.protein_groups.tsv</c>) at the
         /// end of the run: one row per target protein group with its member accessions
         /// (how the proteins were grouped), the unique (representative) and shared
@@ -334,7 +345,7 @@ namespace pwiz.Osprey.Core
         public LibraryBuildConfig LibraryBuild { get; set; } = new LibraryBuildConfig();
 
         /// <summary>Enable the coelution signal pre-filter.</summary>
-        public bool PrefilterEnabled { get; set; } = true;
+        public bool PrefilterEnabled { get; set; } = !OspreyEnvironment.NoPrefilter;
 
         /// <summary>
         /// Demultiplex overlapping-window DIA into its narrow bins before searching

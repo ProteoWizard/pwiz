@@ -43,6 +43,9 @@ namespace pwiz.Osprey.Core
         public const string EXPERIMENT_FDR = @"experiment-fdr";
         public const string RECONCILIATION_COMPACTION_FDR = @"reconciliation-compaction-fdr";
         public const string PROTEIN_FDR = @"protein-fdr";
+        public const string PROTEIN_BEST = @"protein-best";
+        public const string VALUE_ON = @"on";
+        public const string VALUE_OFF = @"off";
         public const string DECOY_PAIRING_MANIFEST = @"decoy-pairing-manifest";
         public const string TASK = @"task";
         public const string MODEL_DIAGNOSTICS = @"model-diagnostics";

@@ -44,6 +44,12 @@ namespace pwiz.Osprey.Scoring
         public const int CAL_TOP_N_FRAGMENTS = 6;
 
         /// <summary>
+        /// How many top fragments the search extracts XICs for: 6, or OSPREY_XIC_FRAGMENTS for an
+        /// experiment (<see cref="OspreyEnvironment.SearchXicFragments"/>).
+        /// </summary>
+        public static readonly int SearchTopNFragments = OspreyEnvironment.SearchXicFragments;
+
+        /// <summary>
         /// Extract XICs for the top N most intense library fragments across the
         /// supplied (pre-filtered) spectra list. Includes an XIC for every selected
         /// fragment, even all-zero ones -- dropping all-zero fragments biases decoys
@@ -105,9 +111,9 @@ namespace pwiz.Osprey.Scoring
             //   3. Always include all selected fragments, even all-zero XICs
             //      (dropping all-zero fragments biases decoys to higher R^2)
             int rangeLen = endScan - startScan + 1;
-            Span<double> mzs = stackalloc double[CAL_TOP_N_FRAGMENTS];
-            Span<double> lowers = stackalloc double[CAL_TOP_N_FRAGMENTS];
-            Span<double> uppers = stackalloc double[CAL_TOP_N_FRAGMENTS];
+            Span<double> mzs = stackalloc double[SearchTopNFragments];
+            Span<double> lowers = stackalloc double[SearchTopNFragments];
+            Span<double> uppers = stackalloc double[SearchTopNFragments];
             var xics = CreateFragmentXics(candidate, windowRts, startScan, endScan,
                 config.FragmentTolerance, mzs, lowers, uppers);
 
@@ -146,7 +152,7 @@ namespace pwiz.Osprey.Scoring
             if (candidate.Fragments == null || candidate.Fragments.Count == 0)
                 return new List<XicData>();
 
-            int[] topIndices = SelectTopFragmentIndices(candidate.Fragments, CAL_TOP_N_FRAGMENTS);
+            int[] topIndices = SelectTopFragmentIndices(candidate.Fragments, SearchTopNFragments);
 
             // Build shared RT array for this range
             int rangeLen = endScan - startScan + 1;
@@ -249,6 +255,40 @@ namespace pwiz.Osprey.Scoring
             if (mzs == null || mzs.Length == 0)
                 return -1;
             return ClosestPeakFrom(mzs, spectrum.MzLowerBound(lower), targetMz, upper);
+        }
+
+        /// <summary>
+        /// <see cref="FindClosestPeakInWindow(Spectrum, double, double, double)"/> for one target
+        /// m/z in two windows at once, the search window [<paramref name="lower"/>,
+        /// <paramref name="upper"/>] and a wider one [<paramref name="wideLower"/>,
+        /// <paramref name="wideUpper"/>], each returning what the single-window call would. When
+        /// the wide window starts at or below the narrow one, every peak before the wide lower
+        /// bound is below the narrow one too, so the narrow lower bound is found by stepping
+        /// forward from the wide one - the same index, for one bucket lookup instead of two.
+        /// </summary>
+        public static int FindClosestPeakInWindows(Spectrum spectrum, double targetMz,
+            double lower, double upper, double wideLower, double wideUpper, out int wideBest)
+        {
+            var mzs = spectrum.Mzs;
+            if (mzs == null || mzs.Length == 0)
+            {
+                wideBest = -1;
+                return -1;
+            }
+            int wideLo = spectrum.MzLowerBound(wideLower);
+            int lo;
+            if (wideLower <= lower)
+            {
+                lo = wideLo;
+                while (lo < mzs.Length && mzs[lo] < lower)
+                    lo++;
+            }
+            else
+            {
+                lo = spectrum.MzLowerBound(lower);
+            }
+            wideBest = ClosestPeakFrom(mzs, wideLo, targetMz, wideUpper);
+            return ClosestPeakFrom(mzs, lo, targetMz, upper);
         }
 
         private static int ClosestPeakFrom(double[] mzs, int lo, double targetMz, double upper)

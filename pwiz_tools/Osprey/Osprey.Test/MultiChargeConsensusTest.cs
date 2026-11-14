@@ -82,6 +82,40 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Under transfer only charge states the blib reports are re-scored at the leader's
+        /// boundaries: a reported target charge state is kept, a target charge state above the
+        /// experiment cutoff and a decoy charge state are dropped, and the leader is still chosen
+        /// by run FDR (here a run-level passer the blib does not report).
+        /// </summary>
+        [TestMethod]
+        public void TestReportedOnlyKeepsReportedChargeStates()
+        {
+            FdrEntry Mk(string seq, byte charge, double score, double runQ, double expQ, double apex,
+                bool isDecoy = false) => new FdrEntry
+            {
+                ModifiedSequence = seq, Charge = charge, Score = score, IsDecoy = isDecoy,
+                RunPrecursorQvalue = runQ, ExperimentPrecursorQvalue = expQ, ExperimentPeptideQvalue = 0.001,
+                ApexRt = apex, StartRt = apex - 0.5, EndRt = apex + 0.5,
+            };
+            var entries = new List<FdrEntry>
+            {
+                Mk("PEPTIDEK", 2, 9.0, 0.001, 0.5, 10.0),   // leader by run FDR, not reported
+                Mk("PEPTIDEK", 3, 2.0, 0.5, 0.004, 20.0),   // reported -> kept
+                Mk("PEPTIDEK", 4, 1.0, 0.5, 0.2, 30.0),     // not reported -> dropped
+                Mk("DECOYK", 2, 9.0, 0.001, 0.001, 10.0, isDecoy: true),
+                Mk("DECOYK", 3, 2.0, 0.5, 0.001, 20.0, isDecoy: true),  // decoy -> dropped
+            };
+
+            var all = MultiChargeConsensus.SelectRescoreTargets(entries, FDR);
+            CollectionAssert.AreEquivalent(new[] { 1, 2, 4 }, all.Select(t => t.Index).ToArray());
+
+            var reported = MultiChargeConsensus.ReportedOnly(all, entries, FdrLevel.Peptide, FDR);
+            Assert.AreEqual(1, reported.Count);
+            Assert.AreEqual(1, reported[0].Index);
+            Assert.AreEqual(10.0, reported[0].Apex, 1e-9);
+        }
+
+        /// <summary>
         /// Cross-impl determinism for shared peak boundaries: when two charge states
         /// of one peptide in a file are BOTH gap-filled at run q=1.0 (a tie) with
         /// DIFFERENT windows, the shared (modseq, file) boundary must resolve to the

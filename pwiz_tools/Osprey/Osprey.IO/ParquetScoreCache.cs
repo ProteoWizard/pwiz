@@ -52,7 +52,8 @@ namespace pwiz.Osprey.IO
         #region PIN Feature Names
 
         /// <summary>
-        /// The 21 PIN feature column names, matching the Rust get_pin_feature_names().
+        /// The PIN feature column names: the 21 of the Rust get_pin_feature_names(), then the
+        /// C#-only runner-up, context, per-fragment-rank and spectrum-across-peak features (masked by default).
         /// </summary>
         public static readonly string[] PIN_FEATURE_NAMES =
         {
@@ -85,9 +86,113 @@ namespace pwiz.Osprey.IO
             @"sg_weighted_cosine",
             @"median_polish_min_fragment_r2",
             @"median_polish_residual_correlation",
+            // Runner-up: the chosen peak against the other candidates in its window (3)
+            @"peak_coelution_margin",
+            @"peak_rank_margin",
+            @"peak_candidate_count",
+            // Context, shared by a target and its decoy (3)
+            @"context_peptide_length",
+            @"context_precursor_charge",
+            @"context_precursor_mz",
+            // Per-fragment-rank: the top 6 library fragments matched at the apex (12)
+            @"frag_rank1_abs_mass_error",
+            @"frag_rank2_abs_mass_error",
+            @"frag_rank3_abs_mass_error",
+            @"frag_rank4_abs_mass_error",
+            @"frag_rank5_abs_mass_error",
+            @"frag_rank6_abs_mass_error",
+            @"frag_rank1_intensity_share",
+            @"frag_rank2_intensity_share",
+            @"frag_rank3_intensity_share",
+            @"frag_rank4_intensity_share",
+            @"frag_rank5_intensity_share",
+            @"frag_rank6_intensity_share",
+            // Spectrum across the peak: library cosine at every scan (2)
+            @"peak_spectrum_cosine_mean",
+            @"peak_spectrum_cosine_sd",
+            // Median-polish top-k: per-fragment R^2 against the robust elution profile (6)
+            @"mp_fragment_r2_rank2",
+            @"mp_fragment_r2_rank3",
+            @"mp_fragment_r2_rank4",
+            @"mp_fragment_r2_top3_mean",
+            @"mp_fragment_r2_median",
+            @"mp_n_fragments_good_fit",
+            // Reference correlation: fragments against the best-correlated fragment (6)
+            @"ref_corr_rank2",
+            @"ref_corr_rank3",
+            @"ref_corr_rank5",
+            @"ref_n_corr_good",
+            @"ref_minfilt_corr_top3_mean",
+            @"apex_log_intensity_excl_top",
+            // Peak profile: width, shape, local correlation, library context, shares (18)
+            @"peak_width",
+            @"shape_bin1",
+            @"shape_bin2",
+            @"shape_bin3",
+            @"shape_bin4",
+            @"shape_bin5",
+            @"local_corr_top3_mean",
+            @"lib_rel_rank2",
+            @"lib_rel_rank3",
+            @"lib_rel_rank4",
+            @"lib_rel_rank5",
+            @"lib_rel_rank6",
+            @"window_share_rank1",
+            @"window_share_rank2",
+            @"window_share_rank3",
+            @"window_share_rank4",
+            @"window_share_rank5",
+            @"window_share_rank6",
+            // Time correlation: against the smoothed reference over apex +/- 0.15 min (9)
+            @"tc_sum6",
+            @"tc_corr_rank1",
+            @"tc_corr_rank2",
+            @"tc_corr_rank3",
+            @"tc_corr_rank4",
+            @"tc_corr_rank5",
+            @"tc_corr_rank6",
+            @"tc_res_sum",
+            @"tc_res_mean",
+            // Re-extracted correlation: M+1 isotopes and tight tolerances against the same reference (5)
+            @"heavy_sum6",
+            @"heavy_n_good",
+            @"tight45_sum6",
+            @"tight20_sum6",
+            @"tc_best_sum6",
+            // Peak dominance: the chosen peak against the other correlated apexes in the XIC range (4)
+            @"dom_best_corr_delta",
+            @"dom_tot_corr_sum",
+            @"dom_apex_count",
+            @"dom_corr_margin",
+            // Top fragment: the 3 most intense library fragments only (4)
+            @"top3_ref_n_corr_good",
+            @"top3_mp_min_r2",
+            @"top3_mp_r2_median",
+            @"top3_coelution_min",
+            // Wide-span coelution: over max(bounds, apex +/- 0.08 min) (4)
+            @"wide_coelution_sum",
+            @"wide_n_coeluting",
+            @"wide_coelution_margin",
+            @"wide_top3_coelution_min",
+            // Shadow isotope: the trace one 13C spacing below each top-6 fragment (2)
+            @"shadow_corr_sum6",
+            @"shadow_frac6",
+            // Cleaned time correlation: interfered scans left out or capped (2)
+            @"tc_clean_sum6",
+            @"tc_clip_sum6",
+            // Library agreement over the co-eluting fragments, HRAM only (3)
+            @"lib_cosine_coel",
+            @"lib_entropy_sim",
+            @"lib_coel_share",
+            // Spectrum match: fragment match probability, projected cosine and hyperscore, apex and peak maximum, HRAM only (5)
+            @"spec_match_prob",
+            @"spec_proj_cosine_xt",
+            @"spec_hyperscore",
+            @"spec_match_prob_max",
+            @"spec_proj_cosine_xt_max",
         };
 
-        public const int NUM_PIN_FEATURES = 21;
+        public const int NUM_PIN_FEATURES = 109;
 
         #endregion
 
@@ -117,9 +222,10 @@ namespace pwiz.Osprey.IO
         private const string COLUMN_BOUNDS_AREA = @"bounds_area";
         private const string COLUMN_BOUNDS_SNR = @"bounds_snr";
         private const string COLUMN_FILE_NAME = @"file_name";
-        // Read only by Stage 6 reconciliation planning, from .scores.parquet, so the
-        // reconciled sibling does not carry it (#5023).
-        private const string COLUMN_CWT_CANDIDATES = @"cwt_candidates";
+        // No cwt_candidates: Rust writes the top-N CWT peak candidates of every row for its
+        // reconciliation planner, which reads them for under 1% of rows. C# recomputes those
+        // rows' candidates from the spectra when it plans them (#5024), so it stopped writing
+        // the column. An older file's column is ignored, since every read is by name.
         // No fragment_mzs / fragment_intensities: Rust writes both, a verbatim copy of the
         // library spectrum per row that nothing reads back, so C# stopped writing them
         // (#5023). An older file's columns are ignored, since every read is by name.
@@ -177,8 +283,7 @@ namespace pwiz.Osprey.IO
         /// </summary>
         private sealed class WriteFields
         {
-            /// <param name="reconciled">True for the reconciled write: adds <c>score_index</c>
-            /// and leaves out <c>cwt_candidates</c>, which only the Stage 4 file is read for.</param>
+            /// <param name="reconciled">True for the reconciled write: adds <c>score_index</c>.</param>
             /// <param name="referenceXic">Whether to write <c>reference_xic_*</c>; see
             /// <see cref="WritesReferenceXic"/>.</param>
             public WriteFields(bool reconciled, bool referenceXic)
@@ -197,20 +302,21 @@ namespace pwiz.Osprey.IO
                 BoundsArea = new DataField<double>(COLUMN_BOUNDS_AREA);
                 BoundsSnr = new DataField<double>(COLUMN_BOUNDS_SNR);
                 FileName = new DataField<string>(COLUMN_FILE_NAME);
-                // Binary blobs: the CWT candidates for reconciliation planning, the reference
-                // XIC for the training export.
-                CwtCandidates = reconciled
-                    ? null
-                    : new DataField(COLUMN_CWT_CANDIDATES, typeof(byte[]), isNullable: true, isArray: false);
+                // Binary blobs: the reference XIC for the training export.
                 if (referenceXic)
                 {
                     ReferenceXicRts = new DataField(COLUMN_REFERENCE_XIC_RTS, typeof(byte[]), isNullable: true, isArray: false);
                     ReferenceXicIntensities = new DataField(COLUMN_REFERENCE_XIC_INTENSITIES, typeof(byte[]), isNullable: true, isArray: false);
                 }
                 ScoreIndex = reconciled ? new DataField<uint>(COLUMN_SCORE_INDEX) : null;
+                // A column for each recorded feature only: a feature scoring did not compute has
+                // none, rather than a column of zeros a reader could take for values.
                 Features = new DataField[NUM_PIN_FEATURES];
                 for (int i = 0; i < NUM_PIN_FEATURES; i++)
-                    Features[i] = new DataField<double>(PIN_FEATURE_NAMES[i]);
+                {
+                    if (PinFeatureMask.IsRecorded(i))
+                        Features[i] = new DataField<double>(PIN_FEATURE_NAMES[i]);
+                }
 
                 // Order matches Rust's pipeline.rs build of `write_scores_parquet_with_metadata`.
                 // Field order is informational only -- Parquet is name-indexed.
@@ -219,8 +325,6 @@ namespace pwiz.Osprey.IO
                     EntryId, IsDecoy, Sequence, ModifiedSequence, Charge, PrecursorMz, ProteinIds,
                     ScanNumber, ApexRt, StartRt, EndRt, BoundsArea, BoundsSnr, FileName,
                 };
-                if (CwtCandidates != null)
-                    fields.Add(CwtCandidates);
                 if (ReferenceXicRts != null)
                 {
                     fields.Add(ReferenceXicRts);
@@ -231,7 +335,7 @@ namespace pwiz.Osprey.IO
                 // informational. Only the reconciled write asks for it.
                 if (ScoreIndex != null)
                     fields.Add(ScoreIndex);
-                fields.AddRange(Features);
+                fields.AddRange(Features.Where(field => field != null));
                 Schema = new ParquetSchema(fields.ToArray());
             }
 
@@ -250,13 +354,12 @@ namespace pwiz.Osprey.IO
             public DataField BoundsArea { get; }
             public DataField BoundsSnr { get; }
             public DataField FileName { get; }
-            /// <summary>Null for a reconciled write; see <see cref="COLUMN_CWT_CANDIDATES"/>.</summary>
-            public DataField CwtCandidates { get; }
             /// <summary>Null, with <see cref="ReferenceXicIntensities"/>, unless the write includes the reference XIC.</summary>
             public DataField ReferenceXicRts { get; }
             public DataField ReferenceXicIntensities { get; }
             /// <summary>Null unless the write is a reconciled one; see <see cref="COLUMN_SCORE_INDEX"/>.</summary>
             public DataField ScoreIndex { get; }
+            /// <summary>Per PIN feature, its field, or null for a feature that is not recorded (<see cref="PinFeatureMask.IsRecorded"/>).</summary>
             public DataField[] Features { get; }
         }
 
@@ -295,6 +398,50 @@ namespace pwiz.Osprey.IO
 
         /// <summary>The footer metadata key holding the search settings hash the scores were written under.</summary>
         public const string META_SEARCH_HASH = @"osprey.search_hash";
+
+        /// <summary>
+        /// The footer metadata key holding the XIC count (OSPREY_XIC_FRAGMENTS) the scores were
+        /// computed with. The search hash leaves the count out, so without this a FDR task pointed
+        /// at existing scores could adopt scores from another count and label its output with its own.
+        /// </summary>
+        public const string META_XIC_FRAGMENTS = @"osprey.xic_fragments";
+
+        private const string XIC_KEY_TERM = @";xic=";
+
+        /// <summary>The <see cref="META_XIC_FRAGMENTS"/> value for <paramref name="count"/>.</summary>
+        public static string XicFragmentsText(int count)
+        {
+            return count.ToString(CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// The XIC count a scores file records: its <see cref="META_XIC_FRAGMENTS"/> footer entry,
+        /// else the <c>;xic=</c> term of its validity stamp (scores written before the entry), else
+        /// <see cref="OspreyEnvironment.DEFAULT_XIC_FRAGMENTS"/> (scores written before the count
+        /// could change). Null when a record is present but does not parse.
+        /// </summary>
+        public static int? RecordedXicFragments(IReadOnlyDictionary<string, string> footer)
+        {
+            if (footer.TryGetValue(META_XIC_FRAGMENTS, out string text))
+                return ParseXicCount(text);
+            if (footer.TryGetValue(ArtifactStamp.PARQUET_KEY, out string stampText))
+            {
+                string key = ArtifactStamp.Parse(stampText)?.Key;
+                int termStart = key != null ? key.IndexOf(XIC_KEY_TERM, StringComparison.Ordinal) : -1;
+                if (key != null && termStart >= 0)
+                {
+                    int valueStart = termStart + XIC_KEY_TERM.Length;
+                    int valueEnd = key.IndexOf(';', valueStart);
+                    return ParseXicCount(valueEnd < 0 ? key.Substring(valueStart) : key.Substring(valueStart, valueEnd - valueStart));
+                }
+            }
+            return OspreyEnvironment.DEFAULT_XIC_FRAGMENTS;
+        }
+
+        private static int? ParseXicCount(string text)
+        {
+            return int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out int count) ? count : null;
+        }
 
         // Score parquets whose charge column a library-identity walk has already checked
         // (RequireFileCharges) in this process. The check costs a seek per row group on a
@@ -516,12 +663,9 @@ namespace pwiz.Osprey.IO
                 var boundsAreas = new double[count];
                 var boundsSnrs = new double[count];
                 var fileNames = new string[count];
-                var cwtCandidates = new byte[count][];
                 var refXicRts = new byte[count][];
                 var refXicIntensities = new byte[count][];
-                var featureArrays = new double[NUM_PIN_FEATURES][];
-                for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                    featureArrays[f] = new double[count];
+                var featureArrays = NewFeatureArrays(fields, count);
 
                 for (int j = 0; j < count; j++)
                 {
@@ -549,7 +693,7 @@ namespace pwiz.Osprey.IO
                 return BuildRowGroupColumns(
                     entryIds, isDecoys, sequences, modifiedSequences, charges,
                     precursorMzs, proteinIds, scanNumbers, apexRts, startRts, endRts,
-                    boundsAreas, boundsSnrs, fileNames, cwtCandidates, refXicRts, refXicIntensities,
+                    boundsAreas, boundsSnrs, fileNames, refXicRts, refXicIntensities,
                     fields, featureArrays);
             });
         }
@@ -643,17 +787,12 @@ namespace pwiz.Osprey.IO
             var fileNames = new string[count];
             // The blob columns below carry per-entry binary payloads
             // matching Rust pipeline.rs:1620-1645's encoding:
-            //   cwt_candidates             = u32 LE count + N×(6×f64 LE)
             //   reference_xic_rts          = K×f64 LE   (no count prefix)
             //   reference_xic_intensities  = K×f64 LE
-            // Length is recovered on read as bytes / sizeof(element). No CWT
-            // candidates for a reconciled write (fields.CwtCandidates is null).
-            var cwtCandidates = fields.CwtCandidates != null ? new byte[count][] : null;
+            // Length is recovered on read as bytes / sizeof(element).
             var refXicRts = fields.ReferenceXicRts != null ? new byte[count][] : null;
             var refXicIntensities = fields.ReferenceXicRts != null ? new byte[count][] : null;
-            var featureArrays = new double[NUM_PIN_FEATURES][];
-            for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                featureArrays[f] = new double[count];
+            var featureArrays = NewFeatureArrays(fields, count);
 
             for (int j = 0; j < count; j++)
             {
@@ -663,11 +802,12 @@ namespace pwiz.Osprey.IO
                 // assigns ParquetIndex = row on read. Without this
                 // assignment, in-memory entries reach Stage 5
                 // ReconciliationPlanner with ParquetIndex = 0 (FdrEntry
-                // default), and every entry's per-file CWT lookup
-                // (fileCwt[entry.ParquetIndex]) grabs the first row's
-                // CwtCandidate list instead of its own -- the planner
-                // then force-integrates almost every entry because the
-                // wrong CWT list has no candidate near the expected RT.
+                // default), and every entry's per-file CWT lookup (then
+                // fileCwt[entry.ParquetIndex], when the candidates were
+                // stored here) grabbed the first row's list instead of its
+                // own -- the planner then force-integrated almost every entry
+                // because the wrong CWT list had no candidate near the
+                // expected RT.
                 // The HPC chain path was unaffected because its entries
                 // are reloaded via LoadFdrStubsFromParquet, which sets
                 // ParquetIndex correctly. Found by C# in-memory vs
@@ -709,34 +849,6 @@ namespace pwiz.Osprey.IO
                 if (refXicIntensities != null)
                     refXicIntensities[j] = ParquetBlobCodec.EncodeF64Blob(entry.ReferenceXicIntensities);
 
-                // Mirror Rust's invariant: every row carries a cwt_candidates
-                // blob, even when the candidate list is empty. Rust's
-                // pipeline.rs::write_scores_parquet (at the cwt_candidates
-                // serialization site) unconditionally appends a 4-byte
-                // little-endian count prefix, so an entry with zero
-                // candidates becomes a 4-byte zero-length blob, never a
-                // null cell. ~57k post-compaction stubs per Stellar file
-                // had no peaks; without this normalization C# emitted
-                // null cells while Rust emitted empty blobs, producing
-                // a spurious cross-impl parquet diff at end-of-Stage-6.
-                //
-                // TODO(osprey-rust): the proper fix is on the Rust side --
-                // pipeline.rs should write null for empty candidate lists,
-                // which is more parquet-idiomatic and saves 4 bytes per
-                // empty row for downstream consumers. When that lands in
-                // maccoss/osprey, revert this branch to the original
-                // "skip null/empty" form.
-                // Use Array.Empty<>() (not `new List<>()`) on the null
-                // branch so we still emit the 4-byte zero-count blob
-                // without allocating a fresh List per empty row.
-                // CwtCandidateCodec.Encode takes IReadOnlyList<CwtCandidate>
-                // which both List<T> and T[] satisfy.
-                if (cwtCandidates != null)
-                {
-                    cwtCandidates[j] = CwtCandidateCodec.Encode(
-                        entry.CwtCandidates ?? (IReadOnlyList<CwtCandidate>)Array.Empty<CwtCandidate>());
-                }
-
                 LibraryEntry libEntry = null;
                 if (libraryById != null)
                     libraryById.TryGetValue(entry.EntryId, out libEntry);
@@ -759,7 +871,10 @@ namespace pwiz.Osprey.IO
                 if (featureVec != null && featureVec.Length == NUM_PIN_FEATURES)
                 {
                     for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                        featureArrays[f][j] = Finite(featureVec[f]);
+                    {
+                        if (featureArrays[f] != null)
+                            featureArrays[f][j] = Finite(featureVec[f]);
+                    }
                 }
                 // else: leave zeros (entries without features can't drive Stage 5+).
             }
@@ -767,7 +882,7 @@ namespace pwiz.Osprey.IO
             return BuildRowGroupColumns(
                 entryIds, isDecoys, sequences, modifiedSequences, charges,
                 precursorMzs, proteinIds, scanNumbers, apexRts, startRts, endRts,
-                boundsAreas, boundsSnrs, fileNames, cwtCandidates, refXicRts, refXicIntensities,
+                boundsAreas, boundsSnrs, fileNames, refXicRts, refXicIntensities,
                 fields, featureArrays, scoreIndices);
         }
 
@@ -775,9 +890,8 @@ namespace pwiz.Osprey.IO
         /// Assemble one row group's columns in the exact physical order
         /// both <see cref="WriteScoresParquet(string,List{CoelutionScoredEntry},Dictionary{string,string})"/>
         /// overloads write -- the fixed columns followed by the 21 PIN feature columns. The 14
-        /// scalars are always written; <paramref name="cwtCandidates"/> is null for a reconciled
-        /// write and the reference XIC pair for a run without the training export, and a null
-        /// array's column is left out.
+        /// scalars are always written; the reference XIC pair is null for a run without the
+        /// training export, and a null array's column is left out.
         /// Centralizing the order keeps the two overloads identical. Parquet is name-indexed,
         /// so the order is informational for correctness, but it is kept identical to the
         /// prior explicit-call sequence so the within-group column layout is unchanged.
@@ -786,7 +900,7 @@ namespace pwiz.Osprey.IO
             uint[] entryIds, bool[] isDecoys, string[] sequences, string[] modifiedSequences,
             byte[] charges, double[] precursorMzs, string[] proteinIds, uint[] scanNumbers,
             double[] apexRts, double[] startRts, double[] endRts, double[] boundsAreas,
-            double[] boundsSnrs, string[] fileNames, byte[][] cwtCandidates,
+            double[] boundsSnrs, string[] fileNames,
             byte[][] refXicRts, byte[][] refXicIntensities,
             WriteFields fields, double[][] featureArrays, uint[] scoreIndices = null)
         {
@@ -807,8 +921,6 @@ namespace pwiz.Osprey.IO
                 Column(fields.BoundsSnr, boundsSnrs),
                 Column(fields.FileName, fileNames),
             };
-            if (fields.CwtCandidates != null)
-                columns.Add(Column(fields.CwtCandidates, cwtCandidates));
             if (fields.ReferenceXicRts != null)
             {
                 columns.Add(Column(fields.ReferenceXicRts, refXicRts));
@@ -818,8 +930,23 @@ namespace pwiz.Osprey.IO
             if (scoreIndices != null)
                 columns.Add(Column(fields.ScoreIndex, scoreIndices));
             for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                columns.Add(Column(fields.Features[f], featureArrays[f]));
+            {
+                if (fields.Features[f] != null)
+                    columns.Add(Column(fields.Features[f], featureArrays[f]));
+            }
             return columns;
+        }
+
+        /// <summary>One row group's value array for each recorded feature column, null for the rest.</summary>
+        private static double[][] NewFeatureArrays(WriteFields fields, int count)
+        {
+            var featureArrays = new double[NUM_PIN_FEATURES][];
+            for (int f = 0; f < NUM_PIN_FEATURES; f++)
+            {
+                if (fields.Features[f] != null)
+                    featureArrays[f] = new double[count];
+            }
+            return featureArrays;
         }
 
         /// <summary>
@@ -998,7 +1125,10 @@ namespace pwiz.Osprey.IO
             if (f == null)
             {
                 for (int i = 0; i < NUM_PIN_FEATURES; i++)
-                    arrays[i][row] = 0.0;
+                {
+                    if (arrays[i] != null)
+                        arrays[i][row] = 0.0;
+                }
                 return;
             }
 
@@ -1594,61 +1724,6 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Load only the <c>cwt_candidates</c> column from a Parquet cache,
-        /// returning one <see cref="CwtCandidate"/> list per row in the same
-        /// order as <see cref="LoadFdrStubsFromParquet(string)"/>. Used by Stage 6
-        /// reconciliation planning, which needs the per-entry CWT peak
-        /// candidates without paying the cost of loading features and
-        /// fragments. Mirrors the Rust loader at
-        /// <c>osprey/crates/osprey/src/pipeline.rs::load_cwt_candidates_from_parquet</c>.
-        /// </summary>
-        public static List<List<CwtCandidate>> LoadCwtCandidatesFromParquet(string path)
-        {
-            var allCandidates = new List<List<CwtCandidate>>();
-            using (var stream = BlockReadStream.OpenRead(path))
-            using (var reader = OpenReader(stream))
-            {
-                var fieldsByName = BuildFieldLookup(reader);
-                DataField cwtField;
-                if (!fieldsByName.TryGetValue(COLUMN_CWT_CANDIDATES, out cwtField))
-                    return allCandidates;
-                for (int g = 0; g < reader.RowGroupCount; g++)
-                {
-                    using (var groupReader = reader.OpenRowGroupReader(g))
-                    {
-                        // The cwt_candidates column is binary; if the file's
-                        // column is typed any other way the schema or write
-                        // path is wrong upstream and any silent fallback would
-                        // desynchronize this list from LoadFdrStubsFromParquet's
-                        // row order. Throw with the offending file + group so
-                        // the caller sees a clear error rather than empty CWT lists.
-                        var blobs = ReadBlobColumnByName(groupReader, fieldsByName, COLUMN_CWT_CANDIDATES);
-                        if (blobs == null)
-                        {
-                            throw new InvalidDataException(string.Format(
-                                OspreyIOResources.ParquetScoreCache_LoadCwtCandidatesFromParquet__0___the_stored_peak_candidates_in_row_group__1__have_an_unexpected_type___2____The_file_is_damaged_or_was_written_by_a_different_version_of_Osprey_,
-                                Path.GetFileName(path), g, cwtField.ClrType.Name));
-                        }
-                        for (int row = 0; row < blobs.Length; row++)
-                            allCandidates.Add(CwtCandidateCodec.Decode(blobs[row]));
-                    }
-                }
-            }
-            return allCandidates;
-        }
-
-        /// <summary>
-        /// Footer-only probe of a scores parquet: the total row count and whether
-        /// the <c>cwt_candidates</c> column is present, read from the Parquet
-        /// metadata WITHOUT decoding any column data. Lets Stage 6 validate that
-        /// every file's stub <see cref="FdrEntry.ParquetIndex"/> is in range (the
-        /// reconciliation all-or-nothing gate) without holding all files'
-        /// candidate lists resident -- the streaming counterpart of
-        /// <see cref="LoadCwtCandidatesFromParquet"/>, whose per-file result count
-        /// equals the returned <c>RowCount</c> when the column is present and 0 when
-        /// it is absent (that method returns an empty list for a missing column).
-        /// </summary>
-        /// <summary>
         /// Footer-only probe of a parquet's POPULATION: whether it is a reconciled
         /// survivors parquet (<c>osprey.reconciled=survivors</c>) and how many rows it
         /// holds. Decodes no column data - both answers come from the footer - so this is
@@ -1713,18 +1788,6 @@ namespace pwiz.Osprey.IO
             }
         }
 
-        public static (long RowCount, bool HasCwtCandidatesField) ProbeCwtRowMetadata(string path)
-        {
-            using (var stream = BlockReadStream.OpenRead(path))
-            using (var reader = OpenReader(stream))
-            {
-                long rowCount = reader.Metadata?.NumRows ?? 0L;
-                var fieldsByName = BuildFieldLookup(reader);
-                bool hasCwt = fieldsByName.ContainsKey(COLUMN_CWT_CANDIDATES);
-                return (rowCount, hasCwt);
-            }
-        }
-
         /// <summary>
         /// Footer-only check that a scores parquet carries the PIN feature columns,
         /// reading the schema WITHOUT decoding any column data. The lean resume /
@@ -1749,26 +1812,21 @@ namespace pwiz.Osprey.IO
         #region Load PIN Features
 
         /// <summary>
-        /// Load FdrEntry stubs + 21-feature PIN vectors + CWT candidate
-        /// lists from a Parquet cache, joined per row. Returns
-        /// <see cref="FdrEntry"/> objects with <see cref="FdrEntry.Features"/>
-        /// and <see cref="FdrEntry.CwtCandidates"/> populated, ready to
-        /// feed into the Phase 3 reconciled parquet write-back step.
+        /// Load FdrEntry stubs + 21-feature PIN vectors from a Parquet cache, joined per
+        /// row. Returns <see cref="FdrEntry"/> objects with <see cref="FdrEntry.Features"/>
+        /// populated, ready to feed into the Phase 3 reconciled parquet write-back step.
         ///
-        /// Equivalent to calling <see cref="LoadFdrStubsFromParquet(string)"/>,
-        /// <see cref="LoadPinFeaturesFromParquet"/>, and
-        /// <see cref="LoadCwtCandidatesFromParquet"/> separately and
+        /// Equivalent to calling <see cref="LoadFdrStubsFromParquet(string)"/> and
+        /// <see cref="LoadPinFeaturesFromParquet"/> separately and
         /// zipping them by row index - but does it in a single parquet
         /// open. Decodes the reference XIC blob columns (<c>reference_xic_rts</c>,
         /// <c>reference_xic_intensities</c>) and the <c>bounds_area</c> /
         /// <c>bounds_snr</c> scalars onto the matching <see cref="FdrEntry"/>
-        /// fields. A reconciled file has no <c>cwt_candidates</c> column, so its rows
-        /// read with <see cref="FdrEntry.CwtCandidates"/> null.
+        /// fields. An older file's <c>cwt_candidates</c> column is not read.
         /// </summary>
         /// <param name="path">The <c>.scores.parquet</c> / <c>.scores-reconciled.parquet</c> to read.</param>
         /// <param name="scalarsOnly">Skip the 21 PIN feature columns and the binary blob
-        /// columns (<c>cwt_candidates</c>, <c>reference_xic_*</c>), leaving
-        /// <see cref="FdrEntry.Features"/>, <see cref="FdrEntry.CwtCandidates"/> and the two
+        /// columns (<c>reference_xic_*</c>), leaving <see cref="FdrEntry.Features"/> and the two
         /// reference XIC arrays null. Every SCALAR field is set exactly as the full read sets it.
         ///
         /// <para>For callers that overlay reconciled values onto an existing buffer and then
@@ -1793,9 +1851,7 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// The rows the training export reads from a reconciled parquet: the TARGET rows only,
-        /// each with every scalar, the 21 PIN features and the reference XIC - but not the CWT
-        /// candidates, which the export never reads (and which a reconciled file no longer
-        /// holds). Decoy rows are skipped as they are read, so they are never built. Every
+        /// each with every scalar, the 21 PIN features and the reference XIC. Decoy rows are skipped as they are read, so they are never built. Every
         /// field that is read is set exactly as <see cref="LoadFullFdrEntries"/> sets it,
         /// <see cref="FdrEntry.ParquetIndex"/> included.
         /// </summary>
@@ -2019,10 +2075,9 @@ namespace pwiz.Osprey.IO
 
                     for (int g = 0; g < reader.RowGroupCount; g++)
                     {
-                        // Everything the reconciled file carries, which is everything but the
-                        // CWT candidates: decoding them only to drop them was most of this read.
+                        // Everything the reconciled file carries.
                         var groupEntries = ReadFdrEntryGroup(reader, g, fieldsByName, origRead, originalPath,
-                            FdrRowColumns.NoCandidates, out _);
+                            FdrRowColumns.Full, out _);
                         for (int j = 0; j < groupEntries.Count; j++)
                         {
                             var row = groupEntries[j];
@@ -2121,9 +2176,6 @@ namespace pwiz.Osprey.IO
             /// <summary>The scalars only, every row (<c>scalarsOnly</c>).</summary>
             ScalarsOnly,
 
-            /// <summary>Every column but the CWT candidates, every row: what a reconciled file holds.</summary>
-            NoCandidates,
-
             /// <summary>Scalars, PIN features and reference XIC, target rows only.</summary>
             TrainingExport,
         }
@@ -2145,9 +2197,6 @@ namespace pwiz.Osprey.IO
             string path, FdrRowColumns columns, out int groupRowCount)
         {
             bool scalarsOnly = columns == FdrRowColumns.ScalarsOnly;
-            // The CWT candidates are read for a full row only; the other projections keep the
-            // features and the reference XIC.
-            bool readCandidates = columns == FdrRowColumns.Full;
             bool targetsOnly = columns == FdrRowColumns.TrainingExport;
             groupRowCount = 0;
             var entries = new List<FdrEntry>();
@@ -2171,9 +2220,6 @@ namespace pwiz.Osprey.IO
                 var boundsAreaCol = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_BOUNDS_AREA);
                 var boundsSnrCol = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_BOUNDS_SNR);
                 // The heavy columns: read only when the caller wants the payload.
-                var cwtCol = !readCandidates
-                    ? null
-                    : ReadBlobColumnByName(groupReader, fieldsByName, COLUMN_CWT_CANDIDATES);
                 var refXicRtsCol = scalarsOnly
                     ? null
                     : ReadBlobColumnByName(groupReader, fieldsByName, COLUMN_REFERENCE_XIC_RTS);
@@ -2184,11 +2230,17 @@ namespace pwiz.Osprey.IO
                 if (entryIdCol == null || isDecoyCol == null)
                     return entries;
 
+                // The recorded features, which this process would write back; a feature it does
+                // not record stays 0 and is dropped on a rewrite. A file with no feature columns
+                // at all reads as zeros, as it always has.
                 var featureCols = new double[NUM_PIN_FEATURES][];
-                if (!scalarsOnly)
+                if (!scalarsOnly && fieldsByName.ContainsKey(PIN_FEATURE_NAMES[0]))
                 {
                     for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                        featureCols[f] = ReadColumnByName<double>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
+                    {
+                        if (PinFeatureMask.IsRecorded(f))
+                            featureCols[f] = RequireFeatureColumn(groupReader, fieldsByName, f, path);
+                    }
                 }
 
                 int rowCount = entryIdCol.Length;
@@ -2208,10 +2260,6 @@ namespace pwiz.Osprey.IO
                         }
                     }
 
-                    List<CwtCandidate> cwt = null;
-                    if (cwtCol != null && cwtCol[row] != null && cwtCol[row].Length > 0)
-                        cwt = CwtCandidateCodec.Decode(cwtCol[row]);
-
                     entries.Add(new FdrEntry
                     {
                         EntryId = entryIdCol[row],
@@ -2227,7 +2275,6 @@ namespace pwiz.Osprey.IO
                         CoelutionSum = coelutionCol != null ? coelutionCol[row] : 0.0,
                         ModifiedSequence = modseqCol != null ? modseqCol[row] : string.Empty,
                         Features = features,
-                        CwtCandidates = cwt,
                         BoundsArea = boundsAreaCol != null ? boundsAreaCol[row] : 0.0,
                         BoundsSnr = boundsSnrCol != null ? boundsSnrCol[row] : 0.0,
                         ReferenceXicRts = ParquetBlobCodec.DecodeF64Blob(refXicRtsCol != null ? refXicRtsCol[row] : null),
@@ -2239,12 +2286,17 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Load only the 21 PIN feature columns from a Parquet cache.
-        /// Returns a list of feature vectors (one double[] per row).
+        /// Load the FDR classifier's feature vectors from a Parquet cache, one double[] per row.
+        /// Each holds only the features <see cref="PinFeatureMask"/> leaves unmasked, in PIN order
+        /// (<see cref="PinFeatureMask.FdrFeatureNames"/> names its positions): this is where the
+        /// mask is applied. A masked column is not read at all, and a file lacking an unmasked one
+        /// (scored under a narrower recorded set, <see cref="PinFeatureMask.IsRecorded"/>) is refused.
         /// </summary>
         public static List<double[]> LoadPinFeaturesFromParquet(string path)
         {
             var allFeatures = new List<double[]>();
+            int[] featureIndices = PinFeatureMask.FdrFeatureIndices;
+            int nFeatures = featureIndices.Length;
 
             using (var stream = BlockReadStream.OpenRead(path))
             using (var reader = OpenReader(stream))
@@ -2254,24 +2306,29 @@ namespace pwiz.Osprey.IO
                 {
                     using (var groupReader = reader.OpenRowGroupReader(g))
                     {
-                        // Read all feature columns
-                        var featureCols = new double[NUM_PIN_FEATURES][];
-                        for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                        {
-                            featureCols[f] = ReadColumnByName<double>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
-                        }
-
-                        if (featureCols[0] == null)
+                        // A file without the first PIN column has no features at all, whatever the
+                        // mask: the readability test the per-file stages use (HasPinFeatures).
+                        var firstCol = ReadColumnByName<double>(groupReader, fieldsByName, PIN_FEATURE_NAMES[0]);
+                        if (firstCol == null)
                             continue;
 
-                        int rowCount = featureCols[0].Length;
+                        var featureCols = new double[nFeatures][];
+                        for (int i = 0; i < nFeatures; i++)
+                        {
+                            int f = featureIndices[i];
+                            featureCols[i] = f == 0
+                                ? firstCol
+                                : RequireFeatureColumn(groupReader, fieldsByName, f, path);
+                        }
+
+                        int rowCount = firstCol.Length;
                         for (int row = 0; row < rowCount; row++)
                         {
-                            var features = new double[NUM_PIN_FEATURES];
-                            for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                            var features = new double[nFeatures];
+                            for (int i = 0; i < nFeatures; i++)
                             {
-                                double v = featureCols[f][row];
-                                features[f] = double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
+                                double v = featureCols[i][row];
+                                features[i] = double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
                             }
                             allFeatures.Add(features);
                         }
@@ -2280,6 +2337,27 @@ namespace pwiz.Osprey.IO
             }
 
             return allFeatures;
+        }
+
+        /// <summary>
+        /// Read PIN feature <paramref name="featureIndex"/>'s column, which the caller needs, from a
+        /// file that holds features. A missing column means the run that scored the file did not
+        /// record that feature (<see cref="PinFeatureMask.IsRecorded"/>), so reading it as zeros
+        /// would hand the classifier or a rewrite values nothing computed: refused, naming the switch
+        /// that records it.
+        /// </summary>
+        private static double[] RequireFeatureColumn(ParquetRowGroupReader groupReader,
+            IReadOnlyDictionary<string, DataField> fieldsByName, int featureIndex, string path)
+        {
+            string name = PIN_FEATURE_NAMES[featureIndex];
+            var column = ReadColumnByName<double>(groupReader, fieldsByName, name);
+            if (column == null)
+            {
+                throw new InvalidDataException(string.Format(
+                    OspreyIOResources.ParquetScoreCache_RequireFeatureColumn__0__has_no__1__column,
+                    path, name, @"OSPREY_FEATURE_MASK", @"OSPREY_RECORD_ALL_FEATURES"));
+            }
+            return column;
         }
 
         #endregion
@@ -2614,6 +2692,15 @@ namespace pwiz.Osprey.IO
                     expectedSearch, expectedLibrary, currentVersion);
                 if (err != null)
                     return err;
+
+                int? recordedXic = RecordedXicFragments(kv);
+                if (recordedXic != OspreyEnvironment.SearchXicFragments)
+                {
+                    return string.Format(
+                        OspreyIOResources.ParquetScoreCache_ValidateScoresParquetGroup__0__was_scored_with__1__XIC_fragments__but_this_run_uses__2____3__,
+                        path, recordedXic?.ToString(CultureInfo.InvariantCulture) ?? @"?",
+                        OspreyEnvironment.SearchXicFragments.ToString(CultureInfo.InvariantCulture), @"OSPREY_XIC_FRAGMENTS");
+                }
 
                 // --task SecondPassFDR strict reconciled-input gate. Mirrors
                 // Rust pipeline.rs:3313-3344: every input parquet must

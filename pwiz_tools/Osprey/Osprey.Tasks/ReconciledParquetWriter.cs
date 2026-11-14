@@ -153,7 +153,7 @@ namespace pwiz.Osprey.Tasks
         /// Re-scored rows are detected by <see cref="FdrEntry.Features"/> != null:
         /// hydration's LoadFdrStubsFromParquet does NOT populate Features, so an unchanged
         /// post-compaction stub (Features == null) is skipped, leaving its original parquet
-        /// row (Features + CwtCandidates + the binary blob columns) to stream through
+        /// row (Features + the binary blob columns) to stream through
         /// untouched. A row with no <see cref="FdrEntry.ParquetIndex"/> is a gap-fill
         /// stub (absent from the original parquet) and is appended; every other
         /// re-scored row overlays the original row at its ParquetIndex (last write wins,
@@ -219,6 +219,7 @@ namespace pwiz.Osprey.Tasks
                 // reader treats a MISSING value as "1": back then the file was only written
                 // when there was work, so its existence meant the same thing.
                 { META_RESCORED, rescored ? @"1" : @"0" },
+                { ParquetScoreCache.META_XIC_FRAGMENTS, ParquetScoreCache.XicFragmentsText(OspreyEnvironment.SearchXicFragments) },
             };
         }
     }

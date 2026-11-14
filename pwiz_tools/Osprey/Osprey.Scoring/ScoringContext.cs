@@ -59,6 +59,15 @@ namespace pwiz.Osprey.Scoring
         public IReadOnlyDictionary<uint, (double Apex, double Start, double End)> BoundaryOverrides { get; set; }
 
         /// <summary>
+        /// True when a peak scored at <see cref="BoundaryOverrides"/> bounds is compared, for the
+        /// runner-up features, with the candidates first-pass detection finds over the normal
+        /// search window. That takes a second CWT detection per peak, so the rescoring task sets
+        /// it only when the classifier sees a runner-up feature; when false the override path
+        /// reports a lone candidate and skips the detection.
+        /// </summary>
+        public bool OverrideRunnerUpCandidates { get; set; }
+
+        /// <summary>
         /// The first-pass RT MAD (median absolute deviation of residuals)
         /// from the per-file <c>.calibration.json</c>, kept separate from
         /// any refined calibration's <c>abs_residuals</c>. The Stage 6
@@ -94,6 +103,23 @@ namespace pwiz.Osprey.Scoring
         /// per-window parallel region completes. Null (and zero overhead) on a normal run.
         /// </summary>
         public PickCandidateDump PickDump { get; set; }
+
+        /// <summary>
+        /// The configuration the correlation-shape features score with when OSPREY_CORR_FRAGMENT_TOLERANCE
+        /// widens their fragment XICs past the search tolerance: a copy of <see cref="Config"/> whose
+        /// <see cref="OspreyConfig.FragmentTolerance"/> is the wider tolerance. Set by
+        /// <c>ScoringPipeline.RunCoelutionScoring</c> once the search tolerance is known; null when the
+        /// setting is off or no wider than the search tolerance, so every feature scores the one XIC set.
+        /// </summary>
+        public OspreyConfig CorrelationConfig { get; set; }
+
+        /// <summary>
+        /// The library-RT-dependent search half-width when OSPREY_LOCAL_RT_TOLERANCE is set and the
+        /// run is calibrated: never narrower than the global half-width, wider where the calibration
+        /// scatters more locally. Set by <c>ScoringPipeline.RunCoelutionScoring</c>; null otherwise,
+        /// so every precursor is searched with the one global half-width.
+        /// </summary>
+        public LocalRtTolerance LocalRtTolerance { get; set; }
 
         public ScoringContext(OspreyConfig config, string fileName)
         {

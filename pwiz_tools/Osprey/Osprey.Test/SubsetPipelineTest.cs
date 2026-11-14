@@ -29,6 +29,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.BiblioSpec.IO;
 using pwiz.CarafeSharp.Contracts;
@@ -36,6 +37,7 @@ using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 using pwiz.Osprey.Tasks.ModelDiagnostics;
@@ -375,8 +377,18 @@ namespace pwiz.Osprey.Test
             AssertTrainingSetAnalysis(pass1Product, Path.Combine(workDir, OutputArtifact(FirstPassModelIO.EXT_MODEL)));
             AssertPlacementSplit(pass1Product);
             AssertProteinEntrapmentView(Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_PASS2)));
+            AssertFragmentMassErrors(workDir, diagnosticsReport);
             // With the optional reports on (diagnostics, FDRBench), still nothing replicated.
             AssertNoReplicatedPerRunOutputs(workDir, RUN_NAMES);
+
+            // Mode 2 with the report on: a resume that re-runs the first pass rewrites its q-value
+            // sidecars bit-identically, which must leave the fragment mass-error summaries current,
+            // so PerFileRescoring still skips.
+            DeleteFiles(workDir, @"*" + FdrScoresSidecar.EXT_FIRST_PASS);
+            DeleteSecondPassOutputs(blib);
+            string resumeLog = RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, Verifier(false), args);
+            AssertTasks(resumeLog, new[] { PerFileScoringTask.TASK_NAME, PerFileRescoreTask.TASK_NAME },
+                new[] { FirstPassFdrTask.TASK_NAME, SecondPassFdrTask.TASK_NAME });
 
             // The report alone, from what the analysis left: every analysis task is cached.
             File.Delete(diagnosticsReport);
@@ -552,6 +564,24 @@ namespace pwiz.Osprey.Test
             log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(true), args);
             AssertRescoredOnly(log, 1);
             AssertBlibsEqual(uninterruptedBlib, blib);
+
+            // A fragment mass-error summary that fails while its run re-scores - a directory holds
+            // its path, so it cannot be written - is reported once, not measured again from disk by
+            // the same run, and does not fail the analysis.
+            CutRescore(workDir, cutRun, true);
+            DeleteSecondPassOutputs(blib);
+            string summaryPath = Path.Combine(workDir, cutRun + FragmentMassErrorWriter.EXT);
+            File.Delete(summaryPath);
+            Directory.CreateDirectory(summaryPath);
+            log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(true), args);
+            AssertRescoredOnly(log, 1);
+            string failure = string.Format(
+                OspreyTasksResources.PerFileRescoreTask_WriteFragmentMassErrors_The_fragment_mass_error_summary_failed_for__0____1_,
+                Path.Combine(workDir, cutRun + MZML_EXTENSION), string.Empty);
+            Assert.AreEqual(1, SplitLines(log).Count(line => line.Contains(failure)),
+                @"the failed fragment mass-error summary was not reported exactly once" + Environment.NewLine + log);
+            AssertBlibsEqual(uninterruptedBlib, blib);
+            Directory.Delete(summaryPath);
         }
 
         /// <summary>
@@ -737,14 +767,23 @@ namespace pwiz.Osprey.Test
             RunIn(referenceDir, withFlag);
             RunIn(workDir, withoutFlag);
             AssertBlibsEqual(Path.Combine(referenceDir, BLIB_FILE), Path.Combine(workDir, BLIB_FILE));
+            // The diagnostics measure the spectra after every score is written, so no score moves:
+            // both passes' per-run q-value sidecars are the same with the flag and without it.
+            foreach (var pass in new[] { FdrScoresSidecar.Pass.FirstPass, FdrScoresSidecar.Pass.SecondPass })
+                AssertFdrSidecarsEqual(referenceDir, workDir, pass, RUN_NAMES);
             foreach (string product in products)
                 Assert.IsFalse(File.Exists(Path.Combine(workDir, product)), @"the analysis without the flag wrote " + product);
+            Assert.AreEqual(0, Directory.GetFiles(workDir, @"*" + FragmentMassErrorWriter.EXT).Length,
+                @"the analysis without the flag wrote fragment mass-error summaries");
 
             // --task ModelDiagnostics folds both products from what the analysis stored.
             string log = RunIn(workDir, withFlag, ModelDiagnosticsTask.TASK_NAME);
             AssertNoRecompute(log);
             AssertLogShape(log, Array.Empty<string>(), NoAnalysisLines());
             AssertSameAsWithFlag(OspreyArgNames.TaskText(ModelDiagnosticsTask.TASK_NAME));
+            // The per-run fragment mass-error summaries, written from the runs' artifacts, are the
+            // ones the analysis wrote while re-scoring with the flag given up front.
+            AssertSameFragmentMassErrors(referenceDir, workDir);
 
             // The original command line with the flag added, products absent, folds them too.
             DeleteDiagnosticsProducts(workDir, pass1, pass2);
@@ -785,6 +824,11 @@ namespace pwiz.Osprey.Test
             RunAnalysis(parallelDir, DataInputs(), FdrLanes(RUN_NAMES.Length),
                 OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText, RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture));
             AssertBlibsEqual(baseBlib, Path.Combine(parallelDir, BLIB_FILE));
+            // Planning computes its CWT candidates on the rescore's file lanes, so the parallel
+            // runs must plan exactly what the sequential ones did.
+            foreach (string run in RUN_NAMES)
+                AssertSameReconciliationActions(baseDir, parallelDir, run);
+            AssertCwtCandidatesComputed(baseDir, RUN_NAMES);
 
             // Each per-file stage resolves its own count: scoring and re-scoring on different lane
             // counts, over a shared --parallel-files they both override, still give the sequential
@@ -995,6 +1039,7 @@ namespace pwiz.Osprey.Test
             RunOsprey(AstralArgs(parallelDir, OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText,
                 ASTRAL_RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture)), Verifier(false));
             AssertBlibsEqual(blib, Path.Combine(parallelDir, BLIB_FILE));
+            AssertCwtCandidatesComputed(straightDir, ASTRAL_RUN_NAMES);
         }
 
         /// <summary>
@@ -1170,7 +1215,7 @@ namespace pwiz.Osprey.Test
             }).Concat(CommonArgs()).ToArray();
             string output;
             int exitCode;
-            using (OspreyEnvironment.OverrideVariables(Verifier(false)))
+            using (EnvVar.OverrideVariables(Verifier(false)))
             {
                 exitCode = InProcessOsprey.Run(args, out output);
             }
@@ -1362,7 +1407,7 @@ namespace pwiz.Osprey.Test
             byte[] before = HashFile(library);
             string output;
             int exitCode;
-            using (OspreyEnvironment.OverrideVariables(Verifier(false)))
+            using (EnvVar.OverrideVariables(Verifier(false)))
             {
                 exitCode = InProcessOsprey.Run(new[]
                 {
@@ -1567,10 +1612,14 @@ namespace pwiz.Osprey.Test
                     OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT),
                     OutputArtifact(FirstPassModelIO.EXT_MODEL), OutputArtifact(Stage6ConsensusFile.EXT));
                 ShipFilesIfPresent(dirPrefix + @"phase2", phaseDir, OutputArtifact(FirstPassModelIO.EXT_STRATUM),
-                    ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass), OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
+                    ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass), OutputArtifact(ModelDiagnosticsReport.EXT_PASS1),
+                    PassArtifact(run, FdrScoresSidecar.Pass.FirstPass, ProteinBestSidecar.EXT));
                 string log = RunTask(data, phaseDir, PerFileRescoreTask.TASK_NAME, run);
                 logs[PerFileRescoreTask.TASK_NAME] = log;
                 AssertHasLine(log, PathLine(LogKey.ROUTE_RESCORE_HYDRATE, @"per-run"));
+                // The worker computed its run's CWT candidates from the spectra cache and the
+                // calibration file it was shipped, and must plan what the straight run planned.
+                AssertSameReconciliationActions(straightDir, phaseDir, run);
             }
 
             // Phase 4, one node over every run: second-pass FDR and the library.
@@ -1684,7 +1733,7 @@ namespace pwiz.Osprey.Test
                 {
                     OspreyCommandArgs.ARG_LIBRARY.ArgumentText, library,
                     OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(phaseDir, BLIB_FILE)
-                }).Concat(CommonArgs(data.Resolution));
+                }).Concat(CommonArgs(data.Resolution)).Concat(data.MoreArgs);
             return RunOsprey(args.ToArray(), data.Variables(false));
         }
 
@@ -1706,7 +1755,7 @@ namespace pwiz.Osprey.Test
         {
             string output;
             int exitCode;
-            using (OspreyEnvironment.OverrideVariables(variables))
+            using (EnvVar.OverrideVariables(variables))
             {
                 exitCode = InProcessOsprey.Run(args, out output);
             }
@@ -1769,6 +1818,40 @@ namespace pwiz.Osprey.Test
                 on[kvp.Key] = kvp.Value;
             on[DIANN_REPORTS] = @"1";
             return on;
+        }
+
+        /// <summary>
+        /// The two directories' plans for <paramref name="run"/> hold the same reconciliation
+        /// actions: the same peaks re-picked at the same CWT candidates, and the same boundaries
+        /// imputed.
+        /// </summary>
+        private static void AssertSameReconciliationActions(string expectedDir, string actualDir, string run)
+        {
+            var expected = ReconciliationFile.Load(Path.Combine(expectedDir, run + ReconciliationFile.EXT));
+            var actual = ReconciliationFile.Load(Path.Combine(actualDir, run + ReconciliationFile.EXT));
+            Assert.AreEqual(JsonConvert.SerializeObject(expected.UseCwtPeakActions),
+                JsonConvert.SerializeObject(actual.UseCwtPeakActions), run + @": the peaks re-picked differ");
+            Assert.AreEqual(JsonConvert.SerializeObject(expected.ForcedIntegrationActions),
+                JsonConvert.SerializeObject(actual.ForcedIntegrationActions), run + @": the boundaries imputed differ");
+        }
+
+        /// <summary>
+        /// Stage 6 planned from CWT candidates it computed, not stored ones (#5024): no
+        /// <c>.scores.parquet</c> carries a <c>cwt_candidates</c> column, and the plans still
+        /// re-pick peaks at candidates - candidates that were never computed would leave every
+        /// moved peak an imputed boundary.
+        /// </summary>
+        private static void AssertCwtCandidatesComputed(string workDir, IEnumerable<string> runs)
+        {
+            int rePicked = 0;
+            foreach (string run in runs)
+            {
+                string scores = Path.Combine(workDir, run + ParquetScoreCache.EXT_SCORES);
+                Assert.IsFalse(ParquetScoreCache.HasColumn(scores, @"cwt_candidates"), scores + @" stores CWT candidates");
+                var plan = ReconciliationFile.Load(Path.Combine(workDir, run + ReconciliationFile.EXT));
+                rePicked += plan.UseCwtPeakActions?.Count ?? 0;
+            }
+            Assert.IsTrue(rePicked > 0, @"no peak was re-picked at a CWT candidate in " + workDir);
         }
 
         /// <summary>
@@ -2232,6 +2315,50 @@ namespace pwiz.Osprey.Test
             Assert.IsFalse(HasLine(log, PathLine(LogKey.ROUTE_RESCORE_FILE, string.Empty)), log);
         }
 
+        /// <summary>
+        /// Every run has a fragment mass-error summary that measured something in each intensity
+        /// class, and the report carries them as its mass-error view.
+        /// </summary>
+        private static void AssertFragmentMassErrors(string workDir, string report)
+        {
+            foreach (string run in RUN_NAMES)
+            {
+                string path = Path.Combine(workDir, run + FragmentMassErrorWriter.EXT);
+                var summary = FragmentMassErrorWriter.ReadRun(path);
+                Assert.IsNotNull(summary, @"no fragment mass-error summary " + path);
+                Assert.IsTrue(summary.Precursors > 0, path);
+                Assert.AreEqual(ModelDiagnosticsData.MASS_ERROR_CLASSES.Length, summary.Classes.Count, path);
+                foreach (var massErrorClass in summary.Classes)
+                    Assert.IsTrue(massErrorClass.Total > 0, path + @" " + massErrorClass.Name);
+                Assert.IsTrue(summary.HalfWidth > summary.SearchTolerance, path);
+                Assert.IsFalse(double.IsNaN(summary.Classes.Last().Sd), path);
+            }
+            string html = File.ReadAllText(report);
+            Assert.IsTrue(html.Contains(@"""fragmentMassErrors"":{""files"":[{"), @"the report has no fragment mass-error view");
+        }
+
+        /// <summary>
+        /// The two directories' per-run fragment mass-error summaries hold the same content; only
+        /// the embedded stamp, which names each directory's own input files, may differ.
+        /// </summary>
+        private static void AssertSameFragmentMassErrors(string expectedDir, string actualDir)
+        {
+            foreach (string run in RUN_NAMES)
+            {
+                string expectedPath = Path.Combine(expectedDir, run + FragmentMassErrorWriter.EXT);
+                string actualPath = Path.Combine(actualDir, run + FragmentMassErrorWriter.EXT);
+                Assert.IsTrue(File.Exists(actualPath), @"no fragment mass-error summary " + actualPath);
+                JObject Content(string path)
+                {
+                    var json = JObject.Parse(File.ReadAllText(path));
+                    json.Remove(ArtifactStamp.JSON_PROPERTY);
+                    return json;
+                }
+                Assert.IsTrue(JToken.DeepEquals(Content(expectedPath), Content(actualPath)),
+                    @"the fragment mass-error summary written later differs: " + actualPath);
+            }
+        }
+
         private static void AssertBlibsEqual(string expectedBlib, string actualBlib)
         {
             var differences = BlibComparer.Compare(expectedBlib, actualBlib, TOLERANCE);
@@ -2465,13 +2592,15 @@ namespace pwiz.Osprey.Test
         private sealed class Subset
         {
             public Subset(string dataDir, string libraryFile, string resolution, string[] runs,
-                string pass2Mode = null)
+                string pass2Mode = null, IReadOnlyDictionary<string, string> moreVariables = null, string[] moreArgs = null)
             {
                 DataDir = dataDir;
                 LibraryFile = libraryFile;
                 Resolution = resolution;
                 Runs = runs;
                 Pass2Mode = pass2Mode;
+                MoreVariables = moreVariables;
+                MoreArgs = moreArgs ?? Array.Empty<string>();
             }
 
             public string DataDir { get; }
@@ -2482,6 +2611,12 @@ namespace pwiz.Osprey.Test
             /// <summary>The OSPREY_PASS2_QVALUE every phase runs under, or null for the default.</summary>
             public string Pass2Mode { get; }
 
+            /// <summary>Further variables every phase runs under (an experimental arm), or null.</summary>
+            public IReadOnlyDictionary<string, string> MoreVariables { get; }
+
+            /// <summary>Further arguments every phase runs with (a setting the arm asks for), or none.</summary>
+            public string[] MoreArgs { get; }
+
             /// <summary>
             /// <see cref="Verifier"/>, with this subset's pass-2 mode set on every phase - a chain
             /// whose phases disagreed on it would compare two analyses, not two routes.
@@ -2489,6 +2624,11 @@ namespace pwiz.Osprey.Test
             public IReadOnlyDictionary<string, string> Variables(bool verify)
             {
                 var variables = Verifier(verify).ToDictionary(kv => kv.Key, kv => kv.Value);
+                if (MoreVariables != null)
+                {
+                    foreach (var kv in MoreVariables)
+                        variables[kv.Key] = kv.Value;
+                }
                 if (Pass2Mode != null)
                     variables[@"OSPREY_PASS2_QVALUE"] = Pass2Mode;
                 return variables;
@@ -2505,7 +2645,7 @@ namespace pwiz.Osprey.Test
                     OspreyCommandArgs.ARG_LIBRARY.ArgumentText, Path.Combine(DataDir, LibraryFile),
                     OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(workDir, BLIB_FILE),
                     OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, workDir
-                }).Concat(CommonArgs(Resolution)).ToArray();
+                }).Concat(CommonArgs(Resolution)).Concat(MoreArgs).ToArray();
             }
         }
     }

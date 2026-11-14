@@ -490,60 +490,12 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reconciliation planning stopped: the {1} file for {0} is missing. Delete any partial outputs and run again so it is written again..
+        ///   Looks up a localized string similar to Could not reproduce the first-pass peaks of {0} of {1} precursors in {2}. Score this run again from the start..
         /// </summary>
-        public static string CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the__scores_parquet_file_for__0__is_missing__Delete_any_ {
+        public static string CwtCandidateRecompute_ForRows_Could_not_reproduce_the_first_pass_peaks_of__0__of__1__precursors_in__2___Score_this_run_again_from_the_start_ {
             get {
-                return ResourceManager.GetString("CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the__scores_parqu" +
-                        "et_file_for__0__is_missing__Delete_any_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reconciliation planning stopped: the CWT candidates in {0} could not be read: {1}. The {2} file is damaged. Delete it and run again so it is written again..
-        /// </summary>
-        public static string CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the_CWT_candidates_in__0__could_not_be_read___1___The__ {
-            get {
-                return ResourceManager.GetString("CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the_CWT_candidate" +
-                        "s_in__0__could_not_be_read___1___The__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reconciliation planning stopped: CWT candidates are missing or damaged in {0:N0} of {1:N0} files: [{2}]. Delete the {3} files of those inputs and run again so they are written again..
-        /// </summary>
-        public static string CwtCandidateLoader_ThrowIfAnyInvalid_Reconciliation_planning_stopped__CWT_candidates_are_missing_or_damaged_in__0__of__1__ {
-            get {
-                return ResourceManager.GetString("CwtCandidateLoader_ThrowIfAnyInvalid_Reconciliation_planning_stopped__CWT_candida" +
-                        "tes_are_missing_or_damaged_in__0__of__1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} ({1} file missing).
-        /// </summary>
-        public static string CwtCandidateLoader_ValidateFileInRange__0____scores_parquet_file_missing_ {
-            get {
-                return ResourceManager.GetString("CwtCandidateLoader_ValidateFileInRange__0____scores_parquet_file_missing_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} (a CWT candidate refers to row {1:N0}, but the {3} file has only {2:N0} rows).
-        /// </summary>
-        public static string CwtCandidateLoader_ValidateFileInRange__0___a_CWT_candidate_refers_to_row__1___but_the__scores_parquet_file_has_only__2__rows_ {
-            get {
-                return ResourceManager.GetString("CwtCandidateLoader_ValidateFileInRange__0___a_CWT_candidate_refers_to_row__1___bu" +
-                        "t_the__scores_parquet_file_has_only__2__rows_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} (unreadable: {1}).
-        /// </summary>
-        public static string CwtCandidateLoader_ValidateFileInRange__0___unreadable___1__ {
-            get {
-                return ResourceManager.GetString("CwtCandidateLoader_ValidateFileInRange__0___unreadable___1__", resourceCulture);
+                return ResourceManager.GetString("CwtCandidateRecompute_ForRows_Could_not_reproduce_the_first_pass_peaks_of__0__of" +
+                        "__1__precursors_in__2___Score_this_run_again_from_the_start_", resourceCulture);
             }
         }
         
@@ -1355,7 +1307,27 @@ namespace pwiz.Osprey.Tasks {
                         "t_precursor_candidates_cannot_be_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: fragment mass error of {1:N0} target precursors ({2:N0} peaks): mean {3:F2}, SD {4:F2}, robust SD {5:F2}, |mean| + 3 SD {6:F2} {7}; search tolerance {8:F2} {9}.
+        /// </summary>
+        public static string FragmentMassErrorWriter_WriteRun__0___fragment_mass_error_of__1_N0__target_precursors {
+            get {
+                return ResourceManager.GetString("FragmentMassErrorWriter_WriteRun__0___fragment_mass_error_of__1_N0__target_precur" +
+                        "sors", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: no fragment peak was found within {2:F2} {3} of the library fragments of {1:N0} target precursors, so no fragment mass error was measured; search tolerance {4:F2} {5}.
+        /// </summary>
+        public static string FragmentMassErrorWriter_WriteRun__0___no_fragment_peak_was_found_for__1_N0__target_precursors {
+            get {
+                return ResourceManager.GetString("FragmentMassErrorWriter_WriteRun__0___no_fragment_peak_was_found_for__1_N0__targe" +
+                        "t_precursors", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to {0:N0} of {1:N0} entrapment peptides sit on a target protein; the model diagnostics report splits the entrapment FDP by protein placement..
         /// </summary>
@@ -1877,6 +1849,16 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The protein-best column file {0} of {1} is missing or was not written by this analysis&apos;s first pass. Run {2} again..
+        /// </summary>
+        public static string Pass2FdrSidecar_LoadProteinBestForRun_The_protein_best_column_file__0__of__1__is_missing_or_was_not_written_by_this_analysis_s_first_pass__Run__2__again_ {
+            get {
+                return ResourceManager.GetString("Pass2FdrSidecar_LoadProteinBestForRun_The_protein_best_column_file__0__of__1__is" +
+                        "_missing_or_was_not_written_by_this_analysis_s_first_pass__Run__2__again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to reload the second-pass intermediate file for &apos;{0}&apos; ({1}); protein FDR will use its first-pass q-values..
         /// </summary>
         public static string Pass2FdrSidecar_OverlayPass2SidecarOntoFile_Failed_to_reload_the_second_pass_intermediate_file_for___0_____1____protein_FDR_will_use_ {
@@ -2284,6 +2266,16 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Second-pass FDR cannot run: the saved first-pass model was trained with {0}, but this run has {1}. Run {2} again with {1}..
+        /// </summary>
+        public static string PerFileRescoreTask_CreatePass2Worker_Second_pass_FDR_cannot_run__the_saved_first_pass_model_was_trained_with__0___but_this_run_has__1___Run__2__again_with__1__ {
+            get {
+                return ResourceManager.GetString("PerFileRescoreTask_CreatePass2Worker_Second_pass_FDR_cannot_run__the_saved_first_" +
+                        "pass_model_was_trained_with__0___but_this_run_has__1___Run__2__again_with__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The saved first-pass model carries no list of precursor candidates from proteins with 2 or more detections, which second-pass FDR needs. Run {0} again..
         /// </summary>
         public static string PerFileRescoreTask_CreatePass2Worker_The_saved_first_pass_model_carries_no_list_of_precursor_candidates_from_proteins_with_2_or_more_detections__ {
@@ -2486,6 +2478,26 @@ namespace pwiz.Osprey.Tasks {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to {0:N0} fragment mass-error summaries were not measured, because the run&apos;s calibration or spectra cache is not in its output folder; any summary already there is kept: {1}.
+        /// </summary>
+        public static string PerFileRescoreTask_WriteFragmentMassErrors_Not_measured__0_N0__runs_without_spectra {
+            get {
+                return ResourceManager.GetString("PerFileRescoreTask_WriteFragmentMassErrors_Not_measured__0_N0__runs_without_spect" +
+                        "ra", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The fragment mass-error summary for the model diagnostics report failed for {0}: {1}.
+        /// </summary>
+        public static string PerFileRescoreTask_WriteFragmentMassErrors_The_fragment_mass_error_summary_failed_for__0____1_ {
+            get {
+                return ResourceManager.GetString("PerFileRescoreTask_WriteFragmentMassErrors_The_fragment_mass_error_summary_failed" +
+                        "_for__0____1_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Failed to remove the incomplete re-scored results file {0} after a failed write: {1}.
         /// </summary>

@@ -50,11 +50,17 @@ namespace pwiz.Osprey.Scoring
     {
         private readonly IOspreyLog _log;
         private readonly IScoringDiagnostics _diagnostics;   // nullable by contract; invoked null-conditionally
+        private readonly bool[] _recordedFeatures;           // null computes every feature
 
-        public ScoringPipeline(IOspreyLog log, IScoringDiagnostics diagnostics)
+        /// <summary>
+        /// A pipeline that scores through a <see cref="CoelutionScorer"/> computing the PIN features
+        /// <paramref name="recordedFeatures"/> flags (see that constructor), or every feature when null.
+        /// </summary>
+        public ScoringPipeline(IOspreyLog log, IScoringDiagnostics diagnostics, bool[] recordedFeatures = null)
         {
             _log = log ?? OspreyLog.None;
             _diagnostics = diagnostics;
+            _recordedFeatures = recordedFeatures;
         }
 
 
@@ -89,7 +95,6 @@ namespace pwiz.Osprey.Scoring
         {
             // A labeled pass runs inside a per-file block that is indented under its heading.
             string settingsIndent = passLabel == null ? string.Empty : @"  ";
-            bool logSettings = OspreyOutput.Verbose && logSearchSettings;
             var config = context.Config;
             var allEntries = new List<FdrEntry>();
             var scorer = context.Resolution.CreateScorer();
@@ -111,96 +116,8 @@ namespace pwiz.Osprey.Scoring
             // simply re-reads windows on each pass; there is no shared resident list to
             // preserve, so nothing here mutates a caller's m/z).
 
-            // Determine RT tolerance - global, matching Rust's run_search.
-            // Rust computes one tolerance for ALL entries: 3 * MAD * 1.4826,
-            // clamped to [min, max]. C# was using per-entry LocalTolerance
-            // (interpolated residuals), which produces different scan ranges.
-            double rtToleranceGlobal;
-            // Sigma for the Gaussian RT penalty applied during CWT peak
-            // ranking inside ScoreCandidate. Rust pipeline.rs:6690 uses
-            // UNCLAMPED 5*MAD*1.4826 with a 0.1 min floor (widened from 3x
-            // in v26.3.1 so peaks with small RT deviations from the LOESS
-            // prediction aren't over-penalized; see maccoss/osprey commit
-            // 2db5f1c). The scan-window tolerance above remains at 3x and
-            // is clamped to [MinRt, MaxRt]. Two separate values keep peak
-            // ranking bit-identical to Rust regardless of config clamping.
-            double rtSigmaGlobal;
-            if (rtCalibration != null)
-            {
-                // Mirror Rust run_search at pipeline.rs:6776-6815: prefer
-                // the per-file .calibration.json's rt_calibration.mad
-                // (the FIRST-PASS MAD), and only fall back to the
-                // calibration's stats MAD when that JSON value is absent.
-                // This is the difference between using ~0.144 (broad
-                // first-pass spread) and ~0.012 (narrow refined-cal
-                // spread that gets clamped to MinRtTolerance), which
-                // costs ~28% of window width and produces ~33k divergent
-                // best-peak picks per Stellar file.
-                double mad = context.OriginalRtMad ?? rtCalibration.Stats().MAD;
-                double robustSd = mad * 1.4826;
-                // Shared definition of the final search-window half-width so the
-                // scoring path, the persisted calibration JSON, and the console
-                // calibration summary all report the same number (issue #4364).
-                // The floor widens for a calibration fitted from few points: a MAD
-                // measured from a thin set can be small by luck, and clamping it to
-                // the configured 0.5 min would pair a tight window with a fit that
-                // does not support one (issue #4401). No-op at n >= MinCalibrationPoints.
-                rtToleranceGlobal = RTCalibration.SearchWindowHalfWidth(
-                    mad, rtCalibration.Stats().NPoints,
-                    config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance,
-                    config.RtCalibration.MinCalibrationPoints);
-                rtSigmaGlobal = Math.Max(robustSd * 5.0, 0.1);
-                if (logSettings)
-                {
-                    _log.LogInfo(settingsIndent + string.Format(
-                        OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Coelution_search_RT_tolerance___0__min__3_MAD_1_4826__MAD__1___2__,
-                        rtToleranceGlobal, mad,
-                        context.OriginalRtMad.HasValue
-                            ? string.Format(OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_from_the__0__file, CalibrationIO.EXT)
-                            : OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_from_the_calibration_statistics));
-                }
-            }
-            else
-            {
-                rtToleranceGlobal = config.RtCalibration.FallbackRtTolerance;
-                rtSigmaGlobal = rtToleranceGlobal;
-            }
-
-            // Apply MS2 calibration: calibrated fragment tolerance + m/z offset.
-            // Matches Rust run_search which applies calibrated_tolerance() and
-            // apply_spectrum_calibration() before scoring.
-            FragmentToleranceConfig searchFragTol = config.FragmentTolerance;
-            if (ms2Calibration.Calibrated)
-            {
-                double calTol;
-                ToleranceUnit calUnit;
-                MzCalibration.CalibratedTolerance(ms2Calibration,
-                    config.FragmentTolerance.Tolerance, config.FragmentTolerance.Unit,
-                    out calTol, out calUnit);
-                searchFragTol = new FragmentToleranceConfig
-                {
-                    Tolerance = calTol,
-                    Unit = calUnit
-                };
-                if (logSettings)
-                {
-                    _log.LogInfo(settingsIndent + string.Format(
-                        OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Coelution_search_using_calibrated_fragment_tolerance___0___1_,
-                        calTol, calUnit.GetLocalizedString()));
-                }
-
-                // Use calibrated tolerance for all downstream scoring. (The
-                // provider already applied the per-spectrum m/z calibration, so
-                // only this fragment-tolerance value is set here.)
-                config.FragmentTolerance = searchFragTol;
-
-                if (logSettings)
-                {
-                    _log.LogInfo(settingsIndent + string.Format(
-                        OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Applying_MS2_calibration__mean_error____0___1_____correcting_by__2___1_,
-                        ms2Calibration.Mean, MzCalibration.GetUnitText(ms2Calibration.Unit), -ms2Calibration.Mean));
-                }
-            }
+            ApplySearchSettings(rtCalibration, ms2Calibration, context, settingsIndent, logSearchSettings,
+                out double rtToleranceGlobal, out double rtSigmaGlobal);
 
             // Per-entry search XIC diagnostic: log the intent once at start.
             // The per-entry dump check happens inline in ScoreCandidate via
@@ -243,13 +160,20 @@ namespace pwiz.Osprey.Scoring
             // Construct the per-window coelution scorer once. It captures the
             // log sink + the scoring-diagnostics sink (null when OSPREY_DIAGNOSTICS is off; the
             // scorer invokes it null-conditionally, so this is a no-op then).
-            var coelutionScorer = new CoelutionScorer(_diagnostics);
+            var coelutionScorer = new CoelutionScorer(_diagnostics, _recordedFeatures);
+
+            // Hand windows out largest first, one at a time. A window is the unit of
+            // parallel work, and Astral's busiest windows carry about twice the mean
+            // candidate count, so in m/z order the last few large windows ran alone
+            // while the other threads idled. Results still land by window index.
+            var scoringOrder = LargestWindowsFirst(windowsToScore, fullLibrary);
+            var swScoring = Stopwatch.StartNew();
 
             ProgressReporter.Run(
                 passLabel ?? OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Scoring_isolation_windows,
                 windowsToScore.Count, progress =>
             {
-                Parallel.For(0, windowsToScore.Count, new ParallelOptions
+                Parallel.ForEach(Partitioner.Create(scoringOrder, EnumerablePartitionerOptions.NoBuffering), new ParallelOptions
                 {
                     MaxDegreeOfParallelism = config.NThreads
                 },
@@ -291,6 +215,7 @@ namespace pwiz.Osprey.Scoring
                     }
                 });
             }, passLabel == null ? string.Empty : @"  ", 2.0);
+            swScoring.Stop();
 
             // Flatten in deterministic window-index order.
             for (int wIdx = 0; wIdx < windowResults.Length; wIdx++)
@@ -301,9 +226,159 @@ namespace pwiz.Osprey.Scoring
 
 
             // Summarize per-window timings.
-            LogWindowTimingSummary(windowTimings);
+            LogWindowTimingSummary(windowTimings, swScoring.Elapsed.TotalSeconds, config.NThreads);
 
             return allEntries;
+        }
+
+        /// <summary>
+        /// Resolve the search settings <see cref="RunCoelutionScoring"/> scores with: the global RT
+        /// search half-width and RT-penalty sigma for <paramref name="rtCalibration"/>, the
+        /// library-RT-dependent half-width (<see cref="ScoringContext.LocalRtTolerance"/>), the
+        /// MS2-calibrated fragment tolerance (written to the context's config) and the
+        /// correlation-shape configuration (<see cref="ScoringContext.CorrelationConfig"/>).
+        /// Public so a caller reproducing one candidate's first-pass detection outside a full
+        /// scoring pass resolves the same settings the pass did.
+        /// </summary>
+        public void ApplySearchSettings(RTCalibration rtCalibration, MzCalibrationResult ms2Calibration,
+            ScoringContext context, string settingsIndent, bool logSearchSettings,
+            out double rtToleranceGlobal, out double rtSigmaGlobal)
+        {
+            bool logSettings = OspreyOutput.Verbose && logSearchSettings;
+            var config = context.Config;
+
+            // Determine RT tolerance - global, matching Rust's run_search.
+            // Rust computes one tolerance for ALL entries: 3 * MAD * 1.4826,
+            // clamped to [min, max]. C# was using per-entry LocalTolerance
+            // (interpolated residuals), which produces different scan ranges.
+            // Sigma for the Gaussian RT penalty applied during CWT peak
+            // ranking inside ScoreCandidate. Rust pipeline.rs:6690 uses
+            // UNCLAMPED 5*MAD*1.4826 with a 0.1 min floor (widened from 3x
+            // in v26.3.1 so peaks with small RT deviations from the LOESS
+            // prediction aren't over-penalized; see maccoss/osprey commit
+            // 2db5f1c). The scan-window tolerance above remains at 3x and
+            // is clamped to [MinRt, MaxRt]. Two separate values keep peak
+            // ranking bit-identical to Rust regardless of config clamping.
+            if (rtCalibration != null)
+            {
+                // Mirror Rust run_search at pipeline.rs:6776-6815: prefer
+                // the per-file .calibration.json's rt_calibration.mad
+                // (the FIRST-PASS MAD), and only fall back to the
+                // calibration's stats MAD when that JSON value is absent.
+                // This is the difference between using ~0.144 (broad
+                // first-pass spread) and ~0.012 (narrow refined-cal
+                // spread that gets clamped to MinRtTolerance), which
+                // costs ~28% of window width and produces ~33k divergent
+                // best-peak picks per Stellar file.
+                double mad = context.OriginalRtMad ?? rtCalibration.Stats().MAD;
+                double robustSd = mad * 1.4826;
+                // Shared definition of the final search-window half-width so the
+                // scoring path, the persisted calibration JSON, and the console
+                // calibration summary all report the same number (issue #4364).
+                // The floor widens for a calibration fitted from few points: a MAD
+                // measured from a thin set can be small by luck, and clamping it to
+                // the configured 0.5 min would pair a tight window with a fit that
+                // does not support one (issue #4401). No-op at n >= MinCalibrationPoints.
+                rtToleranceGlobal = RTCalibration.SearchWindowHalfWidth(
+                    mad, rtCalibration.Stats().NPoints,
+                    config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance,
+                    config.RtCalibration.MinCalibrationPoints);
+                rtSigmaGlobal = Math.Max(robustSd * 5.0, 0.1);
+                context.LocalRtTolerance = OspreyEnvironment.LocalRtToleranceNeighbors.HasValue
+                    ? LocalRtTolerance.Create(rtCalibration, OspreyEnvironment.LocalRtToleranceNeighbors.Value,
+                        rtToleranceGlobal, config.RtCalibration.MaxRtTolerance)
+                    : null;
+                // At default log level: the experiment changes what is searched.
+                if (context.LocalRtTolerance != null && logSearchSettings)
+                {
+                    _log.LogInfo(settingsIndent + string.Format(
+                        OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Local_RT_tolerance,
+                        OspreyEnvironment.LocalRtToleranceNeighbors.Value, context.LocalRtTolerance.MaxHalfWidth,
+                        context.LocalRtTolerance.FractionWidened));
+                }
+                if (logSettings)
+                {
+                    _log.LogInfo(settingsIndent + string.Format(
+                        OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Coelution_search_RT_tolerance___0__min__3_MAD_1_4826__MAD__1___2__,
+                        rtToleranceGlobal, mad,
+                        context.OriginalRtMad.HasValue
+                            ? string.Format(OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_from_the__0__file, CalibrationIO.EXT)
+                            : OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_from_the_calibration_statistics));
+                }
+            }
+            else
+            {
+                rtToleranceGlobal = config.RtCalibration.FallbackRtTolerance;
+                rtSigmaGlobal = rtToleranceGlobal;
+                context.LocalRtTolerance = null;
+            }
+
+            // Apply MS2 calibration: calibrated fragment tolerance + m/z offset.
+            // Matches Rust run_search which applies calibrated_tolerance() and
+            // apply_spectrum_calibration() before scoring.
+            FragmentToleranceConfig searchFragTol = config.FragmentTolerance;
+            if (ms2Calibration.Calibrated)
+            {
+                double calTol;
+                ToleranceUnit calUnit;
+                MzCalibration.CalibratedTolerance(ms2Calibration,
+                    config.FragmentTolerance.Tolerance, config.FragmentTolerance.Unit,
+                    out calTol, out calUnit);
+                if (calUnit == ToleranceUnit.Ppm && OspreyEnvironment.MinFragmentTolerancePpm.HasValue)
+                    calTol = Math.Max(calTol, OspreyEnvironment.MinFragmentTolerancePpm.Value);
+                searchFragTol = new FragmentToleranceConfig
+                {
+                    Tolerance = calTol,
+                    Unit = calUnit
+                };
+                // At default log level: the search tolerance replaces the configured one, so a
+                // log that shows only the configured value misreports what was searched.
+                if (logSearchSettings)
+                {
+                    _log.LogInfo(settingsIndent + string.Format(
+                        OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Coelution_search_using_calibrated_fragment_tolerance___0___1_,
+                        calTol, calUnit.GetLocalizedString()));
+                }
+
+                // Use calibrated tolerance for all downstream scoring. (The
+                // provider already applied the per-spectrum m/z calibration, so
+                // only this fragment-tolerance value is set here.)
+                config.FragmentTolerance = searchFragTol;
+
+                if (logSettings)
+                {
+                    _log.LogInfo(settingsIndent + string.Format(
+                        OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Applying_MS2_calibration__mean_error____0___1_____correcting_by__2___1_,
+                        ms2Calibration.Mean, MzCalibration.GetUnitText(ms2Calibration.Unit), -ms2Calibration.Mean));
+                }
+            }
+
+            context.CorrelationConfig = CorrelationConfigFor(config, OspreyEnvironment.CorrFragmentTolerancePpm);
+        }
+
+        /// <summary>
+        /// The configuration the correlation-shape features score with (see
+        /// <see cref="ScoringContext.CorrelationConfig"/>): a copy of the search
+        /// <paramref name="config"/> at max(search tolerance, <paramref name="corrTolerancePpm"/>) ppm.
+        /// Null when <paramref name="corrTolerancePpm"/> is null, the search tolerance is not in ppm,
+        /// or the setting is no wider than the search tolerance - the wider XICs would then be the
+        /// search XICs, so nothing is re-extracted.
+        /// </summary>
+        public static OspreyConfig CorrelationConfigFor(OspreyConfig config, double? corrTolerancePpm)
+        {
+            var searchTolerance = config.FragmentTolerance;
+            if (!corrTolerancePpm.HasValue || searchTolerance == null ||
+                searchTolerance.Unit != ToleranceUnit.Ppm || corrTolerancePpm.Value <= searchTolerance.Tolerance)
+            {
+                return null;
+            }
+            var corrConfig = config.ShallowClone();
+            corrConfig.FragmentTolerance = new FragmentToleranceConfig
+            {
+                Tolerance = corrTolerancePpm.Value,
+                Unit = ToleranceUnit.Ppm
+            };
+            return corrConfig;
         }
 
 
@@ -609,6 +684,45 @@ namespace pwiz.Osprey.Scoring
 
 
         /// <summary>
+        /// Window indices ordered by candidate count, largest first, ties by index. The count is
+        /// the one <see cref="CoelutionScorer.ScoreWindow"/> scores: entries with fragments whose
+        /// precursor m/z the window contains. A stable sort keeps the order the same run to run.
+        /// </summary>
+        private static int[] LargestWindowsFirst(List<IsolationWindow> windows, List<LibraryEntry> library)
+        {
+            var precursorMzs = new List<double>(library.Count);
+            foreach (var entry in library)
+            {
+                if (entry.Fragments != null && entry.Fragments.Count > 0)
+                    precursorMzs.Add(entry.PrecursorMz);
+            }
+            precursorMzs.Sort(); // Array.Sort OK: primitive values counted by range, ties are indistinguishable
+
+            var counts = new int[windows.Count];
+            for (int i = 0; i < windows.Count; i++)
+                counts[i] = FirstAtOrAbove(precursorMzs, windows[i].UpperBound) - FirstAtOrAbove(precursorMzs, windows[i].LowerBound);
+            return Enumerable.Range(0, windows.Count).OrderByDescending(i => counts[i]).ToArray();
+        }
+
+        /// <summary>
+        /// Index of the first value in ascending <paramref name="sorted"/> that is at least
+        /// <paramref name="value"/>, or its count when none is.
+        /// </summary>
+        private static int FirstAtOrAbove(List<double> sorted, double value)
+        {
+            int lo = 0, hi = sorted.Count;
+            while (lo < hi)
+            {
+                int mid = lo + (hi - lo) / 2;
+                if (sorted[mid] < value)
+                    lo = mid + 1;
+                else
+                    hi = mid;
+            }
+            return lo;
+        }
+
+        /// <summary>
         /// Per-window timing record for diagnostic summarization.
         /// </summary>
         private class WindowTiming
@@ -620,9 +734,11 @@ namespace pwiz.Osprey.Scoring
 
 
         /// <summary>
-        /// Log min/median/max per-window scoring times and the slowest window's candidate count.
+        /// Log min/median/max per-window scoring times and the slowest window's candidate count,
+        /// then how busy the threads were: the summed window time over the wall time the
+        /// threads had. What is missing from 100% is the tail where too few windows remain.
         /// </summary>
-        private void LogWindowTimingSummary(ConcurrentBag<WindowTiming> timings)
+        private void LogWindowTimingSummary(ConcurrentBag<WindowTiming> timings, double wallSeconds, int threads)
         {
             if (timings == null || timings.Count == 0)
                 return;
@@ -635,6 +751,13 @@ namespace pwiz.Osprey.Scoring
             var slowest = sorted[n - 1];
             _log.LogInfo(LogTag.TIMING, @"Per-window: min={0:F2}s, median={1:F2}s, max={2:F2}s (slowest m/z={3:F1} had {4} candidates)",
                 minS, medS, maxS, slowest.CenterMz, slowest.CandidateCount);
+            double busySeconds = sorted.Sum(t => t.Seconds);
+            int lanes = Math.Max(1, Math.Min(threads, n));
+            if (wallSeconds > 0)
+            {
+                _log.LogInfo(LogTag.TIMING, @"Window threads busy: {0:F0}s of {1:F1}s x {2} ({3:P0})",
+                    busySeconds, wallSeconds, lanes, busySeconds / (wallSeconds * lanes));
+            }
         }
     }
 }

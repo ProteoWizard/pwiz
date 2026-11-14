@@ -58,6 +58,8 @@ namespace pwiz.Osprey.IO
         public const string KEY_RUN_FDR = @"osprey.run_fdr";
         /// <summary>A search output's experiment-level FDR threshold.</summary>
         public const string KEY_EXPERIMENT_FDR = @"osprey.experiment_fdr";
+        /// <summary>A search output trained with the protein-best column (<c>--protein-best on</c>): <c>on</c>; absent when off.</summary>
+        public const string KEY_PROTEIN_BEST = @"osprey.protein_best";
         /// <summary>An exported library's source: the library file it was loaded from.</summary>
         public const string KEY_LIBRARY_SOURCE = @"osprey.library_source";
         /// <summary>

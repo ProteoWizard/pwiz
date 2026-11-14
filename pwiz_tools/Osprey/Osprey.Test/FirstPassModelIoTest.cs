@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Pipeline;
@@ -632,6 +633,94 @@ namespace pwiz.Osprey.Test
                 message => Assert.Fail(message), message => Assert.Fail(message));
         }
 
+        /// <summary>
+        /// A masked PIN feature is ABSENT from the FDR classifier's matrix, not a column of zeros:
+        /// the vectors the FDR stage loads hold only <see cref="PinFeatureMask.FdrFeatureNames"/>,
+        /// the trained model is exactly that wide, and its feature names - in memory and in the
+        /// saved model - line up with the vectors' positions. Zero columns cost the classifier as
+        /// much as real ones (97 columns trained where 21 carried information), and a model whose
+        /// names did not travel with it could be applied to vectors laid out another way. The test
+        /// process leaves OSPREY_FEATURE_MASK unset, so the default set is masked.
+        /// </summary>
+        [TestMethod]
+        public void TestMaskedFeaturesAbsentFromTrainingMatrix()
+        {
+            int[] fdrIndices = PinFeatureMask.FdrFeatureIndices;
+            string[] fdrNames = PinFeatureMask.FdrFeatureNames;
+            Assert.IsTrue(fdrIndices.Length > 0 && fdrIndices.Length < ParquetScoreCache.NUM_PIN_FEATURES,
+                @"the default mask must hide some features and leave some");
+            Assert.AreEqual(ParquetScoreCache.NUM_PIN_FEATURES - PinFeatureMask.DEFAULT_MASKED_FEATURES.Length,
+                fdrIndices.Length, @"every default-masked feature must leave the vector");
+            for (int i = 0; i < fdrIndices.Length; i++)
+            {
+                Assert.AreEqual(ParquetScoreCache.PIN_FEATURE_NAMES[fdrIndices[i]], fdrNames[i], @"name of FDR feature " + i);
+                Assert.IsFalse(PinFeatureMask.IsMasked(fdrIndices[i]), fdrNames[i]);
+                Assert.IsTrue(i == 0 || fdrIndices[i] > fdrIndices[i - 1], @"FDR features must stay in PIN order");
+            }
+            CollectionAssert.AreEqual(fdrNames, ScoringTaskShared.FdrFeatureInfos().Select(info => info.Name).ToArray(),
+                @"the classifier's feature metadata must name the vector's positions");
+
+            string parquetPath = Path.Combine(Path.GetTempPath(),
+                @"osprey_fdrcols_" + Guid.NewGuid().ToString(@"N") + @".parquet");
+            string modelPath = Path.Combine(Path.GetTempPath(),
+                @"osprey_fdrcols_" + Guid.NewGuid().ToString(@"N") + @".json");
+            try
+            {
+                var entries = MakeAllFeatureEntries();
+                ParquetScoreCache.WriteScoresParquet(parquetPath, entries, null, null, @"f.mzML", false);
+                var vectors = ParquetScoreCache.LoadPinFeaturesFromParquet(parquetPath);
+                Assert.AreEqual(entries.Count, vectors.Count);
+                for (int row = 0; row < vectors.Count; row++)
+                {
+                    Assert.AreEqual(fdrIndices.Length, vectors[row].Length, @"FDR vector width, row " + row);
+                    for (int i = 0; i < fdrIndices.Length; i++)
+                        Assert.AreEqual(entries[row].Features[fdrIndices[i]], vectors[row][i], fdrNames[i] + @", row " + row);
+                }
+
+                var percEntries = new List<PercolatorEntry>();
+                for (int row = 0; row < entries.Count; row++)
+                {
+                    percEntries.Add(new PercolatorEntry
+                    {
+                        FileName = @"f",
+                        Peptide = entries[row].ModifiedSequence,
+                        Charge = entries[row].Charge,
+                        IsDecoy = entries[row].IsDecoy,
+                        EntryId = entries[row].EntryId,
+                        Features = vectors[row],
+                    });
+                }
+                var model = PercolatorTrainer.RunPercolator(percEntries, new PercolatorConfig
+                {
+                    MaxIterations = 3,
+                    TrainOnly = true,
+                    FeatureInfos = ScoringTaskShared.FdrFeatureInfos(),
+                });
+                Assert.AreEqual(fdrIndices.Length, model.Standardizer.NumFeatures, @"training matrix width");
+                Assert.AreEqual(fdrIndices.Length, model.FoldWeights[0].Length, @"trained weight count");
+                CollectionAssert.AreEqual(fdrNames, model.FeatureNames, @"the model must name the features it trained on");
+
+                Assert.IsTrue(FirstPassModelIO.Save(modelPath, model, null, TestStamps.Any), @"model should persist");
+                var reloaded = FirstPassModelIO.Load(modelPath);
+                Assert.IsNotNull(reloaded, @"a model trained on the FDR features should reload");
+                CollectionAssert.AreEqual(fdrNames, reloaded.Model.FeatureNames, @"the names must travel with the saved model");
+
+                // A model whose names are not this run's FDR features (another mask's, say) would
+                // weigh each column as some other feature, so it does not load.
+                model.FeatureNames = fdrNames.Reverse().ToArray();
+                Assert.IsTrue(FirstPassModelIO.Save(modelPath, model, null, TestStamps.Any));
+                Assert.IsNull(FirstPassModelIO.Load(modelPath), @"a model laid out another way must not load");
+            }
+            finally
+            {
+                foreach (string path in new[] { parquetPath, modelPath })
+                {
+                    if (File.Exists(path))
+                        File.Delete(path);
+                }
+            }
+        }
+
         [TestMethod]
         public void TestFirstPassModelLoadMissingReturnsNull()
         {
@@ -799,6 +888,41 @@ namespace pwiz.Osprey.Test
                 if (File.Exists(path))
                     File.Delete(path);
             }
+        }
+
+        /// <summary>
+        /// Paired targets and decoys carrying every PIN feature, targets higher on each so the
+        /// classifier has something to separate. A masked feature gets a value no unmasked one
+        /// has, so one leaking into an FDR vector shows.
+        /// </summary>
+        private static List<FdrEntry> MakeAllFeatureEntries()
+        {
+            var rng = new Random(13);   // Fixed seed: a fixed population, not a sampled one
+            var entries = new List<FdrEntry>();
+            for (uint i = 0; i < 100; i++)
+            {
+                foreach (bool isDecoy in new[] { false, true })
+                {
+                    var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
+                    for (int f = 0; f < features.Length; f++)
+                    {
+                        features[f] = PinFeatureMask.IsMasked(f)
+                            ? 1e6 + f
+                            : rng.NextDouble() + (isDecoy ? 0.0 : 0.5);
+                    }
+                    entries.Add(new FdrEntry
+                    {
+                        EntryId = isDecoy ? (i + 1) | 0x80000000 : i + 1,
+                        IsDecoy = isDecoy,
+                        Charge = 2,
+                        ScanNumber = 10 + i,
+                        ModifiedSequence = (isDecoy ? @"DECOY" : @"PEPTIDE") + i,
+                        Features = features,
+                    });
+                }
+            }
+            // In the order the parquet stores its rows, so row i of the load is entries[i].
+            return entries.OrderBy(e => e.EntryId).ToList();
         }
 
         /// <summary>The StratumBaseIds array as it appears in the written JSON, so the test can

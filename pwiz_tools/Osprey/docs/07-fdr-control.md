@@ -34,7 +34,7 @@ The FDR stage runs twice in the two-pass architecture:
 
 ```text
 Stage 5 (first pass, after per-file coelution scoring):
-  1. Each observation carries a 21-feature PIN vector (see 03-spectral-scoring.md),
+  1. Each observation carries a 41-feature PIN vector (see 03-spectral-scoring.md; 20 of them masked by default),
      cached per file in .scores.parquet; the resident buffer is a lightweight FdrEntry stub.
   2. Build a flat PercolatorEntry list (one per observation) from the stubs.
   3. Run the native streaming Percolator with the classifier OSPREY_FDR_MODEL selects:
@@ -132,11 +132,14 @@ C# port. See Divergences.
 
 ### GBDT (`OSPREY_FDR_MODEL=gbdt`) - Experimental, C#-only, no Rust counterpart
 
-**Experimental.** GBDT is not expected to improve results with the current features, which
-were chosen for the linear SVM. It exists so that features we want to add later, which do not
-work well with a linear SVM - some were removed earlier for that reason - can be evaluated. It
-has to keep working: every first-pass path trains and scores it, and its tests stay in the
-standing suite.
+**Experimental.** GBDT exists so that features which do not work well with a linear SVM can be
+evaluated. It has to keep working: every first-pass path trains and scores it, and its tests
+stay in the standing suite. With the 21 default features it gains 5-8% at matched entrapment
+FDP over the SVM (Astral, Stellar, ZT Scan). With all 41 PIN features (`OSPREY_FEATURE_MASK=none`)
+it adds 6-13% over the 41-feature SVM on Astral and Stellar, with the reported q still calibrated under the `transfer` second
+pass. It needs enough confident training targets: on a 9.08M-precursor ZT Scan library only
+about 900 of its 150,000 training targets pass 1% FDR, and there the SVM is the better and better
+calibrated choice. Measurements and per-dataset recommendations: `03-spectral-scoring.md` B.7.
 
 `gbdt` reuses the **entire** Percolator scaffold documented below - feature
 standardization, 3-fold peptide-grouped CV, semi-supervised positive-set iteration,
@@ -881,6 +884,7 @@ All defaults are from `Osprey.Core/OspreyConfig.cs` and `Osprey/OspreyCommandArg
 | `--fdrbench-per-run` | off (`OspreyCommandArgs.cs:181`) | One row per (precursor, run) with run-level q-values; default is one row per precursor with experiment q-values. |
 | `--fdrbench-pass {1\|2\|both}` | `2` (`OspreyCommandArgs.cs:183`) | Which pass to emit: 2 = post-compaction second-pass survivors; 1 = full pre-compaction first-pass pool; both = both with `.pass1`/`.pass2` suffixes. |
 | `OSPREY_EXPERIMENT_AGG` | `max` | **Experimental.** Experiment-wide aggregation: `max` (default, byte-identical golden) or `mean-best-<N>` with N in [2, 64]. Out-of-range / malformed values fall back to `max` with a warning; N above the run count is refused. First pass only. See [Experiment-wide aggregation](#experiment-wide-aggregation-osprey_experiment_agg). |
+| `--protein-best {on\|off}` | `off` | The protein-best training column (#4580). On, round 2 of the two-round first-pass training and every score pass after it read a `PROTEIN_BEST` column: from round 1's scores in that run, the best of the other peptides on the candidate's protein (a paired decoy reads its target's value), floored at the run's decoy median. It needs the two-round training, so with `OSPREY_GBT_PREFILTER_SIZE` unset it trains two rounds at 200000 rows (an explicit size overrides; `0` is refused). Either classifier. FirstPassFDR writes each run's column to `<stem>.1st-pass.protein_best.bin`, and the second pass (both modes) scores a rescored row with its entry's first-pass value, or the run's floor for an entry with no first-pass row - its siblings' evidence is a pass-1 quantity, which moving its own peak does not change. Logged in run.log, recorded as `osprey.protein_best` in the library's LibMetadata when on, and part of the FirstPassFDR, PerFileRescoring and SecondPassFDR validity keys when on. `off`, the default, is the one-round first pass that preceded it, bit for bit. Developer switches: `OSPREY_PROTEIN_BEST_DECOY` (`paired`, `own`) and `OSPREY_PROTEIN_BEST_SHUFFLE` (`0`, `1`, the permuted-accession negative control); the `OSPREY_PROTEIN_BEST` variable it replaced is refused as unknown. |
 | `OSPREY_MEANBEST2_FLOOR_MEAN` | off (median) | **Experimental.** Missing-run floor = decoy MEAN instead of the default decoy MEDIAN. Read only under `mean-best-<N>`; the `MEANBEST2` name is historical and it applies at every N. |
 | `OSPREY_MEANBEST2_FLOOR_PCT` | unset (median) | **Experimental.** Missing-run floor = this percentile (0-100) of the decoy scores; a low value is a harder reproducibility cut. Refused outside [0, 100], and refused together with `OSPREY_MEANBEST2_FLOOR_MEAN`. |
 | `--model-diagnostics` | off | Also collects per-feature target/decoy histograms + feature-contribution report (`CollectFeatureHistograms`, `PercolatorEngine.cs:310`); forces the resident first-pass pool. Byte-neutral when off. |
