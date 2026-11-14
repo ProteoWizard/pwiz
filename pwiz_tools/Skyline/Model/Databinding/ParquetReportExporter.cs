@@ -829,7 +829,8 @@ namespace pwiz.Skyline.Model.Databinding
                 }
                 if (typeof(T) == typeof(ReadOnlyMemory<char>))
                 {
-                    // A character can take up to three bytes in UTF-8
+                    // Each UTF-16 char becomes at most three bytes of UTF-8 (the four-byte characters are
+                    // surrogate pairs, two chars)
                     return sizeof(int) + 3L * ((ReadOnlyMemory<char>) (object) _values[rowIndex]).Length;
                 }
                 return sizeof(int) + Unsafe.SizeOf<T>();
@@ -912,8 +913,8 @@ namespace pwiz.Skyline.Model.Databinding
                 var list = _lists[rowIndex];
                 long elementCount = Math.Max(1, list?.Length ?? 0);
                 long byteCount = elementCount * Math.Max(Unsafe.SizeOf<T>(), sizeof(int));
-                // The elements of a string list are strings until Pack converts them. A character can take up
-                // to three bytes in UTF-8.
+                // The elements of a string list are strings until Pack converts them. Each UTF-16 char becomes
+                // at most three bytes of UTF-8 (the four-byte characters are surrogate pairs, two chars).
                 if (list is string[] strings)
                 {
                     foreach (var value in strings)

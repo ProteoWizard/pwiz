@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results;
@@ -23,7 +24,7 @@ namespace pwiz.Skyline.Model.Databinding
         /// </summary>
         private readonly record struct ChromatogramGroupKey(string Replicate, MsDataFileUri File, bool LoadPoints);
 
-        private readonly object _lock = new object();
+        private readonly Lock _lock = new Lock();
         private object _documentReference;
         private readonly Dictionary<IdentityPath, Dictionary<ChromatogramGroupKey, ChromatogramGroupInfo>> _precursors =
             new Dictionary<IdentityPath, Dictionary<ChromatogramGroupKey, ChromatogramGroupInfo>>();
