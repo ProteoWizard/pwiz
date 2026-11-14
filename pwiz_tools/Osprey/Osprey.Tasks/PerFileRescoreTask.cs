@@ -1533,15 +1533,18 @@ namespace pwiz.Osprey.Tasks
                 // not among this task's inputs does not have.
                 if (run.Plan != null && spectra.InputFile == null)
                     throw CwtCandidateRecompute.NotReproduced(file.Key, run.Plan.Moves.Count, run.Plan.Moves.Count);
-                return RescoreOneFile(fileNum, nTotalFiles, file.Key, file.Value, inputs, ctx, run, spectra);
             }
             catch (InvalidDataException ex)
             {
                 // Reported, not thrown, for the reason the hydrate's failure is: the loop reports
-                // every bad run. The run is not done, so its entries are dropped here.
+                // every bad run. The run is not rescored, so its entries are dropped here.
                 loadError = ex.Message;
                 file.Value.Clear();
                 return (0, 0, 0, false);
+            }
+            try
+            {
+                return RescoreOneFile(fileNum, nTotalFiles, file.Key, file.Value, inputs, ctx, run, spectra);
             }
             finally
             {
@@ -2257,25 +2260,11 @@ namespace pwiz.Osprey.Tasks
             {
                 var fileName = kvp.Key.FileName;
                 var idx = kvp.Key.Index;
-                double apex, start, end;
-                if (kvp.Value is ReconcileAction.UseCwtPeak useCwt)
-                {
-                    apex = useCwt.ApexRt;
-                    start = useCwt.StartRt;
-                    end = useCwt.EndRt;
-                }
-                else if (kvp.Value is ReconcileAction.ForcedIntegration forced)
-                {
-                    apex = forced.ExpectedRt;
-                    start = forced.ExpectedRt - forced.HalfWidth;
-                    end = forced.ExpectedRt + forced.HalfWidth;
-                }
-                else
-                {
-                    // Keep: planner omits these from the map by design,
-                    // but stay defensive -- skip rather than crash.
+                // Keep: planner omits these from the map by design,
+                // but stay defensive -- skip rather than crash.
+                if (!(kvp.Value is ReconcileAction.UseCwtPeak) && !(kvp.Value is ReconcileAction.ForcedIntegration))
                     continue;
-                }
+                var (apex, start, end) = CwtCandidateRecompute.OverrideBounds(kvp.Value);
                 if (!perFileReconTargets.TryGetValue(fileName, out var list))
                 {
                     list = new List<(int, double, double, double)>();

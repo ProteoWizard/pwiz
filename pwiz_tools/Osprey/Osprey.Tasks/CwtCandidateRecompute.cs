@@ -132,9 +132,14 @@ namespace pwiz.Osprey.Tasks
             var actions = new Dictionary<uint, ReconcileAction>(_moved.Count);
             int notReproduced = 0;
             multiWindow = 0;
+            // A profiling run capped at its first windows (OSPREY_MAX_SCORING_WINDOWS) never scores
+            // the survivors in the rest, so only the ones it scored can be checked.
+            bool windowsCapped = OspreyEnvironment.MaxScoringWindows > 0;
             foreach (var kvp in _moved)
             {
                 var moved = kvp.Value;
+                if (moved.Action == null && windowsCapped)
+                    continue;
                 if (moved.Action == null || !moved.Reproduced)
                     notReproduced++;
                 else
