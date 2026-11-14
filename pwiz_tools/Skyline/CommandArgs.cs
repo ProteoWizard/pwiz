@@ -789,19 +789,23 @@ namespace pwiz.Skyline
             (c, p) => c.AddDecoysCount = p.ValueInt);
         public static readonly Argument ARG_DECOYS_DISCARD = new DocArgument(@"decoys-discard",
             (c, p) => c.DiscardDecoys = true);
+        public static readonly Argument ARG_DECOYS_PRESERVE_PRECURSOR_MASS = new DocArgument(@"decoys-preserve-precursor-mass",
+            (c, p) => c.PreserveDecoyPrecursorMass = true);
 
         private static readonly ArgumentGroup GROUP_DECOYS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_DECOYS, false,
-            ARG_DECOYS_ADD, ARG_DECOYS_ADD_COUNT, ARG_DECOYS_DISCARD)
+            ARG_DECOYS_ADD, ARG_DECOYS_ADD_COUNT, ARG_DECOYS_DISCARD, ARG_DECOYS_PRESERVE_PRECURSOR_MASS)
         {
             Dependencies =
             {
                 { ARG_DECOYS_ADD_COUNT, ARG_DECOYS_ADD },
+                { ARG_DECOYS_PRESERVE_PRECURSOR_MASS, ARG_DECOYS_ADD },
             }
         };
 
         public string AddDecoysType { get; private set; }
         public int? AddDecoysCount { get; private set; }
         public bool DiscardDecoys { get; private set; }
+        public bool PreserveDecoyPrecursorMass { get; private set; }
 
         public bool AddDecoys
         {

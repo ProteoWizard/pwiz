@@ -320,7 +320,16 @@ namespace pwiz.Skyline {
                 return ResourceManager.GetString("_decoys_discard", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Keeps decoy precursor m/z values the same as their targets when --decoys-add is used. By default, decoy precursors are shifted in m/z..
+        /// </summary>
+        public static string _decoys_preserve_precursor_mass {
+            get {
+                return ResourceManager.GetString("_decoys_preserve_precursor_mass", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Used to specify a default root directory for all other path arguments, other than the directory in which the command is run..
         /// </summary>

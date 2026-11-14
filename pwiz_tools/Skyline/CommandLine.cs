@@ -2860,7 +2860,8 @@ namespace pwiz.Skyline
             var refineAddDecoys = new RefinementSettings
             {
                 DecoysMethod = commandArgs.AddDecoysType,
-                NumberOfDecoys = numDecoys
+                NumberOfDecoys = numDecoys,
+                NeverShiftDecoyPrecursorMass = commandArgs.PreserveDecoyPrecursorMass
             };
             int peptidesBefore = _doc.PeptideCount;
             int decoyPeptideCount = 0;

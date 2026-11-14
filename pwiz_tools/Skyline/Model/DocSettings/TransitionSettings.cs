@@ -1992,11 +1992,6 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public double MzMatchTolerance { get; private set; }
 
-        public bool IsMzMatch(double mz1, double mz2)
-        {
-            return Math.Abs(mz1 - mz1) <= MzMatchTolerance;
-        }
-
         [Track]
         public int? MaxTransitions { get; private set; }
 

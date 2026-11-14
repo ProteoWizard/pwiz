@@ -1401,7 +1401,8 @@ namespace pwiz.Skyline.Model
                 decoyGenerator = new DecoyGenerator.MassShifter();
             }
 
-            decoyGenerator.PreservePrecursorMass = NeverShiftDecoyPrecursorMass;
+            // Adding random mass shifts cannot preserve precursor masses, and the dialog disables the option for it
+            decoyGenerator.PreservePrecursorMass = NeverShiftDecoyPrecursorMass && !(decoyGenerator is DecoyGenerator.MassShifter);
             return decoyGenerator.AddDecoys(document, numDecoys);
         }
 

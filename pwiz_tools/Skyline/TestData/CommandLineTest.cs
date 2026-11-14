@@ -1469,6 +1469,43 @@ namespace pwiz.SkylineTestData
                                        "--decoys-add-count=" + expectFewerPeptides);
             AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
                 expectFewerPeptides, DecoyGeneration.REVERSE_SEQUENCE));
+
+            // By default, decoy precursors are shifted in m/z
+            string shiftedPath = TestFilesDir.GetTestPath("DecoysShifted.sky");
+            RunCommand("--in=" + docPath, "--decoys-add", "--out=" + shiftedPath);
+            var decoyMassShifts = GetDecoyPrecursorMassShifts(shiftedPath);
+            Assert.AreNotEqual(0, decoyMassShifts.Count);
+            Assert.IsTrue(decoyMassShifts.All(shift => shift.HasValue && shift.Value != 0));
+
+            // With --decoys-preserve-precursor-mass decoy precursors have the same m/z as their targets
+            string preservedPath = TestFilesDir.GetTestPath("DecoysPreserved.sky");
+            output = RunCommand("--in=" + docPath,
+                                       "--decoys-add",
+                                       "--decoys-preserve-precursor-mass",
+                                       "--out=" + preservedPath);
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
+                expectedPeptides, DecoyGeneration.REVERSE_SEQUENCE));
+            decoyMassShifts = GetDecoyPrecursorMassShifts(preservedPath, out int decoyPeptideCount);
+            Assert.AreEqual(expectedPeptides, decoyPeptideCount);
+            Assert.IsTrue(decoyMassShifts.All(shift => shift == 0));
+        }
+
+        private static List<int?> GetDecoyPrecursorMassShifts(string docPath)
+        {
+            return GetDecoyPrecursorMassShifts(docPath, out _);
+        }
+
+        private static List<int?> GetDecoyPrecursorMassShifts(string docPath, out int decoyPeptideCount)
+        {
+            var doc = ResultsUtil.DeserializeDocument(docPath);
+            var decoyPeptides = doc.PeptideGroups.Where(g => g.IsDecoy)
+                .SelectMany(g => g.Molecules)
+                .ToList();
+            decoyPeptideCount = decoyPeptides.Count;
+            return decoyPeptides
+                .SelectMany(p => p.TransitionGroups)
+                .Select(tg => tg.TransitionGroup.DecoyMassShift)
+                .ToList();
         }
 
         [TestMethod]

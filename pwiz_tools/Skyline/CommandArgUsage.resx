@@ -660,6 +660,9 @@ Waters</value>
   <data name="_decoys_discard" xml:space="preserve">
     <value>Forces any existing decoys to be discarded when --decoys-add is used.</value>
   </data>
+  <data name="_decoys_preserve_precursor_mass" xml:space="preserve">
+    <value>Keeps decoy precursor m/z values the same as their targets when --decoys-add is used. By default, decoy precursors are shifted in m/z.</value>
+  </data>
   <data name="CommandArgs_GROUP_INTERNAL" xml:space="preserve">
     <value>Internal use only</value>
   </data>

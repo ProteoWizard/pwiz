@@ -17,11 +17,13 @@
  * limitations under the License.
  */
 
+using System;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -171,6 +173,93 @@ namespace pwiz.SkylineTest
                     // Verify that the isotope distribution proportion for the decoy and target transitions are similar
                     Assert.AreEqual(targetTransition.IsotopeDistInfo.Proportion, decoyTransition.IsotopeDistInfo.Proportion, .001);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Tests that preserving precursor mass never adds a decoy with a precursor m/z its target does not have.
+        /// </summary>
+        [TestMethod]
+        public void TestPreservePrecursorMassDecoys()
+        {
+            var originalDocument = (SrmDocument) new XmlSerializer(typeof(SrmDocument)).Deserialize(new StringReader(strHighResDoc));
+            var targetPeptide = originalDocument.Peptides.Single();
+
+            // Reversing MVIITTK changes its sequence without changing its mass
+            var preservedDoc = GenerateDecoys(originalDocument, DecoyGeneration.REVERSE_SEQUENCE, true);
+            var decoyPeptide = preservedDoc.Peptides.Single(nodePep => nodePep.IsDecoy);
+            Assert.AreEqual(targetPeptide.TransitionGroupCount, decoyPeptide.TransitionGroupCount);
+            AssertDecoysHaveTargetPrecursorMzs(preservedDoc);
+            Assert.IsTrue(decoyPeptide.TransitionGroups.All(nodeGroup => nodeGroup.TransitionGroup.DecoyMassShift == 0));
+
+            Assert.AreEqual("TTIIVMK", decoyPeptide.Peptide.Sequence);
+
+            // MVIITTK has a modification that only applies to an N-terminal M, which would be lost by moving M
+            var docNTermM = AddStaticMod(originalDocument, new StaticMod("Test N-term M", "M", ModTerminus.N, "C2H2O"));
+
+            // Without preserving precursor mass the decoy is fully reversed, with shifted precursors
+            var shiftedDoc = GenerateDecoys(docNTermM, DecoyGeneration.REVERSE_SEQUENCE, false);
+            decoyPeptide = shiftedDoc.Peptides.Single(nodePep => nodePep.IsDecoy);
+            Assert.AreEqual("TTIIVMK", decoyPeptide.Peptide.Sequence);
+            Assert.IsTrue(decoyPeptide.TransitionGroups.All(nodeGroup => nodeGroup.TransitionGroup.DecoyMassShift != 0));
+
+            // When preserving precursor mass the modified first amino acid stays in place
+            Assert.AreEqual("MTTIIVK", GetPreservedDecoySequence(docNTermM, DecoyGeneration.REVERSE_SEQUENCE));
+            Assert.AreEqual('M', GetPreservedDecoySequence(docNTermM, DecoyGeneration.SHUFFLE_SEQUENCE)[0]);
+
+            // A modification that only applies to an N-terminal T must not be gained by moving T to the start
+            var docNTermT = AddStaticMod(originalDocument, new StaticMod("Test N-term T", "T", ModTerminus.N, "C2H2O"));
+            Assert.AreEqual("MTTIIVK", GetPreservedDecoySequence(docNTermT, DecoyGeneration.REVERSE_SEQUENCE));
+            Assert.AreNotEqual('T', GetPreservedDecoySequence(docNTermT, DecoyGeneration.SHUFFLE_SEQUENCE)[0]);
+
+            // Adding random mass shifts ignores the option, since it cannot preserve precursor masses
+            var randomDoc = GenerateDecoys(originalDocument, DecoyGeneration.ADD_RANDOM, true);
+            Assert.AreEqual(1, randomDoc.Peptides.Count(nodePep => nodePep.IsDecoy));
+        }
+
+        private static SrmDocument AddStaticMod(SrmDocument document, StaticMod staticMod)
+        {
+            var settings = document.Settings;
+            var mods = settings.PeptideSettings.Modifications;
+            return document.ChangeSettings(settings.ChangePeptideSettings(settings.PeptideSettings.ChangeModifications(
+                mods.ChangeStaticModifications(mods.StaticModifications.Append(staticMod).ToArray()))));
+        }
+
+        /// <summary>
+        /// Generates a decoy preserving precursor mass, checks that it was added without a novel precursor m/z,
+        /// and returns its sequence
+        /// </summary>
+        private static string GetPreservedDecoySequence(SrmDocument document, string decoysMethod)
+        {
+            var decoysDoc = GenerateDecoys(document, decoysMethod, true);
+            var decoyPeptide = decoysDoc.Peptides.Single(nodePep => nodePep.IsDecoy);
+            Assert.AreNotEqual(document.Peptides.Single().Peptide.Sequence, decoyPeptide.Peptide.Sequence);
+            Assert.IsTrue(decoyPeptide.TransitionGroups.All(nodeGroup => nodeGroup.TransitionGroup.DecoyMassShift == 0));
+            AssertDecoysHaveTargetPrecursorMzs(decoysDoc);
+            return decoyPeptide.Peptide.Sequence;
+        }
+
+        private static SrmDocument GenerateDecoys(SrmDocument document, string decoysMethod, bool preservePrecursorMass)
+        {
+            var refinementSettings = new RefinementSettings
+            {
+                DecoysMethod = decoysMethod,
+                NumberOfDecoys = 1,
+                NeverShiftDecoyPrecursorMass = preservePrecursorMass
+            };
+            return refinementSettings.GenerateDecoys(document);
+        }
+
+        private static void AssertDecoysHaveTargetPrecursorMzs(SrmDocument document)
+        {
+            var targetPrecursorMzs = document.Peptides.Where(nodePep => !nodePep.IsDecoy)
+                .SelectMany(nodePep => nodePep.TransitionGroups)
+                .Select(nodeGroup => nodeGroup.PrecursorMz.RawValue)
+                .ToList();
+            foreach (var nodeGroup in document.Peptides.Where(nodePep => nodePep.IsDecoy).SelectMany(nodePep => nodePep.TransitionGroups))
+            {
+                Assert.IsTrue(targetPrecursorMzs.Any(mz => Math.Abs(mz - nodeGroup.PrecursorMz.RawValue) < SequenceMassCalc.MassTolerance),
+                    string.Format("Decoy precursor m/z {0} does not match any target precursor", nodeGroup.PrecursorMz));
             }
         }
 

@@ -36,9 +36,9 @@ namespace pwiz.Skyline.Model
 
         public class Shuffler : DecoyGenerator
         {
-            protected override SequenceMods PermuteSequence(SequenceMods sequenceMods)
+            protected override SequenceMods PermuteSequence(SequenceMods sequenceMods, NTermConstraints nTermConstraints)
             {
-                return sequenceMods.Shuffle(Random);
+                return sequenceMods.Shuffle(Random, nTermConstraints);
             }
 
             protected override bool MultiCycle
@@ -49,16 +49,17 @@ namespace pwiz.Skyline.Model
 
         public class Reverser : DecoyGenerator
         {
-            protected override SequenceMods PermuteSequence(SequenceMods sequenceMods)
+            protected override SequenceMods PermuteSequence(SequenceMods sequenceMods, NTermConstraints nTermConstraints)
             {
                 if (sequenceMods.Sequence.Take(sequenceMods.Sequence.Length - 1).Distinct().Count() <= 1)
                 {
                     return null;
                 }
-                var reversed = sequenceMods.Reverse();
-                if (PreservePrecursorMass && reversed.Sequence == sequenceMods.Sequence)
+                var reversed = sequenceMods.Reverse(nTermConstraints.KeepFirst);
+                if (!nTermConstraints.IsAllowedFirst(sequenceMods.Sequence, reversed.Sequence))
                 {
-                    return null;
+                    // Leave the first amino acid where it is rather than move one that could gain an N-terminal modification
+                    reversed = sequenceMods.Reverse(true);
                 }
                 return reversed;
             }
@@ -66,10 +67,66 @@ namespace pwiz.Skyline.Model
 
         public class MassShifter : DecoyGenerator
         {
-            protected override SequenceMods PermuteSequence(SequenceMods sequenceMods)
+            protected override SequenceMods PermuteSequence(SequenceMods sequenceMods, NTermConstraints nTermConstraints)
             {
                 return sequenceMods;
             }
+        }
+
+        /// <summary>
+        /// Restrictions on the N-terminal amino acid of a decoy which keep N-terminal modifications from
+        /// being lost or gained when the sequence is rearranged.
+        /// </summary>
+        protected class NTermConstraints
+        {
+            public static readonly NTermConstraints NONE = new NTermConstraints(false, new HashSet<char>());
+
+            public NTermConstraints(bool keepFirst, ICollection<char> excludedFirstAminoAcids)
+            {
+                KeepFirst = keepFirst;
+                ExcludedFirstAminoAcids = excludedFirstAminoAcids;
+            }
+
+            /// <summary>
+            /// True if the first amino acid must not move, because it has an N-terminal modification
+            /// </summary>
+            public bool KeepFirst { get; }
+
+            /// <summary>
+            /// Amino acids which an N-terminal modification applies to, and which must not be moved to the start
+            /// </summary>
+            public ICollection<char> ExcludedFirstAminoAcids { get; }
+
+            public bool IsAllowedFirst(string originalSequence, string newSequence)
+            {
+                if (newSequence[0] == originalSequence[0])
+                {
+                    return true;
+                }
+                return !KeepFirst && !ExcludedFirstAminoAcids.Contains(newSequence[0]);
+            }
+        }
+
+        private NTermConstraints GetNTermConstraints(SrmSettings settings, PeptideDocNode nodePep, ICollection<char> excludedFirstAminoAcids)
+        {
+            // TODO: Always apply these constraints, not only when preserving precursor mass
+            if (!PreservePrecursorMass)
+            {
+                return NTermConstraints.NONE;
+            }
+            bool keepFirst = nodePep.TransitionGroups.Select(nodeGroup => nodeGroup.LabelType).Distinct().Any(labelType =>
+                ModifiedSequence.GetModifiedSequence(settings, nodePep, labelType)?.ExplicitMods
+                    .Any(mod => mod.IndexAA == 0 && mod.StaticMod.Terminus == ModTerminus.N) ?? false);
+            return new NTermConstraints(keepFirst, excludedFirstAminoAcids);
+        }
+
+        private static ICollection<char> GetNTermModAminoAcids(SrmSettings settings)
+        {
+            var modifications = settings.PeptideSettings.Modifications;
+            return modifications.StaticModifications.Concat(modifications.AllHeavyModifications)
+                .Where(mod => mod.Terminus == ModTerminus.N)
+                .SelectMany(mod => mod.AminoAcids)
+                .ToHashSet();
         }
 
         public SrmDocument AddDecoys(SrmDocument document, int numDecoys)
@@ -80,6 +137,7 @@ namespace pwiz.Skyline.Model
 
             var decoyNodePepList = new List<PeptideDocNode>();
             var setDecoyKeys = new HashSet<PeptideModKey>();
+            var nTermModAminoAcids = GetNTermModAminoAcids(settings);
             while (numDecoys > 0)
             {
                 int startDecoys = numDecoys;
@@ -91,11 +149,17 @@ namespace pwiz.Skyline.Model
                     // Decoys should not be based on standard peptides
                     if (nodePep.GlobalStandardType != null)
                         continue;
+                    var nTermConstraints = GetNTermConstraints(settings, nodePep, nTermModAminoAcids);
                     const int maxIterations = 10; // Maximum number of times to try generating decoy
                     for (var iteration = 0; iteration < maxIterations; iteration++)
                     {
-                        var seqMods = PermuteSequence(new SequenceMods(nodePep));
+                        var seqMods = PermuteSequence(new SequenceMods(nodePep), nTermConstraints);
                         if (seqMods == null)
+                        {
+                            break;
+                        }
+                        // A decoy with the same sequence as its target can only be told apart by shifting its mass
+                        if (PreservePrecursorMass && seqMods.Sequence == nodePep.Peptide.Sequence)
                         {
                             break;
                         }
@@ -117,6 +181,15 @@ namespace pwiz.Skyline.Model
                             nodePepNew = nodePepNew.ChangeSettings(settings, SrmSettingsDiff.ALL);
                             if (nodePepNew.Children.Count == 0)
                                 continue;
+
+                            // Never add a decoy precursor m/z that the target does not have. Rearranging the
+                            // sequence can still change the mass, e.g. when a terminus-specific modification
+                            // no longer applies.
+                            if (PreservePrecursorMass && !HasTargetPrecursorMzs(nodePep, nodePepNew, settings))
+                            {
+                                retry = MultiCycle;
+                                continue;
+                            }
 
                             if (MultiCycle && nodePepNew.ChangeSettings(settings, SrmSettingsDiff.ALL).TransitionCount != nodePep.TransitionCount)
                             {
@@ -160,6 +233,15 @@ namespace pwiz.Skyline.Model
             }
 
             return (SrmDocument)document.Add(decoyNodePepGroup);
+        }
+
+        private static bool HasTargetPrecursorMzs(PeptideDocNode nodePepTarget, PeptideDocNode nodePepDecoy, SrmSettings settings)
+        {
+            double tolerance = settings.TransitionSettings.Instrument.MzMatchTolerance;
+            return nodePepDecoy.TransitionGroups.All(nodeGroupDecoy => nodePepTarget.TransitionGroups.Any(nodeGroupTarget =>
+                Equals(nodeGroupTarget.PrecursorAdduct, nodeGroupDecoy.PrecursorAdduct) &&
+                Equals(nodeGroupTarget.LabelType, nodeGroupDecoy.LabelType) &&
+                nodeGroupTarget.PrecursorMz.CompareTolerant(nodeGroupDecoy.PrecursorMz, tolerance) == 0));
         }
 
         private List<TransitionGroupDocNode> GetDecoyGroups(PeptideDocNode nodePep, Peptide decoyPeptide,
@@ -253,15 +335,10 @@ namespace pwiz.Skyline.Model
 
 
 
-        protected abstract SequenceMods PermuteSequence(SequenceMods sequenceMods);
+        protected abstract SequenceMods PermuteSequence(SequenceMods sequenceMods, NTermConstraints nTermConstraints);
         protected virtual bool MultiCycle
         {
             get { return false; }
-        }
-
-        private static IList<ExplicitMod> GetReversedMods(IEnumerable<ExplicitMod> mods, int lenSeq)
-        {
-            return GetRearrangedMods(mods, lenSeq, i => lenSeq - i - 1);
         }
 
         protected class SequenceMods
@@ -281,25 +358,35 @@ namespace pwiz.Skyline.Model
             public string Sequence { get; }
             public ExplicitMods Mods { get; }
 
-            public SequenceMods Shuffle(Random random)
+            public SequenceMods Shuffle(Random random, NTermConstraints nTermConstraints)
             {
                 char finalA = Sequence.Last();
                 string sequencePrefix = Sequence.Substring(0, Sequence.Length - 1);
-                if (sequencePrefix.Distinct().Count() <= 1)
+                // The first amino acid stays in place if it has an N-terminal modification
+                int start = nTermConstraints.KeepFirst ? 1 : 0;
+                if (sequencePrefix.Substring(start).Distinct().Count() <= 1)
                 {
                     return null;
                 }
                 int lenPrefix = sequencePrefix.Length;
+                int lenShuffled = lenPrefix - start;
 
                 // Calculate a random shuffling of the current positions
+                const int maxAttempts = 1000;
                 int[] newIndices = new int[lenPrefix];
                 string newSequence;
+                int attempt = 0;
                 do
                 {
+                    if (attempt++ == maxAttempts)
+                    {
+                        // No acceptable shuffling found, e.g. when every other amino acid is excluded from the start
+                        return null;
+                    }
                     for (int i = 0; i < lenPrefix; i++)
                         newIndices[i] = i;
                     for (int i = 0; i < lenPrefix; i++)
-                        Helpers.Swap(ref newIndices[random.Next(newIndices.Length)], ref newIndices[random.Next(newIndices.Length)]);
+                        Helpers.Swap(ref newIndices[start + random.Next(lenShuffled)], ref newIndices[start + random.Next(lenShuffled)]);
 
                     // Move the amino acids to their new positions
                     char[] shuffledArray = new char[lenPrefix];
@@ -309,7 +396,7 @@ namespace pwiz.Skyline.Model
                     newSequence = new string(shuffledArray) + finalA;
                 }
                 // Make sure random shuffling did not just result in the same sequence
-                while (newSequence.Equals(Sequence));
+                while (newSequence.Equals(Sequence) || !nTermConstraints.IsAllowedFirst(Sequence, newSequence));
 
                 ExplicitMods newMods = null;
                 if (Mods != null)
@@ -325,18 +412,26 @@ namespace pwiz.Skyline.Model
                 return new SequenceMods(Peptide, newSequence, newMods);
             }
 
-            public SequenceMods Reverse()
+            /// <summary>
+            /// Reverses all but the last amino acid, and also leaves the first amino acid in place if keepFirst is true
+            /// </summary>
+            public SequenceMods Reverse(bool keepFirst)
             {
-                var reversedSequence = new string(Sequence.Take(Sequence.Length - 1).Reverse().Append(Sequence.Last()).ToArray());
+                int lenPrefix = Sequence.Length - 1;
+                int start = keepFirst ? 1 : 0;
+                Func<int, int> getNewIndex = i => i < start ? i : lenPrefix - 1 - (i - start);
+                var reversedArray = Sequence.ToCharArray();
+                for (int i = 0; i < lenPrefix; i++)
+                    reversedArray[getNewIndex(i)] = Sequence[i];
+                var reversedSequence = new string(reversedArray);
                 ExplicitMods reversedMods = null;
                 if (Mods != null)
                 {
-                    var lenSeq = Sequence.Length - 1;
-                    var reversedStaticMods = GetReversedMods(Mods.StaticModifications, lenSeq);
+                    var reversedStaticMods = GetRearrangedMods(Mods.StaticModifications, lenPrefix, getNewIndex);
                     var typedStaticMods = GetStaticTypedMods(Peptide, reversedStaticMods);
                     reversedMods = new ExplicitMods(Peptide,
                         reversedStaticMods,
-                        GetReversedHeavyMods(typedStaticMods, lenSeq),
+                        GetReversedHeavyMods(typedStaticMods, lenPrefix, getNewIndex),
                         Mods.IsVariableStaticMods);
                 }
 
@@ -354,11 +449,12 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            private IEnumerable<TypedExplicitModifications> GetReversedHeavyMods(TypedExplicitModifications typedStaticMods, int lenSeq)
+            private IEnumerable<TypedExplicitModifications> GetReversedHeavyMods(TypedExplicitModifications typedStaticMods,
+                int lenSeq, Func<int, int> getNewIndex)
             {
                 var reversedHeavyMods = Mods.GetHeavyModifications().Select(typedMod =>
                     new TypedExplicitModifications(Peptide, typedMod.LabelType,
-                        GetReversedMods(typedMod.Modifications, lenSeq)));
+                        GetRearrangedMods(typedMod.Modifications, lenSeq, getNewIndex)));
                 foreach (var typedMods in reversedHeavyMods)
                 {
                     yield return typedMods.AddModMasses(typedStaticMods);
