@@ -212,7 +212,7 @@ namespace pwiz.Skyline.Model.Databinding
         /// True if a report shown with the layout can stream its rows instead of going through
         /// BindingListSource, which is the only thing that applies sorts, filters, pivots and clustering.
         /// The report itself can still need BindingListSource, when
-        /// <see cref="ViewInfo.GetStreamingRowItemEnumerator(CancellationToken, IRowSource)"/> returns null.
+        /// <c>ViewInfo.GetStreamingRowItemEnumerator</c> returns null.
         /// </summary>
         public static bool CanStreamRows(ViewLayout layout)
         {
