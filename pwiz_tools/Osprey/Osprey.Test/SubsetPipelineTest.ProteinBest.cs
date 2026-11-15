@@ -255,7 +255,7 @@ namespace pwiz.Osprey.Test
             AssertProteinBestLogged(log, true, defaults);
             StringAssert.Contains(log, OspreyEnvironment.PROTEIN_BEST_PREFILTER_SIZE.ToString(CultureInfo.InvariantCulture));
             AssertProteinBestAnalysis(onDir);
-            var saved = FirstPassModelIO.Load(Directory.GetFiles(onDir, @"*" + FirstPassModelIO.EXT_MODEL).Single());
+            var saved = FirstPassModelIO.Load(Directory.GetFiles(onDir, @"*" + FirstPassModelIO.EXT_MODEL).Single(), UnitFeatures);
             Assert.IsNotNull(saved);
             Assert.IsFalse(saved.Model.IsGradientBoostedTrees, @"the default classifier trains the linear SVM");
             var offScores = FirstPassScores(offDir);
@@ -280,7 +280,7 @@ namespace pwiz.Osprey.Test
                 Assert.IsNotNull(ProteinBestSidecar.Read(column), column);
             var modelFile = Directory.GetFiles(workDir, @"*" + FirstPassModelIO.EXT_MODEL).Single();
             StringAssert.Contains(File.ReadAllText(modelFile), ProteinBestFeature.FEATURE_NAME);
-            var saved = FirstPassModelIO.Load(modelFile);
+            var saved = FirstPassModelIO.Load(modelFile, UnitFeatures);
             Assert.IsNotNull(saved, @"a model with the column loads");
             var scorer = FrozenModelScorer.TryCreate(saved.Model);
             Assert.IsNotNull(scorer);

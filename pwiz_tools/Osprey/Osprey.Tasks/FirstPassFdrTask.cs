@@ -414,7 +414,7 @@ namespace pwiz.Osprey.Tasks
                     : FdrScoresSidecar.ReadFeatureSums(FdrScoresSidecar.Pass1Path(sidecarBase));
             });
             // A model trained with the protein-best column reports it as its last feature.
-            var featureInfos = ScoringTaskShared.FdrFeatureInfos();
+            var featureInfos = ScoringTaskShared.FdrFeatureInfos(config);
             if (ProteinBestFeature.IsAppendedTo(saved.Model.FeatureNames))
                 featureInfos = ProteinBestFeature.WithColumnInfo(featureInfos);
             var contributions = PercolatorEngine.FirstPassContributionsFromShares(saved.Model, shares,
@@ -546,7 +546,7 @@ namespace pwiz.Osprey.Tasks
                 // The Stage 6 consensus this task writes holds the reconciliation set.
                 + OspreyEnvironment.TransferReconciliationValidityKeySuffix(ctx.Config)
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
-                + PinFeatureMask.ValidityKeySuffix()
+                + PinFeatureMask.For(ctx.Config).ValidityKeySuffix()
                 + OspreyEnvironment.FdrExperimentValidityKeySuffix()
                 // The classifier this task trains, and its tree settings. Empty for the linear
                 // SVM, so no percolator directory is invalidated.
@@ -669,7 +669,7 @@ namespace pwiz.Osprey.Tasks
             Func<string, IReadOnlyList<double[]>> loadFileFeatures = fileName =>
             {
                 if (perFileParquetPaths.TryGetValue(fileName, out string scoresPath))
-                    return ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath);
+                    return ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath, PinFeatureMask.For(ctx.Config));
                 return Array.Empty<double[]>();
             };
 
@@ -1916,7 +1916,7 @@ namespace pwiz.Osprey.Tasks
                 ProteinBestSidecar.Write(ProteinBestSidecar.PathFor(sidecarBase), column.EntryIds, column.Values,
                     column.Floor, sidecarStamp);
             }
-            var featureInfos = ScoringTaskShared.FdrFeatureInfos();
+            var featureInfos = ScoringTaskShared.FdrFeatureInfos(config);
             var swFdr = Stopwatch.StartNew();
             bool aborted;
             // Stage B (issue #4355 struct-shrink S3): the lean 1st pass holds NO resident
@@ -2215,7 +2215,7 @@ namespace pwiz.Osprey.Tasks
             string path = FirstPassModelIO.PathFor(config);
             if (path == null || !PerFileResumeDriver.IsCurrent(path, Name, validityKey))
                 return null;
-            var sidecar = FirstPassModelIO.Load(path);
+            var sidecar = FirstPassModelIO.Load(path, PinFeatureMask.For(config));
             return sidecar?.Model != null ? sidecar : null;
         }
 

@@ -69,6 +69,7 @@ namespace pwiz.Osprey.Tasks
     {
         private readonly FrozenModelScorer _scorer;
         private readonly int _nFeatures;
+        private readonly PinFeatureSelection _features;
         private readonly HashSet<uint> _stratumBaseIds;
         private readonly Action<string> _logWarning;
 
@@ -136,6 +137,7 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<uint, (double score, uint entryId)>> _writeAnswer;
 
         /// <param name="scorer">The frozen 1st-pass model.</param>
+        /// <param name="features">The search's features, as the reconciled parquet holds them.</param>
         /// <param name="transfer">True for <c>OSPREY_PASS2_QVALUE=transfer</c>, false for the
         /// protein-compact competition.</param>
         /// <param name="stratumBaseIds">The protein stratum the competition is constrained to;
@@ -147,7 +149,7 @@ namespace pwiz.Osprey.Tasks
         /// <param name="firstPassStamp">The frozen model's stamp, which every run's protein-best
         /// column must carry when the model scores with one (<c>--protein-best</c>).</param>
         public Pass2PerFileWorker(
-            FrozenModelScorer scorer, bool transfer, HashSet<uint> stratumBaseIds,
+            FrozenModelScorer scorer, PinFeatureSelection features, bool transfer, HashSet<uint> stratumBaseIds,
             IReadOnlyDictionary<uint, FdrExperimentRecord> pass1Experiment,
             Action<string, IReadOnlyList<FdrScoreRecord>,
                 IReadOnlyDictionary<uint, (double score, uint entryId)>> writeAnswer,
@@ -157,6 +159,7 @@ namespace pwiz.Osprey.Tasks
             _writeAnswer = writeAnswer ?? throw new ArgumentNullException(nameof(writeAnswer));
             _scorer = scorer ?? throw new ArgumentNullException(nameof(scorer));
             _nFeatures = scorer.InputFeatures;
+            _features = features ?? throw new ArgumentNullException(nameof(features));
             _transfer = transfer;
             _stratumBaseIds = stratumBaseIds;
             _pass1Experiment = pass1Experiment ?? throw new ArgumentNullException(nameof(pass1Experiment));
@@ -220,7 +223,7 @@ namespace pwiz.Osprey.Tasks
 
             Pass2FdrSidecar.ReadOneFilePass2Inputs(
                 pass1SidecarPath, effectiveParquetPath, survivors,
-                _scorer, _nFeatures, ProteinBestFor(fileName, pass1SidecarPath, survivors), _seeders.Value, _logWarning,
+                _scorer, _nFeatures, _features, ProteinBestFor(fileName, pass1SidecarPath, survivors), _seeders.Value, _logWarning,
                 survivorIds, pass1Records,
                 out uint[] entryIds, out double[] scores, out var survivorScores);
 
@@ -281,7 +284,7 @@ namespace pwiz.Osprey.Tasks
             string fileName, string pass1SidecarPath, string effectiveParquetPath,
             List<FdrEntry> survivors)
         {
-            var featByScoreIndex = Pass2FdrSidecar.LoadReconciledFeaturesByScoreIndex(effectiveParquetPath);
+            var featByScoreIndex = Pass2FdrSidecar.LoadReconciledFeaturesByScoreIndex(effectiveParquetPath, _features);
             var ownFeatures = new double[survivors.Count][];
             for (int i = 0; i < survivors.Count; i++)
                 ownFeatures[i] = survivors[i].Features;

@@ -193,7 +193,7 @@ namespace pwiz.Osprey.Tasks
         public static Sidecar LoadForAnalysis(OspreyConfig config)
         {
             string modelPath = PathFor(config);
-            var sidecar = Load(modelPath);
+            var sidecar = Load(modelPath, PinFeatureMask.For(config));
             if (sidecar == null)
                 return null;
             sidecar.Stamp = ArtifactStamp.TryReadJsonHead(modelPath);
@@ -352,12 +352,13 @@ namespace pwiz.Osprey.Tasks
         /// null under every mode but protein-compact, and likewise on an older sidecar.
         ///
         /// A model whose recorded feature names are not this run's FDR features
-        /// (<see cref="PinFeatureMask.FdrFeatureNames"/>) is unusable too, and loads as null: the
+        /// (<see cref="PinFeatureSelection.FdrFeatureNames"/>) is unusable too, and loads as null: the
         /// frozen scorer would weigh each column of a vector as some other feature. The validity
         /// key already keeps out a model trained under another mask; this checks the file itself.
         /// </summary>
         /// <param name="path">Sidecar path to read.</param>
-        public static Sidecar Load(string path)
+        /// <param name="features">The search's features, which a model must have been trained on.</param>
+        public static Sidecar Load(string path, PinFeatureSelection features)
         {
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
                 return null;
@@ -382,7 +383,7 @@ namespace pwiz.Osprey.Tasks
                     return null;
                 model.FeatureNames = dto.FeatureNames;
                 model.TrainingAnalysis = ReadTrainingAnalysis(dto.TrainingAnalysis);
-                if (!HasFdrFeatureLayout(model))
+                if (!HasFdrFeatureLayout(model, features))
                     return null;
 
                 return new Sidecar
@@ -487,20 +488,20 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Whether <paramref name="model"/> was trained on this run's FDR feature vectors: its
-        /// names, when it records them, are <see cref="PinFeatureMask.FdrFeatureNames"/> in order.
+        /// names, when it records them, are <see cref="PinFeatureSelection.FdrFeatureNames"/> in order.
         /// A model without names (written before they were recorded) is judged by its stamp alone.
         /// A model of <c>--protein-best</c> has those names and then its column
         /// (<see cref="ProteinBestFeature.FEATURE_NAME"/>), which the second pass supplies from the
         /// first pass's per-run column files.
         /// </summary>
-        private static bool HasFdrFeatureLayout(PercolatorResults model)
+        private static bool HasFdrFeatureLayout(PercolatorResults model, PinFeatureSelection features)
         {
             var names = model.FeatureNames;
             if (names == null)
                 return true;
             if (ProteinBestFeature.IsAppendedTo(names))
                 names = names[..^1];
-            return names.SequenceEqual(PinFeatureMask.FdrFeatureNames, StringComparer.Ordinal);
+            return names.SequenceEqual(features.FdrFeatureNames, StringComparer.Ordinal);
         }
 
         /// <summary>

@@ -1496,7 +1496,7 @@ namespace pwiz.Osprey.Tasks
                     // above puts the refusal.
                     ReadOneFilePass2Inputs(
                         sidecarByKey[fileKey], effectiveParquetPath, currentEntries,
-                        scorer, nFeatures, LoadProteinBestForRun(scorer, sidecarByKey[fileKey], fileKey, frozenModelStamp),
+                        scorer, nFeatures, PinFeatureMask.For(ctx.Config), LoadProteinBestForRun(scorer, sidecarByKey[fileKey], fileKey, frozenModelStamp),
                         seeder, ctx.LogWarning,
                         survivorIds, pass1Records,
                         out uint[] eids, out double[] scs, out var fileScores);
@@ -2062,8 +2062,8 @@ namespace pwiz.Osprey.Tasks
 
         internal static void ReadOneFilePass2Inputs(
             string pass1SidecarPath, string effectiveParquetPath, List<FdrEntry> survivors,
-            FrozenModelScorer scorer, int nFeatures, ProteinBestRunValues proteinBest, Pass1ScalarSeeder seeder,
-            Action<string> logWarning,
+            FrozenModelScorer scorer, int nFeatures, PinFeatureSelection features, ProteinBestRunValues proteinBest,
+            Pass1ScalarSeeder seeder, Action<string> logWarning,
             HashSet<uint> survivorIds, List<FdrScoreRecord> pass1Records,
             out uint[] entryIds, out double[] scores, out Dictionary<uint, double> survivorScores)
         {
@@ -2080,7 +2080,7 @@ namespace pwiz.Osprey.Tasks
             Dictionary<uint, double[]> featByScoreIndex;
             try
             {
-                featByScoreIndex = LoadReconciledFeaturesByScoreIndex(effectiveParquetPath);
+                featByScoreIndex = LoadReconciledFeaturesByScoreIndex(effectiveParquetPath, features);
             }
             catch (Exception ex)
             {
@@ -2247,10 +2247,10 @@ namespace pwiz.Osprey.Tasks
         }
 
         internal static Dictionary<uint, double[]> LoadReconciledFeaturesByScoreIndex(
-            string reconciledPath)
+            string reconciledPath, PinFeatureSelection features)
         {
             var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(reconciledPath);
-            var featRows = ParquetScoreCache.LoadPinFeaturesFromParquet(reconciledPath);
+            var featRows = ParquetScoreCache.LoadPinFeaturesFromParquet(reconciledPath, features);
             int n = Math.Min(stubs.Count, featRows.Count);
             var map = new Dictionary<uint, double[]>(n);
             for (int i = 0; i < n; i++)

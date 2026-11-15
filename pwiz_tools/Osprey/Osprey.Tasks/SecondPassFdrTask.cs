@@ -312,8 +312,8 @@ namespace pwiz.Osprey.Tasks
                 // The fold now gives the stratum's complement its own experiment q.
                 + OspreyEnvironment.Pass2StrataValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
-                + PinFeatureMask.ValidityKeySuffix()
-                + PinFeatureMask.RescoreValidityKeySuffix()
+                + PinFeatureMask.For(ctx.Config).ValidityKeySuffix()
+                + PinFeatureMask.For(ctx.Config).RescoreValidityKeySuffix()
                 + OspreyEnvironment.FdrExperimentValidityKeySuffix()
                 // OSPREY_RECON_REFIT=off plans reconciliation on the first-pass calibrations; empty when unset.
                 + OspreyEnvironment.ReconRefitValidityKeySuffix()

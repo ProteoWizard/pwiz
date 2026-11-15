@@ -129,7 +129,11 @@ namespace pwiz.Osprey.Test
 
         private string _testDir;
         private string _dataDir;
-        private FeatureSetScope _featureSettings;
+
+        // The legs search the Stellar subset at unit resolution, and the test reads the parquets and
+        // models they write: it must read them with the features those runs used, the unit-resolution
+        // default set.
+        private static PinFeatureSelection UnitFeatures => PinFeatureMask.For(ResolutionMode.UnitResolution, null);
 
         [TestInitialize]
         public void ExtractData()
@@ -137,16 +141,11 @@ namespace pwiz.Osprey.Test
             _testDir = Path.Combine(Path.GetTempPath(), @"osprey-subset-" + Guid.NewGuid().ToString(@"N"));
             _dataDir = Path.Combine(_testDir, @"data");
             ZipFile.ExtractToDirectory(Path.Combine(AppContext.BaseDirectory, @"TestData", DATA_ZIP), _dataDir);
-            // The legs search the Stellar subset at unit resolution, and the test reads the parquets
-            // they write in this process: it must resolve the features those runs recorded, the
-            // unit-resolution default set, not the HRAM default the test process starts with.
-            _featureSettings = new FeatureSetScope(ResolutionMode.UnitResolution, null);
         }
 
         [TestCleanup]
         public void DeleteTestDir()
         {
-            _featureSettings?.Dispose();
             if (Directory.Exists(_testDir))
                 Directory.Delete(_testDir, true);
         }
@@ -1456,7 +1455,7 @@ namespace pwiz.Osprey.Test
                 Assert.IsNotNull(reconciledName);
                 string reconciled = Path.Combine(workDir, reconciledName);
                 Assert.IsTrue(File.Exists(reconciled), reconciled);
-                var rows = ParquetScoreCache.LoadFullFdrEntries(reconciled);
+                var rows = ParquetScoreCache.LoadFullFdrEntries(reconciled, UnitFeatures);
                 var zeroApex = rows.Where(e => e.Features[apex] == 0 && e.Features[area] > 0)
                     .Select(e => string.Format(@"{0}{1} (entry {2})", e.ModifiedSequence, e.IsDecoy ? @" decoy" : string.Empty, e.EntryId))
                     .ToList();
@@ -1976,7 +1975,7 @@ namespace pwiz.Osprey.Test
             // As the run wrote it: no training export, so no reference XIC in either file.
             ParquetScoreCache.StreamReconciledScoresParquet(Path.Combine(workDir, run + ParquetScoreCache.EXT_SCORES),
                 reconciled, null, null, metadata, null, run + MZML_EXTENSION, null,
-                PerFileRescoreTask.TASK_NAME, null, null, false);
+                PerFileRescoreTask.TASK_NAME, null, null, false, UnitFeatures);
             Assert.IsFalse(ParquetScoreCache.IsCurrentReconciledSurvivorSubset(reconciled));
         }
 

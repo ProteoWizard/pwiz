@@ -361,11 +361,11 @@ namespace pwiz.Osprey.Tasks
                 // The worker's competition now gives the stratum's complement its own run q.
                 + OspreyEnvironment.Pass2StrataValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
-                + PinFeatureMask.ValidityKeySuffix()
-                + PinFeatureMask.RescoreValidityKeySuffix()
+                + PinFeatureMask.For(ctx.Config).ValidityKeySuffix()
+                + PinFeatureMask.For(ctx.Config).RescoreValidityKeySuffix()
                 // The reconciled parquet copies the scores parquet's recorded feature columns and
                 // writes the rescored rows' features beside them, so it records what scoring did.
-                + PinFeatureMask.RecordedFeaturesValidityKeySuffix()
+                + PinFeatureMask.For(ctx.Config).RecordedFeaturesValidityKeySuffix()
                 + OspreyEnvironment.FdrExperimentValidityKeySuffix()
                 // OSPREY_RECON_REFIT=off plans reconciliation on the first-pass calibrations; empty when unset.
                 + OspreyEnvironment.ReconRefitValidityKeySuffix()
@@ -1365,6 +1365,7 @@ namespace pwiz.Osprey.Tasks
                 Pass2FdrSidecar.RequireTransferExperimentSidecar(config);
             return new Pass2PerFileWorker(
                 scorer,
+                PinFeatureMask.For(config),
                 transfer,
                 transfer ? null : sidecar.StratumBaseIds,
                 Pass2FdrSidecar.LoadPass1ExperimentRecords(config),
@@ -1677,7 +1678,7 @@ namespace pwiz.Osprey.Tasks
             var context = new ScoringContext(fileConfig, fileName);
             context.BoundaryOverrides = boundaryOverrides;
             context.BoundaryResolver = resolver;
-            context.OverrideRunnerUpCandidates = PinFeatureMask.UsesRunnerUpFeatures();
+            context.OverrideRunnerUpCandidates = PinFeatureMask.For(fileConfig).UsesRunnerUpFeatures();
             context.OriginalRtMad = rtMadFromCalJson;
 
             // Isolation windows come straight from the streaming index, the same list
@@ -3229,7 +3230,7 @@ namespace pwiz.Osprey.Tasks
 
                 var forcedContext = new ScoringContext(fileConfig, fileName);
                 forcedContext.BoundaryOverrides = forcedOverrides;
-                forcedContext.OverrideRunnerUpCandidates = PinFeatureMask.UsesRunnerUpFeatures();
+                forcedContext.OverrideRunnerUpCandidates = PinFeatureMask.For(fileConfig).UsesRunnerUpFeatures();
                 forcedContext.OriginalRtMad = rtMadFromCalJson;
 
                 var swForced = Stopwatch.StartNew();

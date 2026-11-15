@@ -96,13 +96,11 @@ namespace pwiz.Osprey.Test
         {
             const ResolutionMode unit = ResolutionMode.UnitResolution;
             string[] expectedColumns;
-            using (new FeatureSetScope(unit, asked))
-            {
-                Assert.AreEqual(expected, PinFeatureMask.FeatureSet);
-                AssertHasLine(log, PinFeatureMask.DescribeFeatures());
-                expectedColumns = Enumerable.Range(0, ParquetScoreCache.NUM_PIN_FEATURES).Where(PinFeatureMask.IsRecorded)
-                    .Select(f => ParquetScoreCache.PIN_FEATURE_NAMES[f]).ToArray();
-            }
+            var selection = PinFeatureMask.For(unit, asked);
+            Assert.AreEqual(expected, selection.FeatureSet);
+            AssertHasLine(log, selection.DescribeFeatures());
+            expectedColumns = Enumerable.Range(0, ParquetScoreCache.NUM_PIN_FEATURES).Where(selection.IsRecorded)
+                .Select(f => ParquetScoreCache.PIN_FEATURE_NAMES[f]).ToArray();
             var inSet = PinFeatureMask.FeatureSetIndices(expected)
                 .Where(f => PinFeatureMask.IsAvailable(f, unit)).Select(f => ParquetScoreCache.PIN_FEATURE_NAMES[f]);
             CollectionAssert.AreEqual(inSet.ToArray(), expectedColumns, @"the recorded columns are the set's");

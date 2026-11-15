@@ -541,7 +541,6 @@ namespace pwiz.Osprey
                     resolutionDetection = ResolutionDetector.Detect(config);
                     config.ApplyResolutionMode(resolutionDetection?.Mode ?? ResolutionMode.HRAM);
                 }
-                PinFeatureMask.ApplySearchSettings(config.ResolutionMode, config.FeatureSet);
 
                 // Log startup info
                 LogInfo(string.Format(OspreyResources.Program_Run_Osprey_v_0_, OspreyVersion.DisplayVersion));
@@ -744,16 +743,17 @@ namespace pwiz.Osprey
                 }
                 // Always printed: the default set depends on the resolution, and a warm resume skips
                 // the FDR stage that would show which features trained.
-                LogInfo(PinFeatureMask.DescribeFeatures());
+                var featureSelection = PinFeatureMask.For(config);
+                LogInfo(featureSelection.DescribeFeatures());
                 // A masked feature is absent from the classifier's vectors, so a mask with nothing
                 // left would hand it vectors of no features at all.
-                if (PinFeatureMask.FdrFeatureIndices.Length == 0)
+                if (featureSelection.FdrFeatureIndices.Length == 0)
                 {
                     LogError(@"OSPREY_FEATURE_MASK masks every PIN feature, which leaves the FDR classifier nothing to train on.");
                     return EXIT_CODE_FAILURE_TO_START;
                 }
                 // Not an error: OSPREY_FEATURE_MASK=none is the same request on any data, but say what it did not get.
-                if (PinFeatureMask.LeavesUnavailableFeaturesUnmasked())
+                if (featureSelection.LeavesUnavailableFeaturesUnmasked())
                 {
                     LogInfo(@"OSPREY_FEATURE_MASK leaves HRAM-only features unmasked; at unit resolution they are not computed or used: " +
                             string.Join(@", ", PinFeatureMask.HRAM_ONLY_FAMILIES));

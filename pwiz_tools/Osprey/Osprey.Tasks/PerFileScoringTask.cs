@@ -214,11 +214,11 @@ namespace pwiz.Osprey.Tasks
         /// The default key and the recorded-feature term: the scores parquet holds a column for
         /// each recorded feature only, so a run that needs a feature these scores lack (a wider
         /// mask, or OSPREY_RECORD_ALL_FEATURES=1) must score again rather than adopt them. Empty
-        /// under the default mask (<see cref="PinFeatureMask.RecordedFeaturesValidityKeySuffix()"/>).
+        /// under the default mask (<see cref="PinFeatureSelection.RecordedFeaturesValidityKeySuffix"/>).
         /// </summary>
         public override string ValidityKey(PipelineContext ctx)
         {
-            return base.ValidityKey(ctx) + PinFeatureMask.RecordedFeaturesValidityKeySuffix()
+            return base.ValidityKey(ctx) + PinFeatureMask.For(ctx.Config).RecordedFeaturesValidityKeySuffix()
                 // Whether the parquets carry the reference XIC, which only the training export reads.
                 + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config)
                 // A loaded calibration replaces Stage 3's, which centres every search here.
@@ -1708,7 +1708,7 @@ namespace pwiz.Osprey.Tasks
             try
             {
                 stubs = ParquetScoreCache.LoadFdrStubsFromParquet(scoresPath, null, null);
-                var features = ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath);
+                var features = ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath, PinFeatureMask.For(ctx.Config));
                 if (features.Count != stubs.Count)
                 {
                     ctx.LogWarning(TextUtil.GetIndentation(1) + string.Format(
@@ -1965,7 +1965,7 @@ namespace pwiz.Osprey.Tasks
                 var swParquet = Stopwatch.StartNew();
                 ParquetScoreCache.WriteScoresParquet(
                     parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName,
-                    ParquetScoreCache.WritesReferenceXic(config));
+                    ParquetScoreCache.WritesReferenceXic(config), PinFeatureMask.For(config));
                 swParquet.Stop();
                 ctx.LogInfo(string.Format(
                     OspreyTasksResources.PerFileScoringTask_ProcessFile_Wrote__0__precursor_candidate_peaks_to__1____2_s_,

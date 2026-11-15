@@ -95,7 +95,8 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(legacy, OspreyEnvironment.PickValidityKeySuffix(legacyConfig.Scoring));
             string unitKey = TaskKeys(unitConfig)[PerFileScoringTask.TASK_NAME];
             string hramKey = TaskKeys(hramConfig)[PerFileScoringTask.TASK_NAME];
-            StringAssert.Contains(unitKey, XicTerm(unitConfig) + @";");
+            // The key ends at the XIC term when no feature term follows it, as at unit resolution
+            StringAssert.Contains(unitKey + @";", XicTerm(unitConfig) + @";");
             StringAssert.Contains(hramKey, @";xic=12;");
             StringAssert.Contains(hramKey, @";refxic=corr");
         }
@@ -106,22 +107,19 @@ namespace pwiz.Osprey.Test
             // The keys below are spelled out for the core set, whose recorded-feature term is empty,
             // as they were before the HRAM default became the default set; the feature-set checks set
             // their own resolution and set.
-            using (new FeatureSetScope(ResolutionMode.HRAM, OspreyFeatureSet.core))
-            {
-                AssertSuffixesAreUnconditional();
-                AssertEachArmKeysDifferently();
-                AssertTrainingSampleLeversKeyDifferently();
-                AssertFdrExperimentSwitchesKeyDifferently();
-                AssertRecordedFeaturesFollowTheMask();
-                AssertHramOnlyFamiliesDropOutAtUnitResolution();
-                AssertEveryTaskCarriesTheSuffixesItNeeds();
-                AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
-                AssertTreeClassifierKeysTheModelTasks();
-                AssertTrainingExportKey();
-                AssertFragmentMassErrorReaderKey();
-                AssertTrainingExportKeyFollowsEachRunsInputs();
-                AssertLibraryTermsKeyOnlyWhatChanged();
-            }
+            AssertSuffixesAreUnconditional();
+            AssertEachArmKeysDifferently();
+            AssertTrainingSampleLeversKeyDifferently();
+            AssertFdrExperimentSwitchesKeyDifferently();
+            AssertRecordedFeaturesFollowTheMask();
+            AssertHramOnlyFamiliesDropOutAtUnitResolution();
+            AssertEveryTaskCarriesTheSuffixesItNeeds();
+            AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
+            AssertTreeClassifierKeysTheModelTasks();
+            AssertTrainingExportKey();
+            AssertFragmentMassErrorReaderKey();
+            AssertTrainingExportKeyFollowsEachRunsInputs();
+            AssertLibraryTermsKeyOnlyWhatChanged();
         }
 
         /// <summary>
@@ -149,7 +147,7 @@ namespace pwiz.Osprey.Test
                 string blib = Path.Combine(dir, @"library.blib");
                 File.WriteAllText(blib, @"not read");
 
-                var tsvConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(tsv) };
+                var tsvConfig = new OspreyConfig { FeatureSet = OspreyFeatureSet.core, LibrarySource = LibrarySource.FromPath(tsv) };
                 var tsvKeys = TaskKeys(tsvConfig);
                 // The TSV term is a literal (an int does not concatenate into a const string), so
                 // hold it to the reader's version here.
@@ -161,7 +159,7 @@ namespace pwiz.Osprey.Test
                     Assert.IsFalse(key.Value.Contains(OspreyTask.BLIB_READER_TERM), key.Key);
                 Assert.AreEqual(DiannTsvLoader.CacheTerm(tsvConfig.FragmentTolerance), LibraryLoader.LibraryReaderTerms(tsvConfig));
 
-                var blibConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(blib) };
+                var blibConfig = new OspreyConfig { FeatureSet = OspreyFeatureSet.core, LibrarySource = LibrarySource.FromPath(blib) };
                 var blibKeys = TaskKeys(blibConfig);
                 Assert.AreEqual(PreUpgradeBaseKey(blibConfig) + OspreyTask.BLIB_READER_TERM + XicTerm(blibConfig),
                     blibKeys[PerFileScoringTask.TASK_NAME]);
@@ -172,6 +170,7 @@ namespace pwiz.Osprey.Test
                 // tolerance is another cache (the task keys follow it through the search hash).
                 var unitConfig = new OspreyConfig
                 {
+                    FeatureSet = OspreyFeatureSet.core,
                     LibrarySource = LibrarySource.FromPath(blib),
                     FragmentTolerance = FragmentToleranceConfig.UnitResolution(0.5)
                 };
@@ -288,11 +287,11 @@ namespace pwiz.Osprey.Test
                             FileName = @"a.mzML", PeakBounds = new XICPeakBounds(), Features = new CoelutionFeatureSet(),
                         },
                     },
-                    null);
+                    null, PinFeatureMask.Hram);
                 ParquetScoreCache.StreamReconciledScoresParquet(stage4, ParquetScoreCache.GetReconciledScoresPath(runA),
                     null, null, ParquetScoreCache.WithStamp(
                         ReconciledParquetWriter.BuildReconciliationMetadata(new OspreyConfig(), null), workerStamp),
-                    null, @"a.mzML", null, PerFileRescoreTask.TASK_NAME, null, null, true);
+                    null, @"a.mzML", null, PerFileRescoreTask.TASK_NAME, null, null, true, PinFeatureMask.Hram);
                 current = RunKey(runA);
                 Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(runA),
                     new Dictionary<uint, (double score, uint entryId)>(), workerStamp);
@@ -502,8 +501,8 @@ namespace pwiz.Osprey.Test
         {
             var tasks = OspreyTasks.Create().Pipeline;
             // The protein-best column off in both, so the classifier is the only difference.
-            var linearCtx = new PipelineContext(new OspreyConfig { ProteinBest = false }, tasks, null, null, null);
-            var treeCtx = new PipelineContext(new OspreyConfig { FdrClassifier = FdrClassifier.Gbdt, ProteinBest = false }, tasks, null, null, null);
+            var linearCtx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core, ProteinBest = false }, tasks, null, null, null);
+            var treeCtx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core, FdrClassifier = FdrClassifier.Gbdt, ProteinBest = false }, tasks, null, null, null);
             string treeTerm = PercolatorEngine.GbdtValidityKeySuffix(treeCtx.Config);
             Assert.AreNotEqual(string.Empty, treeTerm, @"gbdt must emit a term");
             // The linear SVM with the protein-best column off emits NOTHING, through both overloads
@@ -565,7 +564,7 @@ namespace pwiz.Osprey.Test
             }
 
             // --protein-best keys the same three tasks, so a resume with the other setting retrains.
-            var proteinBestCtx = new PipelineContext(new OspreyConfig { ProteinBest = true }, tasks, null, null, null);
+            var proteinBestCtx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core, ProteinBest = true }, tasks, null, null, null);
             foreach (var task in tasks)
             {
                 bool expectTerm = task.Name == FirstPassFdrTask.TASK_NAME ||
@@ -651,6 +650,7 @@ namespace pwiz.Osprey.Test
             {
                 var config = new OspreyConfig
                 {
+                    FeatureSet = OspreyFeatureSet.core,
                     OutputBlib = @"C:\runs\out.blib",
                     ModelDiagnostics = wanted
                 };
@@ -884,25 +884,21 @@ namespace pwiz.Osprey.Test
             // Under the core set no task carries the term, so no core output directory is invalidated;
             // under the HRAM default the scoring and rescoring tasks do.
             var tasks = OspreyTasks.Create().Pipeline;
-            var ctx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
-            using (new FeatureSetScope(ResolutionMode.UnitResolution, null))
+            var unitConfig = new OspreyConfig { ResolutionMode = ResolutionMode.UnitResolution };
+            var unitCtx = new PipelineContext(unitConfig, tasks, null, null, null);
+            Assert.AreEqual(string.Empty, PinFeatureMask.For(unitConfig).RecordedFeaturesValidityKeySuffix());
+            foreach (var task in tasks)
             {
-                Assert.AreEqual(string.Empty, PinFeatureMask.RecordedFeaturesValidityKeySuffix());
-                foreach (var task in tasks)
-                {
-                    string key = task.ValidityKey(ctx);
-                    Assert.IsFalse(key.Contains(@";featrec=") || key.Contains(@";featcols="), task.Name);
-                }
+                string key = task.ValidityKey(unitCtx);
+                Assert.IsFalse(key.Contains(@";featrec=") || key.Contains(@";featcols="), task.Name);
             }
-            using (new FeatureSetScope(ResolutionMode.HRAM, null))
+            var ctx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
+            string defaultKey = PinFeatureMask.For(ctx.Config).RecordedFeaturesValidityKeySuffix();
+            Assert.AreEqual(PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => defaultRecorded[f]), defaultKey);
+            foreach (var task in tasks)
             {
-                string defaultKey = PinFeatureMask.RecordedFeaturesValidityKeySuffix();
-                Assert.AreEqual(PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => defaultRecorded[f]), defaultKey);
-                foreach (var task in tasks)
-                {
-                    bool expected = task.Name == PerFileScoringTask.TASK_NAME || task.Name == PerFileRescoreTask.TASK_NAME;
-                    Assert.AreEqual(expected, task.ValidityKey(ctx).Contains(defaultKey), task.Name);
-                }
+                bool expected = task.Name == PerFileScoringTask.TASK_NAME || task.Name == PerFileRescoreTask.TASK_NAME;
+                Assert.AreEqual(expected, task.ValidityKey(ctx).Contains(defaultKey), task.Name);
             }
         }
 
@@ -1065,13 +1061,13 @@ namespace pwiz.Osprey.Test
         /// features Stage 4 writes, so every task carries it. The feature mask
         /// follows the training selection: the mask is applied when the FDR stage
         /// loads features, so per-file scoring must NOT key on it. What scoring
-        /// records keys it instead (<see cref="PinFeatureMask.RecordedFeaturesValidityKeySuffix()"/>),
+        /// records keys it instead (<see cref="PinFeatureSelection.RecordedFeaturesValidityKeySuffix"/>),
         /// so a mask arm that records the same families adopts another arm's scores.
         /// </summary>
         private static void AssertEveryTaskCarriesTheSuffixesItNeeds()
         {
             var tasks = OspreyTasks.Create().Pipeline;
-            var ctx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
+            var ctx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core }, tasks, null, null, null);
             string pick = OspreyEnvironment.PickValidityKeySuffix(ctx.Config.Scoring);
             string pass2 = OspreyEnvironment.Pass2QValueValidityKeySuffix();
             // The training-selection arm is hand-wired into the same three tasks the
@@ -1081,7 +1077,7 @@ namespace pwiz.Osprey.Test
             // exists to prevent. Same exemption shape: the tasks that run before a model is
             // trained cannot key on how it was trained.
             string train = OspreyEnvironment.TrainSampleValidityKeySuffix();
-            string mask = PinFeatureMask.ValidityKeySuffix();
+            string mask = PinFeatureMask.For(ctx.Config).ValidityKeySuffix();
 
             foreach (var task in tasks)
             {
@@ -1135,9 +1131,9 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private static void AssertTransferReconciliationSetKeysTheBlibGate(IReadOnlyList<OspreyTask> tasks)
         {
-            var defaultCtx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
-            var looserCtx = new PipelineContext(new OspreyConfig { ExperimentFdr = 0.05 }, tasks, null, null, null);
-            var peptideCtx = new PipelineContext(new OspreyConfig { FdrLevel = FdrLevel.Peptide }, tasks, null, null, null);
+            var defaultCtx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core }, tasks, null, null, null);
+            var looserCtx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core, ExperimentFdr = 0.05 }, tasks, null, null, null);
+            var peptideCtx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core, FdrLevel = FdrLevel.Peptide }, tasks, null, null, null);
             foreach (var task in tasks)
             {
                 Assert.AreEqual(task.ValidityKey(defaultCtx), task.ValidityKey(looserCtx),
