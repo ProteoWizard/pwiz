@@ -46,7 +46,6 @@ namespace pwiz.Osprey.Test
             string savedCacheDir = ArtifactPaths.CacheDir;
             var savedResolution = PinFeatureMask.AppliedResolutionMode;
             var savedFeatureSet = PinFeatureMask.AppliedFeatureSet;
-            var savedDefaultsResolution = OspreyEnvironment.AppliedDefaultsResolution;
             try
             {
                 return Program.RunCommand(args, writer);
@@ -54,7 +53,6 @@ namespace pwiz.Osprey.Test
             finally
             {
                 PinFeatureMask.ApplySearchSettings(savedResolution, savedFeatureSet);
-                OspreyEnvironment.ApplyResolutionDefaults(savedDefaultsResolution);
                 CommandOutput.Out = savedOut;
                 OspreyOutput.PerfStats = savedPerfStats;
                 OspreyOutput.Verbose = savedVerbose;

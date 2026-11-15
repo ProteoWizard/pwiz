@@ -77,7 +77,7 @@ namespace pwiz.Osprey.Scoring
         {
             if (context.TryGetInfo(out TimeCorrelations timeCorr))
                 return timeCorr;
-            timeCorr = Compute(peakData, OspreyEnvironment.TcHalfWindowMinutes ?? HALF_WINDOW_MINUTES);
+            timeCorr = Compute(peakData, context.Config?.Scoring.TcHalfWindowMinutes ?? HALF_WINDOW_MINUTES);
             context.AddInfo(timeCorr);
             return timeCorr;
         }

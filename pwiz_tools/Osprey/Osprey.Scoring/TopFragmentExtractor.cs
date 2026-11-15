@@ -44,13 +44,6 @@ namespace pwiz.Osprey.Scoring
         public const int CAL_TOP_N_FRAGMENTS = 6;
 
         /// <summary>
-        /// How many top fragments the search extracts XICs for: the resolution's default, or
-        /// OSPREY_XIC_FRAGMENTS (<see cref="OspreyEnvironment.SearchXicFragments"/>). Read on each
-        /// use, because the default is known only once the resolution is.
-        /// </summary>
-        public static int SearchTopNFragments => OspreyEnvironment.SearchXicFragments;
-
-        /// <summary>
         /// Extract XICs for the top N most intense library fragments across the
         /// supplied (pre-filtered) spectra list. Includes an XIC for every selected
         /// fragment, even all-zero ones -- dropping all-zero fragments biases decoys
@@ -112,11 +105,12 @@ namespace pwiz.Osprey.Scoring
             //   3. Always include all selected fragments, even all-zero XICs
             //      (dropping all-zero fragments biases decoys to higher R^2)
             int rangeLen = endScan - startScan + 1;
-            Span<double> mzs = stackalloc double[SearchTopNFragments];
-            Span<double> lowers = stackalloc double[SearchTopNFragments];
-            Span<double> uppers = stackalloc double[SearchTopNFragments];
+            int xicFragments = config.Scoring.XicFragments;
+            Span<double> mzs = stackalloc double[xicFragments];
+            Span<double> lowers = stackalloc double[xicFragments];
+            Span<double> uppers = stackalloc double[xicFragments];
             var xics = CreateFragmentXics(candidate, windowRts, startScan, endScan,
-                config.FragmentTolerance, mzs, lowers, uppers);
+                config.FragmentTolerance, xicFragments, mzs, lowers, uppers);
 
             for (int t = 0; t < xics.Count; t++)
             {
@@ -137,7 +131,7 @@ namespace pwiz.Osprey.Scoring
         /// The per-candidate setup of a fragment XIC extraction, shared by
         /// <see cref="ExtractFragmentXics"/> and the scan-major
         /// <c>PeakDataExtractor.ExtractXicsScanMajor</c>: the candidate's top
-        /// <see cref="CAL_TOP_N_FRAGMENTS"/> fragments by relative intensity, each with a zeroed
+        /// <paramref name="xicFragments"/> fragments by relative intensity, each with a zeroed
         /// XIC over [<paramref name="startScan"/>, <paramref name="endScan"/>] on one shared RT
         /// array, and its m/z and tolerance window written to <paramref name="mzs"/>,
         /// <paramref name="lowers"/> and <paramref name="uppers"/> at the XIC's index. Empty for a
@@ -148,12 +142,13 @@ namespace pwiz.Osprey.Scoring
             double[] windowRts,
             int startScan, int endScan,
             FragmentToleranceConfig fragmentTolerance,
+            int xicFragments,
             Span<double> mzs, Span<double> lowers, Span<double> uppers)
         {
             if (candidate.Fragments == null || candidate.Fragments.Count == 0)
                 return new List<XicData>();
 
-            int[] topIndices = SelectTopFragmentIndices(candidate.Fragments, SearchTopNFragments);
+            int[] topIndices = SelectTopFragmentIndices(candidate.Fragments, xicFragments);
 
             // Build shared RT array for this range
             int rangeLen = endScan - startScan + 1;

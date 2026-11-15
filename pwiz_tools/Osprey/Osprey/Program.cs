@@ -542,9 +542,6 @@ namespace pwiz.Osprey
                     config.ApplyResolutionMode(resolutionDetection?.Mode ?? ResolutionMode.HRAM);
                 }
                 PinFeatureMask.ApplySearchSettings(config.ResolutionMode, config.FeatureSet);
-                // A library phase under --resolution auto measures nothing, so its resolution is unknown:
-                // the legacy defaults, as its config keeps (ApplyResolutionMode never ran).
-                OspreyEnvironment.ApplyResolutionDefaults(config.DetectResolution ? null : config.ResolutionMode);
 
                 // Log startup info
                 LogInfo(string.Format(OspreyResources.Program_Run_Osprey_v_0_, OspreyVersion.DisplayVersion));

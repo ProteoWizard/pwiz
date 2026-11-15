@@ -21,14 +21,13 @@
 namespace pwiz.Osprey.Core
 {
     /// <summary>
-    /// The scoring settings a search uses when neither the command line nor a developer
-    /// <c>OSPREY_*</c> variable chose them, per resolution. The one table of them: the command
-    /// line (<see cref="OspreyConfig.ApplyResolutionMode"/>, for the classifier and
-    /// <c>--protein-best</c>) and <see cref="OspreyEnvironment.ApplyResolutionDefaults"/> (for the
-    /// settings that stay environment variables) both read it once the resolution is known.
+    /// The settings a search uses when neither the command line nor a developer <c>OSPREY_*</c>
+    /// variable chose them, per resolution. The one table of them:
+    /// <see cref="OspreyConfig.ApplyResolutionMode"/> reads it once the resolution is known, for the
+    /// classifier, <c>--protein-best</c> and the <see cref="ScoringSettings"/>.
     ///
     /// <para><see cref="LEGACY"/> holds the values every setting had before the defaults depended
-    /// on the resolution. A process that never learns its resolution, such as a test scoring
+    /// on the resolution. A configuration that never learns its resolution, such as a test scoring
     /// directly, keeps them. The validity keys spell a setting only when it differs from its
     /// legacy value, so a default that moves keys exactly like the variable that once chose it,
     /// and outputs written under that variable are adopted.</para>
@@ -36,8 +35,8 @@ namespace pwiz.Osprey.Core
     public sealed class ResolutionDefaults
     {
         /// <summary>The values before the defaults depended on the resolution, and still the unit-resolution ones.</summary>
-        public static readonly ResolutionDefaults LEGACY = new ResolutionDefaults(
-            FdrClassifier.LinearSvm, false, OspreyEnvironment.DEFAULT_XIC_FRAGMENTS, null, false, null, null, false);
+        public static readonly ResolutionDefaults LEGACY = new ResolutionDefaults(FdrClassifier.LinearSvm, false,
+            new ScoringSettings(OspreyEnvironment.DEFAULT_XIC_FRAGMENTS, null, false, null, null, false));
 
         /// <summary>
         /// HRAM data: the recipe that closed most of the DIA-NN gap on SEA-AD Astral (#4950): gbdt with
@@ -45,8 +44,8 @@ namespace pwiz.Osprey.Core
         /// fragment XICs, a 7 ppm correlation re-extraction, the correlation-chosen reference XIC, the
         /// local RT tolerance over 15 calibration neighbors and a 0.40 min tc_* half window.
         /// </summary>
-        public static readonly ResolutionDefaults HRAM = new ResolutionDefaults(
-            FdrClassifier.Gbdt, true, 12, 7.0, true, 15, 0.40, true);
+        public static readonly ResolutionDefaults HRAM = new ResolutionDefaults(FdrClassifier.Gbdt, true,
+            new ScoringSettings(12, 7.0, true, 15, 0.40, true));
 
         /// <summary>Unit-resolution data.</summary>
         public static readonly ResolutionDefaults UNIT_RESOLUTION = LEGACY;
@@ -57,18 +56,11 @@ namespace pwiz.Osprey.Core
             return mode == ResolutionMode.UnitResolution ? UNIT_RESOLUTION : HRAM;
         }
 
-        private ResolutionDefaults(FdrClassifier fdrClassifier, bool proteinBest, int xicFragments,
-            double? corrFragmentTolerancePpm, bool refXicByCorrelation, int? localRtToleranceNeighbors,
-            double? tcHalfWindowMinutes, bool gbtOutOfFold)
+        private ResolutionDefaults(FdrClassifier fdrClassifier, bool proteinBest, ScoringSettings scoring)
         {
             FdrClassifier = fdrClassifier;
             ProteinBest = proteinBest;
-            XicFragments = xicFragments;
-            CorrFragmentTolerancePpm = corrFragmentTolerancePpm;
-            RefXicByCorrelation = refXicByCorrelation;
-            LocalRtToleranceNeighbors = localRtToleranceNeighbors;
-            TcHalfWindowMinutes = tcHalfWindowMinutes;
-            GbtOutOfFold = gbtOutOfFold;
+            Scoring = scoring;
         }
 
         /// <summary>The first-pass classifier (OSPREY_FDR_MODEL overrides it).</summary>
@@ -77,22 +69,7 @@ namespace pwiz.Osprey.Core
         /// <summary>The protein-best training column (<c>--protein-best</c> overrides it).</summary>
         public bool ProteinBest { get; }
 
-        /// <summary>Fragment XICs per candidate (OSPREY_XIC_FRAGMENTS).</summary>
-        public int XicFragments { get; }
-
-        /// <summary>The correlation features' re-extraction tolerance in ppm, or null for none (OSPREY_CORR_FRAGMENT_TOLERANCE).</summary>
-        public double? CorrFragmentTolerancePpm { get; }
-
-        /// <summary>The reference fragment XIC chosen by correlation inside the peak (OSPREY_REF_XIC).</summary>
-        public bool RefXicByCorrelation { get; }
-
-        /// <summary>The calibration neighbors the local RT tolerance reads, or null for the global one (OSPREY_LOCAL_RT_TOLERANCE).</summary>
-        public int? LocalRtToleranceNeighbors { get; }
-
-        /// <summary>The tc_* features' half window in minutes, or null for their own 0.15 (OSPREY_TC_HALF_WINDOW).</summary>
-        public double? TcHalfWindowMinutes { get; }
-
-        /// <summary>Out-of-fold scoring of the gbdt first pass's training rows (OSPREY_GBT_OOF).</summary>
-        public bool GbtOutOfFold { get; }
+        /// <summary>The scoring settings, before the developer variables that override them.</summary>
+        public ScoringSettings Scoring { get; }
     }
 }

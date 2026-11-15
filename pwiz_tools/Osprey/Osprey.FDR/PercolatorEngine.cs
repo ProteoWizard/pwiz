@@ -262,7 +262,7 @@ namespace pwiz.Osprey.FDR
         /// setting that changes the trained model - the <see cref="GbtParams"/> this process
         /// trains with, <see cref="OspreyEnvironment.GbtMaxIterations"/>,
         /// <see cref="OspreyEnvironment.GbtInnerFolds"/> and
-        /// <see cref="OspreyEnvironment.GbtOutOfFold"/>. FirstPassFDR, PerFileRescoring and
+        /// <see cref="ScoringSettings.GbtOutOfFold"/>. FirstPassFDR, PerFileRescoring and
         /// SecondPassFDR append it, because each writes output that model determines.
         ///
         /// <para>Empty for the linear SVM on purpose, in the shape of
@@ -286,7 +286,7 @@ namespace pwiz.Osprey.FDR
         public static string GbdtValidityKeySuffix(OspreyConfig config)
         {
             string suffix = GbdtValidityKeySuffix(config?.FdrClassifier ?? FdrClassifier.LinearSvm, BuildGbtParams(),
-                OspreyEnvironment.GbtMaxIterations, OspreyEnvironment.GbtInnerFolds, OspreyEnvironment.GbtOutOfFold);
+                OspreyEnvironment.GbtMaxIterations, OspreyEnvironment.GbtInnerFolds, config?.Scoring.GbtOutOfFold ?? false);
             // The two-round training (OSPREY_GBT_PREFILTER_SIZE, or its --protein-best on default size)
             // trains a different model, so it is keyed when on - and only then, so a one-round key
             // (--protein-best off, the default) is unchanged. The same terms under either classifier: the linear
@@ -396,7 +396,7 @@ namespace pwiz.Osprey.FDR
                 // OSPREY_GBT_OOF: the trainer reports each training row's held-out fold, so the
                 // score pass scores that row out of fold. The tree model only.
                 ReportTrainEntryFolds = config.FdrClassifier == FdrClassifier.Gbdt &&
-                                        OspreyEnvironment.GbtOutOfFold,
+                                        config.Scoring.GbtOutOfFold,
                 // The most regularized C within this fraction of the best inner-CV count
                 // (OSPREY_SVM_C_TOLERANCE, range-checked at startup; 0 is the strict maximum,
                 // the pre-#4703 rule).

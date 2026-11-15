@@ -440,7 +440,7 @@ namespace pwiz.Osprey.Scoring
             // on the two-window Stellar subset).
             int si = bestPeak.StartIndex;
             int ei = bestPeak.EndIndex;
-            if (OspreyEnvironment.RefXicByCorrelation)
+            if (config.Scoring.RefXicByCorrelation)
             {
                 // OSPREY_REF_XIC=corr: the reference is the fragment that agrees best with the others
                 // inside the chosen peak, so an intense interfered fragment does not set the apex.
@@ -523,7 +523,7 @@ namespace pwiz.Osprey.Scoring
             if (context.Resolution.HasMs1Features)
             {
                 ProduceMs1Data(candidate, xics, bestPeak, startScan, windowRts,
-                    ms1Spectra, ms1Calibration,
+                    ms1Spectra, ms1Calibration, config.Scoring.RefXicByCorrelation,
                     out XicData ms1PrecursorXic, out XicData ms1ReferenceXic, out double[] apexEnvelope);
                 if (ms1PrecursorXic != null)
                     peakData.SetMs1(ms1PrecursorXic, ms1ReferenceXic, apexEnvelope);
@@ -889,7 +889,7 @@ namespace pwiz.Osprey.Scoring
             var blockXics = new List<XicData>[blockSize];
             // One target per (passing candidate, top fragment): its m/z window and XIC array,
             // at slot b * MAX_FRAGS + t for block candidate b and its t-th top fragment.
-            int MAX_FRAGS = TopFragmentExtractor.SearchTopNFragments;
+            int MAX_FRAGS = config.Scoring.XicFragments;
             var targetMzs = new double[blockSize * MAX_FRAGS];
             var targetLowers = new double[blockSize * MAX_FRAGS];
             var targetUppers = new double[blockSize * MAX_FRAGS];
@@ -912,7 +912,7 @@ namespace pwiz.Osprey.Scoring
                 // The same XICs and m/z windows ExtractFragmentXics sets up; a candidate without
                 // fragments gets none, as there.
                 var xics = TopFragmentExtractor.CreateFragmentXics(candidates[c], windowRts,
-                    startScans[c], endScans[c], fragmentTolerance,
+                    startScans[c], endScans[c], fragmentTolerance, MAX_FRAGS,
                     new Span<double>(targetMzs, b * MAX_FRAGS, MAX_FRAGS),
                     new Span<double>(targetLowers, b * MAX_FRAGS, MAX_FRAGS),
                     new Span<double>(targetUppers, b * MAX_FRAGS, MAX_FRAGS));
@@ -923,7 +923,7 @@ namespace pwiz.Osprey.Scoring
                 if (corrConfig != null)
                 {
                     var corrXics = TopFragmentExtractor.CreateFragmentXics(candidates[c], windowRts,
-                        startScans[c], endScans[c], corrConfig.FragmentTolerance,
+                        startScans[c], endScans[c], corrConfig.FragmentTolerance, MAX_FRAGS,
                         new Span<double>(targetMzs, b * MAX_FRAGS, MAX_FRAGS),
                         new Span<double>(corrLowers, b * MAX_FRAGS, MAX_FRAGS),
                         new Span<double>(corrUppers, b * MAX_FRAGS, MAX_FRAGS));
@@ -1338,7 +1338,7 @@ namespace pwiz.Osprey.Scoring
         private static void ProduceMs1Data(
             LibraryEntry candidate, List<XicData> xics, XICPeakBounds peak,
             int startScan, double[] windowRts,
-            List<MS1Spectrum> ms1Spectra, MzCalibrationResult ms1Calibration,
+            List<MS1Spectrum> ms1Spectra, MzCalibrationResult ms1Calibration, bool refXicByCorrelation,
             out XicData precursorXic, out XicData referenceXic, out double[] apexEnvelope)
         {
             precursorXic = null;
@@ -1368,7 +1368,7 @@ namespace pwiz.Osprey.Scoring
                     total += inten[k];
                 if (total >= bestTotal) { bestTotal = total; refXicIdx = f; }
             }
-            if (OspreyEnvironment.RefXicByCorrelation)
+            if (refXicByCorrelation)
                 refXicIdx = ReferenceCorrelations.ChooseReference(xics, start, end, refXicIdx);
 
             // MS1 calibration: reverse-calibrate search m/z and use calibrated tolerance.
@@ -1477,7 +1477,7 @@ namespace pwiz.Osprey.Scoring
         /// The candidate count alone does not bound memory, since a wide RT tolerance (a failed
         /// calibration's fallback) makes every scan range, and so every XIC, several times longer.
         /// </summary>
-        public int NextXicBlockEnd(int blockStart, int maxCandidates, long maxBytes)
+        public int NextXicBlockEnd(int blockStart, int maxCandidates, long maxBytes, int xicFragments)
         {
             int nCandidates = Verdicts.Length;
             int blockLimit = (int)Math.Min(nCandidates, (long)blockStart + maxCandidates);
@@ -1485,7 +1485,7 @@ namespace pwiz.Osprey.Scoring
             long blockBytes = 0;
             while (blockEnd < blockLimit)
             {
-                long bytes = XicBytes(blockEnd);
+                long bytes = XicBytes(blockEnd, xicFragments);
                 if (blockEnd > blockStart && blockBytes + bytes > maxBytes)
                     break;
                 blockBytes += bytes;
@@ -1499,12 +1499,12 @@ namespace pwiz.Osprey.Scoring
         /// array per top fragment plus the shared RT array, over its scan range; 0 for a
         /// candidate that did not pass, which gets none.
         /// </summary>
-        private long XicBytes(int c)
+        private long XicBytes(int c, int xicFragments)
         {
             if (Verdicts[c] != PrefilterVerdict.passed)
                 return 0;
             long rangeLen = EndScans[c] - StartScans[c] + 1;
-            return (TopFragmentExtractor.SearchTopNFragments + 1) * rangeLen * sizeof(double);
+            return (xicFragments + 1) * rangeLen * sizeof(double);
         }
     }
 

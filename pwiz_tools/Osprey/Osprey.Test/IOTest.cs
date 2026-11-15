@@ -2823,7 +2823,7 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestScoresXicCountValidatedOnLoad()
         {
-            int current = OspreyEnvironment.SearchXicFragments;
+            int current = new OspreyConfig().Scoring.XicFragments;
             Assert.AreEqual(OspreyEnvironment.DEFAULT_XIC_FRAGMENTS, current);
             string stampOf12 = new ArtifactStamp(PerFileScoringTask.TASK_NAME, OspreyVersion.Current,
                 @"search=s;library=l;xic=12;featmask=default").ToString();

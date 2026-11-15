@@ -34,7 +34,6 @@ using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.ML;
-using pwiz.Osprey.Scoring;
 using pwiz.Osprey.Tasks;
 using pwiz.Osprey.Tasks.ModelDiagnostics;
 
@@ -59,41 +58,46 @@ namespace pwiz.Osprey.Test
         /// The HRAM defaults key exactly as the variables that once chose them (OSPREY_TC_HALF_WINDOW=0.4,
         /// OSPREY_CORR_FRAGMENT_TOLERANCE=7, OSPREY_REF_XIC=corr, OSPREY_LOCAL_RT_TOLERANCE=15), so the outputs of
         /// a recipe run are adopted by a default one; unit resolution keeps the legacy key, so no output of a
-        /// unit-resolution search is invalidated. Meaningful only when none of those variables is set.
+        /// unit-resolution search is invalidated. The settings are the configuration's, so two configurations
+        /// in one process each keep their own. Meaningful only when none of those variables is set.
         /// </summary>
         [TestMethod]
         public void TestResolutionDefaultsKeyLikeTheirVariables()
         {
-            var saved = OspreyEnvironment.AppliedDefaultsResolution;
-            try
+            // Each of these overrides its default, either way, so the asserts below need them unset
+            var variables = new[]
             {
-                // Each of these overrides its default, either way, so the asserts below need them unset
-                var variables = new[]
-                {
-                    @"OSPREY_TC_HALF_WINDOW", @"OSPREY_CORR_FRAGMENT_TOLERANCE", @"OSPREY_REF_XIC",
-                    @"OSPREY_LOCAL_RT_TOLERANCE", @"OSPREY_XIC_FRAGMENTS", @"OSPREY_GBT_OOF"
-                };
-                string set = variables.FirstOrDefault(name => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(name)));
-                if (set != null)
-                    Assert.Inconclusive(set + @" is set");
-                OspreyEnvironment.ApplyResolutionDefaults(null);
-                string legacy = OspreyEnvironment.PickValidityKeySuffix();
+                @"OSPREY_TC_HALF_WINDOW", @"OSPREY_CORR_FRAGMENT_TOLERANCE", @"OSPREY_REF_XIC",
+                @"OSPREY_LOCAL_RT_TOLERANCE", @"OSPREY_XIC_FRAGMENTS", @"OSPREY_GBT_OOF"
+            };
+            string set = variables.FirstOrDefault(name => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(name)));
+            if (set != null)
+                Assert.Inconclusive(set + @" is set");
+            var legacyConfig = new OspreyConfig();
+            string legacy = OspreyEnvironment.PickValidityKeySuffix(legacyConfig.Scoring);
+            var unitConfig = new OspreyConfig();
+            unitConfig.ApplyResolutionMode(ResolutionMode.UnitResolution);
+            var hramConfig = new OspreyConfig();
+            hramConfig.ApplyResolutionMode(ResolutionMode.HRAM);
 
-                OspreyEnvironment.ApplyResolutionDefaults(ResolutionMode.UnitResolution);
-                Assert.AreEqual(legacy, OspreyEnvironment.PickValidityKeySuffix());
-                Assert.AreEqual(OspreyEnvironment.DEFAULT_XIC_FRAGMENTS, OspreyEnvironment.SearchXicFragments);
-                Assert.IsFalse(OspreyEnvironment.GbtOutOfFold);
+            Assert.AreEqual(legacy, OspreyEnvironment.PickValidityKeySuffix(unitConfig.Scoring));
+            Assert.AreEqual(OspreyEnvironment.DEFAULT_XIC_FRAGMENTS, unitConfig.Scoring.XicFragments);
+            Assert.IsFalse(unitConfig.Scoring.GbtOutOfFold);
 
-                OspreyEnvironment.ApplyResolutionDefaults(ResolutionMode.HRAM);
-                Assert.AreEqual(legacy + @";tcwin=0.4;fcorr=7;refxic=corr;rtlocal=15", OspreyEnvironment.PickValidityKeySuffix());
-                Assert.AreEqual(12, OspreyEnvironment.SearchXicFragments);
-                Assert.AreEqual(12, TopFragmentExtractor.SearchTopNFragments, @"the XIC count is read live, not frozen at type load");
-                Assert.IsTrue(OspreyEnvironment.GbtOutOfFold);
-            }
-            finally
-            {
-                OspreyEnvironment.ApplyResolutionDefaults(saved);
-            }
+            Assert.AreEqual(legacy + @";tcwin=0.4;fcorr=7;refxic=corr;rtlocal=15", OspreyEnvironment.PickValidityKeySuffix(hramConfig.Scoring));
+            Assert.AreEqual(12, hramConfig.Scoring.XicFragments);
+            Assert.IsTrue(hramConfig.Scoring.GbtOutOfFold);
+            // A shallow clone (per-file scoring, the correlation re-extraction) carries the settings
+            Assert.AreSame(hramConfig.Scoring, hramConfig.ShallowClone().Scoring);
+
+            // Applying one configuration's resolution left the others' settings alone
+            Assert.AreEqual(legacy, OspreyEnvironment.PickValidityKeySuffix(unitConfig.Scoring));
+            Assert.AreEqual(legacy, OspreyEnvironment.PickValidityKeySuffix(legacyConfig.Scoring));
+            string unitKey = TaskKeys(unitConfig)[PerFileScoringTask.TASK_NAME];
+            string hramKey = TaskKeys(hramConfig)[PerFileScoringTask.TASK_NAME];
+            StringAssert.Contains(unitKey, XicTerm(unitConfig) + @";");
+            StringAssert.Contains(hramKey, @";xic=12;");
+            StringAssert.Contains(hramKey, @";refxic=corr");
         }
 
         [TestMethod]
@@ -151,7 +155,7 @@ namespace pwiz.Osprey.Test
                 // hold it to the reader's version here.
                 Assert.AreEqual(@";tsvreader=" + DiannTsvLoader.READER_VERSION.ToString(CultureInfo.InvariantCulture),
                     OspreyTask.TSV_READER_TERM);
-                Assert.AreEqual(PreUpgradeBaseKey(tsvConfig) + OspreyTask.TSV_READER_TERM + XicTerm(), tsvKeys[PerFileScoringTask.TASK_NAME],
+                Assert.AreEqual(PreUpgradeBaseKey(tsvConfig) + OspreyTask.TSV_READER_TERM + XicTerm(tsvConfig), tsvKeys[PerFileScoringTask.TASK_NAME],
                     @"a TSV search keys on its reader version, as a blib search does");
                 foreach (var key in tsvKeys)
                     Assert.IsFalse(key.Value.Contains(OspreyTask.BLIB_READER_TERM), key.Key);
@@ -159,7 +163,7 @@ namespace pwiz.Osprey.Test
 
                 var blibConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(blib) };
                 var blibKeys = TaskKeys(blibConfig);
-                Assert.AreEqual(PreUpgradeBaseKey(blibConfig) + OspreyTask.BLIB_READER_TERM + XicTerm(),
+                Assert.AreEqual(PreUpgradeBaseKey(blibConfig) + OspreyTask.BLIB_READER_TERM + XicTerm(blibConfig),
                     blibKeys[PerFileScoringTask.TASK_NAME]);
                 foreach (var key in blibKeys)
                     StringAssert.Contains(key.Value, OspreyTask.BLIB_READER_TERM, key.Key + @" must key on the blib reader");
@@ -471,16 +475,16 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>The XIC fragment-count term every task's key ends with.</summary>
-        private static string XicTerm()
+        private static string XicTerm(OspreyConfig config)
         {
-            return @";xic=" + TopFragmentExtractor.SearchTopNFragments.ToString(CultureInfo.InvariantCulture);
+            return @";xic=" + config.Scoring.XicFragments.ToString(CultureInfo.InvariantCulture);
         }
 
         /// <summary>The base task key as every build before the blib reader change wrote it.</summary>
         private static string PreUpgradeBaseKey(OspreyConfig config)
         {
             return string.Format(@"search={0};library={1}{2}", config.Identity.SearchParameterHash(),
-                config.Identity.LibraryIdentityHash(), OspreyEnvironment.PickValidityKeySuffix());
+                config.Identity.LibraryIdentityHash(), OspreyEnvironment.PickValidityKeySuffix(config.Scoring));
         }
 
         /// <summary>
@@ -545,8 +549,8 @@ namespace pwiz.Osprey.Test
                 @";gbtbins=64;gbtseed=42;gbtiterations=30;gbtinnerfolds=5;gbtoof=1",
                 PercolatorEngine.GbdtValidityKeySuffix(FdrClassifier.Gbdt, new GbtParams { UseDeterministicMath = true },
                     OspreyEnvironment.GBT_MAX_ITERATIONS_DEFAULT, 5, true));
-            // The process's own setting reaches the key the three tasks append.
-            Assert.AreEqual(OspreyEnvironment.GbtOutOfFold, treeTerm.Contains(@";gbtoof=1"),
+            // The configuration's own setting reaches the key the three tasks append.
+            Assert.AreEqual(treeCtx.Config.Scoring.GbtOutOfFold, treeTerm.Contains(@";gbtoof=1"),
                 @"OSPREY_GBT_OOF must reach the gbdt key");
 
             // The term is the ONLY difference: a percolator key is the gbdt key without it.
@@ -681,7 +685,7 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private static void AssertSuffixesAreUnconditional()
         {
-            Assert.AreNotEqual(string.Empty, OspreyEnvironment.PickValidityKeySuffix(),
+            Assert.AreNotEqual(string.Empty, OspreyEnvironment.PickValidityKeySuffix(new OspreyConfig().Scoring),
                 @"the pick suffix must be emitted for the default arm too - an empty default is precisely what lets a post-flip key equal a pre-flip one");
             Assert.AreNotEqual(string.Empty, OspreyEnvironment.Pass2QValueValidityKeySuffix(),
                 @"the 2nd-pass mode suffix must be emitted for the default arm too, for the same reason");
@@ -1068,7 +1072,7 @@ namespace pwiz.Osprey.Test
         {
             var tasks = OspreyTasks.Create().Pipeline;
             var ctx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
-            string pick = OspreyEnvironment.PickValidityKeySuffix();
+            string pick = OspreyEnvironment.PickValidityKeySuffix(ctx.Config.Scoring);
             string pass2 = OspreyEnvironment.Pass2QValueValidityKeySuffix();
             // The training-selection arm is hand-wired into the same three tasks the
             // library-fragment arm is, so without it here any one of those lines can be dropped in
@@ -1094,7 +1098,7 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(expectTrain, key.Contains(train), string.Format(
                     @"{0} must {1} key on the first-pass training selection",
                     task.Name, expectTrain ? @"" : @"NOT "));
-                StringAssert.Contains(key, XicTerm(), string.Format(
+                StringAssert.Contains(key, XicTerm(ctx.Config), string.Format(
                     @"{0} must key on the XIC fragment count", task.Name));
                 Assert.AreEqual(expectTrain, key.Contains(mask), string.Format(
                     @"{0} must {1} key on the feature mask",

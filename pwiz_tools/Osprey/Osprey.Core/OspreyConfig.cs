@@ -244,6 +244,17 @@ namespace pwiz.Osprey.Core
         public bool ProteinBestGiven { get; set; }
 
         /// <summary>
+        /// The scoring settings that default by resolution and have no command-line option: the XIC
+        /// count, the correlation re-extraction tolerance, the reference XIC, the local RT tolerance,
+        /// the tc_* window and out-of-fold gbdt scoring. <see cref="ApplyResolutionMode"/> sets them
+        /// from the resolution's <see cref="ResolutionDefaults"/>; until then they are the legacy
+        /// ones. Either way a developer variable that sets one replaces its default
+        /// (<see cref="OspreyEnvironment.OverrideScoringSettings"/>).
+        /// </summary>
+        public ScoringSettings Scoring { get; set; } =
+            OspreyEnvironment.OverrideScoringSettings(ResolutionDefaults.LEGACY.Scoring);
+
+        /// <summary>
         /// The PIN features the FDR classifier trains on (<c>--feature-set</c>): the 21 core features,
         /// the chosen default set, or every feature. Null when the command line did not say, and the
         /// resolution chooses: <see cref="OspreyFeatureSet.@default"/> for HRAM data and
@@ -588,7 +599,8 @@ namespace pwiz.Osprey.Core
         /// explicit <c>--resolution</c> and a detected one reach the configuration, so the two
         /// produce the same search settings and the same <see cref="SearchIdentity"/>. The
         /// classifier and <c>--protein-best</c> take the resolution's <see cref="ResolutionDefaults"/>
-        /// unless OSPREY_FDR_MODEL or the command line chose them. Unit
+        /// unless OSPREY_FDR_MODEL or the command line chose them, and <see cref="Scoring"/> takes
+        /// its defaults under the developer variables that set any of them. Unit
         /// resolution matches fragments within 0.5 m/z unless <c>--fragment-unit</c> or
         /// <c>--fragment-tolerance</c> said otherwise, and precursors within 1.0 m/z. The
         /// tolerances are replaced, never changed in place, because a shallow clone shares them.
@@ -602,6 +614,7 @@ namespace pwiz.Osprey.Core
                 FdrClassifier = defaults.FdrClassifier;
             if (!ProteinBestGiven)
                 ProteinBest = defaults.ProteinBest;
+            Scoring = OspreyEnvironment.OverrideScoringSettings(defaults.Scoring);
             if (mode != ResolutionMode.UnitResolution)
                 return;
             if (!FragmentUnitGiven)
