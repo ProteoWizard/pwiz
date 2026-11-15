@@ -38,7 +38,7 @@ namespace pwiz.Osprey.Scoring
     internal sealed class TimeCorrelations
     {
         /// <summary>Half-width of the correlation window in minutes.</summary>
-        public const double HALF_WINDOW_MINUTES = 0.15;
+        public const double HALF_WINDOW_MINUTES = OspreyEnvironment.LEGACY_TC_HALF_WINDOW_MINUTES;
 
         /// <summary>Library fragment ranks with their own correlation feature, and summed into the top-6 score.</summary>
         public const int RANK_COUNT = 6;

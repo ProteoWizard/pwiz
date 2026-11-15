@@ -542,7 +542,9 @@ namespace pwiz.Osprey
                     config.ApplyResolutionMode(resolutionDetection?.Mode ?? ResolutionMode.HRAM);
                 }
                 PinFeatureMask.ApplySearchSettings(config.ResolutionMode, config.FeatureSet);
-                OspreyEnvironment.ApplyResolutionDefaults(config.ResolutionMode);
+                // A library phase under --resolution auto measures nothing, so its resolution is unknown:
+                // the legacy defaults, as its config keeps (ApplyResolutionMode never ran).
+                OspreyEnvironment.ApplyResolutionDefaults(config.DetectResolution ? null : config.ResolutionMode);
 
                 // Log startup info
                 LogInfo(string.Format(OspreyResources.Program_Run_Osprey_v_0_, OspreyVersion.DisplayVersion));
@@ -648,8 +650,8 @@ namespace pwiz.Osprey
                 }
                 // OSPREY_FDR_MODEL: abort on an unrecognized value, do not fall back. A run that
                 // asked for trees and trained the linear SVM is the #4491 defect, and its output
-                // reads exactly like a tree result. The classifier is named only when it is not
-                // the default, so the linear SVM's log is unchanged; here rather than at Stage 5
+                // reads exactly like a tree result. The classifier is named only when it is the
+                // trees, so the linear SVM's log is unchanged; here rather than at Stage 5
                 // for the same reason as the aggregation line above.
                 if (OspreyEnvironment.FdrModelError != null)
                 {

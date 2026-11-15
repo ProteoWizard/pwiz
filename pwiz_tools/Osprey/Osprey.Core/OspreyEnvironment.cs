@@ -623,8 +623,8 @@ namespace pwiz.Osprey.Core
                 return null;
             return string.Format(
                 @"OSPREY_FDR_MODEL='{0}' is not a recognized classifier. Recognized: '{1}' (the " +
-                @"linear SVM, also the default when the variable is unset) and '{2}' " +
-                @"(gradient-boosted trees, experimental). Unset it for the default.",
+                @"linear SVM, the default at unit resolution) and '{2}' (gradient-boosted trees, " +
+                @"the default for HRAM data). Unset it for the resolution's default.",
                 raw, FDR_MODEL_SVM, FDR_MODEL_GBDT);
         }
 
@@ -941,7 +941,7 @@ namespace pwiz.Osprey.Core
         private static readonly EnvVar ENV_TC_HALF_WINDOW = new EnvVar(@"OSPREY_TC_HALF_WINDOW", EnvVarGroup.behavior,
             @"Experiment: half-width in minutes of the window the tc_* time-correlation features " +
             @"correlate over, in place of 0.15. Keyed into every task.")
-            { ValueExample = @"<minutes>", DefaultValue = @"0.40 for HRAM data, 0.15 at unit resolution" };
+            { ValueExample = @"<minutes>", DefaultValue = @"0.40 for HRAM data, 0.15 at unit resolution", AcceptsValue = IsPositiveNumber };
 
         private static readonly EnvVar ENV_MIN_FRAGMENT_TOLERANCE = new EnvVar(@"OSPREY_MIN_FRAGMENT_TOLERANCE", EnvVarGroup.behavior,
             @"Experiment: a floor in ppm on the calibrated fragment tolerance the main search extracts " +
@@ -980,7 +980,7 @@ namespace pwiz.Osprey.Core
         private static readonly EnvVar ENV_CORR_FRAGMENT_TOLERANCE = new EnvVar(@"OSPREY_CORR_FRAGMENT_TOLERANCE", EnvVarGroup.behavior,
             @"Experiment: a tolerance in ppm (at least the calibrated one) the correlation-shape features " +
             @"re-extract their fragment XICs with. Keyed into every task. 7 by default for HRAM data; off turns it off.")
-            { ValueExample = @"<ppm>|off" };
+            { ValueExample = @"<ppm>|off", AcceptsValue = value => IsOffValue(value) || IsNonNegativeNumber(value) };
 
         /// <summary>
         /// OSPREY_CORR_FRAGMENT_TOLERANCE (experiment): a tolerance in ppm the correlation-shape features
@@ -1032,6 +1032,12 @@ namespace pwiz.Osprey.Core
         /// Null when unset.
         /// </summary>
         public static double? TcHalfWindowMinutes => TcHalfWindowSetting ?? _resolutionDefaults.TcHalfWindowMinutes;
+
+        /// <summary>
+        /// The tc_* half window when <see cref="TcHalfWindowMinutes"/> is null. A setting of exactly this
+        /// value computes the legacy features, so it adds no validity-key term and adopts legacy outputs.
+        /// </summary>
+        public const double LEGACY_TC_HALF_WINDOW_MINUTES = 0.15;
 
         private static readonly double? TcHalfWindowSetting = double.TryParse(ENV_TC_HALF_WINDOW.Value,
             NumberStyles.Float, CultureInfo.InvariantCulture, out double halfWindow) ? halfWindow : null;
@@ -1888,7 +1894,7 @@ namespace pwiz.Osprey.Core
         public static string PickValidityKeySuffix()
         {
             return PickValidityKeySuffix(PickLda, PickLdaModelPath)
-                   + (TcHalfWindowMinutes.HasValue ? @";tcwin=" + TcHalfWindowMinutes.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
+                   + (TcHalfWindowMinutes.HasValue && TcHalfWindowMinutes.Value != LEGACY_TC_HALF_WINDOW_MINUTES ? @";tcwin=" + TcHalfWindowMinutes.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
                    + (MinFragmentTolerancePpm.HasValue ? @";ftolmin=" + MinFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
                    + (CorrFragmentTolerancePpm.HasValue ? @";fcorr=" + CorrFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
                    + (RefXicByCorrelation ? @";refxic=corr" : string.Empty)
@@ -2180,6 +2186,16 @@ namespace pwiz.Osprey.Core
         }
 
         // The accepted values of a size with no zero arm (OSPREY_BLOCK_READ_MB).
+        private static bool IsNonNegativeNumber(string value)
+        {
+            return double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double number) && number >= 0;
+        }
+
+        private static bool IsPositiveNumber(string value)
+        {
+            return double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double number) && number > 0;
+        }
+
         // off, which turns off a developer setting whose resolution default is on
         private static bool IsOffValue(string value)
         {

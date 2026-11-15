@@ -67,13 +67,17 @@ namespace pwiz.Osprey.Test
             var saved = OspreyEnvironment.AppliedDefaultsResolution;
             try
             {
+                // Each of these overrides its default, either way, so the asserts below need them unset
+                var variables = new[]
+                {
+                    @"OSPREY_TC_HALF_WINDOW", @"OSPREY_CORR_FRAGMENT_TOLERANCE", @"OSPREY_REF_XIC",
+                    @"OSPREY_LOCAL_RT_TOLERANCE", @"OSPREY_XIC_FRAGMENTS", @"OSPREY_GBT_OOF"
+                };
+                string set = variables.FirstOrDefault(name => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(name)));
+                if (set != null)
+                    Assert.Inconclusive(set + @" is set");
                 OspreyEnvironment.ApplyResolutionDefaults(null);
                 string legacy = OspreyEnvironment.PickValidityKeySuffix();
-                int legacyXics = OspreyEnvironment.SearchXicFragments;
-                bool legacyOutOfFold = OspreyEnvironment.GbtOutOfFold;
-                var terms = new[] { @";tcwin=", @";ftolmin=", @";fcorr=", @";refxic=", @";rtlocal=" };
-                if (terms.Any(legacy.Contains) || legacyXics != OspreyEnvironment.DEFAULT_XIC_FRAGMENTS || legacyOutOfFold)
-                    Assert.Inconclusive(@"a developer variable is set: " + legacy);
 
                 OspreyEnvironment.ApplyResolutionDefaults(ResolutionMode.UnitResolution);
                 Assert.AreEqual(legacy, OspreyEnvironment.PickValidityKeySuffix());
