@@ -218,10 +218,14 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public string DecoyPairingManifestPath { get; set; }
 
-        /// <summary>The classifier first-pass Percolator trains: the linear SVM (default) or
-        /// gradient-boosted trees. Set from <see cref="OspreyEnvironment.FdrModel"/> when the
-        /// command line is parsed; nothing else reads OSPREY_FDR_MODEL.</summary>
+        /// <summary>The classifier first-pass Percolator trains: the linear SVM or gradient-boosted
+        /// trees. Set from <see cref="OspreyEnvironment.FdrModel"/> when the command line is parsed,
+        /// and otherwise by <see cref="ApplyResolutionMode"/> from the resolution's
+        /// <see cref="ResolutionDefaults"/>; nothing else reads OSPREY_FDR_MODEL.</summary>
         public FdrClassifier FdrClassifier { get; set; } = FdrClassifier.LinearSvm;
+
+        /// <summary>True when OSPREY_FDR_MODEL chose <see cref="FdrClassifier"/>, which the resolution's default does not replace.</summary>
+        public bool FdrClassifierGiven { get; set; }
 
         /// <summary>
         /// The protein-best training column (<c>--protein-best</c>, issue #4580), off by default. On, round 2
@@ -231,8 +235,13 @@ namespace pwiz.Osprey.Core
         /// training, so with it on and <c>OSPREY_GBT_PREFILTER_SIZE</c> unset the first pass trains two
         /// rounds at <see cref="OspreyEnvironment.PROTEIN_BEST_PREFILTER_SIZE"/> rows. Off is the
         /// one-round first pass that preceded it, bit for bit. Keyed in every FDR validity key when on.
+        /// Unless the command line gives it, <see cref="ApplyResolutionMode"/> sets it from the
+        /// resolution's <see cref="ResolutionDefaults"/>.
         /// </summary>
         public bool ProteinBest { get; set; }
+
+        /// <summary>True when the command line gave <c>--protein-best</c>, which the resolution's default does not replace.</summary>
+        public bool ProteinBestGiven { get; set; }
 
         /// <summary>
         /// The PIN features the FDR classifier trains on (<c>--feature-set</c>): the 21 core features,
@@ -575,9 +584,11 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// Sets the resolution mode and the tolerances it implies. The one route by which both an
+        /// Sets the resolution mode and the settings it implies. The one route by which both an
         /// explicit <c>--resolution</c> and a detected one reach the configuration, so the two
-        /// produce the same search settings and the same <see cref="SearchIdentity"/>. Unit
+        /// produce the same search settings and the same <see cref="SearchIdentity"/>. The
+        /// classifier and <c>--protein-best</c> take the resolution's <see cref="ResolutionDefaults"/>
+        /// unless OSPREY_FDR_MODEL or the command line chose them. Unit
         /// resolution matches fragments within 0.5 m/z unless <c>--fragment-unit</c> or
         /// <c>--fragment-tolerance</c> said otherwise, and precursors within 1.0 m/z. The
         /// tolerances are replaced, never changed in place, because a shallow clone shares them.
@@ -586,6 +597,11 @@ namespace pwiz.Osprey.Core
         {
             ResolutionMode = mode;
             DetectResolution = false;
+            var defaults = ResolutionDefaults.For(mode);
+            if (!FdrClassifierGiven)
+                FdrClassifier = defaults.FdrClassifier;
+            if (!ProteinBestGiven)
+                ProteinBest = defaults.ProteinBest;
             if (mode != ResolutionMode.UnitResolution)
                 return;
             if (!FragmentUnitGiven)

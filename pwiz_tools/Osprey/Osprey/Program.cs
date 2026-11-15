@@ -542,6 +542,7 @@ namespace pwiz.Osprey
                     config.ApplyResolutionMode(resolutionDetection?.Mode ?? ResolutionMode.HRAM);
                 }
                 PinFeatureMask.ApplySearchSettings(config.ResolutionMode, config.FeatureSet);
+                OspreyEnvironment.ApplyResolutionDefaults(config.ResolutionMode);
 
                 // Log startup info
                 LogInfo(string.Format(OspreyResources.Program_Run_Osprey_v_0_, OspreyVersion.DisplayVersion));

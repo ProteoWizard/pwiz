@@ -581,9 +581,12 @@ namespace pwiz.Osprey.Core
         /// trees and every <c>OSPREY_GBT_*</c> setting key the FirstPassFDR, PerFileRescoring
         /// and SecondPassFDR validity keys (<c>PercolatorEngine.GbdtValidityKeySuffix</c>); the
         /// SVM adds nothing to them.</para>
+        ///
+        /// <para>Null when unset (or unrecognized, which Program refuses): the resolution's
+        /// <see cref="ResolutionDefaults"/> then choose the classifier.</para>
         /// </summary>
-        public static FdrClassifier FdrModel { get; internal set; } =
-            ParseFdrModel(ENV_FDR_MODEL.Value) ?? FdrClassifier.LinearSvm;
+        public static FdrClassifier? FdrModel { get; internal set; } =
+            ParseFdrModel(ENV_FDR_MODEL.Value);
 
         /// <summary>The startup error for an unrecognized OSPREY_FDR_MODEL, or null when the
         /// value is usable. Program startup ABORTS on it, like
@@ -798,8 +801,31 @@ namespace pwiz.Osprey.Core
         private const int MIN_XIC_FRAGMENTS = 2;
         private const int MAX_XIC_FRAGMENTS = 20;
 
-        /// <summary>The XIC count in effect: <see cref="XicFragments"/>, else <see cref="DEFAULT_XIC_FRAGMENTS"/>.</summary>
-        public static int SearchXicFragments => XicFragments ?? DEFAULT_XIC_FRAGMENTS;
+        /// <summary>The XIC count in effect: <see cref="XicFragments"/>, else the resolution's default.</summary>
+        public static int SearchXicFragments => XicFragments ?? _resolutionDefaults.XicFragments;
+
+        private static ResolutionDefaults _resolutionDefaults = ResolutionDefaults.LEGACY;
+
+        /// <summary>
+        /// The resolution whose <see cref="ResolutionDefaults"/> the developer settings below fall back
+        /// to when their variable is unset, or null for <see cref="ResolutionDefaults.LEGACY"/>.
+        /// </summary>
+        public static ResolutionMode? AppliedDefaultsResolution { get; private set; }
+
+        /// <summary>
+        /// Makes the developer settings that default by resolution (<see cref="SearchXicFragments"/>,
+        /// <see cref="CorrFragmentTolerancePpm"/>, <see cref="RefXicByCorrelation"/>,
+        /// <see cref="LocalRtToleranceNeighbors"/>, <see cref="TcHalfWindowMinutes"/>,
+        /// <see cref="GbtOutOfFold"/>) fall back to <paramref name="mode"/>'s defaults, or the legacy
+        /// ones for null. Program calls it once the resolution is known, before anything reads them,
+        /// as it calls <c>PinFeatureMask.ApplySearchSettings</c>; every <c>--task</c> run learns the
+        /// same resolution, so every node of an HPC chain resolves the same settings.
+        /// </summary>
+        public static void ApplyResolutionDefaults(ResolutionMode? mode)
+        {
+            AppliedDefaultsResolution = mode;
+            _resolutionDefaults = mode.HasValue ? ResolutionDefaults.For(mode.Value) : ResolutionDefaults.LEGACY;
+        }
 
         private static readonly EnvVar ENV_FEATURE_MASK = new EnvVar(@"OSPREY_FEATURE_MASK", EnvVarGroup.behavior,
             @"Research switch: the PIN features hidden from the FDR classifier, as comma-separated " +
@@ -934,7 +960,9 @@ namespace pwiz.Osprey.Core
         /// where many precursors share a library RT but elute minutes apart. Keyed into every task through
         /// <see cref="PickValidityKeySuffix()"/>. Null when unset or not a positive integer.
         /// </summary>
-        public static readonly int? LocalRtToleranceNeighbors = int.TryParse(ENV_LOCAL_RT_TOLERANCE.Value,
+        public static int? LocalRtToleranceNeighbors => LocalRtToleranceSetting ?? _resolutionDefaults.LocalRtToleranceNeighbors;
+
+        private static readonly int? LocalRtToleranceSetting = int.TryParse(ENV_LOCAL_RT_TOLERANCE.Value,
             NumberStyles.None, CultureInfo.InvariantCulture, out int localRtNeighbors) && localRtNeighbors > 0 ? localRtNeighbors : null;
 
         /// <summary>
@@ -958,7 +986,9 @@ namespace pwiz.Osprey.Core
         /// calibrated tolerance. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
         /// Null when unset.
         /// </summary>
-        public static readonly double? CorrFragmentTolerancePpm = double.TryParse(ENV_CORR_FRAGMENT_TOLERANCE.Value,
+        public static double? CorrFragmentTolerancePpm => CorrFragmentToleranceSetting ?? _resolutionDefaults.CorrFragmentTolerancePpm;
+
+        private static readonly double? CorrFragmentToleranceSetting = double.TryParse(ENV_CORR_FRAGMENT_TOLERANCE.Value,
             NumberStyles.Float, CultureInfo.InvariantCulture, out double corrFragTol) ? corrFragTol : null;
 
         private static readonly EnvVar ENV_REF_XIC = new EnvVar(@"OSPREY_REF_XIC", EnvVarGroup.behavior,
@@ -975,7 +1005,9 @@ namespace pwiz.Osprey.Core
         /// peak_area and peak_sharpness features keep their own most-intense-fragment reference. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
         /// False when unset.
         /// </summary>
-        public static readonly bool RefXicByCorrelation = string.Equals(
+        public static bool RefXicByCorrelation => RefXicByCorrelationSetting || _resolutionDefaults.RefXicByCorrelation;
+
+        private static readonly bool RefXicByCorrelationSetting = string.Equals(
             ENV_REF_XIC.Value, @"corr", StringComparison.OrdinalIgnoreCase);
 
         /// <summary>
@@ -983,7 +1015,9 @@ namespace pwiz.Osprey.Core
         /// features correlate over, in place of 0.15. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
         /// Null when unset.
         /// </summary>
-        public static readonly double? TcHalfWindowMinutes = double.TryParse(ENV_TC_HALF_WINDOW.Value,
+        public static double? TcHalfWindowMinutes => TcHalfWindowSetting ?? _resolutionDefaults.TcHalfWindowMinutes;
+
+        private static readonly double? TcHalfWindowSetting = double.TryParse(ENV_TC_HALF_WINDOW.Value,
             NumberStyles.Float, CultureInfo.InvariantCulture, out double halfWindow) ? halfWindow : null;
 
         private static readonly EnvVar ENV_RECONCILIATION = new EnvVar(@"OSPREY_RECONCILIATION", EnvVarGroup.behavior,
@@ -1135,7 +1169,9 @@ namespace pwiz.Osprey.Core
         /// saved model. Known limitation: the second-pass rescoring and transfer
         /// (FrozenModelScorer, PerFileRescoreTask) still score training rows with the fold mean.
         /// </summary>
-        public static readonly bool GbtOutOfFold = ParseIntOrNull(ENV_GBT_OOF) == 1;
+        public static bool GbtOutOfFold => GbtOutOfFoldSetting || _resolutionDefaults.GbtOutOfFold;
+
+        private static readonly bool GbtOutOfFoldSetting = ParseIntOrNull(ENV_GBT_OOF) == 1;
 
         private static readonly EnvVar ENV_GBT_PREFILTER_SIZE = new EnvVar(@"OSPREY_GBT_PREFILTER_SIZE", EnvVarGroup.behavior,
             @"Experiment, first pass, either classifier (the GBT_ prefix is historical): two-round training. Round 1 trains on the usual random " +
