@@ -374,6 +374,11 @@ namespace pwiz.Osprey.Tasks
             // searched without the column is the one written before the setting existed.
             if (config.ProteinBest)
                 writer.AddMetadata(OspreyBlibWriter.KEY_PROTEIN_BEST, OspreyArgNames.VALUE_ON);
+            // The same for the feature set, whose default depends on the detected resolution: core,
+            // the set every library had before the others existed, writes no row. A research mask
+            // overrides the set, so it writes none either.
+            if (OspreyEnvironment.FeatureMask == null && PinFeatureMask.FeatureSet != OspreyFeatureSet.core)
+                writer.AddMetadata(OspreyBlibWriter.KEY_FEATURE_SET, PinFeatureMask.FeatureSet.ToString());
             if (config.CommandLine != null)
                 writer.AddMetadata(OspreyBlibWriter.KEY_COMMAND, config.CommandLine);
             // The runs the library's models were tuned on, which SpectrumSourceFiles does not name

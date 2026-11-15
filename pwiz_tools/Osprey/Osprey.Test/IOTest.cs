@@ -2677,17 +2677,50 @@ namespace pwiz.Osprey.Test
         #region FdrScoresSidecar Tests
 
         /// <summary>
-        /// The feature mask decides two things. The FDR stage loads only the unmasked features
+        /// The feature set decides two things. The FDR stage loads only the set's features
         /// (<see cref="ParquetScoreCache.LoadPinFeaturesFromParquet"/>), and the scores parquet holds
         /// a column only for the recorded ones (<see cref="PinFeatureMask.IsRecorded"/>): the core
-        /// features and each family with an unmasked feature. The test process leaves
-        /// OSPREY_FEATURE_MASK and OSPREY_RECORD_ALL_FEATURES unset, so the default set is masked
-        /// and only the 21 core features are recorded - and a file that lacks a column a reader
-        /// needs is refused, not read as zeros.
+        /// features and the set's features - not the rest of a family the set uses part of, which
+        /// scoring computes (<see cref="PinFeatureMask.IsComputed"/>) but does not write. Checked for
+        /// every set at both resolutions, reading the written file's schema back. The test process
+        /// leaves OSPREY_FEATURE_MASK and OSPREY_RECORD_ALL_FEATURES unset. A file that lacks a
+        /// column a reader needs is refused, not read as zeros.
         /// </summary>
         [TestMethod]
         public void TestFeatureMaskAppliesAtFdrLoad()
         {
+            foreach (var mode in new[] { ResolutionMode.HRAM, ResolutionMode.UnitResolution })
+            {
+                foreach (OspreyFeatureSet featureSet in Enum.GetValues(typeof(OspreyFeatureSet)))
+                {
+                    using (new FeatureSetScope(mode, featureSet))
+                    {
+                        AssertFeatureSetRecordsItsColumns(mode, featureSet);
+                    }
+                }
+            }
+
+            // Without --feature-set the resolution chooses: default for HRAM, core at unit resolution.
+            using (new FeatureSetScope(ResolutionMode.HRAM, null))
+                Assert.AreEqual(OspreyFeatureSet.@default, PinFeatureMask.FeatureSet);
+            using (new FeatureSetScope(ResolutionMode.UnitResolution, null))
+            {
+                Assert.AreEqual(OspreyFeatureSet.core, PinFeatureMask.FeatureSet);
+                // The core set keeps the keys the core-only default had, so no core output is invalidated.
+                Assert.AreEqual(@";featmask=default;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix());
+                Assert.AreEqual(string.Empty, PinFeatureMask.RecordedFeaturesValidityKeySuffix(),
+                    "the core set records the core features only, so its keys must not change");
+            }
+            Assert.IsNull(PinFeatureMask.UnknownFeatureName());
+            AssertMissingFeatureColumnIsRefused();
+        }
+
+        // Writes one row with every PIN feature set and checks the file's columns, the stored row and
+        // the FDR vector against the set resolved at the resolution.
+        private static void AssertFeatureSetRecordsItsColumns(ResolutionMode mode, OspreyFeatureSet featureSet)
+        {
+            string arm = featureSet + @" at " + mode;
+            var inSet = new HashSet<int>(PinFeatureMask.FeatureSetIndices(featureSet));
             var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
             for (int f = 0; f < features.Length; f++)
                 features[f] = f + 1.0;
@@ -2701,39 +2734,42 @@ namespace pwiz.Osprey.Test
             {
                 ParquetScoreCache.WriteScoresParquet(saver.SafeName, entries, null, null, "f.mzML", false);
 
+                var expectedColumns = new List<string>();
                 double[] stored = ParquetScoreCache.LoadFullFdrEntries(saver.SafeName).Single().Features;
                 double[] loaded = ParquetScoreCache.LoadPinFeaturesFromParquet(saver.SafeName).Single();
                 var loadedByName = PinFeatureMask.FdrFeatureNames.Zip(loaded, (name, v) => (name, v))
                     .ToDictionary(p => p.name, p => p.v);
-                Assert.AreEqual(loaded.Length, loadedByName.Count);
-                int maskedCount = 0;
+                Assert.AreEqual(loaded.Length, loadedByName.Count, arm);
                 for (int f = 0; f < features.Length; f++)
                 {
-                    string name = ParquetScoreCache.PIN_FEATURE_NAMES[f];
-                    bool masked = PinFeatureMask.DEFAULT_MASKED_FEATURES.Contains(name);
+                    string name = ParquetScoreCache.PIN_FEATURE_NAMES[f] + @" (" + arm + @")";
+                    bool masked = !inSet.Contains(f) || !PinFeatureMask.IsAvailable(f, mode);
                     Assert.AreEqual(masked, PinFeatureMask.IsMasked(f), name);
-                    // Every default-masked feature is in a family with no unmasked feature, so
-                    // the default records the core features alone.
-                    bool recorded = f < PinFeatureMask.CORE_FEATURE_COUNT;
+                    bool recorded = f < PinFeatureMask.CORE_FEATURE_COUNT || !masked;
                     Assert.AreEqual(recorded, PinFeatureMask.IsRecorded(f), name);
-                    Assert.AreEqual(recorded, ParquetScoreCache.HasColumn(saver.SafeName, name),
-                        name + " must have a column exactly when it is recorded");
+                    Assert.IsTrue(!recorded || PinFeatureMask.IsComputed(f), name + " must be computed when recorded");
+                    if (recorded)
+                        expectedColumns.Add(ParquetScoreCache.PIN_FEATURE_NAMES[f]);
                     Assert.AreEqual(recorded ? f + 1.0 : 0.0, stored[f], name + " as stored");
                     if (masked)
-                        Assert.IsFalse(loadedByName.ContainsKey(name), name + " must be absent as the FDR stage loads it");
+                        Assert.IsFalse(loadedByName.ContainsKey(ParquetScoreCache.PIN_FEATURE_NAMES[f]), name + " must be absent as the FDR stage loads it");
                     else
-                        Assert.AreEqual(f + 1.0, loadedByName[name], name + " as the FDR stage loads it");
-                    if (masked)
-                        maskedCount++;
+                        Assert.AreEqual(f + 1.0, loadedByName[ParquetScoreCache.PIN_FEATURE_NAMES[f]], name + " as the FDR stage loads it");
                 }
-                Assert.AreEqual(PinFeatureMask.DEFAULT_MASKED_FEATURES.Length, maskedCount,
-                    "every default-masked name must be a PIN feature");
+                CollectionAssert.AreEqual(expectedColumns, ReadFeatureColumns(saver.SafeName),
+                    arm + @": the file must hold exactly the recorded feature columns");
             }
-            Assert.IsNull(PinFeatureMask.UnknownFeatureName());
-            Assert.AreEqual(@";featmask=default;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix());
-            Assert.AreEqual(string.Empty, PinFeatureMask.RecordedFeaturesValidityKeySuffix(),
-                "the default records the core features only, so default keys must not change");
-            AssertMissingFeatureColumnIsRefused();
+        }
+
+        // The PIN feature columns a parquet's schema holds, in schema order.
+        private static List<string> ReadFeatureColumns(string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                var reader = ParquetReader.CreateAsync(stream).GetAwaiter().GetResult();
+                return reader.Schema.GetDataFields().Select(field => field.Name)
+                    .Where(name => ParquetScoreCache.PIN_FEATURE_NAMES.Contains(name)).ToList();
+            }
         }
 
         /// <summary>

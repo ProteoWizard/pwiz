@@ -802,19 +802,22 @@ namespace pwiz.Osprey.Core
         public static int SearchXicFragments => XicFragments ?? DEFAULT_XIC_FRAGMENTS;
 
         private static readonly EnvVar ENV_FEATURE_MASK = new EnvVar(@"OSPREY_FEATURE_MASK", EnvVarGroup.behavior,
-            @"The PIN features hidden from the FDR classifier, as comma-separated feature names, " +
-            @"or none to mask nothing. Unset masks the default set, the features still under " +
-            @"evaluation. An unknown name stops the search at startup.")
+            @"Research switch: the PIN features hidden from the FDR classifier, as comma-separated " +
+            @"feature names, or none to mask nothing. Set, it overrides " +
+            OspreyArgNames.Text(OspreyArgNames.FEATURE_SET) + @"; unset, the " +
+            @"feature set decides (default for HRAM data, core at unit resolution). An unknown name " +
+            @"stops the search at startup.")
             { ValueExample = @"none|<name>,<name>..." };
 
         /// <summary>
         /// OSPREY_FEATURE_MASK: the PIN features to hide from the FDR classifier (left out of the
         /// vectors the FDR stage loads, so the classifier never sees them), as comma-separated feature
-        /// names, or <c>none</c> to mask nothing. Null when unset: the default set, the features still
-        /// under evaluation, is masked. Scoring computes and records only the feature families the
-        /// mask leaves a feature of (and the 21 core features always), so arms share their per-file
-        /// scores only when they record the same families - see <see cref="RecordAllFeatures"/>.
-        /// An unknown name stops the search at startup.
+        /// names, or <c>none</c> to mask nothing. A research route: set, it overrides the feature set
+        /// (<see cref="OspreyConfig.FeatureSet"/>, <c>--feature-set</c>); null when unset, and the
+        /// feature set decides what is masked. Scoring computes the feature families the classifier
+        /// uses a feature of and records only the features it uses (and the 21 core features always),
+        /// so arms share their per-file scores only when they record the same columns - see
+        /// <see cref="RecordAllFeatures"/>. An unknown name stops the search at startup.
         /// </summary>
         public static readonly string[] FeatureMask = ParseFeatureMask(
             ENV_FEATURE_MASK.Value);
@@ -830,11 +833,11 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// OSPREY_RECORD_ALL_FEATURES=1 (developer and research switch, not for release use): Stage 4
-        /// computes every PIN feature and records it in the scores parquet, whatever the mask hides
-        /// from the classifier. Unset, scoring computes only the features the FDR stage will read
-        /// (<c>PinFeatureMask.IsRecorded</c>), so a default search costs what it did before the
-        /// features under evaluation were added. Recording everything once lets a researcher compare
-        /// masks on the FDR stage alone. Keyed into the per-file scoring and rescoring validity keys
+        /// computes every PIN feature and records it in the scores parquet, whatever the feature set
+        /// or the mask hides from the classifier. Unset, scoring computes only the families of the
+        /// features the FDR stage will read and records only those features
+        /// (<c>PinFeatureMask.IsRecorded</c>). Recording everything once lets a researcher compare
+        /// feature sets and masks on the FDR stage alone. Keyed into the per-file scoring and rescoring validity keys
         /// through the recorded-feature term, so a run that needs a feature its scores lack rescores.
         /// </summary>
         public static readonly bool RecordAllFeatures = ParseIntOrNull(ENV_RECORD_ALL_FEATURES) == 1;

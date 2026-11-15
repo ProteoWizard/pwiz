@@ -149,9 +149,9 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// Scoring computes only the recorded feature families (<see cref="PinFeatureMask.IsRecorded"/>),
+        /// Scoring computes only the families of the recorded features (<see cref="PinFeatureMask.IsComputed"/>),
         /// which is safe only if skipping a family changes no other feature. Scored once computing
-        /// everything, then with the core features alone (the default) and with each family alone:
+        /// everything, then with the core features alone (the core set) and with each family alone:
         /// every computed feature is bit for bit the full scoring's, and every skipped one is 0.
         /// </summary>
         private static void AssertSkippedFamiliesChangeNoOtherFeature()
@@ -162,11 +162,11 @@ namespace pwiz.Osprey.Test
             int n = ParquetScoreCache.NUM_PIN_FEATURES;
             Assert.AreEqual(OspreyFeatureCalculators.FeatureCount, n);
             Assert.AreEqual(OspreyFeatureCalculators.CORE_FEATURE_COUNT, PinFeatureMask.CORE_FEATURE_COUNT);
-            var recordedSets = new List<bool[]> { PinFeatureMask.RecordedFeatures(f => true, false) };
+            var recordedSets = new List<bool[]> { PinFeatureMask.ComputedFeatures(PinFeatureMask.RecordedFeatures(f => true, false)) };
             foreach (string first in PinFeatureMask.FAMILY_FIRST_FEATURES)
             {
                 int unmasked = Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, first);
-                recordedSets.Add(PinFeatureMask.RecordedFeatures(f => f != unmasked, false));
+                recordedSets.Add(PinFeatureMask.ComputedFeatures(PinFeatureMask.RecordedFeatures(f => f != unmasked, false)));
             }
             foreach (var recorded in recordedSets)
             {

@@ -285,6 +285,24 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The PIN features the FDR classifier trains on, each set within the next: {0} (the original 21 core features), {5} (the core and fewer family features: fewer feature columns for a small detection cost), {1} (the closest to {2} at HRAM) [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _feature_set {
+            get {
+                return ResourceManager.GetString("_feature_set", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to FDR feature set.
+        /// </summary>
+        public static string _feature_set_property {
+            get {
+                return ResourceManager.GetString("_feature_set_property", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Fragment m/z tolerance (default: 10).
         /// </summary>
         public static string _fragment_tolerance {

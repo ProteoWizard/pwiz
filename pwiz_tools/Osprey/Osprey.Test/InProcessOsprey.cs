@@ -44,12 +44,15 @@ namespace pwiz.Osprey.Test
             var savedDiagnosticsLog = OspreyDiagnosticsLog.Log;
             string savedOutputDir = ArtifactPaths.OutputDir;
             string savedCacheDir = ArtifactPaths.CacheDir;
+            var savedResolution = PinFeatureMask.AppliedResolutionMode;
+            var savedFeatureSet = PinFeatureMask.AppliedFeatureSet;
             try
             {
                 return Program.RunCommand(args, writer);
             }
             finally
             {
+                PinFeatureMask.ApplySearchSettings(savedResolution, savedFeatureSet);
                 CommandOutput.Out = savedOut;
                 OspreyOutput.PerfStats = savedPerfStats;
                 OspreyOutput.Verbose = savedVerbose;

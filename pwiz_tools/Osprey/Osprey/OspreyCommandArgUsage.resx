@@ -127,6 +127,9 @@
   <data name="_fdrbench_per_run" xml:space="preserve">
     <value>With {0}: emit one row per (precursor, run) using run-level q-values (adds a '{1}' column). Default is one row per precursor using experiment-level q-values.</value>
   </data>
+  <data name="_feature_set" xml:space="preserve">
+    <value>The PIN features the FDR classifier trains on, each set within the next: {0} (the original 21 core features), {5} (the core and fewer family features: fewer feature columns for a small detection cost), {1} (the closest to {2} at HRAM) or {2} (every score, for research). The default is {1} for {3} data and {0} at {4} resolution, where the features only HRAM data can use are left out whatever the set. Scoring records the set's features in the scores files, so a search with another set scores again.</value>
+  </data>
   <data name="_fragment_tolerance" xml:space="preserve">
     <value>The fragment m/z tolerance, in the unit {0} names (default: 10 ppm, or 0.5 m/z with {1} {2}).</value>
   </data>
@@ -297,6 +300,9 @@
   </data>
   <data name="_fdrbench_per_run_property" xml:space="preserve">
     <value>FDRBench row per run</value>
+  </data>
+  <data name="_feature_set_property" xml:space="preserve">
+    <value>FDR feature set</value>
   </data>
   <data name="_fragment_tolerance_property" xml:space="preserve">
     <value>Fragment tolerance</value>

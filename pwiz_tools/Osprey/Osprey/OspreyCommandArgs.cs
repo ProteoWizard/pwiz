@@ -461,6 +461,21 @@ namespace pwiz.Osprey
                 DescriptionArgs = () => new object[] { OspreyArgNames.VALUE_OFF }
             };
 
+        // The PIN features the FDR classifier trains on. Absent, the resolution chooses (default
+        // for HRAM, core at unit resolution), so there is no single default value to declare.
+        // OSPREY_FEATURE_MASK, a research switch, overrides it.
+        public static readonly OspreyArgument ARG_FEATURE_SET = new OspreyArgument(OspreyArgNames.FEATURE_SET,
+            Enum.GetNames(typeof(OspreyFeatureSet)),
+            (c, p) => { c._config.FeatureSet = (OspreyFeatureSet)Enum.Parse(typeof(OspreyFeatureSet), p.Value, true); })
+            {
+                Scope = OspreyPropertyScope.search,
+                DescriptionArgs = () => new object[]
+                {
+                    OspreyFeatureSet.core, OspreyFeatureSet.@default, OspreyFeatureSet.all,
+                    RESOLUTION_HRAM, RESOLUTION_UNIT, OspreyFeatureSet.efficient
+                }
+            };
+
         public static readonly OspreyArgument ARG_FDRBENCH = new OspreyArgument(@"fdrbench",
             () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.OutputFdrBench = p.Value)
             {
@@ -480,7 +495,7 @@ namespace pwiz.Osprey
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_FDR =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_FDR_Protein_Inference, true,
                 ARG_RUN_FDR, ARG_EXPERIMENT_FDR, ARG_RECONCILIATION_COMPACTION_FDR, ARG_PROTEIN_FDR, ARG_FDR_LEVEL, ARG_SHARED_PEPTIDES,
-                ARG_PROTEIN_BEST, ARG_FDRBENCH, ARG_FDRBENCH_PER_RUN, ARG_FDRBENCH_PASS);
+                ARG_PROTEIN_BEST, ARG_FEATURE_SET, ARG_FDRBENCH, ARG_FDRBENCH_PER_RUN, ARG_FDRBENCH_PASS);
 
         // --- Decoys -----------------------------------------------------------------------
         public static readonly OspreyArgument ARG_DECOYS_IN_LIBRARY = new OspreyArgument(OspreyArgNames.DECOYS_IN_LIBRARY,

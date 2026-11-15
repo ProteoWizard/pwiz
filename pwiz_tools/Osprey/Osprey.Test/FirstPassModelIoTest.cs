@@ -649,8 +649,10 @@ namespace pwiz.Osprey.Test
             string[] fdrNames = PinFeatureMask.FdrFeatureNames;
             Assert.IsTrue(fdrIndices.Length > 0 && fdrIndices.Length < ParquetScoreCache.NUM_PIN_FEATURES,
                 @"the default mask must hide some features and leave some");
-            Assert.AreEqual(ParquetScoreCache.NUM_PIN_FEATURES - PinFeatureMask.DEFAULT_MASKED_FEATURES.Length,
-                fdrIndices.Length, @"every default-masked feature must leave the vector");
+            Assert.AreEqual(ParquetScoreCache.NUM_PIN_FEATURES - Enumerable.Range(0, ParquetScoreCache.NUM_PIN_FEATURES).Count(PinFeatureMask.IsMasked),
+                fdrIndices.Length, @"every masked feature must leave the vector");
+            CollectionAssert.AreEqual(PinFeatureMask.FeatureSetIndices(PinFeatureMask.FeatureSet), fdrIndices,
+                @"the vector holds the process's feature set");
             for (int i = 0; i < fdrIndices.Length; i++)
             {
                 Assert.AreEqual(ParquetScoreCache.PIN_FEATURE_NAMES[fdrIndices[i]], fdrNames[i], @"name of FDR feature " + i);

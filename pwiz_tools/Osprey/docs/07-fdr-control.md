@@ -34,7 +34,7 @@ The FDR stage runs twice in the two-pass architecture:
 
 ```text
 Stage 5 (first pass, after per-file coelution scoring):
-  1. Each observation carries a 41-feature PIN vector (see 03-spectral-scoring.md; 20 of them masked by default),
+  1. Each observation carries a 41-feature PIN vector (see 03-spectral-scoring.md; the feature set decides which the classifier sees),
      cached per file in .scores.parquet; the resident buffer is a lightweight FdrEntry stub.
   2. Build a flat PercolatorEntry list (one per observation) from the stubs.
   3. Run the native streaming Percolator with the classifier OSPREY_FDR_MODEL selects:

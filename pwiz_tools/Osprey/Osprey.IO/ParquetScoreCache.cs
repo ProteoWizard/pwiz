@@ -2355,7 +2355,8 @@ namespace pwiz.Osprey.IO
             {
                 throw new InvalidDataException(string.Format(
                     OspreyIOResources.ParquetScoreCache_RequireFeatureColumn__0__has_no__1__column,
-                    path, name, @"OSPREY_FEATURE_MASK", @"OSPREY_RECORD_ALL_FEATURES"));
+                    path, name, OspreyArgNames.Text(OspreyArgNames.FEATURE_SET) + @" / OSPREY_FEATURE_MASK",
+                    @"OSPREY_RECORD_ALL_FEATURES"));
             }
             return column;
         }

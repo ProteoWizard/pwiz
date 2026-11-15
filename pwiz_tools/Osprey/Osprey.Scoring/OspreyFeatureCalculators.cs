@@ -39,9 +39,9 @@ namespace pwiz.Osprey.Scoring
     /// The first 21 are the Rust PIN features, every slot populated, so <see cref="Get"/>
     /// never returns null. Slots 21-108 are C#-only: the runner-up, context, per-fragment-rank,
     /// spectrum-across-peak, median-polish top-k, reference-correlation, peak-profile, time-correlation, re-extracted-correlation, peak-dominance, top-fragment, wide-span coelution, shadow-isotope, cleaned time-correlation, library agreement and spectrum-match families,
-    /// hidden from the FDR classifier by default (<c>PinFeatureMask</c>, OSPREY_FEATURE_MASK) while
-    /// they are evaluated, and computed and written only for a family the mask leaves a feature of,
-    /// or under OSPREY_RECORD_ALL_FEATURES=1. (Scores the Rust engine computes but excludes from its PIN features
+    /// used by the FDR classifier as the feature set says (<c>PinFeatureMask</c>, <c>--feature-set</c>,
+    /// OSPREY_FEATURE_MASK), computed only for a family with a feature the classifier uses and
+    /// written only for the features it uses, or every feature under OSPREY_RECORD_ALL_FEATURES=1. (Scores the Rust engine computes but excludes from its PIN features
     /// are intentionally NOT here - see the non-PIN-scores backlog.)
     /// </summary>
     public static class OspreyFeatureCalculators
@@ -51,7 +51,8 @@ namespace pwiz.Osprey.Scoring
 
         /// <summary>
         /// The core features, the first 21: the Rust PIN features, which the scorer always computes.
-        /// The families after them are computed only when recorded (<c>PinFeatureMask.IsRecorded</c>).
+        /// The families after them are computed only when one of their features is recorded
+        /// (<c>PinFeatureMask.IsComputed</c>).
         /// </summary>
         public const int CORE_FEATURE_COUNT = 21;
 
