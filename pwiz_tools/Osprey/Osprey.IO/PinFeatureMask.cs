@@ -487,6 +487,11 @@ namespace pwiz.Osprey.IO
             int total = ParquetScoreCache.NUM_PIN_FEATURES;
             if (OspreyEnvironment.FeatureMask != null)
             {
+                if (_featureSet == null)
+                {
+                    return string.Format(CultureInfo.InvariantCulture,
+                        @"FDR features: OSPREY_FEATURE_MASK ({0} of {1})", used, total);
+                }
                 return string.Format(CultureInfo.InvariantCulture,
                     @"FDR features: OSPREY_FEATURE_MASK ({0} of {1}; {2} is overridden)",
                     used, total, OspreyArgNames.Text(OspreyArgNames.FEATURE_SET));
@@ -529,7 +534,7 @@ namespace pwiz.Osprey.IO
         /// also carries that count (<c>;featavail=</c>), and an output from before features were added
         /// is not adopted. Without a mask, the feature set: <c>core</c> keeps the term the default mask
         /// had when it left the core alone (<c>featmask=default</c>), so no output of a core search is
-        /// invalidated; <c>all</c> carries the count like a mask; any other set lists the features it
+        /// invalidated; <c>all</c> keys as the empty mask (<c>featmask=none</c>), which selects the same features; any other set lists the features it
         /// uses beyond the core (<c>;featset=</c>), so an edit of a hand-kept list changes the key. A set
         /// is keyed by what it resolves to, so one that is the same at a resolution keys the same.
         /// </summary>
@@ -549,8 +554,9 @@ namespace pwiz.Osprey.IO
                 return @";featmask=default" + fdrcols;
             int available = Enumerable.Range(CORE_FEATURE_COUNT, ParquetScoreCache.NUM_PIN_FEATURES - CORE_FEATURE_COUNT)
                 .Count(f => IsAvailable(f, mode));
+            // The same features as OSPREY_FEATURE_MASK=none, so the same key: either adopts the other's outputs
             if (used.Length == available)
-                return @";featset=all" + AvailableFeaturesTerm(mode) + fdrcols;
+                return @";featmask=none" + AvailableFeaturesTerm(mode) + fdrcols;
             return @";featset=" + string.Join(@"+", used.Select(f => ParquetScoreCache.PIN_FEATURE_NAMES[f])) + fdrcols;
         }
 

@@ -298,7 +298,7 @@ features, and it writes to the `.scores.parquet` only the features the classifie
 feature under the developer switch `OSPREY_RECORD_ALL_FEATURES=1`; see "What scoring records"
 below). **At unit resolution the default is the `core` set**, so a default unit-resolution search
 reports what the 21 Rust features report and its goldens are unchanged; **HRAM data defaults to
-the `default` set**, the core and 36 family features chosen in a nested-set study, which moves the
+the `default` set**, the core and 49 family features chosen in a nested-set study, which moves the
 HRAM goldens.
 
 | # | PIN name | Family | Direction (`IsReversedScore`) | C# calculator (file) |
@@ -405,8 +405,8 @@ key; what scoring records is (below), so:
 - searches that differ only in the set or mask share their per-file scores when they record the
   same columns. The features used are in the validity keys of FirstPassFDR, PerFileRescoring and
   SecondPassFDR: `;featmask=none|<names>` for a mask; for a set, `;featmask=default` for `core`
-  (the term the core-only default had, so no core output is invalidated), `;featset=all` for
-  `all`, and `;featset=<names>` listing the features beyond the core for `efficient` and
+  (the term the core-only default had, so no core output is invalidated), `;featmask=none` for
+  `all` (the same features as the empty mask, so either adopts the other's outputs), and `;featset=<names>` listing the features beyond the core for `efficient` and
   `default`, so each keys differently and an edit of a list rekeys. Pointing a new set at scores that hold its features re-runs
   only the FDR stages (minutes on three runs, against the whole search). See
   `14-intermediate-files.md`. When a
@@ -696,7 +696,7 @@ presence rather than a CLI flag.
   default** - the runner-up, context, per-fragment-rank, spectrum-across-peak and later families
   (B.7) have no Rust counterpart. Under the `core` set, the unit-resolution default, they are
   absent from the classifier's vectors and the scores parquet, so default unit-resolution results
-  match the 21-feature engine; the HRAM default (`default` set) uses 36 of them. Evidence: `ParquetScoreCache.PIN_FEATURE_NAMES` (41 names), `PinFeatureMask`.
+  match the 21-feature engine; the HRAM default (`default` set) uses 49 of them. Evidence: `ParquetScoreCache.PIN_FEATURE_NAMES` (109 names), `PinFeatureMask`.
   Severity: info.
 
 - **[INTENTIONAL-CSHARP-DESIGN] MS1 features gated by resolution strategy, not a config

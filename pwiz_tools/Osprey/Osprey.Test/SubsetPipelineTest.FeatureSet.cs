@@ -22,6 +22,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.BiblioSpec.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -46,10 +47,12 @@ namespace pwiz.Osprey.Test
             string workDir = CreateDir(@"feature-sets");
             string log = RunAnalysis(workDir, DataInputs(), Verifier(false));
             AssertFeatureSetRun(workDir, log, null, OspreyFeatureSet.core);
+            AssertBlibFeatureSet(workDir, null);
 
             log = RunAnalysis(workDir, DataInputs(), Verifier(false), FeatureSetArgs(OspreyFeatureSet.@default));
             AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
             AssertFeatureSetRun(workDir, log, OspreyFeatureSet.@default, OspreyFeatureSet.@default);
+            AssertBlibFeatureSet(workDir, OspreyFeatureSet.@default.ToString());
 
             log = RunAnalysis(workDir, DataInputs(), Verifier(false), FeatureSetArgs(OspreyFeatureSet.@default));
             AssertTasks(log, ALL_TASKS, Array.Empty<string>());
@@ -72,6 +75,14 @@ namespace pwiz.Osprey.Test
             log = RunAnalysis(workDir, DataInputs(), Verifier(false), FeatureSetArgs(OspreyFeatureSet.efficient));
             AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
             AssertFeatureSetRun(workDir, log, OspreyFeatureSet.efficient, OspreyFeatureSet.efficient);
+            AssertBlibFeatureSet(workDir, OspreyFeatureSet.efficient.ToString());
+        }
+
+        /// <summary>The library records a set other than core in its LibMetadata, and nothing for core.</summary>
+        private static void AssertBlibFeatureSet(string workDir, string expected)
+        {
+            string blibPath = Path.Combine(workDir, BLIB_FILE);
+            Assert.AreEqual(expected, BlibMetadata.Read(blibPath, OspreyBlibWriter.KEY_FEATURE_SET), blibPath);
         }
 
         private static string[] FeatureSetArgs(OspreyFeatureSet featureSet)

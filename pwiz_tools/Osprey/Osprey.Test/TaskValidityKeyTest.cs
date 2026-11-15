@@ -948,8 +948,9 @@ namespace pwiz.Osprey.Test
                 }).ToArray();
                 Assert.AreEqual(recordedKeys.Length, recordedKeys.Distinct().Count(), @"every set keys the scoring tasks differently");
             }
-            Assert.AreEqual(@";featset=all;featavail=109;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.all, hram));
-            Assert.AreEqual(@";featset=all;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.all, unit));
+            // all selects what the empty mask does, so it keys the same and adopts that mask's outputs
+            Assert.AreEqual(@";featmask=none;featavail=109;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.all, hram));
+            Assert.AreEqual(@";featmask=none;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.all, unit));
             Assert.AreEqual(@";featmask=none;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix(Array.Empty<string>(), OspreyFeatureSet.core, unit),
                 @"a mask overrides the feature set");
             var none = Array.Empty<string>();
