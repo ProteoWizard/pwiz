@@ -40,6 +40,37 @@ namespace pwiz.Osprey.FDR.Reconciliation
     public delegate IReadOnlyList<IReadOnlyList<CwtCandidate>> CwtCandidateSource(IReadOnlyList<int> entryIndices);
 
     /// <summary>
+    /// One entry the planner moves: its peak is away from the consensus RT, so it is rescored at
+    /// a new peak. Which peak - a CWT candidate near <see cref="ExpectedRt"/> or boundaries imputed
+    /// around it - is decided by <see cref="Resolve"/> from the entry's CWT candidates, which a
+    /// caller can compute when it next holds the run's spectra.
+    /// </summary>
+    public struct ReconcileMove
+    {
+        /// <summary>Index of the entry in the list the planner was given.</summary>
+        public int EntryIndex { get; set; }
+
+        /// <summary>The consensus RT, mapped into the run's measured RT space.</summary>
+        public double ExpectedRt { get; set; }
+
+        /// <summary>Half the consensus median peak width, for imputed boundaries.</summary>
+        public double HalfWidth { get; set; }
+
+        /// <summary>The run's per-peptide RT tolerance a candidate apex must fall within.</summary>
+        public double RtTolerance { get; set; }
+
+        /// <summary>
+        /// The action for the entry whose current apex is <paramref name="apexRt"/>, given its
+        /// first-pass CWT candidates in rank order (null or empty imputes the boundaries).
+        /// </summary>
+        public ReconcileAction Resolve(double apexRt, IReadOnlyList<CwtCandidate> cwtCandidates)
+        {
+            return ReconciliationPlanner.DetermineAction(apexRt, cwtCandidates ?? Array.Empty<CwtCandidate>(),
+                ExpectedRt, RtTolerance, HalfWidth);
+        }
+    }
+
+    /// <summary>
     /// Plans inter-replicate peak reconciliation using consensus RTs and the
     /// CWT candidates of the entries it would move. Ports <c>plan_reconciliation</c> and
     /// <c>determine_reconcile_action</c> from
@@ -276,15 +307,43 @@ namespace pwiz.Osprey.FDR.Reconciliation
                 CwtCandidateSource candidates,
                 IList<KeyValuePair<int, ReconcileAction>> fileActions)
             {
-                if (entries == null)
+                var moves = SelectMoves(fileName, refinedCalibration, entries);
+                if (moves.Count == 0)
                     return;
+
+                var movedCandidates = candidates?.Invoke(moves.ConvertAll(m => m.EntryIndex));
+                for (int i = 0; i < moves.Count; i++)
+                {
+                    int entryIdx = moves[i].EntryIndex;
+                    var action = moves[i].Resolve(entries[entryIdx].ApexRt, movedCandidates?[i]);
+                    fileActions.Add(new KeyValuePair<int, ReconcileAction>(entryIdx, action));
+                }
+            }
+
+            /// <summary>
+            /// The entries of one file whose peak is away from the consensus RT, in entry order:
+            /// the ones <see cref="PlanFile(string,RTCalibration,IReadOnlyList{FdrEntry},CwtCandidateSource,IList{KeyValuePair{int,ReconcileAction}})"/>
+            /// moves. Choosing them reads no CWT candidate - an entry already at its expected RT
+            /// keeps its peak whatever its candidates - so a caller can choose them now and resolve
+            /// each one's new peak (<see cref="ReconcileMove.Resolve"/>) once it holds the run's
+            /// spectra. <paramref name="refinedCalibration"/> is the file's refit, null when it was
+            /// not refit.
+            /// </summary>
+            public List<ReconcileMove> SelectMoves(
+                string fileName,
+                RTCalibration refinedCalibration,
+                IReadOnlyList<FdrEntry> entries)
+            {
+                var moves = new List<ReconcileMove>();
+                if (entries == null)
+                    return moves;
 
                 // Refined calibration if present, else original.
                 RTCalibration cal = refinedCalibration;
                 if (cal == null)
                     _perFileOriginalCal.TryGetValue(fileName, out cal);
                 if (cal == null)
-                    return;
+                    return moves;
 
                 // Per-file RT tolerance ceiling from refined residuals.
                 // Sigma-clipped MAD guards against wrong-peak residuals
@@ -317,11 +376,6 @@ namespace pwiz.Osprey.FDR.Reconciliation
                     Math.Max(_globalWithinPeptideMadLib * MAD_TO_SIGMA * SIGMA_FACTOR, MIN_RT_TOLERANCE),
                     fileCalToleranceCeiling);
 
-                // First the entries whose peak would move: an entry already at its expected RT
-                // keeps its peak whatever its candidates, so only the others' are asked for.
-                var moved = new List<int>();
-                var expectedRts = new List<double>();
-                var halfWidths = new List<double>();
                 for (int entryIdx = 0; entryIdx < entries.Count; entryIdx++)
                 {
                     var entry = entries[entryIdx];
@@ -344,24 +398,15 @@ namespace pwiz.Osprey.FDR.Reconciliation
                     double expectedRt = cal.Predict(consensusEntry.ConsensusLibraryRt);
                     if (IsAtExpectedRt(entry.ApexRt, expectedRt, peptideTolerance))
                         continue;   // Keep, which is implicit absence
-                    moved.Add(entryIdx);
-                    expectedRts.Add(expectedRt);
-                    halfWidths.Add(consensusEntry.MedianPeakWidth / 2.0);
+                    moves.Add(new ReconcileMove
+                    {
+                        EntryIndex = entryIdx,
+                        ExpectedRt = expectedRt,
+                        HalfWidth = consensusEntry.MedianPeakWidth / 2.0,
+                        RtTolerance = peptideTolerance,
+                    });
                 }
-                if (moved.Count == 0)
-                    return;
-
-                var movedCandidates = candidates?.Invoke(moved);
-                for (int i = 0; i < moved.Count; i++)
-                {
-                    var action = DetermineAction(
-                        apexRt: entries[moved[i]].ApexRt,
-                        cwtCandidates: movedCandidates?[i] ?? Array.Empty<CwtCandidate>(),
-                        expectedMeasuredRt: expectedRts[i],
-                        rtTolerance: peptideTolerance,
-                        halfWidth: halfWidths[i]);
-                    fileActions.Add(new KeyValuePair<int, ReconcileAction>(moved[i], action));
-                }
+                return moves;
             }
         }
 
