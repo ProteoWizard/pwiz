@@ -556,9 +556,8 @@ namespace pwiz.Osprey.Core
         public const string FDR_MODEL_GBDT = @"gbdt";
 
         private static readonly EnvVar ENV_FDR_MODEL = new EnvVar(@"OSPREY_FDR_MODEL", EnvVarGroup.behavior,
-            @"The first-pass classifier: the linear SVM, or gradient-boosted trees (experimental, C# " +
-            @"only).")
-            { Values = new[] { @"svm", @"gbdt" }, DefaultValue = @"svm" };
+            @"The first-pass classifier: the linear SVM, or gradient-boosted trees (C# only).")
+            { Values = new[] { @"svm", @"gbdt" }, DefaultValue = @"gbdt for HRAM data, svm at unit resolution" };
 
         /// <summary>
         /// OSPREY_FDR_MODEL: the classifier first-pass Percolator trains. Unset, empty or
@@ -776,13 +775,15 @@ namespace pwiz.Osprey.Core
             @"Experiment, gbdt first pass only: 1 scores each training row with only the fold model that held " +
             @"it out, instead of the mean of every fold model, two of which trained on it. Changes the validity " +
             @"key. A resumed first pass retrains rather than adopt the saved model. " +
-            @"Second-pass rescoring still scores training rows with the fold mean.");
+            @"Second-pass rescoring still scores training rows with the fold mean. On by default for HRAM data; " +
+            @"0 turns it off.")
+            { Values = new[] { @"0", @"1" } };
 
         private static readonly EnvVar ENV_XIC_FRAGMENTS = new EnvVar(@"OSPREY_XIC_FRAGMENTS", EnvVarGroup.behavior,
             @"Experiment: how many of a candidate's most intense library fragments get XICs (CWT " +
             @"peak detection, coelution, peak-shape and median-polish features). Calibration and " +
             @"the 2-of-top-6 prefilter keep 6. A whole number from 2 to 20.")
-            { ValueExample = @"<2-20>", DefaultValue = @"6" };
+            { ValueExample = @"<2-20>", DefaultValue = @"12 for HRAM data, 6 at unit resolution" };
 
         /// <summary>
         /// OSPREY_XIC_FRAGMENTS (experiment): how many of a
@@ -940,7 +941,7 @@ namespace pwiz.Osprey.Core
         private static readonly EnvVar ENV_TC_HALF_WINDOW = new EnvVar(@"OSPREY_TC_HALF_WINDOW", EnvVarGroup.behavior,
             @"Experiment: half-width in minutes of the window the tc_* time-correlation features " +
             @"correlate over, in place of 0.15. Keyed into every task.")
-            { ValueExample = @"<minutes>", DefaultValue = @"0.15" };
+            { ValueExample = @"<minutes>", DefaultValue = @"0.40 for HRAM data, 0.15 at unit resolution" };
 
         private static readonly EnvVar ENV_MIN_FRAGMENT_TOLERANCE = new EnvVar(@"OSPREY_MIN_FRAGMENT_TOLERANCE", EnvVarGroup.behavior,
             @"Experiment: a floor in ppm on the calibrated fragment tolerance the main search extracts " +
@@ -949,8 +950,8 @@ namespace pwiz.Osprey.Core
 
         private static readonly EnvVar ENV_LOCAL_RT_TOLERANCE = new EnvVar(@"OSPREY_LOCAL_RT_TOLERANCE", EnvVarGroup.behavior,
             @"Experiment: widen the RT search window at each library RT from the residual spread of this " +
-            @"many nearest calibration points. Keyed into every task.")
-            { ValueExample = @"<N>", AcceptsValue = IsPositiveInt };
+            @"many nearest calibration points. Keyed into every task. 15 by default for HRAM data; off turns it off.")
+            { ValueExample = @"<N>|off", AcceptsValue = value => IsPositiveInt(value) || IsOffValue(value) };
 
         /// <summary>
         /// OSPREY_LOCAL_RT_TOLERANCE (experiment): widen the RT search window where the calibration fits
@@ -960,7 +961,9 @@ namespace pwiz.Osprey.Core
         /// where many precursors share a library RT but elute minutes apart. Keyed into every task through
         /// <see cref="PickValidityKeySuffix()"/>. Null when unset or not a positive integer.
         /// </summary>
-        public static int? LocalRtToleranceNeighbors => LocalRtToleranceSetting ?? _resolutionDefaults.LocalRtToleranceNeighbors;
+        public static int? LocalRtToleranceNeighbors => IsOffValue(ENV_LOCAL_RT_TOLERANCE.Value)
+            ? null
+            : LocalRtToleranceSetting ?? _resolutionDefaults.LocalRtToleranceNeighbors;
 
         private static readonly int? LocalRtToleranceSetting = int.TryParse(ENV_LOCAL_RT_TOLERANCE.Value,
             NumberStyles.None, CultureInfo.InvariantCulture, out int localRtNeighbors) && localRtNeighbors > 0 ? localRtNeighbors : null;
@@ -976,8 +979,8 @@ namespace pwiz.Osprey.Core
 
         private static readonly EnvVar ENV_CORR_FRAGMENT_TOLERANCE = new EnvVar(@"OSPREY_CORR_FRAGMENT_TOLERANCE", EnvVarGroup.behavior,
             @"Experiment: a tolerance in ppm (at least the calibrated one) the correlation-shape features " +
-            @"re-extract their fragment XICs with. Keyed into every task.")
-            { ValueExample = @"<ppm>" };
+            @"re-extract their fragment XICs with. Keyed into every task. 7 by default for HRAM data; off turns it off.")
+            { ValueExample = @"<ppm>|off" };
 
         /// <summary>
         /// OSPREY_CORR_FRAGMENT_TOLERANCE (experiment): a tolerance in ppm the correlation-shape features
@@ -986,15 +989,20 @@ namespace pwiz.Osprey.Core
         /// calibrated tolerance. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
         /// Null when unset.
         /// </summary>
-        public static double? CorrFragmentTolerancePpm => CorrFragmentToleranceSetting ?? _resolutionDefaults.CorrFragmentTolerancePpm;
+        public static double? CorrFragmentTolerancePpm => IsOffValue(ENV_CORR_FRAGMENT_TOLERANCE.Value)
+            ? null
+            : CorrFragmentToleranceSetting ?? _resolutionDefaults.CorrFragmentTolerancePpm;
 
         private static readonly double? CorrFragmentToleranceSetting = double.TryParse(ENV_CORR_FRAGMENT_TOLERANCE.Value,
             NumberStyles.Float, CultureInfo.InvariantCulture, out double corrFragTol) ? corrFragTol : null;
 
         private static readonly EnvVar ENV_REF_XIC = new EnvVar(@"OSPREY_REF_XIC", EnvVarGroup.behavior,
             @"Experiment: corr chooses the reference fragment XIC (apex scan, area, SNR, sharpness, MS1 " +
-            @"reference) by agreement with the other fragments inside the chosen peak. Keyed into every task.")
-            { Values = new[] { @"corr" } };
+            @"reference) by agreement with the other fragments inside the chosen peak. Keyed into every task. " +
+            @"corr by default for HRAM data; intensity keeps the most intense fragment.")
+            { Values = new[] { @"corr", REF_XIC_INTENSITY } };
+
+        private const string REF_XIC_INTENSITY = @"intensity";
 
         /// <summary>
         /// OSPREY_REF_XIC (experiment): <c>corr</c> re-chooses the reference fragment XIC inside the chosen
@@ -1005,10 +1013,18 @@ namespace pwiz.Osprey.Core
         /// peak_area and peak_sharpness features keep their own most-intense-fragment reference. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
         /// False when unset.
         /// </summary>
-        public static bool RefXicByCorrelation => RefXicByCorrelationSetting || _resolutionDefaults.RefXicByCorrelation;
+        public static bool RefXicByCorrelation => RefXicByCorrelationSetting ?? _resolutionDefaults.RefXicByCorrelation;
 
-        private static readonly bool RefXicByCorrelationSetting = string.Equals(
-            ENV_REF_XIC.Value, @"corr", StringComparison.OrdinalIgnoreCase);
+        private static readonly bool? RefXicByCorrelationSetting = ParseRefXic(ENV_REF_XIC.Value);
+
+        private static bool? ParseRefXic(string value)
+        {
+            if (string.Equals(value, @"corr", StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (string.Equals(value, REF_XIC_INTENSITY, StringComparison.OrdinalIgnoreCase))
+                return false;
+            return null;
+        }
 
         /// <summary>
         /// OSPREY_TC_HALF_WINDOW (experiment): half-width in minutes of the window the tc_* time-correlation
@@ -1169,9 +1185,9 @@ namespace pwiz.Osprey.Core
         /// saved model. Known limitation: the second-pass rescoring and transfer
         /// (FrozenModelScorer, PerFileRescoreTask) still score training rows with the fold mean.
         /// </summary>
-        public static bool GbtOutOfFold => GbtOutOfFoldSetting || _resolutionDefaults.GbtOutOfFold;
+        public static bool GbtOutOfFold => GbtOutOfFoldSetting ?? _resolutionDefaults.GbtOutOfFold;
 
-        private static readonly bool GbtOutOfFoldSetting = ParseIntOrNull(ENV_GBT_OOF) == 1;
+        private static readonly bool? GbtOutOfFoldSetting = ParseIntOrNull(ENV_GBT_OOF) is { } outOfFold ? outOfFold == 1 : null;
 
         private static readonly EnvVar ENV_GBT_PREFILTER_SIZE = new EnvVar(@"OSPREY_GBT_PREFILTER_SIZE", EnvVarGroup.behavior,
             @"Experiment, first pass, either classifier (the GBT_ prefix is historical): two-round training. Round 1 trains on the usual random " +
@@ -2164,6 +2180,12 @@ namespace pwiz.Osprey.Core
         }
 
         // The accepted values of a size with no zero arm (OSPREY_BLOCK_READ_MB).
+        // off, which turns off a developer setting whose resolution default is on
+        private static bool IsOffValue(string value)
+        {
+            return string.Equals(value?.Trim(), @"off", StringComparison.OrdinalIgnoreCase);
+        }
+
         private static bool IsPositiveInt(string value)
         {
             return int.TryParse(value, out int result) && result > 0;

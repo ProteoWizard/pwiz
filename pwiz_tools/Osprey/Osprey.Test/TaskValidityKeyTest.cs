@@ -55,6 +55,43 @@ namespace pwiz.Osprey.Test
     [TestClass]
     public class TaskValidityKeyTest
     {
+        /// <summary>
+        /// The HRAM defaults key exactly as the variables that once chose them (OSPREY_TC_HALF_WINDOW=0.4,
+        /// OSPREY_CORR_FRAGMENT_TOLERANCE=7, OSPREY_REF_XIC=corr, OSPREY_LOCAL_RT_TOLERANCE=15), so the outputs of
+        /// a recipe run are adopted by a default one; unit resolution keeps the legacy key, so no output of a
+        /// unit-resolution search is invalidated. Meaningful only when none of those variables is set.
+        /// </summary>
+        [TestMethod]
+        public void TestResolutionDefaultsKeyLikeTheirVariables()
+        {
+            var saved = OspreyEnvironment.AppliedDefaultsResolution;
+            try
+            {
+                OspreyEnvironment.ApplyResolutionDefaults(null);
+                string legacy = OspreyEnvironment.PickValidityKeySuffix();
+                int legacyXics = OspreyEnvironment.SearchXicFragments;
+                bool legacyOutOfFold = OspreyEnvironment.GbtOutOfFold;
+                var terms = new[] { @";tcwin=", @";ftolmin=", @";fcorr=", @";refxic=", @";rtlocal=" };
+                if (terms.Any(legacy.Contains) || legacyXics != OspreyEnvironment.DEFAULT_XIC_FRAGMENTS || legacyOutOfFold)
+                    Assert.Inconclusive(@"a developer variable is set: " + legacy);
+
+                OspreyEnvironment.ApplyResolutionDefaults(ResolutionMode.UnitResolution);
+                Assert.AreEqual(legacy, OspreyEnvironment.PickValidityKeySuffix());
+                Assert.AreEqual(OspreyEnvironment.DEFAULT_XIC_FRAGMENTS, OspreyEnvironment.SearchXicFragments);
+                Assert.IsFalse(OspreyEnvironment.GbtOutOfFold);
+
+                OspreyEnvironment.ApplyResolutionDefaults(ResolutionMode.HRAM);
+                Assert.AreEqual(legacy + @";tcwin=0.4;fcorr=7;refxic=corr;rtlocal=15", OspreyEnvironment.PickValidityKeySuffix());
+                Assert.AreEqual(12, OspreyEnvironment.SearchXicFragments);
+                Assert.AreEqual(12, TopFragmentExtractor.SearchTopNFragments, @"the XIC count is read live, not frozen at type load");
+                Assert.IsTrue(OspreyEnvironment.GbtOutOfFold);
+            }
+            finally
+            {
+                OspreyEnvironment.ApplyResolutionDefaults(saved);
+            }
+        }
+
         [TestMethod]
         public void TestFlippedDefaultsParticipateInTheValidityKey()
         {

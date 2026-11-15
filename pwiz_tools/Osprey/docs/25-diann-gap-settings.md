@@ -1,25 +1,34 @@
-# Settings that close the DIA-NN gap (off by default)
+# Settings that close the DIA-NN gap
 
-Osprey's defaults reproduce the master analysis. The settings below, all opt-in, are what took Osprey from
+**Most of the recipe is now the HRAM default** (`ResolutionDefaults.HRAM`, `Osprey.Core/ResolutionDefaults.cs`):
+gbdt with out-of-fold scoring, `--protein-best on` (and so the two-round training), 12 fragment XICs, the 7 ppm
+correlation tolerance, the correlation-chosen reference XIC, the local RT tolerance over 15 neighbors and the 0.40
+min tc_* window, besides the `default` feature set. Unit-resolution data keeps the values in the Default column.
+Each variable still overrides its default (`OSPREY_FDR_MODEL=svm`, `OSPREY_GBT_OOF=0`, `--protein-best off`,
+`OSPREY_XIC_FRAGMENTS=6`, `OSPREY_CORR_FRAGMENT_TOLERANCE=off`, `OSPREY_REF_XIC=intensity`,
+`OSPREY_LOCAL_RT_TOLERANCE=off`, `OSPREY_TC_HALF_WINDOW=0.15`). Still opt-in at every resolution: the transfer
+pass-2 q-value, the refit off, the RT tolerance floor, the LOESS bandwidth and the seed.
+
+Before that, Osprey's defaults reproduced the master analysis. The settings below, then all opt-in, are what took Osprey from
 ~40% behind DIA-NN to within ~5% on SEA-AD Astral (82 files) with the gradient-boosted trees, and ahead of
 DIA-NN without its neural network using the linear SVM. They cost time and, above all, disk; a much smaller
 feature set is under study as the eventual default (issue #5018).
 
 ## The recipe
 
-| Setting | Value | Default | What it changes |
+| Setting | Value | Default (unit resolution; HRAM where marked) | What it changes |
 |---|---|---|---|
-| `--protein-best` | `on` | `off` | Second training round with each precursor's best first-pass score among the other peptides of its protein ([12](12-second-pass-fdr.md)) |
-| `OSPREY_FDR_MODEL` | `gbdt` (or `svm`) | `svm` | First-pass classifier ([07](07-fdr-control.md)) |
-| `OSPREY_GBT_OOF` | `1` (gbdt) | off | Out-of-fold tree scoring |
+| `--protein-best` | `on` | `off` (HRAM: `on`) | Second training round with each precursor's best first-pass score among the other peptides of its protein ([12](12-second-pass-fdr.md)) |
+| `OSPREY_FDR_MODEL` | `gbdt` (or `svm`) | `svm` (HRAM: `gbdt`) | First-pass classifier ([07](07-fdr-control.md)) |
+| `OSPREY_GBT_OOF` | `1` (gbdt) | off (HRAM: on) | Out-of-fold tree scoring |
 | `OSPREY_PASS2_QVALUE` | `transfer` | protein-compact | Second pass carries the pass-1 experiment q and reconciles only reported precursors ([12](12-second-pass-fdr.md)) |
 | `OSPREY_FEATURE_MASK` | `none` | unset: `--feature-set core\|efficient\|default\|all` decides (`default`, 70 features, for HRAM; `core` at unit resolution) | Every one of the 109 PIN features reaches the classifier (and is recorded in the scores parquet); `--feature-set all` does the same without the research switch |
-| `OSPREY_XIC_FRAGMENTS` | `12` | `6` | Fragment XICs per candidate ([03](03-spectral-scoring.md)) |
-| `OSPREY_CORR_FRAGMENT_TOLERANCE` | `7` (ppm) | the calibrated tolerance | A second, wider XIC set for the correlation features |
-| `OSPREY_REF_XIC` | `corr` | most intense fragment | Correlation-chosen reference XIC |
-| `OSPREY_LOCAL_RT_TOLERANCE` | `15` | off | RT window widened at each library RT by the residual spread of the 15 nearest calibration points |
+| `OSPREY_XIC_FRAGMENTS` | `12` | `6` (HRAM: `12`) | Fragment XICs per candidate ([03](03-spectral-scoring.md)) |
+| `OSPREY_CORR_FRAGMENT_TOLERANCE` | `7` (ppm) | the calibrated tolerance (HRAM: 7) | A second, wider XIC set for the correlation features |
+| `OSPREY_REF_XIC` | `corr` | most intense fragment (HRAM: `corr`) | Correlation-chosen reference XIC |
+| `OSPREY_LOCAL_RT_TOLERANCE` | `15` | off (HRAM: 15) | RT window widened at each library RT by the residual spread of the 15 nearest calibration points |
 | `OSPREY_MIN_RT_TOLERANCE` | `1.0` (min) | 0.5 | RT search-window floor ([05](05-rt-alignment.md)) |
-| `OSPREY_TC_HALF_WINDOW` | `0.40` (min) | 0.15 | Half-width of the tc_* time-correlation window |
+| `OSPREY_TC_HALF_WINDOW` | `0.40` (min) | 0.15 (HRAM: 0.40) | Half-width of the tc_* time-correlation window |
 | `OSPREY_LOESS_BANDWIDTH` | `0.10` | 0.3 | RT calibration LOESS bandwidth ([05](05-rt-alignment.md)) |
 | `OSPREY_RECON_REFIT` | `off` | refit runs | Skips the Stage 6 consensus refit; each run keeps its own first-pass RT calibration |
 | `OSPREY_FDR_SEED` | `1` | 42 | Percolator seed (results vary ~1.5% SD across seeds at 20 files) |

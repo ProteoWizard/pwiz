@@ -447,8 +447,9 @@ namespace pwiz.Osprey
                 }
             }) { Scope = OspreyPropertyScope.search, DefaultValue = Default(() => new OspreyConfig().SharedPeptides), DescriptionArgs = () => new object[] { @"all" } };
 
-        // The protein-best training column (issue #4580), off by default. Off is the one-round first
-        // pass that preceded it, bit for bit; the developer switches that shape it stay environment
+        // The protein-best training column (issue #4580): on by default for HRAM data, off at unit
+        // resolution (ResolutionDefaults), so like --feature-set it declares no single default. Off
+        // is the one-round first pass that preceded it, bit for bit; the developer switches that shape it stay environment
         // variables (OSPREY_PROTEIN_BEST_DECOY, OSPREY_PROTEIN_BEST_SHUFFLE). A block body, so the
         // handler is an Action: an assignment of a bool would bind to the Func overload, whose false
         // (off) ends the parse and drops every argument after it.
@@ -461,8 +462,10 @@ namespace pwiz.Osprey
             })
             {
                 Scope = OspreyPropertyScope.search,
-                DefaultValue = Default(() => new OspreyConfig().ProteinBest ? OspreyArgNames.VALUE_ON : OspreyArgNames.VALUE_OFF),
-                DescriptionArgs = () => new object[] { OspreyArgNames.VALUE_OFF }
+                DescriptionArgs = () => new object[]
+                {
+                    OspreyArgNames.VALUE_ON, RESOLUTION_HRAM, OspreyArgNames.VALUE_OFF, RESOLUTION_UNIT
+                }
             };
 
         // The PIN features the FDR classifier trains on. Absent, the resolution chooses (default

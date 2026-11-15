@@ -209,9 +209,23 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(FdrLevel.Precursor, Parse(OspreyCommandArgs.ARG_FDR_LEVEL, @"bogus").FdrLevel);     // warn -> default unchanged
             Assert.AreEqual(SharedPeptideMode.Razor, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES + @"razor").SharedPeptides);
             Assert.AreEqual(SharedPeptideMode.All, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES, @"bogus").SharedPeptides); // warn -> default
-            // --protein-best: off by default, and on is the only other value.
-            Assert.IsFalse(io.ProteinBest, @"the protein-best column is off by default");
-            Assert.AreEqual(OspreyArgNames.VALUE_OFF, OspreyCommandArgs.ARG_PROTEIN_BEST.DefaultValue());
+            // --protein-best: on and off are its values. Absent, the resolution chooses (on for HRAM,
+            // off at unit resolution), so it declares no single default and is off until a
+            // resolution is applied; given, it stands whatever the resolution. The classifier
+            // follows the resolution the same way when OSPREY_FDR_MODEL is unset.
+            Assert.IsFalse(io.ProteinBest, @"the protein-best column is off until a resolution is applied");
+            Assert.IsNull(OspreyCommandArgs.ARG_PROTEIN_BEST.DefaultValue);
+            string hramArg = OspreyCommandArgs.ARG_RESOLUTION + OspreyCommandArgs.RESOLUTION_HRAM;
+            string unitArg = OspreyCommandArgs.ARG_RESOLUTION + OspreyCommandArgs.RESOLUTION_UNIT;
+            Assert.IsTrue(Parse(hramArg).ProteinBest);
+            Assert.IsFalse(Parse(unitArg).ProteinBest);
+            Assert.IsFalse(Parse(OspreyCommandArgs.ARG_PROTEIN_BEST + OspreyArgNames.VALUE_OFF, hramArg).ProteinBest);
+            Assert.IsTrue(Parse(OspreyCommandArgs.ARG_PROTEIN_BEST + OspreyArgNames.VALUE_ON, unitArg).ProteinBest);
+            if (!OspreyEnvironment.FdrModel.HasValue)
+            {
+                Assert.AreEqual(FdrClassifier.Gbdt, Parse(hramArg).FdrClassifier);
+                Assert.AreEqual(FdrClassifier.LinearSvm, Parse(unitArg).FdrClassifier);
+            }
             Assert.IsFalse(Parse(OspreyCommandArgs.ARG_PROTEIN_BEST + OspreyArgNames.VALUE_OFF).ProteinBest);
             // Off must not end the parse: the arguments after it still apply.
             var offThenThreads = Parse(OspreyCommandArgs.ARG_PROTEIN_BEST + OspreyArgNames.VALUE_OFF, OspreyCommandArgs.ARG_THREADS + 8);

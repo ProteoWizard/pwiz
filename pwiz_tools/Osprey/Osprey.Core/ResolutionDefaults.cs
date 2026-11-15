@@ -39,8 +39,14 @@ namespace pwiz.Osprey.Core
         public static readonly ResolutionDefaults LEGACY = new ResolutionDefaults(
             FdrClassifier.LinearSvm, false, OspreyEnvironment.DEFAULT_XIC_FRAGMENTS, null, false, null, null, false);
 
-        /// <summary>HRAM data.</summary>
-        public static readonly ResolutionDefaults HRAM = LEGACY;
+        /// <summary>
+        /// HRAM data: the recipe that closed most of the DIA-NN gap on SEA-AD Astral (#4950): gbdt with
+        /// out-of-fold scoring and the protein-best column (which brings the two-round training), 12
+        /// fragment XICs, a 7 ppm correlation re-extraction, the correlation-chosen reference XIC, the
+        /// local RT tolerance over 15 calibration neighbors and a 0.40 min tc_* half window.
+        /// </summary>
+        public static readonly ResolutionDefaults HRAM = new ResolutionDefaults(
+            FdrClassifier.Gbdt, true, 12, 7.0, true, 15, 0.40, true);
 
         /// <summary>Unit-resolution data.</summary>
         public static readonly ResolutionDefaults UNIT_RESOLUTION = LEGACY;
