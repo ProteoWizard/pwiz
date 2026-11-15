@@ -260,8 +260,9 @@ namespace pwiz.Osprey.FDR
         /// The validity-key term for the classifier that trains and applies the first-pass
         /// model: EMPTY unless <c>OSPREY_FDR_MODEL=gbdt</c>, and under gbdt the model plus every tree
         /// setting that changes the trained model - the <see cref="GbtParams"/> this process
-        /// trains with, <see cref="OspreyEnvironment.GbtMaxIterations"/> and
-        /// <see cref="OspreyEnvironment.GbtInnerFolds"/>. FirstPassFDR, PerFileRescoring and
+        /// trains with, <see cref="OspreyEnvironment.GbtMaxIterations"/>,
+        /// <see cref="OspreyEnvironment.GbtInnerFolds"/> and
+        /// <see cref="OspreyEnvironment.GbtOutOfFold"/>. FirstPassFDR, PerFileRescoring and
         /// SecondPassFDR append it, because each writes output that model determines.
         ///
         /// <para>Empty for the linear SVM on purpose, in the shape of
@@ -285,7 +286,7 @@ namespace pwiz.Osprey.FDR
         public static string GbdtValidityKeySuffix(OspreyConfig config)
         {
             string suffix = GbdtValidityKeySuffix(config?.FdrClassifier ?? FdrClassifier.LinearSvm, BuildGbtParams(),
-                OspreyEnvironment.GbtMaxIterations, OspreyEnvironment.GbtInnerFolds);
+                OspreyEnvironment.GbtMaxIterations, OspreyEnvironment.GbtInnerFolds, OspreyEnvironment.GbtOutOfFold);
             // The two-round training (OSPREY_GBT_PREFILTER_SIZE, or its --protein-best on default size)
             // trains a different model, so it is keyed when on - and only then, so a one-round key
             // (--protein-best off, the default) is unchanged. The same terms under either classifier: the linear
@@ -320,10 +321,12 @@ namespace pwiz.Osprey.FDR
         /// model is bit-identical at any value, so keying it would invalidate a directory for a
         /// difference that cannot exist. <see cref="GbtParams.UseDeterministicMath"/> keys only
         /// when false (OSPREY_DETERMINISTIC_MATH=0), so the default term, and every gbdt
-        /// directory written under it, is unchanged.
+        /// directory written under it, is unchanged. <paramref name="outOfFold"/>
+        /// (OSPREY_GBT_OOF=1) keys the same way, only when on: it changes the first-pass scores
+        /// of the training rows, so a resume under the other setting must not adopt them.
         /// </summary>
         public static string GbdtValidityKeySuffix(FdrClassifier fdrClassifier, GbtParams gbtParams,
-            int maxIterations, int innerFolds)
+            int maxIterations, int innerFolds, bool outOfFold)
         {
             if (fdrClassifier != FdrClassifier.Gbdt)
                 return string.Empty;
@@ -331,11 +334,12 @@ namespace pwiz.Osprey.FDR
                 @";fdrmodel=gbdt;gbtobjective={0};gbttrees={1};gbtdepth={2};gbtlr={3:R}" +
                 @";gbtminchild={4:R};gbtsubsample={5:R};gbtcolsample={6:R};gbtgamma={7:R}" +
                 @";gbtlambda={8:R};gbtalpha={9:R};gbtbins={10};gbtseed={11}" +
-                @";gbtiterations={12};gbtinnerfolds={13}{14}",
+                @";gbtiterations={12};gbtinnerfolds={13}{14}{15}",
                 gbtParams.Objective, gbtParams.NTrees, gbtParams.MaxDepth, gbtParams.LearningRate,
                 gbtParams.MinChildWeight, gbtParams.Subsample, gbtParams.ColSample, gbtParams.Gamma,
                 gbtParams.RegLambda, gbtParams.RegAlpha, gbtParams.MaxBins, gbtParams.Seed,
-                maxIterations, innerFolds, gbtParams.UseDeterministicMath ? string.Empty : @";gbtmath=system");
+                maxIterations, innerFolds, gbtParams.UseDeterministicMath ? string.Empty : @";gbtmath=system",
+                outOfFold ? @";gbtoof=1" : string.Empty);
         }
 
         /// <summary>
