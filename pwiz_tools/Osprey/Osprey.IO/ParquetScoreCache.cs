@@ -2695,12 +2695,12 @@ namespace pwiz.Osprey.IO
                     return err;
 
                 int? recordedXic = RecordedXicFragments(kv);
-                if (recordedXic != OspreyEnvironment.SearchXicFragments)
+                if (recordedXic != config.Scoring.XicFragments)
                 {
                     return string.Format(
                         OspreyIOResources.ParquetScoreCache_ValidateScoresParquetGroup__0__was_scored_with__1__XIC_fragments__but_this_run_uses__2____3__,
                         path, recordedXic?.ToString(CultureInfo.InvariantCulture) ?? @"?",
-                        OspreyEnvironment.SearchXicFragments.ToString(CultureInfo.InvariantCulture), @"OSPREY_XIC_FRAGMENTS");
+                        config.Scoring.XicFragments.ToString(CultureInfo.InvariantCulture), @"OSPREY_XIC_FRAGMENTS");
                 }
 
                 // --task SecondPassFDR strict reconciled-input gate. Mirrors

@@ -447,18 +447,25 @@ namespace pwiz.Osprey
                 }
             }) { Scope = OspreyPropertyScope.search, DefaultValue = Default(() => new OspreyConfig().SharedPeptides), DescriptionArgs = () => new object[] { @"all" } };
 
-        // The protein-best training column (issue #4580), off by default. Off is the one-round first
-        // pass that preceded it, bit for bit; the developer switches that shape it stay environment
+        // The protein-best training column (issue #4580): on by default for HRAM data, off at unit
+        // resolution (ResolutionDefaults), so like --feature-set it declares no single default. Off
+        // is the one-round first pass that preceded it, bit for bit; the developer switches that shape it stay environment
         // variables (OSPREY_PROTEIN_BEST_DECOY, OSPREY_PROTEIN_BEST_SHUFFLE). A block body, so the
         // handler is an Action: an assignment of a bool would bind to the Func overload, whose false
         // (off) ends the parse and drops every argument after it.
         public static readonly OspreyArgument ARG_PROTEIN_BEST = new OspreyArgument(OspreyArgNames.PROTEIN_BEST,
             new[] { OspreyArgNames.VALUE_ON, OspreyArgNames.VALUE_OFF },
-            (c, p) => { c._config.ProteinBest = string.Equals(p.Value, OspreyArgNames.VALUE_ON, StringComparison.OrdinalIgnoreCase); })
+            (c, p) =>
+            {
+                c._config.ProteinBest = string.Equals(p.Value, OspreyArgNames.VALUE_ON, StringComparison.OrdinalIgnoreCase);
+                c._config.ProteinBestGiven = true;
+            })
             {
                 Scope = OspreyPropertyScope.search,
-                DefaultValue = Default(() => new OspreyConfig().ProteinBest ? OspreyArgNames.VALUE_ON : OspreyArgNames.VALUE_OFF),
-                DescriptionArgs = () => new object[] { OspreyArgNames.VALUE_OFF }
+                DescriptionArgs = () => new object[]
+                {
+                    OspreyArgNames.VALUE_ON, RESOLUTION_HRAM, OspreyArgNames.VALUE_OFF, RESOLUTION_UNIT
+                }
             };
 
         // The PIN features the FDR classifier trains on. Absent, the resolution chooses (default
@@ -779,12 +786,12 @@ namespace pwiz.Osprey
         /// test. Exists so a test can prove that gbdt reaches the config: #4491 was the
         /// classifier silently not reaching training.
         /// </summary>
-        internal static OspreyConfig ParseArgs(string[] args, FdrClassifier fdrModel)
+        internal static OspreyConfig ParseArgs(string[] args, FdrClassifier? fdrModel)
         {
             return ParseArgs(args, fdrModel, out _);
         }
 
-        private static OspreyConfig ParseArgs(string[] args, FdrClassifier fdrModel, out LibraryBuildSettings librarySettings)
+        private static OspreyConfig ParseArgs(string[] args, FdrClassifier? fdrModel, out LibraryBuildSettings librarySettings)
         {
             var parser = new OspreyCommandArgs();
             CreateParser().Parse(parser, args);
@@ -879,7 +886,7 @@ namespace pwiz.Osprey
             return true;
         }
 
-        private OspreyConfig ToConfig(FdrClassifier fdrModel)
+        private OspreyConfig ToConfig(FdrClassifier? fdrModel)
         {
             // Expand --input-list BEFORE normalization, so a listed path is indistinguishable
             // from one given with -i from here on. Appended in the order the lists were given,
@@ -912,10 +919,13 @@ namespace pwiz.Osprey
 
             // The classifier comes from OSPREY_FDR_MODEL, read once at process start, and is set
             // here, where --fdr-method used to set it, so the rest of the pipeline reads the
-            // config and never the environment. An unrecognized value parses to the default only
-            // so the config is well-formed; Program aborts on OspreyEnvironment.FdrModelError
-            // before the pipeline runs.
-            _config.FdrClassifier = fdrModel;
+            // config and never the environment. Unset, the resolution's default fills it in
+            // (ApplyResolutionMode). An unrecognized value parses to that default only so the
+            // config is well-formed; Program aborts on OspreyEnvironment.FdrModelError before the
+            // pipeline runs.
+            if (fdrModel.HasValue)
+                _config.FdrClassifier = fdrModel.Value;
+            _config.FdrClassifierGiven = fdrModel.HasValue;
 
             // The explicit fragment tolerance and unit first, then the resolution, whose defaults
             // fill in only what the command line left out. A detected resolution reaches the same

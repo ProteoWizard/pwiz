@@ -284,8 +284,9 @@ namespace pwiz.Osprey.Scoring
                     config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance,
                     config.RtCalibration.MinCalibrationPoints);
                 rtSigmaGlobal = Math.Max(robustSd * 5.0, 0.1);
-                context.LocalRtTolerance = OspreyEnvironment.LocalRtToleranceNeighbors.HasValue
-                    ? LocalRtTolerance.Create(rtCalibration, OspreyEnvironment.LocalRtToleranceNeighbors.Value,
+                int? localRtNeighbors = config.Scoring.LocalRtToleranceNeighbors;
+                context.LocalRtTolerance = localRtNeighbors.HasValue
+                    ? LocalRtTolerance.Create(rtCalibration, localRtNeighbors.Value,
                         rtToleranceGlobal, config.RtCalibration.MaxRtTolerance)
                     : null;
                 // At default log level: the experiment changes what is searched.
@@ -293,7 +294,7 @@ namespace pwiz.Osprey.Scoring
                 {
                     _log.LogInfo(settingsIndent + string.Format(
                         OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Local_RT_tolerance,
-                        OspreyEnvironment.LocalRtToleranceNeighbors.Value, context.LocalRtTolerance.MaxHalfWidth,
+                        localRtNeighbors.Value, context.LocalRtTolerance.MaxHalfWidth,
                         context.LocalRtTolerance.FractionWidened));
                 }
                 if (logSettings)
@@ -353,7 +354,7 @@ namespace pwiz.Osprey.Scoring
                 }
             }
 
-            context.CorrelationConfig = CorrelationConfigFor(config, OspreyEnvironment.CorrFragmentTolerancePpm);
+            context.CorrelationConfig = CorrelationConfigFor(config, config.Scoring.CorrFragmentTolerancePpm);
         }
 
         /// <summary>

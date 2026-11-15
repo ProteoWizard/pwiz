@@ -100,7 +100,9 @@ There is no dispatch on an FDR method: every run goes through the one Percolator
 The classifier is chosen by the `OSPREY_FDR_MODEL` environment variable, not a command-line
 argument, because it is a developer lever rather than a product setting. It is read once at
 process start (`OspreyEnvironment.FdrModel`) and copied onto `OspreyConfig.FdrClassifier` when the
-command line is parsed; nothing else reads it.
+command line is parsed; nothing else reads it. Unset, the resolution chooses (`ResolutionDefaults`,
+applied by `OspreyConfig.ApplyResolutionMode`): gradient-boosted trees for HRAM data, the linear SVM
+at unit resolution.
 
 "Percolator" names the framework, not a classifier, so no enum value is called Percolator.
 The framework is also not the original Percolator tool: it cross-validates during the SVM
@@ -110,8 +112,9 @@ the deleted values below are named as they were.
 
 | `OSPREY_FDR_MODEL` | Classifier |
 |---|---|
-| unset, empty, or `svm` | linear SVM (default) |
-| `gbdt` | gradient-boosted trees (**Experimental**) |
+| unset or empty | the resolution's default: `gbdt` for HRAM, `svm` at unit resolution |
+| `svm` | linear SVM |
+| `gbdt` | gradient-boosted trees |
 | anything else | the run **fails at startup** |
 
 Values are case-insensitive and trimmed, like the other `OSPREY_*` selectors; `svm` is
@@ -885,7 +888,7 @@ All defaults are from `Osprey.Core/OspreyConfig.cs` and `Osprey/OspreyCommandArg
 | `--fdrbench-per-run` | off (`OspreyCommandArgs.cs:181`) | One row per (precursor, run) with run-level q-values; default is one row per precursor with experiment q-values. |
 | `--fdrbench-pass {1\|2\|both}` | `2` (`OspreyCommandArgs.cs:183`) | Which pass to emit: 2 = post-compaction second-pass survivors; 1 = full pre-compaction first-pass pool; both = both with `.pass1`/`.pass2` suffixes. |
 | `OSPREY_EXPERIMENT_AGG` | `max` | **Experimental.** Experiment-wide aggregation: `max` (default, byte-identical golden) or `mean-best-<N>` with N in [2, 64]. Out-of-range / malformed values fall back to `max` with a warning; N above the run count is refused. First pass only. See [Experiment-wide aggregation](#experiment-wide-aggregation-osprey_experiment_agg). |
-| `--protein-best {on\|off}` | `off` | The protein-best training column (#4580). On, round 2 of the two-round first-pass training and every score pass after it read a `PROTEIN_BEST` column: from round 1's scores in that run, the best of the other peptides on the candidate's protein (a paired decoy reads its target's value), floored at the run's decoy median. It needs the two-round training, so with `OSPREY_GBT_PREFILTER_SIZE` unset it trains two rounds at 200000 rows (an explicit size overrides; `0` is refused). Either classifier. FirstPassFDR writes each run's column to `<stem>.1st-pass.protein_best.bin`, and the second pass (both modes) scores a rescored row with its entry's first-pass value, or the run's floor for an entry with no first-pass row - its siblings' evidence is a pass-1 quantity, which moving its own peak does not change. Logged in run.log, recorded as `osprey.protein_best` in the library's LibMetadata when on, and part of the FirstPassFDR, PerFileRescoring and SecondPassFDR validity keys when on. `off`, the default, is the one-round first pass that preceded it, bit for bit. Developer switches: `OSPREY_PROTEIN_BEST_DECOY` (`paired`, `own`) and `OSPREY_PROTEIN_BEST_SHUFFLE` (`0`, `1`, the permuted-accession negative control); the `OSPREY_PROTEIN_BEST` variable it replaced is refused as unknown. |
+| `--protein-best {on\|off}` | `on` for HRAM data, `off` at unit resolution | The protein-best training column (#4580). On, round 2 of the two-round first-pass training and every score pass after it read a `PROTEIN_BEST` column: from round 1's scores in that run, the best of the other peptides on the candidate's protein (a paired decoy reads its target's value), floored at the run's decoy median. It needs the two-round training, so with `OSPREY_GBT_PREFILTER_SIZE` unset it trains two rounds at 200000 rows (an explicit size overrides; `0` is refused). Either classifier. FirstPassFDR writes each run's column to `<stem>.1st-pass.protein_best.bin`, and the second pass (both modes) scores a rescored row with its entry's first-pass value, or the run's floor for an entry with no first-pass row - its siblings' evidence is a pass-1 quantity, which moving its own peak does not change. Logged in run.log, recorded as `osprey.protein_best` in the library's LibMetadata when on, and part of the FirstPassFDR, PerFileRescoring and SecondPassFDR validity keys when on. `off`, the unit-resolution default, is the one-round first pass that preceded it, bit for bit. Developer switches: `OSPREY_PROTEIN_BEST_DECOY` (`paired`, `own`) and `OSPREY_PROTEIN_BEST_SHUFFLE` (`0`, `1`, the permuted-accession negative control); the `OSPREY_PROTEIN_BEST` variable it replaced is refused as unknown. |
 | `OSPREY_MEANBEST2_FLOOR_MEAN` | off (median) | **Experimental.** Missing-run floor = decoy MEAN instead of the default decoy MEDIAN. Read only under `mean-best-<N>`; the `MEANBEST2` name is historical and it applies at every N. |
 | `OSPREY_MEANBEST2_FLOOR_PCT` | unset (median) | **Experimental.** Missing-run floor = this percentile (0-100) of the decoy scores; a low value is a harder reproducibility cut. Refused outside [0, 100], and refused together with `OSPREY_MEANBEST2_FLOOR_MEAN`. |
 | `--model-diagnostics` | off | Also collects per-feature target/decoy histograms + feature-contribution report (`CollectFeatureHistograms`, `PercolatorEngine.cs:310`); forces the resident first-pass pool. Byte-neutral when off. |

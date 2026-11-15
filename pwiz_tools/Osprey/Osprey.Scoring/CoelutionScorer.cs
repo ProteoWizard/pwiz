@@ -218,7 +218,7 @@ namespace pwiz.Osprey.Scoring
                 for (int blockStart = 0; blockStart < candidates.Count; blockStart = blockEnd)
                 {
                     blockEnd = scanMajorXics
-                        ? prefilter.NextXicBlockEnd(blockStart, XIC_BLOCK_SIZE, XIC_BLOCK_BYTES)
+                        ? prefilter.NextXicBlockEnd(blockStart, XIC_BLOCK_SIZE, XIC_BLOCK_BYTES, config.Scoring.XicFragments)
                         : candidates.Count;
                     List<XicData>[] blockCorrXics = null;
                     var blockXics = scanMajorXics

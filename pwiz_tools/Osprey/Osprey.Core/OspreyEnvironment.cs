@@ -546,7 +546,7 @@ namespace pwiz.Osprey.Core
                 string.Join(@", ", off));
         }
 
-        /// <summary>The <see cref="FdrModel"/> spelling of the default linear SVM. Accepted so a
+        /// <summary>The <see cref="FdrModel"/> spelling of the linear SVM, the unit-resolution default. Accepted so a
         /// sweep script can name both arms explicitly rather than unsetting the variable for
         /// one of them, as <see cref="EXPERIMENT_AGG_MAX"/> and
         /// <see cref="PASS2_QVALUE_PROTEIN_COMPACT"/> spell their defaults.</summary>
@@ -556,22 +556,20 @@ namespace pwiz.Osprey.Core
         public const string FDR_MODEL_GBDT = @"gbdt";
 
         private static readonly EnvVar ENV_FDR_MODEL = new EnvVar(@"OSPREY_FDR_MODEL", EnvVarGroup.behavior,
-            @"The first-pass classifier: the linear SVM, or gradient-boosted trees (experimental, C# " +
-            @"only).")
-            { Values = new[] { @"svm", @"gbdt" }, DefaultValue = @"svm" };
+            @"The first-pass classifier: the linear SVM, or gradient-boosted trees (C# only).")
+            { Values = new[] { @"svm", @"gbdt" }, DefaultValue = @"gbdt for HRAM data, svm at unit resolution" };
 
         /// <summary>
-        /// OSPREY_FDR_MODEL: the classifier first-pass Percolator trains. Unset, empty or
-        /// <see cref="FDR_MODEL_SVM"/> selects the linear SVM (the default);
+        /// OSPREY_FDR_MODEL: the classifier first-pass Percolator trains, in place of the
+        /// resolution's default (gbdt for HRAM data, the SVM at unit resolution).
+        /// <see cref="FDR_MODEL_SVM"/> selects the linear SVM;
         /// <see cref="FDR_MODEL_GBDT"/> selects gradient-boosted trees. Case-insensitive and
         /// trimmed, like the other OSPREY_* selectors. An unrecognized value is a startup ERROR
         /// (<see cref="FdrModelError"/>), never a fallback: a run that asked for trees and
         /// silently trained the SVM is the #4491 failure over again.
         ///
-        /// <para>GBDT is EXPERIMENTAL and is not expected to improve results with the current
-        /// features, which were chosen for the linear SVM. It exists so that features which do
-        /// not work well with a linear SVM - some were removed for that reason - can be
-        /// evaluated when they are added. It has to keep working.</para>
+        /// <para>GBDT is the HRAM default since the #4950 features, some of which a linear SVM
+        /// cannot use well: with them it found more precursors on SEA-AD Astral than the SVM.</para>
         ///
         /// <para>An environment variable rather than a command-line argument because it is a
         /// developer lever, not a product setting: it replaced <c>--fdr-method</c>, which was
@@ -581,9 +579,12 @@ namespace pwiz.Osprey.Core
         /// trees and every <c>OSPREY_GBT_*</c> setting key the FirstPassFDR, PerFileRescoring
         /// and SecondPassFDR validity keys (<c>PercolatorEngine.GbdtValidityKeySuffix</c>); the
         /// SVM adds nothing to them.</para>
+        ///
+        /// <para>Null when unset (or unrecognized, which Program refuses): the resolution's
+        /// <see cref="ResolutionDefaults"/> then choose the classifier.</para>
         /// </summary>
-        public static FdrClassifier FdrModel { get; internal set; } =
-            ParseFdrModel(ENV_FDR_MODEL.Value) ?? FdrClassifier.LinearSvm;
+        public static FdrClassifier? FdrModel { get; internal set; } =
+            string.IsNullOrWhiteSpace(ENV_FDR_MODEL.Value) ? null : ParseFdrModel(ENV_FDR_MODEL.Value);
 
         /// <summary>The startup error for an unrecognized OSPREY_FDR_MODEL, or null when the
         /// value is usable. Program startup ABORTS on it, like
@@ -594,8 +595,9 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// The classifier an OSPREY_FDR_MODEL value selects, or null when the value is not
-        /// recognized. Unset, empty and whitespace select the linear SVM, as they select the
-        /// default for every other OSPREY_* selector. Public so the parse can be tested; the
+        /// recognized. Unset, empty and whitespace parse as the linear SVM, but
+        /// <see cref="FdrModel"/> never parses them: unset leaves the classifier to the
+        /// resolution's defaults. Public so the parse can be tested; the
         /// environment itself is read once, into <see cref="FdrModel"/>.
         /// </summary>
         public static FdrClassifier? ParseFdrModel(string raw)
@@ -621,8 +623,8 @@ namespace pwiz.Osprey.Core
                 return null;
             return string.Format(
                 @"OSPREY_FDR_MODEL='{0}' is not a recognized classifier. Recognized: '{1}' (the " +
-                @"linear SVM, also the default when the variable is unset) and '{2}' " +
-                @"(gradient-boosted trees, experimental). Unset it for the default.",
+                @"linear SVM, the default at unit resolution) and '{2}' (gradient-boosted trees, " +
+                @"the default for HRAM data). Unset it for the resolution's default.",
                 raw, FDR_MODEL_SVM, FDR_MODEL_GBDT);
         }
 
@@ -637,7 +639,7 @@ namespace pwiz.Osprey.Core
             if (fdrClassifier != FdrClassifier.Gbdt)
                 return null;
             return string.Format(
-                @"FDR model: {0} (EXPERIMENTAL, OSPREY_FDR_MODEL) - gradient-boosted trees " +
+                @"FDR model: {0} - gradient-boosted trees " +
                 @"replace the linear SVM in first-pass Percolator", FDR_MODEL_GBDT);
         }
 
@@ -773,33 +775,48 @@ namespace pwiz.Osprey.Core
             @"Experiment, gbdt first pass only: 1 scores each training row with only the fold model that held " +
             @"it out, instead of the mean of every fold model, two of which trained on it. Changes the validity " +
             @"key. A resumed first pass retrains rather than adopt the saved model. " +
-            @"Second-pass rescoring still scores training rows with the fold mean.");
+            @"Second-pass rescoring still scores training rows with the fold mean. On by default for HRAM data; " +
+            @"0 turns it off.")
+            { Values = new[] { @"0", @"1" } };
 
         private static readonly EnvVar ENV_XIC_FRAGMENTS = new EnvVar(@"OSPREY_XIC_FRAGMENTS", EnvVarGroup.behavior,
             @"Experiment: how many of a candidate's most intense library fragments get XICs (CWT " +
             @"peak detection, coelution, peak-shape and median-polish features). Calibration and " +
             @"the 2-of-top-6 prefilter keep 6. A whole number from 2 to 20.")
-            { ValueExample = @"<2-20>", DefaultValue = @"6" };
+            { ValueExample = @"<2-20>", DefaultValue = @"12 for HRAM data, 6 at unit resolution" };
 
         /// <summary>
-        /// OSPREY_XIC_FRAGMENTS (experiment): how many of a
-        /// candidate's most intense library fragments the search extracts XICs for - the input of the
-        /// CWT peak detection and of the coelution, peak-shape and median-polish features. Null when
-        /// unset (the top 6, <c>TopFragmentExtractor.CAL_TOP_N_FRAGMENTS</c>). Calibration and the
-        /// 2-of-top-6 prefilter keep 6 either way. A value that is not a whole number from 2 to 20
-        /// throws, so an arm can never run under the default while named for another count.
+        /// OSPREY_XIC_FRAGMENTS (<see cref="ScoringSettings.XicFragments"/>): null when unset, for the
+        /// resolution's default. A value that is not a whole number from 2 to 20 throws, so an arm can
+        /// never run under the default while named for another count.
         /// </summary>
         public static readonly int? XicFragments = ParseXicFragments(
             ENV_XIC_FRAGMENTS.Value);
 
-        /// <summary>The XIC count when OSPREY_XIC_FRAGMENTS is unset - the only count before it existed.</summary>
+        /// <summary>The XIC count before it defaulted by resolution, and still the unit-resolution one.</summary>
         public const int DEFAULT_XIC_FRAGMENTS = 6;
 
         private const int MIN_XIC_FRAGMENTS = 2;
         private const int MAX_XIC_FRAGMENTS = 20;
 
-        /// <summary>The XIC count in effect: <see cref="XicFragments"/>, else <see cref="DEFAULT_XIC_FRAGMENTS"/>.</summary>
-        public static int SearchXicFragments => XicFragments ?? DEFAULT_XIC_FRAGMENTS;
+        /// <summary>
+        /// <paramref name="defaults"/> with each setting a developer variable sets replaced by the
+        /// variable's value: OSPREY_XIC_FRAGMENTS, OSPREY_CORR_FRAGMENT_TOLERANCE and
+        /// OSPREY_LOCAL_RT_TOLERANCE (off turns either off), OSPREY_REF_XIC, OSPREY_TC_HALF_WINDOW
+        /// and OSPREY_GBT_OOF. <see cref="OspreyConfig"/> calls it whenever it takes a resolution's
+        /// defaults, so a set variable overrides the default as a command-line option does, and
+        /// the search reads the result from <see cref="OspreyConfig.Scoring"/>.
+        /// </summary>
+        public static ScoringSettings OverrideScoringSettings(ScoringSettings defaults)
+        {
+            return new ScoringSettings(
+                XicFragments ?? defaults.XicFragments,
+                IsOffValue(ENV_CORR_FRAGMENT_TOLERANCE.Value) ? null : CorrFragmentToleranceSetting ?? defaults.CorrFragmentTolerancePpm,
+                RefXicByCorrelationSetting ?? defaults.RefXicByCorrelation,
+                IsOffValue(ENV_LOCAL_RT_TOLERANCE.Value) ? null : LocalRtToleranceSetting ?? defaults.LocalRtToleranceNeighbors,
+                TcHalfWindowSetting ?? defaults.TcHalfWindowMinutes,
+                GbtOutOfFoldSetting ?? defaults.GbtOutOfFold);
+        }
 
         private static readonly EnvVar ENV_FEATURE_MASK = new EnvVar(@"OSPREY_FEATURE_MASK", EnvVarGroup.behavior,
             @"Research switch: the PIN features hidden from the FDR classifier, as comma-separated " +
@@ -914,7 +931,7 @@ namespace pwiz.Osprey.Core
         private static readonly EnvVar ENV_TC_HALF_WINDOW = new EnvVar(@"OSPREY_TC_HALF_WINDOW", EnvVarGroup.behavior,
             @"Experiment: half-width in minutes of the window the tc_* time-correlation features " +
             @"correlate over, in place of 0.15. Keyed into every task.")
-            { ValueExample = @"<minutes>", DefaultValue = @"0.15" };
+            { ValueExample = @"<minutes>", DefaultValue = @"0.40 for HRAM data, 0.15 at unit resolution", AcceptsValue = IsPositiveNumber };
 
         private static readonly EnvVar ENV_MIN_FRAGMENT_TOLERANCE = new EnvVar(@"OSPREY_MIN_FRAGMENT_TOLERANCE", EnvVarGroup.behavior,
             @"Experiment: a floor in ppm on the calibrated fragment tolerance the main search extracts " +
@@ -923,24 +940,17 @@ namespace pwiz.Osprey.Core
 
         private static readonly EnvVar ENV_LOCAL_RT_TOLERANCE = new EnvVar(@"OSPREY_LOCAL_RT_TOLERANCE", EnvVarGroup.behavior,
             @"Experiment: widen the RT search window at each library RT from the residual spread of this " +
-            @"many nearest calibration points. Keyed into every task.")
-            { ValueExample = @"<N>", AcceptsValue = IsPositiveInt };
+            @"many nearest calibration points. Keyed into every task. 15 by default for HRAM data; off turns it off.")
+            { ValueExample = @"<N>|off", AcceptsValue = value => IsPositiveInt(value) || IsOffValue(value) };
 
-        /// <summary>
-        /// OSPREY_LOCAL_RT_TOLERANCE (experiment): widen the RT search window where the calibration fits
-        /// the run worst, from the robust spread of the residuals of this many calibration points nearest
-        /// in library RT (3 * 1.4826 * median |residual|, clamped between the global half-width and the
-        /// maximum RT tolerance). Aimed at a library whose predicted RTs saturate at the gradient end,
-        /// where many precursors share a library RT but elute minutes apart. Keyed into every task through
-        /// <see cref="PickValidityKeySuffix()"/>. Null when unset or not a positive integer.
-        /// </summary>
-        public static readonly int? LocalRtToleranceNeighbors = int.TryParse(ENV_LOCAL_RT_TOLERANCE.Value,
+        /// <summary>OSPREY_LOCAL_RT_TOLERANCE (<see cref="ScoringSettings.LocalRtToleranceNeighbors"/>): null when unset, off or not a positive integer.</summary>
+        private static readonly int? LocalRtToleranceSetting = int.TryParse(ENV_LOCAL_RT_TOLERANCE.Value,
             NumberStyles.None, CultureInfo.InvariantCulture, out int localRtNeighbors) && localRtNeighbors > 0 ? localRtNeighbors : null;
 
         /// <summary>
         /// OSPREY_MIN_FRAGMENT_TOLERANCE (experiment): a floor in ppm on the calibrated fragment tolerance
         /// the main search extracts XICs with (|mean| + 3 SD of confident matches, which is too tight for
-        /// weak fragment ions). Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
+        /// weak fragment ions). Keyed into every task through <see cref="PickValidityKeySuffix(ScoringSettings)"/>.
         /// Null when unset.
         /// </summary>
         public static readonly double? MinFragmentTolerancePpm = double.TryParse(ENV_MIN_FRAGMENT_TOLERANCE.Value,
@@ -948,42 +958,41 @@ namespace pwiz.Osprey.Core
 
         private static readonly EnvVar ENV_CORR_FRAGMENT_TOLERANCE = new EnvVar(@"OSPREY_CORR_FRAGMENT_TOLERANCE", EnvVarGroup.behavior,
             @"Experiment: a tolerance in ppm (at least the calibrated one) the correlation-shape features " +
-            @"re-extract their fragment XICs with. Keyed into every task.")
-            { ValueExample = @"<ppm>" };
+            @"re-extract their fragment XICs with. Keyed into every task. 7 by default for HRAM data; off turns it off.")
+            { ValueExample = @"<ppm>|off", AcceptsValue = value => IsOffValue(value) || IsNonNegativeNumber(value) };
 
-        /// <summary>
-        /// OSPREY_CORR_FRAGMENT_TOLERANCE (experiment): a tolerance in ppm the correlation-shape features
-        /// re-extract their fragment XICs with, as max(calibrated, setting), over the same scans. Peak
-        /// detection, the apex, the intensity-pattern and the mass-error features stay on the XICs at the
-        /// calibrated tolerance. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
-        /// Null when unset.
-        /// </summary>
-        public static readonly double? CorrFragmentTolerancePpm = double.TryParse(ENV_CORR_FRAGMENT_TOLERANCE.Value,
+        /// <summary>OSPREY_CORR_FRAGMENT_TOLERANCE (<see cref="ScoringSettings.CorrFragmentTolerancePpm"/>): null when unset or off.</summary>
+        private static readonly double? CorrFragmentToleranceSetting = double.TryParse(ENV_CORR_FRAGMENT_TOLERANCE.Value,
             NumberStyles.Float, CultureInfo.InvariantCulture, out double corrFragTol) ? corrFragTol : null;
 
         private static readonly EnvVar ENV_REF_XIC = new EnvVar(@"OSPREY_REF_XIC", EnvVarGroup.behavior,
             @"Experiment: corr chooses the reference fragment XIC (apex scan, area, SNR, sharpness, MS1 " +
-            @"reference) by agreement with the other fragments inside the chosen peak. Keyed into every task.")
-            { Values = new[] { @"corr" } };
+            @"reference) by agreement with the other fragments inside the chosen peak. Keyed into every task. " +
+            @"corr by default for HRAM data; intensity keeps the most intense fragment.")
+            { Values = new[] { @"corr", REF_XIC_INTENSITY } };
+
+        private const string REF_XIC_INTENSITY = @"intensity";
+
+        /// <summary>OSPREY_REF_XIC (<see cref="ScoringSettings.RefXicByCorrelation"/>): true for corr, false for intensity, null when unset.</summary>
+        private static readonly bool? RefXicByCorrelationSetting = ParseRefXic(ENV_REF_XIC.Value);
+
+        private static bool? ParseRefXic(string value)
+        {
+            if (string.Equals(value, @"corr", StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (string.Equals(value, REF_XIC_INTENSITY, StringComparison.OrdinalIgnoreCase))
+                return false;
+            return null;
+        }
 
         /// <summary>
-        /// OSPREY_REF_XIC (experiment): <c>corr</c> re-chooses the reference fragment XIC inside the chosen
-        /// peak as the fragment with the largest sum of correlations to the other fragments there, in place
-        /// of the fragment with the largest total intensity over the whole extraction window. The reference
-        /// sets the apex scan (and so every apex-spectrum feature), the recomputed bounds area and SNR, the
-        /// MS1 correlation reference, and the apex/area of the CWT candidates; the peak_apex,
-        /// peak_area and peak_sharpness features keep their own most-intense-fragment reference. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
-        /// False when unset.
+        /// The tc_* half window when <see cref="ScoringSettings.TcHalfWindowMinutes"/> is null. A setting of exactly this
+        /// value computes the legacy features, so it adds no validity-key term and adopts legacy outputs.
         /// </summary>
-        public static readonly bool RefXicByCorrelation = string.Equals(
-            ENV_REF_XIC.Value, @"corr", StringComparison.OrdinalIgnoreCase);
+        public const double LEGACY_TC_HALF_WINDOW_MINUTES = 0.15;
 
-        /// <summary>
-        /// OSPREY_TC_HALF_WINDOW (experiment): half-width in minutes of the window the tc_* time-correlation
-        /// features correlate over, in place of 0.15. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
-        /// Null when unset.
-        /// </summary>
-        public static readonly double? TcHalfWindowMinutes = double.TryParse(ENV_TC_HALF_WINDOW.Value,
+        /// <summary>OSPREY_TC_HALF_WINDOW (<see cref="ScoringSettings.TcHalfWindowMinutes"/>): null when unset.</summary>
+        private static readonly double? TcHalfWindowSetting = double.TryParse(ENV_TC_HALF_WINDOW.Value,
             NumberStyles.Float, CultureInfo.InvariantCulture, out double halfWindow) ? halfWindow : null;
 
         private static readonly EnvVar ENV_RECONCILIATION = new EnvVar(@"OSPREY_RECONCILIATION", EnvVarGroup.behavior,
@@ -1125,17 +1134,8 @@ namespace pwiz.Osprey.Core
                 @"OSPREY_XIC_FRAGMENTS", MIN_XIC_FRAGMENTS, MAX_XIC_FRAGMENTS, value));
         }
 
-        /// <summary>
-        /// OSPREY_GBT_OOF=1 (experiment): on the streaming score pass, scores each tree-model training row with
-        /// only the fold model that held it out, as the cross-validated direct path does, instead of the average
-        /// of every fold model (two of which trained on it). Keyed under gbdt (the <c>;gbtoof=1</c> term of
-        /// PercolatorEngine.GbdtValidityKeySuffix), so a resume under the other setting recomputes rather
-        /// than adopt the first-pass outputs and everything downstream of them. The held-out folds are
-        /// not persisted with the first-pass model, so a resumed first pass retrains rather than adopt the
-        /// saved model. Known limitation: the second-pass rescoring and transfer
-        /// (FrozenModelScorer, PerFileRescoreTask) still score training rows with the fold mean.
-        /// </summary>
-        public static readonly bool GbtOutOfFold = ParseIntOrNull(ENV_GBT_OOF) == 1;
+        /// <summary>OSPREY_GBT_OOF (<see cref="ScoringSettings.GbtOutOfFold"/>): true for 1, false for 0, null when unset.</summary>
+        private static readonly bool? GbtOutOfFoldSetting = ParseIntOrNull(ENV_GBT_OOF) is { } outOfFold ? outOfFold == 1 : null;
 
         private static readonly EnvVar ENV_GBT_PREFILTER_SIZE = new EnvVar(@"OSPREY_GBT_PREFILTER_SIZE", EnvVarGroup.behavior,
             @"Experiment, first pass, either classifier (the GBT_ prefix is historical): two-round training. Round 1 trains on the usual random " +
@@ -1833,18 +1833,21 @@ namespace pwiz.Osprey.Core
         /// static and cannot be flipped at run time - a test would otherwise be able to assert
         /// only whichever arm the test process happens to be running under.
         /// </summary>
-        public static string PickValidityKeySuffix()
+        public static string PickValidityKeySuffix(ScoringSettings scoring)
         {
+            var tcHalfWindow = scoring.TcHalfWindowMinutes;
+            var corrTolerance = scoring.CorrFragmentTolerancePpm;
+            var localRt = scoring.LocalRtToleranceNeighbors;
             return PickValidityKeySuffix(PickLda, PickLdaModelPath)
-                   + (TcHalfWindowMinutes.HasValue ? @";tcwin=" + TcHalfWindowMinutes.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
+                   + (tcHalfWindow.HasValue && tcHalfWindow.Value != LEGACY_TC_HALF_WINDOW_MINUTES ? @";tcwin=" + tcHalfWindow.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
                    + (MinFragmentTolerancePpm.HasValue ? @";ftolmin=" + MinFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
-                   + (CorrFragmentTolerancePpm.HasValue ? @";fcorr=" + CorrFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
-                   + (RefXicByCorrelation ? @";refxic=corr" : string.Empty)
-                   + (LocalRtToleranceNeighbors.HasValue ? @";rtlocal=" + LocalRtToleranceNeighbors.Value.ToString(CultureInfo.InvariantCulture) : string.Empty);
+                   + (corrTolerance.HasValue ? @";fcorr=" + corrTolerance.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
+                   + (scoring.RefXicByCorrelation ? @";refxic=corr" : string.Empty)
+                   + (localRt.HasValue ? @";rtlocal=" + localRt.Value.ToString(CultureInfo.InvariantCulture) : string.Empty);
         }
 
         /// <summary>
-        /// <see cref="PickValidityKeySuffix()"/> for an explicitly supplied arm. The model PATH
+        /// <see cref="PickValidityKeySuffix(ScoringSettings)"/> for an explicitly supplied arm. The model PATH
         /// participates as well as the on/off flag: <see cref="PickLdaModelPath"/> overrides the
         /// resolution-keyed default outright, so two runs can differ in nothing else.
         /// </summary>
@@ -1857,7 +1860,7 @@ namespace pwiz.Osprey.Core
         /// <summary>
         /// The cache-invalidation suffix for any task whose output depends on the 2nd-pass
         /// q-value mode. UNCONDITIONAL for the same reason as
-        /// <see cref="PickValidityKeySuffix()"/>: the default moved from the removed
+        /// <see cref="PickValidityKeySuffix(ScoringSettings)"/>: the default moved from the removed
         /// <c>percolator</c> retrain to <see cref="PASS2_QVALUE_PROTEIN_COMPACT"/>, so an empty
         /// suffix would let a run adopt the other mode's cached q-values.
         ///
@@ -1967,7 +1970,7 @@ namespace pwiz.Osprey.Core
         /// like a change that had no effect, the most expensive possible failure for an A/B.
         ///
         /// The levers are keyed differently ON PURPOSE, and the difference is the same one
-        /// <see cref="PickValidityKeySuffix()"/> draws. <see cref="TrainPickRun"/> is a FLIPPED
+        /// <see cref="PickValidityKeySuffix(ScoringSettings)"/> draws. <see cref="TrainPickRun"/> is a FLIPPED
         /// DEFAULT, so it is emitted for every arm including the new default: "emits nothing"
         /// already describes every directory written before the flip, and an empty new default
         /// would make a post-flip key EQUAL a pre-flip one, letting a resume or a
@@ -2128,6 +2131,22 @@ namespace pwiz.Osprey.Core
         }
 
         // The accepted values of a size with no zero arm (OSPREY_BLOCK_READ_MB).
+        private static bool IsNonNegativeNumber(string value)
+        {
+            return double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double number) && number >= 0;
+        }
+
+        private static bool IsPositiveNumber(string value)
+        {
+            return double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double number) && number > 0;
+        }
+
+        // off, which turns off a developer setting whose resolution default is on
+        private static bool IsOffValue(string value)
+        {
+            return string.Equals(value?.Trim(), @"off", StringComparison.OrdinalIgnoreCase);
+        }
+
         private static bool IsPositiveInt(string value)
         {
             return int.TryParse(value, out int result) && result > 0;

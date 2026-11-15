@@ -1942,7 +1942,7 @@ namespace pwiz.Osprey.Test
             int blockEnd;
             for (int blockStart = 0; blockStart < candidates.Count; blockStart = blockEnd)
             {
-                blockEnd = prefilter.NextXicBlockEnd(blockStart, maxCandidates, maxBytes);
+                blockEnd = prefilter.NextXicBlockEnd(blockStart, maxCandidates, maxBytes, config.Scoring.XicFragments);
                 Assert.IsTrue(blockEnd > blockStart && blockEnd - blockStart <= maxCandidates);
                 nBlocks++;
                 var blockXics = PeakDataExtractor.ExtractXicsScanMajor(candidates, blockStart, blockEnd, prefilter,

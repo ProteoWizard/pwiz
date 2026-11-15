@@ -27,7 +27,6 @@ using System.Globalization;
 using pwiz.Common.Pipeline;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
-using pwiz.Osprey.Scoring;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -229,10 +228,10 @@ namespace pwiz.Osprey.Tasks
             @"search={0};library={1}{2}{3}{4};xic={5}",
             ctx.Config.Identity.SearchParameterHash(),
             ctx.Config.Identity.LibraryIdentityHash(),
-            OspreyEnvironment.PickValidityKeySuffix(),
+            OspreyEnvironment.PickValidityKeySuffix(ctx.Config.Scoring),
             ReaderTerm(ctx.Config.LibrarySource?.Format),
             DemuxCache.ValidityKeySuffix(ctx.Config),
-            TopFragmentExtractor.SearchTopNFragments.ToString(CultureInfo.InvariantCulture));
+            ctx.Config.Scoring.XicFragments.ToString(CultureInfo.InvariantCulture));
 
         /// <summary>The reader-version term of the validity key for a library of <paramref name="format"/>.</summary>
         private static string ReaderTerm(LibraryFormat? format)

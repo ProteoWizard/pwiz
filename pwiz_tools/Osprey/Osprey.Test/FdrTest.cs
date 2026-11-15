@@ -1881,7 +1881,7 @@ namespace pwiz.Osprey.Test
         {
             var built = PercolatorEngine.BuildProjectionPercolatorConfig(
                 new OspreyConfig { FdrClassifier = FdrClassifier.Gbdt }, featureInfos, null);
-            Assert.AreEqual(OspreyEnvironment.GbtOutOfFold, built.ReportTrainEntryFolds);
+            Assert.AreEqual(new OspreyConfig().Scoring.GbtOutOfFold, built.ReportTrainEntryFolds);
             oofConfig.ReportTrainEntryFolds = true;
             Assert.IsTrue(oofConfig.CloneForTrainOnly().ReportTrainEntryFolds);
 
