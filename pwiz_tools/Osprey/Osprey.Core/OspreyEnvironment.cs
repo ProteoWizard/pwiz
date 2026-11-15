@@ -639,7 +639,7 @@ namespace pwiz.Osprey.Core
             if (fdrClassifier != FdrClassifier.Gbdt)
                 return null;
             return string.Format(
-                @"FDR model: {0} (EXPERIMENTAL, OSPREY_FDR_MODEL) - gradient-boosted trees " +
+                @"FDR model: {0} - gradient-boosted trees " +
                 @"replace the linear SVM in first-pass Percolator", FDR_MODEL_GBDT);
         }
 
