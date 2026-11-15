@@ -214,7 +214,8 @@ namespace pwiz.Skyline.Model.Databinding
             ref IProgressStatus status)
         {
             RowItemEnumerator rowItemEnumerator = null;
-            if (layout == null || layout.RowTransforms.Count == 0)
+            // Sorts, filters, pivots and clustering are only applied by BindingListSource
+            if (layout == null || (layout.RowTransforms.Count == 0 && layout.ClusterSpec == null))
             {
                 rowItemEnumerator = viewInfo.GetStreamingRowItemEnumerator(cancellationToken, rowSource);
             }

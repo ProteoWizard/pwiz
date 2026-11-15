@@ -1740,8 +1740,8 @@ namespace pwiz.Skyline.ToolsUI
             var viewInfo = new ViewInfo(dataSchema, rowSourceType, viewSpec);
 
             // Mirror RowFactories.ExportReport: use streaming when there are no
-            // row transforms; otherwise materialize through BindingListSource so
-            // sorts, pivots, and filters get applied uniformly with the file path.
+            // row transforms and no clustering; otherwise materialize through BindingListSource so
+            // sorts, pivots, filters and clustering get applied uniformly with the file path.
             // The BindingListSource is held open across the entire materialization
             // so its ItemProperties and RowItems are guaranteed to be valid for
             // the duration of BuildReportRowsResult.
@@ -1749,7 +1749,7 @@ namespace pwiz.Skyline.ToolsUI
             BindingListSource bindingListSource = null;
             try
             {
-                if (layout == null || layout.RowTransforms.Count == 0)
+                if (layout == null || (layout.RowTransforms.Count == 0 && layout.ClusterSpec == null))
                 {
                     enumerator = viewInfo.GetStreamingRowItemEnumerator(CancellationToken.None, rowSource);
                 }
