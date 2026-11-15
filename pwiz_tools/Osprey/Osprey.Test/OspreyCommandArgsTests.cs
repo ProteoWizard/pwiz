@@ -221,11 +221,11 @@ namespace pwiz.Osprey.Test
             Assert.IsFalse(Parse(unitArg).ProteinBest);
             Assert.IsFalse(Parse(OspreyCommandArgs.ARG_PROTEIN_BEST + OspreyArgNames.VALUE_OFF, hramArg).ProteinBest);
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_PROTEIN_BEST + OspreyArgNames.VALUE_ON, unitArg).ProteinBest);
-            if (!OspreyEnvironment.FdrModel.HasValue)
-            {
-                Assert.AreEqual(FdrClassifier.Gbdt, Parse(hramArg).FdrClassifier);
-                Assert.AreEqual(FdrClassifier.LinearSvm, Parse(unitArg).FdrClassifier);
-            }
+            Assert.AreEqual(FdrClassifier.Gbdt, OspreyCommandArgs.ParseArgs(ArgTokens.Split(hramArg), null).FdrClassifier);
+            Assert.AreEqual(FdrClassifier.LinearSvm, OspreyCommandArgs.ParseArgs(ArgTokens.Split(unitArg), null).FdrClassifier);
+            Assert.AreEqual(FdrClassifier.LinearSvm,
+                OspreyCommandArgs.ParseArgs(ArgTokens.Split(hramArg), FdrClassifier.LinearSvm).FdrClassifier,
+                @"OSPREY_FDR_MODEL=svm stands at HRAM");
             Assert.IsFalse(Parse(OspreyCommandArgs.ARG_PROTEIN_BEST + OspreyArgNames.VALUE_OFF).ProteinBest);
             // Off must not end the parse: the arguments after it still apply.
             var offThenThreads = Parse(OspreyCommandArgs.ARG_PROTEIN_BEST + OspreyArgNames.VALUE_OFF, OspreyCommandArgs.ARG_THREADS + 8);

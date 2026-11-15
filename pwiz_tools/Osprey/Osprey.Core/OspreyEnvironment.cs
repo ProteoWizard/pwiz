@@ -585,7 +585,7 @@ namespace pwiz.Osprey.Core
         /// <see cref="ResolutionDefaults"/> then choose the classifier.</para>
         /// </summary>
         public static FdrClassifier? FdrModel { get; internal set; } =
-            ParseFdrModel(ENV_FDR_MODEL.Value);
+            string.IsNullOrWhiteSpace(ENV_FDR_MODEL.Value) ? null : ParseFdrModel(ENV_FDR_MODEL.Value);
 
         /// <summary>The startup error for an unrecognized OSPREY_FDR_MODEL, or null when the
         /// value is usable. Program startup ABORTS on it, like
