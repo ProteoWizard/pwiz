@@ -59,6 +59,13 @@ namespace pwiz.Osprey.Scoring
         public IReadOnlyDictionary<uint, (double Apex, double Start, double End)> BoundaryOverrides { get; set; }
 
         /// <summary>
+        /// Chooses the boundary overrides of the Stage 6 targets that are not in
+        /// <see cref="BoundaryOverrides"/> because their new peak is picked from the spectra of the
+        /// window scoring them. Null outside the Stage 6 rescore.
+        /// </summary>
+        public IWindowBoundaryResolver BoundaryResolver { get; set; }
+
+        /// <summary>
         /// True when a peak scored at <see cref="BoundaryOverrides"/> bounds is compared, for the
         /// runner-up features, with the candidates first-pass detection finds over the normal
         /// search window. That takes a second CWT detection per peak, so the rescoring task sets
@@ -126,6 +133,20 @@ namespace pwiz.Osprey.Scoring
             Config = config;
             FileName = fileName;
             Resolution = ResolutionStrategy.Create(config.ResolutionMode);
+        }
+
+        /// <summary>
+        /// A copy of this context that scores with <paramref name="boundaryOverrides"/> and no
+        /// <see cref="BoundaryResolver"/>, sharing everything else: one isolation window's view
+        /// once its targets' boundaries are resolved.
+        /// </summary>
+        public ScoringContext WithBoundaryOverrides(
+            IReadOnlyDictionary<uint, (double Apex, double Start, double End)> boundaryOverrides)
+        {
+            var copy = (ScoringContext)MemberwiseClone();
+            copy.BoundaryOverrides = boundaryOverrides;
+            copy.BoundaryResolver = null;
+            return copy;
         }
 
         public XcorrScratchPool EnsureXcorrScratchPool(int nBins)
