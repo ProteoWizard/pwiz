@@ -142,10 +142,6 @@ namespace pwiz.Skyline.Model
                 var maxLoadThreads = GetMaxLoadThreadCount();
                 loadingThreads = Math.Min(maxLoadThreads, loadingThreads.Value);
                 loadingThreads = GetBalancedThreadCount(loadingThreads.Value, fileCount);
-                if (simultaneousFileOptions == ImportResultsSimultaneousFileOptions.many)
-                {
-                    loadingThreads = Settings.Default.MaxSimultaneousFileImports ?? loadingThreads;
-                }
             }
 
             return loadingThreads.Value;

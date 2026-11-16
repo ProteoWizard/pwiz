@@ -71,9 +71,6 @@
          PlatformNotSupportedException elsewhere, so a Linux consumer of CommonUtil must
          not call those two methods. -->
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
-    <!-- CommonUtilSettings (ApplicationSettingsBase). Part of the .NET Framework on net472 and
-         of the WindowsDesktop framework on net10.0-windows, but plain net10.0 needs the package. -->
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
     <!-- net8 replacements via NuGet. Versions pinned to track the legacy
          bundled DLLs so behavior doesn't drift. -->
     <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />

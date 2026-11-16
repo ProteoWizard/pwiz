@@ -25,10 +25,8 @@ using System.Linq;
 using System.Windows.Forms;
 using Grpc.Core;
 using pwiz.Common.Controls;
-using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -44,7 +42,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using Resources = pwiz.Skyline.Properties.Resources;
 using Server = pwiz.Skyline.Util.Server;
 
 namespace pwiz.Skyline.ToolsUI
@@ -87,9 +84,6 @@ namespace pwiz.Skyline.ToolsUI
                 listBoxLanguages.Items.Add(new DisplayLanguageItem(culture.Name, culture.DisplayName));
             }
             comboCompactFormatOption.Items.AddRange(CompactFormatOption.ALL_VALUES.ToArray());
-
-            MaxThreadCount = CommonUtilSettings.Default.MaxThreadCount;
-            MaxSimultaneousFileImports = Settings.Default.MaxSimultaneousFileImports;
 
             var iModels = KoinaIntensityModel.Models.ToList();
             iModels.Insert(0, string.Empty);
@@ -356,9 +350,6 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 Settings.Default.CurrentColorScheme = (string) comboColorScheme.SelectedItem;
 
-                CommonUtilSettings.Default.MaxThreadCount = MaxThreadCount;
-                Settings.Default.MaxSimultaneousFileImports = MaxSimultaneousFileImports;
-
                 bool koinaSettingsValidBefore = KoinaHelpers.KoinaSettingsValid;
                 Settings.Default.KoinaIntensityModel = (string) intensityModelCombo.SelectedItem;
                 Settings.Default.KoinaRetentionTimeModel = (string) iRTModelCombo.SelectedItem;
@@ -369,66 +360,8 @@ namespace pwiz.Skyline.ToolsUI
             base.OnFormClosed(e);
         }
 
-        /// <summary>
-        /// Smallest and largest values accepted for the optional thread and file count settings
-        /// </summary>
-        public const int MIN_COUNT = 1;
-        public const int MAX_COUNT = 1024;
-
-        /// <summary>
-        /// The "Max threads" text box, null when it is blank
-        /// </summary>
-        public int? MaxThreadCount
-        {
-            get { return OptionalCountFromTextBox(tbxMaxThreadCount); }
-            set { tbxMaxThreadCount.Text = OptionalCountToTextBox(value); }
-        }
-
-        /// <summary>
-        /// The "Max simultaneous file imports" text box, null when it is blank
-        /// </summary>
-        public int? MaxSimultaneousFileImports
-        {
-            get { return OptionalCountFromTextBox(tbxMaxSimultaneousFileImports); }
-            set { tbxMaxSimultaneousFileImports.Text = OptionalCountToTextBox(value); }
-        }
-
-        private static int? OptionalCountFromTextBox(TextBox textBox)
-        {
-            return int.TryParse(textBox.Text, out int count) ? (int?) count : null;
-        }
-
-        private static string OptionalCountToTextBox(int? count)
-        {
-            return count?.ToString(CultureInfo.CurrentCulture) ?? string.Empty;
-        }
-
-        private void btnOK_Click(object sender, EventArgs e)
-        {
-            // btnOK closes the dialog through its DialogResult, so undo that when something is invalid
-            if (!ValidateOptionalCounts())
-                DialogResult = DialogResult.None;
-        }
-
-        private bool ValidateOptionalCounts()
-        {
-            var helper = new MessageBoxHelper(this);
-            // Both counts are optional, so only a text box with something in it has to be a valid number
-            return ValidateOptionalCount(helper, tbxMaxThreadCount) &&
-                   ValidateOptionalCount(helper, tbxMaxSimultaneousFileImports);
-        }
-
-        private static bool ValidateOptionalCount(MessageBoxHelper helper, TextBox textBox)
-        {
-            if (string.IsNullOrWhiteSpace(textBox.Text))
-                return true;
-            return helper.ValidateNumberTextBox(textBox, MIN_COUNT, MAX_COUNT, out _);
-        }
-
         public void OkDialog()
         {
-            if (!ValidateOptionalCounts())
-                return;
             DialogResult = DialogResult.OK;
         }
 
