@@ -383,7 +383,8 @@ namespace pwiz.Skyline.Model.Lib
 
         // Version 6 adds peak annotations
         // Version 7 adds ion mobility
-        private const int FORMAT_VERSION_CACHE = 7; 
+        // Version 8 reads MS-DIAL and FragHub retention times as minutes, and PRECURSORTYPE as the adduct
+        private const int FORMAT_VERSION_CACHE = 8;
 
         private static readonly Regex REGEX_BASENAME = new Regex(@"NIST_(.*)_v(\d+\.\d+)_(\d\d\d\d\-\d\d-\d\d)", RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
@@ -713,9 +714,9 @@ namespace pwiz.Skyline.Model.Lib
 
                     float tfRatio = PrimitiveArrays.ReadOneValue<float>(stream);
                     bool hasRt = PrimitiveArrays.ReadOneValue<bool>(stream);
-                    double? rt = hasRt ? PrimitiveArrays.ReadOneValue<double>(stream) : (double?)null;
+                    double? rt = hasRt ? PrimitiveArrays.ReadOneValue<double>(stream) : null;
                     bool hasIrt = PrimitiveArrays.ReadOneValue<bool>(stream);
-                    double? irt = hasIrt ? PrimitiveArrays.ReadOneValue<double>(stream) : (double?)null;
+                    double? irt = hasIrt ? PrimitiveArrays.ReadOneValue<double>(stream) : null;
                     float totalIntensity = PrimitiveArrays.ReadOneValue<float>(stream);
                     int copies = ReadSize(stream);
                     int numPeaks = ReadSize(stream);
@@ -783,10 +784,12 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_TF_RATIO = new Regex(@" Tfratio=([^ ]+) ", NOCASE);
         private static readonly Regex REGEX_RT = new Regex(@" RetentionTime=([^ ,]+)", NOCASE); // In a comment
         private static readonly Regex REGEX_RTINSECONDS = new Regex(@" RTINSECONDS=([^ ,]+)", NOCASE); // In a comment
-        private static readonly Regex REGEX_RT_LINE = new Regex(@"^RetentionTime(Mins)*:\s*([^ ]+)", NOCASE); // On its own line
+        private static readonly Regex REGEX_RT_LINE = new Regex(@"^RetentionTime(Mins|Secs)?:\s*([^ ]+)", NOCASE); // On its own line
+        private static readonly Regex REGEX_RT_MINUTES_LINE = new Regex(@"^RT:\s*([^ ]+)", NOCASE); // On its own line, as in FragHub
+        private static readonly Regex REGEX_MSDIAL = new Regex(@"^(?:PrecursorType|InstrumentType|Ontology):", NOCASE); // MS-DIAL spellings, where NIST uses "Precursor_type" etc
         private static readonly Regex REGEX_IRT = new Regex(@" iRT=([^ ,]+)", NOCASE);
         private static readonly Regex REGEX_RI = new Regex(@"^Retention_index:\s*([^ ]+)", NOCASE); // Retention Index for GC
-        private static readonly Regex REGEX_RI_LINE = new Regex(@"^(?:Synon:.* )?RI:\s*([^ ]+)", NOCASE); // Retention Index for GC
+        private static readonly Regex REGEX_RI_LINE = SynonPrefixedOrBare(@"RI:", @"\s*([^ ]+)"); // Retention Index for GC
         private static readonly Regex REGEX_SAMPLE = new Regex(@" Nreps=\d+/(\d+)", NOCASE);  // Observer spectrum count
         private static readonly char[] MODS_MAJOR_SEP = { '/' }; 
         private static readonly char[] MODS_ALTERNATE_MAJOR_SEP = { ')','(' };
@@ -794,15 +797,15 @@ namespace pwiz.Skyline.Model.Lib
         // Small molecule items
         private static readonly Regex REGEX_NAME_SMALLMOL = new Regex(@"^Name:\s*(.*)", NOCASE); // small molecule names can be anything
         private static readonly string SYNON = "Synon:";
-        private static readonly Regex REGEX_INCHIKEY = new Regex(@"^(?:Synon:.* )?InChIKey:\s*(.*)", NOCASE);
-        private static readonly Regex REGEX_INCHI = new Regex(@"^(?:Synon:.* )?InChI:\s*(?:InChI\=)?(.*)", NOCASE);
+        private static readonly Regex REGEX_INCHIKEY = SynonPrefixedOrBare(@"InChIKey:", @"\s*(.*)");
+        private static readonly Regex REGEX_INCHI = SynonPrefixedOrBare(@"InChI:", @"\s*(?:InChI\=)?(.*)");
         private static readonly Regex REGEX_INCHI_COMMENT = new Regex(@"(InChI=InChI=|InChI=)([^ ""]*)", NOCASE);
         private static readonly Regex REGEX_FORMULA = new Regex(@"^(Formula|Form):\s*(.*)", NOCASE);
-        private static readonly Regex REGEX_CAS = new Regex(@"^(?:Synon:.* )?CAS(?:#?|No|Nbr):\s*(\d+-\d+-\d)", NOCASE); // CONSIDER(bspratt): capture NIST# as well?
-        private static readonly Regex REGEX_KEGG = new Regex(@"^(?:Synon:.* )?KEGG:\s*(.*)", NOCASE);
-        private static readonly Regex REGEX_SMILES = new Regex(@"^(?:Synon:.* )?SMILES:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_CAS = SynonPrefixedOrBare(@"CAS(?:#?|No|Nbr):", @"\s*(\d+-\d+-\d)"); // CONSIDER(bspratt): capture NIST# as well?
+        private static readonly Regex REGEX_KEGG = SynonPrefixedOrBare(@"KEGG:", @"\s*(.*)");
+        private static readonly Regex REGEX_SMILES = SynonPrefixedOrBare(@"SMILES:", @"\s*(.*)");
         private static readonly Regex REGEX_SMILES_COMMENT = new Regex(@"SMILES\=([^ ""]*)", NOCASE);
-        private static readonly Regex REGEX_ADDUCT = new Regex(@"^Precursor_type:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_ADDUCT = new Regex(@"^Precursor_?type:\s*(.*)", NOCASE); // NIST "Precursor_type", MS-DIAL "PRECURSORTYPE"
         private static readonly Regex REGEX_ADDUCT_COMMENT = new Regex(@"Adduct=([^ ,""]+)", NOCASE);
         // N.B this was formerly "^PrecursorMz: ([^ ]+)" - no comma - I don't understand how double.Parse worked with existing
         // test inputs like "PrecursorMZ: 124.0757, 109.1" but somehow adding NOCASE suddenly made it necessary
@@ -812,6 +815,27 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_MOLWEIGHT_COMMENT = new Regex(@"ExactMass=([^ ,""]+)", NOCASE);
         private static readonly Regex REGEX_EXACTMASS = new Regex(@"^ExactMass[:=]\s*(.*)", NOCASE);
         private static readonly Regex REGEX_IONMODE = new Regex(@"^IonMode:\s*(.*)", NOCASE);
+
+        /// <summary>
+        /// Builds a regex matching <paramref name="token"/> followed by <paramref name="rest"/>, either
+        /// at the start of a line or after a "Synon: ..." prefix, as GC libraries write their accessions
+        /// ("Synon: METB InChIKey: ..." as well as a bare "InChIKey: ...").
+        ///
+        /// Spelled as an explicit alternation rather than the more natural optional prefix
+        /// "^(?:Synon:.* )?" because .NET 10.0.3 does not backtrack into an optional group that follows
+        /// "^" and contains ".*": every prefixed accession line silently stopped matching, so small
+        /// molecule entries lost their CAS, KEGG, InChI, InChIKey, SMILES and retention index, and
+        /// entries that differed only by accession collapsed together. The runtime bug is fixed by
+        /// 10.0.8, but Skyline bundles whichever runtime the build machine has, so the pattern itself
+        /// has to be one that every version gets right. Both spellings were verified equivalent on a
+        /// correct runtime before the switch. Covered by LibraryLoadTest.GMDLoadLibrary and
+        /// InvalidPeptidesInLibraryTest.
+        /// </summary>
+        private static Regex SynonPrefixedOrBare(string token, string rest)
+        {
+            return new Regex(@"^(?:Synon:.* " + token + @"|" + token + @")" + rest, NOCASE);
+        }
+
         private const double DEFAULT_MZ_MATCH_TOLERANCE = 0.01; // Most .MSP formats we see present precursor m/z values that match at about this tolerance
         private const string MZVAULT_POSITIVE_SCAN_INDICATOR = @"Positive scan";
         private const string MZVAULT_NEGATIVE_SCAN_INDICATOR = @"Negative scan";
@@ -842,6 +866,7 @@ namespace pwiz.Skyline.Model.Lib
                 lineCount = 0;
                 string line;
                 long nMasslessEntries = 0;
+                bool warnedRtSeconds = false, warnedRtMinutes = false;
                 while ((line = reader.ReadLine()) != null)
                 {
                     lineCount++;
@@ -881,6 +906,9 @@ namespace pwiz.Skyline.Model.Lib
                     int numPeaksDeclared = 0;
                     float? tfRatio = null;
                     double? rt = null, irt = null;
+                    var rtAssumedSeconds = false; // Set when a bare "RetentionTime:" was read, whose units depend on the writer
+                    long rtLine = 0;
+                    var isMsDial = false;
                     int? copies = null;
                     double? precursorMz = null;
                     double? molWeight = null;
@@ -901,11 +929,18 @@ namespace pwiz.Skyline.Model.Lib
                         // "SYNON" is a clue that this isn't actually peptide data
                         isPeptide &= !line.StartsWith(SYNON, StringComparison.InvariantCultureIgnoreCase);
 
+                        // Note MS-DIAL style without consuming the line, which may also carry the adduct
+                        isMsDial = isMsDial || REGEX_MSDIAL.IsMatch(line);
+
                         //
                         // Note the following parsing steps are ordered in descending likelihood of matching, for efficiency
                         //
-                        if (ParseRT(line, isMzVault, ref rt, ref isGC))
+                        if (ParseRT(line, isMzVault, ref rt, ref rtAssumedSeconds, ref isGC))
                         {
+                            if (rtAssumedSeconds && rtLine == 0)
+                            {
+                                rtLine = lineCount;
+                            }
                             continue; // Line is fully consumed
                         }
 
@@ -943,6 +978,26 @@ namespace pwiz.Skyline.Model.Lib
                             break; // Start of next section - no peaks declared for this one, apparently, but not necessarily an error
 
                     } // End parser loop
+
+                    // MS-DIAL writes "RETENTIONTIME:" in minutes, where other writers use seconds.
+                    // The MS-DIAL cues may follow the RT line, so the units are only known now.
+                    // Not every writer that uses the MS-DIAL field names uses minutes, so say once per file what was assumed.
+                    if (rtAssumedSeconds && rt.HasValue)
+                    {
+                        if (isMsDial)
+                        {
+                            rt *= 60;
+                        }
+                        if (isMsDial ? !warnedRtMinutes : !warnedRtSeconds)
+                        {
+                            Messages.WriteAsyncUserMessage(isMsDial
+                                    ? LibResources.NistLibraryBase_CreateCache_Retention_times_in__0__do_not_state_their_units__read_as_minutes
+                                    : LibResources.NistLibraryBase_CreateCache_Retention_times_in__0__do_not_state_their_units__read_as_seconds,
+                                FilePath, rtLine, sequence);
+                            warnedRtMinutes |= isMsDial;
+                            warnedRtSeconds |= !isMsDial;
+                        }
+                    }
 
                     var accessionNumbers = MoleculeAccessionNumbers.Create(accessions);
 
@@ -1616,15 +1671,24 @@ namespace pwiz.Skyline.Model.Lib
         /// Parse line for RT information
         /// </summary>
         /// <returns>true if line was shown to be RT info, and parser can advance to next line</returns>
-        private static bool ParseRT(string line, bool isMzVault, ref double? rt, ref bool isGC)
+        private static bool ParseRT(string line, bool isMzVault, ref double? rt, ref bool rtAssumedSeconds, ref bool isGC)
         {
             if (!rt.HasValue)
             {
                 var match = REGEX_RT_LINE.Match(line); // RT may also be found in comments (originally only in comments)
                 if (match.Success)
                 {
-                    rt = GetRetentionTime(match.Groups[2].Value,
-                        isMzVault || !string.IsNullOrEmpty(match.Groups[1].Value)); // RetentionTime: vs RetentionTimeMins:
+                    var units = match.Groups[1].Value; // RetentionTime: vs RetentionTimeMins: vs RetentionTimeSecs:
+                    var isMinutes = isMzVault || units.Length > 0 && !units.Equals(@"Secs", StringComparison.OrdinalIgnoreCase);
+                    rt = GetRetentionTime(match.Groups[2].Value, isMinutes);
+                    rtAssumedSeconds = !isMzVault && units.Length == 0 && rt.HasValue; // Unparsed, as in "RETENTIONTIME: NOT FOUND", leaves room for another RT source
+                    return true;  // Line is fully consumed
+                }
+
+                match = REGEX_RT_MINUTES_LINE.Match(line);
+                if (match.Success)
+                {
+                    rt = GetRetentionTime(match.Groups[1].Value, true); // May be "RT: NOT FOUND", which leaves rt null
                     return true;  // Line is fully consumed
                 }
 

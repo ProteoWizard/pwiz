@@ -446,11 +446,12 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
             foreach (var summaryGraphPane in GraphPanes)
                 summaryGraphPane.OnClose(e);
+            base.OnFormClosed(e);
         }
 
         private void GraphSummary_Resize(object sender, EventArgs e)

@@ -174,7 +174,8 @@ namespace pwiz.Common.SystemUtil
                         OutputLinesGenerated++;
                     }
 
-                    string lineLower = line.ToLowerInvariant();
+                    // A command run with --timestamp puts its stamp before the Error: or Warning: prefix
+                    string lineLower = CommandStatusWriter.StripTimeStamp(line).ToLowerInvariant();
                     if (progress == null || lineLower.StartsWith(@"error") || lineLower.StartsWith(@"warning"))
                     {
                         sbError.AppendLine(line);
@@ -406,7 +407,7 @@ namespace pwiz.Common.SystemUtil
                         exeName = Path.GetFileNameWithoutExtension(psi.FileName);
                         if (!string.IsNullOrEmpty(exeName))
                         {
-                            tmpDirForCleanup = Path.Combine(tmpDirForCleanup, exeName + "_" + Path.GetRandomFileName());
+                            tmpDirForCleanup = Path.Combine(tmpDirForCleanup, exeName + @"_" + Path.GetRandomFileName());
                         }
                     }
 

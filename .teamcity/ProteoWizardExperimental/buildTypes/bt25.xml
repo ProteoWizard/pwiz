@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="d8ba9747-ad5e-4a2e-af1a-cab0ce3e5c4b" paused="true" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Push to Sourceforge</name>
+  <description>Pushes build artifacts to Sourceforge</description>
+  <settings>
+    <options>
+      <option name="artifactRules" value="build/*.tar.bz2" />
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutDirectory" value="pwiz-push" />
+      <option name="checkoutMode" value="ON_AGENT" />
+    </options>
+    <build-runners>
+      <runner id="RUNNER_simpleRunner_151" name="" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="/bin/bash" />
+          <param name="command.parameters" value="scripts/misc/tcsourceforge.sh" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="proteowizard" />
+    </vcs-settings>
+    <requirements>
+      <contains id="RQ_219" name="teamcity.agent.jvm.os.name" value="Linux" />
+      <equals id="RQ_220" name="teamcity.agent.jvm.os.arch" value="amd64" />
+    </requirements>
+    <build-triggers>
+      <build-trigger id="vcsTrigger" type="vcsTrigger">
+        <parameters>
+          <param name="enableQueueOptimization" value="true" />
+          <param name="quietPeriod" value="-1" />
+          <param name="quietPeriodMode" value="USE_CUSTOM" />
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <artifact-dependencies>
+      <dependency id="ARTIFACT_DEPENDENCY_260" sourceBuildTypeId="bt22" cleanDestination="true">
+        <revisionRule name="lastSuccessful" revision="latest.lastSuccessful" />
+        <artifact sourcePath="pwiz-bin-*-release-?_*_*.tar.bz2=&gt;build" />
+      </dependency>
+      <dependency id="ARTIFACT_DEPENDENCY_263" sourceBuildTypeId="bt19" cleanDestination="true">
+        <revisionRule name="lastSuccessful" revision="latest.lastSuccessful" />
+        <artifact sourcePath="pwiz-bin-*-release-?_*_*.tar.bz2=&gt;build" />
+      </dependency>
+    </artifact-dependencies>
+  </settings>
+</build-type>
+

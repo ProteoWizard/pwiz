@@ -28,6 +28,12 @@ namespace pwiz.Skyline.Model
         [Category("MatchInfo")] public double? Score { get; set; }
         [Category("MatchInfo")] public string ScoreType { get; set; }
         [Category("MatchInfo")] public int? SpectrumCount { get; set; }
+        [Category("MatchInfo")] public double? PrecursorQValue { get; set; }
+        [Category("MatchInfo")] public double? PrecursorPep { get; set; }
+        [Category("MatchInfo")] public double? PeptideQValue { get; set; }
+        [Category("MatchInfo")] public double? PeptidePep { get; set; }
+        [Category("MatchInfo")] public double? ProteinQValue { get; set; }
+        [Category("MatchInfo")] public double? ProteinPep { get; set; }
         [Category("SpectrumInfo")] public string PeakCount { get; set; }
         [Category("SpectrumInfo")] public string MirrorPeakCount { get; set; }
         [Category("SpectrumInfo")] public string TotalIC { get; set; }

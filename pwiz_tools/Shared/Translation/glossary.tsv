@@ -1,0 +1,146 @@
+en	ja	zh-Hans	status	evidence	conflicts	note
+precursor	プリカーサー	母离子	reviewed	ja resx 425/430 tut 209/216; zh resx 428/430 tut 209/216
+precursor candidate	プリカーサー候補	母离子候选	new	Osprey only (91 uses); built from precursor + candidate (候補 resx 5/5, 候选 resx 5/5)		A candidate peak for a precursor, not a candidate precursor. zh follows 候选峰 word order.
+precursor candidate peak	プリカーサー候補ピーク	母离子候选峰	new	Osprey only; Skyline "Candidate Peaks" -> 候補ピーク / 候选峰 (resx 5/5)
+peptide	ペプチド	肽段	reviewed	ja resx 782/788; zh 肽段 resx 782/788		zh bare 肽 appears only inside compounds.
+protein	タンパク質	蛋白质	reviewed	ja resx 333/334; zh resx 333/334
+protein group	タンパク質グループ	蛋白质组	reviewed	ja resx 12/12; zh resx 12/12
+protein parsimony	タンパク質パーシモニー	蛋白质简约	reviewed	ja resx 1/1; zh resx 1/1 ("Protein parsimony options")
+fragment	フラグメント	碎片	reviewed	ja フラグメント resx 43/67 tut 28/30; zh 碎片 tut 21/29, "Fragment ions" -> 碎片离子	ja 断片 resx 24/67 (older UI); zh 片段 resx 44/67 (UI labels "&Fragment")	Osprey means fragment ions/peaks, where both corpora prefer フラグメント / 碎片; 片段 is the zh UI-label choice.
+fragment ion	フラグメントイオン	碎片离子	reviewed	ja "Fragment ions" -> フラグメントイオン; zh resx 19/67 tut 20/29	ja 断片イオン also reviewed
+transition	トランジション	离子对	reviewed	ja resx 418/423; zh resx 403/423		Not used by Osprey today; recorded because Osprey will join Skyline.
+peak	ピーク	峰	reviewed	ja resx 472/473; zh resx 473/473
+peak area	ピーク面積	峰面积	reviewed	ja resx 52/63; zh resx 63/63
+peak boundaries	ピーク境界	峰边界	reviewed	ja resx 31/31; zh resx 23/31
+apex	頂点	顶点	reviewed	ja resx 21/21; zh resx 12/21	zh 峰顶 resx 4/21
+retention time	保持時間	保留时间	reviewed	ja resx 234/236; zh resx 236/236		Abbreviation RT stays RT.
+spectral library	スペクトルライブラリ	谱图库	reviewed	ja resx 107/108; zh resx 107/108
+library	ライブラリ	库	reviewed	ja resx 524/524; zh resx 524/524
+spectrum	スペクトル	谱图	reviewed	ja resx 140/144; zh resx 141/143
+spectra cache	スペクトルキャッシュ	谱图缓存	new	built from spectrum + cache		The .spectra.bin file.
+decoy	デコイ	诱饵	reviewed	ja resx 80/80; zh resx 80/80
+target	ターゲット	目标	reviewed	ja resx 148/162; zh resx 153/162
+target-decoy competition	ターゲット-デコイ競合	目标-诱饵竞争	new	built from target + decoy
+q-value	Q値	q 值	reviewed	ja 'q-value' -> Q値 (resx majority); zh resx 5/12 q 值	ja resx also has lowercase q値 (1/12); zh also Q 值	Keep the letter q; do not translate it.
+FDR	FDR	FDR	reviewed	ja resx 14/14; zh resx 14/14		Never expanded in running text.
+false discovery rate	偽発見率	错误发现率	reviewed	ja tut 5/9; zh resx 5/5 tut 9/9	ja resx leaves "false discovery rate" in English (0/5)
+PEP	PEP	PEP	new	acronym kept like FDR		Posterior error probability.
+calibration	校正	校准	reviewed	ja resx 31/42 tut 55/58; zh resx 37/42	ja 較正 1/42; zh 校正 3/42
+calibrator	キャリブレーター	校准物	new	Osprey only (the calibration-set peptides)		Low confidence; reviewer decision.
+chromatogram	クロマトグラム	色谱图	reviewed	ja resx 179/180; zh resx 167/180
+run (MS acquisition)	ラン	运行	reviewed	ja tutorials "DIAラン", "LC-MRM-MSラン", "PRMラン"; zh resx 70/75 tut 97/128	ja resx UI uses 実行 66/76 for both senses	Osprey distinguishes an acquisition (ラン) from an Osprey invocation (実行).
+run (Osprey invocation)	実行	本次运行 / 运行	reviewed	ja resx 実行; zh 运行	same zh word as acquisition run	"this run" = this Osprey invocation.
+per-run	ランごと	每次运行	new	built from run
+cross-run	ラン間	跨运行	new	built from run
+replicate	繰り返し測定	重复测定	reviewed	ja resx 'Replicate' -> 繰り返し測定; zh resx 259/262
+file	ファイル	文件	reviewed	ja resx 713/727; zh resx 710/723
+input file	入力ファイル	输入文件	reviewed	ja resx 14/14; zh resx 14/14
+output file	出力ファイル	输出文件	reviewed	ja resx 3/3; zh tut 7/7
+intermediate file	中間ファイル	中间文件	new	Osprey only (82 uses)		User-facing name for Osprey's per-stage files (never "sidecar").
+temporary file	一時ファイル	临时文件	reviewed	ja resx 5/5; zh resx 5/5
+cache	キャッシュ	缓存	reviewed	ja resx 20/20; zh resx 20/20
+folder	フォルダ	文件夹	reviewed	ja resx 80/80; zh resx 78/78
+directory	ディレクトリ	目录	reviewed	ja resx 46/46; zh resx 46/46
+path	パス	路径	reviewed	ja resx 101/109; zh resx 103/108
+isolation window	単離ウィンドウ	分离窗口	reviewed	ja resx 'Isolation window' -> 単離ウィンドウ (all examples); zh resx 30/34 tut 13/13	zh 隔离窗口 4/34
+window	ウィンドウ	窗口	reviewed	ja resx 158/170; zh resx 163/170
+mass error	質量誤差	质量误差	reviewed	ja resx 28/28; zh resx 28/28
+mass accuracy	質量精度	质量准确度	reviewed	ja resx 4/4; zh resx 2/4	zh 质量精度 1/4
+charge	電荷	电荷	reviewed	ja resx 101/132; zh resx 124/132	ja 荷電 28/132
+charge state	電荷状態	电荷态	reviewed	ja resx 7/31 tut 7/8; zh resx 13/31	ja 荷電状態 also reviewed; zh 电荷状态 14/31, 价态
+isotope	同位体	同位素	reviewed	ja resx 89/89; zh resx 89/89
+isotope distribution	同位体分布	同位素分布	reviewed	ja resx 8/8; zh tut 18/18
+dot product	内積	点积	reviewed	ja resx 15/23; zh resx 23/23	ja ドット積 8/23
+co-elution	共溶出	共洗脱	reviewed	ja resx 9/9; zh resx 9/9
+intensity	強度	强度	reviewed	ja resx 64/66; zh resx 64/66
+neutral loss	ニュートラルロス	中性丢失	reviewed	ja resx 16/16; zh resx 12/16
+ion	イオン	离子	reviewed	ja resx 484/490; zh resx 490/490
+ion series	イオンシリーズ	离子系列	new	built from ion
+score (noun)	スコア	得分	reviewed	ja resx 132/133; zh 得分 resx 117/132	zh 分数 4/132, 评分 6/132
+score (verb) / scoring	スコアリング / スコア付け	评分	reviewed	zh "re-score the 10 best peaks" -> 重新评分 (tutorial); ja スコアリング resx 8/59	zh UI also uses 得分 for "Scoring"	Noun and verb differ in zh.
+scores file	スコアファイル	得分文件	new	built from score + file		Osprey's .scores.parquet.
+model	モデル	模型	reviewed	ja resx 123/124; zh resx 121/124
+feature (model input)	フィーチャー	特征	reviewed	ja resx 37/66 ("Feature scores" -> フィーチャースコア); zh resx 47/66	ja 機能 appears for software "Features" (a different sense)
+training	トレーニング	训练	reviewed	ja resx 11/14; zh resx 14/14
+iteration	反復	迭代	reviewed	ja resx 4/4; zh resx 4/4
+cross-validation	交差検証	交叉验证	new	standard ML terms; absent from Skyline
+fold (cross-validation)	フォールド	折	new	standard ML usage ("5-fold" -> 5分割 / 5 折)	Skyline "Fold Change" (倍率変化 / 倍数变化) is a different sense	ja may prefer 分割; reviewer decision.
+learning rate	学習率	学习率	new	standard ML term
+regularization	正則化	正则化	new	standard ML term
+coefficient	係数	系数	reviewed	ja resx 27/27; zh resx 27/27
+linear model	線形モデル	线性模型	reviewed	ja resx 1/1; zh resx 1/1
+cosine	コサイン	余弦	new	standard math term
+correlation	相関	相关	reviewed	ja resx 16/16; zh 相关 resx 9/16 tut 11/12	zh 关联 in UI labels
+residual	残差	残差	reviewed	ja tut 2/6; zh tut 5/6	ja 残余 / zh 残留 in UI labels	Statistical sense uses 残差 in both.
+median	中央値	中位数	reviewed	ja resx 29/29; zh resx 27/29
+mean	平均	平均值	reviewed	ja resx 37/37; zh 平均 resx 37/37, 平均值 16/37		zh 平均值 for the noun "mean", 平均 as modifier.
+standard deviation	標準偏差	标准偏差	reviewed	ja resx 15/15; zh resx 13/15
+regression	回帰	回归	reviewed	ja resx 102/102; zh resx 102/102
+threshold	閾値	阈值	reviewed	ja resx 37/38; zh resx 36/38
+tolerance	許容誤差	耐受性	reviewed	ja resx 19/25 tut 11/11; zh resx 24/24 tut 8/11	ja 許容範囲 6/25; zh 容差 / 公差 appear in tutorials	zh reviewers chose 耐受性 throughout Skyline's UI; kept for consistency - flag for the zh reviewer.
+imputation	補完	划定	reviewed	ja resx 4/4; zh resx 4/4	literal zh would be 插补	zh reviewer's deliberate choice (ai/docs/translation-guide.md).
+consensus	コンセンサス	共识	new	absent from Skyline
+normalization	正規化	归一化	reviewed	ja resx 28/28; zh resx 25/28
+experiment	実験	实验	reviewed	ja resx 15/15; zh resx 14/15
+experiment-level	実験レベル	实验水平	new	built from experiment
+search	検索	搜索	reviewed	ja resx 77/78; zh resx 78/79
+search settings	検索設定	搜索设置	new	built from search + settings
+settings	設定	设置	reviewed	ja resx 225/232; zh resx 229/232
+task	タスク	任务	reviewed	ja resx 2/2; zh resx 2/2		Task NAMES (PerFileScoring, FirstPassFDR ...) are never translated.
+report	レポート	报告	reviewed	ja resx 107/113; zh resx 111/112
+diagnostics	診断	诊断	new	absent from Skyline
+model diagnostics	モデル診断	模型诊断	new	built from model + diagnostics
+reconciliation (cross-run)	整合	协调	new	Osprey only (49 uses); docs/10-cross-run-reconciliation.md		Aligning each peptide's integration boundaries across runs so it is quantified at the same chromatographic position everywhere ("cross-run reconciliation" = ラン間整合 / 跨运行协调). Low confidence; reviewer decision.
+peak co-assignment	ピークの重複割り当て	峰重复分配	new	Osprey only (diagnostics panel)	a literal rendering would be ピーク共割り当て / 峰共分配	One detected peak claimed by more than one precursor; rendered as "duplicate assignment" for clarity. Low confidence; reviewer decision.
+entrapment	エントラップメント	诱捕	new	Osprey only; FDR-validation jargon		Low confidence; many zh papers keep "entrapment" in English.
+first pass	第1パス	第一轮	new	Osprey only		Osprey's two-pass FDR design.
+second pass	第2パス	第二轮	new	Osprey only
+accession	アクセッション	编号	reviewed	ja resx 17/18; zh 'Accession' -> 编号 (all examples)	zh 登录号 in tutorials only
+modification	修飾	修饰	reviewed	ja resx 139/140; zh resx 135/140
+sequence	シークエンス	序列	reviewed	ja resx 146/159; zh resx 157/159	ja 配列 8/159 (protein sequence prose)
+residue	残基	残基	reviewed	ja resx 13/13; zh resx 10/13
+amino acid	アミノ酸	氨基酸	reviewed	ja resx 58/58; zh resx 56/58
+match	一致	匹配	reviewed	ja resx 73/89; zh resx 87/89
+candidate	候補	候选	reviewed	ja resx 5/5; zh resx 5/5
+centroid	セントロイド	质心	reviewed	ja resx 2/2; zh tut 1/1	zh UI uses 棒状图 for "centroided"
+peak picking	ピーク選択	峰拣选	reviewed	ja 'Advanced Peak Picking Models' -> ピーク選択; zh 峰值拣选 / 峰拣选	ja ピークピッキング 1/14	Vendor peak picking in msconvert: ベンダーピークピッキング is also acceptable.
+vendor	ベンダー	供应商	reviewed	ja resx 10/10; zh resx 8/10
+instrument	装置	仪器	reviewed	ja resx 99/104; zh resx 101/104
+mass spectrometry	質量分析	质谱	reviewed	ja tut 15/17; zh tut 17/17
+default	デフォルト	默认	reviewed	ja resx 96/99; zh resx 95/99
+option	オプション	选项	reviewed	ja resx 50/50; zh resx 50/50
+argument	引数	参数	reviewed	ja resx 58/60; zh resx 56/59
+value	値	值	reviewed	ja resx 515/525; zh resx 515/522
+column	列	列	reviewed	ja resx 93/95; zh resx 91/95
+row	行	行	reviewed	ja resx 40/42; zh resx 41/42
+row group	行グループ	行组	new	Parquet term
+header	ヘッダー	标题	reviewed	ja resx 21/25; zh resx 24/25
+index	インデックス	索引	reviewed	ja resx 16/16; zh 6/16
+version	バージョン	版本	reviewed	ja resx 36/39; zh resx 38/39
+format	形式	格式	reviewed	ja resx 44/49; zh resx 47/49
+memory	メモリ	内存	reviewed	ja resx 8/8; zh resx 7/8
+parallel	並列	并行	reviewed	ja tut 8/10; zh resx 10/15	ja 並行 in UI "In Parallel"
+cores (CPU)	コア	核心	new	ja tut 2/2
+estimate	推定	估计	reviewed	ja resx 6/7; zh resx 4/7
+aggregation	集約	汇总	new	absent from Skyline
+unique	一意	唯一	reviewed	ja resx 22/36; zh resx 9/35	ja ユニーク for "unique peptides"; zh 序列特异的 for unique peptides
+duplicate	重複	重复	reviewed	ja resx 12/12; zh resx 10/12
+damaged / corrupt	破損	损坏	reviewed	ja 'Server URL is corrupt.' -> 破損; zh -> 损坏
+missing	欠損 / ありません	缺失 / 缺少	reviewed	zh 缺失 resx 85/120, 缺少 25/120; ja varies by sentence	no single ja rendering	Choose per sentence.
+not found	見つかりません	未找到	reviewed	ja resx 26/30; zh 未发现 / 找不到 / 未找到 all reviewed	zh has three forms
+invalid	無効	无效	reviewed	ja resx 98/98; zh resx 95/97
+unsupported	サポートされていません	不支持	reviewed	ja resx 2/6; zh resx 2/6	ja 対応していない also reviewed
+failed	失敗しました	失败	reviewed	ja 失敗 resx 128/161; zh 失败 resx 115/160	ja "できませんでした" 25/161, zh 无法 29/160 for "could not / unable to"
+permission	権限	权限	reviewed	ja resx 9/9; zh resx 9/9
+Error:	エラー：	错误：	reviewed	ja 163/163; zh 163/163		Must match CommandStatusWriter.ERROR_PREFIXES.
+Warning:	警告：	警告：	reviewed	ja 31/31; zh 31/31
+elapsed	経過	消逝	reviewed	ja 'Elapsed time: {0}' -> 経過時間：{0}; zh -> 消逝时间：{0} (resx 1/1)	single example	Thin evidence; 已用时间 is the common software rendering - flag for the zh reviewer.
+gradient	グラジエント	梯度	reviewed	ja tut 25/27; zh tut 27/27
+LOESS	LOESS	LOESS	reviewed	ja resx 1/1	zh resx spells out 局部加权回归	Algorithm names stay in English in log lines.
+kernel density	カーネル密度	核密度	reviewed	ja resx 1/1; zh resx 1/1
+sharpness	鋭さ	锐度	new	absent from Skyline
+detection(s)	検出	检测	reviewed	ja "Detections:" -> 検出, "Minimum Detections" -> 最小検出数; zh -> 检测 (resx)		docs/21: the general word for passing the current cutoff.
+impute (peak boundaries)	補完	划定	reviewed	ja "Impute Peak Boundaries" -> ピーク境界を補完; zh -> 划定峰边界; "Impute Missing Peaks" -> 欠損ピークを補完 / 划定缺失峰	literal zh would be 插补	docs/21 reuses Skyline's imputation vocabulary for reconciliation actions.
+missing peak	欠損ピーク	缺失峰	reviewed	"Impute Missing Peaks" -> 欠損ピークを補完 / 划定缺失峰		
+re-pick (a peak)	再選択	重新拣选	new	built from peak picking (ja ピーク選択, zh 峰拣选)		"peaks re-picked" (docs/21).
+m/z	m/z	质荷比	reviewed	ja keeps m/z 161/181; zh 质荷比 181/181 (resx)		zh reviewers spell it out; found by the blind zh translator, which overrode the first style-guide draft.

@@ -31,7 +31,34 @@ namespace pwiz.Osprey.Core
     {
         DiannTsv,
         Blib,
-        SkylineDocument
+        SkylineDocument,
+        DiannParquet
+    }
+
+    /// <summary>
+    /// The user-facing name of a <see cref="LibraryFormat"/>. Skyline's
+    /// <c>GetLocalizedString</c> pattern.
+    /// </summary>
+    public static class LibraryFormatExtension
+    {
+        private static string[] LOCALIZED_VALUES
+        {
+            get
+            {
+                return new[]
+                {
+                    OspreyCoreResources.LibraryFormatExtension_LOCALIZED_VALUES_DIA_NN_TSV,
+                    OspreyCoreResources.LibraryFormatExtension_LOCALIZED_VALUES_BiblioSpec,
+                    OspreyCoreResources.LibraryFormatExtension_LOCALIZED_VALUES_Skyline_document,
+                    OspreyCoreResources.LibraryFormatExtension_LOCALIZED_VALUES_DIA_NN_Parquet
+                };
+            }
+        }
+
+        public static string GetLocalizedString(this LibraryFormat val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
     }
 
     /// <summary>
@@ -40,6 +67,12 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public class LibrarySource
     {
+        public const string EXT_BLIB = @".blib";
+        public const string EXT_ELIB = @".elib";
+        public const string EXT_SKY = @".sky";
+        public const string EXT_PARQUET = @".parquet";
+        public const string EXT_SPECLIB = @".speclib";
+
         /// <summary>The detected or specified library format.</summary>
         public LibraryFormat Format { get; }
 
@@ -54,26 +87,45 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// Detect library format from file extension.
-        /// .blib -> Blib, .sky -> SkylineDocument, default -> DiannTsv. An .elib
-        /// path is rejected: EncyclopeDIA reading was removed, and falling through
-        /// to the TSV loader would fail with a confusing parse error instead.
+        /// .blib -> Blib, .parquet -> DiannParquet, .sky -> SkylineDocument, default -> DiannTsv.
+        /// An .elib path is rejected: EncyclopeDIA reading was removed, and falling through
+        /// to the TSV loader would fail with a confusing parse error instead. So is a DIA-NN
+        /// .speclib, whose binary format is undocumented: the message gives the DIA-NN command
+        /// that converts it to the .parquet this reads.
         /// </summary>
         public static LibrarySource FromPath(string path)
         {
             string ext = (System.IO.Path.GetExtension(path) ?? string.Empty).ToLowerInvariant();
             switch (ext)
             {
-                case ".blib":
+                case EXT_BLIB:
                     return new LibrarySource(LibraryFormat.Blib, path);
-                case ".elib":
-                    throw new System.NotSupportedException(
-                        "EncyclopeDIA .elib spectral libraries are no longer supported; " +
-                        "convert the library to DIA-NN TSV (.tsv) or .blib.");
-                case ".sky":
+                case EXT_ELIB:
+                    throw new System.NotSupportedException(string.Format(
+                        OspreyCoreResources.LibrarySource_FromPath_EncyclopeDIA__elib_spectral_libraries_are_no_longer_supported__convert_the_library_to_DIA_,
+                        EXT_ELIB, TextUtil.EXT_TSV, EXT_BLIB));
+                case EXT_SKY:
                     return new LibrarySource(LibraryFormat.SkylineDocument, path);
+                case EXT_PARQUET:
+                    return new LibrarySource(LibraryFormat.DiannParquet, path);
+                case EXT_SPECLIB:
+                    throw new System.NotSupportedException(string.Format(
+                        OspreyCoreResources.LibrarySource_FromPath_A_DIA_NN__0__library_cannot_be_read__convert_it_to_the_DIA_NN__1__library_format_with_,
+                        EXT_SPECLIB, EXT_PARQUET, SpeclibConversionCommand(path)));
                 default:
                     return new LibrarySource(LibraryFormat.DiannTsv, path);
             }
+        }
+
+        /// <summary>
+        /// The DIA-NN 2.x command that converts the binary library <paramref name="speclibPath"/>
+        /// to the .parquet beside it, which <see cref="FromPath"/> accepts. DIA-NN's own flags,
+        /// not Osprey's.
+        /// </summary>
+        public static string SpeclibConversionCommand(string speclibPath)
+        {
+            return string.Format(@"diann --lib ""{0}"" --gen-spec-lib --out-lib ""{1}""",
+                speclibPath, System.IO.Path.ChangeExtension(speclibPath, EXT_PARQUET));
         }
     }
 }

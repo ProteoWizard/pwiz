@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Util.Extensions
 
         public static double? GetNullableDouble(SQLiteDataReader reader, int column)
         {
-            return reader.IsDBNull(column) ? (double?)null : reader.GetDouble(column);
+            return reader.IsDBNull(column) ? null : reader.GetDouble(column);
         }
 
         public static float GetFloat(this SQLiteDataReader reader, Enum columnName)
@@ -90,13 +90,18 @@ namespace pwiz.Skyline.Util.Extensions
             byte[] uncompressed;
             try
             {
-                uncompressed = ZlibStream.UncompressBuffer(compressed);
+                using var zlibStream = new System.IO.Compression.ZLibStream(new MemoryStream(compressed),
+                    System.IO.Compression.CompressionMode.Decompress);
+                var memoryStream = new MemoryStream(Math.Max(sizeUncompressed, 0));
+                zlibStream.CopyTo(memoryStream);
+                // When the expected size was right, the stream's buffer is exactly full and can be returned without copying it
+                uncompressed = memoryStream.Length == memoryStream.Capacity ? memoryStream.GetBuffer() : memoryStream.ToArray();
             }
             catch (Exception x)
             {
                 throw new IOException(Resources.UtilDB_Uncompress_Failure_uncompressing_data, x);
             }
-            if (checkSizeDifference && (uncompressed.Length != sizeUncompressed))
+            if (checkSizeDifference && uncompressed.Length != sizeUncompressed)
                 throw new IOException(Resources.UtilDB_Uncompress_Failure_uncompressing_data);
             return uncompressed;
         }

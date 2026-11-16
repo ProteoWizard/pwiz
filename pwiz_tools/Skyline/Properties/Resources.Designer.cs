@@ -86,7 +86,17 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("AbstractSpectrumGraphItem_GetLabel_rank__0__", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap AddFolder {
+            get {
+                object obj = ResourceManager.GetObject("AddFolder", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
@@ -8486,7 +8496,7 @@ namespace pwiz.Skyline.Properties {
                         "ne_based_on_consistency_", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to intercept.
         /// </summary>
@@ -11499,15 +11509,6 @@ namespace pwiz.Skyline.Properties {
         public static string UpgradeManager_updateCheck_Complete_Failed_attempting_to_check_for_an_upgrade_ {
             get {
                 return ResourceManager.GetString("UpgradeManager_updateCheck_Complete_Failed_attempting_to_check_for_an_upgrade_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed attempting to upgrade..
-        /// </summary>
-        public static string UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_ {
-            get {
-                return ResourceManager.GetString("UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_", resourceCulture);
             }
         }
         

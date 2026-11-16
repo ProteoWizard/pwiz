@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="f09ccc77-ded9-4ee5-85b0-c727460ccac8" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>test github update</name>
+  <description />
+  <settings ref="ProteoWizard_LinuxCore">
+    <options>
+      <option name="artifactRules" value="build-nt-x86/*.tar.bz2&#xA;pwiz_tools/Skyline/TestResults/*.trx&#xA;pwiz_tools/Topograph/TestResults/*.trx&#xA;pwiz_tools/Skyline/bin/x64/Release/SkylineTester.zip&#xA;pwiz_tools/Skyline/bin/x64/Release/SkylineNightly.zip&#xA;pwiz_tools/Skyline/bin/x64/Release/BiblioSpec.zip" />
+      <option name="checkoutDirectory" value="%WINDOWS_CHECKOUT_DIR%" />
+      <option name="executionTimeoutMin" value="80" />
+    </options>
+    <disabled-settings>
+      <setting-ref ref="RUNNER_336" />
+      <setting-ref ref="RUNNER_simpleRunner_122" />
+      <setting-ref ref="vcsTrigger" />
+    </disabled-settings>
+    <parameters>
+      <param name="buildStatusUpdateContext" value="" />
+      <param name="buildStatusUpdateDescription" value="" />
+      <param name="buildStatusUpdateState" value="success" />
+      <param name="buildStatusUpdateTargetUrl" value="" />
+      <param name="env.SKYLINE_DOWNLOAD_FROM_S3" value="1" />
+      <param name="env.SKYLINE_DOWNLOAD_PATH" value="z:\downloads" />
+      <param name="env.UNIFI_PASSWORD" value="credentialsJSON:cc957175-a8b4-4d2c-aaf4-9022ee37add7" spec="password display='normal'" />
+      <param name="env.UNIFI_USERNAME" value="" />
+      <param name="env.address_model_short" value="64" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_66" name="" type="ProteoWizard_SendBuildStatusToGitHub">
+        <parameters>
+          <param name="GitHubAuthToken" value="credentialsJSON:e69022c2-0e67-46bb-972e-68929f5294ec" />
+          <param name="buildStatusUpdateContext" value="%system.teamcity.buildConfName%" />
+          <param name="buildStatusUpdateDescription" value="Description" />
+          <param name="buildStatusUpdateState" value="success" />
+          <param name="buildStatusUpdateTargetUrl" value="https://teamcity.labkey.org/guestAuth/repository/download/%system.teamcity.buildType.id%/%teamcity.build.id%:id/SkylineTester.zip" />
+          <param name="teamcity.step.mode" value="execute_if_failed" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <build-triggers>
+      <build-trigger id="vcsTrigger" type="vcsTrigger">
+        <parameters>
+          <param name="enableQueueOptimization" value="true" />
+          <param name="quietPeriod" value="45" />
+          <param name="quietPeriodMode" value="USE_CUSTOM" />
+          <param name="triggerRules"><![CDATA[+:.
+-:README.md
+-:.travis.yml
+-:appveyor.yml
+-:.gitignore
+-:pwiz_tools/Bumbershoot/**
+-:pwiz_tools/SeeMS/**
+-:pwiz_tools/MSConvertGUI/**]]></param>
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <build-extensions>
+      <extension id="BUILD_EXT_687" type="BuildFailureOnMetric">
+        <parameters>
+          <param name="anchorBuild" value="lastSuccessful" />
+          <param name="metricKey" value="InspectionStatsW" />
+          <param name="metricThreshold" value="400" />
+          <param name="metricUnits" value="metricUnitsDefault" />
+          <param name="moreOrLess" value="more" />
+          <param name="withBuildAnchor" value="false" />
+        </parameters>
+      </extension>
+      <extension id="BUILD_EXT_316" type="BuildFailureOnMessage">
+        <parameters>
+          <param name="buildFailureOnMessage.conditionType" value="contains" />
+          <param name="buildFailureOnMessage.messagePattern" value="LEAKED" />
+          <param name="buildFailureOnMessage.outputText" value="Leak detected" />
+          <param name="buildFailureOnMessage.reverse" value="false" />
+        </parameters>
+      </extension>
+    </build-extensions>
+    <cleanup>
+      <policy type="builds" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepBuilds.count" value="4" />
+        </parameters>
+      </policy>
+    </cleanup>
+  </settings>
+</build-type>
+

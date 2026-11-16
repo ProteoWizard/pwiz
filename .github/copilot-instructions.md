@@ -228,9 +228,9 @@ if (condition)
 **REJECT**:
 - Introduction of new build systems (npm, gradle, cargo, etc.)
 - Changes to `.sln` or `.csproj` without corresponding source file additions
-- Modifications to `Jamfile` without justification
+- Modifications to `Directory.Build.props`/`.targets` without justification
 
-**WHY**: Windows-focused project uses `quickbuild.bat` and MSBuild exclusively.
+**WHY**: The project builds with the .NET SDK (`build.bat`, `pwiz_tools\Skyline\build.bat`) and MSBuild exclusively.
 
 ## Review Workflow Recommendations
 

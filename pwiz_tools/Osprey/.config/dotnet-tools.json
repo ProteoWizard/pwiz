@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "jetbrains.dotcover.commandlinetools": {
+      "version": "2023.3.3",
+      "commands": [
+        "dotnet-dotCover"
+      ]
+    },
+    "jetbrains.resharper.globaltools": {
+      "version": "2025.3.3",
+      "commands": [
+        "jb"
+      ]
+    }
+  }
+}

@@ -43,16 +43,55 @@ namespace pwiz.Osprey.Tasks
     ///
     /// <para>The load is byte-order-identical to the legacy in-place compaction:
     /// <see cref="FdrEntry.ParquetIndex"/> comes from the ORIGINAL parquet (row
-    /// ordinal), the sidecar is overlaid onto the FULL stub set before filtering
-    /// (the superset contract <see cref="FdrScoresSidecar.TryRead"/> requires), and
-    /// the result is sorted by the canonical (EntryId, Charge, ScanNumber,
-    /// ParquetIndex) key. Callers must not re-order it.</para>
+    /// ordinal, which the filtering below does not renumber) and the result is sorted
+    /// by the canonical (EntryId, Charge, ScanNumber, ParquetIndex) key. Callers must
+    /// not re-order it.</para>
+    ///
+    /// <para>Survivors are selected DURING the parquet read rather than after it, so the
+    /// rows that do not survive are never built (issue #4486). That inverts the order
+    /// this class used to run in - it overlaid the sidecar onto the FULL stub set first,
+    /// which is the superset
+    /// <see cref="FdrScoresSidecar.TryRead(string, IList{FdrEntry}, FdrScoresSidecar.Pass)"/> requires -
+    /// so the overlay is now told which absences were deliberate. Each survivor ends up
+    /// with the same values either way, because records are matched by entry_id rather
+    /// than by position.</para>
     /// </summary>
     internal sealed class FirstPassSurvivorLoader
     {
         private readonly IReadOnlyDictionary<string, string> _perFileParquetPaths;
+
+        /// <summary>
+        /// The run's shared modified-sequence pool, seeded from the library. The parquet reader
+        /// returns a fresh instance per row, so without this the Stage 7 pool holds one string
+        /// object per survivor observation - ~72 B of its measured 274 B/entry, about 9.9 GB at
+        /// 137 M survivors, for values that are already shared (#4486).
+        ///
+        /// <para>Handed in rather than owned: a pool of this loader's own would canonicalize
+        /// the survivors onto instances DISTINCT from the library's, holding two sets where the
+        /// point is to hold one. It spans files for the same reason - the same peptide is
+        /// observed in many runs.</para>
+        ///
+        /// <para>It is a FROZEN pool, and it has to be: <c>PerFileRescoreTask</c> drives
+        /// <see cref="Load(string,out string)"/> from inside a <c>Parallel.For</c> over files,
+        /// so a pool that still accepted new values would have concurrent writers on a plain
+        /// dictionary. Frozen it is lookup-only and any number of threads may read it.</para>
+        /// </summary>
+        private readonly LibraryStringInterner _sequencePool;
         private readonly OspreyConfig _config;
         private readonly HashSet<uint> _firstPassBaseIds;
+
+        /// <summary>
+        /// The analysis-wide 1st-pass EXPERIMENT-scope records, keyed by entry_id (format v5,
+        /// issue #4486). Read ONCE here rather than per file for the same reason
+        /// <see cref="_sequencePool"/> is frozen: <c>PerFileRescoreTask</c> drives
+        /// <see cref="Load(string,out string)"/> from inside a <c>Parallel.For</c>, so anything
+        /// this type touches per file has to be read-only by then. Null when the analysis has
+        /// no experiment sidecar, which leaves every survivor at its default experiment
+        /// q-values - the same state a run with no experiment competition would produce.
+        /// </summary>
+        private readonly IReadOnlyDictionary<uint, FdrExperimentRecord> _experimentRecords;
+
+        private readonly SurvivorCountCheck _countCheck;
 
         /// <param name="perFileParquetPaths">file name -> its original
         /// <c>.scores.parquet</c>, the same map Stage 5 resolves sidecar paths from.</param>
@@ -60,14 +99,40 @@ namespace pwiz.Osprey.Tasks
         /// <param name="firstPassBaseIds">The passing base_id set the compaction gate
         /// produced. Small (446 K uints at 163 files) and shared across every file, so
         /// holding it costs nothing next to the survivor lists it selects.</param>
+        /// <param name="sequencePool">The run's library-seeded modified-sequence pool.</param>
         internal FirstPassSurvivorLoader(
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
-            HashSet<uint> firstPassBaseIds)
+            HashSet<uint> firstPassBaseIds,
+            LibraryStringInterner sequencePool)
         {
             _perFileParquetPaths = perFileParquetPaths;
             _config = config;
             _firstPassBaseIds = firstPassBaseIds;
+            _sequencePool = sequencePool;
+            _countCheck = new SurvivorCountCheck(perFileParquetPaths?.Count ?? 0);
+            _experimentRecords = FdrExperimentSidecar.ReadMap(
+                FdrExperimentSidecar.PathFor(config?.OutputBlib,
+                    ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass),
+                FdrScoresSidecar.Pass.FirstPass);
+        }
+
+        /// <summary>
+        /// Experimental (OSPREY_STUB_IDENTITY): the library lookup the parquet read takes charge,
+        /// decoy flag and peptide from instead of decoding them. Null reads them from the file.
+        /// </summary>
+        internal LibraryIdentity Identity { get; set; }
+
+        /// <summary>
+        /// The survivor count the compaction gate reported, derived arithmetically from
+        /// rows-per-base_id summed over the passing set, or null when the caller has no such
+        /// count to check against. Once every file has been loaded from its Stage 4 parquet,
+        /// the loads must sum to it - see <see cref="SurvivorCountCheck"/>.
+        /// </summary>
+        internal long? ExpectedSurvivorCount
+        {
+            get { return _countCheck.Expected; }
+            set { _countCheck.Expected = value; }
         }
 
         /// <summary>
@@ -79,45 +144,102 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal List<FdrEntry> Load(string fileName, out string error)
         {
+            return Load(fileName, null, out error);
+        }
+
+        /// <summary>
+        /// Load one file's survivors from <paramref name="parquetPathOverride"/> instead of
+        /// its Stage 4 <c>.scores.parquet</c>.
+        ///
+        /// <para>The override is that file's <c>.scores-reconciled.parquet</c>, and only when
+        /// the caller has judged it CURRENT for this run - existence is not enough, because a
+        /// parquet left by a run with different reconciliation parameters would inject another
+        /// arm's boundaries (see <c>RescoredPoolPlan.ReconciledPaths</c>). Reading it makes
+        /// the Stage 4 parquet unnecessary: this branch now holds the survivor subset with
+        /// Stage 6's re-scored boundaries already applied and the gap-fill rows already
+        /// merged, which is precisely what the second read used to put back (#4486).</para>
+        ///
+        /// <para>The sidecar overlay is unchanged and is resolved from the ORIGINAL scores
+        /// path, not from this one - the 1st-pass sidecar is a Stage 5 artifact and has no
+        /// reconciled sibling. Gap-fill rows simply find no record in it and keep the
+        /// score-reset defaults a cold run gives them, which is the direction
+        /// <c>TryRead</c> tolerates; the predicate covers the other direction, a record whose
+        /// row was compacted away.</para>
+        /// </summary>
+        internal List<FdrEntry> Load(string fileName, string parquetPathOverride, out string error)
+        {
             error = null;
             if (_perFileParquetPaths == null ||
                 !_perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
             {
                 error = string.Format(
-                    @"First-pass survivor load: no scores parquet path for {0}", fileName);
+                    OspreyTasksResources.FirstPassSurvivorLoader_Load_No__scores_parquet_file_is_known_for__0___so_its_kept_precursor_candidates_cannot_be_, fileName,
+                    ParquetScoreCache.EXT_SCORES);
                 return null;
             }
+            if (parquetPathOverride != null)
+            {
+                // Refused, not fallen back on. A subsetted reconciled parquet with no
+                // score_index column records nowhere which .scores.parquet row each row came
+                // from, so reading it by position maps every row to the wrong Stage 4
+                // features - and produces a well-formed answer while doing it.
+                if (ParquetScoreCache.IsSubsetWithoutScoreIndex(parquetPathOverride))
+                {
+                    error = string.Format(
+                        OspreyTasksResources.FirstPassSurvivorLoader_Load__0__was_written_by_an_older_Osprey_build_and_cannot_be_matched_to_its__scores_parquet__,
+                        parquetPathOverride, ParquetScoreCache.EXT_SCORES,
+                        FdrScoresSidecar.FIRST_PASS_FILE_PATTERN);
+                    return null;
+                }
+                parquetPath = parquetPathOverride;
+            }
+
+            // Applied AS THE PARQUET IS READ, not after. This kept ~533 K of ~2.99 M stubs
+            // per file at 257 CHS files, so filtering afterwards built 5.6x what survived
+            // it - the whole reason Stage 7's front end allocates before it compacts
+            // (issue #4486). Hoisted out of the two calls below so both use one delegate.
+            Func<uint, bool> isSurvivor = entryId =>
+                _firstPassBaseIds.Contains(entryId & ScoringTaskShared.BASE_ID_MASK);
 
             List<FdrEntry> stubs;
             try
             {
-                stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
+                stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath, isSurvivor, _sequencePool, Identity);
             }
             catch (Exception ex)
             {
                 error = string.Format(
-                    @"First-pass survivor load: failed to load stubs from {0}: {1}",
+                    OspreyTasksResources.FirstPassSurvivorLoader_Load_Failed_to_load_the_first_pass_precursor_candidates_from__0____1_,
                     parquetPath, ex.Message);
                 return null;
             }
 
-            // Overlay the 1st-pass sidecar onto the FULL stub set (superset contract)
-            // BEFORE filtering to survivors.
+            // Overlay the 1st-pass sidecar. That sidecar covers the whole stub set, so with
+            // the survivors already selected above it carries millions of records with no
+            // entry to land on; the predicate tells the reader which absences it asked for,
+            // leaving any OTHER missing entry_id the corruption it has always been. Records
+            // are matched by entry_id rather than position, so overlaying the filtered list
+            // gives each survivor the same values overlaying the full one did.
             string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(
                 fileName, _perFileParquetPaths, _config);
             string pass1Path = FdrScoresSidecar.Pass1Path(sidecarBase);
-            if (!FdrScoresSidecar.TryRead(pass1Path, stubs, FdrScoresSidecar.Pass.FirstPass))
+            if (!FdrScoresSidecar.TryRead(pass1Path, stubs, FdrScoresSidecar.Pass.FirstPass,
+                    entryId => !isSurvivor(entryId), _experimentRecords))
             {
                 error = string.Format(
-                    @"First-pass survivor load: failed to overlay .1st-pass.fdr_scores.bin for {0} " +
-                    @"(expected at {1})", fileName, pass1Path);
+                    OspreyTasksResources.FirstPassSurvivorLoader_Load_Failed_to_read_the_first_pass_intermediate_file_for__0___expected_at__1___, fileName, pass1Path);
                 return null;
             }
 
-            stubs.RemoveAll(e => !_firstPassBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
             stubs.TrimExcess();
-            stubs.Sort(FdrEntry.CANONICAL_ORDER); // Array.Sort OK: CANONICAL_ORDER's terminal key ParquetIndex is unique per reloaded stub, so the comparison never ties
-            return stubs;
+            // Array.Sort OK: SortCanonicalResolved verifies every stub's ParquetIndex is
+            // resolved, so the terminal key is unique per file and the comparison never ties.
+            FdrEntry.SortCanonicalResolved(stubs, fileName);
+            // Only a Stage 4 load is comparable: a reconciled parquet adds the gap-fill rows.
+            if (parquetPathOverride != null)
+                return stubs;
+            error = _countCheck.Check(fileName, stubs.Count);
+            return error == null ? stubs : null;
         }
     }
 }

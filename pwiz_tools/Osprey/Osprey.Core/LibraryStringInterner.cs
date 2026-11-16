@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace pwiz.Osprey.Core
 {
@@ -50,30 +51,100 @@ namespace pwiz.Osprey.Core
     /// Lives in Core (not IO) so both the format loaders in
     /// <c>Osprey.IO</c> and the decoy generator in <c>Osprey.Scoring</c> can
     /// intern as they build entries.
+    ///
+    /// <para>A SECOND use outlives the load: the per-file score sidecars carry the same
+    /// modified sequences the library does, and a parquet reader hands out a fresh string
+    /// per row, so the FDR pool would otherwise hold one string object per observation
+    /// (issue #4486). Those readers share the pool seeded from the LIBRARY, which is the
+    /// whole point - a pool of their own would canonicalize them onto a second set of
+    /// instances and duplicate every sequence rather than collapse it. Seeding first is
+    /// what makes the library's instance the one that wins.</para>
     /// </summary>
     public sealed class LibraryStringInterner
     {
+        /// <summary>
+        /// <paramref name="pool"/>'s shared instance for <paramref name="value"/>, or the value
+        /// unchanged when no pool was supplied. Empty is returned as-is: it carries no peptide
+        /// identity, so pooling it would only add a lookup and skew the pool's collapse summary.
+        /// The one rule every row reader that canonicalizes sequences applies, so rows read by
+        /// different readers share instances the same way.
+        /// </summary>
+        public static string Canonicalize(LibraryStringInterner pool, string value)
+        {
+            if (pool == null || string.IsNullOrEmpty(value))
+                return value;
+            return pool.Intern(value);
+        }
+
         private readonly Dictionary<string, string> _pool =
             new Dictionary<string, string>(StringComparer.Ordinal);
         private long _totalRefs;
+        private long _frozenMisses;
+        private bool _frozen;
 
         /// <summary>
         /// Return the shared instance for <paramref name="s"/>: the first call
         /// with a given value returns that value and remembers it; later calls
         /// with an equal value return the remembered instance. Null passes
         /// through unchanged.
+        ///
+        /// <para>Once <see cref="Freeze"/> has been called this only LOOKS UP: a value the
+        /// pool does not hold is returned unchanged instead of being added, which is what
+        /// makes the frozen pool safe to read from many threads at once.</para>
         /// </summary>
         public string Intern(string s)
         {
             if (s == null)
                 return null;
-            _totalRefs++;
             string existing;
+            if (_frozen)
+            {
+                // Lookup only - see Freeze. The miss counter is interlocked rather than ++
+                // because frozen readers are concurrent, and it is touched ONLY on a miss,
+                // which the seeding is expected to make vanishingly rare. A hit, the whole
+                // hot path, stays a bare dictionary read.
+                if (_pool.TryGetValue(s, out existing))
+                    return existing;
+                Interlocked.Increment(ref _frozenMisses);
+                return s;
+            }
+            _totalRefs++;
             if (_pool.TryGetValue(s, out existing))
                 return existing;
             _pool[s] = s;
             return s;
         }
+
+        /// <summary>
+        /// Stop the pool accepting new values, making it safe for concurrent readers.
+        ///
+        /// <para>A <see cref="Dictionary{TKey,TValue}"/> supports any number of concurrent
+        /// READERS; it is a writer alongside them that corrupts it. The pool shared with the
+        /// sidecar readers is seeded from the library and then frozen, so the per-file loads -
+        /// which Stage 6 runs under <c>Parallel.For</c> - only ever look up. Freezing rather
+        /// than locking is what keeps that free: interning is called once per observation,
+        /// over a hundred million times, and a lock on that path was already measured as a
+        /// net loss.</para>
+        ///
+        /// <para>The cost is that a value absent from the library is not pooled. That is the
+        /// right trade here because there should be none: every sequence in a score sidecar
+        /// was written from the library entry the candidate came from. <see cref="FrozenMisses"/>
+        /// counts any that are, so the assumption is measured rather than asserted.</para>
+        /// </summary>
+        public void Freeze()
+        {
+            _frozen = true;
+        }
+
+        /// <summary>Whether <see cref="Freeze"/> has been called.</summary>
+        public bool IsFrozen { get { return _frozen; } }
+
+        /// <summary>
+        /// Values looked up while frozen that the pool did not hold, and which were therefore
+        /// returned un-pooled. Expected to be zero or near it; a large count means the seeding
+        /// missed a source of sequences and the interning is not doing its job.
+        /// </summary>
+        public long FrozenMisses { get { return Interlocked.Read(ref _frozenMisses); } }
 
         /// <summary>
         /// Intern every element of <paramref name="items"/> and return them as a
@@ -101,18 +172,42 @@ namespace pwiz.Osprey.Core
         public long TotalReferences { get { return _totalRefs; } }
 
         /// <summary>
-        /// Log a one-line distinct/total summary of what this pool collapsed.
-        /// No-op when <paramref name="logInfo"/> is null.
+        /// Log a one-line distinct/total summary of a pool that interned library
+        /// (target) entries. No-op when <paramref name="logInfo"/> is null.
         /// </summary>
         public void LogSummary(Action<string> logInfo)
+        {
+            LogSummary(logInfo, OspreyCoreResources.LibraryStringInterner_LogSummary_Unique_library_strings___0_____1__total___2___reduced_);
+        }
+
+        /// <summary>
+        /// Log the same summary for the decoy generator's own pool. Named apart from the
+        /// library line because the two print one after the other and read as the same
+        /// quantity, and the decoy pool reduces less by construction: a decoy's modified
+        /// sequence carries a "DECOY_" prefix, so it never collapses onto its plain sequence
+        /// the way an unmodified target's does. No-op when <paramref name="logInfo"/> is null.
+        /// </summary>
+        public void LogDecoySummary(Action<string> logInfo)
+        {
+            LogSummary(logInfo, OspreyCoreResources.LibraryStringInterner_LogDecoySummary_Unique_decoy_strings___0_____1__total___2___reduced_);
+        }
+
+        /// <summary>
+        /// Log the same summary for the protein accessions a decoy pairing manifest assigns.
+        /// No-op when <paramref name="logInfo"/> is null.
+        /// </summary>
+        public void LogPairingManifestSummary(Action<string> logInfo)
+        {
+            LogSummary(logInfo, OspreyCoreResources.LibraryStringInterner_LogPairingManifestSummary_Unique_pairing_manifest_protein_accessions___0_____1__total___2___reduced_);
+        }
+
+        private void LogSummary(Action<string> logInfo, string format)
         {
             if (logInfo == null)
                 return;
             long collapsed = _totalRefs - _pool.Count;
             double pct = _totalRefs > 0 ? 100.0 * collapsed / _totalRefs : 0.0;
-            logInfo(string.Format(
-                "Interned library strings: {0} distinct / {1} total ({2:F1}% collapsed)",
-                _pool.Count, _totalRefs, pct));
+            logInfo(string.Format(format, _pool.Count, _totalRefs, pct));
         }
     }
 }

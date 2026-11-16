@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- RootNamespace deliberately differs from the assembly name: a "BlibFilter" sub-namespace
+         would collide with the Pwiz.Tools.BiblioSpec.BlibFilter library type. -->
+    <RootNamespace>Pwiz.Tools.BiblioSpec.BlibFilterTool</RootNamespace>
+    <AssemblyName>BlibFilter</AssemblyName>
+    <Description>BlibFilter CLI tool. Port of pwiz_tools/BiblioSpec/src/BlibFilter.cpp.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BiblioSpec\BiblioSpec.csproj" />
+  </ItemGroup>
+
+</Project>

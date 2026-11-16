@@ -53,8 +53,7 @@ namespace pwiz.SkylineTestFunctional
         private bool _expectEmptyResults;
 
         [TestMethod,
-         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)]
+         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDiannSearch()
         {
             TestFilesZip = @"TestFunctional\DiannSearchTest.zip";
@@ -64,7 +63,6 @@ namespace pwiz.SkylineTestFunctional
 
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME),
          NoUnicodeTesting(@"DIA-NN 1.9.1 doesn't support UTF-8 paths properly.")]
         public void TestDiannSearch1_9_1()
         {
@@ -87,7 +85,6 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME),
          NoUnicodeTesting(@"DIA-NN 1.9.1 doesn't support UTF-8 paths properly.")]
         public void TestDiannSearchEmptyResults1_9_1()
         {
@@ -150,23 +147,9 @@ namespace pwiz.SkylineTestFunctional
                         Settings.Default.SearchToolList[SearchToolType.DIANN]);
             });
 
-            // SimpleFileDownloader normally rewrites URLs to the Skyline test mirror under
-            // unit tests. The mirror only has DIANN-2.5.0; for 1.9.1 we need to hit GitHub
-            // directly. Toggle UseOriginalURLs around the call (and only around the call
-            // — leave the global state untouched for any subsequent download).
             var progress = new SilentProgressMonitor();
-            bool savedUseOriginalUrls = Skyline.Program.UseOriginalURLs;
-            try
-            {
-                if (version == DiannHelpers.DIANN_191_VERSION)
-                    Skyline.Program.UseOriginalURLs = true;
-                AssertEx.IsTrue(SimpleFileDownloader.DownloadRequiredFiles(new[] { downloadInfo }, progress),
-                    $@"failed to download DIA-NN {version}");
-            }
-            finally
-            {
-                Skyline.Program.UseOriginalURLs = savedUseOriginalUrls;
-            }
+            AssertEx.IsTrue(SimpleFileDownloader.DownloadRequiredFiles(new[] { downloadInfo }, progress),
+                $@"failed to download DIA-NN {version}");
             string realDiannPath = downloadInfo.ToolPath;
             AssertEx.IsTrue(File.Exists(realDiannPath),
                 $@"DIA-NN {version} not at expected path after download: {realDiannPath}");

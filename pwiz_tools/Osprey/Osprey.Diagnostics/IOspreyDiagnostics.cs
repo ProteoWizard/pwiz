@@ -64,8 +64,6 @@ namespace pwiz.Osprey
         bool LdaScoresOnly { get; }
         bool DumpLoessInput { get; }
         bool LoessInputOnly { get; }
-        bool DumpPercolator { get; }
-        bool PercolatorOnly { get; }
         bool DumpStandardizer { get; }
         bool StandardizerOnly { get; }
         bool DumpPercInput { get; }
@@ -74,19 +72,11 @@ namespace pwiz.Osprey
         bool SubsampleOnly { get; }
         bool DumpSvmWeights { get; }
         bool SvmWeightsOnly { get; }
-        bool DumpRescored { get; }
-        bool RescoredOnly { get; }
         bool DumpMpInputs { get; }
         bool DumpPredictRt { get; }
         bool DumpCwtPath { get; }
         bool DumpConsensus { get; }
         bool ConsensusOnly { get; }
-        bool DumpMulticharge { get; }
-        bool MultichargeOnly { get; }
-        bool DumpRefit { get; }
-        bool RefitOnly { get; }
-        bool DumpReconciliation { get; }
-        bool ReconciliationOnly { get; }
         bool DumpCalibration { get; }
         bool CalibrationOnly { get; }
         bool DumpInvPredict { get; }
@@ -96,8 +86,6 @@ namespace pwiz.Osprey
         bool DumpStage7ProteinFdr { get; }
         bool Stage7ProteinFdrOnly { get; }
         bool DumpDetectedPeptides { get; }
-        bool DumpLoessFit { get; }
-        bool LoessFitOnly { get; }
         bool CalWindowsCollecting { get; }
 
         uint? DiagXicEntryId { get; }
@@ -186,24 +174,17 @@ namespace pwiz.Osprey
 
         void ClosePredictRtDump();
 
+        void CloseStage6CalibrationDump();
+
+        /// <summary>
+        /// Close every held-open dump writer this sink owns. Registered against process
+        /// exit so an early <c>Environment.Exit</c> still commits their accumulated content.
+        /// </summary>
+        void CloseAll();
+
         // ----- Stages 5-7: join, rescore, reconciliation, protein FDR dumps -----
 
-        void WriteStage5PercolatorDump(List<KeyValuePair<string, List<FdrEntry>>> perFileEntries);
-
-        void WriteStage6RescoredDump(List<KeyValuePair<string, List<FdrEntry>>> perFileEntries);
-
         void WriteStage6ConsensusDump(IReadOnlyList<PeptideConsensusRT> consensus);
-
-        void WriteStage6MultichargeDump(
-            IReadOnlyList<KeyValuePair<string, IReadOnlyList<FdrEntry>>> perFileEntries,
-            IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> perFileTargets);
-
-        void WriteStage6RefitDump(
-            IReadOnlyDictionary<string, RTCalibration> refinedCalibrations);
-
-        void WriteStage6ReconciliationDump(
-            IReadOnlyDictionary<(string File, int Index), ReconcileAction> actions,
-            IReadOnlyList<KeyValuePair<string, IReadOnlyList<FdrEntry>>> perFileEntries);
 
         void WriteStage6CalibrationDump(
             string fileName, double[] libraryRts, double[] fittedValues);
@@ -217,9 +198,6 @@ namespace pwiz.Osprey
         void WriteStage7ProteinFdrDump(
             ProteinParsimonyResult parsimony,
             ProteinFdrResult fdrResult);
-
-        void WriteStage6LoessFitDump(
-            IReadOnlyDictionary<string, RTCalibration> refinedCalibrations);
 
         void WriteStage7DetectedPeptidesDump(HashSet<string> detectedPeptides);
     }

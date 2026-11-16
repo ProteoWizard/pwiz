@@ -52,17 +52,6 @@ namespace pwiz.Osprey.Chromatography
         public double OutlierRetention { get; set; }
 
         /// <summary>
-        /// When true (default), residuals are recomputed from the current fit
-        /// each iteration, which is the classical Cleveland (1979) robust
-        /// LOESS algorithm. When false, robustness iterations reuse absolute
-        /// residuals from the initial fit throughout the loop (legacy
-        /// behavior). Default matches Rust calibration_ml.rs v26.3.1 and
-        /// later; override via OSPREY_LOESS_CLASSICAL_ROBUST=0 in both tools
-        /// together when validating against legacy behavior.
-        /// </summary>
-        public bool ClassicalRobustIterations { get; set; }
-
-        /// <summary>
         /// Fit a single global robust (Theil-Sen) line instead of a LOESS curve, and
         /// report the calibration as <see cref="RTCalibrationMethod.Linear"/>.
         /// LOESS bandwidth is a *fraction* of the points, so its local window
@@ -82,7 +71,6 @@ namespace pwiz.Osprey.Chromatography
             MinPoints = 20;
             RobustnessIterations = 2;
             OutlierRetention = 0.8;
-            ClassicalRobustIterations = true;
             LinearFit = false;
         }
     }
@@ -112,16 +100,7 @@ namespace pwiz.Osprey.Chromatography
         /// <returns>A fitted RTCalibration for predicting measured RT from library RT.</returns>
         public RTCalibration Fit(double[] libraryRts, double[] measuredRts)
         {
-            if (libraryRts == null || measuredRts == null)
-                throw new ArgumentNullException(libraryRts == null ? "libraryRts" : "measuredRts");
-            if (libraryRts.Length != measuredRts.Length)
-                throw new ArgumentException(string.Format(
-                    "RT arrays must have same length: {0} vs {1}",
-                    libraryRts.Length, measuredRts.Length));
-            if (libraryRts.Length < _config.MinPoints)
-                throw new ArgumentException(string.Format(
-                    "Need at least {0} calibration points, got {1}",
-                    _config.MinPoints, libraryRts.Length));
+            RTCalibration.ValidateRtPairs(libraryRts, measuredRts, nameof(measuredRts), _config.MinPoints);
 
             // Sort by library RT (stable). Rust's slice::sort_by is stable; C#
             // Array.Sort with a Comparison<T> is introsort, which is UNSTABLE
@@ -162,8 +141,7 @@ namespace pwiz.Osprey.Chromatography
 
             // Fit LOESS with robustness iterations
             LoessModel model = LoessRegression.Fit(x, y, _config.Bandwidth,
-                _config.Degree, _config.RobustnessIterations,
-                _config.ClassicalRobustIterations);
+                _config.Degree, _config.RobustnessIterations);
             double[] fitted = model.FittedY;
 
             // Outlier removal: remove worst fraction, refit
@@ -537,12 +515,7 @@ namespace pwiz.Osprey.Chromatography
         public static RTCalibration FromModelParams(double[] libraryRts, double[] fittedRts,
             double[] absResiduals, double residualSD)
         {
-            if (libraryRts == null || fittedRts == null)
-                throw new ArgumentNullException(libraryRts == null ? "libraryRts" : "fittedRts");
-            if (libraryRts.Length != fittedRts.Length)
-                throw new ArgumentException("libraryRts and fittedRts must have same length");
-            if (libraryRts.Length == 0)
-                throw new ArgumentException("Model params have no calibration points");
+            ValidateRtPairs(libraryRts, fittedRts, nameof(fittedRts), 1);
 
             // Handle backwards compatibility: if absResiduals not present, use uniform residualSD
             double[] residuals = absResiduals != null && absResiduals.Length == libraryRts.Length
@@ -596,6 +569,30 @@ namespace pwiz.Osprey.Chromatography
             for (int i = 0; i < length; i++)
                 arr[i] = value;
             return arr;
+        }
+
+        /// <summary>
+        /// Argument checks shared by <see cref="RTCalibrator.Fit"/> and
+        /// <see cref="FromModelParams"/>: both arrays present, paired one to one, and at least
+        /// <paramref name="minPoints"/> long.
+        /// </summary>
+        internal static void ValidateRtPairs(double[] libraryRts, double[] pairedRts, string pairedName,
+            int minPoints)
+        {
+            if (libraryRts == null)
+                throw new ArgumentNullException(nameof(libraryRts));
+            if (pairedRts == null)
+                throw new ArgumentNullException(pairedName);
+            if (libraryRts.Length != pairedRts.Length)
+            {
+                throw new ArgumentException(string.Format(@"{0} and {1} must have the same length: {2} vs {3}",
+                    nameof(libraryRts), pairedName, libraryRts.Length, pairedRts.Length));
+            }
+            if (libraryRts.Length < minPoints)
+            {
+                throw new ArgumentException(string.Format(@"Need at least {0} calibration points, got {1}",
+                    minPoints, libraryRts.Length));
+            }
         }
     }
 

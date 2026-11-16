@@ -147,10 +147,10 @@ namespace pwiz.SkylineTestFunctional
             // truncated to MAX_ATTACHMENT_SIZE
             using (new StoreExceptions())
             {
-                SkylineWindow.BeginInvoke(new Action(() =>
+                SkylineWindow.BeginInvoke(() =>
                 {
                     submitErrorReportMenuItem.PerformClick();
-                }));
+                });
                 WaitForCondition(10000, () => null != FindOpenForm<ReportErrorDlg>(), throwOnProgramException: false);
             }
 

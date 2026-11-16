@@ -44,18 +44,23 @@ namespace pwiz.Osprey.Test
         public void TestLibraryFragmentRelease()
         {
             ValidateGapFillCandidatesAreRetained();
-            ValidateReportedPoolIsRetainedOnSecondPassFdr();
             ValidateOnlyUnscorableFragmentsAreReleased();
             ValidateIdentityFieldsSurvive();
             ValidateEveryLegThatHoldsTheLibraryReleasesIt();
-            ValidateValidityKeySuffixTracksWhetherTheReleaseRan();
         }
 
         /// <summary>
-        /// Gap-fill resolves the MISSING charge states of passing peptides, so it names entries
-        /// that did NOT survive compaction - and Stage 6 scores them. If the retained set were
-        /// survivors alone it would strip exactly the spectra gap-fill is about to ask for,
-        /// which is the defect this assertion exists to catch.
+        /// The union is over BOTH terms, whatever the relationship between them. This assertion
+        /// used to be justified by "gap-fill names entries that did NOT survive compaction",
+        /// which is wrong and is what left issue #4650's subset question open: a gap-fill target
+        /// is a precursor that PASSED in a sibling replicate and is missing from THIS file's
+        /// rows, so its base_id is already in the join-wide first-pass set. The corrected
+        /// argument lives on <c>LibraryFragmentRelease.BuildRetainedBaseIds</c>.
+        ///
+        /// <para>The assertion stays, and is worth keeping on the true reason rather than the
+        /// retracted one: it pins that both terms are unioned and that the decoy bit is masked
+        /// off. Nothing downstream may ASSUME the gap-fill term is empty of new base_ids - that
+        /// is an invariant of another class, which this one is not entitled to inline.</para>
         /// </summary>
         private static void ValidateGapFillCandidatesAreRetained()
         {
@@ -76,36 +81,6 @@ namespace pwiz.Osprey.Test
             // it from the reconciliation envelope, which can carry nothing.
             var survivorsOnly = LibraryFragmentRelease.BuildRetainedBaseIds(survivors, null);
             Assert.AreEqual(1, survivorsOnly.Count);
-        }
-
-        /// <summary>
-        /// SecondPassFDR has no survivors + gap-fill pair to work from - FirstPassFDR is excluded
-        /// from a --task SecondPassFDR pipeline - so it retains every base_id in the final
-        /// reported pool instead. Decoys included: a decoy row must retain its base_id rather
-        /// than being skipped, or a decoy whose paired target did not survive would have its
-        /// spectrum pulled out from under the pool it is still in.
-        /// </summary>
-        private static void ValidateReportedPoolIsRetainedOnSecondPassFdr()
-        {
-            var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>
-            {
-                new KeyValuePair<string, List<FdrEntry>>(@"fileA", new List<FdrEntry>
-                {
-                    new FdrEntry { EntryId = 10u },
-                    new FdrEntry { EntryId = 10u | DECOY_BIT }
-                }),
-                new KeyValuePair<string, List<FdrEntry>>(@"fileB", new List<FdrEntry>
-                {
-                    new FdrEntry { EntryId = 10u },
-                    new FdrEntry { EntryId = 40u | DECOY_BIT }
-                })
-            };
-
-            var retained = LibraryFragmentRelease.BuildRetainedBaseIds(perFileEntries);
-
-            Assert.AreEqual(2, retained.Count, @"the decoy bit must be masked off, not counted twice");
-            Assert.IsTrue(retained.Contains(10u));
-            Assert.IsTrue(retained.Contains(40u), @"a decoy-only row still retains its base_id");
         }
 
         /// <summary>
@@ -175,79 +150,27 @@ namespace pwiz.Osprey.Test
         private static void ValidateEveryLegThatHoldsTheLibraryReleasesIt()
         {
             AssertRunsOnLeg(true, @"straight-through", new OspreyConfig());
-            AssertRunsOnLeg(true, @"--task SecondPassFDR",
-                WithInputScores(c => c.ExpectReconciledInput = true));
-            AssertRunsOnLeg(true, @"--input-scores full pipeline", WithInputScores(_ => { }));
-            AssertRunsOnLeg(false, @"--task FirstPassFDR",
-                WithInputScores(c => c.StopAfterStage5 = true));
+            AssertRunsOnLeg(true, OspreyCommandArgs.ARG_TASK + SecondPassFdrTask.TASK_NAME, TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME));
+            // The `--input-scores full pipeline` leg that stood here is gone with the flag:
+            // a single-node full pipeline started from parquets IS the straight-through leg
+            // above now, asserted once rather than twice under two input kinds.
+            AssertRunsOnLeg(false, OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME, TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME));
 
-            // --fdrbench-pass 1 forces the RESIDENT first-pass pool, which never computes a
-            // surviving base_id set, so there is nothing to release against.
-            AssertRunsOnLeg(false, @"--fdrbench-pass 1", new OspreyConfig
+            // --fdrbench-pass 1 used to force the RESIDENT first-pass pool, which never computed
+            // a surviving base_id set, so there was nothing to release against. Since #4507 the
+            // pass-1 emitter streams off the sidecars on the projection path, before compaction
+            // and reading only library sequences and accessions, so the leg releases like any
+            // other - for either selection that includes pass 1.
+            AssertRunsOnLeg(true, OspreyCommandArgs.ARG_FDRBENCH_PASS + OspreyConfig.FDRBENCH_PASS_1, new OspreyConfig
             {
                 OutputFdrBench = @"bench.tsv",
                 FdrBenchPass = OspreyConfig.FDRBENCH_PASS_1
             });
-
-            bool savedProjection = OspreyEnvironment.UseFdrProjection;
-            bool savedRelease = OspreyEnvironment.ReleaseLibraryFragments;
-            try
+            AssertRunsOnLeg(true, OspreyCommandArgs.ARG_FDRBENCH_PASS + @"both", new OspreyConfig
             {
-                OspreyEnvironment.UseFdrProjection = false;
-                AssertRunsOnLeg(false, @"OSPREY_FDR_PROJECTION=0", new OspreyConfig());
-                OspreyEnvironment.UseFdrProjection = savedProjection;
-
-                OspreyEnvironment.ReleaseLibraryFragments = false;
-                AssertRunsOnLeg(false, @"OSPREY_RELEASE_LIBRARY_FRAGMENTS=0", new OspreyConfig());
-            }
-            finally
-            {
-                OspreyEnvironment.UseFdrProjection = savedProjection;
-                OspreyEnvironment.ReleaseLibraryFragments = savedRelease;
-            }
-        }
-
-        /// <summary>
-        /// The suffix records whether the release RAN, not whether the flag was set. Keying it
-        /// on the flag alone left the guarantee resting one gate upstream: a leg that never
-        /// released (Stage 5 forced onto the resident path, say) stamped the same EMPTY suffix
-        /// as a leg that did, so a later run WITH the release could adopt those outputs, skip
-        /// the work, and report the release arm's memory profile without ever executing it.
-        ///
-        /// <para>It is EMPTY on a leg that could not have released either. There the two arms
-        /// are literally the same run, so a term would invalidate output directories - forcing
-        /// hours of re-scoring on an HPC resume - to record a difference that cannot exist.</para>
-        /// </summary>
-        private static void ValidateValidityKeySuffixTracksWhetherTheReleaseRan()
-        {
-            bool savedProjection = OspreyEnvironment.UseFdrProjection;
-            bool savedRelease = OspreyEnvironment.ReleaseLibraryFragments;
-            try
-            {
-                AssertSuffix(true, @"straight-through, released", new OspreyConfig());
-                AssertSuffix(true, @"--task SecondPassFDR, released",
-                    WithInputScores(c => c.ExpectReconciledInput = true));
-                AssertSuffix(true, @"--task FirstPassFDR cannot release",
-                    WithInputScores(c => c.StopAfterStage5 = true));
-
-                OspreyEnvironment.UseFdrProjection = false;
-                AssertSuffix(false, @"could have released, Stage 5 went resident instead",
-                    new OspreyConfig());
-                // SecondPassFDR's release is its own and does not ride the Stage 5 path.
-                AssertSuffix(true, @"--task SecondPassFDR ignores OSPREY_FDR_PROJECTION",
-                    WithInputScores(c => c.ExpectReconciledInput = true));
-                OspreyEnvironment.UseFdrProjection = savedProjection;
-
-                OspreyEnvironment.ReleaseLibraryFragments = false;
-                AssertSuffix(false, @"opted out where a release was possible", new OspreyConfig());
-                AssertSuffix(true, @"opted out where it was not possible anyway",
-                    WithInputScores(c => c.StopAfterStage5 = true));
-            }
-            finally
-            {
-                OspreyEnvironment.UseFdrProjection = savedProjection;
-                OspreyEnvironment.ReleaseLibraryFragments = savedRelease;
-            }
+                OutputFdrBench = @"bench.tsv",
+                FdrBenchPass = OspreyConfig.FDRBENCH_PASS_1 | OspreyConfig.FDRBENCH_PASS_2
+            });
         }
 
         private static void AssertRunsOnLeg(bool expected, string leg, OspreyConfig config)
@@ -257,24 +180,9 @@ namespace pwiz.Osprey.Test
                     leg, expected ? string.Empty : @"NOT "));
         }
 
-        private static void AssertSuffix(bool expectEmpty, string leg, OspreyConfig config)
-        {
-            string suffix = LibraryFragmentRelease.ValidityKeySuffix(MakeContext(config));
-            Assert.AreEqual(expectEmpty, suffix.Length == 0, string.Format(
-                @"{0}: expected {1} suffix, got '{2}'",
-                leg, expectEmpty ? @"an empty" : @"a non-empty", suffix));
-        }
-
         private static PipelineContext MakeContext(OspreyConfig config)
         {
-            return new PipelineContext(config, AnalysisPipeline.CanonicalPipeline(), null, null, null);
-        }
-
-        private static OspreyConfig WithInputScores(Action<OspreyConfig> set)
-        {
-            var config = new OspreyConfig { InputScores = new List<string> { @"a.scores.parquet" } };
-            set(config);
-            return config;
+            return TaskConfigs.ContextFor(config);
         }
 
         /// <summary>

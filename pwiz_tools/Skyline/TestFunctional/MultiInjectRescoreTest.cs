@@ -22,6 +22,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -74,7 +75,13 @@ namespace pwiz.SkylineTestFunctional
             });
 
             var allChromatogramsGraph = WaitForOpenForm<AllChromatogramsGraph>();
-            WaitForConditionUI(() => allChromatogramsGraph.Finished);
+            // A rescore that works finishes in 2-5 seconds, so the default budget spends 12 minutes
+            // in a Debug build establishing what is already known. GetWaitCycles still multiplies
+            // this by 4 for Debug, giving 2 minutes there and 30 seconds in Release.
+            WaitForConditionUI(30 * 1000, () => allChromatogramsGraph.Finished,
+                () => TextUtil.LineSeparate(@"Import never finished. File status:",
+                    TextUtil.LineSeparate(allChromatogramsGraph.Files.Select(f =>
+                        string.Format(@"  {0}: pct={1} error={2}", f.FilePath, f.Progress, f.Error ?? @"(none)")))));
             RunUI(() =>
             {
                 var fileStatuses = allChromatogramsGraph.Files.ToList();

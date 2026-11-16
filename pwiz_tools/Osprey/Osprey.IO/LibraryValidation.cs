@@ -65,9 +65,7 @@ namespace pwiz.Osprey.IO
             // Name the offending peptide: on a multi-million-row library an error that
             // does not is unactionable.
             throw new InvalidDataException(string.Format(
-                "Library peptide '{0}' has {1} residues; the minimum supported length is {2}. " +
-                "Peptides this short are not specific enough to identify and are excluded by " +
-                "convention from spectral libraries. Rebuild the library with a longer minimum.",
+                OspreyIOResources.LibraryValidation_ValidatePeptideLength_Library_peptide___0___has__1__residues__the_minimum_supported_length_is__2___Peptides_,
                 sequence, sequence.Length, MIN_PEPTIDE_LENGTH));
         }
     }

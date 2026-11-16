@@ -1,6 +1,7 @@
 /*
  * Original author: brendanx .at. uw.edu
  * AI assistance: Cursor (Claude Sonnet 4) <cursor .at. anysphere.co>
+ *                Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2025 University of Washington - Seattle, WA
  * 
@@ -22,9 +23,13 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using System;
 using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Net.Sockets;
 using System.Text;
 
 namespace pwiz.SkylineTestFunctional
@@ -44,6 +49,7 @@ namespace pwiz.SkylineTestFunctional
             TestDnsFailureHandling();
             TestConnectionFailureHandling();
             TestTimeoutHandling();
+            TestRequestTimeoutOnStalledServer();
             TestConnectionLossHandling();
             TestCancellationHandling();
             TestCancellationClickByException();
@@ -67,7 +73,10 @@ namespace pwiz.SkylineTestFunctional
             
             // Category: Download - Cancellation tests
             TestDownloadCancellationViaButton();
-            
+
+            // Category: Download - Retries of a tool download
+            TestDownloadRetries();
+
             // Category: Upload - Network failure tests
             TestUploadFileDnsFailure();
             TestUploadFileConnectionFailure();
@@ -100,8 +109,10 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestDnsFailureHandling()
         {
-            using var helper = HttpClientTestHelper.SimulateDnsFailure();
-            ValidateDownloadFailure(helper, "http://nonexistent.example.com");
+            using (var helper = HttpClientTestHelper.SimulateDnsFailure())
+                ValidateDownloadFailure(helper, "http://nonexistent.example.com");
+            using (var helper = HttpClientTestHelper.SimulateDnsNoDataFailure())
+                ValidateDownloadFailure(helper, "http://nonexistent.example.com");
         }
 
         private static void TestConnectionFailureHandling()
@@ -114,6 +125,56 @@ namespace pwiz.SkylineTestFunctional
         {
             using var helper = HttpClientTestHelper.SimulateTimeout();
             ValidateDownloadFailure(helper, "http://slow.example.com");
+        }
+
+        /// <summary>
+        /// A server that accepts the connection and then never answers must not block the caller
+        /// forever. The simulation helpers replace the transport, so only a real socket exercises
+        /// the wait for a response, which is the wait that has no timeout of its own.
+        /// </summary>
+        private static void TestRequestTimeoutOnStalledServer()
+        {
+            // This is the one case here that must reach the real transport, so no simulation may be
+            // installed - one left behind would answer before a socket was touched and pass green.
+            Assert.IsNull(HttpClientWithProgress.TestBehavior);
+
+            // A started listener completes the handshake from the kernel backlog, so the connection
+            // is accepted and then answered by nobody without any code accepting it.
+            var listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start();
+            var responseTimeout = HttpClientWithProgress.ResponseTimeoutMilliseconds;
+            HttpClientWithProgress.ResponseTimeoutMilliseconds = 2000; // No point waiting out the real one
+            try
+            {
+                var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+
+                // Run the request on its own thread and join with a deadline, so a regression is a
+                // failed assertion here rather than a test that never returns.
+                Exception thrown = null;
+                var requestThread = ActionUtil.RunAsync(() =>
+                {
+                    try
+                    {
+                        using var httpClient = new HttpClientWithProgress();
+                        httpClient.DownloadString(new Uri($@"http://127.0.0.1:{port}/stalled"));
+                    }
+                    catch (Exception x)
+                    {
+                        thrown = x;
+                    }
+                });
+
+                Assert.IsTrue(requestThread.Join(TimeSpan.FromSeconds(30)),
+                    "Request to a server that never answers did not return");
+                var networkException = thrown as NetworkRequestException;
+                Assert.IsNotNull(networkException, $"Expected a network failure, got {thrown}");
+                Assert.AreEqual(NetworkFailureType.Timeout, networkException.FailureType);
+            }
+            finally
+            {
+                HttpClientWithProgress.ResponseTimeoutMilliseconds = responseTimeout;
+                listener.Stop();
+            }
         }
 
         private static void TestConnectionLossHandling()
@@ -363,6 +424,84 @@ namespace pwiz.SkylineTestFunctional
                 FindOpenForm<LongWaitDlg>() == null));
         }
 
+        /// <summary>
+        /// A tool download is retried after a failure that may not happen again, including a connection
+        /// that drops mid-download, and is not retried after a failure that will.
+        /// </summary>
+        private void TestDownloadRetries()
+        {
+            var filePath = TestContext.GetTestResultsPath("retried_download.dat");
+            var mockData = new byte[] { 0x01, 0x02, 0x03 };
+
+            // The connection drops mid-download twice, then the download succeeds
+            int attempts = 0;
+            var dropTwice = new HttpClientTestBehavior
+            {
+                ResponseFactory = uri => ++attempts <= 2 ? new DroppedConnectionStream() : new MemoryStream(mockData)
+            };
+            using (new HttpClientTestHelper(dropTwice))
+                DownloadToolFile(filePath);
+            Assert.AreEqual(3, attempts);
+            CollectionAssert.AreEqual(mockData, File.ReadAllBytes(filePath));
+
+            // A server error is retried MAX_DOWNLOAD_RETRIES times before the download fails
+            ValidateDownloadAttempts(new HttpRequestException("Response status code does not indicate success: 503 (Service Unavailable)."),
+                1 + MultiFileAsynchronousDownloadClient.MAX_DOWNLOAD_RETRIES, filePath);
+            // A missing file and having no network are not retried
+            ValidateDownloadAttempts(new HttpRequestException("Response status code does not indicate success: 404 (Not Found)."),
+                1, filePath);
+            ValidateDownloadAttempts(new HttpClientWithProgress.NoNetworkTestException(), 1, filePath);
+        }
+
+        private static void ValidateDownloadAttempts(Exception failure, int expectedAttempts, string filePath)
+        {
+            var behavior = new AttemptCountingTestBehavior { FailureException = failure };
+            using (new HttpClientTestHelper(behavior))
+            {
+                AssertEx.ThrowsException<NetworkRequestException>(() => DownloadToolFile(filePath));
+            }
+            Assert.AreEqual(expectedAttempts, behavior.Attempts, $"Download attempts after {failure.Message}");
+        }
+
+        private static void DownloadToolFile(string filePath)
+        {
+            using var client = new MultiFileAsynchronousDownloadClient(new SilentProgressMonitor(), 1);
+            client.DownloadFileAsyncOrThrow(new Uri("http://example.com/tool.zip"), filePath);
+        }
+
+        private class AttemptCountingTestBehavior : HttpClientTestBehavior
+        {
+            public int Attempts { get; private set; }
+
+            public override void OnException(Uri uri, Exception exception)
+            {
+                Attempts++;
+            }
+        }
+
+        /// <summary>
+        /// A response stream whose connection drops on the first read.
+        /// </summary>
+        private class DroppedConnectionStream : Stream
+        {
+            public override int Read(byte[] buffer, int offset, int count) =>
+                throw new IOException("The response ended prematurely.");
+
+            public override bool CanRead => true;
+            public override bool CanSeek => false;
+            public override bool CanWrite => false;
+            public override long Length => throw new NotSupportedException();
+            public override long Position
+            {
+                get => throw new NotSupportedException();
+                set => throw new NotSupportedException();
+            }
+            public override void Flush() { }
+            public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+            public override void SetLength(long value) => throw new NotSupportedException();
+            public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        }
+
         private static void TestSuccessCase()
         {
             // No helper needed - test normal operation
@@ -447,8 +586,10 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestUploadFileDnsFailure()
         {
-            using var helper = HttpClientTestHelper.SimulateDnsFailure();
-            ValidateUploadFailure(helper, "http://nonexistent.example.com");
+            using (var helper = HttpClientTestHelper.SimulateDnsFailure())
+                ValidateUploadFailure(helper, "http://nonexistent.example.com");
+            using (var helper = HttpClientTestHelper.SimulateDnsNoDataFailure())
+                ValidateUploadFailure(helper, "http://nonexistent.example.com");
         }
 
         private void TestUploadFileConnectionFailure()

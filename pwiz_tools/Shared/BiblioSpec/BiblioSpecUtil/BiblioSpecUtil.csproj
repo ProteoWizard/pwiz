@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- BiblioSpecUtil: the wrapper Skyline runs the BiblioSpec executables through. Tiny wrapper
+       that shells out to BlibBuild.exe / BlibFilter.exe; depends on Common. The .blib schema and
+       writer are the sibling BiblioSpec.IO project, which has no process wrapper. -->
+  <PropertyGroup>
+    <ProjectGuid>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</ProjectGuid>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Platforms>AnyCPU;x64</Platforms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>pwiz.BiblioSpec</RootNamespace>
+    <AssemblyName>BiblioSpecUtil</AssemblyName>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Company>University of Washington</Company>
+    <Product>BiblioSpec</Product>
+    <AssemblyTitle>BiblioSpecUtil</AssemblyTitle>
+    <Copyright>Copyright © University of Washington 2026</Copyright>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\CommonUtil\CommonUtil.csproj" />
+  </ItemGroup>
+
+</Project>

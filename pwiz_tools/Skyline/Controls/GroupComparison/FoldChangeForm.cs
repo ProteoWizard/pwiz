@@ -358,7 +358,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 if (!string.IsNullOrEmpty(form._groupComparisonName) &&
                     !groupComparisonNames.Contains(form._groupComparisonName))
                 {
-                    form.BeginInvoke(new Action(form.Close));
+                    form.BeginInvoke(form.Close);
                 }
             }
         }

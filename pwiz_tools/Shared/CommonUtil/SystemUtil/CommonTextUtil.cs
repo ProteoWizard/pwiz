@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -76,12 +77,17 @@ namespace pwiz.Common.SystemUtil
         /// Encrypts a string. This encryption uses the user's (i.e. not machine) key, so it is 
         /// appropriate for strings that are marked with the [UserScopedSetting].
         /// It is not appropriate for any setting marked [ApplicationScopedSetting]
+        /// <para>Windows-only: DPAPI has no equivalent elsewhere, and this assembly targets plain
+        /// net10.0 so that Osprey can consume it on Linux. Every caller today is a
+        /// net10.0-windows project, which carries the platform attribute implicitly.</para>
         /// </summary>
+        [SupportedOSPlatform("windows")]
         public static string EncryptString(string str)
         {
             return Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(str), null, DataProtectionScope.CurrentUser));
         }
 
+        [SupportedOSPlatform("windows")]
         public static string DecryptString(string str)
         {
             return Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(str), null, DataProtectionScope.CurrentUser));

@@ -132,6 +132,24 @@ namespace pwiz.CommonFileDialogs {
             }
         }
 
+        /// <summary>
+        ///   Looks up a localized string similar to Scanning....
+        /// </summary>
+        public static string BaseFileDialogNE_populateListViewFromDirectory_Scanning___ {
+            get {
+                return ResourceManager.GetString("BaseFileDialogNE_populateListViewFromDirectory_Scanning___", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Scanning... {0} items.
+        /// </summary>
+        public static string BaseFileDialogNE_populateListViewFromDirectory_Scanning____0__items {
+            get {
+                return ResourceManager.GetString("BaseFileDialogNE_populateListViewFromDirectory_Scanning____0__items", resourceCulture);
+            }
+        }
+
         public static string OpenDataSourceDialog_populateListViewFromDirectory_access_failure {
             get {
                 return ResourceManager.GetString("OpenDataSourceDialog_populateListViewFromDirectory_access_failure", resourceCulture);
@@ -189,6 +207,24 @@ namespace pwiz.CommonFileDialogs {
         public static string OpenDataSourceDialog_Open_Please_select_one_or_more_data_sources {
             get {
                 return ResourceManager.GetString("OpenDataSourceDialog_Open_Please_select_one_or_more_data_sources", resourceCulture);
+            }
+        }
+
+        public static string BaseFileDialogNE_NewFolder {
+            get {
+                return ResourceManager.GetString("BaseFileDialogNE_NewFolder", resourceCulture);
+            }
+        }
+
+        public static string BaseFileDialogNE_BeginCreateNewFolder_New_folder {
+            get {
+                return ResourceManager.GetString("BaseFileDialogNE_BeginCreateNewFolder_New_folder", resourceCulture);
+            }
+        }
+
+        public static string BaseFileDialogNE_Refresh {
+            get {
+                return ResourceManager.GetString("BaseFileDialogNE_Refresh", resourceCulture);
             }
         }
     }

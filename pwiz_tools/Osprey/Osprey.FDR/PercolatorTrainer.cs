@@ -25,6 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
@@ -48,12 +50,22 @@ namespace pwiz.Osprey.FDR
         // iteration keeps the previous set rather than collapsing.
         private static readonly int MIN_POSITIVE = 50;
 
+        /// <summary>Fewest rows a parallel tree-scoring slice gets; fewer rows are scored serially.</summary>
+        private const int MIN_ROWS_PER_SCORE_SLICE = 20000;
+
         /// <summary>
         /// Run the Percolator algorithm on a collection of entries.
         /// </summary>
+        /// <param name="entries">The entries to train on and, unless train-only, to score.</param>
+        /// <param name="config">The training configuration.</param>
+        /// <param name="initialEntryScores">Optional per-entry scores the first positive-set
+        /// selection starts from, in place of the best single feature. Round 2 of
+        /// <see cref="TrainWithScorePrefilter"/> passes the round-1 model's scores. Null (every
+        /// other caller) keeps the best-initial-feature start.</param>
         public static PercolatorResults RunPercolator(
             IList<PercolatorEntry> entries,
-            PercolatorConfig config)
+            PercolatorConfig config,
+            double[] initialEntryScores = null)
         {
             if (entries.Count == 0)
                 return new PercolatorResults();
@@ -81,8 +93,8 @@ namespace pwiz.Osprey.FDR
             Matrix stdFeatures;
             var standardizer = FeatureStandardizer.FitTransform(features, out stdFeatures);
             swSetup.Stop();
-            OspreyOutput.Out.WriteLine(
-                $"[TIMING]   Percolator setup + standardize: {swSetup.Elapsed.TotalSeconds:F1}s ({n} entries x {nFeatures} features)");
+            OspreyLog.Out.LogInfo(LogTag.TIMING, @"  Percolator setup + standardize: {0:F1}s ({1} peaks x {2} features)",
+                swSetup.Elapsed.TotalSeconds, n, nFeatures);
 
             // Stage 5 standardizer dump. Gated by the injected diagnostics config
             // (OSPREY_DUMP_STANDARDIZER); a *Only request returns the abort
@@ -113,7 +125,7 @@ namespace pwiz.Osprey.FDR
             //     N times, which would inflate apparent target/decoy separation and
             //     cause the SVM to learn file-specific noise rather than peptide
             //     discriminating features. Mirrors the streaming Percolator path's
-            //     dedup step (RunPercolatorStreaming); the Rust direct path
+            //     dedup step; the Rust direct path
             //     historically omitted this step, but on multi-file inputs sized
             //     below the streaming threshold (Stellar 3-file at 393k entries)
             //     the omission produced a statistically incorrect training set
@@ -136,7 +148,7 @@ namespace pwiz.Osprey.FDR
                     dedupDecoys++;
                 else dedupTargets++;
             }
-            OspreyOutput.Out.WriteLine("[COUNT]   Percolator best-per-precursor: {0} entries ({1} targets, {2} decoys) from {3} total",
+            OspreyLog.Out.LogInfo(LogTag.COUNT, @"  Percolator best-per-precursor: {0} precursors ({1} targets, {2} decoys) from {3} peaks",
                 bestPerPrecursor.Length, dedupTargets, dedupDecoys, n);
 
             int subN = trainSubset.Length;
@@ -147,7 +159,7 @@ namespace pwiz.Osprey.FDR
                     subDecoys++;
                 else subTargets++;
             }
-            OspreyOutput.Out.WriteLine("[COUNT]   Percolator subsample: {0} entries ({1} targets, {2} decoys) from {3} dedup",
+            OspreyLog.Out.LogInfo(LogTag.COUNT, @"  Percolator subsample: {0} precursors ({1} targets, {2} decoys) from {3} dedup",
                 subN, subTargets, subDecoys, bestPerPrecursor.Length);
 
             // Build subset-local arrays.
@@ -188,34 +200,57 @@ namespace pwiz.Osprey.FDR
                     return new PercolatorResults { DiagnosticAbort = true };
             }
 
-            // 5. Find best initial feature
+            // 5. Find best initial feature - or, when the caller supplies initial scores (round 2
+            //    of the two-round tree training), start from those instead.
             double trainFdr = config.TrainFdr;
-            int bestFeatIdx;
-            int bestFeatPassing;
-            FindBestInitialFeature(subFeatures, subLabels, subEntryIds, trainFdr,
-                out bestFeatIdx, out bestFeatPassing);
-
-            if (bestFeatPassing == 0)
+            double[] initialScores;
+            if (initialEntryScores != null)
             {
-                double relaxedFdr = 0.05;
-                FindBestInitialFeature(subFeatures, subLabels, subEntryIds, relaxedFdr,
-                    out bestFeatIdx, out bestFeatPassing);
-                if (bestFeatPassing > 0)
-                    trainFdr = relaxedFdr;
+                initialScores = new double[subN];
+                for (int i = 0; i < subN; i++)
+                    initialScores[i] = initialEntryScores[trainSubset[i]];
+                int seedPassing = PercolatorQValues.CountPassing(initialScores, subLabels, subEntryIds, trainFdr);
+                if (seedPassing == 0)
+                {
+                    double relaxedFdr = 0.05;
+                    int relaxedPassing = PercolatorQValues.CountPassing(initialScores, subLabels, subEntryIds, relaxedFdr);
+                    if (relaxedPassing > 0)
+                    {
+                        trainFdr = relaxedFdr;
+                        seedPassing = relaxedPassing;
+                    }
+                }
+                OspreyLog.Out.LogInfo(LogTag.COUNT, @"Initial score: supplied scores ({0} targets at {1:F0}% FDR)",
+                    seedPassing, trainFdr * 100.0);
             }
+            else
+            {
+                int bestFeatIdx;
+                int bestFeatPassing;
+                FindBestInitialFeature(subFeatures, subLabels, subEntryIds, trainFdr,
+                    out bestFeatIdx, out bestFeatPassing);
 
-            string bestFeatName = (config.FeatureInfos != null &&
-                                   bestFeatIdx >= 0 &&
-                                   bestFeatIdx < config.FeatureInfos.Length)
-                ? config.FeatureInfos[bestFeatIdx].Name
-                : string.Format("feature_{0}", bestFeatIdx);
-            OspreyOutput.Out.WriteLine(
-                "[COUNT] Best initial feature: {0} ({1} targets at {2:F0}% FDR)",
-                bestFeatName, bestFeatPassing, trainFdr * 100.0);
+                if (bestFeatPassing == 0)
+                {
+                    double relaxedFdr = 0.05;
+                    FindBestInitialFeature(subFeatures, subLabels, subEntryIds, relaxedFdr,
+                        out bestFeatIdx, out bestFeatPassing);
+                    if (bestFeatPassing > 0)
+                        trainFdr = relaxedFdr;
+                }
 
-            var initialScores = new double[subN];
-            for (int i = 0; i < subN; i++)
-                initialScores[i] = subFeatures[i, bestFeatIdx];
+                string bestFeatName = (config.FeatureInfos != null &&
+                                       bestFeatIdx >= 0 &&
+                                       bestFeatIdx < config.FeatureInfos.Length)
+                    ? config.FeatureInfos[bestFeatIdx].Name
+                    : string.Format(@"feature_{0}", bestFeatIdx);
+                OspreyLog.Out.LogInfo(LogTag.COUNT, @"Best initial feature: {0} ({1} targets at {2:F0}% FDR)",
+                    bestFeatName, bestFeatPassing, trainFdr * 100.0);
+
+                initialScores = new double[subN];
+                for (int i = 0; i < subN; i++)
+                    initialScores[i] = subFeatures[i, bestFeatIdx];
+            }
 
             // 6. Train per-fold models via cross-validation
             var finalScores = new double[n];
@@ -225,17 +260,20 @@ namespace pwiz.Osprey.FDR
 
             var foldModels = new LinearSvmClassifier[config.NFolds];
             // Populated instead of foldModels when config.UseGradientBoostedTrees
-            // (--fdr-method gbdt). Exactly one of the two is non-null.
+            // (OSPREY_FDR_MODEL=gbdt). Exactly one of the two is non-null.
             var foldGbtModels = config.UseGradientBoostedTrees
                 ? new GradientBoostedTrees[config.NFolds]
                 : null;
             var foldIterations = new int[config.NFolds];
+            // Each fold's final training set, for the training-set analysis; null when not asked
+            // for, which leaves the fold loops exactly as they were.
+            var foldTrainingSets = config.CollectTrainingAnalysis ? new FoldTrainingSet[config.NFolds] : null;
 
             // Fold models are trained into the caller-allocated arrays (exactly one
             // of foldModels / foldGbtModels is populated, per config).
             TrainFoldModels(config, subFeatures, subLabels, subEntryIds, subPeptides,
                 foldAssignments, initialScores, subN, subTargets, nFeatures, trainFdr,
-                foldModels, foldGbtModels, foldIterations);
+                foldModels, foldGbtModels, foldIterations, foldTrainingSets);
 
             // Stage 5 SVM-internals dump. Gated by OSPREY_DUMP_SVM_WEIGHTS;
             // a *Only request returns the abort sentinel. Captures per-fold
@@ -252,6 +290,27 @@ namespace pwiz.Osprey.FDR
                 PercolatorDiagnosticsDump.WriteSvmWeightsDump(foldModels, foldIterations, config.FeatureInfos);
                 if (config.Diagnostics.SvmWeightsOnly)
                     return new PercolatorResults { DiagnosticAbort = true };
+            }
+
+            // Training-set analysis (#4550, #4467): a read of the resident subset and the trained
+            // folds that never touches a model or a score the pipeline uses.
+            TrainingSetAnalysis trainingAnalysis = null;
+            if (foldTrainingSets != null)
+            {
+                var swAnalysis = Stopwatch.StartNew();
+                var foldScorers = new Func<double[], double>[config.NFolds];
+                for (int fold = 0; fold < config.NFolds; fold++)
+                {
+                    if (foldGbtModels != null)
+                        foldScorers[fold] = foldGbtModels[fold].ScoreSingle;
+                    else
+                        foldScorers[fold] = foldModels[fold].ScoreSingle;
+                }
+                trainingAnalysis = TrainingSetAnalysis.Compute(subFeatures, subLabels, subEntryIds,
+                    foldAssignments, foldTrainingSets, foldScorers, foldIterations, trainFdr, config.Seed, config.NThreads,
+                    foldGbtModels != null ? TrainingSetAnalysis.TREE_PERMUTATION_ROW_CAP : int.MaxValue);
+                OspreyLog.Out.LogInfo(LogTag.TIMING, @"  Percolator training-set analysis: {0:F1}s",
+                    swAnalysis.Elapsed.TotalSeconds);
             }
 
             // Train-only mode: return fold models + standardizer; skip the
@@ -284,7 +343,11 @@ namespace pwiz.Osprey.FDR
                         ? new List<GradientBoostedTrees>(foldGbtModels)
                         : null,
                     Standardizer = standardizer,
-                    IterationsPerFold = trainIterations
+                    IterationsPerFold = trainIterations,
+                    TrainEntryFolds = foldGbtModels != null && config.ReportTrainEntryFolds
+                        ? BuildEntryFolds(n, trainSubset, foldAssignments)
+                        : null,
+                    TrainingAnalysis = trainingAnalysis
                 };
             }
 
@@ -341,6 +404,10 @@ namespace pwiz.Osprey.FDR
             var runPeptideQvalues = PercolatorQValues.ComputePerRunPeptideQvalues(
                 finalScores, labels, entryIds, fileNames, peptides);
 
+            // The peptide PEP comes from the experiment peptide competition either way; with
+            // one file that competition is the run's own.
+            var expPeptideCompetitionQvalues = PercolatorQValues.ComputeExperimentPeptideQvalues(
+                finalScores, labels, entryIds, peptides, out double[] peptidePeps);
             double[] expPrecursorQvalues;
             double[] expPeptideQvalues;
             if (isSingleFile)
@@ -352,14 +419,13 @@ namespace pwiz.Osprey.FDR
             {
                 expPrecursorQvalues = PercolatorQValues.ComputeExperimentPrecursorQvalues(
                     finalScores, labels, entryIds);
-                expPeptideQvalues = PercolatorQValues.ComputeExperimentPeptideQvalues(
-                    finalScores, labels, entryIds, peptides);
+                expPeptideQvalues = expPeptideCompetitionQvalues;
             }
 
             // Best-of-runs monotonicity (issue #4390 clamp, memory-bounded flat form): floor
             // each experiment q up to the entry's best (min-over-runs) combined run q, so an
             // experiment-level q is never more confident than the entry's best single run.
-            // Identical floors to PercolatorEngine.ClampExperimentQToBestRun, over the flat
+            // Identical floors to PercolatorEngine.AccumulateExperimentQFloors, over the flat
             // score-pass arrays (no resident FdrEntry buffer). Covers the direct dispatch.
             PercolatorQValues.ClampExperimentQToBestRunFlat(
                 entryIds, labels, peptides, runPrecursorQvalues, runPeptideQvalues,
@@ -371,15 +437,15 @@ namespace pwiz.Osprey.FDR
             // model it decomposes -- a pure read of stdFeatures + foldWeights that
             // never perturbs finalScores / q-values (serial in row/index order).
             // The table characterizes the AVERAGED model -- the same object the
-            // production streaming path (ScorePopulationAndComputeFdr) actually
+            // production streaming path actually
             // scores with -- not the per-entry CV ensemble that produced
             // finalScores on this test / small-input standalone path.
             // Null on the gradient-boosted-trees path: the report decomposes a score
             // into per-feature weight x mean-difference terms, which only exists for a
             // linear model. A tree ensemble's analogue is split-gain importance -- a
             // different quantity that would need its own report rather than a
-            // reinterpretation of this one. Callers already tolerate null (the Simple
-            // and transfer 2nd-pass paths return it), so the --model-diagnostics Model
+            // reinterpretation of this one. Callers already tolerate null (the transfer
+            // 2nd-pass path returns it), so the --model-diagnostics Model
             // panel renders "n/a" exactly as it does for transfer-compete.
             FeatureContributions contributions = null;
             if (!config.UseGradientBoostedTrees)
@@ -387,7 +453,7 @@ namespace pwiz.Osprey.FDR
                 var contribAcc = new FeatureContributions.Accumulator(nFeatures, config.CollectFeatureHistograms);
                 for (int i = 0; i < n; i++)
                     contribAcc.Add(stdFeatures, i, labels[i]);   // labels[i] == IsDecoy
-                contributions = contribAcc.Build(foldWeights, config.FeatureInfos);
+                contributions = contribAcc.Build(foldWeights, config.FeatureInfos, trainingAnalysis);
                 PercolatorDiagnosticsDump.EmitFeatureContributions(contributions);
             }
 
@@ -402,7 +468,8 @@ namespace pwiz.Osprey.FDR
                     RunPeptideQvalue = runPeptideQvalues[i],
                     ExperimentPrecursorQvalue = expPrecursorQvalues[i],
                     ExperimentPeptideQvalue = expPeptideQvalues[i],
-                    Pep = peps[i]
+                    Pep = peps[i],
+                    ExperimentPeptidePep = peptidePeps[i]
                 });
             }
 
@@ -416,8 +483,117 @@ namespace pwiz.Osprey.FDR
                     : null,
                 Standardizer = standardizer,
                 IterationsPerFold = iterationsPerFold,
-                FeatureContributions = contributions
+                FeatureContributions = contributions,
+                TrainingAnalysis = trainingAnalysis
             };
+        }
+
+        /// <summary>
+        /// Two-round tree training (<see cref="PercolatorConfig.PrefilterTrainSize"/>,
+        /// <c>OSPREY_GBT_PREFILTER_SIZE</c>). Round 1 is the usual train-only
+        /// <see cref="RunPercolator"/> on the <paramref name="round1Subset"/> rows of
+        /// <paramref name="candidates"/> - the random peptide-grouped subsample. Its fold models
+        /// then score EVERY candidate: a round-1 training row by the one fold model that held it
+        /// out, any other row by the mean of the fold models, which is how the score pass scores a
+        /// row the models never saw. Round 2 is the same train-only training on the
+        /// best-scoring peptide groups (<see cref="PercolatorSampling.SelectTopScoringGroups"/>),
+        /// up to <see cref="PercolatorConfig.PrefilterTrainSize"/> rows, and replaces round 1.
+        ///
+        /// <para>Round 2's first positive set is chosen by the same round-1 scores the subset was
+        /// selected by, not by the best single feature. Within a subset of rows that already score
+        /// well, no single feature separates targets from decoys well, so a feature start picks a
+        /// poor first positive set; a fold whose first model wins its held-out selection then stops
+        /// on that model, and on SEA-AD that collapsed the result for some seeds. Selecting the
+        /// subset itself by a single feature fails the same way, which is why round 1 is
+        /// required. Otherwise round 2 is the unchanged <see cref="RunPercolator"/>, with only the
+        /// subsample turned off (the subset is already the selection).</para>
+        ///
+        /// <para>Every candidate must carry its feature vector. Deterministic and independent of
+        /// <see cref="PercolatorConfig.NThreads"/>: a tree score depends only on its own row, and
+        /// the selection orders groups by a total order.</para>
+        /// </summary>
+        /// <param name="candidates">The best-per-precursor rows the subsampler chose from, at
+        /// most one per (base_id, isDecoy).</param>
+        /// <param name="round1Subset">Ascending indices into <paramref name="candidates"/>: the
+        /// round-1 training rows.</param>
+        /// <param name="trainConfig">The train-only tree config.</param>
+        /// <param name="log">Where the round-2 subset is reported.</param>
+        /// <param name="passLabel">The pass label for the log lines.</param>
+        /// <param name="round2Entries">The round-2 training rows, which the caller treats as the
+        /// training rows from here on (the held-out folds of <c>OSPREY_GBT_OOF</c> are keyed by
+        /// them).</param>
+        internal static PercolatorResults TrainWithScorePrefilter(
+            IList<PercolatorEntry> candidates,
+            int[] round1Subset,
+            PercolatorConfig trainConfig,
+            IOspreyLog log,
+            string passLabel,
+            out List<PercolatorEntry> round2Entries)
+        {
+            if (!trainConfig.UseGradientBoostedTrees)
+                throw new InvalidOperationException(@"TrainWithScorePrefilter trains the tree model only.");
+            int prefilterSize = trainConfig.PrefilterTrainSize;
+            if (prefilterSize <= 0)
+                throw new ArgumentOutOfRangeException(nameof(trainConfig), @"PrefilterTrainSize must be positive.");
+
+            // Round 1: exactly the single-round training, plus each training row's held-out fold.
+            // No diagnostic dumps: they describe the model that is used, which is round 2's, so a
+            // dump-only request aborts on round 2's state (and round 1 never aborts).
+            var round1Entries = new List<PercolatorEntry>(round1Subset.Length);
+            foreach (int k in round1Subset)
+                round1Entries.Add(candidates[k]);
+            var round1Config = trainConfig.CloneForTrainOnly();
+            round1Config.ReportTrainEntryFolds = true;
+            round1Config.Diagnostics = null;
+            var round1 = RunPercolator(round1Entries, round1Config);
+
+            // Score every candidate with the round-1 models, out of fold where it trained.
+            int m = candidates.Count;
+            var heldOutFold = new Dictionary<int, int>(round1Subset.Length);
+            for (int s = 0; s < round1Subset.Length; s++)
+            {
+                int fold = round1.TrainEntryFolds[s];
+                if (fold >= 0)
+                    heldOutFold[round1Subset[s]] = fold;
+            }
+            int nFeatures = candidates.Count > 0 ? candidates[0].Features.Length : 0;
+            var round1Scores = new double[m];
+            PercolatorScorer.ScoreRowsGbt(m, k => candidates[k].Features, round1.FoldGbtModels,
+                round1.Standardizer, nFeatures, round1Scores, 0, trainConfig.NThreads, heldOutFold);
+
+            // Round 2's subset: the best-scoring peptide groups, kept whole.
+            var labels = new bool[m];
+            var entryIds = new uint[m];
+            var peptides = new string[m];
+            for (int k = 0; k < m; k++)
+            {
+                labels[k] = candidates[k].IsDecoy;
+                entryIds[k] = candidates[k].EntryId;
+                peptides[k] = candidates[k].Peptide;
+            }
+            int[] selected = PercolatorSampling.SelectTopScoringGroups(
+                labels, entryIds, peptides, round1Scores, prefilterSize);
+            round2Entries = new List<PercolatorEntry>(selected.Length);
+            var round2InitialScores = new double[selected.Length];
+            int round2Targets = 0;
+            foreach (int k in selected)
+            {
+                round2InitialScores[round2Entries.Count] = round1Scores[k];
+                round2Entries.Add(candidates[k]);
+                if (!labels[k])
+                    round2Targets++;
+            }
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator prefilter subsample (round 2): {1} precursors ({2} targets, {3} decoys) from {4} candidates by round-1 score",
+                passLabel, round2Entries.Count, round2Targets, round2Entries.Count - round2Targets, m);
+
+            // Round 2: the same training on that subset, its first positive set chosen by the
+            // round-1 scores the subset was selected by. MaxTrainSize 0 turns the subsample off:
+            // the rows are already one per precursor, so the dedup keeps them all.
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator prefilter round 2 initial score: round-1 model (out of fold for round-1 training rows, fold mean otherwise)",
+                passLabel);
+            var round2Config = trainConfig.CloneForTrainOnly();
+            round2Config.MaxTrainSize = 0;
+            return RunPercolator(round2Entries, round2Config, round2InitialScores);
         }
 
         /// <summary>
@@ -489,6 +665,17 @@ namespace pwiz.Osprey.FDR
             }
         }
 
+        /// <summary>The fold each of the <paramref name="n"/> input entries was held out of, or -1
+        /// for an entry outside the training subset.</summary>
+        private static int[] BuildEntryFolds(int n, int[] trainSubset, int[] foldAssignments)
+        {
+            var folds = new int[n];
+            for (int i = 0; i < n; i++)
+                folds[i] = -1;
+            for (int i = 0; i < trainSubset.Length; i++)
+                folds[trainSubset[i]] = foldAssignments[i];
+            return folds;
+        }
 
         /// <summary>
         /// Cross-validated per-fold model training: precompute each fold's training
@@ -517,7 +704,8 @@ namespace pwiz.Osprey.FDR
             double trainFdr,
             LinearSvmClassifier[] foldModels,
             GradientBoostedTrees[] foldGbtModels,
-            int[] foldIterations)
+            int[] foldIterations,
+            FoldTrainingSet[] foldTrainingSets)
         {
             var foldElapsed = new double[config.NFolds];
             // Selected SVM cost C per fold (chosen by inner CV over config.CValues,
@@ -557,8 +745,14 @@ namespace pwiz.Osprey.FDR
             // Section sub-header (default human log): the actual (possibly subsampled)
             // training-set size the per-iteration percent lines below are computed against.
             // subN / subTargets are the post-subsample counts computed above.
-            OspreyOutput.Out.WriteLine("  {0}-fold cross-validation on {1} training entries ({2} targets)",
-                config.NFolds, subN, subTargets);
+            CommandOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
+                OspreyFDRResources.PercolatorTrainer_TrainFoldModels__0__fold_cross_validation_on__1__training_peaks___2__targets_,
+                config.NFolds, subN, subTargets));
+
+            // The folds train concurrently, so each gets an equal share of the thread budget
+            // for its trees' histograms and re-scoring. The trained model is bit-identical at
+            // any thread count, so this changes only the wall clock.
+            int threadsPerFold = Math.Max(1, config.NThreads / Math.Max(1, config.NFolds));
 
             var swTrain = Stopwatch.StartNew();
             var trainProgress = new TrainProgressReporter(config.NFolds, config.MaxIterations, trainFdr);
@@ -574,7 +768,7 @@ namespace pwiz.Osprey.FDR
                     foldGbtModels[fold] = TrainFoldGbt(
                         subFeatures, subLabels, subEntryIds, subPeptides,
                         foldTrainIndices[fold], initialScores, config, trainFdr,
-                        fold, trainProgress, out iters);
+                        threadsPerFold, fold, trainProgress, foldTrainingSets, out iters);
                     // No C to sweep: the trees are regularized by depth / gamma /
                     // lambda / min-child-weight, all fixed by GbtParams.
                     foldBestC[fold] = double.NaN;
@@ -585,7 +779,7 @@ namespace pwiz.Osprey.FDR
                     foldModels[fold] = TrainFold(
                         subFeatures, subLabels, subEntryIds, subPeptides,
                         foldTrainIndices[fold], initialScores, config, trainFdr,
-                        svmScratchPool, fold, trainProgress, out iters, out foldC);
+                        svmScratchPool, fold, trainProgress, foldTrainingSets, out iters, out foldC);
                     foldBestC[fold] = foldC;
                 }
                 foldIterations[fold] = iters;
@@ -596,35 +790,37 @@ namespace pwiz.Osprey.FDR
 
             for (int fold = 0; fold < config.NFolds; fold++)
             {
-                OspreyOutput.Out.WriteLine("[TIMING]   Percolator fold {0}/{1}: {2:F1}s ({3} iterations)",
+                OspreyLog.Out.LogInfo(LogTag.TIMING, @"  Percolator fold {0}/{1}: {2:F1}s ({3} iterations)",
                     fold + 1, config.NFolds, foldElapsed[fold], foldIterations[fold]);
             }
-            OspreyOutput.Out.WriteLine("[TIMING]   Percolator train all folds (parallel): {0:F1}s",
-                swTrain.Elapsed.TotalSeconds);
+            OspreyLog.Out.LogInfo(LogTag.TIMING, @"  Percolator train all folds (parallel): {0:F1}s", swTrain.Elapsed.TotalSeconds);
 
             if (config.UseGradientBoostedTrees)
             {
                 // The tree counterpart of the C report below: the knobs that actually
                 // bound this model's capacity, so the fold scores above have context.
                 var gp = config.GbtParams;
-                OspreyOutput.Out.WriteLine(
-                    "  Gradient-boosted trees: {0} trees, max depth {1}, learning rate {2}, " +
-                    "subsample {3}, colsample {4}, lambda {5}, alpha {6}, gamma {7}, min child weight {8}",
+                CommandOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
+                    OspreyFDRResources.PercolatorTrainer_TrainFoldModels_Gradient_boosted_trees___0__trees__max_depth__1__learning_rate__2__subsample__3__colsample__4_,
                     gp.NTrees, gp.MaxDepth, gp.LearningRate, gp.Subsample, gp.ColSample,
-                    gp.RegLambda, gp.RegAlpha, gp.Gamma, gp.MinChildWeight);
+                    gp.RegLambda, gp.RegAlpha, gp.Gamma, gp.MinChildWeight));
             }
             else
             {
                 // Selected SVM regularization C per fold, on the default console (issue
                 // #4364): C controls the SVM margin, so the trained coefficients above are
                 // only interpretable with it. C is chosen per fold by inner cross-validation
-                // from a log-scale sweep grid; report the grid and each fold's pick.
-                OspreyOutput.Out.WriteLine("  SVM regularization C (swept over {0}, chosen by cross-validation per fold):",
-                    FormatCGrid(config.CValues));
+                // from a log-scale sweep grid; report the grid, the selection rule (it is part
+                // of the validity key, so a resumed run was trained under the same one) and
+                // each fold's pick.
+                CommandOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
+                    OspreyFDRResources.PercolatorTrainer_TrainFoldModels_SVM_regularization_C__swept_over__0___chosen_by_cross_validation_per_fold__,
+                    FormatCGrid(config.CValues), DescribeCSelection(config.CSelectionTolerance)));
                 for (int fold = 0; fold < config.NFolds; fold++)
                 {
-                    OspreyOutput.Out.WriteLine("    fold {0}/{1}: C = {2}",
-                        fold + 1, config.NFolds, FormatC(foldBestC[fold]));
+                    CommandOutput.Out.WriteLine(TextUtil.GetIndentation(2) + string.Format(
+                        OspreyFDRResources.PercolatorTrainer_TrainFoldModels_fold__0___1___C____2_,
+                        fold + 1, config.NFolds, FormatC(foldBestC[fold])));
                 }
             }
         }
@@ -694,10 +890,10 @@ namespace pwiz.Osprey.FDR
                         foreach (var r in reports)
                         {
                             double foldPct = r.Targets > 0 ? 100.0 * r.Passing / r.Targets : 0.0;
-                            OspreyOutput.Out.WriteLine(
-                                "  Percolator fold {0}/{1}: iteration {2} of {3} ({4} of {5} targets, {6:F1}% at {7:P0} FDR)",
+                            CommandOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
+                                OspreyFDRResources.PercolatorTrainer_TrainProgressReporter_ReportIteration_Percolator_fold__0___1___iteration__2__of__3____4__of__5__targets___6____at__7__FDR_,
                                 r.Fold + 1, _nFolds, iteration + 1, _maxIterations,
-                                r.Passing, r.Targets, foldPct, _trainFdr);
+                                r.Passing, r.Targets, foldPct, _trainFdr));
                         }
                         return;
                     }
@@ -709,9 +905,9 @@ namespace pwiz.Osprey.FDR
                         sumTargets += r.Targets;
                     }
                     double pct = sumTargets > 0 ? 100.0 * sumPassing / sumTargets : 0.0;
-                    OspreyOutput.Out.WriteLine(
-                        "  Percolator iteration {0} of {1} ({2:F1}% of training targets at {3:P0} FDR)",
-                        iteration + 1, _maxIterations, pct, _trainFdr);
+                    CommandOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
+                        OspreyFDRResources.PercolatorTrainer_TrainProgressReporter_ReportIteration_Percolator_iteration__0__of__1____2____of_training_targets_at__3__FDR_,
+                        iteration + 1, _maxIterations, pct, _trainFdr));
                 }
             }
         }
@@ -728,6 +924,7 @@ namespace pwiz.Osprey.FDR
             SvmTrainScratchPool svmScratchPool,
             int foldIndex,
             TrainProgressReporter progress,
+            FoldTrainingSet[] trainingSets,
             out int bestIteration,
             out double bestC)
         {
@@ -821,7 +1018,7 @@ namespace pwiz.Osprey.FDR
 
                 double bestC1 = GridSearchC(
                     svmFeatures, svmLabels, svmEntryIds,
-                    config.CValues, svmFoldAssignments, config.NFolds,
+                    config.CValues, config.CSelectionTolerance, svmFoldAssignments, config.NFolds,
                     config.Seed, trainFdr, svmScratchPool);
 
                 // iii. Train SVM with best C
@@ -865,6 +1062,13 @@ namespace pwiz.Osprey.FDR
                     bestIteration = iteration + 1;
                     bestC = bestC1;
                     consecutiveNoImprove = 0;
+                    // svmGlobalIndices index the training subset: the selected targets, then the decoys.
+                    if (trainingSets != null)
+                    {
+                        int nSelected = selectedTargetIndices.Length;
+                        trainingSets[foldIndex] = new FoldTrainingSet(svmGlobalIndices.Take(nSelected).ToArray(),
+                            svmGlobalIndices.Skip(nSelected).ToArray(), trainIndices);
+                    }
                 }
                 else
                 {
@@ -886,7 +1090,7 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>
         /// Gradient-boosted-trees counterpart of <see cref="TrainFold"/>
-        /// (<c>--fdr-method gbdt</c>): the SAME semi-supervised loop -- select the
+        /// (<c>OSPREY_FDR_MODEL=gbdt</c>): the SAME semi-supervised loop - select the
         /// targets that reach <paramref name="trainFdr"/> under the current score, train
         /// on those positives against all decoys, re-score, keep the iteration that
         /// passes the most targets, stop after two without improvement -- with the linear
@@ -912,11 +1116,15 @@ namespace pwiz.Osprey.FDR
             double[] initialScores,
             PercolatorConfig config,
             double trainFdr,
+            int threads,
             int foldIndex,
             TrainProgressReporter progress,
+            FoldTrainingSet[] trainingSets,
             out int bestIteration)
         {
             var currentScores = (double[])initialScores.Clone();
+            var gbtParams = config.GbtParams.Clone();
+            gbtParams.MaxDegreeOfParallelism = threads;
             GradientBoostedTrees bestModel = null;
             bestIteration = 0;
             // -1, where TrainFold uses 0: the SVM seeds bestModel with a degenerate
@@ -982,31 +1190,35 @@ namespace pwiz.Osprey.FDR
                 valLocal = fitLocal;
             }
 
+            // Rows of stdFeatures behind each fit / validation position, for re-scoring.
+            var fitRows = new int[fitLocal.Count];
             var fitLabels = new bool[fitLocal.Count];
             var fitEntryIds = new uint[fitLocal.Count];
             for (int i = 0; i < fitLocal.Count; i++)
             {
+                fitRows[i] = trainIndices[fitLocal[i]];
                 fitLabels[i] = trainLabels[fitLocal[i]];
                 fitEntryIds[i] = trainEntryIds[fitLocal[i]];
             }
+            var valRows = new int[valLocal.Count];
             var valLabels = new bool[valLocal.Count];
             var valEntryIds = new uint[valLocal.Count];
             int nValTargets = 0;
             for (int i = 0; i < valLocal.Count; i++)
             {
+                valRows[i] = trainIndices[valLocal[i]];
                 valLabels[i] = trainLabels[valLocal[i]];
                 valEntryIds[i] = trainEntryIds[valLocal[i]];
                 if (!valLabels[i]) nValTargets++;
             }
 
-            var rowBuf = new double[stdFeatures.Cols];
             for (int iteration = 0; iteration < config.MaxIterations; iteration++)
             {
                 // i. Select positive training set under the CURRENT score -- from the FIT
                 //    rows only, so the validation rows never influence what the trees fit.
                 var fitCurrentScores = new double[fitLocal.Count];
                 for (int i = 0; i < fitLocal.Count; i++)
-                    fitCurrentScores[i] = currentScores[trainIndices[fitLocal[i]]];
+                    fitCurrentScores[i] = currentScores[fitRows[i]];
 
                 var selectedFitTargets = SelectPositiveTrainingSet(
                     fitCurrentScores, fitLabels, fitEntryIds, trainFdr, MIN_POSITIVE);
@@ -1027,27 +1239,20 @@ namespace pwiz.Osprey.FDR
                 var gbtLabels = new bool[gbtLocal.Count];
                 for (int i = 0; i < gbtLocal.Count; i++)
                 {
-                    gbtRows[i] = MatrixRows.ExtractRow(stdFeatures, trainIndices[fitLocal[gbtLocal[i]]]);
+                    gbtRows[i] = MatrixRows.ExtractRow(stdFeatures, fitRows[gbtLocal[i]]);
                     gbtLabels[i] = fitLabels[gbtLocal[i]];
                 }
 
                 // ii. Train. No grid search: capacity is bounded by depth / gamma /
                 //     lambda / min-child-weight, all fixed up front.
-                var model = GradientBoostedTrees.Train(gbtRows, gbtLabels, config.GbtParams);
+                var model = GradientBoostedTrees.Train(gbtRows, gbtLabels, gbtParams);
 
                 // iii. Re-score the FIT rows (drives the next iteration's positive
                 //      selection) and the VALIDATION rows (drives model selection).
-                for (int i = 0; i < fitLocal.Count; i++)
-                {
-                    MatrixRows.CopyRow(stdFeatures, trainIndices[fitLocal[i]], rowBuf);
-                    currentScores[trainIndices[fitLocal[i]]] = model.ScoreSingle(rowBuf);
-                }
-                var valScores = new double[valLocal.Count];
-                for (int i = 0; i < valLocal.Count; i++)
-                {
-                    MatrixRows.CopyRow(stdFeatures, trainIndices[valLocal[i]], rowBuf);
-                    valScores[i] = model.ScoreSingle(rowBuf);
-                }
+                var fitScores = ScoreRows(model, stdFeatures, fitRows, threads);
+                for (int i = 0; i < fitRows.Length; i++)
+                    currentScores[fitRows[i]] = fitScores[i];
+                var valScores = ScoreRows(model, stdFeatures, valRows, threads);
 
                 // iv. Keep the iteration that passes the most targets on the HELD-OUT rows.
                 int nPassing = PercolatorQValues.CountPassing(valScores, valLabels, valEntryIds, trainFdr);
@@ -1059,6 +1264,14 @@ namespace pwiz.Osprey.FDR
                     bestPassing = nPassing;
                     bestIteration = iteration + 1;
                     consecutiveNoImprove = 0;
+                    // gbtLocal indexes fitLocal: the selected FIT targets, then the FIT decoys.
+                    if (trainingSets != null)
+                    {
+                        var subsetRows = gbtLocal.Select(local => trainIndices[fitLocal[local]]).ToArray();
+                        int nSelected = selectedFitTargets.Length;
+                        trainingSets[foldIndex] = new FoldTrainingSet(subsetRows.Take(nSelected).ToArray(),
+                            subsetRows.Skip(nSelected).ToArray(), fitLocal.Select(local => trainIndices[local]).ToArray());
+                    }
                 }
                 else
                 {
@@ -1077,12 +1290,37 @@ namespace pwiz.Osprey.FDR
                 // silently produce meaningless q-values that still look like a result.
                 throw new InvalidOperationException(string.Format(
                     @"TrainFoldGbt: fold {0} selected no positive training targets at any " +
-                    @"FDR threshold ({1} training entries, {2} targets); cannot train a model.",
+                    @"FDR threshold ({1} training peaks, {2} targets); cannot train a model.",
                     foldIndex, trainIndices.Length, nTrainTargets));
             }
 
             bestIteration = Math.Max(bestIteration, 1);
             return bestModel;
+        }
+
+        /// <summary>
+        /// Score the <paramref name="rows"/> of <paramref name="stdFeatures"/> with
+        /// <paramref name="model"/>, in parallel over contiguous slices. Bit-identical to the
+        /// serial loop: a tree score depends only on its own row.
+        /// </summary>
+        private static double[] ScoreRows(GradientBoostedTrees model, Matrix stdFeatures,
+            int[] rows, int threads)
+        {
+            var scores = new double[rows.Length];
+            // Below a slice of MIN_ROWS_PER_SCORE_SLICE rows, starting a thread costs more than it saves.
+            int slices = Math.Max(1, Math.Min(threads, rows.Length / MIN_ROWS_PER_SCORE_SLICE));
+            int slice = (rows.Length + slices - 1) / slices;
+            OspreyParallel.For(0, slices, slices, c =>
+            {
+                var rowBuf = new double[stdFeatures.Cols];   // per-slice: never shared
+                int hi = Math.Min(rows.Length, (c + 1) * slice);
+                for (int i = c * slice; i < hi; i++)
+                {
+                    MatrixRows.CopyRow(stdFeatures, rows[i], rowBuf);
+                    scores[i] = model.ScoreSingle(rowBuf);
+                }
+            });
+            return scores;
         }
 
         // ============================================================
@@ -1165,7 +1403,7 @@ namespace pwiz.Osprey.FDR
 
         private static double GridSearchC(
             Matrix features, bool[] labels, uint[] entryIds,
-            double[] cValues, int[] foldAssignments, int nFolds,
+            double[] cValues, double cSelectionTolerance, int[] foldAssignments, int nFolds,
             ulong seed, double fdrThreshold,
             SvmTrainScratchPool svmScratchPool)
         {
@@ -1173,7 +1411,8 @@ namespace pwiz.Osprey.FDR
             // c_values.par_iter() in osprey-ml/src/svm.rs::grid_search_c.
             // Each C is independent (no shared mutable state during
             // training); the per-C totalPassing is stored by index so
-            // the tie-break below is deterministic. OspreyParallel.For
+            // SelectC is deterministic; Rust's svm::select_c applies the same
+            // rule (maccoss/osprey#69). OspreyParallel.For
             // (explicit threads) replaces TPL Parallel.For for the same
             // reason as the outer loop above.
             var totalPassingByC = new int[cValues.Length];
@@ -1240,20 +1479,33 @@ namespace pwiz.Osprey.FDR
                 }
             });
 
-            // Tie-break: first index with the maximum totalPassing wins,
-            // matching the strict `>` semantics of the prior serial loop
-            // and the corresponding Rust path.
-            double bestC = cValues[0];
-            int bestTotal = totalPassingByC[0];
+            return SelectC(cValues, totalPassingByC, cSelectionTolerance);
+        }
+
+        /// <summary>
+        /// The C a grid search keeps: the smallest (most regularized) C whose inner-CV
+        /// passing count is within <paramref name="tolerance"/> (a fraction) of the best
+        /// count. With a tolerance of 0 this is the strict maximum, the first C in grid order
+        /// winning a tie (the pre-#4703 rule). Rust's svm::select_c is the same function.
+        /// </summary>
+        internal static double SelectC(double[] cValues, int[] totalPassingByC, double tolerance)
+        {
+            int bestIndex = 0;
             for (int ci = 1; ci < cValues.Length; ci++)
             {
-                if (totalPassingByC[ci] > bestTotal)
-                {
-                    bestTotal = totalPassingByC[ci];
-                    bestC = cValues[ci];
-                }
+                if (totalPassingByC[ci] > totalPassingByC[bestIndex])
+                    bestIndex = ci;
             }
-            return bestC;
+            if (!(tolerance > 0))
+                return cValues[bestIndex];
+            double floor = (1 - tolerance) * totalPassingByC[bestIndex];
+            double selected = cValues[bestIndex];
+            for (int ci = 0; ci < cValues.Length; ci++)
+            {
+                if (totalPassingByC[ci] >= floor && cValues[ci] < selected)
+                    selected = cValues[ci];
+            }
+            return selected;
         }
 
         // ============================================================
@@ -1353,26 +1605,41 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Format a single SVM cost C for the console using the invariant culture
-        /// (a numeric value, not localizable text), with the general "R" round-trip
-        /// so grid values like 0.001 / 100 print exactly rather than as 1E-03.
+        /// Format a single SVM cost C for the console in the current culture, with the
+        /// general "R" round-trip so grid values like 0.001 / 100 print exactly rather
+        /// than as 1E-03.
         /// </summary>
         private static string FormatC(double c)
         {
-            return c.ToString("R", CultureInfo.InvariantCulture);
+            return c.ToString(@"R", CultureInfo.CurrentCulture);
         }
 
         /// <summary>
-        /// Format the log-scale C sweep grid as "{a, b, c}" for the console header.
+        /// The C-selection rule for the console header (see <see cref="SelectC"/>).
+        /// </summary>
+        private static string DescribeCSelection(double tolerance)
+        {
+            if (!(tolerance > 0))
+                return OspreyFDRResources.PercolatorTrainer_DescribeCSelection_strict_maximum;
+            // General format, not fixed decimals: a small non-zero tolerance must not print
+            // as "0%", which would read as the strict maximum it is not.
+            return string.Format(OspreyFDRResources.PercolatorTrainer_DescribeCSelection_most_regularized_within__0___of_the_best, tolerance * 100);
+        }
+
+        /// <summary>
+        /// Format the log-scale C sweep grid as "{a, b, c}" for the console header. The values
+        /// are separated by the current culture's list separator, as Skyline's command line
+        /// does, so a comma decimal separator (fr-FR "0,1; 1; 10") stays unambiguous.
         /// </summary>
         private static string FormatCGrid(double[] cValues)
         {
             if (cValues == null || cValues.Length == 0)
-                return "{}";
+                return @"{}";
             var parts = new string[cValues.Length];
             for (int i = 0; i < cValues.Length; i++)
                 parts[i] = FormatC(cValues[i]);
-            return "{" + string.Join(", ", parts) + "}";
+            string separator = CultureInfo.CurrentCulture.TextInfo.ListSeparator + @" ";
+            return @"{" + string.Join(separator, parts) + @"}";
         }
     }
 }

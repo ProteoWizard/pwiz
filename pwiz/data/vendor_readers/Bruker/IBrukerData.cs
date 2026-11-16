@@ -1,0 +1,140 @@
+using Pwiz.Data.MsData.Spectra;
+
+namespace Pwiz.Vendor.Bruker;
+
+/// <summary>
+/// Vendor-agnostic wrapper over a Bruker <c>.d</c> analysis. Port of pwiz C++
+/// <c>CompassData</c> (renamed to <c>BrukerData</c> here because "Compass" refers to Bruker's
+/// older acquisition software, not TDF / TSF): hides the TDF / TSF (and eventually BAF / FID /
+/// YEP) differences so <see cref="SpectrumList_Bruker"/> and <see cref="ChromatogramList_Bruker"/>
+/// can be format-agnostic.
+/// </summary>
+/// <remarks>
+/// Owns the underlying metadata and binary-data handles and disposes them together. Create
+/// instances via <see cref="BrukerData.Create"/>.
+/// </remarks>
+public interface IBrukerData : IDisposable
+{
+    /// <summary>Which Bruker sub-format this wrapper is backed by.</summary>
+    BrukerFormat Format { get; }
+
+    /// <summary>Absolute path of the opened <c>.d</c> directory.</summary>
+    string AnalysisDirectory { get; }
+
+    /// <summary>Raw <c>GlobalMetadata</c> key/value table from the analysis SQLite db.</summary>
+    IReadOnlyDictionary<string, string> GlobalMetadata { get; }
+
+    /// <summary>True if the analysis has PASEF data (TDF only).</summary>
+    bool HasPasefData { get; }
+
+    /// <summary>True if the analysis has DIA-PASEF data (TDF only).</summary>
+    bool HasDiaPasefData { get; }
+
+    /// <summary>True if the source has any MS1 frames.</summary>
+    bool HasMs1Frames { get; }
+
+    /// <summary>True if the source has any MS2+ frames.</summary>
+    bool HasMsNFrames { get; }
+
+    /// <summary>Acquired m/z range (from <c>MzAcqRangeLower/Upper</c> global params).</summary>
+    (double Low, double High) MzAcquisitionRange { get; }
+
+    /// <summary>
+    /// Instrument family reported by the backend. Mirrors cpp
+    /// <c>CompassData::getInstrumentFamily()</c>.
+    /// </summary>
+    /// <remarks>
+    /// A property rather than something <c>Reader_Bruker</c> derives from
+    /// <see cref="GlobalMetadata"/>, because the two backend families disagree on the numbering:
+    /// TDF / TSF / BAF store the codes <c>translateInstrumentFamily</c> decodes, while
+    /// CompassXtract reports the SDK enum directly and has no equivalent metadata code for
+    /// several of its values (an ion trap, for one).
+    /// </remarks>
+    BrukerInstrumentFamily InstrumentFamily { get; }
+
+    /// <summary>
+    /// Free-text instrument model, emitted as the <c>instrument model</c> userParam on the
+    /// <c>CommonInstrumentParams</c> group. Port of <c>CompassData::getInstrumentDescription()</c>;
+    /// only the CompassXtract backend has one — the TDF / TSF / BAF implementations all return
+    /// <c>""</c> (<c>TimsData.cpp:885</c>, <c>TsfData.cpp:315</c>, <c>Baf2Sql.cpp:243</c>).
+    /// </summary>
+    string InstrumentDescription { get; }
+
+    /// <summary>
+    /// True when the backend can produce whole-run TIC and BPC chromatograms. Mirrors cpp's
+    /// <c>getTIC()</c> / <c>getBPC()</c> returning a null pointer, which is what makes
+    /// <c>ChromatogramList_Bruker::createIndex</c> skip those two entries entirely
+    /// (<c>ChromatogramList_Bruker.cpp:165-185</c>). Only the CompassXtract backend declines.
+    /// </summary>
+    bool HasGlobalChromatograms { get; }
+
+    /// <summary>
+    /// True when the first frame's scan mode or instrument source indicates MALDI (used for
+    /// the source CV term in <c>Reader_Bruker</c>).
+    /// </summary>
+    bool IsMaldiSource { get; }
+
+    /// <summary>Per-frame DIA-PASEF isolation windows (TDF DIA only; empty otherwise).</summary>
+    IEnumerable<DiaFrameWindow> EnumerateDiaFrameWindows();
+
+    /// <summary>
+    /// Builds the flat spectrum index. Each <see cref="BrukerIndexEntry"/> holds the id + an
+    /// opaque per-format tag that <see cref="FillSpectrum"/> consumes to materialize the
+    /// spectrum's metadata and peaks.
+    /// </summary>
+    IReadOnlyList<BrukerIndexEntry> BuildSpectrumIndex(
+        bool combineIonMobilitySpectra,
+        int preferOnlyMsLevel,
+        bool passEntireDiaPasefFrame);
+
+    /// <summary>
+    /// Populates <paramref name="spec"/> with all metadata for the entry and, if
+    /// <paramref name="getBinaryData"/> is true, its peak arrays. The existing <c>Index</c> /
+    /// <c>Id</c> on <paramref name="spec"/> are left untouched. When
+    /// <paramref name="includeIsolationArrays"/> is true (only meaningful for TDF whole-frame
+    /// diaPASEF spectra), the two scanning-quadrupole isolation m/z arrays are emitted.
+    /// </summary>
+    void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, bool getBinaryData, bool preferCentroid, bool sortAndJitter, bool includeIsolationArrays);
+
+    /// <summary>
+    /// Yields the points of the TIC / BPC chromatograms, honoring
+    /// <paramref name="preferOnlyMsLevel"/> (0 = all, 1 = MS1 only, 2 = MS2+ only). One point per
+    /// frame, except for TDF PASEF acquisitions where each MS2 frame contributes one point per
+    /// MS/MS-info row (DDA precursor, or diaPASEF / PRM isolation window) at interpolated times.
+    /// </summary>
+    /// <param name="preferOnlyMsLevel">0 = all, 1 = MS1 only, 2 = MS2+ only.</param>
+    /// <param name="passEntireDiaPasefFrame">
+    /// The reader config's whole-frame diaPASEF flag. When set (or auto-detected for diagonal
+    /// PASEF), a diaPASEF MS2 frame contributes a single point instead of one per isolation
+    /// window — matching the C++ query switch in TimsData.cpp:451-456.
+    /// </param>
+    IEnumerable<BrukerChromatogramPoint> EnumerateChromatogramPoints(int preferOnlyMsLevel, bool passEntireDiaPasefFrame = false);
+
+    /// <summary>Reads the LC traces (pressure, flow, UV, etc.) from <c>chromatography-data.sqlite</c>.</summary>
+    List<LcTrace> ReadLcTraces();
+}
+
+/// <summary>One entry in the flat spectrum index built by <see cref="IBrukerData.BuildSpectrumIndex"/>.</summary>
+public sealed class BrukerIndexEntry : SpectrumIdentity
+{
+    /// <summary>
+    /// Format-specific payload interpreted by the concrete <see cref="IBrukerData"/> impl. Public
+    /// so derived classes can stash their state; clients treat it as opaque.
+    /// </summary>
+    public object Tag { get; set; } = null!;
+
+    /// <summary>1 for MS1, 2 for MSn — exposed so chromatogram callers can build a per-point
+    /// ms-level array without round-tripping through full spectrum metadata.</summary>
+    public int MsLevel { get; set; } = 1;
+}
+
+/// <summary>One point in a TIC / BPC chromatogram.</summary>
+/// <param name="RetentionTimeSeconds">Frame retention time.</param>
+/// <param name="TotalIonCurrent">Summed intensity (frame TIC).</param>
+/// <param name="BasePeakIntensity">Max intensity (frame BPI).</param>
+/// <param name="MsLevel">1 for MS1, 2 for MS2+ — emitted into the <c>ms level</c> integer array.</param>
+public readonly record struct BrukerChromatogramPoint(
+    double RetentionTimeSeconds,
+    double TotalIonCurrent,
+    double BasePeakIntensity,
+    int MsLevel);

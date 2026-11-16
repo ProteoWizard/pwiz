@@ -22,6 +22,7 @@ using System.Linq;
 using System.Net; // HttpStatusCode
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.Ardia;
@@ -145,7 +146,7 @@ namespace pwiz.Skyline.FileUI
                 if (ServerStorageInfo == null)
                     return;
 
-                CommonActionUtil.SafeBeginInvoke(this, () =>
+                ControlUtil.SafeBeginInvoke(this, () =>
                 {
                     Assume.IsNotNull(ServerStorageInfo);
 

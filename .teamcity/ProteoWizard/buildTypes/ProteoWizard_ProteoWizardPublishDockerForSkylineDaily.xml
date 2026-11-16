@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="9e195e8f-66fb-4c10-aac4-e89c2d2b565c" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>ProteoWizard Publish Docker image (Skyline-daily)</name>
+  <description>Tags current master Docker container as Skyline-daily and pushes to DockerHub.</description>
+  <settings>
+    <options>
+      <option name="allowPersonalBuildTriggering" value="false" />
+      <option name="buildConfigurationType" value="DEPLOYMENT" />
+      <option name="maximumNumberOfBuilds" value="1" />
+    </options>
+    <build-runners>
+      <runner id="Load_tag_and_push_to_Docker" name="Load, tag and push to Docker" type="simpleRunner">
+        <parameters>
+          <param name="script.content"><![CDATA[/usr/bin/docker load -i pwiz-skyline-i-agree-to-the-vendor-licenses.tbz2
+
+# Avoid pipe operator in next line because it causes 403 error on TC (can't save config)
+/usr/bin/docker run --rm chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:x64 bash -c "grep \"Skyline\" < <(wine SkylineCmd --version)" > SKYLINE_VERSION 2>&1
+# Skyline-daily(64-bit) 23.1.1.535 (e56850ad6)
+echo "SKYLINE_VERSION:"
+cat SKYLINE_VERSION
+skylineVersion=$(sed -Ee "s/.*([0-9]{2}\.[0-9]+\.[0-9]+\.[0-9]+) \(([0-9a-z]+)\)/\1-\2/" SKYLINE_VERSION | tr -d '\r')
+
+/usr/bin/docker tag chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:x64 proteowizard/pwiz-skyline-i-agree-to-the-vendor-licenses:skyline_daily_$skylineVersion
+/usr/bin/docker push proteowizard/pwiz-skyline-i-agree-to-the-vendor-licenses:skyline_daily_$skylineVersion
+
+/usr/bin/docker rmi chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:x64 \
+                    proteowizard/pwiz-skyline-i-agree-to-the-vendor-licenses:skyline_daily_$skylineVersion]]></param>
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements>
+      <equals id="RQ_2038" name="teamcity.agent.jvm.os.name" value="Linux" />
+    </requirements>
+    <build-extensions>
+      <extension id="DockerSupport" type="DockerSupport">
+        <parameters>
+          <param name="login2registry" value="PROJECT_EXT_175" />
+          <param name="loginCheckbox" value="on" />
+        </parameters>
+      </extension>
+    </build-extensions>
+    <artifact-dependencies>
+      <dependency id="ARTIFACT_DEPENDENCY_2370" sourceBuildTypeId="ProteoWizardAndSkylineDockerContainerWineX8664" cleanDestination="false">
+        <revisionRule name="lastSuccessful" revision="latest.lastSuccessful" />
+        <artifact sourcePath="pwiz-skyline-i-agree-to-the-vendor-licenses.tbz2" />
+      </dependency>
+    </artifact-dependencies>
+  </settings>
+</build-type>
+

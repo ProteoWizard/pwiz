@@ -455,7 +455,11 @@ namespace TestPerf
             // See if Hardklor output is stable
             var expectedHardklorFiles = @"expected_hardklor_files";
             var expectedFilesPath = GetTestPath(expectedHardklorFiles);
-            var columnTolerances = new AssertEx.ColumnTolerances(0.00015); // Allow a little rounding wiggle in the numeric values
+            // Absolute wiggle for the small mass/RT columns, plus a relative tolerance for the
+            // large-magnitude columns (e.g. Summed Intensity): net8 bullseye-sharp accumulates those
+            // in float32, so the last sig-fig can differ from net472's native Bullseye by an ULP
+            // (same FMA/accumulation drift already accepted for TestBullseyeSharp in commit ef61ecf177).
+            var columnTolerances = new AssertEx.ColumnTolerances(0.00015, 5e-6);
             foreach (var hkExpectedFilePath in Directory.EnumerateFiles(expectedFilesPath))
             {
                 var hkActualFilePath = hkExpectedFilePath.Replace(expectedHardklorFiles, Path.Combine(expectedHardklorFiles, @".."));

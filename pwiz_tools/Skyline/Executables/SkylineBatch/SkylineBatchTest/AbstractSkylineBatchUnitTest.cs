@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+using System.Threading;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
 using SharedBatchTest;
 using SkylineBatch;
@@ -31,6 +33,17 @@ namespace SkylineBatchTest
     /// </summary>
     public abstract class AbstractSkylineBatchUnitTest : AbstractUnitTest
     {
+        [TestInitialize]
+        public void ClearLeakedSynchronizationContext()
+        {
+            // A WinForms functional test earlier in the run (Program.Main -> Application.Run) can leave a
+            // stale, no-longer-pumping WindowsFormsSynchronizationContext installed on the thread MSTest
+            // reuses for this test. An async unit test would then post its await continuations to that
+            // dead context and deadlock (e.g. SkylineSettingsTest's SkylineCmd version check hangs after
+            // the process already exited). Reset to the default so continuations resume on the thread pool.
+            SynchronizationContext.SetSynchronizationContext(null);
+        }
+
         /// <summary>
         /// Gets a test-specific path in the TestResults directory.
         /// Creates path like: TestResults/&lt;TestName&gt;/&lt;relativePath&gt;

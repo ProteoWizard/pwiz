@@ -839,6 +839,20 @@ namespace pwiz.Skyline.Model.Results
             return dataFile.SpectrumCount > 0;
         }
 
+        /// <summary>
+        /// Returns true if a spectrum has no m/z values and should be ignored.
+        /// A spectrum which measured no ions is a valid measurement of zero intensity, but only if
+        /// we know which m/z values it was measuring. That range comes from the scan window limits,
+        /// so a spectrum which declares them is not considered empty.
+        /// </summary>
+        public static bool IsEmptySpectrum(MsDataSpectrum spectrum)
+        {
+            if (spectrum.Mzs != null && spectrum.Mzs.Length != 0)
+                return false;
+            return spectrum.Metadata?.ScanWindowLowerLimit == null &&
+                   spectrum.Metadata?.ScanWindowUpperLimit == null;
+        }
+
         private class Spectra : IDisposable
         {
             private bool _runningAsync;
@@ -926,7 +940,7 @@ namespace pwiz.Skyline.Model.Results
 
             public bool? CurrentSpectrumIsNegative
             {
-                get { return _currentInfo != null ? _currentInfo.DataSpectrum.NegativeCharge : (bool?)null; }
+                get { return _currentInfo != null ? _currentInfo.DataSpectrum.NegativeCharge : null; }
             }
 
             public MsDataSpectrum[] CurrentSpectra
@@ -1218,7 +1232,7 @@ namespace pwiz.Skyline.Model.Results
                             // Assertion for testing ID to spectrum index support
                             //                        int iFromId = dataFile.GetSpectrumIndex(dataSpectrum.Id);
                             //                        Assume.IsTrue(i == iFromId);
-                            if (nextSpectrum.Mzs.Length == 0)
+                            if (IsEmptySpectrum(nextSpectrum))
                                 continue;
 
                             double? rt = nextSpectrum.RetentionTime;
@@ -1228,13 +1242,13 @@ namespace pwiz.Skyline.Model.Results
                             // For Waters msE skip any lockspray data
                             if (_filter.IsWatersMse)
                             {
-                                // looking for the 3 in 3.0.1 (or the 10 in 10.0.1) or the 2 in 1.2.3 if it's combined ion mobility'
-                                if (MsDataSpectrum.WatersFunctionNumberFromId(nextSpectrum.Id, _dataFile.HasCombinedIonMobilitySpectra && nextSpectrum.IonMobilities != null) > 2)
+                                // Functions above 2 are lockspray, not data. Null when the file carries no
+                                // function number, in which case only an explicit MS:1000928 identifies lockspray.
+                                if (nextSpectrum.WatersFunctionNumber > 2 || nextSpectrum.IsCalibrationSpectrum)
                                     continue;
                             }
                             else if (_filter.IsWatersFile)
                             {
-                                // looking for the 3 in id string 3.0.1 (or the 10 in 10.0.1)
                                 if (_dataFile.IsWatersLockmassSpectrum(nextSpectrum))
                                     continue;
                             }
@@ -1574,7 +1588,7 @@ namespace pwiz.Skyline.Model.Results
                     while (_lookAheadIndex++ < _lenSpectra)
                     {
                         _rt = dataSpectrum.RetentionTime;
-                        if (_rt.HasValue && dataSpectrum.Mzs.Length != 0)
+                        if (_rt.HasValue && !IsEmptySpectrum(dataSpectrum))
                         {
                             spectrumList.Add(dataSpectrum);
                             if (!rtReported.HasValue)
@@ -1630,7 +1644,7 @@ namespace pwiz.Skyline.Model.Results
                     while (_lookAheadIndex++ < _lenSpectra)
                     {
                         _rt = dataSpectrum.RetentionTime;
-                        if (_rt.HasValue && dataSpectrum.Mzs.Length != 0)
+                        if (_rt.HasValue && !IsEmptySpectrum(dataSpectrum))
                         {
                             spectrumList.Add(dataSpectrum);
                             rtTotal += dataSpectrum.RetentionTime.Value;
@@ -1649,7 +1663,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     // No need to search forward, this isn't IMS or Agilent ramped-CE data
                     rtReported = dataSpectrum.RetentionTime;
-                    if (rtReported.HasValue && dataSpectrum.Mzs.Length != 0)
+                    if (rtReported.HasValue && !IsEmptySpectrum(dataSpectrum))
                     {
                         spectrumList.Add(dataSpectrum);
                     }
@@ -1704,7 +1718,6 @@ namespace pwiz.Skyline.Model.Results
 
         public bool ProvidesCollisionalCrossSectionConverter { get { return _dataFile.ProvidesCollisionalCrossSectionConverter; } }
         public eIonMobilityUnits IonMobilityUnits { get { return _dataFile.IonMobilityUnits; } }
-        public bool HasCombinedIonMobility { get { return _dataFile.HasCombinedIonMobilitySpectra; } } // When true, data source provides IMS data in 3-array format, which affects spectrum ID format
 
         public IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge, object obj)
         {
@@ -1852,7 +1865,7 @@ namespace pwiz.Skyline.Model.Results
                     intensity = float.NaN;
                 chromCollector.AddPoint(chromIndex,
                     intensity,
-                    spectrum.MassErrors != null ? spectrum.MassErrors[j] : (float?)null,
+                    spectrum.MassErrors != null ? spectrum.MassErrors[j] : null,
                     _blockWriter);
             }
 

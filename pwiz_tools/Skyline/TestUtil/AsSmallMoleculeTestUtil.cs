@@ -226,6 +226,13 @@ namespace pwiz.SkylineTestUtil
                     {
                         docContainer.SetDocument(docLoad, null, true);
                         docContainer.AssertComplete();
+                        // ConvertToSmallMolecules skips library conversion entirely unless
+                        // Libraries.IsLoaded, so the conversion under test depends on winning a
+                        // race with the library loader. Whichever conversion test ran first in a
+                        // process lost it: no converted .blib was written, the converted document
+                        // had no library dot product where the original did, and the comparison
+                        // below failed. Later tests in the same process passed on a warm cache.
+                        docContainer.WaitForLibrariesLoaded();
                         doc = docContainer.Document;
                     }
                 }
@@ -280,6 +287,7 @@ namespace pwiz.SkylineTestUtil
             {
                 docContainer.SetDocument(docResults, null, true);
                 docContainer.AssertComplete();
+                docContainer.WaitForLibrariesLoaded();
                 doc = docContainer.Document;
             }
             AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(docOriginal, doc, Path.GetDirectoryName(docPath), mode);

@@ -1,0 +1,184 @@
+syntax = "proto3";
+
+// waters_connect spectrum schema. Mirrors cpp WatersConnectProtobuf.hpp:309-708.
+// Used for /waters_connect/v2.0/injection-data/{id}/ms/spectra (Accept: application/x-protobuf).
+//
+// proto3 — protoc 3.8 only emits C# from proto3; wire format stays compatible with cpp
+// UNIFI's protobuf-net output. The cpp ships its own DiscriminatedUnion* scaffolding
+// around oneof; proto3 supports oneof natively so we drop the workaround structs.
+
+package pwiz.waters_connect;
+
+option csharp_namespace = "Pwiz.Vendor.UNIFI.Protobuf";
+
+// ADC acquisition mode. cpp AdcAcquisitionModeDto (WatersConnectProtobuf.hpp:685-693).
+enum AdcAcquisitionModeDto {
+    ADC_NOT_SET = 0;
+    ADC_PEAK_DETECTING = 1;
+    ADC_AVERAGING = 2;
+    TDC_EDGE_DETECTING = 3;
+    TDC_PEAK_TOP = 4;
+}
+
+// MSe energy level. cpp EnergyLevelDto (WatersConnectProtobuf.hpp:695-701).
+enum EnergyLevelDto {
+    ENERGY_LEVEL_DTO_LOW = 0;
+    ENERGY_LEVEL_DTO_HIGH = 1;
+    ENERGY_LEVEL_DTO_NOT_SET = 2;
+}
+
+// Scan polarity. cpp IonisationModeDto (WatersConnectProtobuf.hpp:703-708).
+enum IonisationModeDto {
+    IONISATION_MODE_DTO_POSITIVE = 0;
+    IONISATION_MODE_DTO_NEGATIVE = 1;
+}
+
+// Container for a list of MzSpectraDtoV2 entries — response shape for /ms/spectra.
+// cpp MzSpectraDtoV2Collection (WatersConnectProtobuf.hpp:309-317).
+message MzSpectraDtoV2Collection {
+    repeated MzSpectraDtoV2 items = 1;
+}
+
+// One channel's worth of spectra. cpp MzSpectraDtoV2 (WatersConnectProtobuf.hpp:499-525).
+message MzSpectraDtoV2 {
+    string parent_channel_id = 1;
+    string channel_name = 2;
+    string title = 3;
+    int32 total_spectrum_count = 4;
+    MSTechniqueDtoV4 ms_technique = 5;
+    repeated MzSpectrumItemDtoV2 values = 6;
+    string correction_status = 7;
+}
+
+// One spectrum's payload. cpp MzSpectrumItemDtoV2 (WatersConnectProtobuf.hpp:527-594).
+// Tags 101/102 are the cpp DiscriminatedUnion subtype slots — modeled here as a oneof.
+message MzSpectrumItemDtoV2 {
+    int32 scan_index = 1;
+    ContinuumSpectrumDataDto continuum_spectrum_data = 2;
+    CentroidSpectrumDataDto centroid_spectrum_data = 3;
+    double retention_time = 4;
+    double set_mass_mz = 5;
+
+    oneof subtype {
+        MzProductSpectrumItemDtoV2 mz_product_spectrum_item = 101;
+        MzPrecursorSpectrumItemDtoV2 mz_precursor_spectrum_item = 102;
+    }
+}
+
+// Profile-mode arrays. cpp ContinuumSpectrumDataDto (WatersConnectProtobuf.hpp:406-417).
+message ContinuumSpectrumDataDto {
+    repeated double masses = 1;
+    repeated double intensities = 2;
+}
+
+// Centroid-mode arrays + ancillary stats. cpp CentroidSpectrumDataDto
+// (WatersConnectProtobuf.hpp:375-404). Reader_UNIFI only consumes m_over_zs + intensities;
+// the std-dev / mass-index / saturation arrays are kept on the schema for future consumers.
+message CentroidSpectrumDataDto {
+    repeated double m_over_zs = 1;
+    repeated double m_over_z_std_devs = 2;
+    repeated double intensities = 3;
+    repeated double intensity_std_devs = 4;
+    repeated double mass_indexes = 5;
+    repeated double mass_index_std_devs = 6;
+    repeated int32 accurate_flag_indexes = 7;
+    repeated int32 saturated_flag_indexes = 8;
+}
+
+// Subtype carrying DDA precursor metadata for product spectra.
+// cpp MzProductSpectrumItemDtoV2 (WatersConnectProtobuf.hpp:483-497).
+message MzProductSpectrumItemDtoV2 {
+    double precursor_mz = 7;
+    double precursor_intensity = 8;
+    ScanInfoDto precursor_scan_info = 9;
+}
+
+// Subtype carrying the per-product roster for a precursor (survey) spectrum.
+// cpp MzPrecursorSpectrumItemDtoV2 (WatersConnectProtobuf.hpp:473-481).
+message MzPrecursorSpectrumItemDtoV2 {
+    repeated ProductInfoDto products_infoes = 7;
+}
+
+// One precursor → list-of-products entry. cpp ProductInfoDto (WatersConnectProtobuf.hpp:596-613).
+message ProductInfoDto {
+    double set_mass_mz = 1;
+    double precursor_mz = 2;
+    double precursor_intensity = 3;
+    repeated ScanInfoDto product_scan_infoes = 4;
+}
+
+// Reference to a scan in another channel. cpp ScanInfoDto (WatersConnectProtobuf.hpp:628-642).
+message ScanInfoDto {
+    string channel_id = 1;
+    int32 scan_index = 2;
+    double scan_rt = 3;
+}
+
+// Channel-level acquisition technique. cpp MSTechniqueDtoV4 (WatersConnectProtobuf.hpp:432-461).
+// Tags 30/31 dodge a numbering collision in earlier cpp versions.
+message MSTechniqueDtoV4 {
+    TargetPropertiesDto target_properties = 1;
+    BasicMsPropertiesDtoV3 basic_ms_properties = 2;
+    MsCalibrationDto ms_calibration = 3;
+    bool is_lock_mass_data = 4;
+    FragmentationPropertiesDto fragmentation_properties = 5;
+    TofPropertiesDto tof_properties = 6;
+    string instrument_id = 30;
+    string instrument_internal_name = 31;
+}
+
+// Mass-resolution. cpp MsCalibrationDto (WatersConnectProtobuf.hpp:463-471).
+message MsCalibrationDto {
+    double resolution = 1;
+}
+
+// Core MS scan-function properties. cpp BasicMsPropertiesDtoV3 (WatersConnectProtobuf.hpp:335-373).
+message BasicMsPropertiesDtoV3 {
+    double precursor_mz = 1;
+    double product_mz = 2;
+    string mass_analyser = 3;
+    string scanning_method = 4;
+    double scan_time = 5;
+    double inter_scan_delay = 6;
+    repeated double set_masses = 7;
+    RangeDtoDouble acquired_m_over_z_range = 8;
+    IonisationModeDto ionisation_mode = 9;
+    string ionisation_type = 10;
+    double cone_voltage = 11;
+}
+
+// Inclusive (start, end) double range. cpp RangeDtoDouble (WatersConnectProtobuf.hpp:615-626).
+message RangeDtoDouble {
+    double start = 1;
+    double end = 2;
+}
+
+// SRM / SIM target identity. cpp TargetPropertiesDto (WatersConnectProtobuf.hpp:644-658).
+message TargetPropertiesDto {
+    string target_id = 1;
+    string target_name = 2;
+    string target_group = 3;
+}
+
+// Fragmentation parameters. cpp FragmentationPropertiesDto (WatersConnectProtobuf.hpp:419-430).
+message FragmentationPropertiesDto {
+    EnergyLevelDto energy_level_type = 1;
+    double collision_energy = 2;
+}
+
+// TOF-specific calibration. cpp TofPropertiesDto (WatersConnectProtobuf.hpp:660-683).
+message TofPropertiesDto {
+    double time_zero = 1;
+    double pusher_frequency = 2;
+    double lteff = 3;
+    double veff = 4;
+    AdcAcquisitionModeDto adc_acquisition_mode = 5;
+    AdcIonResponseDto adc_ion_response = 6;
+}
+
+// ADC ion-response calibration entry. cpp AdcIonResponseDto (WatersConnectProtobuf.hpp:319-333).
+message AdcIonResponseDto {
+    double mass_over_charge = 1;
+    int32 charge = 2;
+    double average_single_ion_response = 3;
+}

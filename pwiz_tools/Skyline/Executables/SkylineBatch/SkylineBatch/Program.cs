@@ -1,6 +1,8 @@
 /*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
+ *
  * Copyright 2020 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,14 +22,10 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Deployment.Application;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Net;
 using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using log4net.Config;
@@ -100,8 +98,6 @@ namespace SkylineBatch
                     return;
                 }
 
-                InitializeSecurityProtocol();
-                
                 // Initialize log4net -- global application logging
                 XmlConfigurator.Configure();
 
@@ -144,7 +140,6 @@ namespace SkylineBatch
 
                 if (!restart)
                 {
-                    if (!FunctionalTest) SendAnalyticsHit();
                     if (!InitSkylineSettings()) return;
                     Settings.Default.UpdateIfNecessary();
                     RInstallations.FindRDirectory();
@@ -162,10 +157,15 @@ namespace SkylineBatch
             if (restart) Application.Restart();
         }
 
+        // ClickOnce (System.Deployment) is net472-only; on net8 the app is never network-deployed.
+        private static bool IsNetworkDeployed =>
+            false;
+
         private static void InitializeVersion()
         {
-            if (ApplicationDeployment.IsNetworkDeployed)
-                _version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
+            if (IsNetworkDeployed)
+            {
+            }
             else
             {
                 // copied from Skyline Install.cs GetVersion()
@@ -205,12 +205,9 @@ namespace SkylineBatch
         private static string GetFirstArg(string[] args)
         {
             string arg;
-            if (ApplicationDeployment.IsNetworkDeployed)
+            if (IsNetworkDeployed)
             {
-                var activationData = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
-                arg = activationData != null && activationData.Length > 0
-                    ? activationData[0]
-                    : string.Empty;
+                arg = string.Empty;
             }
             else
             {
@@ -224,7 +221,15 @@ namespace SkylineBatch
         {
             if (SkylineInstallations.FindSkyline())
                 return true;
-            
+
+            // FindSkylineForm is modal and there is no one to answer it under a functional test,
+            // so on a machine with no Skyline installation the whole test run hangs here instead
+            // of failing. Carry on without the settings: tests that need a Skyline path build
+            // their own SkylineSettings, and a missing installation then surfaces as a test
+            // failure with a message rather than as a run that never finishes.
+            if (FunctionalTest)
+                return true;
+
             var form = new FindSkylineForm(AppName(), Icon());
             Application.Run(form);
             if (form.DialogResult == DialogResult.OK)
@@ -244,7 +249,7 @@ namespace SkylineBatch
             var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var configFileIconPath = Path.Combine(baseDirectory, "SkylineBatch_configs.ico");
 
-            if (ApplicationDeployment.IsNetworkDeployed)
+            if (IsNetworkDeployed)
             {
                 FileUtil.AddFileTypeClickOnce(TextUtil.EXT_BCFG, "SkylineBatch.Configuration.0",
                     Resources.Program_AddFileTypesToRegistry_Skyline_Batch_Configuration_File,
@@ -256,48 +261,6 @@ namespace SkylineBatch
                     Resources.Program_AddFileTypesToRegistry_Skyline_Batch_Configuration_File,
                     appExe, configFileIconPath);
             }
-        }
-
-        // ReSharper disable once UnusedMember.Local
-        private static void SendAnalyticsHit()
-        {
-            // ReSharper disable LocalizableElement
-            var postData = "v=1"; // Version 
-            postData += "&t=event"; // Event hit type
-            postData += "&tid=UA-9194399-1"; // Tracking Id 
-            postData += "&cid=" + SharedBatch.Properties.Settings.Default.InstallationId; // Anonymous Client Id
-            postData += "&ec=InstanceBatch"; // Event Category
-            postData += "&ea=" + Uri.EscapeDataString((_version.Length > 0 ? _version : "Version unspecified") + "batch"); // version should never be unspecified
-            var dailyRegex = new Regex(@"[0-9]+\.[0-9]+\.[19]\.[0-9]+");
-            postData += "&el=" + (dailyRegex.IsMatch(_version) ? "batch-daily" : "batch-release");
-            postData += "&p=" + "Instance"; // Page
-
-            var data = Encoding.UTF8.GetBytes(postData);
-            var analyticsUrl = "http://www.google-analytics.com/collect";
-            var request = (HttpWebRequest)WebRequest.Create(analyticsUrl);
-
-            request.Method = "POST";
-            request.ContentType = "application/x-www-form-urlencoded";
-            request.ContentLength = data.Length;
-            try
-            {
-                using (Stream stream = request.GetRequestStream())
-                {
-                    stream.Write(data, 0, data.Length);
-                }
-            } catch (Exception e)
-            {
-                ProgramLog.Error(string.Format(Resources.Program_SendAnalyticsHit_There_was_an_error_connecting_to__0___Skipping_sending_analytics_, analyticsUrl), e);
-                return;
-            }
-
-            var response = (HttpWebResponse)request.GetResponse();
-            var responseStream = response.GetResponseStream();
-            if (null != responseStream)
-            {
-                new StreamReader(responseStream).ReadToEnd();
-            }
-            // ReSharper restore LocalizableElement
         }
 
         public static string Version()
@@ -313,12 +276,6 @@ namespace SkylineBatch
         public static Icon Icon()
         {
             return System.Drawing.Icon.ExtractAssociatedIcon(Application.ExecutablePath);
-        }
-
-        private static void InitializeSecurityProtocol()
-        {
-            // Make sure we can negotiate with HTTPS servers that demand TLS 1.2 (default in dotNet 4.6, but has to be turned on in 4.5)
-            ServicePointManager.SecurityProtocol |= (SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12);  
         }
 
         public static void AddTestException(Exception exception)

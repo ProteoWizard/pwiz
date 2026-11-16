@@ -115,11 +115,11 @@
         <li>On the <b>View</b> menu, choose <b>Libraries</b>, and click <b>Library Explorer</b>.</li>
     </ul>
     <p>
-        A message is presented about the modifications Skyline has detected in the Experiment 15N library. In your own work, you will often want to
+        The <b>Add Modifications</b> form lists the modifications Skyline has detected in the Experiment 15N library. In your own work, you will often want to
         accept these automatically detected peptide modifications, but for this tutorial:
     </p>
     <ul>
-        <li>Click the <b>No</b> button.</li>
+        <li>Click the <b>Cancel</b> button.</li>
     </ul>
     <p class="keep-next">
         The library explorer should look something like this:
@@ -163,9 +163,9 @@
     </p>
     <p>
         Hover the cursor over the one displayed as <b><u>Q</u></b>VLFSADDR++, and you will see that the glutamine modification is displayed
-        in the tip as Q[+17.0] for a Gln-&gt;pyro-Glu modification. To understand why Skyline displays both <b><u>QVLFSADDR</u></b>++ and
-        <b><u>QVLFSADDRVK</u></b>+++ twice, you can hover the cursor over these peptides as well. You will find that they represent all 15N
-        modified peptides with and without the Gln-&gt;pyro-Glu modification.
+        in the tip as Q[-17.0] for a Gln-&gt;pyro-Glu modification. To understand why Skyline displays <b><u>QVLFSADDR</u></b>++ four times and
+        <b><u>QVLFSADDRVK</u></b>+++ three times, you can hover the cursor over these peptides as well. You will find that they represent the
+        peptides with and without 15N labeling and with different modifications of the leading glutamine, such as Gln-&gt;pyro-Glu.
     </p>
     <p>
         Turning your attention to the right side of the library explorer, you will see a Skyline MS/MS spectrum chart similar to the one Skyline
@@ -406,11 +406,11 @@
         <li>Click the <b>Yes</b> button, to save the new settings and open the <b>Spectral Library Explorer</b>.</li>
     </ul>
     <p>
-        Again a message will be presented with a list of the peptide modifications that Skyline has detected in the library, and again for this
+        Again the <b>Add Modifications</b> form will list the peptide modifications that Skyline has detected in the library, and again for this
         tutorial simply
     </p>
     <ul>
-        <li>Click the <b>No</b> button.</li>
+        <li>Click the <b>Cancel</b> button.</li>
     </ul>
     <p>
         You can see that most of peptides in the library do not yet match the current document settings by noting that they lack peptide icons to the
@@ -447,8 +447,8 @@
         <li>In the <b>Chemical Formula</b> field, enter “HO3P”.</li>
         <li>Click the <b>Loss &gt;&gt;</b> button.</li>
         <li>Click the blue “<b>+</b>” button.</li>
-        <li>Enter “H3O4P” in the <b>Neutral Loss Chemical Formula</b> field of the <b>Edit Neutral Loss</b> form.</li>
-        <li>Click the <b>OK</b> button on the <b>Edit Neutral Loss</b> form.</li>
+        <li>Enter “H3O4P” in the <b>Loss chemical formula</b> field of the <b>Edit Loss</b> form.</li>
+        <li>Click the <b>OK</b> button on the <b>Edit Loss</b> form.</li>
     </ul>
     <p class="keep-next">
         The <b>Edit Structural Modification</b> form should now look like this:
@@ -469,7 +469,7 @@
         <li>Right-click the spectrum graph, and click <b>Precursor</b> to show precursor ions.</li>
     </ul>
     <p class="keep-next">
-        The two filtered peptides should both now have peptide icons to the right of their peptide sequences, and their spectrum
+        The two filtered peptides should both now have peptide icons to the left of their peptide sequences, and their spectrum
         charts should look like:
     </p>
     <table class="comp-fig">
@@ -511,7 +511,7 @@
         <li>Click the <b>Digestion</b> tab.</li>
         <li>From the <b>Background proteome</b> dropdown list, choose <b>&lt;Add…&gt;</b>.</li>
         <li>Enter “Human (mini)” in the <b>Name</b> field of the <b>Edit Background Proteome</b> form.</li>
-        <li>Click the <b>Browse</b> button.</li>
+        <li>Click the <b>Open</b> button.</li>
         <li>Navigate to the LibraryExplorer folder for this tutorial.</li>
         <li>Double-click the “human.protdb” file.</li>
     </ul>
@@ -528,7 +528,7 @@
     </ul>
     <p>
         Return to the library explorer and clear the filter box in the <b>Peptide</b> field so that all peptides are again showing. If you
-        scroll through the list of peptides, you will see that most of them now show a peptide icon to the right of the peptide sequence. Some do not,
+        scroll through the list of peptides, you will see that most of them now show a peptide icon to the left of the peptide sequence. Some do not,
         however, and you can explore their tips to determine that you would still have to add modifications for oxidation on Methionine and N-terminal
         acetylation to cover all of the modifications in this library.
     </p>
@@ -538,6 +538,7 @@
     <ul>
         <li>Check the <b>Associate Proteins</b> checkbox in the <b>Spectral Library Explorer</b>.</li>
         <li>Click the <b>Add All</b> button.</li>
+        <li>If Skyline asks to upgrade the background proteome to the latest format, click the <b>Yes</b> button.</li>
     </ul>
     <p class="keep-next">
         This should bring up a form that looks like this:
@@ -549,7 +550,7 @@
         <li>For the <b>163 peptides matching multiple proteins</b>, choose/change to <b>Add to only the first matching
                 protein</b>.</li>
         <li>For the <b>2 peptides without matching proteins</b>, choose <b>Add to a peptide list</b>.</li>
-        <li>For the <b>199 peptides not matching the current filter settings</b>, choose <b>Include all peptides</b>.</li>
+        <li>For the <b>176 peptides not matching the current filter settings</b>, choose <b>Include all peptides</b>.</li>
         <li>Click the <b>OK</b> button.</li>
     </ul>
     <p class="keep-next">

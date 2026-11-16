@@ -28,6 +28,7 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Reflection;
+using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -114,18 +115,14 @@ namespace TestRunner
             // with no potential for infinite looping on a detected leak.
             {"TestLibraryExplorer", new ExpandedLeakCheck()},
             {"TestLibraryExplorerAsSmallMolecules", new ExpandedLeakCheck()},
-            // These show the native common file dialog, and what grows is Windows' shell cache, not
-            // Skyline: a heap block-size diff finds Explorer's cached DirectUI view for the modern
-            // IFileDialog, one set per dialog, held on a UI thread that lives for the whole process.
-            // It saturates (~2 KB/dialog by the 40th), so these tests do settle -- they just need
-            // more than the default 24 runs. x4 because the nightly machines sit further up the
-            // curve than the box this was measured on; the extra iterations are only consumed when a
-            // test has not settled, so they cost nothing where it converges early. Muting instead
-            // would give up heap-leak detection here entirely.
-            // See ai/todos/active/TODO-20260723_native_dialog_leak_iterations.md for the evidence.
+            // Native heap keeps growing while tiered JIT recompiles the vendor readers' hot methods,
+            // and Mobilion's SDK frees its internal HDF5 caches only periodically
+            {"TestTicChromatogram", new ExpandedLeakCheck()},
+            // Tests which show the native common file dialog need more iterations to stabilize
+            // because the Windows shell cache grows
             {"TestNativeFileDialog", new ExpandedLeakCheck(LeakCheckIterations * 4)},
             {"TestNativeMessageBox", new ExpandedLeakCheck(LeakCheckIterations * 4)},
-            {"TestPrmMcpConnector", new ExpandedLeakCheck(LeakCheckIterations * 4)},
+            {"TestLayoutExportImport", new ExpandedLeakCheck(LeakCheckIterations * 4)}
         };
 
         //  These tests only need to be run once, regardless of language, so they get turned off in pass 0 after a single invocation
@@ -255,16 +252,52 @@ namespace TestRunner
             }
         }
 
+        /// <summary>
+        /// Assembles the staged test directory that net8 tests run from, and reports what it did.
+        /// </summary>
+        private static int StageTests(CommandLineArgs commandLineArgs)
+        {
+            try
+            {
+                var skylineDir = GetSkylineDirectory().FullName;
+                var configuration = commandLineArgs.ArgAsString("configuration");
+                var stager = new TestStager(skylineDir, configuration, Console.WriteLine);
+
+                // stageprojects= narrows staging to the projects named, comma separated.
+                // SkylineTester is not in the default set - it is a dev/CI tool rather than
+                // part of the product - so the only way it reaches the staging directory it
+                // has to RUN from is for the build to ask for it by name. Empty means the
+                // default set, which is what a plain staging pass wants.
+                var projects = commandLineArgs.ArgAsString("stageprojects");
+                if (!string.IsNullOrEmpty(projects))
+                    stager.Projects = projects.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+                // The portable runtime is the same bytes every time and takes about thirty
+                // seconds, so a caller staging one project at a time bundles it on the first
+                // pass and turns it off for the rest.
+                stager.StageRuntime = commandLineArgs.ArgAsBool("stageruntime");
+
+                stager.Stage();
+                return 0;
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("Staging failed: " + e.Message);
+                return 1;
+            }
+        }
+
         static readonly string commandLineOptions =
             "?;/?;-?;help;skylinetester;debug;results;" +
             "test;skip;filter;form;" +
             "loop=0;repeat=1;pause=0;startingshot=1;random=off;offscreen=on;multi=1;wait=off;internet=off;originalurls=off;" +
-            "parallelmode=off;workercount=0;waitforworkers=off;keepworkerlogs=off;checkdocker=on;workername;queuehost;workerport;workertimeout;alwaysupcltpassword;" +
+            "parallelmode=off;workercount=0;waitforworkers=off;keepworkerlogs=off;checkdocker=on;workername;queuehost;workerport;workertimeout;alwaysupcltpassword;skipsystemheaps=off;" +
             "coverage=off;dotcoverexe=jetbrains.dotcover.commandlinetools\\2023.3.3\\tools\\dotCover.exe;" +
             "maxsecondspertest=-1;" +
-            "demo=off;showformnames=off;status=off;buildcheck=0;" +
+            "demo=off;showformnames=off;status=off;buildcheck=0;aiconnector=off;" +
+            "stage=off;configuration=Debug;stageprojects=;stageruntime=on;" +
             "quality=off;qualityonly=off;pass0=off;pass1=off;pass2=on;" +
-            "perftests=off;" +
+            "perftests=off;perffirst=off;" +
             "retrydatadownloads=off;" +
             "runsmallmoleculeversions=off;" +
             "recordauditlogs=off;" +
@@ -284,6 +317,13 @@ namespace TestRunner
         static int Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
+
+            // Pin the WinForms default font exactly as shipping Skyline does, before any control
+            // is created. Skyline sets this in its own Main, but by the time the first functional
+            // test calls that, hundreds of unit tests have run in this process and may already
+            // have created a window - after which the font can no longer be set. Doing it here
+            // guarantees every test sees the same metrics as the shipping app.
+            pwiz.Skyline.Program.SetDefaultFont();
 
             // Opt the test runner into the latest WinForms accessibility level by explicitly setting
             // all four UseLegacyAccessibilityFeatures switches to false BEFORE any control is created.
@@ -317,8 +357,33 @@ namespace TestRunner
 
             _testRunStartTime = DateTime.UtcNow;
 
+            // Let .NET 8 tool apphosts that tests spawn (BlibBuild.exe, BlibFilter.exe, SkylineCmd.exe, ...)
+            // resolve the runtime. This process itself runs via the staged dotnet.exe muxer, which self-locates
+            // its runtime with no env var; but a bare apphost launched via ProcessRunner does not use the muxer --
+            // it looks for DOTNET_ROOT, a global install, or a co-located hostfxr.dll. In the Docker worker the
+            // image has no global .NET and the AlwaysUp .\TestUser service session does not inherit `docker run -e`
+            // vars, so without this the apphost dies with 0x80008083 "Failed to resolve hostfxr.dll", hanging or
+            // failing every library-build/tool test and taking its worker down. Setting DOTNET_ROOT in THIS
+            // process's environment is inherited by the child processes it spawns (which read the process env,
+            // not the service session), sidestepping that limitation.
+            SetDotNetRootForChildApphosts();
+
             // Parse command line args and initialize default values.
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
+
+            // skipsystemheaps=on is a manual escape hatch to skip the GetProcessHeapSizes system-heap
+            // accounting entirely. It is no longer needed for segment-heap safety -- on net8
+            // GetProcessHeapSizes reads committed/reserved via HeapSummary instead of the AccessViolation-prone
+            // HeapWalk (which faults on the segment heaps Windows Server + containers use by default) -- but
+            // it stays available for diagnosing heap issues without a rebuild.
+            if (commandLineArgs.ArgAsBool("skipsystemheaps"))
+                RunTests.SkipSystemHeaps = true;
+
+            // stage=1 assembles the staged test directory and exits. This is the same code the
+            // staging script and SkylineTester use, so there is one implementation of staging
+            // rather than one per caller.
+            if (commandLineArgs.ArgAsBool("stage"))
+                return StageTests(commandLineArgs);
 
             switch (commandLineArgs.SearchArgs("?;/?;-?;help;report"))
             {
@@ -410,7 +475,9 @@ namespace TestRunner
                 else if (commandLineArgs.HasArg("listonly"))
                 {
                     foreach(var test in testList)
-                        Console.WriteLine("{0}\t{1}", Path.GetFileName(test.TestClassType.Assembly.CodeBase), test.TestMethod.Name);
+                        // Location, not the obsolete CodeBase: both name the same DLL here, and only the
+                        // file name is printed.
+                        Console.WriteLine("{0}\t{1}", Path.GetFileName(test.TestClassType.Assembly.Location), test.TestMethod.Name);
                     return 0;
                 }
                 else
@@ -498,9 +565,9 @@ namespace TestRunner
 
             if (commandLineArgs.ArgAsBool("wait"))
             {
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
+                // The parked process is what a developer inspects in Task Manager or dotMemory,
+                // so make it the same quiet point the per-test samples use
+                RunTests.MemoryManagement.CollectForMeasurement();
                 Console.Out.WriteLine("Press <enter> to continue");
                 Console.ReadLine();
             }
@@ -519,7 +586,7 @@ namespace TestRunner
                 .GetAllNetworkInterfaces()
                 .Where(n => n.OperationalStatus == OperationalStatus.Up)
                 .Where(n => n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
-                .SelectMany(n => n.GetIPProperties()?.GatewayAddresses)
+                .SelectMany(n => n.GetIPProperties().GatewayAddresses)
                 .Select(g => g?.Address)
                 .FirstOrDefault(a => a?.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6);
                 // .Where(a => Array.FindIndex(a.GetAddressBytes(), b => b != 0) >= 0)
@@ -728,7 +795,7 @@ namespace TestRunner
                 var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
                 string workerName = $"docker_check{GetTestRunTimeStamp()}";
                 string testRunnerExe = GetTestRunnerExe();
-                string dockerArgs = $"run --name {workerName} --rm -v \"{pwizRoot}\":c:\\pwiz {RunTests.DOCKER_IMAGE_NAME} \"{testRunnerExe} help\"";
+                string dockerArgs = $"run --name {workerName} --rm -v \"{pwizRoot}\":c:\\pwiz {GetDockerEnvArgs()}{RunTests.DOCKER_IMAGE_NAME} \"{testRunnerExe} {GetTestRunnerTargetArg()}help\"";
                 Console.WriteLine("Checking that Docker always_up_runner container can run.");
                 string checkOutput = RunTests.RunCommand("docker", dockerArgs, "Error checking whether always_up_runner can start");
                 if (checkOutput.Contains("StartService FAILED"))
@@ -775,7 +842,7 @@ namespace TestRunner
             }
         }
 
-        private static int LaunchHostWorker(CommandLineArgs commandLineArgs, int workerPort, StreamWriter log, ConcurrentBag<string> coverageSnapshots)
+        private static Process LaunchHostWorker(CommandLineArgs commandLineArgs, int workerPort, StreamWriter log, ConcurrentBag<string> coverageSnapshots)
         {
             var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
             Assume.IsNotNull(pwizRoot);
@@ -786,7 +853,7 @@ namespace TestRunner
                 testRunnerLog = @$"log=""{pwizRoot}\TestRunner-{workerName}.log""";
 
             // here paths are in host space
-            var testRunnerExe = Assembly.GetExecutingAssembly().Location;
+            var testRunnerExe = GetHostTestRunnerExe();
             var testRunnerArgs = $"parallelmode=client showheader=0 results=\"{pwizRoot}\\TestResults_host\" {testRunnerLog}";
             if (commandLineArgs.ArgAsBool("coverage"))
             {
@@ -810,7 +877,11 @@ namespace TestRunner
             {
                 throw new IOException($"Error launching host worker: {proc?.ExitCode ?? -1}");
             }
-            return proc.Id;
+            // Return the Process, not its id. Holding it keeps a handle open, so Windows cannot
+            // hand this pid to something else once the worker exits, and teardown never has to
+            // guess whether the pid it holds is still the worker. The name would not settle that
+            // either: under coverage this process is dotCover, not TestRunner.
+            return proc;
         }
 
         private static string LaunchDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker,
@@ -830,16 +901,18 @@ namespace TestRunner
             if (commandLineArgs.ArgAsBool("coverage"))
             {
                 var dotCoverExe = commandLineArgs.ArgAsString("dotcoverexe"); // use relative path
+                // On net8 testRunnerExe is dotnet.exe (the muxer); the TestRunner.dll it runs is the
+                // first target argument after the "--" separator.
                 testRunnerCmd =
-                    $@"c:\pwiz\{dotCoverExe} cover {dotCoverFilters} /Output=c:\pwiz\coverage-{workerName}.dcvr /ReturnTargetExitCode /AnalyzeTargetArguments=false /TargetExecutable={testRunnerExe} -- " +
+                    $@"c:\pwiz\{dotCoverExe} cover {dotCoverFilters} /Output=c:\pwiz\coverage-{workerName}.dcvr /ReturnTargetExitCode /AnalyzeTargetArguments=false /TargetExecutable={testRunnerExe} -- {GetTestRunnerTargetArg()}" +
                     testRunnerCmd;
                 coverageSnapshots.Add($"coverage-{workerName}.dcvr");
             }
             else
-                testRunnerCmd = testRunnerExe + " " + testRunnerCmd;
+                testRunnerCmd = testRunnerExe + " " + GetTestRunnerTargetArg() + testRunnerCmd.TrimStart();
             testRunnerCmd = AddPassThroughArguments(commandLineArgs, testRunnerCmd);
 
-            string dockerArgs = $"run --name {workerName} --rm -m {workerBytes}b -v \"{PathEx.GetDownloadsPath()}\":c:\\downloads -v \"{pwizRoot}\":c:\\pwiz {RunTests.DOCKER_IMAGE_NAME} \"{testRunnerCmd}\" {dockerRunRedirect}";
+            string dockerArgs = $"run --name {workerName} --rm -m {workerBytes}b -v \"{PathEx.GetDownloadsPath()}\":c:\\downloads -v \"{pwizRoot}\":c:\\pwiz {GetDockerEnvArgs()}{RunTests.DOCKER_IMAGE_NAME} \"{testRunnerCmd}\" {dockerRunRedirect}";
             Console.WriteLine($"Launching {workerName}: docker {dockerArgs}");
             log?.WriteLine($"Launching {workerName}: docker {dockerArgs}");
             workerNames = (workerNames ?? "") + $"{workerName} ";
@@ -872,17 +945,79 @@ namespace TestRunner
             return testRunnerCmd;
         }
 
+        // The runnable TestRunner executable on the host. On net472 Assembly.Location is the .exe
+        // already; on net8 it's the managed TestRunner.dll and the runnable apphost is the sibling
+        // .exe, which is what Process.Start / the Docker worker command must reference.
+        private static string GetHostTestRunnerExe()
+        {
+            var location = Assembly.GetExecutingAssembly().Location;
+            if (location.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+            {
+                var exe = Path.ChangeExtension(location, ".exe");
+                if (File.Exists(exe))
+                    return exe;
+            }
+            return location;
+        }
+
+        // Container-space path of the staged TestRunner.exe. The container mounts pwizRoot at c:\pwiz,
+        // so any host path under pwizRoot becomes c:\pwiz\<relative>. The old code anchored on
+        // "pwiz_tools\Skyline\bin", which the net8 SDK per-project bin layout (pwiz_tools\Skyline\
+        // <Project>\bin\... or a staged bin dir) no longer matches.
+        private static string GetContainerTestRunnerExe()
+        {
+            var testRunnerExe = GetHostTestRunnerExe();
+            var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
+            return pwizRoot != null && testRunnerExe.StartsWith(pwizRoot + Path.DirectorySeparatorChar, StringComparison.CurrentCultureIgnoreCase)
+                ? Path.Combine(@"c:\pwiz", testRunnerExe.Substring(pwizRoot.Length).TrimStart('\\', '/'))
+                : @"c:\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe";
+        }
+
+        // Point DOTNET_ROOT at the portable runtime staged next to this assembly (<staged>\dotnet, which
+        // ships hostfxr under dotnet\host\fxr\<ver>) so bare apphosts this process spawns can resolve it.
+        // No-op when DOTNET_ROOT is already set (respect an explicit runtime) or when the staged runtime is
+        // absent (net472, or an unstaged dev bin layout where a global .NET install is used instead).
+        private static void SetDotNetRootForChildApphosts()
+        {
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"DOTNET_ROOT")))
+                return;
+            var stagedRuntime = Path.Combine(AppContext.BaseDirectory, @"dotnet");
+            if (File.Exists(Path.Combine(stagedRuntime, @"dotnet.exe")) &&
+                Directory.Exists(Path.Combine(stagedRuntime, @"host", @"fxr")))
+            {
+                Environment.SetEnvironmentVariable(@"DOTNET_ROOT", stagedRuntime);
+            }
+        }
+
+        // The executable the Docker worker launches. On net8 the image has no .NET installed and the
+        // apphost can't be pointed at the staged runtime via DOTNET_ROOT: AlwaysUp runs the worker as
+        // a Windows service (account .\TestUser) whose session does not inherit `docker run -e` vars,
+        // so the apphost fails with "You must install .NET / Failed to resolve hostfxr.dll". Instead
+        // launch via the staged dotnet.exe muxer, which self-locates its runtime from its own folder
+        // (<staged>\dotnet) with no environment variable at all. net472 launches the apphost directly.
         private static string GetTestRunnerExe()
         {
-            // paths in testRunnerCmd are in container-space (c:\pwiz is mounted from pwizRoot, c:\downloads is mounted from GetDownloadsPath(), c:\AlwaysUpCLT is not copied to the host)
-            var testRunnerExe = Assembly.GetExecutingAssembly().Location;
-            int iRelative = testRunnerExe.IndexOf(@"pwiz_tools\Skyline\bin", StringComparison.CurrentCultureIgnoreCase);
-            testRunnerExe = iRelative != -1
-                ? Path.Combine(@"c:\pwiz", testRunnerExe.Substring(iRelative))
-                : @"c:\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe";
-            // N.B. TestResults_<n> could technically just be TestResults since each VM has its own drive, but it makes for a more readable log and
-            // is also used in pwiz_tools\Skyline\TestRunnerLib\RunTests.cs to determine the test client ID
-            return testRunnerExe;
+            // Container paths under c:\pwiz\...\staging\ contain no spaces, so no quoting needed.
+            return Path.GetDirectoryName(GetContainerTestRunnerExe()) + @"\dotnet\dotnet.exe";
+        }
+
+        // The managed target that must follow GetTestRunnerExe() on net8 (the DLL the muxer runs),
+        // with a trailing space; empty on net472 where the apphost itself is the program.
+        private static string GetTestRunnerTargetArg()
+        {
+            return Path.ChangeExtension(GetContainerTestRunnerExe(), ".dll") + " ";
+        }
+
+        // Environment fragment spliced into `docker run` for the Docker workers. Currently empty:
+        // container workers no longer need SKYLINE_TESTRUNNER_SKIP_SYSTEM_HEAPS to dodge the segment-heap
+        // AccessViolation -- on net8 GetProcessHeapSizes reads committed/reserved with HeapSummary instead
+        // of walking the heaps a Windows Server container uses by default, so the committed-heap
+        // leak-tracking number keeps working in the container. Kept as the single seam for any future
+        // `docker run -e` needs. (The net8 runtime is supplied by the staged dotnet.exe muxer - see
+        // GetTestRunnerExe - not by an environment variable.)
+        private static string GetDockerEnvArgs()
+        {
+            return string.Empty;
         }
 
         private static void LaunchAndWaitForDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker,
@@ -962,6 +1097,14 @@ namespace TestRunner
         /// Name prefix of an ordinary container worker.
         /// </summary>
         private const string NORMAL_WORKER_NAME = "docker_worker";
+
+        /// <summary>
+        /// How long to let the host worker exit on its own before generating the coverage report.
+        /// Under coverage that process is dotCover, which writes its snapshot on exit, so this is
+        /// the difference between a report and an empty one. Bounded so a host worker that never
+        /// exits delays the report rather than hanging the run.
+        /// </summary>
+        private const int HOST_WORKER_EXIT_TIMEOUT_MILLIS = 60 * 1000;
 
         /// <summary>
         /// The name a container worker will be launched under. Worked out separately from launching it
@@ -1120,13 +1263,37 @@ namespace TestRunner
                     // Every language, not just the first few: pass 1 keeps going while it is still
                     // deciding on a leak, so it can wrap around the list any number of times.
                     var cultures = Pass == 1 ? allLanguages : new[] { Language };
-                    // Deliberately the language as queued rather than a CultureInfo round trip, which
-                    // throws on a name GetCanonicalLanguage did not recognize. These are the same
-                    // strings the client builds its CultureInfo from, so they are what the directory
-                    // ends up named after, and a bad one should fail the test that uses it rather than
-                    // the server handing it out.
                     return cultures.Select(culture =>
-                        PathEx.GetTestDirectoryName(TestInfo.TestMethod.Name, culture));
+                        PathEx.GetTestDirectoryName(TestInfo.TestMethod.Name, ResolvedCultureName(culture)));
+                }
+            }
+
+            /// <summary>
+            /// The culture name the CLIENT ends up running under, which is what its tools directory
+            /// gets named after.
+            /// <para>It is not always the string that was queued: where a runtime normalizes a
+            /// deprecated culture name, reserving the queued spelling locks a directory that culture
+            /// never writes and leaves the one it does write unprotected. Both spellings were found
+            /// side by side in a staging directory, which is what that looks like on disk.</para>
+            /// <para>NOTE, measured 2026-08-25: .NET Framework 4.8 does NOT do this - "zh-CHS"
+            /// constructs and round-trips as "zh-CHS". So on net472 this resolves to the queued
+            /// string and the call is a no-op. It is kept because it is cheap and because the
+            /// normalization it guards against is real on .NET, which the port moves to; whoever
+            /// works the net8 line should confirm the spelling there rather than trust this note.
+            /// </para>
+            /// <para>Falls back to the string as queued for a name CultureInfo does not recognize, so
+            /// an unusable language still fails the test that asked for it rather than throwing while
+            /// the server is handing work out.</para>
+            /// </summary>
+            private static string ResolvedCultureName(string culture)
+            {
+                try
+                {
+                    return new CultureInfo(culture).Name;
+                }
+                catch (CultureNotFoundException)
+                {
+                    return culture;
                 }
             }
 
@@ -1250,7 +1417,7 @@ namespace TestRunner
             public DateTime CurrentTestStarted { get; set; }
         }
 
-        private static int HostWorkerPid { get; set; }
+        private static Process HostWorker { get; set; }
 
         private static bool PushToTestQueue(List<TestInfo> testList, List<TestInfo> unfilteredTestList, CommandLineArgs commandLineArgs, StreamWriter log)
         {
@@ -1351,14 +1518,23 @@ namespace TestRunner
                 languages = new[] { "en-US" };
             }
 
+            // Each worker connection is handled on its own thread, so LogTestOutput is called
+            // concurrently. Console and the shared StreamWriter are not thread-safe -- unsynchronized
+            // WriteLine calls race and (on net8) throw IndexOutOfRangeException, which the worker
+            // thread's catch escalates to Environment.Exit, killing the whole parallel run. Serialize
+            // the writes so a parallel pass completes.
+            var logWriteLock = new object();
             Action<string, StreamWriter, int> LogTestOutput = (testOutput, testLog, pass) =>
             {
                 testOutput = testOutput.Trim(' ', '\t', '\r', '\n');
                 testOutput = Regex.Replace(testOutput, @"\d+ failures", $"{testsFailed} failures");
                 testOutput = Regex.Replace(testOutput, @"^(\[\d+:\d+\])?\s*(\d+)\.(\d+)?", $" $1 {pass}.{testsResultsReturned} ", RegexOptions.Multiline);
 
-                Console.WriteLine(testOutput);
-                testLog.WriteLine(testOutput);
+                lock (logWriteLock)
+                {
+                    Console.WriteLine(testOutput);
+                    testLog.WriteLine(testOutput);
+                }
             };
 
             // One lead entry per test, carrying everything it still has to run - see QueuedTestInfo for
@@ -1402,7 +1578,12 @@ namespace TestRunner
                 CheckDocker(commandLineArgs);
 
             // open socket that listens for workers to connect
+            // workerNames is declared out here so the teardown scope can read the names as they
+            // are launched. Disposing that scope is what stops the workers when a run finishes
+            // normally; the console control handler installed below only covers outside termination.
+            string workerNames = null;
             using (var receiver = new PullSocket())
+            using (new RunTests.ParallelWorkerTeardown(() => HostWorker, () => workerNames, GetTestRunTimeStamp()))
             {
                 // get system-assigned port which will passed to workers with "workerport" parameter
                 int workerPort;
@@ -1417,12 +1598,16 @@ namespace TestRunner
                     workerPort = UnusedPortFinder.FindUnusedPort(9810, 65535);
                 }
                 receiver.Bind($"tcp://*:{workerPort}");
-                string workerNames = null;
 
                 // try to kill docker workers if process is terminated externally (e.g. SkylineTester)
                 Kernel32Test.SetConsoleCtrlHandler(c =>
                 {
-                    RunTests.KillParallelWorkers(HostWorkerPid, workerNames);
+                    // The run tag matters most here. workerNames is only committed once a container
+                    // CONNECTS, so one that was launched and has not connected yet is running and
+                    // absent from that list - and this handler kills the process immediately after,
+                    // so neither Dispose nor ProcessExit gets a turn. Matching on the tag reaches
+                    // those containers, where names alone would leave them behind.
+                    RunTests.KillParallelWorkers(HostWorker, workerNames, GetTestRunTimeStamp());
                     cts.Cancel();
                     Process.GetCurrentProcess().Kill();
                     return true;
@@ -1470,13 +1655,14 @@ namespace TestRunner
                         catch (Exception e)
                         {
                             Console.Error.WriteLine("Error launching Docker workers: " + e);
+                            RunTests.ParallelWorkerTeardown.TearDownNow();   // Exit runs no finally
                             Environment.Exit(1);
                         }
                     });
                 }
 
                 // fix this to get PID of TestRunner, not dotCover
-                HostWorkerPid = LaunchHostWorker(commandLineArgs, workerPort, log, coverageSnapshots);
+                HostWorker = LaunchHostWorker(commandLineArgs, workerPort, log, coverageSnapshots);
                 // A worker still counts while its container is booting. Without that, a replacement is
                 // launched into a pool that is declared empty a second later, and it can never register.
                 bool AnyWorkerAliveOrPending()
@@ -1510,6 +1696,7 @@ namespace TestRunner
                     catch (Exception e)
                     {
                         Console.Error.WriteLine("Error running worker wait thread: " + e);
+                        RunTests.ParallelWorkerTeardown.TearDownNow();   // Exit runs no finally
                         Environment.Exit(1);
                     }
                 }, TaskCreationOptions.LongRunning));
@@ -1536,6 +1723,7 @@ namespace TestRunner
                             Console.Error.WriteLine("Be sure to check BOTH public and private options if prompted to \"Allow TestRunner to communicate on these networks\".");
                             Console.Error.WriteLine("See https://skyline.ms/wiki/home/development/page.view?name=Troubleshooting_parallel_mode for troubleshooting tips.\r\n");
 
+                            RunTests.ParallelWorkerTeardown.TearDownNow();   // Exit runs no finally
                             Environment.Exit(1);
                         }
                         continue;
@@ -1711,6 +1899,7 @@ namespace TestRunner
                         catch (Exception e)
                         {
                             Console.Error.WriteLine("Error in worker handling thread: " + e);
+                            RunTests.ParallelWorkerTeardown.TearDownNow();   // Exit runs no finally
                             Environment.Exit(1);
                         }
                     }, TaskCreationOptions.LongRunning));
@@ -1740,11 +1929,58 @@ namespace TestRunner
                                     // pair it usually is, which would mean never noticing a worker died
                                     if (workerInfo.Retired || cts.IsCancellationRequested)
                                         return;
-                                    Console.WriteLine($"Worker {workerName} stopped responding while working on test {workerInfo.CurrentTest}.");
+                                    // Reported as a FAILURE of the TEST, in the shape Report() and
+                                    // SkylineNightly parse, and written to the LOG rather than only to
+                                    // the console. Deliberately says nothing about WHY the worker went
+                                    // quiet: all this detection knows is that heartbeats stopped, and a
+                                    // container starved of CPU can miss its window while its test runs
+                                    // on - see MISSED_HEARTBEATS_BEFORE_DEAD. The exit code would settle
+                                    // it, but `docker run --rm` deletes the container before anything
+                                    // can ask. What IS known is that no result ever came back, which is
+                                    // a failure of the test whatever caused it.
+                                    // A lost worker used to be one plain line among thousands of
+                                    // results: it named the test but counted for nothing, so a run
+                                    // that shed half its workers still ended saying "No failures" and
+                                    // read as a 40% performance regression instead of five crashes.
+                                    // CurrentTest is "Name/Language/Pass"; the bare name goes on the
+                                    // !!! line because that is what the parsers key on.
+                                    // Only a worker that was HOLDING a test failed one. Between tests it
+                                    // takes nothing down with it, and naming a test there is worse than
+                                    // saying nothing: the !!! shape makes Report() and SkylineNightly
+                                    // record whatever word follows as a failing test, so a placeholder
+                                    // becomes a test called "(no test)" in the failure list.
+                                    var lostTest = workerInfo.CurrentTest;
+                                    var report = lostTest == null
+                                        ? new[]
+                                        {
+                                            $"Worker {workerName} stopped responding between tests and was " +
+                                            @"given up on. No test result was lost, but the pool is smaller."
+                                        }
+                                        : new[]
+                                        {
+                                            $"!!! {lostTest.Split('/')[0]} FAILED",
+                                            $"Worker {workerName} stopped responding while running {lostTest} and " +
+                                            @"was given up on. No result was ever produced for it, and no stack " +
+                                            @"trace: nothing came back from the worker to write one.",
+                                            @"!!!"
+                                        };
+                                    lock (workerInfoByName)   // Every worker's heartbeat runs its own thread
+                                    {
+                                        foreach (var line in report)
+                                        {
+                                            Console.WriteLine(line);
+                                            log?.WriteLine(line);
+                                        }
+                                        log?.Flush();
+                                    }
                                     if (commandLineArgs.ArgAsBool("coverage"))
                                     {
                                         Console.WriteLine("Aborting coverage run due to failed worker (coverage from that worker is lost).");
-                                        RunTests.KillParallelWorkers(HostWorkerPid);
+                                        // Scoped to this run: without the names and the tag, this kills
+                                        // every worker container on the machine, including a concurrent
+                                        // run's - and this path then kills the process, so it is the
+                                        // last chance to get the scope right.
+                                        RunTests.KillParallelWorkers(HostWorker, workerNames, GetTestRunTimeStamp());
                                         Process.GetCurrentProcess().Kill();
                                     }
 
@@ -1794,6 +2030,7 @@ namespace TestRunner
                         catch (Exception e)
                         {
                             Console.Error.WriteLine("Error listening for worker heartbeat: " + e);
+                            RunTests.ParallelWorkerTeardown.TearDownNow();   // Exit runs no finally
                             Environment.Exit(1);
                         }
                     }, TaskCreationOptions.LongRunning);
@@ -1802,21 +2039,46 @@ namespace TestRunner
                 Console.WriteLine("Waiting for worker tasks to finish.");
                 foreach (var task in tasks)
                     task.Wait();
+
+                Console.WriteLine($"Parallel testing finished in {timer.Elapsed} ({timer.Elapsed.TotalSeconds}s)");
+
+                // Inside the teardown scope on purpose. Under coverage the host worker IS dotCover, and
+                // teardown kills it - so generating the report after the scope closes reports on a
+                // process that was just killed, and every parallel coverage run fails.
+                if (coverageSnapshots.Any())
+                {
+                    // Being inside the scope is not enough on its own. dotCover writes its snapshot
+                    // when the profiled process EXITS, and the server task returns as soon as it has
+                    // sent the quit message - so the tasks completing does not mean the host worker
+                    // is gone. Without this wait the report is generated before the snapshot exists,
+                    // and teardown then kills the process that was about to write it.
+                    if (HostWorker != null && !HostWorker.HasExited &&
+                        !HostWorker.WaitForExit(HOST_WORKER_EXIT_TIMEOUT_MILLIS))
+                    {
+                        Console.WriteLine(
+                            $"Host worker did not exit within {HOST_WORKER_EXIT_TIMEOUT_MILLIS} ms; coverage may be incomplete.");
+                    }
+
+                    GenerateCoverageReport(commandLineArgs, coverageSnapshots);
+                }
             }
-            Console.WriteLine($"Parallel testing finished in {timer.Elapsed} ({timer.Elapsed.TotalSeconds}s)");
-            if (coverageSnapshots.Any())
-                GenerateCoverageReport(commandLineArgs, coverageSnapshots);
 
             // Every worker has finished, so anything still queued is work nobody ever ran - most likely
             // because the only worker that could have run it went away. Report that rather than passing:
             // a run that quietly skipped tests must not look like a run that passed them.
-            var neverRun = testQueue.Concat(nonParallelTestQueue).Concat(abandonedEntries).ToList();
-
             // A run that loops until something stops it always has work outstanding at the moment it
-            // stops, so leftover entries prove nothing by themselves. The ones that never ran at all
-            // still do.
+            // stops, so leftover QUEUE entries prove nothing by themselves. The ones that never ran
+            // at all still do.
+            var leftInQueue = testQueue.Concat(nonParallelTestQueue).ToList();
             if (LoopsForever(loop))
-                neverRun = neverRun.Where(entry => !entry.HasRun).ToList();
+                leftInQueue = leftInQueue.Where(entry => !entry.HasRun).ToList();
+
+            // Abandoned entries are NOT subject to that: they were taken from the queue by a worker
+            // that then went away or wedged, which is a failure whatever the loop mode. Filtering
+            // them by HasRun is what hid this all along - a test that dies on its fifth pass has run
+            // four times, so every one of them was dropped, and four nights of runs that each lost
+            // half their workers ended reporting no failures at all.
+            var neverRun = leftInQueue.Concat(abandonedEntries).ToList();
 
             if (neverRun.Count > 0)
             {
@@ -1980,12 +2242,14 @@ namespace TestRunner
             bool internet = commandLineArgs.ArgAsBool("internet");
             bool useOriginalURLs = commandLineArgs.ArgAsBool("originalurls");
             bool perftests = commandLineArgs.ArgAsBool("perftests");
+            bool perfFirst = commandLineArgs.ArgAsBool("perffirst"); // Nightly perf order: perf tests first, then the suite, then perf tests in further languages
             bool retrydatadownloads = commandLineArgs.ArgAsBool("retrydatadownloads"); // When true, re-download data files on test failure in case its due to data staleness
             bool runsmallmoleculeversions = commandLineArgs.ArgAsBool("runsmallmoleculeversions"); // Run the various tests that are versions of other tests with the document completely converted to small molecules?
             bool recordauditlogs = commandLineArgs.ArgAsBool("recordauditlogs"); // Replace or create audit logs for tutorial tests
             bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
             bool showStatus = commandLineArgs.ArgAsBool("status");
             bool showFormNames = commandLineArgs.ArgAsBool("showformnames");
+            bool aiConnector = commandLineArgs.ArgAsBool("aiconnector"); // Register each test's Skyline with the MCP, so a session can drive a paused test
             bool qualityMode = commandLineArgs.ArgAsBool("quality");
             bool pass0 = commandLineArgs.ArgAsBool("pass0");
             bool pass1 = commandLineArgs.ArgAsBool("pass1");
@@ -2035,24 +2299,14 @@ namespace TestRunner
                 testList.RemoveAll(test => test.IsPerfTest);
                 unfilteredTestList.RemoveAll(test => test.IsPerfTest);
             }
-            else if (asNightly && !commandLineArgs.ArgAsBool("qualityonly"))
-            {
-                // Take advantage of the extra time available in nightly perftest runs to do the leak tests we
-                // skip in regular nightlies - but skip leak tests covered in regular nightlies.
-                // The Quality tab sets qualityonly=on and perftests=on (in case selected tests include perf tests),
-                // which would otherwise trigger this inversion and skip all normal tests in pass 1.
-                foreach (var test in unfilteredTestList)
-                {
-                    test.DoNotLeakTest = !test.DoNotLeakTest;
-                }
-            }
 
-            // If this is a nightly run, check the SKYLINE_NIGHTLY_TEST_EXCLUSIONS env var 
+            // If this is a nightly run, check the SKYLINE_NIGHTLY_TEST_EXCLUSIONS env var
             HandleNightlyTestExclusions(testList, unfilteredTestList, log, asNightly);
 
             // Even if we have been told to run perftests, if none are in the list
             // then make sure we don't chat about perf tests in the log
             perftests &= testList.Any(t => t.IsPerfTest);
+            perfFirst &= perftests;
 
             if (buildMode)
             {
@@ -2084,7 +2338,7 @@ namespace TestRunner
                 runsmallmoleculeversions, recordauditlogs, teamcityTestDecoration, teamcityCleanup,
                 retrydatadownloads,
                 pauseDialogs, pauseSeconds, pauseStartingScreenshot, useVendorReaders, timeoutMultiplier,
-                results, log, verbose, clientMode, reportHeaps, reportHandles, sortHandlesByCount);
+                results, log, verbose, clientMode, reportHeaps, reportHandles, sortHandlesByCount, aiConnector);
 
             // Configure dotMemory snapshot settings only when explicitly requested
             if (commandLineArgs.HasArg("dotmemorywarmup") || commandLineArgs.HasArg("dotmemorywaitruns"))
@@ -2153,9 +2407,9 @@ namespace TestRunner
                 }
                 else if (commandLineArgs.ArgAsBool("showheader"))
                 {
-                    if (!randomOrder && formList.IsNullOrEmpty() && perftests)
+                    if (!randomOrder && formList.IsNullOrEmpty() && perftests && !perfFirst)
                         runTests.Log("Perf tests will run last, for maximum overall test coverage.\r\n");
-                        runTests.Log("Running {0}{1} tests{2}{3}...\r\n",
+                    runTests.Log("Running {0}{1} tests{2}{3}...\r\n",
                         testList.Count,
                         testList.Count < unfilteredTestList.Count ? "/" + unfilteredTestList.Count : "",
                         (loopCount <= 0) ? " forever" : (loopCount == 1) ? "" : " in " + loopCount + " loops",
@@ -2171,6 +2425,29 @@ namespace TestRunner
                         SystemInformation.TerminalServerSession,
                         Environment.GetEnvironmentVariable("SESSIONNAME") ?? "(unset)",
                         SystemInformation.MonitorCount);
+                    // Display layout, for the net10 GDI+ failures that appear ONLY on the MacCoss
+                    // console agent. Every one of them is the same stack: a form being shown ->
+                    // SplitContainer.OnLayout -> RepaintSplitterRect -> Graphics.FillRectangle
+                    // throwing "A generic error occurred in GDI+". Offscreen mode parks every form
+                    // at CommonFormEx.GetOffscreenPoint(), which is min(all screen origins) minus
+                    // the PRIMARY screen size -- so the coordinate, and whether the window keeps any
+                    // owning monitor at all, depends entirely on the agent's display layout. The
+                    // same tests pass on the AWS agents and on a 2-monitor dev box, so log the
+                    // layout that does produce it. Calls the real method rather than restating the
+                    // formula, so this cannot drift from what SetOffscreen actually does.
+                    foreach (var screen in Screen.AllScreens)
+                        runTests.Log("# Screen: {0} bounds={1} working={2}{3}\r\n",
+                            screen.DeviceName, screen.Bounds, screen.WorkingArea,
+                            screen.Primary ? " PRIMARY" : "");
+                    runTests.Log("# Offscreen point: {0}\r\n", CommonFormEx.GetOffscreenPoint());
+                    // The memory columns are only comparable between runs under the same GC
+                    // regime. A container's memory limit or a machine-wide DOTNET_gc* variable
+                    // changes it, and nothing else in the log would say so.
+                    var gcConfig = GC.GetConfigurationVariables();
+                    var gcKeys = new[] { "GCServer", "GCConcurrent", "GCName", "GCConserveMemory", "GCHeapHardLimit", "GCHeapHardLimitPercent", "GCRegionRange" };
+                    runTests.Log("# GC: server={0}, concurrent={1}, {2}\r\n", GCSettings.IsServerGC,
+                        AppContext.GetData("System.GC.Concurrent") ?? "default",
+                        string.Join(", ", gcKeys.Where(gcConfig.ContainsKey).Select(k => k + "=" + gcConfig[k])));
                 }
 
                 // Get list of languages
@@ -2236,17 +2513,15 @@ namespace TestRunner
                     {
                         runTests.Log("\r\n");
                         runTests.Log("# Pass 1: Run tests multiple times to detect memory leaks.\r\n");
-                        if (testList.Any(t => t.DoNotLeakTest))
-                        {
-                            // These are  too lengthy to run multiple times for leak testing, so not a good fit for pass 1
-                            // But it's a shame to skip them entirely, so we flip the attribute so they run on perf test machines
-                            runTests.Log("# Tests with NoLeakTesting attribute are skipped in pass 1 but prioritized in pass 2.\r\n");
-                            runTests.Log("# Note that systems running perf tests invert the NoLeakTesting attribute to ensure overall coverage.\r\n");
-                        }
                         if (testList.Any(t => t.IsPerfTest))
                         {
                             // These are generally too lengthy to run multiple times, so not a good fit for pass 1
                             runTests.Log("# Skipping perf tests for pass 1 leak checks.\r\n");
+                        }
+                        if (asNightly && !pass2)
+                        {
+                            // NB the phrase "# Leak checking only" in a log is a key for SkylineNightly to post to a different URL - so don't mess with this.
+                            runTests.Log("# Leak checking only: pass 1 is repeated over every test until the run is stopped.\r\n");
                         }
                     }
 
@@ -2257,7 +2532,12 @@ namespace TestRunner
                     if (!pass2 && loopCount <= 0)
                         pass1LoopCount = int.MaxValue;
 
+                    var failedTests = new List<TestInfo>();
                     for (int pass1Count = 0; pass1Count <= pass1LoopCount; ++pass1Count)
+                    {
+                        if (pass1Count > 0)
+                            runTests.Log("# Pass 1 sweep {0}: every test again, for an independent measurement.\r\n", pass1Count + 1);
+
                         for (int testNumber = 0; testNumber < testList.Count; testNumber++)
                         {
                             var test = testList[testNumber];
@@ -2269,14 +2549,13 @@ namespace TestRunner
                                 continue;
                             }
 
-                            if (test.DoNotLeakTest)
+                            if (RunOnceTestNames.Contains(test.TestMethod.Name))
                             {
-                                // These are specifically too lengthy to run multiple times, so not a good fit for pass 1
+                                // Not leak checks, but the antivirus check still wants to be the first thing a run does
+                                if (pass1Count == 0 && !runTests.Run(test, 1, testNumber, dmpDir, false))
+                                    failedTests.Add(test);
                                 continue;
                             }
-
-                            if (failed)
-                                continue;
 
                             // Run test repeatedly until we can confidently assess the leak status.
                             var numLeakCheckIterations = GetLeakCheckIterations(test);
@@ -2295,7 +2574,7 @@ namespace TestRunner
                                 if (!runTests.Run(test, 1, testNumber, dmpDir, hangIteration >= 0 && (i - hangIteration) % 100 == 0))
                                 {
                                     failed = true;
-                                    removeList.Add(test);
+                                    failedTests.Add(test);
                                     break;
                                 }
 
@@ -2363,6 +2642,17 @@ namespace TestRunner
                             maxIterationCount = Math.Max(maxIterationCount, iterationCount);
                         }
 
+                        // A failure can leak badly, so give up on a failed test for the following sweeps (a leak is
+                        // kept for its independent measurement). Leaked and failed tests are both dropped from pass 2.
+                        // NB the phrase "# Pass 1 sweep 1 complete" is how SkylineNightly tells a leak checking run
+                        // that got through every test from one that did not - so don't mess with this.
+                        foreach (var failedTest in failedTests)
+                            testList.Remove(failedTest);
+                        removeList.AddRange(failedTests);
+                        failedTests.Clear();
+                        runTests.Log("# Pass 1 sweep {0} complete.\r\n", pass1Count + 1);
+                    }
+
                     runTests.Log(maxDeltas.GetLogMessage("MaximumLeaks", maxIterationCount));
                     foreach (var removeTest in removeList)
                         testList.Remove(removeTest);
@@ -2389,37 +2679,41 @@ namespace TestRunner
                     runTests.Log("# Pass 2+: Run tests in each selected language.\r\n");
                 }
 
-                // Move any tests with the NoLeakTesting attribute to the front of the list for pass 2, as we skipped them in pass 1.
-                // Only apply this reordering during actual nightly runs, not when perftests=on is used interactively.
-                if (asNightly)
-                {
-                    testList = testList.Where(t => t.DoNotLeakTest)
-                        .Concat(testList.Where(t => !t.DoNotLeakTest))
-                        .ToList();
-                }
-
                 int perfPass = pass; // For nightly tests, we'll run perf tests just once per language, and only in one language (dynamically chosen for coverage) if english and french (along with any others) are both enabled
                 bool needsPerfTestPass2Warning = asNightly && testList.Any(t => t.IsPerfTest); // No perf tests, no warning
-                var perfTestsOneLanguageOnly = asNightly && perftests && languages.Any(l => l.StartsWith("en")) && languages.Any(l => l.StartsWith("fr"));
+                var perfTestsOneLanguageOnly = !perfFirst && asNightly && perftests && languages.Any(l => l.StartsWith("en")) && languages.Any(l => l.StartsWith("fr"));
 
-                for (; pass < passEnd; pass++)
+                // A nightly perf run (perffirst=on) keeps the perf tests apart from the suite: pass 2 is the perf
+                // tests once in the rotating language and then the suite once in every language, tutorials and
+                // functional tests first. Each later pass is the perf tests in the next language, so a fast machine
+                // gains perf languages and a slow one loses them, never the suite. Once every language has had its
+                // perf pass, the remaining passes cycle the suite.
+                var perfTests = new List<TestInfo>();
+                var runOnceTests = new List<TestInfo>(); // The antivirus check, which wants to be the first thing a run does
+                int perfLanguageStart = GetPerfTestLanguageIndex(); // Once: a pass may start after midnight
+                if (perfFirst)
                 {
-                    if (testList.Count == 0)
-                        break;
+                    perfTests = testList.Where(t => t.IsPerfTest).ToList();
+                    runOnceTests = testList.Where(t => RunOnceTestNames.Contains(t.TestMethod.Name)).ToList();
+                    testList = OrderForPerfNight(testList.Where(t => !t.IsPerfTest && !runOnceTests.Contains(t)));
+                    // NB the phrase "# Perf tests" in a log is a key for SkylineNightly to post to a different URL - so don't mess with this.
+                    runTests.Log("# Perf tests first, once in one language, then all tests once in each selected language, then perf tests in each further language until stopped.\r\n");
+                }
 
-                    // Run each test in this test pass.
-                    var testPass = randomOrder ? testList.RandomOrder().ToList() : testList;
-                    for (int testNumber = 0; testNumber < testPass.Count; testNumber++)
+                // Runs each of the tests once (or repeat times) in each of the languages, as part of the current pass,
+                // numbering them on from the tests already run in the pass. Returns false when the run is to stop entirely.
+                int passTestNumber = 0;
+                bool RunTestsInLanguages(IList<TestInfo> tests, string[] testLanguages)
+                {
+                    var testPass = randomOrder ? tests.RandomOrder().ToList() : tests;
+                    foreach (var test in testPass)
                     {
-                        var test = testPass[testNumber];
-
                         // Perf Tests are generally too lengthy to run multiple times (but non-english format check is useful, so rotate through on a per-day basis - including "tr")
-                        var perfTestLanguage = allLanguages[DateTime.Now.DayOfYear % allLanguages.Length];
-                        var languagesThisTest = (test.IsPerfTest && perfTestsOneLanguageOnly) ? new[] { perfTestLanguage } : languages;
+                        var languagesThisTest = (test.IsPerfTest && perfTestsOneLanguageOnly) ? new[] { allLanguages[perfLanguageStart] } : testLanguages;
                         if (perfTestsOneLanguageOnly && needsPerfTestPass2Warning)
                         {
                             // NB the phrase "# Perf tests" in a log is a key for SkylineNightly to post to a different URL - so don't mess with this.
-                            runTests.Log("# Perf tests will be run only once, and only in one language, dynamically chosen (by DayOfYear%NumberOfLanguages) for coverage.  To run perf tests in specific languages, enable all but English.\r\n");
+                            runTests.Log("# Perf tests will be run only once, and only in one language, dynamically chosen (by day and machine) for coverage.  To run perf tests in specific languages, enable all but English.\r\n");
                             needsPerfTestPass2Warning = false;
                         }
 
@@ -2431,7 +2725,7 @@ namespace TestRunner
                             stopWatch.Start(); // Limit the repeats in case of very long tests
                             for (int repeatCounter = 1; repeatCounter <= repeat; repeatCounter++)
                             {
-                                if (asNightly && test.IsPerfTest && ((pass > perfPass) || (repeatCounter > 1)))
+                                if (!perfFirst && asNightly && test.IsPerfTest && ((pass > perfPass) || (repeatCounter > 1)))
                                 {
                                     // Perf Tests are generally too lengthy to run multiple times (but per-language check is useful)
                                     if (needsPerfTestPass2Warning)
@@ -2442,19 +2736,17 @@ namespace TestRunner
                                     }
                                     break;
                                 }
-                                if (!runTests.Run(test, pass, testNumber, dmpDir, false) || // Test failed, don't rerun
+                                if (!runTests.Run(test, pass, passTestNumber, dmpDir, false) || // Test failed, don't rerun
                                     RunOnceTestNames.Contains(test.TestMethod.Name)) // No point in running certain tests more than once
                                 {
                                     removeList.Add(test);
-                                    i = languages.Length - 1;   // Don't run other languages.
+                                    i = languagesThisTest.Length - 1;   // Don't run other languages.
                                     break;
                                 }
                                 if (runTests.ProfilingComplete) // All configured snapshots taken
                                 {
                                     runTests.Log("# Profiling complete - stopping test run.\r\n");
-                                    pass = passEnd; // Break out of pass loop
-                                    i = languages.Length - 1; // Break out of language loop
-                                    break; // Break out of repeat loop
+                                    return false;
                                 }
                                 if (maxSecondsPerTest > 0)
                                 {
@@ -2469,16 +2761,90 @@ namespace TestRunner
                             if (profiling)
                                 break;
                         }
+                        passTestNumber++;
+                    }
+                    return true;
+                }
+
+                for (; pass < passEnd; pass++)
+                {
+                    if (testList.Count == 0 && perfTests.Count == 0)
+                        break;
+
+                    passTestNumber = 0;
+                    bool continueRun = true;
+                    if (perfFirst)
+                    {
+                        // One perf language per pass, starting with the rotating language
+                        int perfLanguageOffset = pass - perfPass;
+                        bool perfLanguagesDone = perfLanguageOffset >= allLanguages.Length;
+                        if (pass == perfPass)
+                            continueRun = RunTestsInLanguages(runOnceTests, new[] { languages[0] });
+                        if (continueRun && !perfLanguagesDone)
+                            continueRun = RunTestsInLanguages(perfTests, new[] { allLanguages[(perfLanguageStart + perfLanguageOffset) % allLanguages.Length] });
+                        // The suite runs once, after the first perf language, and cycles only once the perf languages are exhausted
+                        if (continueRun && (pass == perfPass || perfLanguagesDone))
+                            continueRun = RunTestsInLanguages(testList, languages);
+                    }
+                    else
+                    {
+                        continueRun = RunTestsInLanguages(testList, languages);
                     }
 
                     foreach (var removeTest in removeList)
+                    {
                         testList.Remove(removeTest);
+                        perfTests.Remove(removeTest);
+                    }
                     removeList.Clear();
+
+                    if (!continueRun)
+                        break;
                 }
             }
 
             Console.WriteLine($"Tests finished in {timer.Elapsed} ({timer.Elapsed.TotalSeconds}s)");
             return runTests.FailureCount == 0;
+        }
+
+        /// <summary>
+        /// The index into allLanguages of the first perf test language of a nightly run, rotating by day so
+        /// that every language gets covered over a week, and by machine so that machines running perf tests
+        /// on the same night cover different languages instead of all choosing the same one. Later perf
+        /// passes walk the languages in order from there.
+        /// </summary>
+        private static int GetPerfTestLanguageIndex()
+        {
+            return (DateTime.Now.DayOfYear + GetMachineLanguageOffset()) % allLanguages.Length;
+        }
+
+        private static int GetMachineLanguageOffset()
+        {
+            // Not string.GetHashCode, which is randomized per process on newer runtimes
+            int hash = 0;
+            foreach (char c in Environment.MachineName)
+                hash = unchecked(hash * 31 + c);
+            return (hash & int.MaxValue) % allLanguages.Length;
+        }
+
+        /// <summary>
+        /// Suite order for a nightly perf run: tutorials, then functional tests, then the unit test
+        /// projects, each alphabetical. The stop time usually lands inside the suite on a slower machine,
+        /// so the projects most likely to catch a regression go first.
+        /// </summary>
+        private static List<TestInfo> OrderForPerfNight(IEnumerable<TestInfo> tests)
+        {
+            return tests.OrderBy(GetPerfNightProjectOrder).ThenBy(t => t.TestMethod.Name).ToList();
+        }
+
+        private static int GetPerfNightProjectOrder(TestInfo test)
+        {
+            var assemblyName = test.TestClassType.Assembly.GetName().Name;
+            if (Equals(assemblyName, "TestTutorial"))
+                return 0;
+            if (Equals(assemblyName, "TestFunctional"))
+                return 1;
+            return 2;
         }
 
         //
@@ -2961,6 +3327,15 @@ Here is a list of recognized arguments:
                                     test is run to allow you to take a memory snapshot.
                                     After the test run it will sleep instead of terminating
                                     to allow you to take a final memory snapshot.
+
+    perftests=[on|off]              Set perftests=on to include the TestPerf tests (large data
+                                    sets, long running), which are otherwise removed from the list.
+
+    perffirst=[on|off]              Nightly perf run order, used with perftests=on and loop=0:
+                                    the perf tests once in one language (rotating by day and by
+                                    machine), then the other tests once in each language, tutorials
+                                    and functional tests first, then the perf tests again in each
+                                    further language until the run is stopped.
 
     vendors=[on|off]                If vendors=on, Skyline's tests will use vendor readers to
                                     read data files.  If vendors=off, tests will read data using

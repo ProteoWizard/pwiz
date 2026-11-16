@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.CarafeSharp.Tasks</RootNamespace>
+    <AssemblyName>CarafeSharp.Tasks</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CarafeSharp" />
+    <InternalsVisibleTo Include="CarafeSharp.Test" />
+  </ItemGroup>
+
+  <!-- The task layer: CarafeSharp's stages on the shared PipelineTask contract (the entrapment
+       FASTA build, manifest reconciliation, library prediction, training), their context, driver,
+       validity key and stamp reader, and the two engines the tasks run (LibraryGenerator,
+       ModelTrainer). CarafeSharp.exe is a command-line front end over this library, and Osprey.exe
+       runs the library stages of its one-command workflow through it; neither tool's exe references
+       the other. The managed TorchSharp reference comes with CarafeSharp.Models; the libtorch native
+       runtime is added by the executables and test projects (UseLibTorch). -->
+  <ItemGroup>
+    <ProjectReference Include="..\CarafeSharp.Contracts\CarafeSharp.Contracts.csproj" />
+    <ProjectReference Include="..\CarafeSharp.Core\CarafeSharp.Core.csproj" />
+    <ProjectReference Include="..\CarafeSharp.Models\CarafeSharp.Models.csproj" />
+    <ProjectReference Include="..\CarafeSharp.IO\CarafeSharp.IO.csproj" />
+    <ProjectReference Include="..\CarafeSharp.Training\CarafeSharp.Training.csproj" />
+    <ProjectReference Include="..\CarafeSharp.Proteome\CarafeSharp.Proteome.csproj" />
+  </ItemGroup>
+
+</Project>

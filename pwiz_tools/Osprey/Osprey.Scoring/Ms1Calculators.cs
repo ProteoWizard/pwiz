@@ -39,9 +39,9 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     internal sealed class Ms1PrecursorCoelutionCalc : DetailedOspreyFeatureCalculator
     {
-        public override string Name { get { return "ms1_precursor_coelution"; } }
+        public override string Name { get { return @"ms1_precursor_coelution"; } }
 
-        public override string DisplayName { get { return "MS1 precursor co-elution"; } }
+        public override string DisplayName { get { return OspreyScoringResources.Ms1PrecursorCoelutionCalc_DisplayName_MS1_precursor_co_elution; } }
 
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
@@ -70,9 +70,9 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     internal sealed class Ms1IsotopeCosineCalc : DetailedOspreyFeatureCalculator
     {
-        public override string Name { get { return "ms1_isotope_cosine"; } }
+        public override string Name { get { return @"ms1_isotope_cosine"; } }
 
-        public override string DisplayName { get { return "MS1 isotope dot-product"; } }
+        public override string DisplayName { get { return OspreyScoringResources.Ms1IsotopeCosineCalc_DisplayName_MS1_isotope_dot_product; } }
 
         public override bool IsReversedScore { get { return false; } }   // higher is better
 

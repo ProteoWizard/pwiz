@@ -493,18 +493,31 @@ namespace SkylineTool
         ActionResult DismissWithCancelButton(string formId);
 
         /// <summary>
+        /// Resizes a window, as a user does by dragging its edge: the main Skyline window or a dialog whose
+        /// border can be dragged. The window keeps its position; a maximized or minimized window is first
+        /// restored, as dragging it does. A docked or floating pane is sized by the window layout instead, so
+        /// arrange those with "File > Import > Window Layout".
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="width">The outer width in pixels, border included.</param>
+        /// <param name="height">The outer height in pixels, border and title bar included.</param>
+        /// <returns>The size the window ended up at, which is smaller or larger than asked when the window
+        /// has a minimum or maximum size.</returns>
+        WindowSize ResizeWindow(string formId, int width, int height);
+
+        /// <summary>
         /// Exports graph data to a TSV file. Returns the file path.
         /// </summary>
-        /// <param name="graphId">Form identifier from <see cref="GetOpenForms"/> (e.g. "GraphSummary:Title").</param>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/> (e.g. "GraphSummary:Title").</param>
         /// <param name="filePath">Output file path, or null for auto-generated temp path.</param>
-        string GetGraphData(string graphId, string filePath = null);
+        string GetGraphData(string formId, string filePath = null);
 
         /// <summary>
         /// Exports a graph as a PNG image. Returns the file path.
         /// </summary>
-        /// <param name="graphId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="filePath">Output file path, or null for auto-generated temp path.</param>
-        string GetGraphImage(string graphId, string filePath = null);
+        string GetGraphImage(string formId, string filePath = null);
 
         /// <summary>
         /// Renders a graph as a PNG and returns the bytes inline together with a
@@ -512,8 +525,89 @@ namespace SkylineTool
         /// the inline payload is too large. The file is NOT written by this call.
         /// Companion to <see cref="GetGraphImage"/> (file-based).
         /// </summary>
-        /// <param name="graphId">Form identifier from <see cref="GetOpenForms"/>.</param>
-        ImageBytesMetadata GetGraphImageBytes(string graphId);
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        ImageBytesMetadata GetGraphImageBytes(string formId);
+
+        /// <summary>
+        /// Returns the region of DATA coordinates the graph is currently zoomed to --
+        /// the X and Y axis ranges of the first (or only) pane - as a
+        /// <see cref="Rectangle"/>. The returned edges can be handed straight back to
+        /// <see cref="ZoomGraphTo"/>, and they tell a caller what coordinate ranges are
+        /// valid to pass to <see cref="ClickGraph"/> (whose <see cref="Rectangle.Bottom"/>
+        /// edge is the X-axis line - coordinates below it fall below the axis).
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/> (e.g. "GraphSummary:Title").</param>
+        Rectangle GetGraphZoom(string formId);
+
+        /// <summary>
+        /// Zooms the graph's first (or only) pane so its axes span the DATA coordinates in
+        /// <paramref name="bounds"/> (<see cref="Rectangle.Left"/>/<see cref="Rectangle.Right"/>
+        /// set the X range, <see cref="Rectangle.Top"/>/<see cref="Rectangle.Bottom"/> the Y
+        /// range). Returns the zoom actually applied, which may differ from the request when
+        /// the graph clamps it to the available data range.
+        ///
+        /// <para>An EQUAL edge pair asks for no zoom in that direction and leaves that axis exactly as it
+        /// was, so equal left and right zoom vertically only, equal top and bottom horizontally only, and a
+        /// rectangle with neither width nor height changes nothing. A direction the graph lets the user neither
+        /// zoom nor pan is ignored.</para>
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="bounds">The DATA-coordinate region to zoom to.</param>
+        Rectangle ZoomGraphTo(string formId, Rectangle bounds);
+
+        /// <summary>
+        /// Clicks or drags on the graph in DATA coordinates, reproducing a real mouse
+        /// gesture: the mouse goes down at the <see cref="Rectangle.Left"/>/<see cref="Rectangle.Top"/>
+        /// corner of <paramref name="bounds"/> and is released at the
+        /// <see cref="Rectangle.Right"/>/<see cref="Rectangle.Bottom"/> corner. A zero-size
+        /// rectangle is a single click (e.g. to select a data point); a rectangle whose Y
+        /// values fall below the X-axis drags a chromatogram peak boundary, exactly as the
+        /// same gesture would if performed by hand. Operates on the first (or only) pane.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="bounds">The DATA-coordinate gesture: down at Left/Top, up at Right/Bottom.</param>
+        ActionResult ClickGraph(string formId, Rectangle bounds);
+
+        /// <summary>
+        /// Types text into one control on a form, whether or not it has the focus. Named for what it does: it
+        /// delivers the CHARACTERS to that control's own window, it does not simulate key presses - so the
+        /// caller never has to arrange focus first, and the control is verified enabled first.
+        ///
+        /// <para>The text is literal - no key names and nothing to escape. To press a key, use
+        /// <see cref="SendKeyStroke"/>; to paste, use the "paste" action, which takes the text to paste and so
+        /// needs neither the clipboard nor a keystroke.</para>
+        ///
+        /// <para>Typing into the Targets tree edits the selected node's label, as it does for a user, and with
+        /// a background proteome brings up the completion pop-up (a form of its own, listed by
+        /// <see cref="GetOpenForms"/>). Select an item in its list to accept it, or press "Down"/"Up" then
+        /// "Enter" on the tree; "Enter" alone accepts the text as typed and "Esc" cancels. The matches are
+        /// looked up in the background, so the pop-up opens a moment after this returns.</para>
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="controlId">The control to type into, matched as <see cref="GetControls"/> reports it
+        /// (its visible label, or its Type for a caption-less control).</param>
+        /// <param name="text">The text to type, taken literally.</param>
+        ActionResult SendText(string formId, string controlId, string text);
+
+        /// <summary>
+        /// Presses one key on a control, whether or not it has the focus - e.g. to accept a choice in a
+        /// popup, or to paste with "Ctrl+V" where the form's own handler does the pasting. The control is
+        /// verified enabled first.
+        ///
+        /// <para>The key goes through everything a real press does: keyboard shortcuts and dialog keys first
+        /// (the control's PreProcessControlMessage: PreviewKeyDown, then shortcuts and dialog keys), then the key-down message - seen by any form around it that
+        /// previews keys, by KeyDown handlers, and by the control's own window procedure (an arrow moving a
+        /// list's selection) - then the character the key types (Backspace editing a text box), unless a
+        /// handler suppressed it, then the key-up. The modifiers are in the thread's keyboard state while the
+        /// key is pressed, as they are for a user.</para>
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="controlId">The control to press the key on, matched as <see cref="GetControls"/>
+        /// reports it; empty to press it as the keyboard does while the window is active - on the control
+        /// that has the focus in the form, or the form itself when none does.</param>
+        /// <param name="keyStroke">The key with any modifiers, '+'-separated and in any order, e.g.
+        /// <c>"Down"</c>, <c>"Enter"</c>, <c>"Ctrl+V"</c>, <c>"Ctrl+Shift+Home"</c>.</param>
+        ActionResult SendKeyStroke(string formId, string controlId, string keyStroke);
 
         /// <summary>
         /// Captures a screenshot of any open form as a PNG image. Returns the file path.
@@ -543,7 +637,7 @@ namespace SkylineTool
         /// metadata including title, table of contents, and file path.
         /// </summary>
         /// <param name="name">Tutorial folder name (e.g. "MethodEdit", "DIA-TTOF").</param>
-        /// <param name="language">Language code: "en" (default), "ja", "zh-CHS".</param>
+        /// <param name="language">Language code: "en" (default), "ja", "zh-Hans".</param>
         /// <param name="filePath">Output file path, or null for auto-generated temp path.</param>
         TutorialMetadata GetTutorial(string name, string language = "en", string filePath = null);
 

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="c4c0f1e7-cf7b-417b-8589-33959ea13c58" paused="true" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Bumbershoot Linux x86_64</name>
+  <description>Bumbershoot is the suite of tools produced by the Tabb Lab at Vanderbilt, which now proudly call ProteoWizard home. This is the 64-bit Linux variant.</description>
+  <settings ref="ProteoWizard_GitHubReportingConfig">
+    <options>
+      <option name="allowExternalStatus" value="true" />
+      <option name="artifactRules" value="build-linux-x86_64/Bumbershoot/*.tar.bz2&#xA;build-linux-x86_64/Bumbershoot/VERSION" />
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutDirectory" value="pwiz" />
+      <option name="checkoutMode" value="ON_AGENT" />
+    </options>
+    <disabled-settings>
+      <setting-ref ref="vcsTrigger" />
+    </disabled-settings>
+    <parameters>
+      <param name="env.MSPARSER_HOME" value="/usr/lib/msparser/gnu" />
+      <param name="env.address_model_property" value="address-model=64" />
+      <param name="env.architecture_property" value="" />
+      <param name="env.link_property" value="" />
+      <param name="env.toolset_property" value="toolset=gcc-9" />
+      <param name="env.variant_property" value="release" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_204" name="" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="/bin/bash" />
+          <param name="command.parameters" value="scripts/misc/tcbuild.sh pwiz_tools/Bumbershoot -j%env.NUMBER_OF_CORES% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property% %env.toolset_property% --i-agree-to-the-vendor-licenses" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_1114" name="Build tarball separately" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="/bin/bash" />
+          <param name="command.parameters" value="quickbuild.sh %env.toolset_property% pwiz_tools/Bumbershoot//bumbershoot-bin.tar.bz2 -j%env.NUMBER_OF_CORES% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property%" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_326" name="Download test file" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="wget" />
+          <param name="command.parameters" value="http://github.com/galaxyproteomics/tools-galaxyp/raw/master/tools/bumbershoot/test-data/201208-378803-msgf-filtered.idpDB -O &quot;%teamcity.build.checkoutDir%/201208-378803-msgf-filtered.idpDB&quot;" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_328" name="Test that idpQuery can run" type="simpleRunner">
+        <parameters>
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="script.content"><![CDATA[args="Protein Accession,DistinctPeptides %teamcity.build.checkoutDir%/201208-378803-msgf-filtered.idpDB"
+if [ -e build-linux-x86_64/gcc-release ]; then
+  build-linux-x86_64/gcc-release/idpQuery $args
+else
+  build-linux-x86_64/gcc-release-x86_64/idpQuery $args
+fi]]></param>
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_76" name="" type="ProteoWizard_UploadArtifactMetadataToSourceForge">
+        <parameters>
+          <param name="WINDOWS_CHECKOUT_DIR" value="Z:\pwiz" />
+          <param name="WINDOWS_SKYLINE_RELEASE_CHECKOUT_DIR" value="C:\skyline_release" />
+          <param name="env.NUMBER_OF_CORES" value="%teamcity.agent.hardware.cpuCount%" />
+          <param name="env.PYTHON_HOME" value="C:\Python38" />
+          <param name="system.artifact.paths" value="build-linux-x86_64/Bumbershoot/*.tar.bz2,build-linux-x86_64/Bumbershoot/VERSION" />
+          <param name="teamcity.activeBuildBranch.age.hours" value="0" />
+          <param name="teamcity.activeVcsBranch.age.days" value="3" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizard_PwizGithubMasterWithPRs" />
+    </vcs-settings>
+    <requirements>
+      <contains id="RQ_1772" name="teamcity.agent.jvm.os.name" value="Linux" />
+      <does-not-equal id="RQ_1774" name="teamcity.agent.jvm.os.arch" value="i386" />
+    </requirements>
+    <build-triggers>
+      <build-trigger id="vcsTrigger" type="vcsTrigger">
+        <parameters>
+          <param name="branchFilter"><![CDATA[+:*
+-:refs/heads/Skyline/*]]></param>
+          <param name="enableQueueOptimization" value="true" />
+          <param name="quietPeriod" value="61" />
+          <param name="quietPeriodMode" value="USE_CUSTOM" />
+          <param name="triggerRules"><![CDATA[+:.
+-:README.md
+-:.travis.yml
+-:appveyor.yml
+-:.gitignore
+-:%teamcity.build.checkoutDir%/pwiz_tools/Bumbershoot/idpicker/Website/**
+-:%teamcity.build.checkoutDir%/pwiz_tools/BiblioSpec/**
+-:%teamcity.build.checkoutDir%/pwiz_tools/Shared/**
+-:%teamcity.build.checkoutDir%/pwiz_tools/Skyline/**
+-:%teamcity.build.checkoutDir%/pwiz_tools/Topograph/**
+-:%teamcity.build.checkoutDir%/pwiz_tools/SeeMS/**
+-:%teamcity.build.checkoutDir%/pwiz_tools/MSConvertGUI/**]]></param>
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <cleanup>
+      <policy type="days" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepDays.count" value="60" />
+        </parameters>
+      </policy>
+    </cleanup>
+  </settings>
+</build-type>
+

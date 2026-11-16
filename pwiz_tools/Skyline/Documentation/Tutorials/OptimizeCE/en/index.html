@@ -509,7 +509,7 @@
     </p>
     <ul>
         <li>Select IDALNENK in the <b>Targets</b> view.</li>
-        <li>Right-click in the peak area chart, choose <b>Normalize To</b> and click <b>Total</b>. </li>
+        <li>Right-click in the peak area chart, choose <b>Normalized To</b> and click <b>Total</b>. </li>
     </ul>
     <p>
         In this view all peak areas are normalized to the area of the calculated CE value in red. The area of the peak with the calculated CE is given
@@ -520,8 +520,13 @@
         <img src="s-06.png" />
     </p>
     <p>
-        For this tutorial, however, remove this peptide before calculating the new equation for the Thermo TSQ Vantage.
+        For this tutorial, however, remove this peptide before calculating the new equation for the Thermo TSQ Vantage. Also remove LICDNTHITK,
+        which the <b>Targets</b> view marks with a warning:
     </p>
+    <ul>
+        <li>Select IDALNENK in the <b>Targets</b> view and press the Delete key.</li>
+        <li>Select LICDNTHITK in the <b>Targets</b> view and press the Delete key.</li>
+    </ul>
     <h2>Creating a New Equation for CE</h2>
     <p>
         To create a newly optimized linear equation for CE using this data, perform the following steps:
@@ -533,7 +538,7 @@
         <li>Click the <b>Use Results</b> button.</li>
     </ul>
     <p>
-        If you deleted the two suggested peptides, Skyline should calculate the equation coefficients as:
+        If you deleted the three suggested peptides, Skyline should calculate the equation coefficients as:
     </p>
     <table>
         <tr>

@@ -49,7 +49,15 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     public class CoelutionScorer
     {
-        private readonly IScoringDiagnostics _diagnostics;   // nullable by contract; invoked null-conditionally
+        // Most candidates whose XICs ScoreWindow extracts scan-major at once, and most bytes of
+        // XICs: a block ends at whichever comes first. At ~6 fragments x ~100-300 scans each,
+        // 512 candidates' XICs are a few MB, but a wide RT tolerance (a failed calibration's
+        // 2 min fallback, or a 3 min maximum) makes each several times longer, so the byte
+        // budget is what bounds the XICs alive per concurrently scored window.
+        private const int XIC_BLOCK_SIZE = 512;
+        private const long XIC_BLOCK_BYTES = 4L * 1024 * 1024;
+
+        private readonly IScoringDiagnostics _diagnostics;  // nullable by contract; invoked null-conditionally
         private readonly PeakDataExtractor _extractor;
 
         public CoelutionScorer(IScoringDiagnostics diagnostics)
@@ -117,14 +125,8 @@ namespace pwiz.Osprey.Scoring
             for (int i = 0; i < windowSpectra.Count; i++)
                 windowRts[i] = windowSpectra[i].RetentionTime;
 
-            // Pre-preprocess all window spectra for XCorr via the resolution
-            // strategy. Both Unit-res and HRAM now produce a dense
-            // double[NSpectra][NBins] cache by renting from the scratch
-            // pool; per-candidate scoring then hits the O(n_fragments)
-            // XcorrFromPreprocessed fast path. Matches Rust pipeline.rs:
-            // 5954-5957 (preprocessed_xcorr per window). Release the rented
-            // bins arrays back to the pool once all candidates for this
-            // window are scored.
+            // The window's XCorr cache (see IResolutionStrategy.PreprocessWindowSpectra);
+            // released once all candidates for this window are scored.
             var preprocessedXcorr = context.Resolution.PreprocessWindowSpectra(
                 windowSpectra, scorer, context.XcorrScratchPool);
 
@@ -141,19 +143,51 @@ namespace pwiz.Osprey.Scoring
 
             try
             {
-                // Score each candidate
-                foreach (var candidate in candidates)
-                {
-                    var fdrEntry = ScoreCandidate(
-                        candidate, windowSpectra, windowRts,
-                        rtCalibration,
-                        globalRtTolerance, rtSigma,
-                        ms1Spectra, ms1Calibration,
-                        context,
-                        ospreyContext, ospreyPeakData);
+                // Run the signal prefilter for all candidates at once, scan-major, so each
+                // spectrum is matched against every candidate while it is in cache. Null when
+                // the prefilter is off (or OSPREY_SCAN_MAJOR_PREFILTER=0), leaving each
+                // candidate's own TryExtract to run it as before.
+                var prefilter = OspreyEnvironment.ScanMajorPrefilter
+                    ? _extractor.ComputePrefilterScanMajor(candidates, windowSpectra, windowRts,
+                        rtCalibration, globalRtTolerance, context)
+                    : null;
+                // The passing candidates' fragment XICs, also extracted scan-major, one block of
+                // consecutive candidates at a time to bound the XICs alive at once. Scoring
+                // order is unchanged.
+                bool scanMajorXics = prefilter != null && OspreyEnvironment.ScanMajorXic;
 
-                    if (fdrEntry != null)
-                        entries.Add(fdrEntry);
+                // Score each candidate
+                int blockEnd;
+                for (int blockStart = 0; blockStart < candidates.Count; blockStart = blockEnd)
+                {
+                    blockEnd = scanMajorXics
+                        ? prefilter.NextXicBlockEnd(blockStart, XIC_BLOCK_SIZE, XIC_BLOCK_BYTES)
+                        : candidates.Count;
+                    var blockXics = scanMajorXics
+                        ? PeakDataExtractor.ExtractXicsScanMajor(candidates, blockStart, blockEnd,
+                            prefilter, windowSpectra, windowRts, config)
+                        : null;
+                    for (int c = blockStart; c < blockEnd; c++)
+                    {
+                        List<XicData> precomputedXics = null;
+                        if (blockXics != null)
+                        {
+                            precomputedXics = blockXics[c - blockStart];
+                            blockXics[c - blockStart] = null;    // Released with the candidate's scoring
+                        }
+
+                        var fdrEntry = ScoreCandidate(
+                            candidates[c], windowSpectra, windowRts,
+                            rtCalibration,
+                            globalRtTolerance, rtSigma,
+                            ms1Spectra, ms1Calibration,
+                            context,
+                            ospreyContext, ospreyPeakData,
+                            prefilter, c, precomputedXics);
+
+                        if (fdrEntry != null)
+                            entries.Add(fdrEntry);
+                    }
                 }
 
                 return entries;
@@ -186,12 +220,15 @@ namespace pwiz.Osprey.Scoring
             MzCalibrationResult ms1Calibration,
             ScoringContext context,
             OspreyScoringContext ospreyContext,
-            OspreyPeakData ospreyPeakData)
+            OspreyPeakData ospreyPeakData,
+            WindowPrefilter prefilter,
+            int prefilterIndex,
+            List<XicData> precomputedXics)
         {
             if (!_extractor.TryExtract(
                     candidate, windowSpectra, windowRts, rtCalibration,
                     globalRtTolerance, rtSigma, ms1Spectra, ms1Calibration,
-                    context, ospreyPeakData, out var ext))
+                    context, ospreyPeakData, prefilter, prefilterIndex, precomputedXics, out var ext))
                 return null;
 
             var bestPeak = ext.BestPeak;
@@ -237,7 +274,8 @@ namespace pwiz.Osprey.Scoring
                 _diagnostics?.WriteMpInputsRow(
                     candidate.Id, apexSpectrum.ScanNumber, peakXics, peakRts);
 
-                var polish = TukeyMedianPolish.Compute(peakXics, peakRts, 10, 0.01);
+                var polish = TukeyMedianPolish.Compute(peakXics, peakRts,
+                    TukeyMedianPolish.SCORING_MAX_ITERATIONS, TukeyMedianPolish.SCORING_TOLERANCE);
                 // Only publish when the fit converged. Every consumer (the four
                 // calculators and the WriteMpDump guard) treats a missing byproduct
                 // and a byproduct with null Polish identically (family default / no
@@ -274,7 +312,7 @@ namespace pwiz.Osprey.Scoring
             // Median-polish bisection dump (after the feature vector so the four
             // values are available). Reads the polish + cropped inputs from the
             // byproduct published above; gated by ShouldDumpMpFor as before. The
-            // standard parity gate compares Stage 7 + blib, not the -d dumps.
+            // standard parity gate compares Stage 7 + blib, not the OSPREY_DIAGNOSTICS dumps.
             if (peakLen >= 3
                 && ospreyContext.TryGetInfo(out MedianPolishByproduct mpByproduct)
                 && mpByproduct.Polish != null
@@ -382,13 +420,13 @@ namespace pwiz.Osprey.Scoring
 
         /// <summary>
         /// Build the <see cref="FdrEntry"/> for a scored candidate's winning peak.
-        /// Serializes the full library fragment list (m/z + relative intensity),
-        /// slices the reference XIC across the winning peak's [start..end] window,
+        /// Slices the reference XIC across the winning peak's [start..end] window,
         /// and copies the feature vector + bounds onto the entry. Pure: no logging,
-        /// no diagnostics -- the six blob/scalar fields mirror Rust
-        /// CoelutionScoredEntry::{fragment_mzs, fragment_intensities, reference_xic,
-        /// peak.area, peak.signal_to_noise} so the reconciled .scores.parquet
-        /// write-back stays byte-identical for cross-impl validation.
+        /// no diagnostics -- the reference XIC and bounds mirror Rust
+        /// CoelutionScoredEntry::{reference_xic, peak.area, peak.signal_to_noise}.
+        /// Rust also carries the library fragment list (fragment_mzs,
+        /// fragment_intensities); C# does not, because it is a verbatim copy of the
+        /// library spectrum that nothing reads back (#5023).
         /// </summary>
         private static FdrEntry BuildFdrEntry(
             LibraryEntry candidate,
@@ -402,23 +440,6 @@ namespace pwiz.Osprey.Scoring
             int startScan,
             Spectrum apexSpectrum)
         {
-            // FragmentMzs / FragmentIntensities iterate the FULL library
-            // fragment list (not just the top-N used by XIC extraction)
-            // because Rust's parquet writer at pipeline.rs:1620-1631
-            // serializes every library fragment.
-            var frags = candidate.Fragments;
-            int nFrags = frags?.Count ?? 0;
-            double[] fragMzs = new double[nFrags];
-            float[] fragInts = new float[nFrags];
-            if (frags != null)
-            {
-                for (int fi = 0; fi < nFrags; fi++)
-                {
-                    fragMzs[fi] = frags[fi].Mz;
-                    fragInts[fi] = frags[fi].RelativeIntensity;
-                }
-            }
-
             // ReferenceXic{Rts,Intensities} are sliced from the highest-
             // total-intensity fragment XIC across the winning peak's
             // [si..=ei] window, matching Rust's
@@ -464,8 +485,6 @@ namespace pwiz.Osprey.Scoring
                 ModifiedSequence = candidate.ModifiedSequence,
                 Features = features,
                 CwtCandidates = cwtCandidatesOut,
-                FragmentMzs = fragMzs,
-                FragmentIntensities = fragInts,
                 ReferenceXicRts = refXicRts,
                 ReferenceXicIntensities = refXicInts,
                 BoundsArea = bestPeak.Area,

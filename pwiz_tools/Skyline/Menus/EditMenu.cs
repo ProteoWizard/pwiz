@@ -33,6 +33,7 @@ using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
+using ReplicateValue = pwiz.Skyline.Model.Results.ReplicateValue;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
@@ -117,13 +118,13 @@ namespace pwiz.Skyline.Menus
                 DataObject data = provider.ProvideData();
                 int levels = node.Level - shallowestLevel;
                 int lineBreaks = GetLineBreakCount(node, prev);
-                string providerHtml = (string)data.GetData(DataFormats.Html);
+                data.TryGetData(DataFormats.Html, out string providerHtml);
                 if (providerHtml != null)
                     AppendClipboardText(htmlSb, new HtmlFragment(providerHtml).Fragment,
                         // ReSharper disable LocalizableElement
                         "<br>\r\n", "&nbsp;&nbsp;&nbsp;&nbsp;", levels, lineBreaks);
                 // ReSharper restore LocalizableElement
-                string providerText = (string)data.GetData(@"Text");
+                data.TryGetData(@"Text", out string providerText);
                 if (providerText != null)
                     // ReSharper disable LocalizableElement
                     AppendClipboardText(textSb, providerText, "\r\n", "    ", levels, lineBreaks);
@@ -280,7 +281,7 @@ namespace pwiz.Skyline.Menus
 
             try
             {
-                dataObjectSkyline = (string)ClipboardEx.GetData(ClipboardEx.SKYLINE_FORMAT);
+                dataObjectSkyline = ClipboardEx.GetData<string>(ClipboardEx.SKYLINE_FORMAT);
             }
             catch (ExternalException)
             {

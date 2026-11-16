@@ -94,8 +94,8 @@ namespace CustomProgressCell
 
         #region Private member variables
         ProgressBar _progressBar;
-        Timer _animationStepTimer;
-        Timer _animationStopTimer;
+        System.Windows.Forms.Timer _animationStepTimer;
+        System.Windows.Forms.Timer _animationStopTimer;
         string _text;
         #endregion
 
@@ -113,10 +113,10 @@ namespace CustomProgressCell
             ValueType = typeof(int);
 
             // repaint every 25 milliseconds while progress is active
-            _animationStepTimer = new Timer { Interval = 25, Enabled = true };
+            _animationStepTimer = new System.Windows.Forms.Timer { Interval = 25, Enabled = true };
 
             // stop repainting 3 seconds after progress becomes inactive
-            _animationStopTimer = new Timer { Interval = 3000, Enabled = false };
+            _animationStopTimer = new System.Windows.Forms.Timer { Interval = 3000, Enabled = false };
 
             _animationStepTimer.Tick += (x, y) => { stopAnimation(); refresh(); };
             _animationStopTimer.Tick += (x, y) => { _animationStepTimer.Stop(); _animationStopTimer.Stop(); };

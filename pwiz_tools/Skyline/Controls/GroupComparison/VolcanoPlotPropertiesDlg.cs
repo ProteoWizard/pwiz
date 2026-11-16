@@ -60,11 +60,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var helper = new MessageBoxHelper(this);
 
             var foldChangeCutoff = double.NaN;
-            if (!string.IsNullOrEmpty(textFoldChange.Text) && !helper.ValidateDecimalTextBox(textFoldChange, checkBoxLog.Checked ? (double?)null : 0.0, null, out foldChangeCutoff, false))
+            if (!string.IsNullOrEmpty(textFoldChange.Text) && !helper.ValidateDecimalTextBox(textFoldChange, checkBoxLog.Checked ? null : 0.0, null, out foldChangeCutoff, false))
                 return;
 
             var pValueCutoff = double.NaN;
-            if (!string.IsNullOrEmpty(textPValue.Text) && !helper.ValidateDecimalTextBox(textPValue, 0.0, checkBoxLog.Checked ? (double?)null : 1.0, out pValueCutoff, checkBoxLog.Checked))
+            if (!string.IsNullOrEmpty(textPValue.Text) && !helper.ValidateDecimalTextBox(textPValue, 0.0, checkBoxLog.Checked ? null : 1.0, out pValueCutoff, checkBoxLog.Checked))
                 return;
 
             Settings.Default.Log2FoldChangeCutoff = Math.Abs(checkBoxLog.Checked ? foldChangeCutoff : ConvertBetweenLogs(foldChangeCutoff, true, 2));

@@ -52,8 +52,7 @@ namespace pwiz.SkylineTestFunctional
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(
                 documentSettingsDlg.EditAnnotationList);
-            var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
-            string dlgId = GetOpenFormId<DefineAnnotationDlg>();
+            var defineAnnotationDlg = ShowMcpConnectorForm<DefineAnnotationDlg>(editListDlg.AddItem, out var dlgId);
             // Address the name box by the localized label that names it, read from the dialog's resources.
             var namePath = new UiElementPath(new UiElementPath(null, dlgId, null, @"Form"),
                 GetLocalizedText<DefineAnnotationDlg>(@"lblName"), null, null);

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="3e2fd8c1-5628-4c6b-9837-7dabdaedee4d" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Remote account test parameters</name>
+  <settings>
+    <parameters>
+      <param name="env.NARDIA_PASSWORD" value="credentialsJSON:aec5b17c-2979-4247-81c7-894a2b88c4d3" spec="password display='normal'" />
+      <param name="env.NARDIA_PASSWORD_1ROLE" value="credentialsJSON:b8e5c6d8-4b16-4b8f-8047-3dd16c4fe3a4" spec="password display='normal'" />
+      <param name="env.PANORAMAWEB_PASSWORD" value="credentialsJSON:c289ca59-d059-4458-a013-2bfbc2cf2351" spec="password display='normal'" />
+      <param name="env.UNIFI_PASSWORD" value="credentialsJSON:cc957175-a8b4-4d2c-aaf4-9022ee37add7" spec="password display='normal'" />
+      <param name="env.UNIFI_USERNAME" value="" />
+    </parameters>
+  </settings>
+</template>
+

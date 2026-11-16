@@ -56,6 +56,12 @@ namespace pwiz.Skyline.Controls.Graphs
         // Static so label positions survive when the graph pane instance is recreated on refresh
         private static List<LabeledPoint.PointLayout> _labelsLayout = new List<LabeledPoint.PointLayout>();
         private static RelativeAbundanceFormatting _formattingOverride;
+        private RenderState _renderState;
+        /// <summary>
+        /// Test support: how many times the pane has actually rebuilt its curves and labels. Lets a test
+        /// assert that an update which cannot change this plot did not touch it.
+        /// </summary>
+        public int RenderCount { get; private set; }
         private int _progressValue = -1;
         private Stopwatch _progressStopwatch;
         private const int PROGRESS_INITIAL_DELAY_MS = 300; // Wait before showing progress bar
@@ -467,6 +473,70 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        /// <summary>
+        /// Everything this pane draws from. Every graph in Skyline is refreshed on any document change, so
+        /// editing the volcano plot's formatting rules rebuilt this pane too, although the two use entirely
+        /// separate rule sets. Comparing this against the last render lets an update that cannot change
+        /// anything here return without touching the plot.
+        ///
+        /// The document tree is immutable, so a change confined to another part of it - the group
+        /// comparison definitions, say - leaves the children and settings this pane reads referentially
+        /// identical, and reference comparisons are both cheap and sound. Anything NOT captured here is a
+        /// stale plot waiting to happen, so add to it rather than broadening what counts as unchanged.
+        /// </summary>
+        private sealed class RenderState
+        {
+            private readonly object _children;
+            private readonly object _peptideSettings;
+            private readonly object _transitionSettings;
+            private readonly object _measuredResults;
+            private readonly RelativeAbundanceFormatting _formatting;
+            private readonly GraphSettings _graphSettings;
+            private readonly ReplicateDisplay _showReplicate;
+            private readonly int _resultsIndex;
+            private readonly bool _showSelection;
+            private readonly bool _avoidLabelOverlap;
+            private readonly bool _logScale;
+            private readonly PeptideGroupDocNode _selectedProtein;
+            private readonly List<IdentityPath> _selectedPaths;
+
+            public RenderState(SrmDocument document, GraphSettings graphSettings, ReplicateDisplay showReplicate,
+                int resultsIndex, PeptideGroupDocNode selectedProtein, IEnumerable<IdentityPath> selectedPaths)
+            {
+                _children = document.Children;
+                _peptideSettings = document.Settings.PeptideSettings;
+                _transitionSettings = document.Settings.TransitionSettings;
+                _measuredResults = document.Settings.MeasuredResults;
+                _formatting = _formattingOverride ?? document.Settings.DataSettings.RelativeAbundanceFormatting;
+                _graphSettings = graphSettings;
+                _showReplicate = showReplicate;
+                _resultsIndex = resultsIndex;
+                _showSelection = ShowSelection;
+                _avoidLabelOverlap = Settings.Default.GroupComparisonAvoidLabelOverlap;
+                _logScale = Settings.Default.RelativeAbundanceLogScale;
+                _selectedProtein = selectedProtein;
+                _selectedPaths = selectedPaths?.ToList() ?? new List<IdentityPath>();
+            }
+
+            public bool RendersTheSameAs(RenderState other)
+            {
+                return other != null &&
+                       ReferenceEquals(_children, other._children) &&
+                       ReferenceEquals(_peptideSettings, other._peptideSettings) &&
+                       ReferenceEquals(_transitionSettings, other._transitionSettings) &&
+                       ReferenceEquals(_measuredResults, other._measuredResults) &&
+                       Equals(_formatting, other._formatting) &&
+                       Equals(_graphSettings, other._graphSettings) &&
+                       _showReplicate == other._showReplicate &&
+                       _resultsIndex == other._resultsIndex &&
+                       _showSelection == other._showSelection &&
+                       _avoidLabelOverlap == other._avoidLabelOverlap &&
+                       _logScale == other._logScale &&
+                       ReferenceEquals(_selectedProtein, other._selectedProtein) &&
+                       _selectedPaths.SequenceEqual(other._selectedPaths);
+            }
+        }
+
         public override void UpdateGraph(bool selectionChanged)
         {
             PeptideGroupDocNode selectedProtein = null;
@@ -485,6 +555,14 @@ namespace pwiz.Skyline.Controls.Graphs
             var showReplicate = RTLinearRegressionGraphPane.ShowReplicate;
             var resultsIndex = GraphSummary.ResultsIndex;
             var oldGraphData = _graphData;
+
+            // Nothing this pane draws from has changed, so a rebuild would produce the same plot. Return
+            // before the data fetch: GraphDataParameters compares documents by reference, so an unrelated
+            // document change misses the cache and recomputes the whole graph data as well.
+            var renderState = new RenderState(document, graphSettings, showReplicate, resultsIndex,
+                selectedProtein, ShowSelection ? Program.MainWindow.SequenceTree.SelectedPaths : null);
+            if (_graphData != null && renderState.RendersTheSameAs(_renderState))
+                return;
 
             // Get prior cached data for this replicate to enable incremental updates
             var cacheKey = showReplicate == ReplicateDisplay.single ? resultsIndex : -1;
@@ -609,6 +687,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         GraphSummary.GraphControl.GraphPane.Rect.Height);
                 }
                 GraphSummary.GraphControl.Invalidate();
+                _renderState = renderState;
+                RenderCount++;
             }
             finally
             {
@@ -985,7 +1065,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private void CalcDataPositionsIncremental(GraphData priorData, ProductionMonitor productionMonitor)
             {
                 var schema = SkylineDataSchema.MemoryDataSchema(Document, SkylineDataSchema.GetLocalizedSchemaLocalizer());
-                int? resultIndex = ShowReplicate == ReplicateDisplay.single ? (int?)ResultsIndex : null;
+                int? resultIndex = ShowReplicate == ReplicateDisplay.single ? ResultsIndex : null;
                 var moleculeGroups = GetFilteredMoleculeGroups();
 
                 // Step 1: Build map of new doc nodes by identity for two-phase change detection
@@ -1261,7 +1341,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var minY = double.MaxValue;
 
                 var pointPairList = new PointPairList();
-                int? resultIndex = ShowReplicate == ReplicateDisplay.single ? (int?)ResultsIndex : null;
+                int? resultIndex = ShowReplicate == ReplicateDisplay.single ? ResultsIndex : null;
 
                 foreach (var dataPoint in listPoints)
                 {

@@ -53,13 +53,10 @@ public sealed class SingleInstanceHandler
     /// <param name="uniqueID">A unique string for the application.</param>
     public SingleInstanceHandler (string uniqueID)
     {
-        var rng = new Random(uniqueID.GetHashCode());
-        byte[] ipcMutexGuidBytes = new byte[16];
-        byte[] ipcNamedPipeGuidBytes = new byte[16];
-        rng.NextBytes(ipcMutexGuidBytes);
-        rng.NextBytes(ipcNamedPipeGuidBytes);
-        ipcMutexGuid = new Guid(ipcMutexGuidBytes).ToString().Trim('{', '}');
-        ipcNamedPipeGuid = new Guid(ipcNamedPipeGuidBytes).ToString().Trim('{', '}');
+        // every instance must derive the same names; string.GetHashCode differs per process on .NET Core
+        byte[] hash = System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(uniqueID));
+        ipcMutexGuid = new Guid(hash.AsSpan(0, 16)).ToString();
+        ipcNamedPipeGuid = new Guid(hash.AsSpan(16, 16)).ToString();
 
         Timeout = 500;
     }

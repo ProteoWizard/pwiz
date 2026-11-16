@@ -248,7 +248,11 @@ namespace pwiz.Skyline.Model.GroupComparison
             private const string LABEL_ARG = "label";
 
             public RatioToSurrogate(string surrogateName, IsotopeLabelType isotopeLabelType)
-                : base(surrogate_prefix + Uri.EscapeUriString(surrogateName) + '?' + LABEL_ARG + '=' + Uri.EscapeUriString(isotopeLabelType.Name), null)
+                // EscapeDataString, not EscapeUriString: these are query-string components, and a
+                // surrogate name containing '?' or '=' would otherwise break the delimiters that
+                // ParseRatioToSurrogate splits on. Reading is unaffected either way, because it has
+                // always used UnescapeDataString, which decodes both encodings.
+                : base(surrogate_prefix + Uri.EscapeDataString(surrogateName) + '?' + LABEL_ARG + '=' + Uri.EscapeDataString(isotopeLabelType.Name), null)
             {
                 _surrogateName = surrogateName;
                 _isotopeLabelType = isotopeLabelType;
@@ -284,7 +288,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
             }
 
-            public RatioToSurrogate(string surrogateName) : base(surrogate_prefix + Uri.EscapeUriString(surrogateName), null)
+            public RatioToSurrogate(string surrogateName) : base(surrogate_prefix + Uri.EscapeDataString(surrogateName), null)
             {
                 _surrogateName = surrogateName;
             }

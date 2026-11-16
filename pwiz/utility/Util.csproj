@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Util</RootNamespace>
+    <AssemblyName>Pwiz.Util</AssemblyName>
+    <Description>Foundation utilities for pwiz-sharp: chemistry, math, misc helpers. Port of pwiz/utility.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
+  </ItemGroup>
+
+  <!-- bindings/ holds separate projects (Hosted, NativeAot, timstof_prm_scheduler) that sit under
+       utility/ the way the cpp CLI bindings did; keep them out of this project's default globs. -->
+  <ItemGroup>
+    <Compile Remove="bindings\**" />
+    <EmbeddedResource Remove="bindings\**" />
+    <None Remove="bindings\**" />
+    <Content Remove="bindings\**" />
+  </ItemGroup>
+
+</Project>

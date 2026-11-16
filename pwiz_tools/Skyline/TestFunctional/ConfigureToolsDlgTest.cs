@@ -85,6 +85,8 @@ namespace pwiz.SkylineTestFunctional
 
             TestURL();
 
+            TestSharedToolsCannotBeChanged();
+
             TestImmediateWindow();
 
             TestCascadingMenuItems();
@@ -413,6 +415,56 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
         }
 
+        /// <summary>
+        /// A tool installed outside the current user's Tools folder, such as one an administrator
+        /// installed beside the shared user.config, can be neither changed nor removed. Moving from
+        /// it back to a web page tool must leave that tool's program-only fields disabled.
+        /// </summary>
+        private void TestSharedToolsCannotBeChanged()
+        {
+            const string editableTitle = "EditableWebTool"; // Not L10N
+            const string readOnlyTitle = "SharedWebTool"; // Not L10N
+            const string url = "https://skyline.ms/project/home/begin.view"; // Not L10N
+            var sharedToolDir = TestFilesDir.GetTestPath(Path.Combine(@"SharedTools", readOnlyTitle));
+            RunUI(() =>
+            {
+                Settings.Default.ToolList.Clear();
+                Settings.Default.ToolList.Add(new ToolDescription(editableTitle, url, _empty));
+                Settings.Default.ToolList.Add(new ToolDescription(readOnlyTitle, url, _empty, _empty, false, _empty,
+                    _empty, _empty, sharedToolDir, new List<AnnotationDef>(), null, null, null));
+            });
+            RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
+            {
+                Assert.AreEqual(editableTitle, configureToolsDlg.textTitle.Text);
+                VerifyToolFieldsEnabled(configureToolsDlg, true, false);
+
+                configureToolsDlg.TestHelperIndexChange(1);
+                Assert.AreEqual(readOnlyTitle, configureToolsDlg.textTitle.Text);
+                VerifyToolFieldsEnabled(configureToolsDlg, false, false);
+
+                configureToolsDlg.TestHelperIndexChange(0);
+                Assert.AreEqual(editableTitle, configureToolsDlg.textTitle.Text);
+                VerifyToolFieldsEnabled(configureToolsDlg, true, false);
+                configureToolsDlg.Cancel();
+            });
+            RunUI(() => Settings.Default.ToolList.Clear());
+        }
+
+        private static void VerifyToolFieldsEnabled(ConfigureToolsDlg configureToolsDlg, bool editable, bool programFields)
+        {
+            Assert.AreEqual(editable, configureToolsDlg.btnRemove.Enabled);
+            Assert.AreEqual(editable, configureToolsDlg.textTitle.Enabled);
+            Assert.AreEqual(editable, configureToolsDlg.textCommand.Enabled);
+            Assert.AreEqual(editable, configureToolsDlg.textArguments.Enabled);
+            Assert.AreEqual(editable, configureToolsDlg.btnArguments.Enabled);
+            Assert.AreEqual(editable, configureToolsDlg.comboReport.Enabled);
+            Assert.AreEqual(programFields, configureToolsDlg.textInitialDirectory.Enabled);
+            Assert.AreEqual(programFields, configureToolsDlg.btnFindCommand.Enabled);
+            Assert.AreEqual(programFields, configureToolsDlg.btnInitialDirectory.Enabled);
+            Assert.AreEqual(programFields, configureToolsDlg.btnInitialDirectoryMacros.Enabled);
+            Assert.AreEqual(programFields, configureToolsDlg.cbOutputImmediateWindow.Enabled);
+        }
+
         private void TestMacros()
         {
             RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
@@ -485,17 +537,17 @@ namespace pwiz.SkylineTestFunctional
                         ToolStripMenuItem mi = SkylineWindow.GetMenuItem(1);
                         Assert.AreEqual(EXAMPLE1, mi.DropDownItems[0].Text);
                         SkylineWindow.ToolMenuItem example1 = (SkylineWindow.ToolMenuItem) mi.DropDownItems[0];
-                        Assert.AreEqual(EXAMPLE1_EXE, example1.Command);
+                        Assert.AreEqual(EXAMPLE1_EXE, example1.ToolCommand);
 
                         Assert.AreEqual(FURTHER, mi.DropDownItems[1].Text);
                         ToolStripMenuItem mi2 = (ToolStripMenuItem) mi.DropDownItems[1];
                         Assert.AreEqual(EXAMPLE3, mi2.DropDownItems[0].Text);
                         SkylineWindow.ToolMenuItem example3 = (SkylineWindow.ToolMenuItem) mi2.DropDownItems[0];
-                        Assert.AreEqual(EXAMPLE3_EXE, example3.Command);
+                        Assert.AreEqual(EXAMPLE3_EXE, example3.ToolCommand);
 
                         Assert.AreEqual(EXAMPLE2, mi.DropDownItems[2].Text);
                         SkylineWindow.ToolMenuItem example2 = (SkylineWindow.ToolMenuItem) mi.DropDownItems[2];
-                        Assert.AreEqual(EXAMPLE2_EXE, example2.Command);
+                        Assert.AreEqual(EXAMPLE2_EXE, example2.ToolCommand);
 
                         Assert.IsTrue(SkylineWindow.ConfigMenuPresent());
 

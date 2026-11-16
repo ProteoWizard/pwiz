@@ -34,7 +34,7 @@ namespace MSConvertGUI
         private static string[] GetSourceTypes()
         {
             var types = new List<string> { CommonFileDialogResources.OpenDataSourceDialog_OpenDataSourceDialog_Any_spectra_format };
-            foreach (var typeExtsPair in pwiz.CLI.msdata.ReaderList.FullReaderList.getFileExtensionsByType())
+            foreach (var typeExtsPair in ReaderList.FullReaderList.getFileExtensionsByType())
             {
                 if (typeExtsPair.Value.Count > 0) // exclude types with no file extensions (e.g. UNIFI)
                     types.Add(typeExtsPair.Key);

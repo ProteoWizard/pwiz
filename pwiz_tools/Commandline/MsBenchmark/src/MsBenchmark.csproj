@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Pwiz.Tools.MsBenchmark</RootNamespace>
+    <AssemblyName>msbenchmark-sharp</AssemblyName>
+    <Description>Read-only benchmark: enumerates an MSData file's spectra and reports timing + peak memory, without writing output. Port of pwiz_tools/examples/msbenchmark.cpp. Useful for measuring reader speed under filter chains (e.g. an index-range filter that lazy readers can satisfy without touching most of the file).</Description>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\utility\Util.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\common\Common.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\msdata\MsData.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\analysis\Analysis.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Common\Vendor.Common.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Thermo\Thermo.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Bruker\Bruker.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Waters\Waters.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Agilent\Agilent.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Sciex\Sciex.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Shimadzu\Shimadzu.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\UNIFI\UNIFI.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\UIMF\UIMF.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Mobilion\Mobilion.csproj" />
+  </ItemGroup>
+
+</Project>

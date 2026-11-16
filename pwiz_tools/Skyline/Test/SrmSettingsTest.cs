@@ -32,6 +32,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -57,6 +58,27 @@ namespace pwiz.SkylineTest
         public void SettingsSerializeDefaultsTest()
         {
             AssertEx.Serializable(SrmSettingsList.GetDefault(), AssertEx.SettingsCloned);
+        }
+
+        [TestMethod]
+        public void ReplicateOrderSettingsDiffTest()
+        {
+            var replicateOne = new ChromatogramSet("One", new[] { "same.raw" });
+            var replicateTwo = new ChromatogramSet("Two", new[] { "same.raw" });
+            var settings = SrmSettingsList.GetDefault();
+            var oldResults = new MeasuredResults(new[] { replicateOne, replicateTwo });
+            var oldSettings = settings.ChangeMeasuredResults(oldResults);
+
+            var reorderedResults = oldResults.ChangeChromatograms(new[] { replicateTwo, replicateOne });
+            Assert.IsTrue(new SrmSettingsDiff(oldSettings,
+                settings.ChangeMeasuredResults(reorderedResults)).DiffResults);
+
+            var renamedResults = oldResults.ChangeChromatograms(new[]
+            {
+                (ChromatogramSet) replicateOne.ChangeName("Renamed"), replicateTwo
+            });
+            Assert.IsFalse(new SrmSettingsDiff(oldSettings,
+                settings.ChangeMeasuredResults(renamedResults)).DiffResults);
         }
 
         /// <summary>

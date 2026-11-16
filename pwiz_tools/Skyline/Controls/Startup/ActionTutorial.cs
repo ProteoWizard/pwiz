@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Ionic.Zip;
@@ -145,7 +144,7 @@ namespace pwiz.Skyline.Controls.Startup
                     }
                 }
                 var hasSkylineFile = !string.IsNullOrEmpty(SkyFileLocationInZip) && !string.IsNullOrEmpty(ExtractPath);
-                Program.MainWindow.BeginInvoke(new Action(() =>
+                Program.MainWindow.BeginInvoke(() =>
                 {
                     if (hasSkylineFile)
                     {
@@ -176,7 +175,7 @@ namespace pwiz.Skyline.Controls.Startup
 
                     try
                     {
-                        Process.Start(PdfFileLocation); // Opens Tutorial PDF in users default browser.
+                        ProcessEx.OpenInShell(PdfFileLocation); // Opens Tutorial PDF in users default browser.
                     }
                     catch (Exception e)
                     {
@@ -185,7 +184,7 @@ namespace pwiz.Skyline.Controls.Startup
                             PdfFileLocation);
                         MessageDlg.ShowWithException(Program.MainWindow, message, e);
                     }
-                }));
+                });
             }
         }
 

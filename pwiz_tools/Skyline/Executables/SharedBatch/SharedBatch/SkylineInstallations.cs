@@ -37,6 +37,22 @@ namespace SharedBatch
         public const string SkylineRunnerExe = "SkylineRunner.exe";
         public const string SkylineDailyRunnerExe = "SkylineDailyRunner.exe";
 
+        /// <summary>
+        /// Test seam: a SkylineCmd.exe to stand in for an administrative Skyline installation
+        /// when the machine has none. Mirrors <c>RInstallations.TestRVersions</c>.
+        ///
+        /// The functional tests drive the real app, and the app refuses to start - and then
+        /// refuses to save a configuration - without a Skyline installation. Pointing this at a
+        /// SkylineCmd.exe built in the checkout makes that run work without installing Skyline.
+        ///
+        /// It deliberately stands in for the ADMINISTRATIVE install rather than the local one.
+        /// A local SkylineCmd.exe makes <c>SkylineSettings.ReadXml</c> retype every configuration
+        /// to <see cref="SkylineType.Local"/>, which changes what an import/export round trip
+        /// writes and breaks the BcfgTestFiles baselines that expect type="Skyline". Standing in
+        /// as an administrative install keeps the type the configuration files already record.
+        /// </summary>
+        public static string TestAdminSkylineCmdPath { get; set; }
+
         public static bool HasLocalSkylineCmd => !string.IsNullOrEmpty(Settings.Default.SkylineLocalCommandPath);
 
         public static bool HasCustomSkylineCmd => !string.IsNullOrEmpty(Settings.Default.SkylineCustomCmdPath) && File.Exists(Settings.Default.SkylineCustomCmdPath);
@@ -100,6 +116,11 @@ namespace SharedBatch
                                       File.Exists(Path.Combine(skylinePath, SkylineCmdExe));
             Settings.Default.SkylineAdminCmdPath =
                 adminInstallSkyline ? Path.Combine(skylinePath, SkylineCmdExe) : null;
+            // Applied here rather than assigned once by the test, because this runs again on every
+            // FindSkyline() - including the one in the application's own startup and the one after
+            // Settings.Reset() - and any value assigned outside would be overwritten.
+            if (Settings.Default.SkylineAdminCmdPath == null && File.Exists(TestAdminSkylineCmdPath))
+                Settings.Default.SkylineAdminCmdPath = TestAdminSkylineCmdPath;
             // Skyline-daily administrative install
             var skylineDailyPath = Path.Combine(programFilesPath, SkylineDaily);
             var adminInstallSkylineDaily = Directory.Exists(skylineDailyPath) &&

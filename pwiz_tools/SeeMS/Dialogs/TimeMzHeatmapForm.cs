@@ -34,10 +34,14 @@ using ZedGraph;
 
 using System.Diagnostics;
 using System.Linq;
-using pwiz.Common.Collections;
-using SpyTools;
 
-namespace seems
+using SpyTools;
+using pwiz.Common.Collections;
+using Pwiz.Analysis;
+using Pwiz.Analysis.PeakPicking;
+using Pwiz.Util.Misc;
+
+namespace Pwiz.SeeMS
 {
     public partial class TimeMzHeatmapForm : ManagedDockableForm
     {
@@ -140,15 +144,15 @@ namespace seems
 
             var msLevels = new Set<int>();
             for (int i = 0; i < dgv.RowCount; ++i)
-                msLevels.Add((int)dgv[msLevelColumn.Index, i].Value - 1);
+                msLevels.Add((int) dgv[msLevelColumn.Index, i].Value - 1);
 
             while (heatmapPointsByMsLevel.Count <= msLevels.Max)
                 heatmapPointsByMsLevel.Add(new List<Point3D>());
 
-            var peakPicker = new pwiz.CLI.analysis.SpectrumList_PeakPicker(Source.Source.MSDataFile.run.spectrumList, new pwiz.CLI.analysis.CwtPeakDetector(1, 0.5), true, new int[]{1});
+            var peakPicker = new SpectrumList_PeakPicker(Source.Source.MSDataFile.Run.SpectrumList, new CwtPeakDetector(1, 0, 0.5), true, new IntegerSet(1));
             for (int i = 0; i < dgv.RowCount; ++i)
             {
-                int msLevel = (int)dgv[msLevelColumn.Index, i].Value - 1;
+                int msLevel = (int) dgv[msLevelColumn.Index, i].Value - 1;
                 var heatmapGraphPane = heatmapGraphPaneByMsLevel[msLevel];
                 var heatmapPoints = heatmapPointsByMsLevel[msLevel];
 
@@ -162,7 +166,7 @@ namespace seems
 
                 var bounds = heatmapBoundsByMsLevel[msLevel];
                 var spectrum = Source.GetMassSpectrum(Source.Source.Spectra[i].Index, peakPicker);
-                double scanTime = (double)dgv[scanTimeColumn.Index, i].Value;
+                double scanTime = (double) dgv[scanTimeColumn.Index, i].Value;
                 var points = spectrum.Points;
                 for (int j = 0; j < points.Count; ++j)
                 {

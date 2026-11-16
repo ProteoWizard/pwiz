@@ -57,7 +57,7 @@ namespace pwiz.SkylineTestData
 
         private void VerifyResourceManager(ResourceManager resourceManager)
         {
-            var cultureInfos = new[] { "ja", "zh-CHS" }.Select(CultureInfo.GetCultureInfo).ToList();
+            var cultureInfos = new[] { "ja", "zh-Hans" }.Select(CultureInfo.GetCultureInfo).ToList();
             foreach (DictionaryEntry invariantEntry in resourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true).Cast<DictionaryEntry>().OrderBy(entry=>entry.Key))
             {
                 foreach (var cultureInfo in cultureInfos)
@@ -122,7 +122,8 @@ namespace pwiz.SkylineTestData
                      {
                          typeof(Skyline.SkylineWindow).Assembly,
                          typeof(ProteomeDatabase.API.ProteomeDb).Assembly,
-                         typeof(CommonFormEx).Assembly,
+                         typeof(CommonFormEx).Assembly, // CommonBaseUI
+                         typeof(Assume).Assembly, // CommonUtil - CommonFormEx moved out of it
                          typeof(MSGraph.MSGraphPane).Assembly,
                          typeof(ProteowizardWrapper.MsDataFileImpl).Assembly
                      })
@@ -174,7 +175,10 @@ namespace pwiz.SkylineTestData
             var skylineAssembly = typeof(Skyline.SkylineWindow).Assembly;
             yield return skylineAssembly;
             yield return typeof(ProteomeDatabase.API.ProteomeDb).Assembly;
-            yield return typeof(CommonFormEx).Assembly;
+            yield return typeof(CommonFormEx).Assembly; // CommonBaseUI
+            // CommonUtil needs its own sentinel: CommonFormEx moved to CommonBaseUI in the
+            // WinForms split, which silently dropped CommonUtil from this list.
+            yield return typeof(Assume).Assembly;
             yield return typeof(MSGraph.MSGraphPane).Assembly;
             yield return typeof(ProteowizardWrapper.MsDataFileImpl).Assembly;
             yield return Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(skylineAssembly.Location)!, "ZedGraph.dll"));

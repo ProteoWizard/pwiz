@@ -24,7 +24,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
     // courtesy of https://stackoverflow.com/a/10052686/638445
     public class NoHScrollTree : TreeView

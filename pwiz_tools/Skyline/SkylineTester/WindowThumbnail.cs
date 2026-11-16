@@ -128,7 +128,7 @@ namespace SkylineTester
                     }
                     return true;
                 },
-                (IntPtr)processId);
+                processId);
 
             return window;
         }

@@ -61,6 +61,7 @@ using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -72,7 +73,7 @@ namespace pwiz.Skyline
     {
         public static string GetViewFile(string fileName)
         {
-            return fileName + @".view";
+            return fileName + EXT_VIEW;
         }
 
         private void fileMenu_DropDownOpening(object sender, EventArgs e)
@@ -332,14 +333,21 @@ namespace pwiz.Skyline
                     longWaitDlg.PerformWork(parentWindow ?? this, 500, progressMonitor =>
                     {
                         using var fileStream = File.OpenRead(path);
-                        using var progressStream = new ProgressStream(fileStream);
+                        // The hash is computed under the read-ahead stream, so it happens on the reading
+                        // thread as each block comes off the disk instead of on the thread parsing the XML
+                        using var hashingStream = new HashingStream(fileStream, true);
+                        // Reads ahead on its own thread so the file keeps transferring while the XML is parsed
+                        using var sequentialReadStream = new SequentialReadStream(hashingStream, true);
+                        using var progressStream = new ProgressStream(sequentialReadStream);
                         progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus(Path.GetFileName(path)), true);
-                        using var hashingStream = new HashingStream(progressStream, true);
                         // Wrap stream in XmlReader so that BaseUri is known
-                        var reader = XmlReader.Create(new StreamReader(hashingStream, Encoding.UTF8),
+                        var reader = XmlReader.Create(new StreamReader(progressStream, Encoding.UTF8),
                             new XmlReaderSettings { IgnoreWhitespace = true }, path);
                         XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
                         document = (SrmDocument) ser.Deserialize(reader);
+                        // The parser can stop before the end of the file, and the reading thread may still be hashing.
+                        // Reading to the end waits for that thread to hash the last block.
+                        sequentialReadStream.CopyTo(Stream.Null);
                         var skylineDocumentHash = hashingStream.Done();
 
                         try
@@ -1276,7 +1284,7 @@ namespace pwiz.Skyline
 
             try
             {
-                SaveLayout(fileName);
+                SaveLayout(GetViewFile(fileName));
 
                 if (includingCacheFile)
                 {
@@ -1342,14 +1350,6 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// When saving to a new name ("Save As"), copies the document-specific spectral library
-        /// to the new name and updates the document to reference the library by its new name. This
-        /// includes renaming the library on each precursor's spectrum header info so that the saved
-        /// file does not require a slow settings update the next time it is opened. Returns the
-        /// updated document (which has also been set as the current document), or the current
-        /// document unchanged if there is no document-specific library to rename.
-        /// </summary>
-        /// <summary>
         /// If the document has a document-specific spectral library and this is a "Save As" to a new
         /// name, copies the library files to the new name and returns a <see cref="RenamedDocumentLibrary"/>
         /// holding the copied (not yet committed) files together with the document renamed to reference
@@ -1360,15 +1360,20 @@ namespace pwiz.Skyline
         /// </summary>
         private RenamedDocumentLibrary RenameDocumentLibraryAs(SrmDocument document, string newDocFilePath)
         {
-            string oldDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath);
+            var libraries = document.Settings.PeptideSettings.Libraries;
+            if (!libraries.HasDocumentLibrary)
+                return null;
+
+            // Copy from the file the document library spec names. For a document opened from disk
+            // this is the library beside the current .sky file, but a document built in memory may
+            // hold a document library written somewhere else.
+            string oldDocLibFile = libraries.LibrarySpecs.FirstOrDefault(spec => spec != null && spec.IsDocumentLibrary)?.FilePath;
             string oldRedundantDocLibFile = BiblioSpecLiteSpec.GetRedundantName(oldDocLibFile);
             string newDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(newDocFilePath);
-            // If the document has no document-specific library, or the files for it do not
-            // exist on disk, or it's stale due to conversion of document to small molecule
-            // representation, there is nothing to rename.
-            if (!document.Settings.PeptideSettings.Libraries.HasDocumentLibrary
-                || !File.Exists(oldDocLibFile)
-                || Equals(newDocLibFile.Replace(BiblioSpecLiteSpec.DotConvertedToSmallMolecules, string.Empty), oldDocLibFile))
+            // If the files for the library do not exist on disk, or the library is already
+            // at the new name, there is nothing to copy.
+            if (!File.Exists(oldDocLibFile) ||
+                string.Equals(Path.GetFullPath(oldDocLibFile), Path.GetFullPath(newDocLibFile), StringComparison.OrdinalIgnoreCase))
             {
                 return null;
             }
@@ -1460,16 +1465,131 @@ namespace pwiz.Skyline
             }, (int) SrmDocument.Level.TransitionGroups);
         }
 
-        private void SaveLayout(string fileName)
+        private void SaveLayout(string viewFilePath)
         {
-            using (var saverUser = new FileSaver(GetViewFile(fileName)))
+            using (var saverUser = new FileSaver(viewFilePath))
             {
-                if (saverUser.CanSave())
+                // Pass the parent: without it CanSave swallows read-only and access-denied and
+                // returns false, so Export Window Layout would write nothing and say nothing.
+                if (saverUser.CanSave(this))
                 {
                     dockPanel.SaveAsXml(saverUser.SafeName, new UTF8Encoding(false)); // UTF-8 without BOM
                     saverUser.Commit();
                 }
             }
+        }
+
+        public const string EXT_VIEW = ".view";
+        public static string FILTER_VIEW
+        {
+            get { return TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files, EXT_VIEW); }
+        }
+
+        /// <summary>
+        /// Where the layout dialogs start: beside the document, since that is where its ".sky.view"
+        /// belongs and what the Export dialog names the file after. Only falls back to
+        /// <see cref="Settings.ActiveDirectory"/> for an unsaved document - that setting is the last
+        /// folder ANY file operation used, including unrelated ones like picking an iRT database, so
+        /// on its own it can put a file named after this document somewhere else entirely.
+        /// Share Document starts from the document folder for the same reason.
+        /// </summary>
+        private string GetLayoutDirectory()
+        {
+            return !string.IsNullOrEmpty(DocumentFilePath)
+                ? Path.GetDirectoryName(DocumentFilePath)
+                : Settings.Default.ActiveDirectory;
+        }
+
+        private void exportLayoutMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowExportLayoutDlg();
+        }
+
+        public void ShowExportLayoutDlg()
+        {
+            using (var dlg = new SaveFileDialog())
+            {
+                dlg.Title = SkylineResources.SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout;
+                dlg.Filter = FILTER_VIEW;
+                dlg.InitialDirectory = GetLayoutDirectory();
+                dlg.DefaultExt = EXT_VIEW;
+                if (!string.IsNullOrEmpty(DocumentFilePath))
+                    dlg.FileName = Path.GetFileName(GetViewFile(DocumentFilePath));
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                ExportLayout(dlg.FileName);
+            }
+        }
+
+
+        public void ExportLayout(string viewFilePath)
+        {
+            try
+            {
+                SaveLayout(viewFilePath);
+            }
+            catch (Exception x)
+            {
+                MessageDlg.ShowWithException(this,
+                    string.Format(SkylineResources.SkylineWindow_ExportLayout_Failure_attempting_to_save_the_window_layout_file__0__, viewFilePath), x);
+            }
+        }
+
+        private void importLayoutMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowImportLayoutDlg();
+        }
+
+        public void ShowImportLayoutDlg()
+        {
+            using (var dlg = new OpenFileDialog())
+            {
+                dlg.Title = SkylineResources.SkylineWindow_ShowImportLayoutDlg_Import_Window_Layout;
+                dlg.Filter = FILTER_VIEW;
+                dlg.InitialDirectory = GetLayoutDirectory();
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                ImportLayout(dlg.FileName);
+            }
+        }
+
+        public void ImportLayout(string viewFilePath)
+        {
+            MemoryStream previousLayout = null;
+            try
+            {
+                using var stream = File.OpenRead(viewFilePath);
+                try
+                {
+                    MemoryStream memoryStream = new MemoryStream();
+                    // Remember the current layout in case something goes wrong.
+                    dockPanel.SaveAsXml(memoryStream, new UTF8Encoding(false), true); // UTF-8 without BOM
+                    memoryStream.Position = 0;
+                    previousLayout = memoryStream;
+                }
+                catch
+                {
+                    // Failed to save the current layout (maybe too big). Continue without a backup.
+                }
+                LoadLayout(stream);
+            }
+            catch (Exception x)
+            {
+                if (previousLayout != null)
+                {
+                    try
+                    {
+                        LoadLayout(previousLayout);
+                    }
+                    catch (Exception restoreException)
+                    {
+                        x = new AggregateException(x, restoreException);
+                    }
+                }
+                MessageDlg.ShowWithException(this,
+                    string.Format(SkylineResources.SkylineWindow_UpdateGraphUI_Failure_attempting_to_load_the_window_layout_file__0__, viewFilePath), x);
+            }
+            EnsureApplicableForms();
         }
 
         private void SetActiveFile(string path)
@@ -1568,7 +1688,7 @@ namespace pwiz.Skyline
 
         private DocumentFormat? GetFileFormatOnDisk()
         {
-            return !Dirty && null != DocumentFilePath ? SavedDocumentFormat : (DocumentFormat?) null;
+            return !Dirty && null != DocumentFilePath ? SavedDocumentFormat : null;
         }
 
         public bool ShareDocument(string fileDest, ShareType shareType, bool useFileSaver = true, int zipFileMaxSegmentSize = 0)
@@ -1584,8 +1704,8 @@ namespace pwiz.Skyline
                     {
                         var tempDocumentPath = Path.Combine(sharing.EnsureTempDir().DirPath,
                             sharing.GetDocumentFileName());
-                        SaveLayout(tempDocumentPath);
                         sharing.ViewFilePath = GetViewFile(tempDocumentPath);
+                        SaveLayout(sharing.ViewFilePath);
                     }
                     else if (DocumentFilePath != null)
                     {
@@ -3564,6 +3684,11 @@ namespace pwiz.Skyline
             ShowDiannSearchDlg();
         }
 
+        private void ospreySearchMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowOspreySearchDlg();
+        }
+
         private void importFeatureDetectionMenuItem_Click(object sender, EventArgs e)
         {
             ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow.feature_detection);
@@ -3725,6 +3850,30 @@ namespace pwiz.Skyline
                 return false; // user canceled
             }
             return true;
+        }
+
+        public void ShowOspreySearchDlg()
+        {
+            if (!CheckDocumentExists(SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
+            {
+                return;
+            }
+            else if (!Document.IsLoaded)
+            {
+                MessageDlg.Show(this, SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
+                return;
+            }
+
+            if (!OspreyInstaller.EnsureInstalled(this))
+                return;
+
+            using (var dlg = new OspreySearchDlg(this, _libraryManager))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    // Nothing to do; the dialog does all the work.
+                }
+            }
         }
 
         public void ShowFeatureDetectionDlg()
@@ -4057,7 +4206,12 @@ namespace pwiz.Skyline
             }
 
             // Validate folder path matches
+            // EscapeDataString is NOT the replacement here: folderPath is a URI AbsolutePath, so its
+            // '/' separators have to survive escaping or the Contains match can never succeed.
+            // Retiring this properly means building the comparison from Uri parts.
+#pragma warning disable SYSLIB0013
             if (folders?[@"path"] == null || !folderPath.Contains(Uri.EscapeUriString(folders[@"path"].ToString())))
+#pragma warning restore SYSLIB0013
                 return null; // Folder path mismatch
 
             // Validate upload permissions

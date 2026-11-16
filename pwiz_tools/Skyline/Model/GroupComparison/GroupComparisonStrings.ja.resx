@@ -324,28 +324,28 @@
     <value>極大</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Square" xml:space="preserve">
-    <value>&#x25A0;</value>
+    <value>■</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Diamond" xml:space="preserve">
-    <value>&#x25C6;</value>
+    <value>◆</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Triangle" xml:space="preserve">
-    <value>&#x25B2;</value>
+    <value>▲</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Circle" xml:space="preserve">
-    <value>&#x25CF;</value>
+    <value>●</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_TriangleDown" xml:space="preserve">
-    <value>&#x25BC;</value>
+    <value>▼</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Cross" xml:space="preserve">
-    <value>&#x00D7;</value>
+    <value>×</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Plus" xml:space="preserve">
     <value>+</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Star" xml:space="preserve">
-    <value>&#x2605;</value>
+    <value>★</value>
   </data>
   <data name="NormalizationMethod_TIC_Total_Ion_Current" xml:space="preserve">
     <value>総イオン電流</value>

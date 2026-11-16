@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="4f74e7f6-92dd-4a70-9c66-e79861190479" paused="true" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Alternate Build System: create GNU Autotools build for libpwiz</name>
+  <description>creates non-bjam (GNU Autotools) build tools for libpwiz use in existing non-Proteowizard projects by parsing logs of a verbose bjam build</description>
+  <settings>
+    <options>
+      <option name="artifactRules" value="%teamcity.build.checkoutDir%/build-linux-x86/libpwiz_src_*.tgz&#xA;%teamcity.build.checkoutDir%/build-linux-x86/VERSION" />
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutDirectory" value="pwiz" />
+      <option name="checkoutMode" value="ON_AGENT" />
+      <option name="shouldFailBuildOnAnyErrorMessage" value="true" />
+    </options>
+    <parameters>
+      <param name="env.BOOST_ROOT" value=" /usr/local/boost_1_50_0" />
+      <param name="env.address_model_property" value="" />
+      <param name="env.architecture_property" value="" />
+      <param name="env.link_property" value="" />
+      <param name="env.variant_property" value="release" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_simpleRunner_144" name="" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="/bin/bash" />
+          <param name="command.parameters" value="make_nonbjam_build.sh  toolset=gcc --teamcity-test-decoration --prefix=build-linux-x86_64/usr pwiz-bin.tar.bz2 pwiz pwiz_aux pwiz_tools -j%env.NUMBER_OF_CORES% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property%" />
+          <param name="teamcity.build.workingDir" value="%teamcity.build.checkoutDir%/scripts/autotools" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizard_Github" />
+    </vcs-settings>
+    <requirements>
+      <contains id="RQ_423" name="teamcity.agent.jvm.os.name" value="Linux" />
+      <contains id="RQ_424" name="teamcity.agent.jvm.os.arch" value="64" />
+    </requirements>
+    <build-triggers>
+      <build-trigger id="TRIGGER_82" type="schedulingTrigger">
+        <parameters>
+          <param name="cronExpression_dm" value="*" />
+          <param name="cronExpression_dw" value="?" />
+          <param name="cronExpression_hour" value="*" />
+          <param name="cronExpression_min" value="0" />
+          <param name="cronExpression_month" value="*" />
+          <param name="cronExpression_sec" value="0" />
+          <param name="cronExpression_year" value="*" />
+          <param name="dayOfWeek" value="Sunday" />
+          <param name="enableQueueOptimization" value="true" />
+          <param name="hour" value="0" />
+          <param name="minute" value="0" />
+          <param name="schedulingPolicy" value="daily" />
+          <param name="triggerBuildWithPendingChangesOnly" value="true" />
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+  </settings>
+</build-type>
+

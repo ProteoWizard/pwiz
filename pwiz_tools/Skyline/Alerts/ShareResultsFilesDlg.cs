@@ -279,7 +279,8 @@ namespace pwiz.Skyline.Alerts
                 initialDir = null;
 
             // Ask the user for the directory to search
-            using var searchFolderDialog = new FolderBrowserDialog();
+            // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+            using var searchFolderDialog = FormUtil.CreateFolderBrowserDialog();
             searchFolderDialog.ShowNewFolderButton = false;
             searchFolderDialog.SelectedPath = initialDir;
             searchFolderDialog.Description = AlertsResources.ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files_;
@@ -347,7 +348,7 @@ namespace pwiz.Skyline.Alerts
                     if (longWaitBroker != null && longWaitBroker.IsCanceled)
                         return;
 
-                    if (entry != null && DataSourceUtil.IsDataSource(entry))
+                    if (DataSourceUtil.IsDataSource(entry))
                     {
                         if (namesToMatch.Contains(Path.GetFileName(entry)))
                         {

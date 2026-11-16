@@ -75,7 +75,7 @@ namespace ImageComparer.Core
             switch (source)
             {
                 case ImageSource.git:
-                    return $"Git HEAD: {RelativePath}";
+                    return $"Git: {RelativePath}";
                 case ImageSource.web:
                     return UrlToDownload;
                 case ImageSource.disk:

@@ -904,8 +904,8 @@ namespace pwiz.Skyline.Model.DocSettings
             double highEnergyOffset = PrimitiveArrays.ReadOneValue<double>(stream);
             return ionMobility == 0 && collisionalCrossSectionSqA == 0 && highEnergyOffset == 0 ?
                 EMPTY :
-                GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobility != 0 ? ionMobility : (double?)null, units), 
-                    collisionalCrossSectionSqA > 0 ? collisionalCrossSectionSqA : (double?)null, highEnergyOffset);
+                GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobility != 0 ? ionMobility : null, units), 
+                    collisionalCrossSectionSqA > 0 ? collisionalCrossSectionSqA : null, highEnergyOffset);
         }
 
         public override bool Equals(object obj)

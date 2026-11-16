@@ -536,12 +536,9 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             List<ListSortDescription> sortDescriptions = new List<ListSortDescription>();
             sortDescriptions.Add(new ListSortDescription(propertyDescriptor, direction));
-            if (null != BindingListSource.SortDescriptions)
-            {
-                sortDescriptions.AddRange(
-                    BindingListSource.SortDescriptions.OfType<ListSortDescription>()
-                        .Where(sortDescription => sortDescription.PropertyDescriptor.Name != propertyDescriptor.Name));
-            }
+            sortDescriptions.AddRange(
+                BindingListSource.SortDescriptions.OfType<ListSortDescription>()
+                    .Where(sortDescription => sortDescription.PropertyDescriptor.Name != propertyDescriptor.Name));
             BindingListSource.ApplySort(new ListSortDescriptionCollection(sortDescriptions.ToArray()));
         }
 
@@ -678,7 +675,7 @@ namespace pwiz.Skyline.Controls.Databinding
                         filter => Equals(columnId, filter.ColumnId));
                 filterToolStripMenuItem.Enabled = true;
                 ListSortDirection? sortDirection = null;
-                if (null != BindingListSource.SortDescriptions && BindingListSource.SortDescriptions.Count > 0)
+                if (BindingListSource.SortDescriptions.Count > 0)
                 {
                     var sortDescription = BindingListSource.SortDescriptions.OfType<ListSortDescription>().First();
                     if (sortDescription.PropertyDescriptor.Name == _columnFilterPropertyDescriptor.Name)
@@ -729,7 +726,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 {
                     try
                     {
-                        BeginInvoke(new Action(() => DisplayError(e)));
+                        BeginInvoke(() => DisplayError(e));
                         _errorMessagePending = true;
                     }
                     catch (Exception)

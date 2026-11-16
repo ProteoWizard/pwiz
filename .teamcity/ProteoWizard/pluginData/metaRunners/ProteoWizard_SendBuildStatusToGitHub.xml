@@ -1,0 +1,57 @@
+<meta-runner name="Send build status to GitHub">
+  <description>Send a custom build status for a GitHub commit</description>
+  <settings>
+    <parameters>
+      <param name="GitHubAuthToken" value="zxx05ef5a299ed0b0f46b4c7898ed776994a1ef0772e2a810cd95ed0b7dca611361dfec53604fd8827c775d03cbe80d301b" spec="password label='GitHubAuthToken' display='normal'" />
+      <param name="buildStatusUpdateContext" value="" />
+      <param name="buildStatusUpdateDescription" value="" />
+      <param name="buildStatusUpdateState" value="success" />
+      <param name="buildStatusUpdateTargetUrl" value="" />
+    </parameters>
+    <build-runners>
+      <runner name="Upgrade certifi" type="pip_upgrade_certifi">
+      </runner>
+      <runner name="Send build status to GitHub" type="python-runner">
+        <parameters>
+          <param name="command" value="script" />
+          <param name="coverageArgs" value="--omit=*lib*" />
+          <param name="envTool" value="none" />
+          <param name="installToolPackage" value="true" />
+          <param name="isCoverageEnabled" value="false" />
+          <param name="isTestReportingEnabled" value="true" />
+          <param name="poetryExecutable" value="poetry" />
+          <param name="pythonVersion" value="python3" />
+          <param name="scriptContent"><![CDATA[import os
+import sys
+import subprocess
+import re
+import certifi
+import urllib.request
+import urllib.parse
+import base64
+import json
+
+args = sys.argv[1:len(sys.argv)]
+
+def post(url, params, headers):
+    if isinstance(params, dict):
+        data = urllib.parse.urlencode(params).encode('ascii')
+    else:
+        data = params.encode('ascii')
+    req = urllib.request.Request(url, data, method="POST", headers=headers)
+    with urllib.request.urlopen(req) as conn:
+        return conn.read().decode('utf-8')
+
+githubUrl = "https://api.github.com/repos/ProteoWizard/pwiz/statuses/%build.vcs.number%"
+headers = {"Authorization": "Bearer %GitHubAuthToken%", "Content-type": "application/json"}
+data = '{"state": "%buildStatusUpdateState%", "context": "%buildStatusUpdateContext%", "description": "%buildStatusUpdateDescription%", "target_url": "%buildStatusUpdateTargetUrl%"}'
+print("Sending build status update to GitHub: '{\"state\": \"%buildStatusUpdateState%\", \"context\": \"%buildStatusUpdateContext%\", \"description\": \"%buildStatusUpdateDescription%\", \"target_url\": \"%buildStatusUpdateTargetUrl%\"}'")
+rsp = post(githubUrl, data, headers)]]></param>
+          <param name="teamcity.step.mode" value="default" />
+          <param name="virtualenvEnvName" value=".venv" />
+          <param name="virtualenvFile" value="requirements.txt" />
+        </parameters>
+      </runner>
+    </build-runners>
+  </settings>
+</meta-runner>

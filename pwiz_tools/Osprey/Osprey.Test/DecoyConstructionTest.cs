@@ -92,6 +92,49 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(SinglyChargedY(decoyLadder, 4), decoy.Fragments[1].Mz, TOLERANCE);
         }
 
+        /// <summary>
+        /// Both library loaders put an N-terminal modification on residue 0, where a
+        /// modification of the first residue also sits (<c>(UniMod:1)M(UniMod:35)</c>). Every
+        /// decoy fragment spanning that residue must carry both mass deltas, as every target
+        /// fragment spanning it does; keeping only the last one put those decoy ions 42 Da off
+        /// the peptide they claim to be. What this pins is the SUM. Where the two land - with
+        /// the residue, so the N-terminal modification ends up on an internal decoy residue,
+        /// the same in Rust - is current behavior, not a claim that it is right.
+        /// </summary>
+        [TestMethod]
+        public void DecoyFragmentCarriesStackedModifications()
+        {
+            const double acetyl = 42.010565;
+            const double oxidation = 15.994915;
+            var generator = new DecoyGenerator(Enzyme.Trypsin);
+            var target = new LibraryEntry(1, @"MPEPTIDEK", @"[+42.010565]M[+15.994915]PEPTIDEK", 2, 550.0, 10.0);
+            target.Modifications = new[]
+            {
+                new Modification { Position = 0, MassDelta = acetyl, UnimodId = 1 },
+                new Modification { Position = 0, MassDelta = oxidation, UnimodId = 35 },
+            };
+            target.Fragments = new[]
+            {
+                Fragment(300.0, 1.0f, IonType.B, 3),
+                Fragment(900.0, 0.8f, IonType.B, 8),
+                Fragment(400.0, 0.6f, IonType.Y, 2),
+                Fragment(500.0, 0.4f, IonType.Y, 4)
+            };
+
+            var decoy = generator.Generate(target);
+            // The reversal keeps the C-terminal K and moves the methionine, with both of its
+            // modifications, to position 7.
+            Assert.AreEqual(@"EDITPEPMK", decoy.Sequence);
+            Assert.AreEqual(2, decoy.Modifications.Count(m => m.Position == 7));
+
+            double[] ladder = DecoyGenerator.TheoreticalLadder(@"EDITPEPMK");
+            double stacked = acetyl + oxidation;
+            Assert.AreEqual(SinglyChargedB(ladder, 3), decoy.Fragments[0].Mz, TOLERANCE, @"b3 does not reach the methionine");
+            Assert.AreEqual(SinglyChargedB(ladder, 8) + stacked, decoy.Fragments[1].Mz, TOLERANCE, @"b8");
+            Assert.AreEqual(SinglyChargedY(ladder, 2) + stacked, decoy.Fragments[2].Mz, TOLERANCE, @"y2");
+            Assert.AreEqual(SinglyChargedY(ladder, 4) + stacked, decoy.Fragments[3].Mz, TOLERANCE, @"y4");
+        }
+
         [TestMethod]
         public void OverlapGateRejectsAnIsobaricNearDuplicate()
         {
@@ -187,19 +230,23 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void LadderDropsOnlyTheIonsSpanningAnUnknownResidue()
         {
-            // Selenocysteine (U) is absent from the standard residue table and is real in
-            // UniProt-derived libraries (GPX1, GPX4, SELENOP, TXNRD1). A LEADING unknown
-            // is the case that matters: deriving y ions as (total - prefix) makes total
-            // NaN and empties the whole ladder, and an empty ladder is read as "accept",
-            // which silently switches the gate off for exactly those peptides.
-            double[] leading = DecoyGenerator.TheoreticalLadder(@"UPEPTIDEK");
+            // X, any residue, has no mass in the residue table. (Selenocysteine, U, did not
+            // either until 2026-10-16, and is real in UniProt-derived libraries - GPX1, GPX4,
+            // SELENOP, TXNRD1 - which is why it has one now.) A LEADING unknown is the case
+            // that matters: deriving y ions as (total - prefix) makes total NaN and empties
+            // the whole ladder, and an empty ladder is read as "accept", which silently
+            // switches the gate off for exactly those peptides.
+            double[] leading = DecoyGenerator.TheoreticalLadder(@"XPEPTIDEK");
             Assert.AreEqual(8, leading.Length,
-                @"Every b ion spans the leading U, but all eight y ions survive");
+                @"Every b ion spans the leading X, but all eight y ions survive");
 
             // An interior unknown drops the ions that span it from both series, and only
-            // those: b1-b3 and y1-y4 of PEPUIDEK never cross position 4.
-            double[] interior = DecoyGenerator.TheoreticalLadder(@"PEPUIDEK");
+            // those: b1-b3 and y1-y4 of PEPXIDEK never cross position 4.
+            double[] interior = DecoyGenerator.TheoreticalLadder(@"PEPXIDEK");
             Assert.AreEqual(7, interior.Length);
+
+            // Selenocysteine has its mass, so a U peptide keeps its full 2*(n-1) ladder.
+            Assert.AreEqual(16, DecoyGenerator.TheoreticalLadder(@"UPEPTIDEK").Length);
 
             // Control: a clean sequence yields the full 2*(n-1) ladder.
             Assert.AreEqual(14, DecoyGenerator.TheoreticalLadder(@"PEPTIDEK").Length);

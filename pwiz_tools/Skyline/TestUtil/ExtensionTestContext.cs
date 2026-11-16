@@ -67,7 +67,7 @@ namespace pwiz.SkylineTestUtil
         {
             // when run with VSTest/MSTest (when .runsettings file is used), use the CustomTestResultsDirectory property if available
             // because there's no other way to override the TestDir
-            var dir = testContext.Properties["CustomTestResultsDirectory"]?.ToString() ?? testContext.TestDir;
+            var dir = testContext.Properties["CustomTestResultsDirectory"]?.ToString() ?? testContext.TestRunDirectory;
             var decoration = testContext.Properties[@"UnicodeDecoration"]?.ToString(); // Helps check unicode handling N.B. "UnicodeDecoration" must agree with RunTests.cs
             if (string.IsNullOrEmpty(decoration))
             {
@@ -277,7 +277,7 @@ namespace pwiz.SkylineTestUtil
 
         public static string ExtAgilentRaw
         {
-            get { return CanImportAgilentRaw ? DataSourceUtil.EXT_AGILENT_BRUKER_RAW : ExtMzml; }
+            get { return CanImportAgilentRaw ? DataSourceUtil.EXT_AGILENT_BRUKER_D : ExtMzml; }
         }
 
         public static bool CanImportMobilionRaw

@@ -101,12 +101,12 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.NewDocument();
                 Settings.Default.ActiveDirectory = Path.GetTempPath();
             });
-            RunNativeDlg<NativeOpenFileDialog>(SkylineWindow.ShowOpenFileDialog, dlg =>
+            RunLongNativeDlg<NativeOpenFileDialog>(SkylineWindow.ShowOpenFileDialog, dlg =>
             {
                 dlg.EnterPath(savePath);
                 dlg.Accept();
             });
-            // RunNativeDlg has already waited for ShowOpenFileDialog (which opens the file) to complete, so the
+            // RunLongNativeDlg has already waited for ShowOpenFileDialog (which opens the file) to complete, so the
             // document has changed here; only its background loading remains to wait on.
             WaitForDocumentLoaded();
             // Case-insensitive: opening through the native dialog returns the drive letter upper-cased

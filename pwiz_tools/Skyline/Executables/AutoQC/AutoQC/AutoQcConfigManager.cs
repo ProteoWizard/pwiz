@@ -250,7 +250,12 @@ namespace AutoQC
 
         private void ValidateServerSettings(object sender, DoWorkEventArgs e)
         {
+            // DoWorkEventArgs.Argument is typed object and can be null; every caller here passes
+            // the list, but the analyser cannot see that and the foreach would be the crash site.
             var configs = (List<AutoQcConfig>)e.Argument;
+            if (configs == null)
+                return;
+
             foreach (var config in configs)
             {
                 if (config.PanoramaSettings.PublishToPanorama)

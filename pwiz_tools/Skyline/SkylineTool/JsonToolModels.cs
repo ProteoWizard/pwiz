@@ -52,6 +52,47 @@ namespace SkylineTool
     // Link-compiled into both .NET Framework 4.7.2 (Skyline) and .NET 8.0
     // (SkylineMcpServer), so must not reference any JSON library.
 
+    // --- Graph geometry models ---
+
+    /// <summary>
+    /// An axis-aligned rectangle in a graph's DATA coordinates (axis values), used
+    /// both to describe a graph's current zoom (<see cref="IJsonToolService.GetGraphZoom"/>,
+    /// <see cref="IJsonToolService.ZoomGraphTo"/>) and to drive a click or drag
+    /// gesture on it (<see cref="IJsonToolService.ClickGraph"/>).
+    ///
+    /// <para>The edges are named by their visual position on the graph:
+    /// <see cref="Left"/>/<see cref="Right"/> are X-axis values and
+    /// <see cref="Top"/>/<see cref="Bottom"/> are Y-axis values, with
+    /// <see cref="Top"/> the upper edge (normally the larger Y). The rectangle is
+    /// intentionally NOT normalized - the stored values are exactly as supplied,
+    /// even when <see cref="Right"/> is less than <see cref="Left"/> or
+    /// <see cref="Bottom"/> is greater than <see cref="Top"/>.</para>
+    ///
+    /// <para>For a gesture the drag always runs from the <see cref="Left"/>/
+    /// <see cref="Top"/> corner (where the mouse goes down) to the
+    /// <see cref="Right"/>/<see cref="Bottom"/> corner (where it is released), so
+    /// the un-normalized values preserve the drag's direction. A zero-size
+    /// rectangle (<see cref="Left"/> == <see cref="Right"/> and <see cref="Top"/>
+    /// == <see cref="Bottom"/>) is a single stationary click.</para>
+    /// </summary>
+    public class Rectangle
+    {
+        public double Left { get; set; }
+        public double Top { get; set; }
+        public double Right { get; set; }
+        public double Bottom { get; set; }
+    }
+
+    /// <summary>
+    /// The outer size of a window in screen pixels, including its border and title bar -- the size a user
+    /// sets by dragging the window's edge.
+    /// </summary>
+    public class WindowSize
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
+    }
+
     // --- Report models ---
 
     /// <summary>
@@ -132,6 +173,11 @@ namespace SkylineTool
         public bool? PivotIsotopeLabel { get; set; }
         public string Uimode { get; set; }
         public string DataSource { get; set; }
+        /// <summary>
+        /// The report in the XML format of a .skyr file, holding exactly one report. When this is
+        /// set, that report definition is used.
+        /// </summary>
+        public string ReportXml { get; set; }
     }
 
     /// <summary>

@@ -23,13 +23,19 @@ using System.IO;
 namespace pwiz.Common.SystemUtil
 {
     /// <summary>
-    /// A stream that shows progress while it is being read.
+    /// A stream that shows progress while it is being read: through an <see cref="IProgressMonitor"/>
+    /// (Skyline), or through a <see cref="ProgressReporter"/> (the command-line tools), so a long
+    /// byte-oriented read - a multi-GB spectral-library TSV, which otherwise runs for over a minute
+    /// with nothing on the console - reports a throttled percent against the total length. Counting
+    /// is the only added work on the hot path; there are no extra buffer copies. The stream does not
+    /// own the one it wraps.
     /// </summary>
     public class ProgressStream : Stream
     {
         private Stream _input;
         private long _length;
         private long _position;
+        private readonly ProgressReporter _reporter;
 
         public ProgressStream(Stream input) : this(input, input.Length)
         {
@@ -39,6 +45,12 @@ namespace pwiz.Common.SystemUtil
         {
             _input = input;
             _length = expectedSize;
+        }
+
+        /// <summary>A stream whose reads drive <paramref name="reporter"/> by the bytes that have passed through it.</summary>
+        public ProgressStream(Stream input, ProgressReporter reporter) : this(input)
+        {
+            _reporter = reporter ?? throw new ArgumentNullException(nameof(reporter));
         }
 
         public override void Flush()
@@ -92,6 +104,11 @@ namespace pwiz.Common.SystemUtil
 
         private void UpdateProgress(long newPosition)
         {
+            if (_reporter != null)
+            {
+                _reporter.Report(newPosition);
+                return;
+            }
             if (ProgressMonitor == null || ProgressStatus == null || Length <= 0)
             {
                 return;

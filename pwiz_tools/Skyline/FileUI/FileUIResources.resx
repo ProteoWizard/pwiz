@@ -741,4 +741,22 @@ Reason: </value>
   <data name="ImportTransitionListColumnSelectDlg_GetKnownHeaderTypes_Spectrum_Filter" xml:space="preserve">
     <value>Spectrum Filter</value>
   </data>
+  <data name="WatersConnectSaveMethodFileDialog_CreateNewFolder_Creating_folder" xml:space="preserve">
+    <value>Creating folder</value>
+  </data>
+  <data name="WatersConnectSaveMethodFileDialog_CreateNewFolder_Created_by__0__using_Skyline" xml:space="preserve">
+    <value>Created by {0} using Skyline</value>
+  </data>
+  <data name="WatersConnectSaveMethodFileDialog_CreateNewFolder_You_do_not_have_permission_to_create_folders_in_this_location_" xml:space="preserve">
+    <value>You do not have permission to create folders in this location.</value>
+  </data>
+  <data name="WatersConnectSaveMethodFileDialog_CreateNewFolder_You_do_not_have_permission_to_create_the_folder__0__" xml:space="preserve">
+    <value>You do not have permission to create the folder '{0}'.</value>
+  </data>
+  <data name="WatersConnectSaveMethodFileDialog_CreateNewFolder_A_folder_named__0__already_exists_" xml:space="preserve">
+    <value>A folder named '{0}' already exists.</value>
+  </data>
+  <data name="WatersConnectSaveMethodFileDialog_CreateNewFolder_Could_not_create_the_folder__0__" xml:space="preserve">
+    <value>Could not create the folder '{0}'.</value>
+  </data>
 </root>

@@ -1,0 +1,5 @@
+<Project>
+  <!-- pwiz tool, not a Skyline project: chain to the repo-root Directory.Build.targets instead of
+       inheriting pwiz_tools/Directory.Build.targets (Skyline's LangVersion/NoWarn/BinaryFormatter settings). -->
+  <Import Project="$(MSBuildThisFileDirectory)..\..\Directory.Build.targets" />
+</Project>

@@ -87,7 +87,7 @@ namespace pwiz.Common.Chemistry
         }
 
         public string UnitName => Enum.GetName(typeof(Units), Unit);
-        public string UnitText => Resources.ResourceManager.GetString(nameof(Units) + "_" + UnitName);
+        public string UnitText => Resources.ResourceManager.GetString(nameof(Units) + @"_" + UnitName);
 
         public override string ToString()
         {

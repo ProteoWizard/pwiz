@@ -1,120 +1,38 @@
-# Optional, but good to give a name
-name: Unofficial toolset CI
- 
-# This means the workflow will be triggered
-#    on push to master branch
-#    when a pull request arrives to the master branch. (The source branch does not matter)
-#    workflow_dispatch to trigger manually or via API call
+# GitHub Actions leg of the pwiz library + tools build (the official CI is TeamCity:
+# ProteoWizard_CoreWindowsNet / ProteoWizard_CoreLinuxNet). Runs build.sh on Ubuntu:
+# dotnet restore + build + test of Pwiz.sln without the Windows-only vendor SDKs.
+name: Core Linux .NET (GitHub Actions)
+
 on:
   push:
     branches: [ master ]
     paths-ignore:
-    - 'pwiz_tools/MSConvertGUI/**'
-    - 'pwiz_tools/SeeMS/**'
     - 'pwiz_tools/Shared/**'
     - 'pwiz_tools/Osprey/**'
     - 'pwiz_tools/Skyline/**'
-    - 'pwiz_tools/Topograph/**'
-    - 'scripts/Topograph/**'
-    - 'doc/**'
-    - 'clean.*'
     - '.github/workflows/cherrypick*release.yml'
     - '.github/workflows/*on_demand.yml'
   pull_request:
     branches: [ master ]
     paths-ignore:
-    - 'pwiz_tools/MSConvertGUI/**'
-    - 'pwiz_tools/SeeMS/**'
     - 'pwiz_tools/Shared/**'
     - 'pwiz_tools/Osprey/**'
     - 'pwiz_tools/Skyline/**'
-    - 'pwiz_tools/Topograph/**'
-    - 'doc/**'
-    - 'clean.*'
     - '.github/workflows/cherrypick*release.yml'
     - '.github/workflows/*on_demand.yml'
- 
-# There is a single job here called "build" (The word "build" is NOT a keyword, you can use anything there)
+  workflow_dispatch:
+
 jobs:
   build:
-    # Just a free-text name to be descriptive
-    name: Build with ${{ matrix.config.compiler }} on ${{ matrix.config.os }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        config: 
-#        - {
-#            name: "Windows Latest MSVC",
-#            os: windows-latest,
-#            compiler: 'latest MSVC'
-#          }
-        - {
-            name: "Ubuntu Latest GCC",
-            os: ubuntu-latest,
-            compiler: 'latest g++',
-            toolset: 'toolset=gcc'
-          }
-#        - {
-#            name: "Ubuntu GCC 9",
-#            os: ubuntu-latest,
-#            compiler: g++-9,
-#            toolset: 'toolset=gcc'
-#          }
-#        - {
-#            name: "macOS Latest Clang",
-#            os:	macos-12,
-#            compiler: 'latest clang',
-#            toolset: 'toolset=darwin'
-#          }
- 
-    # Using the value from the matrix above we select the platform (operating system) to run on
-    runs-on: ${{ matrix.config.os }}
-
+    name: Build and test on Ubuntu
+    runs-on: ubuntu-latest
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Get number of CPU cores
-        id: cpu-count
-        uses: SimenB/github-actions-cpu-cores@v1
+    - name: Set up .NET (version pinned by global.json)
+      uses: actions/setup-dotnet@v4
+      with:
+        global-json-file: global.json
 
-      - name: Print env
-        run: |
-          echo github.event.action: ${{ github.event.action }}
-          echo github.event_name: ${{ github.event_name }}
-#      - name: Install dependencies on windows
-#        if: startsWith(matrix.config.os, 'windows')
-#        run: |
-#        # cmd "${{ matrix.config.environment_script }}"
-
-      - name: Install dependencies on ubuntu
-        if: startsWith(matrix.config.name, 'Ubuntu Latest GCC')
-        run: |
-          gcc --version
-
-      - name: Install dependencies on ubuntu9
-        if: startsWith(matrix.config.name, 'Ubuntu GCC 9')
-        run: |
-          echo Update gcc-9 =======================================================================
-          echo gcc version before
-          gcc --version
-          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-          sudo apt-get update
-          sudo apt-get install gcc-9 g++-9
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 90 --slave /usr/bin/g++ g++ /usr/bin/g++-9 --slave /usr/bin/gcov gcov /usr/bin/gcov-9
-          echo gcc version after
-          gcc --version
-
-      - name: Install dependencies on macos
-        if: startsWith(matrix.config.os, 'macos')
-        run: |
-          clang --version
-          gcc --version
-
-      - name: Build
-        shell: bash
-        run: |
-          unset JAVA_HOME
-          ./quickbuild.sh --abbreviate-paths --i-agree-to-the-vendor-licenses -j${{ steps.cpu-count.outputs.count }} address-model=64 pwiz executables ${{ matrix.config.toolset }}
-          ./quickbuild.sh --abbreviate-paths --i-agree-to-the-vendor-licenses -j${{ steps.cpu-count.outputs.count }} address-model=64 pwiz_tools/BiblioSpec ${{ matrix.config.toolset }}
+    - name: Build and test
+      run: ./build.sh Release --i-agree-to-the-vendor-licenses --without-mascot --automated

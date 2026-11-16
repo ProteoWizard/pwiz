@@ -7,9 +7,12 @@
   <nightlyRepeat>1</nightlyRepeat>
   <nightlyRandomize>false</nightlyRandomize>
   <nightlyBuildTrunk>true</nightlyBuildTrunk>
+  <nightlyRunType>Standard</nightlyRunType>
   <nightlyRunPerfTests>false</nightlyRunPerfTests>
   <nightlyBranch>false</nightlyBranch>
   <nightlyBranchUrl></nightlyBranchUrl>
   <nightlyExit>true</nightlyExit>
+  <nukeBuild>true</nukeBuild>
+  <updateBuild>false</updateBuild>
   <buildRoot></buildRoot>
 </SkylineTester>

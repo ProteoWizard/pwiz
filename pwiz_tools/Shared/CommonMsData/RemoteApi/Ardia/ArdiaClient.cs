@@ -201,7 +201,13 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
             try
             {
+                // Deliberately still HttpWebRequest - see the remarks above: HttpClient adds
+                // "charset=utf-8" to Content-Type and the Ardia delete API answers 400. Retiring
+                // it needs an HttpContent with a CharSet-less MediaTypeHeaderValue, verified
+                // against the endpoint with TestArdia* credentials.
+#pragma warning disable SYSLIB0014
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(uri);
+#pragma warning restore SYSLIB0014
                 httpWebRequest.Method = HttpMethod.Delete.ToString();
                 httpWebRequest.ContentType = HEADER_CONTENT_TYPE_FOLDER;
                 httpWebRequest.ContentLength = 0;

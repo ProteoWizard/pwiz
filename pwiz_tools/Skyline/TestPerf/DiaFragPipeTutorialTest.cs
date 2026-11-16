@@ -54,8 +54,12 @@ namespace TestPerf
         public override bool AuditLogCompareLogs => false;
 
         [TestMethod]
-        public void TestDiaFragPipeTutorial()
+        public void TestDiaFragPipeTutorialDraft()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
             // Set true to look at / regenerate tutorial screenshots.
             // IsPauseForScreenShots = true;
             CoverShotName = "DiaFragPipe";
@@ -93,7 +97,7 @@ namespace TestPerf
         {
             // File > Open opens the native Open dialog, so the menu click does not complete -- take the dialog
             // straight from the action's ActionResult.FormId.
-            var openDlg = ResolveNativeFileDialog(McpConnector.ClickMainMenuItem(
+            var openDlg = ResolveModal(McpConnector.ClickMainMenuItem(
                 MenuPath<SkylineWindow>("fileToolStripMenuItem", "openMenuItem")));
             McpConnector.SetFormValue(openDlg, "FileName",
                 GetTestPath(Path.Combine("backup", "skyline_files", "fragpipe.sky")));

@@ -211,7 +211,41 @@ namespace pwiz.Skyline.ToolsUI
                 if (typed == null)
                     throw new ArgumentException(LlmInstruction.Format(
                         @"The action '{0}' does not apply to this control.", SnakeCaseName));
-                return _invoke(typed, argument is TArg arg ? arg : default(TArg));
+                return _invoke(typed, ToArgument(argument));
+            }
+
+            // The action's value, which has to be of the kind the action takes. Only an action declared to
+            // take object may be given nothing: those are the ones with no value at all, and the ones that
+            // read the value themselves. Anything else that arrives null or of another kind used to become
+            // default(TArg) - a null string for most actions - so the action quietly did nothing and
+            // reported that it had done it.
+            private TArg ToArgument(object argument)
+            {
+                switch (argument)
+                {
+                    case TArg typed:
+                        return typed;
+                    case null when typeof(TArg) == typeof(object):
+                        return default;
+                    case null:
+                        throw new ArgumentException(LlmInstruction.Format(
+                            @"The action '{0}' needs a value: {1}.", SnakeCaseName, DescribeType(typeof(TArg))));
+                    default:
+                        throw new ArgumentException(LlmInstruction.Format(
+                            @"The action '{0}' takes {1}, but was given {2}.",
+                            SnakeCaseName, DescribeType(typeof(TArg)), DescribeType(argument.GetType())));
+                }
+            }
+
+            private static string DescribeType(Type type)
+            {
+                if (type == typeof(string))
+                    return @"text";
+                if (type == typeof(bool))
+                    return @"true or false";
+                if (type == typeof(double) || type == typeof(int))
+                    return @"a number";
+                return type.Name;
             }
         }
 
@@ -304,6 +338,16 @@ namespace pwiz.Skyline.ToolsUI
                 @"SetValue", (e, value) => { e.SetValueNow(UiElement.ConvertValue(value)); return null; })
             .Describe(new LlmInstruction(@"Set this control's value."), new LlmInstruction(@"the new value -- a bool, a number, or a string"));
 
+        public static readonly UiAction SendText = SimpleAction<IKeyboardElement, string>(
+                @"SendText", (e, text) => { e.SendTextNow(text); return null; })
+            .Describe(new LlmInstruction(@"Type text into this control, whether or not it has the focus. Named for what it does: it delivers the CHARACTERS, it does not simulate key presses - for a key use 'send_key_stroke', and to paste use 'paste' (which takes the text, so it needs no clipboard). Typing into the Targets tree edits the selected node's label, as it does for a user: select the node first (the blank one at the end to add a target). With a background proteome the matches appear in a completion pop-up, a form of its own - select an item in its list to accept it, or press 'Down'/'Up' then 'Enter' on the tree; 'Enter' alone accepts the text as typed and 'Esc' cancels. The matches are looked up in the background, so the pop-up opens a moment after the typing returns: read its list before choosing."),
+                new LlmInstruction(@"the text to type, taken literally"));
+
+        public static readonly UiAction SendKeyStroke = SimpleAction<IKeyStrokeElement, string>(
+                @"SendKeyStroke", (e, keyStroke) => { e.SendKeyStrokeNow(keyStroke); return null; })
+            .Describe(new LlmInstruction(@"Press one key on this control, whether or not it has the focus, as the keyboard does - e.g. to accept a choice in a popup, to paste with 'Ctrl+V', or to move through a list or tree with the arrows, Home and End. The key goes through everything a real press does: keyboard shortcuts (e.g. F11 on the main window) and dialog keys (Enter, Esc) first, then a form that previews keys (e.g. Escape on a graph returns to the Targets view), the control's KeyDown handlers and its own behavior (an arrow moving a list's selection, Backspace editing text), then the character the key types. On a form (the root of a path), the key goes where the keyboard would while it is the active window: to the control that has the focus in it, or the form itself. In the Targets tree while a label is being edited, keys go to the edit box."),
+                new LlmInstruction(@"the key with any modifiers, '+'-separated, e.g. ""Down"", ""Enter"" or ""Ctrl+V"""));
+
         public static readonly UiAction CheckItem = SimpleAction<ICheckItemsElement, string>(
                 @"CheckItem", (e, item) => { e.SetItemCheckedNow(item, true); return null; })
             .Describe(new LlmInstruction(@"Check the list/tree item with the given text."), new LlmInstruction(@"the item's visible text"));
@@ -340,6 +384,27 @@ namespace pwiz.Skyline.ToolsUI
                 @"SetCurrentCellAddress", (e, arg) => { var cell = UiValue.ToColumnRow(arg); e.SetCurrentCellAddressNow(cell[0], cell[1]); return null; })
             .Describe(new LlmInstruction(@"Move the grid's current cell (do this before set_grid_text or opening a cell's menu)."), new LlmInstruction(@"a [column, row] array, e.g. [0, 1]"));
 
+        public static readonly UiAction ClickCellImage = SimpleAction<GridElement, object>(
+                @"ClickCellImage", (e, arg) => { e.ClickCellImageNow(UiValue.ToInt(arg)); return null; })
+            .Describe(new LlmInstruction(@"Click an image drawn in the grid's current cell (move there first with set_current_cell_address), e.g. the Audit Log's undo arrow or magnifying glass."), new LlmInstruction(@"the zero-based index of the image among those the cell shows, counting from the left"));
+
+        // The graph's own actions, on GraphElement the way the grid actions are on GridElement - so a graph
+        // takes part in the same machinery as every other control: get_actions lists them, perform_action drives
+        // them, and a form with a single graph resolves them without the caller naming the control.
+        public static readonly UiFunction<Rectangle> GetGraphZoom = SimpleFunction<GraphElement, Rectangle>(
+                @"GetGraphZoom", e => e.GetZoom())
+            .Describe(new LlmInstruction(@"Get the region of DATA coordinates this graph is zoomed to, as an object with left, top, right and bottom values. Those are the coordinates zoom_graph_to and click_graph take, but they take them as a [left, top, right, bottom] ARRAY, so build one from these values rather than passing this object back. The bottom edge is the x-axis line, so a click below it falls below the axis."));
+
+        public static readonly UiAction ZoomGraphTo = SimpleAction<GraphElement, object>(
+                @"ZoomGraphTo", (e, bounds) => e.ZoomTo(UiValue.ToRectangle(bounds)))
+            .Describe(new LlmInstruction(@"Zoom this graph to a region of DATA coordinates. An edge pair that is EQUAL asks for no zoom in that direction and leaves that axis untouched: equal left and right zoom only vertically, equal top and bottom only horizontally, and equal corners change nothing. A direction this graph lets the user neither zoom nor pan is ignored, and the graph may clamp what it is given to the data range, so read the zoom back with get_graph_zoom to see what actually changed."),
+                new LlmInstruction(@"a [left, top, right, bottom] array of data coordinates; make one pair equal to leave that axis alone"));
+
+        public static readonly UiAction ClickGraph = SimpleAction<GraphElement, object>(
+                @"ClickGraph", (e, bounds) => { e.Click(UiValue.ToRectangle(bounds)); return null; })
+            .Describe(new LlmInstruction(@"Click or drag on this graph in DATA coordinates, reproducing a real mouse gesture: down at the left/top corner, up at the right/bottom one. Equal corners are a single click - e.g. to select a data point. A rectangle whose y values fall below the x-axis drags a chromatogram peak boundary. Any other drag does what a user's drag does on that pane, which on most graphs means ZOOMING to the rectangle - so use equal corners unless you mean to drag."),
+                new LlmInstruction(@"a [left, top, right, bottom] array of data coordinates; make the two corners equal for a single click"));
+
         public static readonly UiAction Expand = SimpleAction<IExpandCollapseElement, object>(
                 @"Expand", (e, path) => { e.ExpandNow(path); return null; })
             .Describe(new LlmInstruction(@"Expand a tree node by its path."), new LlmInstruction(@"a path array of child names/indexes, e.g. [""Peptides"", 0]"));
@@ -360,25 +425,26 @@ namespace pwiz.Skyline.ToolsUI
 
         // Pastes the given text into a control that can paste (text box, grid, Targets tree, main window) --
         // for the tutorial paste steps, without touching the clipboard.
-        public static readonly UiAction Paste = SimpleAction<IClipboardElement, string>(@"Paste", (e, text) => { e.PasteNow(text); return null; })
-            .Describe(new LlmInstruction(@"Paste text into this element (a text box, a grid, the Targets tree, or the main Skyline window) without using the clipboard."), new LlmInstruction(@"the text to paste"));
+        public static readonly UiAction Paste = SimpleAction<IClipboardElement, string>(@"Paste",
+                (e, text) => { e.PasteNow(text); return null; })
+            .Describe(new LlmInstruction(@"Paste text into this element (a text box, a grid, the Targets tree, or the main Skyline window) without using the clipboard."),
+                new LlmInstruction(@"the text to paste"));
 
         // Selects everything in a control that can paste -- e.g. before a paste, to replace the contents.
         public static readonly UiAction SelectAll = SimpleAction<IClipboardElement>(@"SelectAll", e => { e.SelectAllNow(); return null; })
             .Describe(new LlmInstruction(@"Select all the content of this element (a text box, a grid, the Targets tree, or the main Skyline window) -- e.g. before paste, to replace it."));
 
-        // Renames the tree's selected node in place -- e.g. the MethodEdit tutorial's "Type 'Primary
-        // Peptides' and press Enter" on a peptide group. Select the node first.
-        public static readonly UiAction RenameNode = SimpleAction<IRenameNodeElement, string>(
-                @"RenameNode", (e, value) => { e.RenameNodeNow(value); return null; })
-            .Describe(new LlmInstruction(@"Rename the tree's selected node in place (select the node first)."), new LlmInstruction(@"the new name"));
+        public static readonly UiAction ShowTooltip = SimpleAction<ITooltipElement>(
+                @"ShowTooltip", e => { e.ShowTooltipNow(); return null; })
+            .Describe(new LlmInstruction(@"Show the tooltip of the selected item, as resting the mouse on it does: a tree's selected node, a list's selected item, a grid's current cell (select it first). Skyline comes to the front and the control takes the focus, which its tooltip needs. An item that has a tooltip brings it up about half a second later as a window of its own in the open forms, where its image can be captured whole; it stays until the selection changes, the mouse moves, or the focus goes elsewhere."));
 
         // Every action, in get_actions / get_children listing order (the universal ones first).
         public static readonly UiAction[] AllActions =
         {
-            GetActions, GetChildren, Click, GetValue, SetValue, GetOptions, CheckItem, UncheckItem, SelectItem,
-            UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress, Expand,
-            Collapse, SelectTab, Dismiss, Paste, SelectAll, RenameNode
+            GetActions, GetChildren, Click, GetValue, SetValue, SendText, SendKeyStroke, GetOptions, CheckItem, UncheckItem,
+            SelectItem, UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress, ClickCellImage,
+            GetGraphZoom, ZoomGraphTo, ClickGraph, Expand,
+            Collapse, SelectTab, Dismiss, Paste, SelectAll, ShowTooltip
         };
 
         // The action with the given wire name, matched case- and underscore-insensitively, or null.

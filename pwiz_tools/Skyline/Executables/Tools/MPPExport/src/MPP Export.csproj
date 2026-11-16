@@ -62,7 +62,7 @@
     <EmbeddedResource Include="MppExportResources.ja.resx">
       <DependentUpon>MppExportResources.resx</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="MppExportResources.zh-CHS.resx">
+    <EmbeddedResource Include="MppExportResources.zh-Hans.resx">
       <DependentUpon>MppExportResources.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MppExportResources.resx">
@@ -77,7 +77,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>pushd $(TargetDir)
-"$(SolutionDir)\..\..\..\..\..\..\libraries\7za.exe" a $(SolutionDir)\..\MPPReport.zip $(TargetFileName) $(TargetName).pdb ja zh-CHS
+"$(SolutionDir)\..\..\..\..\..\..\libraries\7za.exe" a $(SolutionDir)\..\MPPReport.zip $(TargetFileName) $(TargetName).pdb ja zh-Hans
 popd
 pushd "$(SolutionDir)"\..
 "$(SolutionDir)\..\..\..\..\..\..\libraries\7za.exe" a MPPReport.zip *.r tool-inf

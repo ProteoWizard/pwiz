@@ -47,7 +47,7 @@ namespace ImageComparer.Mcp.Tools
         private static string NormalizePath(string path) => path?.Replace('/', '\\');
 
         [McpServerTool(Name = "list_changed_screenshots"),
-         Description("Scan tutorial screenshot folders for files that differ from git HEAD. Returns a markdown summary of changed screenshots with pixel counts and dimensions.")]
+         Description("Scan tutorial screenshot folders for files that still need review: changed and not yet accepted (the working file differs from the git index, which is HEAD until accept_screenshot stages it). Returns a markdown summary of changed screenshots with pixel counts and dimensions.")]
         public static string ListChangedScreenshots(
             [Description("Full path to the Tutorials directory (e.g., C:\\proj\\pwiz\\pwiz_tools\\Skyline\\Documentation\\Tutorials)")] string tutorialsPath,
             [Description("Minimum pixel difference to report (default 0 = all changes)")] int minPixelDiff = 0)
@@ -99,7 +99,7 @@ namespace ImageComparer.Mcp.Tools
         }
 
         [McpServerTool(Name = "generate_diff_image"),
-         Description("Generate a diff image for a specific screenshot, comparing current file against git HEAD. Saves the diff image to ai/.tmp/ and returns the path. Claude can then read the saved image to review the visual differences.")]
+         Description("Generate a diff image for a specific screenshot, comparing the current file against its git index version (the accepted version if accepted, otherwise HEAD). Saves the diff image to ai/.tmp/ and returns the path. Claude can then read the saved image to review the visual differences.")]
         public static string GenerateDiffImage(
             [Description("Full path to the screenshot PNG file")] string screenshotPath,
             [Description("Diff visualization mode: 'highlighted' (diff pixels blended on original), 'diff_only' (diff pixels on white), 'amplified' (expanded diff regions on original), 'amplified_diff_only' (expanded diff on white). Default: highlighted")] string mode = "highlighted",
@@ -151,7 +151,7 @@ namespace ImageComparer.Mcp.Tools
                 var newMs = new MemoryStream(newBytes);
                 var newInfo = new ScreenshotInfo(newMs);
 
-                // Load git HEAD version
+                // Load the git index version (accepted, or HEAD)
                 var oldBytes = GitFileHelper.GetGitFileBinaryContent(screenshotPath);
                 var oldMs = new MemoryStream(oldBytes);
                 var oldInfo = new ScreenshotInfo(oldMs);
@@ -180,7 +180,7 @@ namespace ImageComparer.Mcp.Tools
                 var diff = new ScreenshotDiff(diffOldInfo, diffNewInfo, color, options);
 
                 if (!diff.IsDiff)
-                    return "No differences detected between current file and git HEAD.";
+                    return "No differences detected between the current file and its git index version.";
 
                 // Get the appropriate diff image
                 Bitmap diffImage = GetDiffImage(diff, mode, amplifyRadius);
@@ -342,7 +342,7 @@ namespace ImageComparer.Mcp.Tools
         }
 
         [McpServerTool(Name = "revert_screenshot"),
-         Description("Revert a screenshot file to its git HEAD version.")]
+         Description("Revert a screenshot file to its git index version: the accepted version if it was accepted, otherwise the HEAD version.")]
         public static string RevertScreenshot(
             [Description("Full path to the screenshot PNG file to revert")] string screenshotPath)
         {
@@ -353,12 +353,33 @@ namespace ImageComparer.Mcp.Tools
 
             try
             {
-                GitFileHelper.RevertFileToHead(screenshotPath);
-                return $"Reverted to git HEAD: {screenshotPath}";
+                GitFileHelper.RevertFile(screenshotPath);
+                return $"Reverted to the git index version: {screenshotPath}";
             }
             catch (Exception ex)
             {
                 return $"Error reverting: {ex.Message}";
+            }
+        }
+
+        [McpServerTool(Name = "accept_screenshot"),
+         Description("Accept a changed screenshot by staging it in git (git add), so it is included in the next commit and no longer listed as changed. A later change to the file lists it again, compared against the accepted version.")]
+        public static string AcceptScreenshot(
+            [Description("Full path to the screenshot PNG file to accept")] string screenshotPath)
+        {
+            screenshotPath = NormalizePath(screenshotPath);
+
+            if (!File.Exists(screenshotPath))
+                return $"Error: File not found: {screenshotPath}";
+
+            try
+            {
+                GitFileHelper.AcceptFile(screenshotPath);
+                return $"Accepted (staged in git): {screenshotPath}";
+            }
+            catch (Exception ex)
+            {
+                return $"Error accepting: {ex.Message}";
             }
         }
 

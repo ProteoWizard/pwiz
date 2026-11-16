@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.MsData.NativeAot</RootNamespace>
+    <AssemblyName>pwiz_msdata</AssemblyName>
+    <Description>Native AOT shim around Pwiz.Data.MsData — exposes a flat C API (UnmanagedCallersOnly exports) for opening an MS data file and querying its spectrum list. Consumers compile against the .h header in examples/cpp-aot-reader and link against the AOT-published pwiz_msdata.dll / libpwiz_msdata.so.</Description>
+
+    <!-- Native AOT: produce a self-contained native shared library. PublishAot also
+         turns on ILC trimming + native compilation at publish time. -->
+    <OutputType>Library</OutputType>
+    <PublishAot>true</PublishAot>
+
+    <!-- AOT requires invariant globalization (no CultureInfo lookups) by default;
+         that matches how the rest of pwiz-sharp formats numbers in CV params. -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+
+    <!-- ILC inserts ICU embeddings unless we opt out; the mzML/mzXML readers do
+         their own InvariantCulture parsing already. -->
+    <NativeLib>Shared</NativeLib>
+    <IsTrimmable>true</IsTrimmable>
+
+    <!-- All exports use byte* pointers for UTF-8 strings; unsafe is unavoidable. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- Force one assembly name regardless of platform-specific extensions. -->
+    <UseAppHost>false</UseAppHost>
+
+    <!-- C-conventional snake_case for the AOT shared library matches how C consumers expect
+         to find pwiz_msdata.dll / libpwiz_msdata.so on the link line. CA1711 fires on
+         ExportsImpl (which is a deliberate "logic methods backing Exports" suffix — see the
+         class docstring for why the split exists). CS1591: the [UnmanagedCallersOnly]
+         wrappers don't need their own docstrings; the impl methods carry them. -->
+    <NoWarn>$(NoWarn);CA1707;CA1711;CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Util.csproj" />
+    <ProjectReference Include="..\..\..\data\common\Common.csproj" />
+    <ProjectReference Include="..\..\..\data\msdata\MsData.csproj" />
+  </ItemGroup>
+
+  <!-- PublishAot makes the SDK add an implicit Microsoft.DotNet.ILCompiler reference at the
+       version it bundles, and every 10.0 SDK released before the fix (any of them can satisfy
+       global.json through rollForward) bundles one covered by GHSA-p3jp-9v83-76w9
+       (CVE-2026-111497, Brotli decoder out-of-bounds write; published 2026-11-03, fixed in
+       10.0.14). NuGet audit reports it as NU1903 on every restore. The SDK takes that version,
+       the ILCompiler host pack version and the NativeAOT runtime pack version all from this
+       item, so overriding it here moves the three together. An explicit PackageReference to
+       Microsoft.DotNet.ILCompiler silences NU1903 too, but restore still downloads the runtime
+       pack at the bundled version and a win-x64 publish then fails ("The PrivateSdkAssemblies
+       ItemGroup is required"). The override only raises net10.0 versions below 10.0.14, so an
+       SDK that bundles a later ILCompiler keeps its own. Remove it once global.json moves to
+       an SDK that bundles ILCompiler 10.0.14 or later. -->
+  <ItemGroup>
+    <KnownILCompilerPack Update="Microsoft.DotNet.ILCompiler">
+      <ILCompilerPackVersion Condition="'%(TargetFramework)' == 'net10.0' and $([MSBuild]::VersionLessThan('%(ILCompilerPackVersion)', '10.0.14'))">10.0.14</ILCompilerPackVersion>
+    </KnownILCompilerPack>
+  </ItemGroup>
+
+</Project>

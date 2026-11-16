@@ -31,13 +31,18 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Xml;
 using System.Threading;
-using pwiz.CLI.cv;
-using pwiz.CLI.data;
-using pwiz.CLI.msdata;
+using Pwiz.Data.Common.Cv;
+using Pwiz.Data.Common.Params;
+using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Instruments;
+using Pwiz.Data.MsData.Spectra;
+using Pwiz.Data.MsData.Readers;
+using Pwiz.Data.MsData.Mzml;
 using pwiz.MSGraph;
 using System.Text.RegularExpressions;
+using Pwiz.Data.MsData.Processing;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
     public partial class OpenDataSourceDialog : Form
     {
@@ -145,7 +150,7 @@ namespace seems
             DialogResult = DialogResult.Cancel;
 
             var sourceTypes = new List<string>();
-            foreach (var typeExtsPair in ReaderList.FullReaderList.getFileExtensionsByType())
+            foreach (var typeExtsPair in SpectrumSource.FullReaderList.FileExtensionsByType())
                 if (typeExtsPair.Value.Count > 0) // e.g. exclude UNIFI
                     sourceTypes.Add(typeExtsPair.Key);
             sourceTypes.Sort();
@@ -216,39 +221,39 @@ namespace seems
 
                     if( !sourceInfo.hasDetails ) // first pass
                     {
-                        if( sourceInfo.type == "File Folder" ||
+                        if( sourceInfo.Type == "File Folder" ||
                             sourceTypeComboBox.SelectedIndex == 0 ||
-                            sourceTypeComboBox.SelectedItem.ToString() == sourceInfo.type )
+                            sourceTypeComboBox.SelectedItem.ToString() == sourceInfo.Type )
                         {
                             // subitems: Name, Type, Spectra, Size, Date Modified
                             ListViewItem item;
-                            if( sourceInfo.type == "File Folder" )
+                            if( sourceInfo.Type == "File Folder" )
                                 item = new ListViewItem( sourceInfo.ToArray(), 0 );
                             else
                                 item = new ListViewItem( sourceInfo.ToArray(), 2 );
                             item.SubItems[3].Tag = (object) sourceInfo.size;
                             item.SubItems[4].Tag = (object) sourceInfo.dateModified;
-                            item.Name = sourceInfo.name;
+                            item.Name = sourceInfo.Name;
                             item.Tag = sourceInfo;
                             listView.Items.Add( item );
                         }
                     } else // second pass
                     {
-                        ListViewItem item = listView.Items[sourceInfo.name];
+                        ListViewItem item = listView.Items[sourceInfo.Name];
                         if( item == null ) // a virtual document from a multi-run source
                         {
-                            if( sourceInfo.type == "File Folder" )
+                            if( sourceInfo.Type == "File Folder" )
                                 item = new ListViewItem( sourceInfo.ToArray(), 0 );
                             else
                                 item = new ListViewItem( sourceInfo.ToArray(), 2 );
                             item.SubItems[3].Tag = (object) sourceInfo.size;
                             item.SubItems[4].Tag = (object) sourceInfo.dateModified;
-                            item.Name = sourceInfo.name;
+                            item.Name = sourceInfo.Name;
                             item.Tag = sourceInfo;
                             listView.Items.Add( item );
                         }
 
-                        if( sourceInfo.type != "File Folder" )
+                        if( sourceInfo.Type != "File Folder" )
                         {
                             item.SubItems[2].Text = sourceInfo.spectra.ToString();
                             item.SubItems[3].Tag = (object) sourceInfo.size;
@@ -271,7 +276,7 @@ namespace seems
             var directoriesPassingFilter = new List<DirectoryInfo>();
             var filesPassingFilter = new List<FileInfo>();
 
-            for( int i = 0; i < workerArgs.SourceDirectories.Count && !backgroundSourceLoader.CancellationPending; ++i )
+            for( int i = 0; i < workerArgs.SourceDirectories.Count && !worker.CancellationPending; ++i )
             {
                 try
                 {
@@ -282,8 +287,8 @@ namespace seems
                     if( sourceInfo == null ||
                         sourceInfo.Length == 0 ||
                         ( !String.IsNullOrEmpty( workerArgs.SourceTypeFilter ) &&
-                         sourceInfo[0].type != "File Folder" &&
-                         sourceInfo[0].type != workerArgs.SourceTypeFilter ) )
+                         sourceInfo[0].Type != "File Folder" &&
+                         sourceInfo[0].Type != workerArgs.SourceTypeFilter ) )
                         continue;
                     directoriesPassingFilter.Add( directory );
                     worker.ReportProgress( 0, (object) sourceInfo );
@@ -293,14 +298,14 @@ namespace seems
                 }
             }
 
-            for( int i = 0; i < workerArgs.SourceFiles.Count && !backgroundSourceLoader.CancellationPending; ++i )
+            for( int i = 0; i < workerArgs.SourceFiles.Count && !worker.CancellationPending; ++i )
             {
                 SourceInfo[] sourceInfo = getSourceInfo( workerArgs.SourceFiles[i], false );
                 if( sourceInfo == null ||
                     sourceInfo.Length == 0 ||
                     ( !String.IsNullOrEmpty( workerArgs.SourceTypeFilter ) &&
-                     sourceInfo[0].type != "File Folder" &&
-                     sourceInfo[0].type != workerArgs.SourceTypeFilter ) )
+                     sourceInfo[0].Type != "File Folder" &&
+                     sourceInfo[0].Type != workerArgs.SourceTypeFilter ) )
                     continue;
                 filesPassingFilter.Add( workerArgs.SourceFiles[i] );
                 worker.ReportProgress( 0, (object) sourceInfo );
@@ -308,10 +313,10 @@ namespace seems
 
             if( workerArgs.GetDetails )
             {
-                for( int i = 0; i < directoriesPassingFilter.Count && !backgroundSourceLoader.CancellationPending; ++i )
+                for( int i = 0; i < directoriesPassingFilter.Count && !worker.CancellationPending; ++i )
                     worker.ReportProgress( 0, (object) getSourceInfo( directoriesPassingFilter[i], true ) );
 
-                for( int i = 0; i < filesPassingFilter.Count && !backgroundSourceLoader.CancellationPending; ++i )
+                for( int i = 0; i < filesPassingFilter.Count && !worker.CancellationPending; ++i )
                     worker.ReportProgress( 0, (object) getSourceInfo( filesPassingFilter[i], true ) );
             }
 
@@ -322,6 +327,12 @@ namespace seems
         {
             CurrentDirectory = initialDirectory;
             return base.ShowDialog();
+        }
+
+        protected override void OnFormClosed( FormClosedEventArgs e )
+        {
+            backgroundSourceLoader?.CancelAsync();
+            base.OnFormClosed( e );
         }
 
         private Stack<string> previousDirectories = new Stack<string>();
@@ -360,8 +371,8 @@ namespace seems
 
         private class SourceInfo
         {
-            public string name;
-            public string type;
+            public string Name;
+            public string Type;
             public UInt64 size;
             public DateTime dateModified;
 
@@ -377,32 +388,32 @@ namespace seems
             public void populateFromMSData( MSData msInfo )
             {
                 hasDetails = true;
-                spectra = msInfo.run.spectrumList == null ? 0 : msInfo.run.spectrumList.size();
+                spectra = msInfo.Run.SpectrumList == null ? 0 : msInfo.Run.SpectrumList.Count;
                 ionSource = analyzer = detector = "";
-                foreach( InstrumentConfiguration ic in msInfo.instrumentConfigurationList )
+                foreach( InstrumentConfiguration ic in msInfo.InstrumentConfigurations )
                 {
                     SortedDictionary<int, string> ionSources = new SortedDictionary<int, string>();
                     SortedDictionary<int, string> analyzers = new SortedDictionary<int, string>();
                     SortedDictionary<int, string> detectors = new SortedDictionary<int, string>();
-                    foreach( pwiz.CLI.msdata.Component c in ic.componentList )
+                    foreach( Pwiz.Data.MsData.Instruments.Component c in ic.ComponentList )
                     {
                         CVParam term;
-                        switch( c.type )
+                        switch( c.Type )
                         {
-                            case ComponentType.ComponentType_Source:
-                                term = c.cvParamChild( CVID.MS_ionization_type );
-                                if( !term.empty() )
-                                    ionSources.Add( c.order, term.name );
+                            case ComponentType.Source:
+                                term = c.Params.CvParamChild( CVID.MS_ionization_type );
+                                if( !term.IsEmpty )
+                                    ionSources.Add( c.Order, term.Name );
                                 break;
-                            case ComponentType.ComponentType_Analyzer:
-                                term = c.cvParamChild( CVID.MS_mass_analyzer_type );
-                                if( !term.empty() )
-                                    analyzers.Add( c.order, term.name );
+                            case ComponentType.Analyzer:
+                                term = c.Params.CvParamChild( CVID.MS_mass_analyzer_type );
+                                if( !term.IsEmpty )
+                                    analyzers.Add( c.Order, term.Name );
                                 break;
-                            case ComponentType.ComponentType_Detector:
-                                term = c.cvParamChild( CVID.MS_detector_type );
-                                if( !term.empty() )
-                                    detectors.Add( c.order, term.name );
+                            case ComponentType.Detector:
+                                term = c.Params.CvParamChild( CVID.MS_detector_type );
+                                if( !term.IsEmpty )
+                                    detectors.Add( c.Order, term.Name );
                                 break;
                         }
                     }
@@ -421,23 +432,23 @@ namespace seems
                 }
 
                 System.Collections.Generic.Set<string> contentTypes = new System.Collections.Generic.Set<string>();
-                CVParamList cvParams = msInfo.fileDescription.fileContent.cvParams;
+                var cvParams = msInfo.FileDescription.FileContent.CVParams;
                 if( cvParams.Count > 0 )
                 {
-                    foreach( CVParam term in msInfo.fileDescription.fileContent.cvParams )
-                        contentTypes.Add( term.name );
+                    foreach( CVParam term in msInfo.FileDescription.FileContent.CVParams )
+                        contentTypes.Add( term.Name );
                     contentType = String.Join( ", ", new List<string>( contentTypes.Keys ).ToArray() );
                 }
             }
 
             public string[] ToArray()
             {
-                if( type == "File Folder" )
+                if( Type == "File Folder" )
                 {
                     return new string[]
                     {
-                        name,
-                        type,
+                        Name,
+                        Type,
                         "",
                         "",
                         String.Format( "{0} {1}", dateModified.ToShortDateString(),
@@ -451,8 +462,8 @@ namespace seems
                 {
                     return new string[]
                     {
-                        name,
-                        type,
+                        Name,
+                        Type,
                         spectra.ToString(),
                         String.Format( new FileSizeFormatProvider(), "{0:fs}", size ),
                         String.Format( "{0} {1}", dateModified.ToShortDateString(),
@@ -478,7 +489,7 @@ namespace seems
             }
             else if (source is SourceInfo)
             {
-                return (source as SourceInfo).type;
+                return (source as SourceInfo).Type;
             }
             
             throw new ArgumentException( "path is not a file, directory, or SourceInfo" );
@@ -488,7 +499,7 @@ namespace seems
         {
             try
             {
-                string type = ReaderList.FullReaderList.identify( dirInfo.FullName );
+                string type = SpectrumSource.FullReaderList.IdentifyType( dirInfo.FullName, null );
                 if( type == String.Empty )
                     return "File Folder";
                 return type;
@@ -502,7 +513,7 @@ namespace seems
         {
             try
             {
-                return ReaderList.FullReaderList.identify( fileInfo.FullName );
+                return SpectrumSource.FullReaderList.IdentifyType( fileInfo.FullName, null );
             } catch (Exception)
             {
                 return "";
@@ -513,8 +524,8 @@ namespace seems
         {
             var sourceInfoList = new List<SourceInfo>();
             sourceInfoList.Add( new SourceInfo() );
-            sourceInfoList[0].type = getSourceType( dirInfo );
-            sourceInfoList[0].name = dirInfo.Name;
+            sourceInfoList[0].Type = getSourceType( dirInfo );
+            sourceInfoList[0].Name = dirInfo.Name;
             sourceInfoList[0].path = new MSDataRunPath(dirInfo.FullName, 0);
             sourceInfoList[0].dateModified = dirInfo.LastWriteTime;
             sourceInfoList[0].hasDetails = getDetails;
@@ -522,15 +533,18 @@ namespace seems
             if( !getDetails )
                 return sourceInfoList.ToArray();
 
-            if( sourceInfoList[0].type == "File Folder" )
+            if( sourceInfoList[0].Type == "File Folder" )
             {
                 return sourceInfoList.ToArray();
-            } else if( sourceInfoList[0].type != String.Empty )
+            } else if( sourceInfoList[0].Type != String.Empty )
             {
                 try
                 {
-                    MSDataFile msInfo = new MSDataFile( dirInfo.FullName );
-                    sourceInfoList[0].populateFromMSData( msInfo );
+                    using( var msInfo = new MSData() )
+                    {
+                        SpectrumSource.FullReaderList.Read( dirInfo.FullName, msInfo );
+                        sourceInfoList[0].populateFromMSData( msInfo );
+                    }
 
                 } catch( ThreadAbortException )
                 {
@@ -538,7 +552,7 @@ namespace seems
                 } catch
                 {
                     sourceInfoList[0].spectra = 0;
-                    sourceInfoList[0].type = "Invalid " + sourceInfoList[0].type;
+                    sourceInfoList[0].Type = "Invalid " + sourceInfoList[0].Type;
                 }
 
                 sourceInfoList[0].size = 0;
@@ -558,48 +572,47 @@ namespace seems
         {
             var sourceInfoList = new List<SourceInfo>();
             sourceInfoList.Add( new SourceInfo() );
-            sourceInfoList[0].type = getSourceType( fileInfo );
-            sourceInfoList[0].name = fileInfo.Name;
+            sourceInfoList[0].Type = getSourceType( fileInfo );
+            sourceInfoList[0].Name = fileInfo.Name;
             sourceInfoList[0].path = new MSDataRunPath(fileInfo.FullName, 0);
             sourceInfoList[0].hasDetails = getDetails;
             sourceInfoList[0].size = (UInt64) fileInfo.Length;
             sourceInfoList[0].dateModified = fileInfo.LastWriteTime;
-            if( sourceInfoList[0].type != String.Empty )
+            if( sourceInfoList[0].Type != String.Empty )
             {
                 if( !getDetails )
                     return sourceInfoList.ToArray();
 
                 try
                 {
-                    ReaderList readerList = ReaderList.FullReaderList;
+                    ReaderList readerList = SpectrumSource.FullReaderList;
                     var readerConfig = new ReaderConfig
                     {
-                        simAsSpectra = Properties.Settings.Default.SimAsSpectra,
-                        srmAsSpectra = Properties.Settings.Default.SrmAsSpectra,
-                        combineIonMobilitySpectra = Properties.Settings.Default.CombineIonMobilitySpectra,
-                        ignoreZeroIntensityPoints = Properties.Settings.Default.IgnoreZeroIntensityPoints,
-                        acceptZeroLengthSpectra = Properties.Settings.Default.AcceptZeroLengthSpectra,
-                        allowMsMsWithoutPrecursor = false
+                        SimAsSpectra = Pwiz.SeeMS.Settings.Default.SimAsSpectra,
+                        SrmAsSpectra = Pwiz.SeeMS.Settings.Default.SrmAsSpectra,
+                        CombineIonMobilitySpectra = Pwiz.SeeMS.Settings.Default.CombineIonMobilitySpectra,
+                        IgnoreZeroIntensityPoints = Pwiz.SeeMS.Settings.Default.IgnoreZeroIntensityPoints,
+                        AcceptZeroLengthSpectra = Pwiz.SeeMS.Settings.Default.AcceptZeroLengthSpectra,
+                        AllowMsMsWithoutPrecursor = false
                     };
 
-                    MSDataList msInfo = new MSDataList();
-                    readerList.read( fileInfo.FullName, msInfo, readerConfig );
+                    using MSDataList msInfo = MSDataList.Read( readerList, fileInfo.FullName, readerConfig );
 
                     foreach( MSData msData in msInfo )
                     {
                         SourceInfo sourceInfo = new SourceInfo();
-                        sourceInfo.type = sourceInfoList[0].type;
-                        sourceInfo.name = sourceInfoList[0].name;
+                        sourceInfo.Type = sourceInfoList[0].Type;
+                        sourceInfo.Name = sourceInfoList[0].Name;
                         sourceInfo.path = new MSDataRunPath(fileInfo.FullName, sourceInfoList.Count);
                         if( msInfo.Count > 1 )
-                            sourceInfo.name += " (" + msData.run.id + ")";
+                            sourceInfo.Name += " (" + msData.Run.Id + ")";
                         sourceInfo.populateFromMSData( msData );
                         sourceInfoList.Add( sourceInfo );
                     }
                 } catch
                 {
                     sourceInfoList[0].spectra = 0;
-                    sourceInfoList[0].type = "Invalid " + sourceInfoList[0].type;
+                    sourceInfoList[0].Type = "Invalid " + sourceInfoList[0].Type;
                 }
 
                 foreach( SourceInfo sourceInfo in sourceInfoList )
@@ -710,7 +723,7 @@ namespace seems
                         ++driveCount;
                         pathNode = pathNode.Nodes.Add( branches[i], branches[i], 8, 8 );
                         pathNode.Tag = String.Join( Path.DirectorySeparatorChar.ToString(),
-                                                    branches.GetRange( 0, i ).ToArray() );
+                                                    branches.GetRange( 0, i + 1 ).ToArray() );
                         lookInComboBox.Items.Insert( 3 + driveCount, pathNode );
                     }
                     lookInComboBox.SelectedIndex = 3 + driveCount;
@@ -868,7 +881,7 @@ namespace seems
                     {
                         dataSourceList.Add(sourceInfo.path.ToString());
                         sourcePath = sourceInfo.path.Filepath;
-                        sourceType = sourceInfo.type;
+                        sourceType = sourceInfo.Type;
                         runIndex = sourceInfo.path.RunIndex;
                     }
                     else
@@ -894,16 +907,16 @@ namespace seems
             {
                 using (MSData msd = new MSData())
                 {
-                    ReaderList.FullReaderList.read(sourcePath, msd, runIndex, SpectrumSource.GetReaderConfig());
-                    using (ChromatogramList cl = msd.run.chromatogramList)
+                    SpectrumSource.FullReaderList.Read(sourcePath, msd, runIndex, SpectrumSource.GetReaderConfig());
+                    using (IChromatogramList cl = msd.Run.ChromatogramList)
                     {
-                        if( cl != null && !cl.empty() && cl.find( "TIC" ) != cl.size() )
+                        if( cl != null && !cl.IsEmpty && cl.Find( "TIC" ) != cl.Count )
                         {
                             ticGraphControl.Visible = true;
-                            pwiz.CLI.msdata.Chromatogram tic = cl.chromatogram( cl.find( "TIC" ), true );
+                            Pwiz.Data.MsData.Spectra.Chromatogram tic = cl.GetChromatogram(cl.Find( "TIC"), true );
                             Map<double, double> sortedFullPointList = new Map<double, double>();
-                            IList<double> timeList = tic.binaryDataArrays[0].data;
-                            IList<double> intensityList = tic.binaryDataArrays[1].data;
+                            IList<double> timeList = tic.BinaryDataArrays[0].Data;
+                            IList<double> intensityList = tic.BinaryDataArrays[1].Data;
                             int arrayLength = timeList.Count;
                             for( int i = 0; i < arrayLength; ++i )
                                 sortedFullPointList[timeList[i]] = intensityList[i];
@@ -1127,7 +1140,9 @@ namespace seems
                 case "My Network Places":
                     break;
                 default:
-                    if( driveReadiness[location] )
+                    // drives and the folders on the path to the current directory
+                    string root = Path.GetPathRoot( location );
+                    if( root != null && driveReadiness.Contains( root ) && driveReadiness[root] )
                         CurrentDirectory = location;
                     else
                         CurrentDirectory = currentDirectory;

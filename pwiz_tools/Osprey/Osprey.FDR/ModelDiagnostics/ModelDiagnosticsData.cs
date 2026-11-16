@@ -2,6 +2,7 @@
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ *                Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -21,6 +22,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.FDR.ModelDiagnostics
@@ -65,6 +67,18 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         public string FdrLevel { get; set; }
         public bool HasEntrapment { get; set; }
 
+        /// <summary>
+        /// What this page does and does not represent, stated in the page itself. Set by the
+        /// render step (never by a fold), because it describes which products existed at render
+        /// time rather than anything pass 1 computed.
+        ///
+        /// <para>A report whose pass-2 sections are merely ABSENT is indistinguishable, to
+        /// someone opening the file a week later with no console scrollback, from a complete
+        /// report of a run that found nothing in pass 2. That is the silently-invalid-output
+        /// shape, so the incompleteness is an artifact-level statement and not only a log line.</para>
+        /// </summary>
+        public CompletenessInfo Completeness { get; set; }
+
         // ----- population counts (best-per-precursor) -----
         public int NTarget { get; set; }
         public int NDecoy { get; set; }
@@ -80,6 +94,26 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         // ----- tabs -----
         public double ModelComposite { get; set; }
         public bool ModelDegenerate { get; set; }
+
+        /// <summary>
+        /// True when the first-pass model is gradient-boosted trees
+        /// (<see cref="FeatureContributions.IsTreeEnsemble"/>): <see cref="Model"/> then lists
+        /// each feature's target-decoy mean gap and histograms with no coefficient or
+        /// contribution, and the page says the contribution table does not apply rather than
+        /// that the model was not retrained. Written only when true
+        /// (<see cref="ShouldSerializeModelIsTreeEnsemble"/>), so a linear model's data is
+        /// byte-for-byte what it was before trees were reported.
+        /// </summary>
+        public bool ModelIsTreeEnsemble { get; set; }
+
+        /// <summary>Newtonsoft's conditional-serialization convention for
+        /// <see cref="ModelIsTreeEnsemble"/>: this project has no Json.NET reference to put an
+        /// attribute on it.</summary>
+        public bool ShouldSerializeModelIsTreeEnsemble()
+        {
+            return ModelIsTreeEnsemble;
+        }
+
         public List<FeatureRow> Model { get; set; }
         /// <summary>
         /// The complete pass-2 (final reported pool) bundle -- every pass-dependent
@@ -88,10 +122,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// once. Null on a single-pass run (no reconciliation), which hides the switch.
         /// Its structural half (<see cref="Pass2Data.Model"/> /
         /// <see cref="Pass2Data.DensityRatio"/> / <see cref="Pass2Data.WinFraction"/>)
-        /// is present only when the second pass RETRAINED Percolator; under
-        /// <c>OSPREY_PASS2_QVALUE=transfer</c> it is null and the report's structural
-        /// cards degrade to a "pass-2 model n/a" note, while the q-driven half still
-        /// renders. Built by the end-of-run writer (SecondPassFdrTask) via
+        /// needed a retrained second-pass model, and no surviving mode trains one
+        /// (issue #4484), so it is null and the report's structural cards degrade to a
+        /// "pass-2 model n/a" note while the q-driven half still renders. Built by the
+        /// end-of-run writer (SecondPassFdrTask) via
         /// <see cref="BuildPass2"/>. Shares <see cref="FeatureHistEdges"/> with pass 1
         /// (same standardized bins).
         /// </summary>
@@ -103,6 +137,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// "Feature Scores" per-feature distribution view.
         /// </summary>
         public double[] FeatureHistEdges { get; set; }
+        /// <summary>
+        /// The first-pass model on its own training subset (#4550, #4467): final-training-set
+        /// population, composite ROC curves, permutation baseline, correlation and groups. Null
+        /// when the model carries no training-set analysis; the per-feature values are on
+        /// <see cref="Model"/>'s rows.
+        /// </summary>
+        public TrainingSetView TrainingSet { get; set; }
         public ScoreHistogram Scores { get; set; }
         /// <summary>
         /// Non-parametric null-alignment ratios (Storey-style) derived from
@@ -159,23 +200,47 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public bool Degenerate { get; set; }
             public List<FeatureRow> Features { get; set; }
             public ScoreHistogram Scores { get; set; }
+            /// <summary>This pass's model on its own training subset, or null.</summary>
+            public TrainingSetView TrainingSet { get; set; }
         }
 
         /// <summary>
         /// The complete pass-2 (final reported pool) bundle behind the report's
         /// top-level Pass 1 / Pass 2 switch: every pass-dependent card recomputed on
         /// the post-compaction, second-pass-q-valued pool. Split into a STRUCTURAL half
-        /// (score/model-derived) and a Q-DRIVEN half (reported-pool q-derived), because
-        /// the two become available under different second-pass modes:
-        /// <list type="bullet">
-        /// <item>Retrain (<c>OSPREY_PASS2_QVALUE=percolator</c>): a second Percolator
-        /// model exists, so BOTH halves are built.</item>
-        /// <item>Confidence transfer (<c>OSPREY_PASS2_QVALUE=transfer</c>): no retrained
-        /// model, so the structural half is null (the report's Model / Density /
-        /// Competition cards show a "pass-2 model n/a" note) while the q-driven half --
-        /// which needs only the transferred q -- still renders.</item>
-        /// </list>
+        /// (score/model-derived) and a Q-DRIVEN half (reported-pool q-derived).
+        ///
+        /// <para>The Q-DRIVEN half is what every surviving second-pass mode produces:
+        /// <c>transfer</c> and <c>protein-compact</c> both yield reported q-values and
+        /// nothing else. The STRUCTURAL half needed a retrained second-pass model, and
+        /// there is no longer a mode that trains one - the retrain was removed because a
+        /// compacted pool is decoy-depleted and retraining on it mis-estimates the null
+        /// (issue #4484). So the structural half is null in production today and the
+        /// report's Model / Density / Competition cards show their "pass-2 model n/a"
+        /// note. It is kept as a shape rather than deleted because its replacement is
+        /// specified and sourced differently: the FROZEN pass-1 coefficients, already on
+        /// disk in <c>.1st-pass.model.json</c>, plus per-feature running sums folded per
+        /// run. <see cref="BuildPass2"/> still accepts contributions so that shape stays
+        /// covered and has somewhere to reconnect.</para>
         /// </summary>
+        /// <summary>
+        /// Which passes this page represents and how much of the cohort reached them, so the
+        /// page can say what it is rather than leaving the reader to infer it from an absent
+        /// section. Rendered as a banner whenever <see cref="Pass2Present"/> is false.
+        /// </summary>
+        public sealed class CompletenessInfo
+        {
+            /// <summary>True when the pass-2 product was on disk at render time.</summary>
+            public bool Pass2Present { get; set; }
+            /// <summary>Runs that contributed rows to the pass-1 fold.</summary>
+            public int RunsContributed { get; set; }
+            /// <summary>Runs the analysis was asked for; equal to <see cref="RunsContributed"/>
+            /// once every run's first pass has completed.</summary>
+            public int RunsExpected { get; set; }
+            /// <summary>Operator-facing reason the page is partial, or null when it is not.</summary>
+            public string Reason { get; set; }
+        }
+
         public sealed class Pass2Data
         {
             // ----- structural half (null under confidence-transfer mode) -----
@@ -209,6 +274,88 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// for the numbers and the direction, which is not the intuitive one).
             /// </summary>
             public CoAssignmentData CoAssignment { get; set; }
+            /// <summary>
+            /// Protein-group FDP from the entrapment proteins: the picked-protein q of the
+            /// reported groups against the groups made only of entrapment proteins. Null when
+            /// the library has no entrapment on proteins of its own.
+            /// </summary>
+            public ProteinEntrapmentView ProteinEntrapment { get; set; }
+        }
+
+        /// <summary>
+        /// The protein-level analogue of <see cref="FdpView"/>: the protein-group q-value axis
+        /// against the combined entrapment estimate, where the entrapment groups are those made
+        /// only of entrapment proteins (the <c>_p_target</c> accessions) and r is the library's
+        /// entrapment-protein to target-protein count ratio. Entrapment placed on target proteins
+        /// is not counted here: it belongs to a target protein's group by design.
+        /// </summary>
+        public sealed class ProteinEntrapmentView
+        {
+            /// <summary>Entrapment proteins over target proteins in the searched library.</summary>
+            public double EntrapmentRatio { get; set; }
+            public int NLibraryTargetProteins { get; set; }
+            public int NLibraryEntrapmentProteins { get; set; }
+            /// <summary>The protein-group q-value axis (experiment-level picked-protein q).</summary>
+            public double[] Q { get; set; }
+            public int[] NTargetGroups { get; set; }
+            public int[] NEntrapmentGroups { get; set; }
+            /// <summary><c>(1 + 1/r) * n_e / (n_t + n_e)</c> at each q.</summary>
+            public double[] Combined { get; set; }
+            /// <summary>Entrapment groups a calibrated q would let through at each threshold.</summary>
+            public double[] ExpectedEntrapment { get; set; }
+        }
+
+        /// <summary>
+        /// Builds <see cref="ProteinEntrapmentView"/> from the reported protein groups: each a
+        /// (made only of entrapment proteins, group q) pair, swept up the target groups' q as
+        /// <see cref="FdpView"/> sweeps precursors. Null when there is no entrapment protein in
+        /// the library or no target group to sweep.
+        /// </summary>
+        public static ProteinEntrapmentView BuildProteinEntrapmentView(
+            IEnumerable<KeyValuePair<bool, double>> groupsEntrapmentAndQ,
+            int nLibraryTargetProteins, int nLibraryEntrapmentProteins)
+        {
+            if (nLibraryTargetProteins <= 0 || nLibraryEntrapmentProteins <= 0)
+                return null;
+            var targetQ = new List<double>();
+            var entrapQ = new List<double>();
+            foreach (var kv in groupsEntrapmentAndQ)
+                (kv.Key ? entrapQ : targetQ).Add(kv.Value);
+            if (targetQ.Count == 0)
+                return null;
+            targetQ.Sort(); // Array.Sort OK: primitive q doubles, value is whole key, tie order immaterial to the <= sweep
+            entrapQ.Sort(); // Array.Sort OK: primitive q doubles, value is whole key, tie order immaterial to the <= sweep
+            double r = (double)nLibraryEntrapmentProteins / nLibraryTargetProteins;
+            var qs = new List<double>();
+            var nt = new List<int>();
+            var ne = new List<int>();
+            var comb = new List<double>();
+            var expected = new List<double>();
+            int ei = 0, nE = 0;
+            for (int i = 0; i < targetQ.Count; i++)
+            {
+                double t = targetQ[i];
+                while (ei < entrapQ.Count && entrapQ[ei] <= t) { nE++; ei++; }
+                int nT = i + 1;
+                double denom = nT + nE;
+                qs.Add(t);
+                nt.Add(nT);
+                ne.Add(nE);
+                comb.Add((1.0 + 1.0 / r) * nE / denom);
+                expected.Add(t * denom * r / (1.0 + r));
+            }
+            var idx = ThinFdpIndices(qs);
+            return new ProteinEntrapmentView
+            {
+                EntrapmentRatio = r,
+                NLibraryTargetProteins = nLibraryTargetProteins,
+                NLibraryEntrapmentProteins = nLibraryEntrapmentProteins,
+                Q = Pick(qs, idx),
+                NTargetGroups = Pick(nt, idx),
+                NEntrapmentGroups = Pick(ne, idx),
+                Combined = Pick(comb, idx),
+                ExpectedEntrapment = Pick(expected, idx),
+            };
         }
 
         /// <summary>One row of the trained-model feature-contribution table.</summary>
@@ -231,6 +378,34 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// </summary>
             public int[] TargetHist { get; set; }
             public int[] DecoyHist { get; set; }
+
+            // ---- Fold-to-fold weight stability (#4550): the composition's reproducibility.
+            // Coefficient is the fold mean. NaN for a tree ensemble.
+            public double FoldWeightSd { get; set; } = double.NaN;
+            public double FoldWeightMin { get; set; } = double.NaN;
+            public double FoldWeightMax { get; set; } = double.NaN;
+            /// <summary>Every fold's weight has the same sign.</summary>
+            public bool FoldSignConsistent { get; set; }
+
+            // ---- The final training set (#4550, #4467), from TrainingSetAnalysis.FeatureStats.
+            // NaN / null when the model carries no training-set analysis - also the defaults, so a
+            // pass-1 product written before these keys existed reads back as "not available".
+            /// <summary>P(positive &gt; decoy) on the pooled final training set, ties half.</summary>
+            public double Auroc { get; set; } = double.NaN;
+            public double AurocFoldMin { get; set; } = double.NaN;
+            public double AurocFoldMax { get; set; } = double.NaN;
+            public double CohenD { get; set; } = double.NaN;
+            /// <summary>TPR at <see cref="TrainingSetView.ReferenceFpr"/>.</summary>
+            public double TprAtReferenceFpr { get; set; } = double.NaN;
+            /// <summary>TPR at each <see cref="TrainingSetView.RocFpr"/>.</summary>
+            public double[] RocTpr { get; set; }
+            /// <summary>Final-training-set histograms over <see cref="FeatureHistEdges"/>.</summary>
+            public int[] TrainTargetHist { get; set; }
+            public int[] TrainDecoyHist { get; set; }
+            /// <summary>Fractional drop in held-out passing targets with this feature permuted.</summary>
+            public double PermutationDrop { get; set; } = double.NaN;
+            /// <summary>Index into <see cref="TrainingSetView.Groups"/>, or -1 when ungrouped.</summary>
+            public int Group { get; set; } = -1;
         }
 
         /// <summary>
@@ -342,6 +517,32 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// lower-bound remain valid at any ratio.</summary>
             public bool PairedSuppressedPartial { get; set; }
             public int[] NTargetAccepted { get; set; }
+
+            /// <summary>Entrapment accepted at each q (n_p), the count the estimators scale.</summary>
+            public int[] NEntrapmentAccepted { get; set; }
+            /// <summary>
+            /// The entrapment count a calibrated q would produce at each threshold: FDP = q solved
+            /// for n_p under the combined estimator, <c>q * (n_t + n_p) * r / (1 + r)</c>. Read
+            /// <see cref="NEntrapmentAccepted"/> against it with a Poisson interval (about
+            /// 2 * sqrt of the expectation), so a thin entrapment arm's noise is read as noise.
+            /// </summary>
+            public double[] ExpectedEntrapment { get; set; }
+
+            // ----- the protein-placement split (null when the library has no entrapment on target proteins) -----
+            /// <summary>Entrapment on real target proteins over targets, from the library.</summary>
+            public double RatioOnTargetProteins { get; set; }
+            /// <summary>Entrapment on entrapment proteins of its own over targets, from the library.</summary>
+            public double RatioOnEntrapmentProteins { get; set; }
+            /// <summary>Accepted entrapment on real target proteins at each q.</summary>
+            public int[] NEntrapmentOnTargetProteins { get; set; }
+            /// <summary>Accepted entrapment on its own entrapment proteins at each q.</summary>
+            public int[] NEntrapmentOnEntrapmentProteins { get; set; }
+            /// <summary>Combined FDP from the entrapment on target proteins alone, at its own ratio.</summary>
+            public double[] CombinedOnTargetProteins { get; set; }
+            /// <summary>Combined FDP from the entrapment on its own proteins alone, at its own ratio.</summary>
+            public double[] CombinedOnEntrapmentProteins { get; set; }
+            /// <summary>True when the two halves are both present, so their divergence can be read.</summary>
+            public bool HasPlacementSplit { get; set; }
         }
 
         /// <summary>
@@ -483,6 +684,26 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// i = N quantifies "how anti-conservative is per-run FDR at this run count".
             /// </summary>
             public double[] UnionFdp { get; set; }
+            /// <summary>
+            /// Index k-1 =&gt; DECOY precursors detected in exactly k runs under the SAME gate as
+            /// this view, each decoy counted by its own per-run q (never its paired target's).
+            /// Present on the pass-1 views, null on pass 2, where gap-fill moves targets to higher k
+            /// and not decoys.
+            /// </summary>
+            public int[] DecoyRunCountHistogram { get; set; }
+            /// <summary>
+            /// Decoy-estimated FDP of the precursors detected in exactly k runs (index k-1):
+            /// <see cref="DecoyRunCountHistogram"/> over the target-side count (real targets plus
+            /// entrapment); NaN in a slice with no target. The entrapment-free companion of
+            /// <see cref="EntrapmentFdpByRunCount"/> (#4489) - where both exist they should agree.
+            /// </summary>
+            public double[] DecoyFdpByRunCount { get; set; }
+            /// <summary>
+            /// Decoy-estimated FDP of the precursors detected in AT LEAST k runs (index k-1): the
+            /// FDP of what a run-count floor of k would keep. NaN where no target is that
+            /// reproducible.
+            /// </summary>
+            public double[] DecoyFdpAtLeastRunCount { get; set; }
         }
 
         // A precursor reduced to the fields the diagnostics need.
@@ -496,13 +717,21 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public uint PairIndex;
             public byte Charge;
             public bool HasPair;
+            /// <summary>Entrapment placed on a real target protein (<see cref="EntrapmentPlacement"/>).</summary>
+            public bool OnTargetProtein;
         }
 
         /// <summary>
         /// Build the full model-diagnostics data model from first-pass results.
+        ///
+        /// <para>A TEST ORACLE, internal so nothing outside this assembly and its tests can reach
+        /// it. It reduces a resident pool of every run's first-pass entries, which no
+        /// production route holds any more: the report is built from the streamed
+        /// <see cref="Accumulator"/>, and the tests hold that to this independent batch
+        /// reduction on the same rows.</para>
         /// </summary>
         /// <param name="perFileEntries">Per-file first-pass FdrEntry lists, scored and q-valued, pre-compaction.</param>
-        /// <param name="contributions">The trained model's feature contributions (may be null for non-Percolator FDR).</param>
+        /// <param name="contributions">The trained model's feature contributions (may be null: a tree model has none).</param>
         /// <param name="classByBaseId">
         /// library base-id (<c>EntryId &amp; 0x7FFFFFFF</c>) -> target-side
         /// entrapment class (Target / PTarget), resolved from the library
@@ -526,14 +755,18 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// <param name="fdrLevel">
         /// The FDR control level the run was reported at (Precursor / Peptide / Both).
         /// Decides which run-level q gates the "passing" set (via
-        /// <see cref="FdrEntry.EffectiveRunQvalue"/>), so the per-file and cross-run
+        /// <see cref="FdrRowExtensions.EffectiveRunQvalue{T}"/>), so the per-file and cross-run
         /// counts match what the pipeline actually reported -- not a hardcoded scope.
         /// </param>
         /// <param name="precursorMzByEntryId">
         /// Full entry id to library precursor m/z (NaN when unknown), for the co-assignment panel.
         /// Null skips that panel and leaves <see cref="CoAssignment"/> null.
         /// </param>
-        public static ModelDiagnosticsData Build(
+        /// <param name="placement">
+        /// Which entrapment sits on a real target protein (the protein-aware audit), with each
+        /// half's own ratio, for the FDP views' placement split. Null for no split.
+        /// </param>
+        internal static ModelDiagnosticsData Build(
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             FeatureContributions contributions,
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
@@ -541,7 +774,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             double entrapmentRatio,
             double runFdr,
             FdrLevel fdrLevel,
-            Func<uint, double> precursorMzByEntryId = null)
+            Func<uint, double> precursorMzByEntryId = null,
+            EntrapmentPlacement placement = null)
         {
             var data = new ModelDiagnosticsData
             {
@@ -555,7 +789,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
             // ---- best-per-precursor reduction (max score per modseq+charge) ----
             var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
-                out int nWithClass, out int nWithoutClass);
+                out int nWithClass, out int nWithoutClass, null, placement);
 
             // Per-file passing summary at the run-level FDR (kept separate from the
             // reduction so the same reduction serves pass 1 and pass 2). Factored into
@@ -572,18 +806,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 }
             }
             data.HasEntrapment = data.NPTarget > 0;
-            data.FeatureCount = contributions?.Features.Count ?? 0;
             data.NClassifiedFromManifest = nWithClass;
             data.NUnclassified = nWithoutClass;
 
             // ---- model table (pass 1) ----
-            if (contributions != null)
-            {
-                data.ModelComposite = contributions.Composite;
-                data.ModelDegenerate = contributions.IsDegenerate;
-                data.FeatureHistEdges = contributions.HistogramEdges;
-                data.Model = BuildFeatureRows(contributions);
-            }
+            ModelView.ApplyTo(ModelView.From(contributions), data);
 
             // ---- score histogram + decoy normal fit ----
             data.Scores = BuildScoreHistogram(precs);
@@ -620,7 +847,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             if (data.HasEntrapment)
             {
                 double r = entrapmentRatio > 0 ? entrapmentRatio : 1.0;
-                data.FdpViews = BuildFdpViewsFromPrecs(precs, r, 1);
+                data.FdpViews = BuildFdpViewsFromPrecs(precs, r, 1, placement);
             }
 
             // ---- reproducibility frontier (first-pass, pre-compaction; entrapment-gated) ----
@@ -640,7 +867,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         bool isEntrap = haveManifest
                             && classByBaseId.TryGetValue(e.EntryId & BASE_ID_MASK, out var fcls)
                             && fcls == EntrapmentClass.PTarget;
-                        FrontierRow(frontier, fileMinQ, e.ModifiedSequence + "|" + e.Charge, isEntrap,
+                        FrontierRow(frontier, fileMinQ, e.ModifiedSequence + @"|" + e.Charge, isEntrap,
                             e.EffectiveRunQvalue(fdrLevel), e.EffectiveExperimentQvalue(fdrLevel));
                     }
                     FrontierFlushFile(frontier, fileMinQ);   // one increment per detected precursor = one file
@@ -652,19 +879,36 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         }
 
         /// <summary>
+        /// Cards <see cref="BuildPass2"/> always builds, and the extra ones it builds only when
+        /// the second pass retrained. Counts rather than derived values because the reporter
+        /// needs its total up front; keep them in step with the <c>Report</c> calls, which use
+        /// <c>++cardIdx</c> so only the totals are hand-maintained. A stale total shows a run
+        /// stalling short of 100% or, since <see cref="ProgressReporter"/> does not clamp,
+        /// printing past it.
+        /// </summary>
+        private const int PASS2_BASE_CARDS = 6;
+
+        private const int PASS2_STRUCTURAL_CARDS = 3;
+
+        /// <summary>
         /// Build the complete pass-2 (final reported pool) bundle behind the report's
-        /// top-level Pass 1 / Pass 2 switch. Called by the end-of-run writer
-        /// (SecondPassFdrTask) with the post-compaction, second-pass-q-valued pool
-        /// (<c>RescoredEntries</c>) -- the same pool the pass-2 FDRBench TSV is written
-        /// from -- so the HTML pass-2 cards and stock FDRBench see the identical
-        /// peptides and q-values. The classification / pairing / ratio inputs come
-        /// from the searched library exactly as pass 1 (see ModelDiagnosticsReport).
+        /// top-level Pass 1 / Pass 2 switch from the post-compaction, second-pass-q-valued
+        /// pool - the same pool the pass-2 FDRBench TSV is written from - so the HTML pass-2
+        /// cards and stock FDRBench see the identical peptides and q-values. The
+        /// classification / pairing / ratio inputs come from the searched library exactly as
+        /// pass 1 (see ModelDiagnosticsReport).
+        ///
+        /// <para>A TEST ORACLE, internal for the reason <see cref="Build"/> gives: production
+        /// folds the pass-2 cards run by run through <see cref="Accumulator"/>, and the tests
+        /// hold that fold to this batch build over every run's survivors.</para>
         ///
         /// The STRUCTURAL half (Model / DensityRatio / WinFraction) is built only when
-        /// the second pass RETRAINED Percolator (<paramref name="pass2Contributions"/>
-        /// non-null); under <c>OSPREY_PASS2_QVALUE=transfer</c> there is no retrained
-        /// model, so it stays null and the report's Model / Density / Competition cards
-        /// degrade to a "pass-2 model n/a" note. The Q-DRIVEN half (FdpViews / IdYield /
+        /// <paramref name="pass2Contributions"/> is non-null. Production passes null
+        /// today: it required a retrained second-pass model and no surviving mode trains
+        /// one (issue #4484), so those cards degrade to a "pass-2 model n/a" note. The
+        /// parameter and the cards are kept because their replacement is specified -
+        /// frozen pass-1 coefficients plus per-feature running sums - and because the
+        /// non-null contract stays under test. The Q-DRIVEN half (FdpViews / IdYield /
         /// CrossRun / PerFile) is always built from the reported pool (FdpViews is empty
         /// when the pool carries no entrapment).
         ///
@@ -672,7 +916,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// unknown) for the co-assignment panel; null skips that panel and leaves
         /// <see cref="Pass2Data.CoAssignment"/> null.
         /// </summary>
-        public static Pass2Data BuildPass2(
+        internal static Pass2Data BuildPass2(
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             FeatureContributions pass2Contributions,
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
@@ -680,40 +924,90 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             double entrapmentRatio,
             double runFdr,
             FdrLevel fdrLevel,
-            Func<uint, double> precursorMzByEntryId = null)
+            Func<uint, double> precursorMzByEntryId = null,
+            HashSet<uint> stratumBaseIds = null,
+            EntrapmentPlacement placement = null)
         {
             bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
-            var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
-                out _, out _);
 
-            var pass2 = new Pass2Data
+            // Reported per CARD, not per file (#4571). This is not one loop: it is six
+            // independent whole-pool builds, each of which walks every survivor observation
+            // (89,068,375 at 82 files), and together they were the long half of a 71 s silence
+            // between the classification's [ENTRAPMENT] line and "finalized report". A per-file
+            // reporter would have to live inside each build separately; the cards are the
+            // granularity that actually says WHICH one is slow, which is the question a reader
+            // has when the page takes a minute to appear.
+            //
+            // Written as sequential locals rather than an object initializer for that reason -
+            // an initializer cannot report between its members. Evaluation order is unchanged.
+            var pass2 = new Pass2Data();
+
+            // The total covers the STRUCTURAL cards too when they will run, and they are inside
+            // the same reporter. Reporting only the q-driven six printed "100%" and then left
+            // BuildModelPass2 and BuildWinFraction - both whole-pool walks - running silently
+            // behind a completed bar, which is the gap #4571 exists to remove wearing a disguise.
+            // BuildModelPass2 returns null iff contributions are null (its first statement), so
+            // this flag predicts the structural half exactly; the guard below tests Model for the
+            // same condition rather than trusting the two to stay in step.
+            bool structural = pass2Contributions != null;
+            int cards = PASS2_BASE_CARDS + (structural ? PASS2_STRUCTURAL_CARDS : 0);
+            // A report writer catches and logs our exception as one line, so a card that throws
+            // must not read "all cards done" before "pass-2 enrichment failed": only a body that
+            // returns closes this step with 100%.
+            // The heading counts CARDS because that is what the total is; labelling it with the
+            // file count would invite a completion estimate from unequal-cost units.
+            int cardIdx = 0;
+            ProgressReporter.Run(
+                CountText.Format(cards, OspreyFDRResources.ModelDiagnosticsData_BuildPass2_Building_1_second_pass_diagnostics_panel,
+                    OspreyFDRResources.ModelDiagnosticsData_BuildPass2_Building__0__second_pass_diagnostics_panels),
+                cards, progress =>
             {
+                // Indented one level: this reporter nests inside the card reporter, and without it
+                // the two percent streams print at the same column - the inner one reaching 100%
+                // immediately before the outer prints its next card.
+                var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
+                    out _, out _, @"  ", placement);
+                progress.Report(++cardIdx);
+
                 // Q-driven half: available whenever a second pass produced reported
                 // q-values (retrain OR confidence transfer). Entrapment-independent
                 // except FdpViews (which is empty without an entrapment pool).
-                PerFile = BuildPerFile(perFileEntries, classByBaseId, haveManifest, runFdr, fdrLevel),
-                IdYield = BuildIdYield(precs),
-                CrossRun = BuildCrossRunDetection(perFileEntries, classByBaseId, haveManifest,
-                    entrapmentRatio, runFdr, fdrLevel),
-                FdpViews = BuildPass2FdpViews(perFileEntries, classByBaseId, pairByBaseId, entrapmentRatio),
+                pass2.PerFile = BuildPerFile(perFileEntries, classByBaseId, haveManifest, runFdr, fdrLevel);
+                progress.Report(++cardIdx);
+                pass2.IdYield = BuildIdYield(precs);
+                progress.Report(++cardIdx);
+                pass2.CrossRun = WithoutDecoyFdp(BuildCrossRunDetection(perFileEntries, classByBaseId, haveManifest,
+                    entrapmentRatio, runFdr, fdrLevel));
+                progress.Report(++cardIdx);
+                // Reuses the reduction computed for the ID-yield card above rather than
+                // recomputing an identical one from the same inputs.
+                pass2.FdpViews = BuildPass2FdpViews(precs, entrapmentRatio, placement);
+                progress.Report(++cardIdx);
                 // Single-peak co-assignment on the REPORTED pool (issue #4522). Post-Stage-6, so
                 // it includes co-assignment reconciliation itself introduced; the pass-1 panel is
                 // the uncontaminated scoring picture and the two are meant to be read together.
-                CoAssignment = BuildCoAssignment(perFileEntries, classByBaseId, precursorMzByEntryId,
-                    runFdr, fdrLevel, 2, true),
-            };
+                // Takes the pass-2 stratum so each decoy is judged against its own q system's
+                // acceptance boundary (issue #4573); null in every non-stratified mode.
+                pass2.CoAssignment = BuildCoAssignment(perFileEntries, classByBaseId, precursorMzByEntryId,
+                    runFdr, fdrLevel, 2, true, stratumBaseIds);
+                progress.Report(++cardIdx);
 
-            // Structural half: only when the second pass retrained on the reported pool.
-            // BuildModelPass2 returns null when contributions are null (transfer mode),
-            // which leaves DensityRatio / WinFraction null too -- the report's structural
-            // cards then show their n/a note under the top-level Pass 2 mode.
-            pass2.Model = BuildModelPass2(perFileEntries, pass2Contributions, classByBaseId, pairByBaseId);
-            if (pass2.Model != null)
-            {
-                bool hasEntrapment = precs.Any(p => p.Class == EntrapmentClass.PTarget);
-                pass2.DensityRatio = BuildDensityRatio(pass2.Model.Scores, hasEntrapment);
-                pass2.WinFraction = BuildWinFraction(perFileEntries, classByBaseId, haveManifest);
-            }
+                // Structural half: only when contributions were supplied. Production supplies none
+                // (there is no retrained second pass any more, #4484), which leaves Model,
+                // DensityRatio and WinFraction null and shows the report's n/a note. Takes the
+                // reduction computed above; it used to recompute a bit-identical one from the
+                // same inputs.
+                pass2.Model = BuildModelPass2(pass2Contributions, precs);
+                if (pass2.Model != null)
+                {
+                    progress.Report(++cardIdx);
+                    bool hasEntrapment = precs.Any(p => p.Class == EntrapmentClass.PTarget);
+                    pass2.DensityRatio = BuildDensityRatio(pass2.Model.Scores, hasEntrapment);
+                    progress.Report(++cardIdx);
+                    pass2.WinFraction = BuildWinFraction(perFileEntries, classByBaseId, haveManifest);
+                    progress.Report(++cardIdx);
+                }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             return pass2;
         }
 
@@ -768,14 +1062,19 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             var rows = new List<FeatureRow>();
             var targetHist = contributions.TargetHistograms;
             var decoyHist = contributions.DecoyHistograms;
+            var analysis = contributions.TrainingAnalysis;
+            var groupOf = TrainingSetView.GroupIndexByFeature(analysis);
+            // A tree ensemble has no percents to rank by, so its rows stay in feature order.
+            bool unranked = contributions.IsDegenerate || contributions.IsTreeEnsemble;
             foreach (var f in contributions.Features
-                .OrderByDescending(f => contributions.IsDegenerate ? 0.0 : Math.Abs(f.Percent))
+                .OrderByDescending(f => unranked ? 0.0 : Math.Abs(f.Percent))
                 .ThenBy(f => f.Index))
             {
                 rows.Add(new FeatureRow
                 {
                     Index = f.Index,
-                    Label = f.Label,
+                    // Invariant: the report and its intermediate file read the same in every UI language.
+                    Label = f.ReportLabel,
                     Coefficient = f.Coefficient,
                     Percent = f.Percent,
                     DeltaMu = f.TargetDecoyMeanGap,
@@ -789,9 +1088,32 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     // model; null when not collected).
                     TargetHist = targetHist != null && f.Index < targetHist.Count ? targetHist[f.Index] : null,
                     DecoyHist = decoyHist != null && f.Index < decoyHist.Count ? decoyHist[f.Index] : null,
+                    FoldWeightSd = f.FoldWeightSd,
+                    FoldWeightMin = f.FoldWeightMin,
+                    FoldWeightMax = f.FoldWeightMax,
+                    FoldSignConsistent = f.IsFoldSignConsistent,
                 });
+                SetTrainingStats(rows[rows.Count - 1], analysis, groupOf);
             }
             return rows;
+        }
+
+        /// <summary>A row's final-training-set values, or the not-available markers.</summary>
+        private static void SetTrainingStats(FeatureRow row, TrainingSetAnalysis analysis, int[] groupOf)
+        {
+            var stats = analysis?.Features != null && row.Index < analysis.Features.Length
+                ? analysis.Features[row.Index]
+                : null;
+            row.Group = groupOf != null && row.Index < groupOf.Length ? groupOf[row.Index] : -1;
+            row.Auroc = stats?.Auroc ?? double.NaN;
+            row.AurocFoldMin = stats?.AurocFoldMin ?? double.NaN;
+            row.AurocFoldMax = stats?.AurocFoldMax ?? double.NaN;
+            row.CohenD = stats?.CohenD ?? double.NaN;
+            row.TprAtReferenceFpr = stats?.TprAtReferenceFpr ?? double.NaN;
+            row.PermutationDrop = stats?.PermutationDrop ?? double.NaN;
+            row.RocTpr = stats?.RocTpr;
+            row.TrainTargetHist = stats?.TrainTargetHist;
+            row.TrainDecoyHist = stats?.TrainDecoyHist;
         }
 
         /// <summary>
@@ -811,14 +1133,30 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             if (contributions == null)
                 return null;
             bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
-            var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
-                out _, out _);
+            return BuildModelPass2(contributions,
+                ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
+                    out _, out _));
+        }
+
+        /// <summary>
+        /// The same card from an ALREADY-reduced precursor list, so a caller holding one does not
+        /// pay for the reduction again. <see cref="BuildPass2"/> is that caller: it reduces once
+        /// for the ID-yield card and used to re-derive a bit-identical reduction here from the
+        /// same inputs - the same ~16 s / 89 M-observation walk at 82 files, O(observations), so
+        /// ~32 s at 163. Sharing is safe for the reasons given on
+        /// <see cref="BuildPass2FdpViews(List{Prec}, double, EntrapmentPlacement)"/>.
+        /// </summary>
+        private static ModelPass BuildModelPass2(FeatureContributions contributions, List<Prec> precs)
+        {
+            if (contributions == null)
+                return null;
             return new ModelPass
             {
                 Composite = contributions.Composite,
                 Degenerate = contributions.IsDegenerate,
                 Features = BuildFeatureRows(contributions),
                 Scores = BuildScoreHistogram(precs),
+                TrainingSet = TrainingSetView.From(contributions),
             };
         }
 
@@ -836,16 +1174,46 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
             IReadOnlyDictionary<uint, uint> pairByBaseId,
-            double entrapmentRatio)
+            double entrapmentRatio,
+            EntrapmentPlacement placement = null)
         {
             bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
-            var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
-                out _, out _);
+            return BuildPass2FdpViews(
+                ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
+                    out _, out _, null, placement),
+                entrapmentRatio, placement);
+        }
+
+        /// <summary>
+        /// The same views from an ALREADY-reduced precursor list, so a caller that has one does
+        /// not pay for the reduction twice. <see cref="BuildPass2"/> is that caller: it reduces
+        /// once for the ID-yield card and then built these views from a second, identical
+        /// reduction of the same inputs - ~16 s duplicated at 82 files on the 2026-08-15
+        /// measurement, and it is O(survivor observations), so ~32 s at 163 files.
+        ///
+        /// <para>Sharing the list is safe because every consumer only READS it:
+        /// <see cref="BuildIdYield"/> projects into new collections, and
+        /// <see cref="BuildFdpView"/> sorts the double lists it extracts rather than the input.
+        /// That is the property to check when adding a card - it is the one that holds whatever
+        /// <c>Prec</c> is declared as.</para>
+        ///
+        /// <para><c>Prec</c> being a <c>struct</c> is deliberately NOT the argument, even though
+        /// value-copy semantics would stop one card writing through to another. Copy semantics do
+        /// not make a stray mutation harmless, they make it silently INEFFECTIVE, which is a
+        /// different defect rather than the absence of one - and this file already depends on
+        /// that subtlety: <see cref="ReduceToPrecs"/> mutates a local copy and the
+        /// <c>best[key] = cur</c> write-back at the end of its loop is what commits it. Remove
+        /// that line as redundant - which it would be for a class - and the reduction quietly
+        /// stops updating.</para>
+        /// </summary>
+        private static List<FdpView> BuildPass2FdpViews(List<Prec> precs, double entrapmentRatio,
+            EntrapmentPlacement placement)
+        {
             bool hasEntrapment = precs.Any(p => p.Class == EntrapmentClass.PTarget);
             if (!hasEntrapment)
                 return new List<FdpView>();
             double r = entrapmentRatio > 0 ? entrapmentRatio : 1.0;
-            return BuildFdpViewsFromPrecs(precs, r, 2);
+            return BuildFdpViewsFromPrecs(precs, r, 2, placement);
         }
 
         // Build the experiment- and run-scope FDP calibration views for one pass
@@ -854,14 +1222,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         // the per-run picture FDRBench cannot show. pass = 1 (pre-compaction) or
         // 2 (final reported pool). Shared by pass 1 (Build) and pass 2
         // (BuildPass2FdpViews) so the two passes are computed identically.
-        private static List<FdpView> BuildFdpViewsFromPrecs(List<Prec> precs, double r, int pass)
+        private static List<FdpView> BuildFdpViewsFromPrecs(List<Prec> precs, double r, int pass,
+            EntrapmentPlacement placement)
         {
             var views = new List<FdpView>();
             var expView = BuildFdpView(precs, r, p => p.QExpPrecursor,
-                string.Format(@"Pass {0} - experiment-wide", pass), pass, @"experiment", true);
+                string.Format(@"Pass {0} - experiment-wide", pass), pass, @"experiment", true, placement);
             if (expView != null) views.Add(expView);
             var runView = BuildFdpView(precs, r, p => p.QRunPrecursor,
-                string.Format(@"Pass {0} - per-run", pass), pass, @"run", false);
+                string.Format(@"Pass {0} - per-run", pass), pass, @"run", false, placement);
             if (runView != null) views.Add(runView);
             return views;
         }
@@ -878,60 +1247,80 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
             IReadOnlyDictionary<uint, uint> pairByBaseId,
             bool haveManifest,
-            out int nWithClass, out int nWithoutClass)
+            out int nWithClass, out int nWithoutClass,
+            string indent = null,
+            EntrapmentPlacement placement = null)
         {
             var best = new Dictionary<string, Prec>(StringComparer.Ordinal);
             int wc = 0, woc = 0;
-            foreach (var kvp in perFileEntries)
+            // Reported from INSIDE the per-file loop, not merely around the call (#4571). This
+            // walks every survivor observation - 89,068,375 at 82 files - and measured ~16 s
+            // there on 2026-08-15. It is O(observations), so it is ~32 s at 163 files and worse
+            // beyond: a caller-level reporter would print a heading and then go silent for the
+            // whole of it, which is the gap this issue exists to remove, merely deferred to a
+            // larger dataset. The reporter's throttle means a small run still costs one line.
+            int reduceIdx = 0;
+            ProgressReporter.Run(
+                CountText.Format(perFileEntries.Count,
+                    OspreyFDRResources.ModelDiagnosticsData_ReduceToPrecs_Finding_the_best_peak_of_each_precursor_in_1_file,
+                    OspreyFDRResources.ModelDiagnosticsData_ReduceToPrecs_Finding_the_best_peak_of_each_precursor_across__0__files),
+                perFileEntries.Count, progress =>
             {
-                foreach (var e in kvp.Value)
+                foreach (var kvp in perFileEntries)
                 {
-                    uint baseId = e.EntryId & BASE_ID_MASK;
-                    EntrapmentClass cls = Classify(e.IsDecoy, baseId, classByBaseId, haveManifest,
-                        ref wc, ref woc);
-                    uint pairIdx = 0;
-                    bool hasPair = pairByBaseId != null &&
-                        pairByBaseId.TryGetValue(baseId, out pairIdx);
-                    string key = e.ModifiedSequence + "|" + e.Charge;
-                    if (!best.TryGetValue(key, out var cur))
+                    progress.Report(++reduceIdx);
+                    foreach (var e in kvp.Value)
                     {
-                        cur = new Prec
+                        uint baseId = e.EntryId & BASE_ID_MASK;
+                        EntrapmentClass cls = Classify(e.IsDecoy, baseId, classByBaseId, haveManifest,
+                            ref wc, ref woc);
+                        uint pairIdx = 0;
+                        bool hasPair = pairByBaseId != null &&
+                            pairByBaseId.TryGetValue(baseId, out pairIdx);
+                        bool onTargetProtein = placement != null && placement.IsOnTargetProtein(baseId);
+                        string key = e.ModifiedSequence + @"|" + e.Charge;
+                        if (!best.TryGetValue(key, out var cur))
                         {
-                            Score = e.Score,
-                            // Precursor-level q at both scopes -- the axes the
-                            // FDR-calibration views plot. Experiment scope is what
-                            // --fdrbench emits (and thus reproduces its plots); run
-                            // scope is the per-run picture. Each precursor takes its
-                            // BEST (min) q across observations, matching
-                            // FdrBenchInputWriter's dedup, while Score stays the max
-                            // (for density / the score histogram).
-                            QRunPrecursor = e.RunPrecursorQvalue,
-                            QExpPrecursor = e.ExperimentPrecursorQvalue,
-                            IsDecoy = e.IsDecoy,
-                            Class = cls,
-                            PairIndex = pairIdx,
-                            Charge = e.Charge,
-                            HasPair = hasPair,
-                        };
-                    }
-                    else
-                    {
-                        if (e.Score > cur.Score)
-                        {
-                            cur.Score = e.Score;
-                            cur.IsDecoy = e.IsDecoy;
-                            cur.Class = cls;
-                            cur.PairIndex = pairIdx;
-                            cur.HasPair = hasPair;
+                            cur = new Prec
+                            {
+                                Score = e.Score,
+                                // Precursor-level q at both scopes -- the axes the
+                                // FDR-calibration views plot. Experiment scope is what
+                                // --fdrbench emits (and thus reproduces its plots); run
+                                // scope is the per-run picture. Each precursor takes its
+                                // BEST (min) q across observations, matching
+                                // FdrBenchInputWriter's dedup, while Score stays the max
+                                // (for density / the score histogram).
+                                QRunPrecursor = e.RunPrecursorQvalue,
+                                QExpPrecursor = e.ExperimentPrecursorQvalue,
+                                IsDecoy = e.IsDecoy,
+                                Class = cls,
+                                PairIndex = pairIdx,
+                                Charge = e.Charge,
+                                HasPair = hasPair,
+                                OnTargetProtein = onTargetProtein,
+                            };
                         }
-                        if (e.RunPrecursorQvalue < cur.QRunPrecursor)
-                            cur.QRunPrecursor = e.RunPrecursorQvalue;
-                        if (e.ExperimentPrecursorQvalue < cur.QExpPrecursor)
-                            cur.QExpPrecursor = e.ExperimentPrecursorQvalue;
+                        else
+                        {
+                            if (e.Score > cur.Score)
+                            {
+                                cur.Score = e.Score;
+                                cur.IsDecoy = e.IsDecoy;
+                                cur.Class = cls;
+                                cur.PairIndex = pairIdx;
+                                cur.HasPair = hasPair;
+                                cur.OnTargetProtein = onTargetProtein;
+                            }
+                            if (e.RunPrecursorQvalue < cur.QRunPrecursor)
+                                cur.QRunPrecursor = e.RunPrecursorQvalue;
+                            if (e.ExperimentPrecursorQvalue < cur.QExpPrecursor)
+                                cur.QExpPrecursor = e.ExperimentPrecursorQvalue;
+                        }
+                        best[key] = cur;
                     }
-                    best[key] = cur;
                 }
-            }
+            }, indent, ProgressReporter.IO_INTERVAL_SECONDS);
             nWithClass = wc; nWithoutClass = woc;
             return best.Values.ToList();
         }
@@ -1325,6 +1714,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // it adjudicates the real-target set's FDP -- see ComputeCrossRunView.
             var entRunSets = new List<HashSet<string>>(n);
             var entExpSets = new List<HashSet<string>>(n);
+            // The DECOYS' own membership under the SAME two gates (#4489): a decoy is detected in
+            // a run iff its OWN q clears the run gate there - the rule a target's run count uses.
+            // Run q is winner-only per file, so a decoy only has one in a run where it won its
+            // target-decoy competition, exactly as a target only has one where it won; nothing
+            // beyond that competition couples the two. That symmetry is what lets the decoy
+            // run-count histogram stand in for the false targets' and give a per-k FDP on any
+            // dataset - see SetDecoyFdpByRunCount.
+            var decRunSets = new List<HashSet<string>>(n);
+            var decExpSets = new List<HashSet<string>>(n);
             bool anyEntrapment = false;
             for (int i = 0; i < n; i++)
             {
@@ -1334,17 +1732,25 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 var expSet = new HashSet<string>(StringComparer.Ordinal);
                 var entRunSet = new HashSet<string>(StringComparer.Ordinal);
                 var entExpSet = new HashSet<string>(StringComparer.Ordinal);
+                var decRunSet = new HashSet<string>(StringComparer.Ordinal);
+                var decExpSet = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var e in kvp.Value)
                 {
-                    // Decoys (and p_decoys, which carry is_decoy) never enter either tally.
-                    if (e.IsDecoy)
-                        continue;
                     // Gate on the CONFIGURED FDR level (the value the pipeline reports on),
                     // matching the Summary per-file loop -- not a hardcoded peptide q.
                     if (e.EffectiveRunQvalue(fdrLevel) > runFdr)
                         continue;
-                    string key = e.ModifiedSequence + "|" + e.Charge;   // same key as ReduceToPrecs
+                    string key = e.ModifiedSequence + @"|" + e.Charge;   // same key as ReduceToPrecs
                     bool expOk = e.EffectiveExperimentQvalue(fdrLevel) <= runFdr; // max(run q, exp q) <= FDR
+                    // Decoys (and p_decoys, which carry is_decoy) never enter the target or
+                    // entrapment tallies; they get their own.
+                    if (e.IsDecoy)
+                    {
+                        decRunSet.Add(key);
+                        if (expOk)
+                            decExpSet.Add(key);
+                        continue;
+                    }
                     // Entrapment (p_target) is a known false set that by design does not
                     // reproduce: route it to its own sets so it can't inflate the real-target
                     // k=1 bump, then reuse it as the FDP reference for the real set.
@@ -1369,6 +1775,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 expSets.Add(expSet);
                 entRunSets.Add(entRunSet);
                 entExpSets.Add(entExpSet);
+                decRunSets.Add(decRunSet);
+                decExpSets.Add(decExpSet);
             }
 
             // Only overlay the entrapment adjudication when the run actually carries
@@ -1378,8 +1786,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             return new CrossRunDetection
             {
                 RunNames = runNames,
-                PerRun = ComputeCrossRunView(runSets, anyEntrapment ? entRunSets : null, n, r),
-                Experiment = ComputeCrossRunView(expSets, anyEntrapment ? entExpSets : null, n, r),
+                PerRun = ComputeCrossRunView(runSets, anyEntrapment ? entRunSets : null, decRunSets, n, r),
+                Experiment = ComputeCrossRunView(expSets, anyEntrapment ? entExpSets : null, decExpSets, n, r),
             };
         }
 
@@ -1390,9 +1798,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         // per-run mean/std. Shared by the run-scoped and experiment-scoped views.
         // entRunSets (the entrapment membership under the SAME gate, or null on a plain
         // target+decoy run) adds the entrapment run-count overlay and the per-k
-        // entrapment-measured FDP at the library ratio r.
+        // entrapment-measured FDP at the library ratio r. decRunSets (the decoys' membership
+        // under the same gate) adds the decoy run-count histogram and the decoy-estimated per-k FDP.
         private static CrossRunView ComputeCrossRunView(List<HashSet<string>> perRunSets,
-            List<HashSet<string>> entRunSets, int n, double r)
+            List<HashSet<string>> entRunSets, List<HashSet<string>> decRunSets, int n, double r)
         {
             var perRunCount = new int[n];
             var cumUnion = new int[n];
@@ -1413,6 +1822,52 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             }
 
             var hist = TallyRunCountHistogram(perRunSets, n);
+            int[] entHistOrNull = entRunSets == null ? null : TallyRunCountHistogram(entRunSets, n);
+            int[] cumUnionEntOrNull = null;
+            if (entRunSets != null)
+            {
+                cumUnionEntOrNull = new int[n];
+                var entUnionSet = new HashSet<string>(StringComparer.Ordinal);
+                for (int i = 0; i < n; i++)
+                {
+                    entUnionSet.UnionWith(entRunSets[i]);
+                    cumUnionEntOrNull[i] = entUnionSet.Count;
+                }
+            }
+            return AssembleCrossRunView(perRunCount, cumUnion, cumIntersection, hist,
+                entHistOrNull, cumUnionEntOrNull, TallyRunCountHistogram(decRunSets, n), n, r);
+        }
+
+        /// <summary>
+        /// Streamed counterpart of the set-based <see cref="ComputeCrossRunView(List{HashSet{string}}, List{HashSet{string}}, List{HashSet{string}}, int, double)"/>:
+        /// same view, from state folded one run at a time instead of from N retained per-run sets.
+        ///
+        /// <para>The two overloads share <see cref="AssembleCrossRunView"/>, which is every line
+        /// of arithmetic in this view. They differ ONLY in how the four arrays and two histograms
+        /// are produced, so the equality that has to hold is "do the streams produce the same
+        /// arrays as the loop" - which is what
+        /// <c>ModelDiagnosticsDataTest.TestStreamingAccumulatorMatchesBatch</c> already asserts on
+        /// every build. The resident caller keeps the set-based overload deliberately: changing
+        /// both would leave two implementations that can agree with each other and disagree with
+        /// what they replaced.</para>
+        /// </summary>
+        private static CrossRunView ComputeCrossRunView(Accumulator.CrossRunStream main,
+            Accumulator.CrossRunStream ent, Accumulator.CrossRunStream dec, int n, double r)
+        {
+            return AssembleCrossRunView(main.PerRunCount, main.CumUnion, main.CumIntersection,
+                HistogramFromRunCounts(main.RunCount, n),
+                ent == null ? null : HistogramFromRunCounts(ent.RunCount, n),
+                ent?.CumUnion, HistogramFromRunCounts(dec.RunCount, n), n, r);
+        }
+
+        /// <summary>
+        /// Everything the cross-run view computes once its per-run arrays and run-count
+        /// histograms exist. Shared by the set-based and streamed producers so neither can drift
+        /// in the arithmetic - only in how it arrives at the inputs.
+        /// </summary>
+        private static CrossRunView AssembleCrossRunView(int[] perRunCount, int[] cumUnion,
+            int[] cumIntersection, int[] hist, int[] entHist, int[] cumUnionEnt, int[] decHist, int n, double r)
+        {
             int half = (n + 1) / 2;                     // ceil(n/2)
             int atLeastHalf = 0;
             // Start at max(half, 1): hist is indexed k-1, so k must be >= 1. Guards the
@@ -1437,15 +1892,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 MeanPerRun = mean,
                 StdPerRun = std,
             };
+            SetDecoyFdpByRunCount(view, hist, entHist, decHist, n);
 
             // Entrapment adjudication overlay: the known-false set's own run-count
             // histogram, plus the FDRBench combined FDP of each k-slice (real targets
             // n_t = hist[k], entrapment n_p = entHist[k]). The k=1 entry on the
             // experiment view answers whether the exp-q-surviving singletons are real
             // rare biology (FDP ~ nominal) or over-admitted 1-hit-wonders (FDP >> nominal).
-            if (entRunSets != null)
+            if (entHist != null)
             {
-                var entHist = TallyRunCountHistogram(entRunSets, n);
                 var fdp = new double[n];
                 for (int k = 0; k < n; k++)
                 {
@@ -1465,13 +1920,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 // the union accretes fresh FPs and this climbs with i; the experiment-wide
                 // gate bounds the dataset-wide error, so its curve stays far flatter. The
                 // gap at i = n is the empirical Collins/Rosenberger run-vs-global FDR effect.
-                var cumUnionEnt = new int[n];
                 var unionFdp = new double[n];
-                var entUnion = new HashSet<string>(StringComparer.Ordinal);
                 for (int i = 0; i < n; i++)
                 {
-                    entUnion.UnionWith(entRunSets[i]);
-                    cumUnionEnt[i] = entUnion.Count;
                     int ntU = cumUnion[i], npU = cumUnionEnt[i];
                     unionFdp[i] = ntU + npU > 0 ? (1.0 + 1.0 / r) * npU / (ntU + npU) : double.NaN;
                 }
@@ -1480,6 +1931,60 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             }
 
             return view;
+        }
+
+        /// <summary>
+        /// The decoy-based per-k FDP (#4489): the entrapment-free counterpart of
+        /// <see cref="CrossRunView.EntrapmentFdpByRunCount"/>, available on every dataset.
+        ///
+        /// <para>FDP(k) = N_D(k) / N_T(k), where N_D(k) is the decoy precursors detected in
+        /// exactly k runs and N_T(k) every TARGET-side precursor detected in exactly k runs -
+        /// the real targets plus any entrapment, because both are on the target side of the
+        /// competition the decoys are drawn against. Osprey makes one decoy per target-side
+        /// entry, so the target-to-decoy ratio is 1 and carries no factor. False targets do not
+        /// reproduce, so they pile up at low k; decoys are null draws gated by the same per-run
+        /// rule, so their k distribution follows the false targets' and the ratio estimates
+        /// each slice's contamination. The cumulative form FDP(>=k) sums both counts from k up
+        /// to N: the FDP of the set a run-count floor of k would keep. NaN where a slice (or
+        /// tail) holds no target.</para>
+        /// </summary>
+        private static void SetDecoyFdpByRunCount(CrossRunView view, int[] hist, int[] entHist,
+            int[] decHist, int n)
+        {
+            var fdp = new double[n];
+            var fdpAtLeast = new double[n];
+            long tailTargets = 0, tailDecoys = 0;
+            for (int k = n - 1; k >= 0; k--)
+            {
+                int targets = hist[k] + (entHist?[k] ?? 0);
+                fdp[k] = targets > 0 ? (double)decHist[k] / targets : double.NaN;
+                tailTargets += targets;
+                tailDecoys += decHist[k];
+                fdpAtLeast[k] = tailTargets > 0 ? (double)tailDecoys / tailTargets : double.NaN;
+            }
+            view.DecoyRunCountHistogram = decHist;
+            view.DecoyFdpByRunCount = fdp;
+            view.DecoyFdpAtLeastRunCount = fdpAtLeast;
+        }
+
+        /// <summary>
+        /// The pass-2 cross-run views without the decoy-based FDP. In pass 2 the symmetry the
+        /// estimate rests on is broken: Stage 6 gap-fill re-scores TARGETS that passed into the
+        /// runs where they were missing, and a decoy is re-scored there only alongside its
+        /// target, so a passing false target climbs to higher k while a passing decoy stays where
+        /// its own detections put it. The pass-2 decoy curve would read as a calibration finding
+        /// when it is an artifact of gap-fill, so it is left out; the entrapment curve, which
+        /// gap-fill treats like any target, stays.
+        /// </summary>
+        private static CrossRunDetection WithoutDecoyFdp(CrossRunDetection crossRun)
+        {
+            foreach (var view in new[] { crossRun.PerRun, crossRun.Experiment })
+            {
+                view.DecoyRunCountHistogram = null;
+                view.DecoyFdpByRunCount = null;
+                view.DecoyFdpAtLeastRunCount = null;
+            }
+            return crossRun;
         }
 
         // Histogram of how many runs each precursor is detected in (index k-1 => detected
@@ -1497,6 +2002,16 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     runCount[key] = c + 1;
                 }
             }
+            return HistogramFromRunCounts(runCount, n);
+        }
+
+        /// <summary>
+        /// The histogram step alone, over a key -> run-count map. Factored out so the streamed
+        /// producer - which maintains that map as it folds instead of building it from retained
+        /// sets - bins it with the identical code rather than a copy that can drift.
+        /// </summary>
+        private static int[] HistogramFromRunCounts(IReadOnlyDictionary<string, int> runCount, int n)
+        {
             var hist = new int[n];
             foreach (var c in runCount.Values)
             {
@@ -1660,7 +2175,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         // gives the per-run picture when qSel is the run-precursor q. r =
         // entrapment DB size / target DB size, from the manifest.
         private static FdpView BuildFdpView(List<Prec> precs, double r,
-            Func<Prec, double> qSel, string label, int pass, string scope, bool matchesFdrBench)
+            Func<Prec, double> qSel, string label, int pass, string scope, bool matchesFdrBench,
+            EntrapmentPlacement placement)
         {
             // FDRBench thresholds each class by ITS OWN q-value: at q <= t,
             // n_t = targets with q <= t and n_p = entrapment with q <= t. So sort
@@ -1702,8 +2218,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
             var targetQ = new List<double>();
             var entrapQ = new List<double>();     // all entrapment q (for n_p)
+            var entrapOnTargetQ = new List<double>();   // the entrapment on real target proteins
             var eventsA = new List<double>();     // +1 at q_e  (entrapment accepted, ranks above target)
             var eventsB = new List<double>();     // +1 at q_t  (paired target then also accepted)
+            bool split = placement != null && placement.HasEntrapmentOnTargetProteins;
             foreach (var p in precs)
             {
                 if (p.IsDecoy)
@@ -1716,6 +2234,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 {
                     double qe = qSel(p);
                     entrapQ.Add(qe);
+                    if (split && p.OnTargetProtein)
+                        entrapOnTargetQ.Add(qe);
                     if (!p.HasPair)
                         continue;
                     double[] tgt;
@@ -1740,6 +2260,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // is C#-only diagnostics, off the cross-impl parity path).
             targetQ.Sort(); // Array.Sort OK: primitive q doubles, value is whole key, tie order immaterial to the <= sweep
             entrapQ.Sort(); // Array.Sort OK: primitive q doubles, value is whole key, tie order immaterial to the <= sweep
+            entrapOnTargetQ.Sort(); // Array.Sort OK: primitive q doubles, value is whole key, tie order immaterial to the <= sweep
             eventsA.Sort(); // Array.Sort OK: primitive q doubles, value is whole key, tie order immaterial to the <= sweep
             eventsB.Sort(); // Array.Sort OK: primitive q doubles, value is whole key, tie order immaterial to the <= sweep
 
@@ -1748,12 +2269,24 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             var comb = new List<double>();
             var paired = new List<double>();
             var ntAcc = new List<int>();
+            var neAcc = new List<int>();
+            var expected = new List<double>();
+            var neOnTarget = new List<int>();
+            var neOnOwn = new List<int>();
+            var combOnTarget = new List<double>();
+            var combOnOwn = new List<double>();
+            // Each half is scaled by its own entrapment-to-target ratio: the half on target
+            // proteins is r_t of the targets, the half on its own proteins r_e, and the plain
+            // combined estimate at r = r_t + r_e is their pooled value.
+            double rOnTarget = split ? placement.RatioOnTargetProteins : 0;
+            double rOnOwn = split ? placement.RatioOnEntrapmentProteins : 0;
 
-            int ei = 0, ai = 0, bi = 0, nE = 0;
+            int ei = 0, ai = 0, bi = 0, nE = 0, oi = 0, nEOnTarget = 0;
             for (int i = 0; i < targetQ.Count; i++)
             {
                 double t = targetQ[i];
                 while (ei < entrapQ.Count && entrapQ[ei] <= t) { nE++; ei++; }
+                while (oi < entrapOnTargetQ.Count && entrapOnTargetQ[oi] <= t) { nEOnTarget++; oi++; }
                 while (ai < eventsA.Count && eventsA[ai] <= t) ai++;
                 while (bi < eventsB.Count && eventsB[bi] <= t) bi++;
                 int nT = i + 1;
@@ -1768,6 +2301,18 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 comb.Add((1.0 + 1.0 / r) * nE / denom);
                 paired.Add((nE + vt) / denom);
                 ntAcc.Add(nT);
+                neAcc.Add(nE);
+                // The combined estimator at FDP = t, solved for n_p: what a calibrated q would
+                // have let through at this threshold.
+                expected.Add(t * denom * r / (1.0 + r));
+                if (split)
+                {
+                    int nEOnOwn = nE - nEOnTarget;
+                    neOnTarget.Add(nEOnTarget);
+                    neOnOwn.Add(nEOnOwn);
+                    combOnTarget.Add(rOnTarget > 0 ? (1.0 + 1.0 / rOnTarget) * nEOnTarget / (nT + nEOnTarget) : double.NaN);
+                    combOnOwn.Add(rOnOwn > 0 ? (1.0 + 1.0 / rOnOwn) * nEOnOwn / (nT + nEOnOwn) : double.NaN);
+                }
             }
 
             // q-aware thinning: keep the [0, 2%] calibration zoom window dense
@@ -1791,6 +2336,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 Paired = pairedOk ? Pick(paired, idx) : null,
                 PairedSuppressedPartial = anyPair && !pairedOk,
                 NTargetAccepted = Pick(ntAcc, idx),
+                NEntrapmentAccepted = Pick(neAcc, idx),
+                ExpectedEntrapment = Pick(expected, idx),
+                HasPlacementSplit = split,
+                RatioOnTargetProteins = rOnTarget,
+                RatioOnEntrapmentProteins = rOnOwn,
+                NEntrapmentOnTargetProteins = split ? Pick(neOnTarget, idx) : null,
+                NEntrapmentOnEntrapmentProteins = split ? Pick(neOnOwn, idx) : null,
+                CombinedOnTargetProteins = split ? Pick(combOnTarget, idx) : null,
+                CombinedOnEntrapmentProteins = split ? Pick(combOnOwn, idx) : null,
             };
         }
 

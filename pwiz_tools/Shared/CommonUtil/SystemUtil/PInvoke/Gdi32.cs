@@ -44,5 +44,17 @@ namespace pwiz.Common.SystemUtil.PInvoke
 
         [DllImport("gdi32.dll")]
         public static extern int GetDeviceCaps(IntPtr hdc, DeviceCap flag);
+
+        [DllImport("gdi32.dll")]
+        public static extern int SaveDC(IntPtr hdc);
+
+        [DllImport("gdi32.dll")]
+        public static extern bool RestoreDC(IntPtr hdc, int nSavedDC);
+
+        [DllImport("gdi32.dll")]
+        public static extern bool SetViewportOrgEx(IntPtr hdc, int x, int y, IntPtr lpPoint);
+
+        [DllImport("gdi32.dll")]
+        public static extern int IntersectClipRect(IntPtr hdc, int left, int top, int right, int bottom);
     }
 }

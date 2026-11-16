@@ -41,9 +41,9 @@
 // [psi-ms.obo]
 #define _PSI_MS_OBO_
 //   format-version: 1.2
-//   data-version: 4.1.232
-//   date: 16:01:2026 12:00
-//   saved-by: Jonathan Hunter
+//   data-version: 4.1.257
+//   date: 23:06:2026 22:00
+//   saved-by: Douwe Schulte
 //   default-namespace: MS
 //   namespace-id-rule: * MS:$sequence(7,0,9999999)$
 //   namespace-id-rule: * PEFF:$sequence(7,0,9999999)$
@@ -70,6 +70,7 @@
 //   remark: creator: Jonathan Hunter <jhunter <-at-> ebi.ac.uk>
 //   remark: creator: Samuel Wein <sam <-at-> openms.de>
 //   remark: creator: Jeroen Van Goey <j.vangoey <-at-> instadeep.com>
+//   remark: creator: Jannick Kappelmann <jannick.kappelmann <-at-> gmail.com>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html and http://mass-spec.lsu.edu/msterms/index.php/Main_Page
 //   remark: For any queries contact psidev-ms-vocab@lists.sourceforge.net
@@ -81,7 +82,7 @@
 // [unimod.obo]
 #define _UNIMOD_OBO_
 //   format-version: 1.4
-//   date: 17:06:2025 11:31
+//   date: 17:02:2026 11:36
 //
 // [unit.obo]
 #define _UNIT_OBO_
@@ -136,7 +137,7 @@ enum PWIZ_API_DECL CVID
     /// DbDate: PEFF keyword for the database date (release or file date of the source) according to database provider.
     PEFF_DbDate_OBSOLETE = 200000014,
 
-    /// NumberOfEntries: PEFF keyword for the sumber of sequence entries in the database.
+    /// NumberOfEntries: PEFF keyword for the number of sequence entries in the database.
     PEFF_NumberOfEntries = 200000015,
 
     /// Conversion: PEFF keyword for the description of the conversion from original format to this current one.
@@ -202,7 +203,7 @@ enum PWIZ_API_DECL CVID
     /// ModResPsi: PEFF keyword for the modified residue with PSI-MOD identifier.
     PEFF_ModResPsi = 200001012,
 
-    /// ModRes: PEFF keyword for the modified residue without aPSI-MOD or UniMod identifier.
+    /// ModRes: PEFF keyword for the modified residue without a PSI-MOD or Unimod identifier.
     PEFF_ModRes = 200001013,
 
     /// AltAC: PEFF keyword for the Alternative Accession Code.
@@ -244,7 +245,7 @@ enum PWIZ_API_DECL CVID
     /// ID: PEFF keyword for the UniProtKB specific Protein identifier ID; a UniProtKB term.
     PEFF_ID = 200001026,
 
-    /// ModResUnimod: PEFF keyword for the modified residue with UniMod identifier.
+    /// ModResUnimod: PEFF keyword for the modified residue with Unimod identifier.
     PEFF_ModResUnimod = 200001027,
 
     /// VariantSimple: PEFF keyword for the simple sequence variation of a single amino acid change. A change to a stop codon is permitted with a * symbol. More complex variations must be encoded with the VariantComplex term.
@@ -781,19 +782,19 @@ enum PWIZ_API_DECL CVID
     /// Waters instrument model: Waters Corporation instrument model.
     MS_Waters_instrument_model = 1000126,
 
-    /// centroid spectrum: Processing of profile data to produce spectra that contains discrete peaks of zero width. Often used to reduce the size of dataset.
+    /// centroid spectrum: A spectrum representation in which each peak is recorded as a single discrete data point at a distinct coordinate value (e.g. m/z; wavelength; drift time) with a corresponding intensity.
     MS_centroid_spectrum = 1000127,
 
-    /// Discrete Mass Spectrum (centroid spectrum): Processing of profile data to produce spectra that contains discrete peaks of zero width. Often used to reduce the size of dataset.
+    /// Discrete Mass Spectrum (centroid spectrum): A spectrum representation in which each peak is recorded as a single discrete data point at a distinct coordinate value (e.g. m/z; wavelength; drift time) with a corresponding intensity.
     MS_Discrete_Mass_Spectrum = MS_centroid_spectrum,
 
-    /// profile spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.
+    /// profile spectrum: A spectrum representation in which ion signal for each peak is recorded as a distribution of intensity values across the coordinate range (e.g. m/z; wavelength; drift time).
     MS_profile_spectrum = 1000128,
 
-    /// continuous mass spectrum (profile spectrum): A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.
+    /// continuous mass spectrum (profile spectrum): A spectrum representation in which ion signal for each peak is recorded as a distribution of intensity values across the coordinate range (e.g. m/z; wavelength; drift time).
     MS_continuous_mass_spectrum = MS_profile_spectrum,
 
-    /// Continuum Mass Spectrum (profile spectrum): A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.
+    /// Continuum Mass Spectrum (profile spectrum): A spectrum representation in which ion signal for each peak is recorded as a distribution of intensity values across the coordinate range (e.g. m/z; wavelength; drift time).
     MS_Continuum_Mass_Spectrum = MS_profile_spectrum,
 
     /// negative scan: Polarity of the scan is negative.
@@ -2526,6 +2527,9 @@ enum PWIZ_API_DECL CVID
 
     /// ProteinLynx Global Server: Waters software for data analysis.
     MS_ProteinLynx_Global_Server = 1000601,
+
+    /// PLGS (ProteinLynx Global Server): Waters software for data analysis.
+    MS_PLGS = MS_ProteinLynx_Global_Server,
 
     /// Shimadzu MALDI-TOF instrument model: Shimadzu MALDI-TOF instrument model.
     MS_Shimadzu_MALDI_TOF_instrument_model = 1000602,
@@ -7237,7 +7241,7 @@ enum PWIZ_API_DECL CVID
     /// ProteomeDiscoverer:Mascot:Significance High: Calculated relaxed significance when performing a decoy search for medium-confidence peptides.
     MS_ProteomeDiscoverer_Mascot_Significance_High = 1002230,
 
-    /// regular expressions for a GUID: ([A-Fa-f0-9]\{8\}-([A-Fa-f0-9]\{4\}-)\{3\}[A-Fa-f0-9]\{12\}).
+    /// regular expressions for a GUID: ([A-Fa-f0-9]\\{8\\}-([A-Fa-f0-9]\\{4\\}-)\\{3\\}[A-Fa-f0-9]\\{12\\}).
     MS_regular_expressions_for_a_GUID = 1002231,
 
     /// ProteomeDiscoverer:Default FDR calculator: The default FDR calculator as globally unique identifier (GUID).
@@ -7993,7 +7997,7 @@ enum PWIZ_API_DECL CVID
     /// regular expression: Regular expression.
     MS_regular_expression = 1002479,
 
-    /// regular expression for a digital object identifier (DOI): (10[.][0-9]\{4,\}(?:[.][0-9]+)*/(?:(?![\"&\'<>])[^ \t\\r\n\\v\\f])+).
+    /// regular expression for a digital object identifier (DOI): (10[.][0-9]\\{4,\\}(?:[.][0-9]+)*/(?:(?![\\\"&\\'<>])[^ \\t\\r\\n\\v\\f])+).
     MS_regular_expression_for_a_digital_object_identifier__DOI_ = 1002480,
 
     /// higher energy beam-type collision-induced dissociation: A collision-induced dissociation process wherein the projectile ion has the translational energy higher than approximately 1000 eV.
@@ -8071,7 +8075,7 @@ enum PWIZ_API_DECL CVID
     /// modification index: The order of modifications to be referenced elsewhere in the document.
     MS_modification_index = 1002504,
 
-    /// regular expression for modification localization scoring: (?<MOD_INDEX>[0-9]+):(?<SCORE>[01][.][0-9]+(?:[Ee][+\-]?[0-9]+)?):(?<POSITION>[0-9]+(?:[|][0-9]+)*):(?<PASS_THRESHOLD>true|false)
+    /// regular expression for modification localization scoring: (?<MOD_INDEX>[0-9]+):(?<SCORE>[01][.][0-9]+(?:[Ee][+\\-]?[0-9]+)?):(?<POSITION>[0-9]+(?:[|][0-9]+)*):(?<PASS_THRESHOLD>true|false)
     MS_regular_expression_for_modification_localization_scoring = 1002505,
 
     /// modification position score: Modification position score.
@@ -9022,7 +9026,7 @@ enum PWIZ_API_DECL CVID
     /// adduct ion isotope: Isotope of the matrix molecule M of an adduct formation.
     MS_adduct_ion_isotope = 1002811,
 
-    /// Regular expression for adduct ion formula: (\[[:digit:]{0,1}M([+][:digit:]{0,1}(H|K|(Na)|(Li)|(Cl)|(Br)|(NH3)|(NH4)|(CH3OH)|(IsoProp)|(DMSO)|(FA)|(Hac)|(TFA)|(NaCOOH)|(HCOOH)|(CF3COOH)|(ACN))){0,}([-][:digit:]{0,1}(H|(H2O)|(CH2)|(CH4)|(NH3)|(CO)|(CO2)|(COCH2)|(HCOOH)|(C2H4)|(C4H8)|(C3H2O3)|(C5H8O4)|(C6H10O4)|(C6H10O5)|(C6H8O6))){0,}\][:digit:]{0,1}[+-]).
+    /// Regular expression for adduct ion formula: (\\[[:digit:]{0,1}M([+][:digit:]{0,1}(H|K|(Na)|(Li)|(Cl)|(Br)|(NH3)|(NH4)|(CH3OH)|(IsoProp)|(DMSO)|(FA)|(Hac)|(TFA)|(NaCOOH)|(HCOOH)|(CF3COOH)|(ACN))){0,}([-][:digit:]{0,1}(H|(H2O)|(CH2)|(CH4)|(NH3)|(CO)|(CO2)|(COCH2)|(HCOOH)|(C2H4)|(C4H8)|(C3H2O3)|(C5H8O4)|(C6H10O4)|(C6H10O5)|(C6H8O6))){0,}\\][:digit:]{0,1}[+-]).
     MS_Regular_expression_for_adduct_ion_formula = 1002812,
 
     /// adduct ion formula: Adduct formation formula of the form M+X or M-X, as constrained by the provided regular expression.
@@ -10030,6 +10034,9 @@ enum PWIZ_API_DECL CVID
     /// ProSight: ProSight: Database search engine for top-down proteomics.
     MS_ProSight = 1003141,
 
+    /// ProSightPD (ProSight): ProSight: Database search engine for top-down proteomics.
+    MS_ProSightPD = MS_ProSight,
+
     /// TDPortal: TDPortal: Database search engine for top-down proteomics.
     MS_TDPortal = 1003142,
 
@@ -10234,7 +10241,7 @@ enum PWIZ_API_DECL CVID
     /// constituent library file: Source library URI which(at least) a subset of spectra were extracted from.
     MS_constituent_library_file = 1003205,
 
-    /// library creation log: String of logging information generated when the library was constructed from its constituent files. Multiple lines should be separated with escaped \n
+    /// library creation log: String of logging information generated when the library was constructed from its constituent files. Multiple lines should be separated with escaped \\n
     MS_library_creation_log = 1003206,
 
     /// library creation software: Library creation software
@@ -10822,7 +10829,7 @@ enum PWIZ_API_DECL CVID
     /// crosslinker cleavage characteristics: Signifies that the crosslinker is cleavable and on cleavage can leave a given stub. The pattern specifies three slots <name>:<mass>:<pairs with>.
     MS_crosslinker_cleavage_characteristics = 1003390,
 
-    /// crosslinker cleavage regular expression: ^(?<NAME>[A-Za-z]):(?<MASS>[+-]?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+(\.[0-9]+)?)?):(?<PAIRS_WITH>[A-Za-z]+)$
+    /// crosslinker cleavage regular expression: ^(?<NAME>[A-Za-z]):(?<MASS>[+-]?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+(\\.[0-9]+)?)?):(?<PAIRS_WITH>[A-Za-z]+)$
     MS_crosslinker_cleavage_regular_expression = 1003391,
 
     /// search modification id: A unique identifier within an in mzIdentML document denoting a search modification rule. The same modification may be present multiple times with different id values to reflect different specificities or neutral losses.
@@ -11437,8 +11444,8 @@ enum PWIZ_API_DECL CVID
     /// three-dimensional liquid chromatography system: A system for Three-dimensional liquid chromatography (3D-LC), an advanced separation technique that combines three distinct liquid chromatography (LC) methods to achieve significantly enhanced separation power for complex mixtures, particularly in fields like proteomics.
     MS_three_dimensional_liquid_chromatography_system = 1003594,
 
-    /// planar chomatography system: A system for on-line planar chomatography.
-    MS_planar_chomatography_system = 1003595,
+    /// planar chromatography system: A system for on-line planar chromatography.
+    MS_planar_chromatography_system = 1003595,
 
     /// thin layer chromatography system: A system for on-line Thin Layer Chromatography (TLC), based upon a widely used, simple, and cost-effective analytical technique for separating and identifying components in a mixture.
     MS_thin_layer_chromatography_system = 1003596,
@@ -11848,12 +11855,6 @@ enum PWIZ_API_DECL CVID
     /// gas chromatography mass spectrometry system: A gas chromatography mass spectrometry system (GC–MS) integrates a gas chromatograph for volatile analyte separation with a mass spectrometer for ionization and detection, enabling sensitive qualitative or quantitative analysis.
     MS_gas_chromatography_mass_spectrometry_system = 1003733,
 
-    /// gas chromatography mass spectrometry system model: Gas chromatography mass spectrometry system model name not including the vendor's name.
-    MS_gas_chromatography_mass_spectrometry_system_model = 1003734,
-
-    /// Shimadzu gas chromatography mass spectrometry system model: Shimadzu Corporation gas chromatography mass spectrometry system model.
-    MS_Shimadzu_gas_chromatography_mass_spectrometry_system_model = 1003735,
-
     /// separation system: A system to effect separation of compounds.
     MS_separation_system = 1003737,
 
@@ -11929,59 +11930,62 @@ enum PWIZ_API_DECL CVID
     /// instrument class: Instruments classified based on their architecture with respect to mass analyzers.
     MS_instrument_class = 1003761,
 
-    /// triple quadrupole: A triple quadrupole mass spectrometer (TQMS; QqQ) is a tandem mass spectrometry (MS/MS) system that employs three linear quadrupoles in series to achieve highly selective and sensitive targeted quantification of specific compounds. The first quadrupole (Q1) may select a precursor ion, the second (Q2) induces fragmentation via collision-induced dissociation (CID), and the third (Q3) monitors specific product ions, typically through Multiple Reaction Monitoring (MRM).
-    MS_triple_quadrupole = 1003762,
+    /// triple quadrupole instrument: A tandem instrument that employs three quadrupoles in series, where the first (Q1) acts as a mass filter for precursor ion selection, the second (q2) serves as a collision cell for fragmentation, and the third (Q3) as a mass filter for product ion detection.
+    MS_triple_quadrupole_instrument = 1003762,
 
-    /// QqQ (triple quadrupole): A triple quadrupole mass spectrometer (TQMS; QqQ) is a tandem mass spectrometry (MS/MS) system that employs three linear quadrupoles in series to achieve highly selective and sensitive targeted quantification of specific compounds. The first quadrupole (Q1) may select a precursor ion, the second (Q2) induces fragmentation via collision-induced dissociation (CID), and the third (Q3) monitors specific product ions, typically through Multiple Reaction Monitoring (MRM).
-    MS_QqQ = MS_triple_quadrupole,
+    /// QqQ (triple quadrupole instrument): A tandem instrument that employs three quadrupoles in series, where the first (Q1) acts as a mass filter for precursor ion selection, the second (q2) serves as a collision cell for fragmentation, and the third (Q3) as a mass filter for product ion detection.
+    MS_QqQ = MS_triple_quadrupole_instrument,
 
-    /// quadrupole time-of-flight: A quadrupole time-of-flight (Q-TOF) mass spectrometer is a hybrid instrument that combines a quadrupole mass filter with a time-of-flight (TOF) mass analyzer to provide both highly accurate mass measurements and fragmentation data. The quadrupole may be used to select a specific precursor ion which is then fragmented, and the resulting product ions are measured by the TOF analyzer, providing high resolution and mass accuracy for structural elucidation and quantification.
-    MS_quadrupole_time_of_flight = 1003763,
+    /// quadrupole time-of-flight instrument: A hybrid instrument that combines a quadrupole mass filter for precursor ion selection with a time-of-flight mass analyzer for high-resolution, accurate-mass detection of product ions.
+    MS_quadrupole_time_of_flight_instrument = 1003763,
 
-    /// Q-TOF (quadrupole time-of-flight): A quadrupole time-of-flight (Q-TOF) mass spectrometer is a hybrid instrument that combines a quadrupole mass filter with a time-of-flight (TOF) mass analyzer to provide both highly accurate mass measurements and fragmentation data. The quadrupole may be used to select a specific precursor ion which is then fragmented, and the resulting product ions are measured by the TOF analyzer, providing high resolution and mass accuracy for structural elucidation and quantification.
-    MS_Q_TOF = MS_quadrupole_time_of_flight,
+    /// Q-TOF (quadrupole time-of-flight instrument): A hybrid instrument that combines a quadrupole mass filter for precursor ion selection with a time-of-flight mass analyzer for high-resolution, accurate-mass detection of product ions.
+    MS_Q_TOF = MS_quadrupole_time_of_flight_instrument,
 
-    /// ion trap time-of-flight: An ion trap time-of-flight (IT-TOF) mass spectrometer is a hybrid instrument that uses an ion trap to accumulate, store, and often fragment ions, which are then periodically injected into a time-of-flight (TOF) mass analyzer for high-resolution mass analysis. This combination allows for sensitive MSn experiments (multiple stages of mass spectrometry) within the ion trap for structural elucidation and provides high mass accuracy and resolution via the TOF component.
-    MS_ion_trap_time_of_flight = 1003764,
+    /// ion trap time-of-flight instrument: A hybrid instrument that combines an ion trap for ion accumulation, storage, and fragmentation with a time-of-flight mass analyzer for high-resolution, accurate-mass detection.
+    MS_ion_trap_time_of_flight_instrument = 1003764,
 
-    /// IT-TOF (ion trap time-of-flight): An ion trap time-of-flight (IT-TOF) mass spectrometer is a hybrid instrument that uses an ion trap to accumulate, store, and often fragment ions, which are then periodically injected into a time-of-flight (TOF) mass analyzer for high-resolution mass analysis. This combination allows for sensitive MSn experiments (multiple stages of mass spectrometry) within the ion trap for structural elucidation and provides high mass accuracy and resolution via the TOF component.
-    MS_IT_TOF = MS_ion_trap_time_of_flight,
+    /// IT-TOF (ion trap time-of-flight instrument): A hybrid instrument that combines an ion trap for ion accumulation, storage, and fragmentation with a time-of-flight mass analyzer for high-resolution, accurate-mass detection.
+    MS_IT_TOF = MS_ion_trap_time_of_flight_instrument,
 
-    /// triple quadrupole linear ion trap: A triple quadrupole linear ion trap (QqLIT) mass spectrometer is a hybrid instrument that can operate as a conventional triple quadrupole for high-sensitivity quantification (e.g., in Multiple Reaction Monitoring mode) or as a linear ion trap for qualitative analysis, such as MSn experiments and structural elucidation. The final quadrupole (Q3) of the system can be rapidly switched between functioning as a mass-resolving filter and a high-capacity linear ion trap, allowing for both precise quantification and comprehensive structural information to be acquired in a single analytical run.
-    MS_triple_quadrupole_linear_ion_trap = 1003765,
+    /// triple quadrupole linear ion trap instrument: A hybrid instrument that combines a triple quadrupole configuration with a linear ion trap, where the third quadrupole can function either as a conventional mass filter or as a linear ion trap for MSn analysis.
+    MS_triple_quadrupole_linear_ion_trap_instrument = 1003765,
 
-    /// QqLIT (triple quadrupole linear ion trap): A triple quadrupole linear ion trap (QqLIT) mass spectrometer is a hybrid instrument that can operate as a conventional triple quadrupole for high-sensitivity quantification (e.g., in Multiple Reaction Monitoring mode) or as a linear ion trap for qualitative analysis, such as MSn experiments and structural elucidation. The final quadrupole (Q3) of the system can be rapidly switched between functioning as a mass-resolving filter and a high-capacity linear ion trap, allowing for both precise quantification and comprehensive structural information to be acquired in a single analytical run.
-    MS_QqLIT = MS_triple_quadrupole_linear_ion_trap,
+    /// QqLIT (triple quadrupole linear ion trap instrument): A hybrid instrument that combines a triple quadrupole configuration with a linear ion trap, where the third quadrupole can function either as a conventional mass filter or as a linear ion trap for MSn analysis.
+    MS_QqLIT = MS_triple_quadrupole_linear_ion_trap_instrument,
 
-    /// quadrupole fourier transform ion cyclotron resonance: A quadrupole Fourier-transform ion cyclotron resonance (Q-FT-ICR) mass spectrometer is a hybrid instrument that uses an initial quadrupole for ion guiding or mass filtering before the ions are introduced into a Penning trap, where the mass analysis occurs. Once in the Penning trap, the ions' mass-to-charge ratios (m/z) are determined with ultra-high resolution and mass accuracy by measuring their unique cyclotron frequencies in a strong magnetic field and converting the resulting image current signal into a mass spectrum via a Fourier transform. 
-    MS_quadrupole_fourier_transform_ion_cyclotron_resonance = 1003766,
+    /// quadrupole fourier transform ion cyclotron resonance instrument: A hybrid instrument that combines a quadrupole for ion guiding or mass filtering with a Fourier transform ion cyclotron resonance mass analyzer for ultra-high resolution and mass accuracy.
+    MS_quadrupole_fourier_transform_ion_cyclotron_resonance_instrument = 1003766,
 
-    /// Q-FT-ICR (quadrupole fourier transform ion cyclotron resonance): A quadrupole Fourier-transform ion cyclotron resonance (Q-FT-ICR) mass spectrometer is a hybrid instrument that uses an initial quadrupole for ion guiding or mass filtering before the ions are introduced into a Penning trap, where the mass analysis occurs. Once in the Penning trap, the ions' mass-to-charge ratios (m/z) are determined with ultra-high resolution and mass accuracy by measuring their unique cyclotron frequencies in a strong magnetic field and converting the resulting image current signal into a mass spectrum via a Fourier transform. 
-    MS_Q_FT_ICR = MS_quadrupole_fourier_transform_ion_cyclotron_resonance,
+    /// Q-FT-ICR (quadrupole fourier transform ion cyclotron resonance instrument): A hybrid instrument that combines a quadrupole for ion guiding or mass filtering with a Fourier transform ion cyclotron resonance mass analyzer for ultra-high resolution and mass accuracy.
+    MS_Q_FT_ICR = MS_quadrupole_fourier_transform_ion_cyclotron_resonance_instrument,
 
-    /// quadrupole ion mobility time-of-flight: A quadrupole ion mobility time-of-flight (Q-IMS-TOF) mass spectrometer is a hybrid instrument that adds an ion mobility spectrometry (IMS) cell between the quadrupole and the time-of-flight (TOF) analyzer, providing an additional dimension of separation based on ion size, shape, and charge in a buffer gas. This configuration allows for the separation of isobars and isomers that have the same mass-to-charge ratio (m/z) but different three-dimensional structures, which significantly enhances analytical confidence for complex samples such as in proteomics, environmental analysis, and drug screening.
-    MS_quadrupole_ion_mobility_time_of_flight = 1003767,
+    /// quadrupole ion mobility time-of-flight instrument: A hybrid instrument that combines a quadrupole mass filter, an ion mobility spectrometry separation cell, and a time-of-flight mass analyzer, enabling separation of ions by size and shape in addition to mass-to-charge ratio.
+    MS_quadrupole_ion_mobility_time_of_flight_instrument = 1003767,
 
-    /// Q-IMS-TOF (quadrupole ion mobility time-of-flight): A quadrupole ion mobility time-of-flight (Q-IMS-TOF) mass spectrometer is a hybrid instrument that adds an ion mobility spectrometry (IMS) cell between the quadrupole and the time-of-flight (TOF) analyzer, providing an additional dimension of separation based on ion size, shape, and charge in a buffer gas. This configuration allows for the separation of isobars and isomers that have the same mass-to-charge ratio (m/z) but different three-dimensional structures, which significantly enhances analytical confidence for complex samples such as in proteomics, environmental analysis, and drug screening.
-    MS_Q_IMS_TOF = MS_quadrupole_ion_mobility_time_of_flight,
+    /// Q-IMS-TOF (quadrupole ion mobility time-of-flight instrument): A hybrid instrument that combines a quadrupole mass filter, an ion mobility spectrometry separation cell, and a time-of-flight mass analyzer, enabling separation of ions by size and shape in addition to mass-to-charge ratio.
+    MS_Q_IMS_TOF = MS_quadrupole_ion_mobility_time_of_flight_instrument,
 
-    /// ion trap orbitrap: A hybrid instrument that combines an ion trap for ion storage and fragmentation with an Orbitrap mass analyzer for high-resolution, accurate-mass (HRAM) detection.
-    MS_ion_trap_orbitrap = 1003768,
+    /// ion trap orbitrap instrument: A hybrid instrument that combines an ion trap for ion storage and fragmentation with an Orbitrap mass analyzer for high-resolution, accurate-mass detection.
+    MS_ion_trap_orbitrap_instrument = 1003768,
 
-    /// quadrupole orbitrap: A quadrupole Orbitrap mass spectrometer is a hybrid instrument that uses a quadrupole mass filter for precursor ion selection, a collision cell for fragmentation, followed by an Orbitrap mass analyzer which determines the precise mass-to-charge ratios of ions with high resolution and mass accuracy via Fourier transform.
-    MS_quadrupole_orbitrap = 1003769,
+    /// quadrupole orbitrap instrument: A hybrid instrument that combines a quadrupole mass filter for precursor ion selection with an Orbitrap mass analyzer for high-resolution, accurate-mass detection.
+    MS_quadrupole_orbitrap_instrument = 1003769,
 
-    /// quadrupole ion trap orbitrap: A mass spectrometer that integrates a quadrupole mass filter, a linear ion trap, and an Orbitrap mass analyzer to provide precursor ion selection, multiple-stage fragmentation (MSn), and ultra-high resolution mass analysis.
-    MS_quadrupole_ion_trap_orbitrap = 1003770,
+    /// quadrupole ion trap orbitrap instrument: A hybrid instrument that combines a quadrupole mass filter, a linear ion trap for MSn fragmentation, and an Orbitrap mass analyzer for high-resolution, accurate-mass detection.
+    MS_quadrupole_ion_trap_orbitrap_instrument = 1003770,
 
-    /// quadrupole orbitrap astral: A instrument that integrates a quadrupole mass filter, an Orbitrap mass analyzer, and the ASTRAL analyzer for high performance in ion selection, high-resolution analysis, and high-speed, high-sensitivity MS2 measurements.
-    MS_quadrupole_orbitrap_astral = 1003771,
+    /// quadrupole orbitrap astral instrument: A hybrid instrument that combines a quadrupole mass filter, an Orbitrap mass analyzer, and an asymmetric track lossless (ASTRAL) analyzer for high-resolution analysis and high-speed MS/MS measurements.
+    MS_quadrupole_orbitrap_astral_instrument = 1003771,
 
     /// mixed polarity acquisition: The scans of a run include both positive and negative polarity acquisitions in a pattern that is not strictly alternating, such as discrete blocks of each polarity, irregular switching sequences, or other non-alternating arrangements.
     MS_mixed_polarity_acquisition = 1003774,
 
     /// secondary electrospray ionization: Secondary electrospray ionization (SESI) is an atmospheric pressure ionization (API) technique that uses a primary nano-electrospray plume of solvent ions to ionize neutral gaseous molecules in the gas phase via efficient proton transfer reactions. Operating at atmospheric pressure, SESI allows for the sensitive and real-time detection of volatile organic compounds (VOCs) and vapors with minimal sample preparation, making it ideal for applications like breath analysis and environmental monitoring.
     MS_secondary_electrospray_ionization = 1003775,
+
+    /// acquisition polarity: The ion polarity configuration used during data acquisition of a sample run.
+    MS_acquisition_polarity = 1003776,
 
     /// zstd compression: Zstandard compression, a fast, modern, general purpose lossless compression algorithm.
     MS_zstd_compression = 1003780,
@@ -12001,11 +12005,92 @@ enum PWIZ_API_DECL CVID
     /// MS-Numpress short logged float compression followed by zstd compression: Compression using MS-Numpress short logged float compression and Zstandard.
     MS_MS_Numpress_short_logged_float_compression_followed_by_zstd_compression = 1003785,
 
+    /// electrophoretic separation: Electrophoretic separation is a technique in which charged analytes are separated by differential migration in an applied electric field.
+    MS_electrophoretic_separation = 1003786,
+
+    /// capillary electrophoresis: Capillary electrophoresis (CE) is an electrophoretic separation technique performed in narrow-bore capillaries, in which analytes migrate through an electrolyte solution under the influence of an electric field and separate according to their electrophoretic mobility.
+    MS_capillary_electrophoresis = 1003787,
+
+    /// capilliary zone electrophoresis (capillary electrophoresis): Capillary electrophoresis (CE) is an electrophoretic separation technique performed in narrow-bore capillaries, in which analytes migrate through an electrolyte solution under the influence of an electric field and separate according to their electrophoretic mobility.
+    MS_capilliary_zone_electrophoresis = MS_capillary_electrophoresis,
+
+    /// CE (capillary electrophoresis): Capillary electrophoresis (CE) is an electrophoretic separation technique performed in narrow-bore capillaries, in which analytes migrate through an electrolyte solution under the influence of an electric field and separate according to their electrophoretic mobility.
+    MS_CE = MS_capillary_electrophoresis,
+
+    /// electrochromatography: Electrochromatography is a liquid chromatography technique in which the mobile phase is driven through a stationary phase by electroosmotic flow generated by an applied electric field, combining electrophoretic migration with chromatographic retention.
+    MS_electrochromatography = 1003788,
+
+    /// ion-pair reversed phase chromatography: Ion-pair reversed-phase chromatography is a reversed-phase chromatography technique in which an ion-pairing reagent is added to the mobile phase to enable retention and separation of charged or ionizable analytes on a nonpolar stationary phase.
+    MS_ion_pair_reversed_phase_chromatography = 1003789,
+
+    /// supercritical fluid chromatography: Supercritical fluid chromatography (SFC) is a separation technique in which the mobile phase is a fluid above and relatively close to its critical temperature and pressure.
+    MS_supercritical_fluid_chromatography = 1003790,
+
+    /// SFC (supercritical fluid chromatography): Supercritical fluid chromatography (SFC) is a separation technique in which the mobile phase is a fluid above and relatively close to its critical temperature and pressure.
+    MS_SFC = MS_supercritical_fluid_chromatography,
+
     /// TSQ Certis: Thermo Scientific TSQ Certis Triple Quadrupole MS.
     MS_TSQ_Certis = 1003800,
 
     /// AccurateMassSearch: OpenMS TOPP tool to assemble metabolite features from singleton mass traces.
     MS_AccurateMassSearch = 1003801,
+
+    /// Ionoptika instrument model: Ionoptika Ltd. instrument model.
+    MS_Ionoptika_instrument_model = 1003802,
+
+    /// Ionoptika software: Ionoptika software for data acquisition and analysis.
+    MS_Ionoptika_software = 1003803,
+
+    /// Ionoptika J105: Ionoptika J105 time-of-flight secondary ion mass spectrometer.
+    MS_Ionoptika_J105 = 1003804,
+
+    /// J Series III: Ionoptika J Series III time-of-flight secondary ion mass spectrometer.
+    MS_J_Series_III = 1003805,
+
+    /// NeoSIMS: Ionoptika software for data acquisition.
+    MS_NeoSIMS = 1003806,
+
+    /// Ionoptika Image Analyser: Ionoptika software for image data analysis.
+    MS_Ionoptika_Image_Analyser = 1003807,
+
+    /// J105 Ionoptika Mass Imager: Ionoptika J105 software for mass spectrometry imaging data analysis.
+    MS_J105_Ionoptika_Mass_Imager = 1003808,
+
+    /// IoDataConverter: Ionoptika software for converting Ionoptika data formats to imzML or HDF5.
+    MS_IoDataConverter = 1003809,
+
+    /// Ionoptika V1 format: Ionoptika data format generated by J105 TOF-SIMS instrument.
+    MS_Ionoptika_V1_format = 1003810,
+
+    /// Ionoptika V3 format: Ionoptika data format generated by J105 TOF-SIMS instrument.
+    MS_Ionoptika_V3_format = 1003811,
+
+    /// lambda max: The wavelength of maximum absorbance for a substance. This is analogous to the base peak m/z for UV-Vis spectroscopy.
+    MS_lambda_max = 1003812,
+
+    /// λ-max (lambda max): The wavelength of maximum absorbance for a substance. This is analogous to the base peak m/z for UV-Vis spectroscopy.
+    MS__xCE__xBB__max = MS_lambda_max,
+
+    /// list of doubles: A list of xsd:double.
+    MS_list_of_doubles = 1003813,
+
+    /// coordinate spacing model: Defines a model for calculating or correcting the spacing between points along a continuous dimension.
+    MS_coordinate_spacing_model = 1003820,
+
+    /// polynomial delta coordinate interpolation: A coordinate spacing model that predicts the next coordinate as a function of a low degree polynomial on the current coordinate, for instance a 2nd degree $x_{i + 1} = (a*x_i^2 + b*x_i + c) + x_i$. It is assumed that the parameters are inferred from the value list and the number implies the polynomial degree.
+    MS_polynomial_delta_coordinate_interpolation = 1003821,
+
+    /// grid coordinate interpolation: A coordinate spacing model that uses some form of interpolation to calculate coordinate values between a fixed minimum and maximum value. This includes formula for (potentially lossily) converting a coordinate to an integer index and vice-versa. The grid model and recalibration function parameters are given by the value list. The recalibration function may be the identity function, or a more complex model defined in a child term.
+    MS_grid_coordinate_interpolation = 1003822,
+
+    /// linear grid interpolation: A coordinate spacing model that uses linear interpolation to map grid indices to coordinates $x_i = f_x(b + i * a)$ where $f$ is some recalibration function.
+    MS_linear_grid_interpolation = 1003824,
+
+    /// square root grid interpolation: A coordinate spacing model that maps grid indices to coordinates $x_i = f_x((b + i * a)^2)$ where $f$ is some recalibration function. The square root of the coordinate is linear with respect to the index. This mirrors the formula relating time-of-flight to m/z, $t = k\\sqrt{m/z}$
+    MS_square_root_grid_interpolation = 1003825,
+
+    /// coordinate grid encoding: This array stores indices or spans into some form of coordinate space model rather than the coordinates themselves, and that grid is stored externally from this data array. The objective being that these coordinates are more compact to store than the raw coordinates themselves. The value of this parameter is the grid identifier, if there are multiple to choose from. A separate coordinate spacing model parameter will signify what form of coordinate space model is used.
+    MS_coordinate_grid_encoding = 1003826,
 
     /// zero intensity point trimming: Apply an algorithm to remove excess zero intensity value data points from a spectrum. Data may be retained for interperatbility such as retaining only zeros that flank non-zero intensity value data points from a profile spectrum..
     MS_zero_intensity_point_trimming = 1003901,
@@ -12031,8 +12116,356 @@ enum PWIZ_API_DECL CVID
     /// PRM (parallel reaction monitoring): Parallel Reaction Monitoring (PRM) utilizes high-resolution, accurate-mass mass spectrometry, typically a quadrupole orbitrap or quadrupole time-of-flight instrument, to isolate specific precursor ions and detect all resulting product ions in parallel. Unlike Selected Reaction Monitoring (SRM), which filters for pre-selected transitions, PRM acquires full MS/MS spectra for each target, thereby eliminating the need for transition optimization and providing high specificity through high-resolution interference rejection.
     MS_PRM = MS_parallel_reaction_monitoring,
 
-    /// Agilent gas chromatography mass spectrometry system model: Agilent Technologies gas chromatography mass spectrometry system model.
-    MS_Agilent_gas_chromatography_mass_spectrometry_system_model = 1003914,
+    /// centroid peak: A peak represented as a single discrete data point defined by a distinct coordinate value (e.g. m/z; wavelength; drift time) and a corresponding intensity value.
+    MS_centroid_peak = 1003908,
+
+    /// two-dimensional gas chromatography: Comprehensive two-dimensional gas chromatography (GCxGC) is a multidimensional separation technique that utilizes two columns with different stationary phases connected by a modulator, which traps, focuses and reinjects fractions from the first column to the second. This approach leads to a 2D chromatogram offering higher peak capacity and separation power.
+    MS_two_dimensional_gas_chromatography = 1003915,
+
+    /// GCxGC (two-dimensional gas chromatography): Comprehensive two-dimensional gas chromatography (GCxGC) is a multidimensional separation technique that utilizes two columns with different stationary phases connected by a modulator, which traps, focuses and reinjects fractions from the first column to the second. This approach leads to a 2D chromatogram offering higher peak capacity and separation power.
+    MS_GCxGC = MS_two_dimensional_gas_chromatography,
+
+    /// SpectroSwiss software: SpectroSwiss software for mass spectrometry data processing and analysis.
+    MS_SpectroSwiss_software = 1003916,
+
+    /// Peak-by-Peak: SpectroSwiss software for Fourier transform mass spectrometry (FTMS) data processing and analysis, providing advanced workflows including the processing of unreduced, transient data.
+    MS_Peak_by_Peak = 1003917,
+
+    /// PeakByPeak (Peak-by-Peak): SpectroSwiss software for Fourier transform mass spectrometry (FTMS) data processing and analysis, providing advanced workflows including the processing of unreduced, transient data.
+    MS_PeakByPeak = MS_Peak_by_Peak,
+
+    /// chromatographic column: A tube or housing containing a stationary phase, through which a mobile phase flows to achieve chromatographic separation of analytes.
+    MS_chromatographic_column = 1003920,
+
+    /// liquid chromatographic column: A chromatographic column designed for use with a liquid mobile phase, housing a stationary phase for analyte separation.
+    MS_liquid_chromatographic_column = 1003921,
+
+    /// chromatographic stationary phase: The immobile phase in a chromatographic system with which analytes interact differentially, enabling separation based on chemical or physical properties.
+    MS_chromatographic_stationary_phase = 1003922,
+
+    /// chromatographic stationary phase attribute: Chromatographic stationary phase properties that are associated with a value.
+    MS_chromatographic_stationary_phase_attribute = 1003923,
+
+    /// pore size: The average diameter of the pores within the particles of the stationary phase, typically represented in angstroms (Å)
+    MS_pore_size = 1003924,
+
+    /// particle diameter: The average diameter of the solid particles that constitute the stationary phase.
+    MS_particle_diameter = 1003925,
+
+    /// chromatographic column attribute: Properties of the chromatographic column hardware that are associated with a value.
+    MS_chromatographic_column_attribute = 1003926,
+
+    /// column length: The length of the chromatographic column, representing the path length available for separation.
+    MS_column_length = 1003927,
+
+    /// column internal diameter: The inner diameter of the chromatographic column.
+    MS_column_internal_diameter = 1003928,
+
+    /// column I.D. (column internal diameter): The inner diameter of the chromatographic column.
+    MS_column_I_D_ = MS_column_internal_diameter,
+
+    /// particle porosity: The porosity of the particles composing the chromatographic stationary phase.
+    MS_particle_porosity = 1003929,
+
+    /// fully porous: A chromatographic stationary phase particle with pores distributed throughout its entire volume.
+    MS_fully_porous = 1003930,
+
+    /// superficially porous: A chromatographic stationary phase particle consisting of a solid, non-porous core surrounded by a porous shell.
+    MS_superficially_porous = 1003931,
+
+    /// core-shell particle (superficially porous): A chromatographic stationary phase particle consisting of a solid, non-porous core surrounded by a porous shell.
+    MS_core_shell_particle = MS_superficially_porous,
+
+    /// non-porous: A solid chromatographic stationary phase particle without internal pores.
+    MS_non_porous = 1003932,
+
+    /// support material: The base material from which the chromatographic stationary phase is constructed.
+    MS_support_material = 1003933,
+
+    /// silica-based: A chromatographic stationary phase constructed from silica particles, optionally with surface chemical modification.
+    MS_silica_based = 1003934,
+
+    /// hybrid particle: A chromatographic stationary phase constructed from organic-inorganic hybrid particles, such as ethylene-bridged hybrid (BEH), providing enhanced chemical stability and pH range.
+    MS_hybrid_particle = 1003935,
+
+    /// polymer-based: A chromatographic stationary phase constructed from organic polymer particles such as polystyrene-divinylbenzene or methacrylate-based polymers.
+    MS_polymer_based = 1003936,
+
+    /// monolithic: A chromatographic stationary phase consisting of a single continuous porous rod rather than packed discrete particles.
+    MS_monolithic = 1003937,
+
+    /// porous graphitic carbon: A chromatographic stationary phase composed of porous graphitic carbon, providing strong retention of polar compounds and chemical robustness across a wide pH range.
+    MS_porous_graphitic_carbon = 1003938,
+
+    /// PGC stationary phase (porous graphitic carbon): A chromatographic stationary phase composed of porous graphitic carbon, providing strong retention of polar compounds and chemical robustness across a wide pH range.
+    MS_PGC_stationary_phase = MS_porous_graphitic_carbon,
+
+    /// trap column: A short chromatographic column used for on-line sample loading, concentration, and desalting prior to separation on the analytical column.
+    MS_trap_column = 1003939,
+
+    /// guard column: A short protective chromatographic column placed upstream of the analytical column to capture contaminants and extend analytical column lifetime.
+    MS_guard_column = 1003940,
+
+    /// analytical column: The primary chromatographic column in which analyte separation occurs.
+    MS_analytical_column = 1003941,
+
+    /// gas chromatographic column: A chromatographic column designed for use with a gaseous mobile phase.
+    MS_gas_chromatographic_column = 1003943,
+
+    /// chromatographic column role: The functional role of a chromatographic column within the separation workflow.
+    MS_chromatographic_column_role = 1003944,
+
+    /// chromatographic column type: The type of chromatographic column classified by the mobile phase it is designed to operate with.
+    MS_chromatographic_column_type = 1003945,
+
+    /// tandem time-of-flight instrument: A tandem instrument that combines two time-of-flight mass analyzers in series, where the first selects precursor ions and the second analyzes fragment ions produced by collision-induced dissociation or post-source decay.
+    MS_tandem_time_of_flight_instrument = 1003946,
+
+    /// TOF/TOF (tandem time-of-flight instrument): A tandem instrument that combines two time-of-flight mass analyzers in series, where the first selects precursor ions and the second analyzes fragment ions produced by collision-induced dissociation or post-source decay.
+    MS_TOF_TOF = MS_tandem_time_of_flight_instrument,
+
+    /// magnetic sector ion trap instrument: A hybrid instrument that combines a double-focusing magnetic sector analyzer for high-resolution precursor ion selection with an ion trap for MSn fragmentation analysis.
+    MS_magnetic_sector_ion_trap_instrument = 1003947,
+
+    /// fourier transform ion cyclotron resonance instrument: An instrument that uses a Fourier transform ion cyclotron resonance mass analyzer as its primary means of mass analysis.
+    MS_fourier_transform_ion_cyclotron_resonance_instrument = 1003948,
+
+    /// magnetic sector instrument: An instrument that uses a magnetic sector mass analyzer as its primary means of mass analysis.
+    MS_magnetic_sector_instrument = 1003949,
+
+    /// quadrupole instrument: An instrument that uses a single quadrupole mass analyzer as its primary means of mass analysis.
+    MS_quadrupole_instrument = 1003950,
+
+    /// time-of-flight instrument: An instrument that uses a time-of-flight mass analyzer as its primary means of mass analysis.
+    MS_time_of_flight_instrument = 1003951,
+
+    /// ion trap instrument: An instrument that uses an ion trap mass analyzer as its primary means of mass analysis.
+    MS_ion_trap_instrument = 1003952,
+
+    /// orbitrap instrument: An instrument that uses an Orbitrap mass analyzer as its primary means of mass analysis.
+    MS_orbitrap_instrument = 1003953,
+
+    /// argon gas cluster ion beam: Argon gas cluster ion beam (Ar GCIB) bombardment uses a focused beam of large argon cluster ions, typically [Ar500]+ to [Ar10000]+, accelerated to high energies to sputter and generate secondary ions from a surface, enabling molecular depth profiling and imaging of organic and biological materials with reduced subsurface damage compared to monatomic ion beams.
+    MS_argon_gas_cluster_ion_beam = 1003954,
+
+    /// Ar GCIB (argon gas cluster ion beam): Argon gas cluster ion beam (Ar GCIB) bombardment uses a focused beam of large argon cluster ions, typically [Ar500]+ to [Ar10000]+, accelerated to high energies to sputter and generate secondary ions from a surface, enabling molecular depth profiling and imaging of organic and biological materials with reduced subsurface damage compared to monatomic ion beams.
+    MS_Ar_GCIB = MS_argon_gas_cluster_ion_beam,
+
+    /// singly charged bismuth trimer liquid metal ion gun: A beam of singly charged bismuth trimer ([Bi3]+) ions for desorption and ionisation from a surface, providing high spatial resolution imaging and enhanced molecular secondary ion yields compared to monatomic primary ion beams.
+    MS_singly_charged_bismuth_trimer_liquid_metal_ion_gun = 1003955,
+
+    /// [Bi3]+ LMIG (singly charged bismuth trimer liquid metal ion gun): A beam of singly charged bismuth trimer ([Bi3]+) ions for desorption and ionisation from a surface, providing high spatial resolution imaging and enhanced molecular secondary ion yields compared to monatomic primary ion beams.
+    MS__Bi3___LMIG = MS_singly_charged_bismuth_trimer_liquid_metal_ion_gun,
+
+    /// doubly charged bismuth trimer liquid metal ion gun: A beam of doubly charged bismuth trimer ([Bi3]2+) ions for desorption and ionisation from a surface. Ions achieve a higher velocity at a given acceleration voltage compared to singly charged [Bi3]+, resulting in enhanced secondary ion yields for surface analysis.
+    MS_doubly_charged_bismuth_trimer_liquid_metal_ion_gun = 1003956,
+
+    /// [Bi3]2+ LMIG (doubly charged bismuth trimer liquid metal ion gun): A beam of doubly charged bismuth trimer ([Bi3]2+) ions for desorption and ionisation from a surface. Ions achieve a higher velocity at a given acceleration voltage compared to singly charged [Bi3]+, resulting in enhanced secondary ion yields for surface analysis.
+    MS__Bi3_2__LMIG = MS_doubly_charged_bismuth_trimer_liquid_metal_ion_gun,
+
+    /// two-dimensional liquid chromatography: Two-dimensional liquid chromatography (2D-LC) is a multidimensional separation technique that couples two liquid chromatography columns with different selectivities, such as strong cation exchange and reversed phase, connected by a switching valve or modulator to provide significantly higher peak capacity and resolving power for complex mixtures than one-dimensional liquid chromatography.
+    MS_two_dimensional_liquid_chromatography = 1003957,
+
+    /// 2D-LC (two-dimensional liquid chromatography): Two-dimensional liquid chromatography (2D-LC) is a multidimensional separation technique that couples two liquid chromatography columns with different selectivities, such as strong cation exchange and reversed phase, connected by a switching valve or modulator to provide significantly higher peak capacity and resolving power for complex mixtures than one-dimensional liquid chromatography.
+    MS_2D_LC = MS_two_dimensional_liquid_chromatography,
+
+    /// LCxLC (two-dimensional liquid chromatography): Two-dimensional liquid chromatography (2D-LC) is a multidimensional separation technique that couples two liquid chromatography columns with different selectivities, such as strong cation exchange and reversed phase, connected by a switching valve or modulator to provide significantly higher peak capacity and resolving power for complex mixtures than one-dimensional liquid chromatography.
+    MS_LCxLC = MS_two_dimensional_liquid_chromatography,
+
+    /// bismuth liquid metal ion gun: Bismuth liquid metal ion gun (Bi LMIG) bombardment uses a focused beam of bismuth ions emitted from a liquid metal ion source to desorb and ionize molecules from a surface. The LMIG source generates a diversity of monomers and clusters, which are filtered prior to the sample in order to select the specific ionisation characteristics.
+    MS_bismuth_liquid_metal_ion_gun = 1003958,
+
+    /// Bi LMIG (bismuth liquid metal ion gun): Bismuth liquid metal ion gun (Bi LMIG) bombardment uses a focused beam of bismuth ions emitted from a liquid metal ion source to desorb and ionize molecules from a surface. The LMIG source generates a diversity of monomers and clusters, which are filtered prior to the sample in order to select the specific ionisation characteristics.
+    MS_Bi_LMIG = MS_bismuth_liquid_metal_ion_gun,
+
+    /// gas cluster ion beam: A gas cluster ion beam (GCIB) is an ion source that generates and accelerates large aggregates of gas atoms or molecules to high energies. The low energy per constituent atom minimizes surface damage and molecular fragmentation, making it highly effective for molecular depth profiling and the analysis of fragile organic and biological materials.
+    MS_gas_cluster_ion_beam = 1003959,
+
+    /// GCIB (gas cluster ion beam): A gas cluster ion beam (GCIB) is an ion source that generates and accelerates large aggregates of gas atoms or molecules to high energies. The low energy per constituent atom minimizes surface damage and molecular fragmentation, making it highly effective for molecular depth profiling and the analysis of fragile organic and biological materials.
+    MS_GCIB = MS_gas_cluster_ion_beam,
+
+    /// liquid metal ion gun: A liquid metal ion gun (LMIG) is an ion source that extracts and ionizes a thin layer of liquid metal from a fine heated needle using a high-voltage electric field. It produces a high-brightness, tightly focused beam of metal ions or clusters, enabling high-resolution imaging and analysis in Secondary Ion Mass Spectrometry (SIMS).
+    MS_liquid_metal_ion_gun = 1003960,
+
+    /// LMIG (liquid metal ion gun): A liquid metal ion gun (LMIG) is an ion source that extracts and ionizes a thin layer of liquid metal from a fine heated needle using a high-voltage electric field. It produces a high-brightness, tightly focused beam of metal ions or clusters, enabling high-resolution imaging and analysis in Secondary Ion Mass Spectrometry (SIMS).
+    MS_LMIG = MS_liquid_metal_ion_gun,
+
+    /// Thermo Scientific software: Thermo Scientific software for data acquisition and analysis.
+    MS_Thermo_Scientific_software = 1003961,
+
+    /// TraceFinder: Thermo Scientific software for targeted quantitative and screening analysis of LC-MS, GC-MS, and IC-MS data, supporting automated data acquisition, processing, and reporting for diverse workflows.
+    MS_TraceFinder = 1003962,
+
+    /// FreeStyle: Thermo Scientific software for interactive qualitative visualization and review of mass spectrometry data, including chromatographic peak detection, spectral library searching, and high-resolution deconvolution.
+    MS_FreeStyle = 1003963,
+
+    /// Chromeleon CDS: Thermo Scientific enterprise chromatography data system with integrated mass spectrometry instrument control and data processing, supporting GC-MS, LC-MS, and IC-MS platforms with GxP/21 CFR Part 11 compliance.
+    MS_Chromeleon_CDS = 1003964,
+
+    /// Chromeleon Chromatography Data System (Chromeleon CDS): Thermo Scientific enterprise chromatography data system with integrated mass spectrometry instrument control and data processing, supporting GC-MS, LC-MS, and IC-MS platforms with GxP/21 CFR Part 11 compliance.
+    MS_Chromeleon_Chromatography_Data_System = MS_Chromeleon_CDS,
+
+    /// Mass Frontier: Thermo Scientific software for mass spectral interpretation and structural elucidation of small molecules, featuring the HighChem fragmentation library, fragmentation prediction, and spectral tree searching.
+    MS_Mass_Frontier = 1003965,
+
+    /// LipidSearch: Thermo Scientific software for automated identification of lipid molecular species from LC-MS and LC-MS/MS data using a comprehensive database of predicted lipid ion fragments.
+    MS_LipidSearch = 1003966,
+
+    /// mzVault: Thermo Scientific software for offline storage, searching, and management of high-resolution accurate-mass spectral libraries, including curated mzCloud content and user-generated in-house libraries.
+    MS_mzVault = 1003967,
+
+    /// SIEVE: Thermo Scientific software for label-free differential expression analysis of LC-MS and GC-MS data, providing chromatographic alignment, feature detection, and statistical comparison for proteomics and metabolomics.
+    MS_SIEVE = 1003968,
+
+    /// BioPharma Finder: Thermo Scientific software for complex biotherapeutic characterization by LC-MS, supporting intact protein analysis, peptide mapping, oligonucleotide analysis, multi-attribute method workflows, and top-down or middle-down approaches.
+    MS_BioPharma_Finder = 1003969,
+
+    /// ion mobility quadrupole time-of-flight instrument: An instrument that uses an ion mobility analyzer followed by a quadrupole mass filter and a time-of-flight mass analyzer as its primary means of mass analysis.
+    MS_ion_mobility_quadrupole_time_of_flight_instrument = 1003970,
+
+    /// IMS-Q-TOF (ion mobility quadrupole time-of-flight instrument): An instrument that uses an ion mobility analyzer followed by a quadrupole mass filter and a time-of-flight mass analyzer as its primary means of mass analysis.
+    MS_IMS_Q_TOF = MS_ion_mobility_quadrupole_time_of_flight_instrument,
+
+    /// ion trap fourier transform ion cyclotron resonance instrument: An instrument that uses a linear ion trap coupled to a fourier transform ion cyclotron resonance mass analyzer as its primary means of mass analysis.
+    MS_ion_trap_fourier_transform_ion_cyclotron_resonance_instrument = 1003971,
+
+    /// quadrupole ion trap instrument: An instrument that uses a quadrupole mass filter followed by an ion trap mass analyzer as its primary means of mass analysis.
+    MS_quadrupole_ion_trap_instrument = 1003972,
+
+    /// LECO PEG format: Proprietary binary data format with extension '.peg', used by LECO ChromaTOF software to store raw and processed data from LECO Pegasus series mass spectrometers.
+    MS_LECO_PEG_format = 1003973,
+
+    /// JEOL JPF format: Proprietary binary data format with extension '.jpf', used by JEOL mass spectrometry systems and associated data processing software to store mass spectral data.
+    MS_JEOL_JPF_format = 1003974,
+
+    /// peak group: A collection of co-eluting chromatographic peaks with matching profiles, derived from a single source analyte. Examples include: related product ion peaks of a single precursor; related peaks derived from different adducts, multimers or isotopologues of a given analyte; and related peaks derived from in-source fragmentation of a given analyte.
+    MS_peak_group = 1003975,
+
+    /// retention time window target: The reference retention time from which a retention time window is defined. The target may be derived from a predicted, expected, observed, or user-specified retention time.
+    MS_retention_time_window_target = 1003976,
+
+    /// Monocle: A software program for converting Thermo Scientific RAW file format to mzXML, mzML, or CSV with improved monoisotopic mass estimation. Monocle was originally developed at the Gygi Lab at Harvard Medical School.
+    MS_Monocle = 1003977,
+
+    /// (?<=[^DE])(?=[AFILMV][^P]): Regular expression for Thermolysin.
+    MS_______DE______AFILMV___P__ = 1003978,
+
+    /// Thermolysin: Thermostable extracellular metalloendopeptidase containing four calcium ions
+    MS_Thermolysin = 1003979,
+
+    /// Bacillus thermoproteolyticus neutral proteinase (Thermolysin): Thermostable extracellular metalloendopeptidase containing four calcium ions
+    MS_Bacillus_thermoproteolyticus_neutral_proteinase = MS_Thermolysin,
+
+    /// (?=[AEFILTVWY]): Regular expression for peptidase K.
+    MS_____AEFILTVWY__ = 1003980,
+
+    /// peptidase K: Peptidase from the mold Tritirachium album Limber
+    MS_peptidase_K = 1003981,
+
+    /// endopeptidase K (peptidase K): Peptidase from the mold Tritirachium album Limber
+    MS_endopeptidase_K = MS_peptidase_K,
+
+    /// proteinase K (peptidase K): Peptidase from the mold Tritirachium album Limber
+    MS_proteinase_K = MS_peptidase_K,
+
+    /// Tritirachium album proteinase K (peptidase K): Peptidase from the mold Tritirachium album Limber
+    MS_Tritirachium_album_proteinase_K = MS_peptidase_K,
+
+    /// Tritirachium alkaline proteinase (peptidase K): Peptidase from the mold Tritirachium album Limber
+    MS_Tritirachium_alkaline_proteinase = MS_peptidase_K,
+
+    /// (?<=N)(?=G): Regular expression for hydroxylamine.
+    MS_____N____G_ = 1003982,
+
+    /// hydroxylamine: NH2OH
+    MS_hydroxylamine = 1003983,
+
+    /// amino acid confidence level: The confidence level of the PSM assignment per amino acid, where 0 is not confident and 1 is maximally confident.
+    MS_amino_acid_confidence_level = 1003984,
+
+    /// peptidoform token confidence level: The confidence level of the PSM assignment per peptidoform token, so separately for each amino acid and modification, where 0 is not confident and 1 is maximally confident.
+    MS_peptidoform_token_confidence_level = 1003985,
+
+    /// protein sequence: The protein sequence of a protein in a database.
+    MS_protein_sequence = 1003986,
+
+    /// Orbitrap Tribrid Apex: Thermo Scientific Orbitrap Tribrid Apex mass spectrometer with Tribrid architecture consisting of quadrupole mass filter, linear ion trap and Orbitrap mass analyzers.
+    MS_Orbitrap_Tribrid_Apex = 1003987,
+
+    /// Xevo MRT P10: Waters Xevo MRT P10 quadrupole - multi-reflecting time-of-flight mass spectrometer.
+    MS_Xevo_MRT_P10 = 1003988,
+
+    /// Cyclic IMS P20: Waters Cyclic IMS P20 multipass cyclic ion mobility quadrupole time-of-flight mass spectrometer.
+    MS_Cyclic_IMS_P20 = 1003989,
+
+    /// Orbitrap Excedion: Thermo Scientific Orbitrap Excedion mass spectrometer.
+    MS_Orbitrap_Excedion = 1003990,
+
+    /// novus V55: SCIEX novus V55 triple quadrupole mass spectrometer.
+    MS_novus_V55 = 1003991,
+
+    /// 9500 Triple Quadrupole ICP-MS: Agilent 9500 Triple Quadrupole ICP-MS inductively coupled plasma triple quadrupole mass spectrometer.
+    MS_9500_Triple_Quadrupole_ICP_MS = 1003992,
+
+    /// InfinityLab Pro iQ: Agilent InfinityLab Pro iQ single quadrupole LC mass detector.
+    MS_InfinityLab_Pro_iQ = 1003993,
+
+    /// ion mobility quadrupole FT-ICR instrument: Instrument class combining trapped ion mobility spectrometry (TIMS) with a quadrupole mass filter and fourier transform ion cyclotron resonance (magnetic resonance) mass analysis.
+    MS_ion_mobility_quadrupole_FT_ICR_instrument = 1003994,
+
+    /// timsMRMS: Bruker timsMRMS instrument combining trapped ion mobility spectrometry with magnetic resonance (FT-ICR) mass spectrometry.
+    MS_timsMRMS = 1003995,
+
+    /// DeepNovo: DeepNovo is a deep-learning based de novo peptide sequencer for DDA.
+    MS_DeepNovo = 1003996,
+
+    /// DeepNovo-DIA: DeepNovo is a deep-learning based de novo peptide sequencer for DDA and DIA.
+    MS_DeepNovo_DIA = 1003997,
+
+    /// PointNovo: PointNovo is neural network based de novo peptide sequencing model.
+    MS_PointNovo = 1003998,
+
+    /// PGPointNovo: PGPointNovo is a modification of PointNovo that allows parallel processing and a better optimization strategy.
+    MS_PGPointNovo = 1003999,
+
+    /// BiATNovo: BiATNovo an attention based bidirectional de novo peptide sequencing software.
+    MS_BiATNovo = 1004000,
+
+    /// NovoB: NovoB a transformer based bidirectional de novo peptide sequencing software.
+    MS_NovoB = 1004001,
+
+    /// PepNet: PepNet a convolutional neural network de novo peptide sequencing software.
+    MS_PepNet = 1004002,
+
+    /// π-HelixNovo: π-HelixNovo a transformer based de novo peptide sequencing software.
+    MS__xCF__x80__HelixNovo = 1004003,
+
+    /// pi-HelixNovo (π-HelixNovo): π-HelixNovo a transformer based de novo peptide sequencing software.
+    MS_pi_HelixNovo = MS__xCF__x80__HelixNovo,
+
+    /// π-PrimeNovo: π-PrimeNovo a non-autoregressive de novo peptide sequencing software.
+    MS__xCF__x80__PrimeNovo = 1004004,
+
+    /// pi-PrimeNovo (π-PrimeNovo): π-PrimeNovo a non-autoregressive de novo peptide sequencing software.
+    MS_pi_PrimeNovo = MS__xCF__x80__PrimeNovo,
+
+    /// PowerNovo: PowerNovo a BERT and transformer ensemble de novo peptide sequencing software.
+    MS_PowerNovo = 1004005,
+
+    /// pUniFind: pUniFind a open modification de novo peptide sequencing and rescoring software.
+    MS_pUniFind = 1004006,
+
+    /// Sage: A database search based peptide identification software with retention time prediction, quantification, rescoring, and false discovery rate control.
+    MS_Sage = 1004007,
+
+    /// BiblioSpec Spectrum Sequence List: Tabular result format for proteomics and small molecule experiments, saved with extension '.ssl'.
+    MS_BiblioSpec_Spectrum_Sequence_List = 1004008,
+
+    /// ProteoScape: Bruker ProteoScape is a GPU-powered platform delivering parallel computing capabilities and real-time database search results for bottom-up proteomics.
+    MS_ProteoScape = 1004009,
+
+    /// Stitch: Template-based assembly of PSMs for de novo protein sequencing.
+    MS_Stitch = 1004010,
 
     /// Number of Occurrences: The number of times something happened.
     NCIT_Number_of_Occurrences = 103150827,
@@ -17322,6 +17755,33 @@ enum PWIZ_API_DECL CVID
 
     /// DMA-PEG3: DimethylaminoPEG3ylation.
     UNIMOD_DMA_PEG3 = 300002136,
+
+    /// HCCA-Lys: Lysine labelled with HCCA tag.
+    UNIMOD_HCCA_Lys = 300002138,
+
+    /// Phosphocholine: Serine/Threonine/Tyrosine of a protein becomes posttranslationally modified with a phosphocholine moiety..
+    UNIMOD_Phosphocholine = 300002139,
+
+    /// Methyl:13C(1)2H(2): Heavy-Methyl:13C(1)2H(2).
+    UNIMOD_Methyl_13C_1_2H_2_ = 300002140,
+
+    /// c-type-ion: Cleavage at the N atom from the N+1 residue as reaction inside the mass spectrometer.
+    UNIMOD_c_type_ion = 300002141,
+
+    /// x-type-ion: Cleavage at the carbonyl from the N-1 residue as reaction inside the mass spectrometer.
+    UNIMOD_x_type_ion = 300002142,
+
+    /// z-type-ion: Ammonia loss from N-terminus as reaction inside the mass spectrometer.
+    UNIMOD_z_type_ion = 300002143,
+
+    /// Dehydromethionine: Intramolecular cyclization product of N-terminal methionine, forming a five-membered azasulfonium ion where the sulfur atom bonds to the amine group.
+    UNIMOD_Dehydromethionine = 300002144,
+
+    /// Label:2H(8): SILAC: Lysine_D8.
+    UNIMOD_Label_2H_8_ = 300002146,
+
+    /// imidazolone: Imidazolone from 3-DG.
+    UNIMOD_imidazolone = 300002147,
 
     /// unit: A unit of measurement is a standardized quantity of a physical quality.
     UO_unit = 400000000,

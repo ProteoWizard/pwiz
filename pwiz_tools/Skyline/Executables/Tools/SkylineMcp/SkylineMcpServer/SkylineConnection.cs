@@ -108,15 +108,21 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public ActionResult ClickMainMenuItem(string menuPath) { return CallClient(c => c.ClickMainMenuItem(menuPath)); }
     public ActionResult DismissWithAcceptButton(string formId) { return CallClient(c => c.DismissWithAcceptButton(formId)); }
     public ActionResult DismissWithCancelButton(string formId) { return CallClient(c => c.DismissWithCancelButton(formId)); }
+    public WindowSize ResizeWindow(string formId, int width, int height) { return CallClient(c => c.ResizeWindow(formId, width, height)); }
     public ActionResult DismissWithButton(string formId, string button) { return CallClient(c => c.DismissWithButton(formId, button)); }
 
     // 2-arg methods
     public ActionResult ClickControlMenuItem(string formId, string control, string menuPath) { return CallClient(c => c.ClickControlMenuItem(formId, control, menuPath)); }
     public LocationEntry[] GetLocations(string level, string rootLocator = null) { return CallClient(c => c.GetLocations(level, rootLocator)); }
     public void SetSelectedElement(string elementLocator, string additionalLocators = null) { CallClientVoid(c => c.SetSelectedElement(elementLocator, additionalLocators)); }
-    public string GetGraphData(string graphId, string filePath = null) { return CallClient(c => c.GetGraphData(graphId, filePath)); }
-    public string GetGraphImage(string graphId, string filePath = null) { return CallClient(c => c.GetGraphImage(graphId, filePath)); }
-    public ImageBytesMetadata GetGraphImageBytes(string graphId) { return CallClient(c => c.GetGraphImageBytes(graphId)); }
+    public string GetGraphData(string formId, string filePath = null) { return CallClient(c => c.GetGraphData(formId, filePath)); }
+    public string GetGraphImage(string formId, string filePath = null) { return CallClient(c => c.GetGraphImage(formId, filePath)); }
+    public ImageBytesMetadata GetGraphImageBytes(string formId) { return CallClient(c => c.GetGraphImageBytes(formId)); }
+    public SkylineTool.Rectangle GetGraphZoom(string formId) { return CallClient(c => c.GetGraphZoom(formId)); }
+    public SkylineTool.Rectangle ZoomGraphTo(string formId, SkylineTool.Rectangle bounds) { return CallClient(c => c.ZoomGraphTo(formId, bounds)); }
+    public ActionResult ClickGraph(string formId, SkylineTool.Rectangle bounds) { return CallClient(c => c.ClickGraph(formId, bounds)); }
+    public ActionResult SendText(string formId, string controlId, string text) { return CallClient(c => c.SendText(formId, controlId, text)); }
+    public ActionResult SendKeyStroke(string formId, string controlId, string keyStroke) { return CallClient(c => c.SendKeyStroke(formId, controlId, keyStroke)); }
     public string GetFormImage(string formId, string filePath = null) { return CallClient(c => c.GetFormImage(formId, filePath)); }
     public ImageBytesMetadata GetFormImageBytes(string formId) { return CallClient(c => c.GetFormImageBytes(formId)); }
     public string GetSettingsListItem(string listType, string itemName) { return CallClient(c => c.GetSettingsListItem(listType, itemName)); }
@@ -240,6 +246,18 @@ public class SkylineConnection : IJsonToolService, IDisposable
         // All connections failed
         return (null, "No Skyline instance is connected. " +
                       "Start Skyline and choose Tools > AI Connector to connect.");
+    }
+
+    /// <summary>
+    /// The process ID of the Skyline instance <see cref="TryConnect"/> would connect to, without connecting,
+    /// or null when no Skyline instance is available.
+    /// </summary>
+    public static int? GetTargetProcessId()
+    {
+        var infos = FindConnectionFiles();
+        if (TargetProcessId.HasValue && infos.Any(i => i.ProcessId == TargetProcessId.Value))
+            return TargetProcessId;
+        return infos.OrderByDescending(i => i.ConnectedAt).FirstOrDefault()?.ProcessId;
     }
 
     /// <summary>

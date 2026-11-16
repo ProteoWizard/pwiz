@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="cb99e68e-661e-44d8-93f0-828b3a5e49c1" paused="true" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Skyline master and PRs (Windows x86 debug)</name>
+  <description />
+  <settings>
+    <inherits>
+      <ref id="ProteoWizard_WindowsSkylineDebug" />
+      <ref id="ProteoWizard_GitHubReportingConfig" />
+      <ref id="ProteoWizard_WindowsBase" />
+    </inherits>
+    <options>
+      <option name="executionTimeoutMin" value="60" />
+    </options>
+    <parameters>
+      <param name="env.address_model_property" value="address-model=32" />
+      <param name="env.address_model_short" value="32" />
+    </parameters>
+    <build-runners order="RUNNER_simpleRunner_141, Set_PYTHON_HOME_if_unset_by_agent" />
+    <cleanup>
+      <policy type="builds" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepBuilds.count" value="1" />
+        </parameters>
+      </policy>
+    </cleanup>
+  </settings>
+</build-type>
+

@@ -115,10 +115,10 @@ namespace SkylineBatch
                     if (!completed)
                         return;
                     _updated = true;
-                    Invoke(new Action(() =>
+                    Invoke(() =>
                     {
                         listBoxFileNames.Items.Clear();
-                    }));
+                    });
 
                     if (connectionException == null)
                         SuccessfulConnect(files, closeWhenDone);
@@ -134,21 +134,21 @@ namespace SkylineBatch
             else
             {
                 _updated = true;
-                Invoke(new Action(() =>
+                Invoke(() =>
                 {
                     UpdateLabel();
                     UpdateFileList(files);
-                }));
+                });
             }
         }
 
         private void UnsuccessfulConnect(Exception e)
         {
-            Invoke(new Action(() =>
+            Invoke(() =>
             {
                 if (e != null) CommonAlertDlg.ShowException(this, e);
 
-            }));
+            });
             _cancelValidate = null;
         }
 

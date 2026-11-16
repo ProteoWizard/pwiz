@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<AcqMethod>
+  <Version>1.0</Version>
+  <!--Method Properties-->
+  <MethodName>interactive.m</MethodName>
+  <MethodPath>D:\QTOFCustomerHome\data\Neg_MS_002.d\AcqData\\interactive.m</MethodPath>
+  <MethodDescription>Default Method</MethodDescription>
+  <!--List of Devices-->
+  <DeviceList>MSQTOF</DeviceList>
+  <!--Device Specific Setpoints-->
+  <QTOF>
+    <msInstrument>QTOF</msInstrument>
+  </QTOF>
+</AcqMethod>

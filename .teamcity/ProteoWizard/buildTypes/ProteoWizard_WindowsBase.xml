@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="c7b48d90-04c0-4841-a38c-eeda20f79cb9" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Windows base</name>
+  <description>Sets currently used default Visual Studio version.</description>
+  <settings>
+    <parameters>
+      <param name="env.toolset_property" value="toolset=msvc-14.5" />
+    </parameters>
+    <build-runners>
+      <runner id="Set_PYTHON_HOME_if_unset_by_agent" name="Set PYTHON_HOME if unset by agent" type="simpleRunner">
+        <parameters>
+          <param name="script.content" value="IF NOT EXIST &quot;%%PYTHON_HOME%%&quot; echo &quot;##teamcity[setParameter name='env.PYTHON_HOME' value='C:\Program Files (x86)\Microsoft Visual Studio\Shared\Python39_64']&quot;" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <build-extensions>
+      <extension id="BUILD_EXT_446" type="BuildFailureOnMessage">
+        <parameters>
+          <param name="buildFailureOnMessage.conditionType" value="contains" />
+          <param name="buildFailureOnMessage.messagePattern" value="The spot instance is scheduled for termination" />
+          <param name="buildFailureOnMessage.outputText" value="AWS terminated the spot instance early. Retrigger the build manually from TeamCity." />
+          <param name="buildFailureOnMessage.reverse" value="false" />
+          <param name="buildFailureOnMessage.stopBuildOnFailure" value="true" />
+        </parameters>
+      </extension>
+      <extension id="BUILD_EXT_457" type="BuildFailureOnMessage">
+        <parameters>
+          <param name="buildFailureOnMessage.conditionType" value="contains" />
+          <param name="buildFailureOnMessage.messagePattern" value="terminated due to StackOverflowException" />
+          <param name="buildFailureOnMessage.outputText" value="Build terminated due to stack overflow in Skyline tests (see build log)." />
+          <param name="buildFailureOnMessage.reverse" value="false" />
+          <param name="buildFailureOnMessage.stopBuildOnFailure" value="true" />
+        </parameters>
+      </extension>
+      <extension id="BUILD_EXT_544" type="BuildFailureOnMessage">
+        <parameters>
+          <param name="buildFailureOnMessage.conditionType" value="contains" />
+          <param name="buildFailureOnMessage.messagePattern" value="...failed" />
+          <param name="buildFailureOnMessage.reportOnlyFirstMatch" value="false" />
+          <param name="buildFailureOnMessage.reverse" value="false" />
+        </parameters>
+      </extension>
+    </build-extensions>
+  </settings>
+</template>
+

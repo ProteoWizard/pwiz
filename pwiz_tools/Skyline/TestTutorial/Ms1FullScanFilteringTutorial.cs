@@ -25,6 +25,8 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.BiblioSpec.IO;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.MSGraph;
@@ -38,7 +40,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
@@ -56,8 +57,7 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class Ms1FullScanFilteringTutorial : AbstractFunctionalTestEx
     {
-        [TestMethod, MinidumpLeakThreshold(15),
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod, MinidumpLeakThreshold(15)]
         public void TestMs1Tutorial()
         {
             // Set true to look at tutorial screenshots.
@@ -209,14 +209,14 @@ namespace pwiz.SkylineTestTutorial
             if (expectedFileCount != docLib.FileCount)
             {
                 var searchFileNames = searchFiles.Select(Path.GetFileName).ToArray();
-                using (var blibDbRedundant = BlibDb.OpenBlibDb(redundantDocLibPath))
+                using (var readerRedundant = new BlibReader(redundantDocLibPath))
                 {
-                    VerifyLib(searchFileNames, expectedRedundantSpectra, blibDbRedundant.GetIdFilePaths(), blibDbRedundant.GetSpectraCount(),
+                    VerifyLib(searchFileNames, expectedRedundantSpectra, GetIdFilePaths(readerRedundant), readerRedundant.CountSpectra(),
                         "redundant library", buildArgs, buildOutput);
                 }
-                using (var blibDb = BlibDb.OpenBlibDb(docLibPath))
+                using (var reader = new BlibReader(docLibPath))
                 {
-                    VerifyLib(searchFileNames, expectedSpectra, blibDb.GetIdFilePaths(), blibDb.GetSpectraCount(),
+                    VerifyLib(searchFileNames, expectedSpectra, GetIdFilePaths(reader), reader.CountSpectra(),
                         "SQLite library", buildArgs, buildOutput);
                 }
                 VerifyLib(searchFileNames, expectedSpectra, docLib.LibraryDetails.DataFiles.Select(d => d.IdFilePath).ToArray(), docLib.SpectrumCount,
@@ -453,10 +453,10 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<ScreenForm>("Peak Areas view (show context menu)", null,
                     bmp =>
                     {
-                        var rectBorder = ScreenshotProcessingExtensions.GetToolWindowBorderRect(
+                        var rectBorder = ScreenshotBorder.GetToolWindowBorderRect(
                             ScreenshotManager.GetFramedWindowBounds(peakAreas));
                         bmp = bmp.CleanupBorder(rectBorder,
-                            ScreenshotProcessingExtensions.CornerToolWindow, 
+                            ScreenshotBorder.CornerToolWindow, 
                             Rectangle.Union(menuStrip.Bounds, subMenuStrip.Bounds));
 
                         return ClipRegionAndEraseBackground(bmp,
@@ -820,6 +820,11 @@ namespace pwiz.SkylineTestTutorial
             return SkylineWindow.GraphChromatograms.FirstOrDefault(chrom => chrom.NameSet == replicateName);
         }
 
+        private static string[] GetIdFilePaths(BlibReader reader)
+        {
+            return reader.ReadSourceFiles().Select(file => file.IdFileName).ToArray();
+        }
+
         private void VerifyLib(string[] expectedPaths, int expectedSpectra, string[] foundPaths, int foundSpectra,
             string sourceMessage, string buildArgs, string buildOutput)
         {
@@ -1075,17 +1080,7 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForConditionUI(() => msGraph.PropertiesVisible);
             WaitForGraphs();
-            FullScanProperties currentProperties = null;
-            RunUI(() =>
-            {
-                currentProperties = msGraph.PropertiesSheet.SelectedObject as FullScanProperties;
-            });
-            Assert.IsNotNull(currentProperties);
-            // To write new json string for the expected property values into the output stream uncomment the next line
-            //Trace.Write(currentProperties.Serialize());
-            var difference = expectedProperties.GetDifference(currentProperties);
-
-            Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
+            var currentProperties = WaitForPropertySheet(() => msGraph.PropertiesSheet.SelectedObject, expectedProperties);
             Assert.IsTrue(propertiesButton.Checked);
 
             // make sure the properties are updated when the spectrum changes

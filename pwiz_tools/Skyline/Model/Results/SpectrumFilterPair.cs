@@ -93,11 +93,11 @@ namespace pwiz.Skyline.Model.Results
         public SignedMz Q1 { get; private set; }
         public double? MinTime
         {
-            get { return _hasMinTime ? _minTime : (double?) null; }
+            get { return _hasMinTime ? _minTime : null; }
         }
         public double? MaxTime
         {
-            get { return _hasMaxTime ? _maxTime : (double?) null; }
+            get { return _hasMaxTime ? _maxTime : null; }
         }
         public double? MinIonMobilityValue { get; set; }
         public double? MaxIonMobilityValue { get; set; }
@@ -109,7 +109,6 @@ namespace pwiz.Skyline.Model.Results
         public int? OptStep { get; }
         private double? CollisionEnergy { get; }
         private IonMobilityFilter IonMobilityInfo { get; set; }
-        private bool HasCombinedIonMobility { get; set; } // When true, data was read in 3-array format, which affects spectrum ID format
         internal SpectrumProductFilter[] Ms1ProductFilters { get; set; }
         private SpectrumProductFilter[] SimProductFilters { get; set; }
         public SpectrumProductFilter[] Ms2ProductFilters { get; set; }
@@ -344,7 +343,11 @@ namespace pwiz.Skyline.Model.Results
                                 iPeak = ~iPeak;
                         }
                         if (iPeak >= mzArray.Length)
+                        {
+                            // The extracted intensities for the remaining targets will be zero so we can stop extracting
+                            // Consider: we probably still need to keep checking "hasScanWindowCoverage"
                             break; // No further overlap
+                        }
                     }
                     
                     // TODO:(bspratt) for full frame diaPASEF MS2, try not sorting - make IM the initial binary search range (and deal with mz that rolls over)

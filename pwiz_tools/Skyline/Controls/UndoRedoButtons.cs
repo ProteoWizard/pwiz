@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 
@@ -82,18 +81,22 @@ namespace pwiz.Skyline.Controls
             {
                 button.ShowDropDown();
                 if (list != null)
-                    list.Closing += DenyListClosing;
+                    list.FormClosing += DenyListClosing;
             }
             else if (list != null)
             {
-                list.Closing -= DenyListClosing;
+                list.FormClosing -= DenyListClosing;
                 list.Close();
             }
         }
 
-        private void DenyListClosing(object sender, CancelEventArgs e)
+        private void DenyListClosing(object sender, FormClosingEventArgs e)
         {
-            e.Cancel = true;
+            // Keep the dropdown open while the user is working in it, but never veto a close
+            // driven by the owning form. WinForms raises FormClosing on owned forms before the
+            // owner's own OnFormClosing, and a cancel here also stops the rest of the cascade.
+            if (e.CloseReason != CloseReason.FormOwnerClosing)
+                e.Cancel = true;
         }
 
         void undoManager_StacksChanged(object sender, EventArgs e)

@@ -1,6 +1,7 @@
 /*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5) <noreply .at. anthropic.com>
  *
  * Copyright 2023 University of Washington - Seattle, WA
  *
@@ -21,11 +22,6 @@ namespace pwiz.Common
 {
     public static class CommonApplicationSettings
     {
-        static CommonApplicationSettings()
-        {
-            HttpMessageHandlerFactory = new Mock.HttpMessageHandlerFactory();
-        }
-
         private static string _programNameAndVersion;
         public static bool Offscreen { get; set; }
         public static bool FunctionalTest { get; set; }
@@ -47,7 +43,5 @@ namespace pwiz.Common
                 _programNameAndVersion = value;
             }
         }
-
-        public static Mock.HttpMessageHandlerFactory HttpMessageHandlerFactory { get; set; }
     }
 }

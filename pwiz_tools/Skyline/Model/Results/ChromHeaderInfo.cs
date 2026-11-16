@@ -25,6 +25,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using JetBrains.Annotations;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -345,8 +346,8 @@ namespace pwiz.Skyline.Model.Results
         public bool HasRawChromatograms { get { return (Flags & FlagValues.raw_chromatograms) != 0; } }
         public bool IsDda { get { return (Flags & FlagValues.dda_acquisition_method) != 0; } }
 
-        public float? StartTime { get { return _startTime >= 0 ? _startTime : (float?) null; }  } // For SRM data with same precursor but different RT interval
-        public float? EndTime { get { return _endTime >= 0 ? _endTime : (float?)null; } } // For SRM data with same precursor but different RT interval
+        public float? StartTime { get { return _startTime >= 0 ? _startTime : null; }  } // For SRM data with same precursor but different RT interval
+        public float? EndTime { get { return _endTime >= 0 ? _endTime : null; } } // For SRM data with same precursor but different RT interval
 
         public bool HasRawTimes()
         {
@@ -566,7 +567,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromTransition4(ChromTransition chromTransition) : this((float) chromTransition.Product)
         {
-            
+
         }
 
         public float Product { get; private set; }
@@ -1206,7 +1207,7 @@ namespace pwiz.Skyline.Model.Results
         public float BackgroundArea { get { return _backgroundArea; } }
         public float Height { get { return _height; } }
         public float Fwhm { get { return _fwhm; } }
-        public short? PointsAcross { get { return _pointsAcross == 0 ? (short?)null : _pointsAcross; } }
+        public short? PointsAcross { get { return _pointsAcross == 0 ? null : _pointsAcross; } }
 
         public override string ToString()
         {
@@ -1953,12 +1954,12 @@ namespace pwiz.Skyline.Model.Results
 
         public double? OptionalMinTime
         {
-            get { return _hasOptionalTimes ? (double?) _optionalMinTime : null; }
+            get { return _hasOptionalTimes ? _optionalMinTime : null; }
         }
 
         public double? OptionalMaxTime
         {
-            get { return _hasOptionalTimes ? (double?) _optionalMaxTime : null; }
+            get { return _hasOptionalTimes ? _optionalMaxTime : null; }
         }
 
         public ChromKey ChangeOptimizationStep(int step, SignedMz? newProductMz)
@@ -2270,6 +2271,7 @@ namespace pwiz.Skyline.Model.Results
         protected IList<ChromPeak> _chromPeaks;
         protected IList<float> _scores;
         private TimeIntensitiesGroup _timeIntensitiesGroup;
+        private readonly Lock _timeIntensitiesLock = new Lock();
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
                                      FeatureNames scoreTypeIndices,
@@ -2330,11 +2332,21 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                if (_timeIntensitiesGroup == null)
+                var timeIntensitiesGroup = _timeIntensitiesGroup;
+                if (timeIntensitiesGroup == null)
                 {
-                    _timeIntensitiesGroup = _chromatogramCache?.ReadTimeIntensities(Header);
+                    // Threads calculating report rows can ask for the same group at the same time,
+                    // and the points should only be read once
+                    lock (_timeIntensitiesLock)
+                    {
+                        if (_timeIntensitiesGroup == null)
+                        {
+                            _timeIntensitiesGroup = _chromatogramCache?.ReadTimeIntensities(Header);
+                        }
+                        timeIntensitiesGroup = _timeIntensitiesGroup;
+                    }
                 }
-                return _timeIntensitiesGroup;
+                return timeIntensitiesGroup;
             }
         }
 

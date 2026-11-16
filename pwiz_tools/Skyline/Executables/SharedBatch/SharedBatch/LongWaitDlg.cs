@@ -34,6 +34,9 @@ namespace SharedBatch
                 Text = programName;
                 progressBar.Value = _percent;
                 _loaded = true;
+                // The work may have finished before this window existed, when Finish could not close it.
+                if (Completed)
+                    Close();
             });
         }
 
@@ -81,14 +84,19 @@ namespace SharedBatch
             Completed = true;
             try
             {
-                Invoke(new Action(() =>
+                Invoke(() =>
                 {
                     if (Visible) Close();
-                }));
+                });
             }
             catch (ObjectDisposedException)
             {
                 // pass
+            }
+            catch (InvalidOperationException)
+            {
+                // The operation finished before ShowDialog created the window. The Shown handler
+                // closes it. Letting this escape would skip the caller's completion callback.
             }
         }
     }

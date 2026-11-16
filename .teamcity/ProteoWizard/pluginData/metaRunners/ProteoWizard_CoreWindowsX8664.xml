@@ -1,0 +1,100 @@
+<meta-runner name="Core Windows x86_64">
+  <description>test</description>
+  <settings>
+    <parameters>
+      <param name="GitHubAuthToken" value="cks3960d1c8be8fa2ef7f70b162e3db2525buk/K9WKQPRgJIsMNgwSxM8AbLEkZa8t/YHR9nvqSHmqWo92ZTqLKtoAn3ySh5xT" spec="password label='GitHubAuthToken' display='normal'" />
+      <param name="SkylineCurrentRelease" value="skyline_26_1" />
+      <param name="TeamCityAuthToken" value="cks3960d1c8be8fa2ef7f70b162e3db2525+2ualAXqGJRoC6vI0x9b8LqQgO+o/SLdjWiAeKUve5ebu8XT7Tybnnxp1WW7mPTr+8RoTSiH5Imh4R2lfaluJghiRpDtLG//yQcoJO71swq07RkjzTdii9jjZ2rqgDXSEkiuWd3cMVLU1LW71ZCx7A==" spec="password display='normal'" />
+      <param name="WINDOWS_CHECKOUT_DIR" value="C:\pwiz" />
+      <param name="WINDOWS_SKYLINE_RELEASE_CHECKOUT_DIR" value="C:\skyline_release" />
+      <param name="env.NARDIA_PASSWORD" value="cks3960d1c8be8fa2ef7f70b162e3db25253t71tnxsjsFOK9PKU3sl5umhQDaKVHit+6J53iHHoWo=" spec="password display='normal'" />
+      <param name="env.NARDIA_PASSWORD_1ROLE" value="cks3960d1c8be8fa2ef7f70b162e3db2525s40RY5t0JmmytWqotmEJegldnG1piDe1acAT2Rz+qmQ=" spec="password display='normal'" />
+      <param name="env.NUMBER_OF_CORES" value="%teamcity.agent.hardware.cpuCount%" />
+      <param name="env.PANORAMAWEB_PASSWORD" value="cks3960d1c8be8fa2ef7f70b162e3db2525mLigiYp+ijEpbAaqfQV4lg==" spec="password display='normal'" />
+      <param name="env.PARALLEL_WORKER_COUNT" value="8" />
+      <param name="env.PWIZ_VERSION" value="42" />
+      <param name="env.PYTHON_HdOME" value="C:\Program Files (x86)\Microsoft Visual Studio\Shared\Python39_64" />
+      <param name="env.SKYLINE_DOWNLOAD_FROM_S3" value="1" />
+      <param name="env.SKYLINE_DOWNLOAD_PATH" value="c:\skyline-downloads" />
+      <param name="env.UNIFI_PASSWORD" value="cks3960d1c8be8fa2ef7f70b162e3db2525RW6h+rxOy2P8GhO9eCokbQ==" spec="password display='normal'" />
+      <param name="env.UNIFI_USERNAME" value="" />
+      <param name="env.address_model_property" value="address-model=64" />
+      <param name="env.architecture_property" value="" />
+      <param name="env.link_property" value="" />
+      <param name="env.toolset_property" value="toolset=msvc-14.3" />
+      <param name="env.variant_property" value="release" />
+      <param name="prositconfig_production_xml" value="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" spec="password readOnly='true' display='hidden'" />
+      <param name="teamcity.activeBuildBranch.age.hours" value="0" />
+      <param name="teamcity.activeVcsBranch.age.days" value="3" />
+    </parameters>
+    <build-runners>
+      <runner name="Set PYTHON_HOME if unset by agent" type="simpleRunner">
+        <parameters>
+          <param name="script.content" value="IF NOT EXIST &quot;%%PYTHON_HOME%%&quot; echo &quot;##teamcity[setParameter name='env.PYTHON_HOME' value='C:\Program Files (x86)\Microsoft Visual Studio\Shared\Python39_64']&quot;" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner name="Set PWIZ_VERSION variable" type="simpleRunner">
+        <parameters>
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="script.content"><![CDATA[REM Read version from build directory into PWIZ_VERSION
+set /p PWIZ_VERSION=<build-nt-x86\VERSION
+
+REM Replace spaces with periods
+set PWIZ_VERSION=%%PWIZ_VERSION: =.%%
+
+REM Pass the value to TeamCity
+echo ##teamcity[setParameter name='env.PWIZ_VERSION' value='%%PWIZ_VERSION%%']]]></param>
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner name="" type="python-runner">
+        <parameters>
+          <param name="command" value="module" />
+          <param name="coverageArgs" value="--omit=*lib*" />
+          <param name="envTool" value="none" />
+          <param name="installToolPackage" value="true" />
+          <param name="isCoverageEnabled" value="false" />
+          <param name="isTestReportingEnabled" value="true" />
+          <param name="module" value="pip" />
+          <param name="poetryExecutable" value="poetry" />
+          <param name="pythonVersion" value="python3" />
+          <param name="scriptArguments" value="install --upgrade certifi" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="virtualenvEnvName" value=".venv" />
+          <param name="virtualenvFile" value="requirements.txt" />
+        </parameters>
+      </runner>
+      <runner name="" type="ProteoWizard_UploadArtifactMetadataToSourceForge">
+        <parameters>
+          <param name="WINDOWS_CHECKOUT_DIR" value="Z:\pwiz" />
+          <param name="WINDOWS_SKYLINE_RELEASE_CHECKOUT_DIR" value="C:\skyline_release" />
+          <param name="env.NUMBER_OF_CORES" value="%teamcity.agent.hardware.cpuCount%" />
+          <param name="env.PYTHON_HOME" value="C:\Python38" />
+          <param name="system.artifact.paths" value="build-nt-x86/*.msi,build-nt-x86/*.tar.bz2,build-nt-x86/VERSION" />
+          <param name="teamcity.activeBuildBranch.age.hours" value="0" />
+          <param name="teamcity.activeVcsBranch.age.days" value="3" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner name="Send build status update for pwiz artifacts" type="ProteoWizard_SendBuildStatusToGitHub">
+        <parameters>
+          <param name="GitHubAuthToken" value="cks3960d1c8be8fa2ef7f70b162e3db2525oVrpo3fADiAc5yxQbpZNNc/KbHVF7lkRC/eq8Mh2ybDeid1jvvbnSXOxPtG+mi/zuJNhgPazknRo21bEOcNR34BsxxL5uPpz79ploYRyZnAXHQAyjcq0QQjpcmOY+y4bqYKyEQbXDmM88wCtVlkg7w==" />
+          <param name="buildStatusUpdateContext" value="artifacts - ProteoWizard" />
+          <param name="buildStatusUpdateDescription" value="Includes msconvert/SeeMS" />
+          <param name="buildStatusUpdateState" value="success" />
+          <param name="buildStatusUpdateTargetUrl" value="https://mc-tca-01.s3.us-west-2.amazonaws.com/ProteoWizard/%system.teamcity.buildType.id%/%teamcity.build.id%/pwiz-setup-%env.PWIZ_VERSION%-x86_64.msi" />
+          <param name="teamcity.step.mode" value="execute_if_failed" />
+          <param name="teamcity.step.phase" value="" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements>
+      <contains id="RQ_1839" name="teamcity.agent.jvm.os.name" value="Windows" />
+    </requirements>
+  </settings>
+</meta-runner>

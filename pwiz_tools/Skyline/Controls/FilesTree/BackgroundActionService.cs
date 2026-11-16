@@ -17,6 +17,7 @@
 using System;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Controls.FilesTree
@@ -103,7 +104,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (!SynchronizingObject.IsDisposed && SynchronizingObject.IsHandleCreated)
             {
                 Interlocked.Increment(ref _pendingActionCount);
-                if (!CommonActionUtil.SafeBeginInvoke(SynchronizingObject, () =>
+                if (!ControlUtil.SafeBeginInvoke(SynchronizingObject, () =>
                     {
                         try
                         {

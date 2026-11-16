@@ -146,6 +146,14 @@ namespace pwiz.SkylineTestFunctional
                 halfWin += winOffset*0.5;
             }
 
+            // Scheduled start/end times are rounded to 2 decimals by the exporter (Prediction.GetRetentionTimeDisplay).
+            // Round the expected values the same way: net8's shortest-round-trip double.ToString prints unrounded
+            // arithmetic such as (56.79 - 1.2) as "55.589999999999996", whereas net472's lossy "G" format printed "55.59".
+            var t46Start = Math.Round(t46 - halfWin, 2);
+            var t46End = Math.Round(t46 + halfWin, 2);
+            var t39Start = Math.Round(t39 - halfWin, 2);
+            var t39End = Math.Round(t39 + halfWin, 2);
+
             // Conversion to negative charge states shifts the masses
             var mzFirst = AsSmallMoleculesNegative ? 580.304419 : 582.318971;
             var mzLast = AsSmallMoleculesNegative ? 442.535468 : 444.55002;
@@ -207,11 +215,11 @@ namespace pwiz.SkylineTestFunctional
             // Export Thermo scheduled DDA list.
             if (!AsSmallMoleculesNegative) // .skyd file chromatograms are not useful in this conversion due to mass shift
               ExportIsolationList(
-                "ThermoScheduledDda.csv", 
+                "ThermoScheduledDda.csv",
                 ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanAcquisitionMethod.None, ExportMethodType.Scheduled,
                 thermoQExactiveIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(peptideA, mzFirst, string.Empty, string.Empty, Math.Abs(zFirst), polarity, t46 - halfWin, t46 + halfWin, nce),
-                FieldSeparate(peptideB, mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, t39 - halfWin, t39 + halfWin, nce));
+                FieldSeparate(peptideA, mzFirst, string.Empty, string.Empty, Math.Abs(zFirst), polarity, t46Start, t46End, nce),
+                FieldSeparate(peptideB, mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, t39Start, t39End, nce));
 
             // Export Agilent unscheduled Targeted list.
             ExportIsolationList(
@@ -244,8 +252,8 @@ namespace pwiz.SkylineTestFunctional
                 "ThermoScheduledTargeted.csv", 
                 ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
                 thermoQExactiveIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(peptideA, mzFirst, string.Empty, string.Empty, Math.Abs(zFirst), polarity, t46 - halfWin, t46 + halfWin, nce),
-                FieldSeparate(peptideB, mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, t39 - halfWin, t39 + halfWin, nce));
+                FieldSeparate(peptideA, mzFirst, string.Empty, string.Empty, Math.Abs(zFirst), polarity, t46Start, t46End, nce),
+                FieldSeparate(peptideB, mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, t39Start, t39End, nce));
 
             // Export Thermo Fusion unscheduled Targeted list.
             var thermoFusionMassListExporter = new ThermoFusionMassListExporter(SkylineWindow.Document);
@@ -262,8 +270,8 @@ namespace pwiz.SkylineTestFunctional
                 "FusionScheduledTargeted.csv",
                 ExportInstrumentType.THERMO_FUSION, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
                 thermoFusionMassListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(mzFirst, zFirst, t46 - halfWin, t46 + halfWin, nce),
-                FieldSeparate(mzLast, zLast, t39 - halfWin, t39 + halfWin, nce));
+                FieldSeparate(mzFirst, zFirst, t46Start, t46End, nce),
+                FieldSeparate(mzLast, zLast, t39Start, t39End, nce));
 
             // Export Thermo Stellar unscheduled isolation list
             var runStart = "0";
@@ -302,8 +310,8 @@ namespace pwiz.SkylineTestFunctional
                 checkStrings = new List<string>
                 {
                     thermoStellarMassListExporter.GetHeader(),
-                    FieldSeparate(mzFirst, zFirst, t46 - halfWin, t46 + halfWin, customNCE),
-                    FieldSeparate(mzLast, zLast, t39 - halfWin, t39 + halfWin, customNCE)
+                    FieldSeparate(mzFirst, zFirst, t46Start, t46End, customNCE),
+                    FieldSeparate(mzLast, zLast, t39Start, t39End, customNCE)
                 };
                 ExportIsolationList(
                     "StellarScheduledIsolationList.csv",
@@ -311,10 +319,10 @@ namespace pwiz.SkylineTestFunctional
                     checkStrings.ToArray());
                 for (int i = 1; i <= customStepCount; i++)
                 {
-                    checkStrings.Add(FieldSeparate(mzFirst, zFirst, t46 - halfWin, t46 + halfWin, customNCE + i*customStepSize));
-                    checkStrings.Add(FieldSeparate(mzFirst, zFirst, t46 - halfWin, t46 + halfWin, customNCE - i*customStepSize));
-                    checkStrings.Add(FieldSeparate(mzLast, zLast, t39 - halfWin, t39 + halfWin, customNCE + i*customStepSize));
-                    checkStrings.Add(FieldSeparate(mzLast, zLast, t39 - halfWin, t39 + halfWin, customNCE - i*customStepSize));
+                    checkStrings.Add(FieldSeparate(mzFirst, zFirst, t46Start, t46End, customNCE + i*customStepSize));
+                    checkStrings.Add(FieldSeparate(mzFirst, zFirst, t46Start, t46End, customNCE - i*customStepSize));
+                    checkStrings.Add(FieldSeparate(mzLast, zLast, t39Start, t39End, customNCE + i*customStepSize));
+                    checkStrings.Add(FieldSeparate(mzLast, zLast, t39Start, t39End, customNCE - i*customStepSize));
                 }
                 ExportIsolationList(
                     "StellarScheduledNceOptIsolationList.csv",

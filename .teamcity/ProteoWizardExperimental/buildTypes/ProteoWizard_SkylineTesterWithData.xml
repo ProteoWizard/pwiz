@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="0671279c-5160-4901-be7b-ca536b8c4fbb" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>SkylineTester with Data</name>
+  <description />
+  <settings>
+    <inherits>
+      <ref id="ProteoWizard_WindowsSkylineRelease" />
+      <ref id="ProteoWizard_GitHubReportingConfig" />
+      <ref id="ProteoWizard_WindowsBase" />
+      <ref id="ProteoWizard_RemoteAccountTestParameters" />
+    </inherits>
+    <options>
+      <option name="artifactRules" value="pwiz_tools/Skyline/TestResults/*.trx&#xA;pwiz_tools/Topograph/TestResults/*.trx&#xA;pwiz_tools/Skyline/bin/x64/Release/SkylineTesterWithTestData.zip" />
+      <option name="executionTimeoutMin" value="80" />
+    </options>
+    <disabled-settings>
+      <setting-ref ref="vcsTrigger" />
+    </disabled-settings>
+    <parameters>
+      <param name="buildStatusUpdateContext" value="" />
+      <param name="buildStatusUpdateDescription" value="" />
+      <param name="buildStatusUpdateState" value="success" />
+      <param name="buildStatusUpdateTargetUrl" value="" />
+      <param name="env.address_model_property" value="address-model=64" />
+      <param name="env.address_model_short" value="64" />
+    </parameters>
+    <build-runners order="RUNNER_62, RUNNER_simpleRunner_131, Set_PYTHON_HOME_if_unset_by_agent, RUNNER_84">
+      <runner id="RUNNER_62" name="Create PrositConfig file" type="MRPP_CreateTextFile">
+        <parameters>
+          <param name="content" value="%prositconfig_production_xml%" />
+          <param name="system.dest.file" value="pwiz_tools/Skyline/Model/Prosit/Config/PrositConfig_production.xml" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_simpleRunner_131" name="" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="scripts/misc/tcbuild.bat" />
+          <param name="command.parameters" value="pwiz_tools\Skyline//SkylineTesterWithTestData.zip --i-agree-to-the-vendor-licenses -j%env.NUMBER_OF_CORES% %env.toolset_property% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property% --without-compassxtract --teamcity-test-decoration --automated --official" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_84" name="Send build status update for SkylineTester.zip artifact" type="ProteoWizard_SendBuildStatusToGitHub">
+        <parameters>
+          <param name="GitHubAuthToken" value="credentialsJSON:e69022c2-0e67-46bb-972e-68929f5294ec" />
+          <param name="buildStatusUpdateContext" value="artifacts - SkylineTesterWithData.zip" />
+          <param name="buildStatusUpdateDescription" value="Includes SkylineTester with test zips included" />
+          <param name="buildStatusUpdateState" value="success" />
+          <param name="buildStatusUpdateTargetUrl" value="https://teamcity.labkey.org/guestAuth/repository/download/%system.teamcity.buildType.id%/%teamcity.build.id%:id/SkylineTesterWithData.zip" />
+          <param name="teamcity.step.mode" value="execute_if_failed" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <build-triggers>
+      <build-trigger id="vcsTrigger" type="vcsTrigger">
+        <parameters>
+          <param name="enableQueueOptimization" value="true" />
+          <param name="quietPeriod" value="45" />
+          <param name="quietPeriodMode" value="USE_CUSTOM" />
+          <param name="triggerRules"><![CDATA[+:.
+-:README.md
+-:.travis.yml
+-:appveyor.yml
+-:.gitignore
+-:pwiz_tools/Bumbershoot/**
+-:pwiz_tools/SeeMS/**
+-:pwiz_tools/MSConvertGUI/**]]></param>
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <build-extensions>
+      <extension id="BUILD_EXT_687" type="BuildFailureOnMetric">
+        <parameters>
+          <param name="anchorBuild" value="lastSuccessful" />
+          <param name="metricKey" value="InspectionStatsW" />
+          <param name="metricThreshold" value="400" />
+          <param name="metricUnits" value="metricUnitsDefault" />
+          <param name="moreOrLess" value="more" />
+          <param name="withBuildAnchor" value="false" />
+        </parameters>
+      </extension>
+      <extension id="BUILD_EXT_316" type="BuildFailureOnMessage">
+        <parameters>
+          <param name="buildFailureOnMessage.conditionType" value="contains" />
+          <param name="buildFailureOnMessage.messagePattern" value="LEAKED" />
+          <param name="buildFailureOnMessage.outputText" value="Leak detected" />
+          <param name="buildFailureOnMessage.reverse" value="false" />
+        </parameters>
+      </extension>
+    </build-extensions>
+    <cleanup>
+      <policy type="builds" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepBuilds.count" value="4" />
+        </parameters>
+      </policy>
+    </cleanup>
+  </settings>
+</build-type>
+

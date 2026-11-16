@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public double? CirtIrt(Target target)
         {
-            return _cirtAll.TryGetValue(target, out var irt) ? irt : (double?) null;
+            return _cirtAll.TryGetValue(target, out var irt) ? irt : null;
         }
 
         public void ScorePeptides(SrmDocument doc, IProgressMonitor progressMonitor)
@@ -350,7 +350,7 @@ namespace pwiz.Skyline.Model.Irt
 
             private float? Peek()
             {
-                return !Empty ? (float?)_peptides.First().Score : null;
+                return !Empty ? _peptides.First().Score : null;
             }
 
             private T Pop()

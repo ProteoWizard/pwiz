@@ -711,12 +711,15 @@ namespace pwiz.Skyline.Model
         {
             if (AverageMass == 0 || MonoisotopicMass == 0)
                 throw new InvalidDataException(ModelResources.CustomMolecule_Validate_Custom_molecules_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_);
+            // Pin the mass to 15 significant figures: .NET Core's double.ToString() emits the
+            // shortest round-trip form (up to 17 digits) where .NET Framework capped at 15, so an
+            // unpinned mass showed e.g. "503970013.01879007" on net8 vs "503970013.01879" on net472.
             if(AverageMass > MAX_MASS || MonoisotopicMass > MAX_MASS)
-                throw new InvalidDataException(string.Format(Resources.CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_exceeeds_the_maximum_of__1__, 
-                    AverageMass > MAX_MASS ? AverageMass : MonoisotopicMass, MAX_MASS));
+                throw new InvalidDataException(string.Format(Resources.CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_exceeeds_the_maximum_of__1__,
+                    (AverageMass > MAX_MASS ? AverageMass : MonoisotopicMass).Value.ToString(@"G15", CultureInfo.CurrentCulture), MAX_MASS));
             if(AverageMass < MIN_MASS || MonoisotopicMass < MIN_MASS)
                 throw new InvalidDataException(string.Format(Resources.CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_is_less_than_the_minimum_of__1__,
-                    AverageMass < MIN_MASS ? AverageMass : MonoisotopicMass, MIN_MASS));
+                    (AverageMass < MIN_MASS ? AverageMass : MonoisotopicMass).Value.ToString(@"G15", CultureInfo.CurrentCulture), MIN_MASS));
         }
 
         public bool IsEmpty

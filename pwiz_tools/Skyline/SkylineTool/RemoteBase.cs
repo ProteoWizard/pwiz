@@ -48,15 +48,19 @@ namespace SkylineTool
 
         protected object DeserializeObject(byte[] bytes)
         {
+#pragma warning disable SYSLIB0011
             var formatter = new BinaryFormatter();
             return formatter.Deserialize(new MemoryStream(bytes));
+#pragma warning restore SYSLIB0011
         }
 
         protected byte[] SerializeObject(object o)
         {
             var stream = new MemoryStream();
+#pragma warning disable SYSLIB0011
             var formatter = new BinaryFormatter();
             formatter.Serialize(stream, o);
+#pragma warning restore SYSLIB0011
             return stream.ToArray();
         }
 

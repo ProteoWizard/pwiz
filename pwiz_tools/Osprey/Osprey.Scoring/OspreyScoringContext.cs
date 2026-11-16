@@ -61,8 +61,8 @@ namespace pwiz.Osprey.Scoring
         public IResolutionStrategy Resolution { get; private set; }
 
         /// <summary>
-        /// Per-window preprocessed XCorr cache (f64 doubles for Unit, f32 floats for
-        /// HRAM), produced once before the candidate loop. Window-level.
+        /// Per-window preprocessed XCorr cache (f64 doubles for Unit, sparse f32-narrowed
+        /// spectra for HRAM, filled on demand), created before the candidate loop. Window-level.
         /// </summary>
         public WindowXcorrCache PreprocessedXcorr { get; private set; }
 

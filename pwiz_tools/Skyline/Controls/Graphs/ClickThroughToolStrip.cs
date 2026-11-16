@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil.PInvoke;
 
@@ -41,9 +40,9 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             base.WndProc(ref m);
             if (m.Msg == (int)User32.WinMessageType.WM_MOUSEACTIVATE &&
-                m.Result == (IntPtr)MA_ACTIVATEANDEAT)
+                m.Result == MA_ACTIVATEANDEAT)
             {
-                m.Result = (IntPtr)MA_ACTIVATE;
+                m.Result = MA_ACTIVATE;
             }
         }
     }

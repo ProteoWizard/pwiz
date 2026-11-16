@@ -30,6 +30,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -286,6 +287,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(cacheLen, new FileInfo(cachePath).Length);                
             }
 
+            VerifySameFileReplicateReorder();
+
             // Remove the last replicate
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
             {
@@ -299,6 +302,126 @@ namespace pwiz.SkylineTestFunctional
             var docClear = WaitForProteinMetadataBackgroundLoaderCompletedUI();
 
             Assert.IsFalse(docClear.Settings.HasResults);
+        }
+
+        /// <summary>
+        /// Reordering replicates that measure the same file must move their results with them.
+        /// Two <see cref="ChromatogramSet"/> objects measuring the same file are equal in everything
+        /// <see cref="SrmSettingsDiff"/> compares except their Id, so this is the case where a reorder
+        /// can be mistaken for no change at all, leaving peak integration and annotations attached to
+        /// the replicate that happens to land on the old index. Everything done here is undone before
+        /// returning, so the rest of the test proceeds from the document it started with.
+        /// </summary>
+        private void VerifySameFileReplicateReorder()
+        {
+            var docStart = SkylineWindow.Document;
+            var chromatogramsStart = docStart.Settings.MeasuredResults.Chromatograms;
+            Assert.AreEqual(1, chromatogramsStart.Count);
+            var filePath = chromatogramsStart[0].MSDataFilePaths.First();
+
+            // Import the file a second time, so two replicates measure the same file
+            const string nameSameFile = "Same file replicate";
+            RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, dlg =>
+            {
+                dlg.NamedPathSets = new[]
+                {
+                    new KeyValuePair<string, MsDataFileUri[]>(nameSameFile, new[] { filePath })
+                };
+                dlg.OkDialog();
+            });
+            WaitForDocumentLoaded();
+            WaitForClosedForm<AllChromatogramsGraph>();
+
+            var docImport = SkylineWindow.Document;
+            var chromatogramsImport = docImport.Settings.MeasuredResults.Chromatograms;
+            Assert.AreEqual(2, chromatogramsImport.Count);
+            int iSameFile = chromatogramsImport.IndexOf(chromSet => Equals(chromSet.Name, nameSameFile));
+            Assert.AreNotEqual(-1, iSameFile);
+            // Both replicates must measure the same file, or this tests nothing
+            Assert.AreEqual(filePath, chromatogramsImport[iSameFile].MSDataFilePaths.First());
+
+            // Give the new replicate its own integration and note, so its results can be told
+            // apart from those of the replicate measuring the same file
+            var groupPath = docImport.GetPathTo((int) SrmDocument.Level.TransitionGroups, 0);
+            var nodeGroupImport = (TransitionGroupDocNode) docImport.FindNode(groupPath);
+            var chromInfoImport = nodeGroupImport.Results[iSameFile].First();
+            double startTime = chromInfoImport.StartRetentionTime.Value + 0.02;
+            double endTime = chromInfoImport.EndRetentionTime.Value - 0.02;
+            const string note = "Note for the replicate measuring the same file";
+
+            RunUI(() => SkylineWindow.ModifyDocument("Change peak and note", doc =>
+            {
+                doc = doc.ChangePeak(groupPath, nameSameFile, filePath, null,
+                    startTime, endTime, UserSet.TRUE, null, false);
+                return ChangeTransitionNote(doc, groupPath, iSameFile, note);
+            }));
+
+            var docModified = WaitForDocumentChange(docImport);
+
+            // Record the transition results now on each replicate, so they can be found again after
+            // the move. Their content must differ, or two objects holding equal values would make
+            // the reference comparisons below prove nothing.
+            var tranChromInfoModified = GetTransitionChromInfo(docModified, groupPath, iSameFile);
+            var tranChromInfoOther = GetTransitionChromInfo(docModified, groupPath, iSameFile == 0 ? 1 : 0);
+            Assert.AreNotEqual(tranChromInfoOther.StartRetentionTime, tranChromInfoModified.StartRetentionTime);
+            Assert.AreNotEqual(tranChromInfoOther.EndRetentionTime, tranChromInfoModified.EndRetentionTime);
+            Assert.AreEqual(note, tranChromInfoModified.Annotations.Note);
+            Assert.AreNotEqual(note, tranChromInfoOther.Annotations.Note);
+
+            // Move the replicate measuring the same file to the other end of the list
+            RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
+            {
+                dlg.SelectedChromatograms = new[] { docModified.Settings.MeasuredResults.Chromatograms[iSameFile] };
+                if (iSameFile > 0)
+                    dlg.MoveUp();
+                else
+                    dlg.MoveDown();
+                dlg.OkDialog();
+            });
+
+            var docReorder = WaitForDocumentChange(docModified);
+            var chromatogramsReorder = docReorder.Settings.MeasuredResults.Chromatograms;
+            int iReorder = chromatogramsReorder.IndexOf(chromSet => Equals(chromSet.Name, nameSameFile));
+            Assert.AreNotEqual(iSameFile, iReorder, "The replicate measuring the same file did not move");
+
+            // The integration and the note must have moved with the replicate, and not been left
+            // behind on the index it used to occupy. The tree is immutable, so these must be the
+            // same instances, which reference equality shows without inspecting any content.
+            Assert.AreSame(tranChromInfoModified, GetTransitionChromInfo(docReorder, groupPath, iReorder));
+            // And the replicate that did not get the manual integration must still have its own
+            Assert.AreSame(tranChromInfoOther,
+                GetTransitionChromInfo(docReorder, groupPath, iReorder == 0 ? 1 : 0));
+
+            // Undo the reorder, the peak and note change, and the import
+            RunUI(() =>
+            {
+                SkylineWindow.Undo();
+                SkylineWindow.Undo();
+                SkylineWindow.Undo();
+            });
+            WaitForDocumentLoaded();
+
+            Assert.AreSame(docStart, SkylineWindow.Document);
+        }
+
+        private static SrmDocument ChangeTransitionNote(SrmDocument doc, IdentityPath groupPath,
+            int replicateIndex, string note)
+        {
+            var nodeGroup = (TransitionGroupDocNode) doc.FindNode(groupPath);
+            var nodeTran = nodeGroup.Transitions.First();
+            var results = nodeTran.Results.ToArray();
+            results[replicateIndex] = new ChromInfoList<TransitionChromInfo>(
+                results[replicateIndex].Select(chromInfo =>
+                    chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeNote(note))));
+            return (SrmDocument) doc.ReplaceChild(groupPath,
+                nodeTran.ChangeResults(new Results<TransitionChromInfo>(results)));
+        }
+
+        private static TransitionChromInfo GetTransitionChromInfo(SrmDocument doc, IdentityPath groupPath,
+            int replicateIndex)
+        {
+            var nodeGroup = (TransitionGroupDocNode) doc.FindNode(groupPath);
+            return nodeGroup.Transitions.First().Results[replicateIndex].First();
         }
 
         private void WaitForGraphPositioning<TValue>(IList<GraphChromatogram> listGraphChroms, IDictionary<Point, TValue> dictGraphPositions)

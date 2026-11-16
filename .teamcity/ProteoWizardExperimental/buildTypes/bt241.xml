@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="6569ded7-11e2-4208-bdd4-368f34fe9cf1" paused="true" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Alternate build system: VC8 libpwiz build</name>
+  <description>Tests the sln and vcxproj files produced by "MSVC project files for libpwiz"</description>
+  <settings>
+    <options>
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutDirectory" value="pwiz" />
+      <option name="checkoutMode" value="ON_AGENT" />
+    </options>
+    <parameters>
+      <param name="env.BOOST_ROOT" value="\boost\boost_1_43" />
+      <param name="env.ZLIB_SOURCE" value="%teamcity.build.checkoutDir%\libraries\zlib-1.2.3" />
+      <param name="env.toolset_property" value="toolset=msvc-9.0" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_VS.Solution_143" name="" type="VS.Solution">
+        <parameters>
+          <param name="build-file-path" value="msvc_test/pwiz/msvc8/libpwiz.sln" />
+          <param name="msbuild.prop.Configuration" value="Release" />
+          <param name="msbuild_version" value="2.0" />
+          <param name="nunit_environment" value="v2.0" />
+          <param name="nunit_platform" value="MSIL" />
+          <param name="nunit_version" value="NUnit-2.2.10" />
+          <param name="run-platform" value="x86" />
+          <param name="runnerArgs" value="/verbosity:quiet" />
+          <param name="targets" value="Build" />
+          <param name="toolsVersion" value="2.0" />
+          <param name="vs.version" value="vs2005" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizardAtSourceForge" />
+    </vcs-settings>
+    <requirements>
+      <contains id="RQ_1237" name="teamcity.agent.jvm.os.name" value="Windows" />
+      <exists id="RQ_1238" name="VS2005" />
+    </requirements>
+    <build-triggers>
+      <build-trigger id="vcsTrigger" type="vcsTrigger">
+        <parameters>
+          <param name="enableQueueOptimization" value="true" />
+          <param name="quietPeriod" value="-1" />
+          <param name="quietPeriodMode" value="USE_CUSTOM" />
+        </parameters>
+      </build-trigger>
+      <build-trigger id="TRIGGER_81" type="buildDependencyTrigger">
+        <parameters>
+          <param name="afterSuccessfulBuildOnly" value="true" />
+          <param name="dependsOn" value="bt211" />
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <dependencies>
+      <depend-on sourceBuildTypeId="bt211">
+        <options>
+          <option name="take-started-build-with-same-revisions" value="true" />
+          <option name="take-successful-builds-only" value="true" />
+        </options>
+      </depend-on>
+    </dependencies>
+  </settings>
+</build-type>
+

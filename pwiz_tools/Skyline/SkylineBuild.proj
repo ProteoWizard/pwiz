@@ -1,0 +1,81 @@
+<Project DefaultTargets="Build">
+
+  <!--
+    Everything build.bat compiles, in one MSBuild session: Skyline, every test project and the
+    TestRunner harness. Building them one `dotnet build` at a time started a new session per
+    project, and each one re-evaluated and up-to-date-checked the ~40 projects under Skyline and
+    re-ran the steps that do not know they are up to date (SortRESX, the protobuf code generation,
+    the native shim builds, the vendor test-data extraction): eight of the nine builds did no
+    compiling and still took 11-17 seconds each. In one session MSBuild builds each project once
+    and hands the result to every project that references it.
+
+    Every project here is built with only the global properties of the command line
+    (Configuration, Platform, IAgreeToVendorLicenses, ...) - the same set a ProjectReference
+    builds it with. Do not add a TargetFramework or any other property to the MSBuild call below:
+    a project built here with one more global property than its referencing projects pass is a
+    second configuration of the same project, which MSBuild builds again, possibly concurrently,
+    into the same obj folder.
+
+    Restore: NuGet's Restore target restores RestoreGraphProjectInputItems as one graph, so
+    `dotnet build SkylineBuild.proj` (which restores first) restores all of them in one pass too.
+    This file deliberately imports nothing else: no Microsoft.Common targets, and so no
+    Directory.Build.props/targets.
+
+    -p:SkylineBuildSet picks which projects to build:
+      All  (default) everything above - build.bat
+      Perf Skyline, TestPerf, TestTutorial and TestRunner - tc-perftests.bat
+    A named set rather than a project list on the command line, which would need its ';'
+    separators escaped. The property is removed again before the projects are built, so it
+    does not become a global property of every project.
+  -->
+
+  <PropertyGroup>
+    <SkylineBuildSet Condition="'$(SkylineBuildSet)' == ''">All</SkylineBuildSet>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(SkylineBuildSet)' == 'Perf'">
+    <SkylineBuildProject Include="Skyline.csproj" />
+    <SkylineBuildProject Include="TestPerf\TestPerf.csproj" />
+    <SkylineBuildProject Include="TestTutorial\TestTutorial.csproj" />
+    <SkylineBuildProject Include="TestRunner\TestRunner.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(SkylineBuildSet)' == 'All'">
+    <SkylineBuildProject Include="Skyline.csproj" />
+    <SkylineBuildProject Include="CommonTest\CommonTest.csproj" />
+    <SkylineBuildProject Include="Test\Test.csproj" />
+    <SkylineBuildProject Include="TestData\TestData.csproj" />
+    <SkylineBuildProject Include="TestFunctional\TestFunctional.csproj" />
+    <SkylineBuildProject Include="TestConnected\TestConnected.csproj" />
+    <SkylineBuildProject Include="TestTutorial\TestTutorial.csproj" />
+    <SkylineBuildProject Include="TestPerf\TestPerf.csproj" />
+    <SkylineBuildProject Include="TestRunner\TestRunner.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Full paths: NuGet does not resolve these relative to this file, and skips any it
+         cannot open with warning NU1503 rather than failing. -->
+    <RestoreGraphProjectInputItems Include="@(SkylineBuildProject->'%(FullPath)')" />
+  </ItemGroup>
+
+  <Import Project="$(MSBuildToolsPath)\NuGet.targets" />
+
+  <Target Name="Build" DependsOnTargets="_CheckSkylineBuildSet">
+    <MSBuild Projects="@(SkylineBuildProject)" Targets="Build" BuildInParallel="true"
+             RemoveProperties="SkylineBuildSet" />
+  </Target>
+
+  <Target Name="Clean" DependsOnTargets="_CheckSkylineBuildSet">
+    <MSBuild Projects="@(SkylineBuildProject)" Targets="Clean" BuildInParallel="true"
+             RemoveProperties="SkylineBuildSet" />
+  </Target>
+
+  <!-- A misspelled set would otherwise build nothing and report success. -->
+  <Target Name="_CheckSkylineBuildSet">
+    <Error Condition="'@(SkylineBuildProject)' == ''"
+           Text="Unknown SkylineBuildSet '$(SkylineBuildSet)'. Use All or Perf." />
+  </Target>
+
+  <Target Name="Rebuild" DependsOnTargets="Clean;Build" />
+
+</Project>

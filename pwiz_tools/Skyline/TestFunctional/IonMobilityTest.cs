@@ -42,8 +42,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class IonMobilityTest : AbstractFunctionalTestEx
     {
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         public void TestIonMobility()
         {
             TestFilesZipPaths = new[]

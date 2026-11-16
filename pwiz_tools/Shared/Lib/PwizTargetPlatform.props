@@ -1,0 +1,56 @@
+<Project>
+
+  <!-- Which platform the build OUTPUT will run on, as distinct from $(OS), which is the machine
+       running the build. Everything that stages a native payload - the vendor SDK libraries, the
+       VC++ redistributable, MascotShim, the bundled 7-Zip - has to key off the target. Keying off
+       the host does not fail when the two differ; it succeeds and emits a broken tree, which is
+       worse. installer/build-linux.sh documents the mirror image of the same trap ("a linux-x64
+       publish from Windows would stage Windows DLLs") and works around it by refusing to run
+       anywhere but Linux. This property is what lets that restriction be lifted.
+
+       Build TOOLS keep using $(OS) - 7za.exe vs 7zz, bsdtar.exe vs tar, vswhere - because those
+       execute on the build machine. The rule: $(OS) picks what RUNS during the build,
+       $(PwizTargetIsWindows) picks what SHIPS. The two are deliberately allowed to disagree; 7zz
+       unpacking a Windows vendor archive on a Linux host is the combination that makes
+       cross-targeting work at all.
+
+       Resolution order, first match wins:
+
+         1. -p:PwizTargetIsWindows=true|false     explicit, for a cross-target build
+         2. $(RuntimeIdentifier)                  `dotnet publish -r <rid>` passes it as a global
+                                                  property, so it is in scope even in a .props
+         3. a -windows platform in the TFM        visible only where this file is imported AFTER
+                                                  the project sets $(TargetFramework); a plain
+                                                  net10.0 TFM says nothing about the target and
+                                                  correctly falls through to the host
+         4. $(OS)                                 the host, which is the right answer for every
+                                                  build that never leaves its own platform
+
+       WHERE TO IMPORT matters, because of rule 3. Import early (Directory.Build.props) only where
+       projects cannot carry a platform TFM; import next to the consuming ItemGroups otherwise -
+       VendorNativeCrt.targets does the latter, since Skyline.csproj imports it mid-body where
+       net10.0-windows is already in scope but Directory.Build.targets has not run yet. Importing
+       more than once is harmless: every assignment below is conditioned on the property still
+       being empty, so the earliest import wins and later ones are no-ops. -->
+
+  <PropertyGroup>
+    <!-- Both import sites are legitimate (see above) and MSBuild warns MSB4011 on the second
+         one, so make it a silent no-op rather than noise on every build. -->
+    <PwizTargetPlatformPropsImported>true</PwizTargetPlatformPropsImported>
+
+    <!-- Remember whether the caller pinned this, so the cross-check in the companion .targets
+         knows not to second-guess a deliberate cross-target build. -->
+    <PwizTargetPlatformExplicit Condition="'$(PwizTargetIsWindows)' != ''">true</PwizTargetPlatformExplicit>
+
+    <PwizTargetIsWindows Condition="'$(PwizTargetIsWindows)' == '' AND '$(RuntimeIdentifier)' != '' AND $(RuntimeIdentifier.StartsWith('win'))">true</PwizTargetIsWindows>
+    <PwizTargetIsWindows Condition="'$(PwizTargetIsWindows)' == '' AND '$(RuntimeIdentifier)' != ''">false</PwizTargetIsWindows>
+    <PwizTargetIsWindows Condition="'$(PwizTargetIsWindows)' == '' AND '$(TargetFramework)' != '' AND $(TargetFramework.Contains('-windows'))">true</PwizTargetIsWindows>
+    <PwizTargetIsWindows Condition="'$(PwizTargetIsWindows)' == '' AND '$(OS)' == 'Windows_NT'">true</PwizTargetIsWindows>
+    <PwizTargetIsWindows Condition="'$(PwizTargetIsWindows)' == ''">false</PwizTargetIsWindows>
+
+    <!-- For messages, and for the handful of places that need the name rather than the flag. -->
+    <PwizTargetOSName Condition="'$(PwizTargetIsWindows)' == 'true'">Windows</PwizTargetOSName>
+    <PwizTargetOSName Condition="'$(PwizTargetIsWindows)' != 'true'">Linux</PwizTargetOSName>
+  </PropertyGroup>
+
+</Project>

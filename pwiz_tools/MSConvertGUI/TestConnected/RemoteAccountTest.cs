@@ -27,6 +27,8 @@ using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.Unifi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
 
+// Block-scoped like the MSConvertGUI sources this tests, which are exempt from IDE0161
+#pragma warning disable IDE0161
 namespace MSConvertGUI.TestConnected
 {
     [TestClass]
@@ -255,8 +257,8 @@ namespace MSConvertGUI.TestConnected
                         dlg.SetCurrentDirectory(rootUrl);
 
                         // Navigate into the known test path
-                        var pathParts = new[] { "Company", "Skyline", "SmallMolOptimization", "Scheduled" };
-                        var targetUrl = rootUrl.ChangePathParts(pathParts.ToList());
+                        var pathParts = new List<string> { "Company", "Skyline", "SmallMolOptimization", "Scheduled" };
+                        var targetUrl = rootUrl.ChangePathParts(pathParts);
                         dlg.SetCurrentDirectory(targetUrl);
 
                         // Wait for async data to arrive
@@ -271,7 +273,7 @@ namespace MSConvertGUI.TestConnected
                         var items = dlg.ListItemNames.ToList();
                         Assert.AreNotEqual(0, items.Count, "Dialog should show items after navigating to test folder");
 
-                        var injection = items.FirstOrDefault(name => name.StartsWith("ID33140"));
+                        var injection = items.FirstOrDefault(name => name.StartsWith("ID33140", StringComparison.Ordinal));
                         Assert.IsNotNull(injection, "Expected injection ID33140 in dialog. Found: " +
                             string.Join(", ", items.Take(10)));
 
@@ -280,7 +282,7 @@ namespace MSConvertGUI.TestConnected
 
                         // Verify we can get an authenticated URL for the injection
                         // (simulates what ProgressForm does when conversion starts)
-                        var injectionItem = dlg.ListItemNames.First(name => name.StartsWith("ID33140"));
+                        var injectionItem = dlg.ListItemNames.First(name => name.StartsWith("ID33140", StringComparison.Ordinal));
                         Assert.IsNotNull(injectionItem, "Should be able to find selected item");
                     }
                 });
@@ -374,7 +376,7 @@ namespace MSConvertGUI.TestConnected
                 if (session.AsyncFetchContents(url, out exception))
                     break;
                 if (exception != null)
-                    throw new Exception("Remote server error: " + exception.Message, exception);
+                    throw new AssertFailedException("Remote server error: " + exception.Message, exception);
                 Thread.Sleep(1000);
             }
 

@@ -704,8 +704,13 @@ namespace pwiz.Skyline.SettingsUI
             ScaleGraph(graphPane, modelHistograms.Min, modelHistograms.Max, _hasUnknownScores);
 
             // Change the graph title
-            if(_selectedCalculator >= 0)
-                graphPane.Title.Text = gridPeakCalculators.Rows[_selectedCalculator].Cells[(int)ColumnNames.calculator_name].Value.ToString();
+            if (_selectedCalculator >= 0)
+            {
+                // During teardown the grid's cell value can already be null, so guard the deref.
+                var nameCell = gridPeakCalculators.Rows[_selectedCalculator].Cells[(int)ColumnNames.calculator_name];
+                if (nameCell.Value != null)
+                    graphPane.Title.Text = nameCell.Value.ToString();
+            }
 
             zedGraphSelectedCalculator.Refresh();
         }
@@ -999,7 +1004,10 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         var cell = gridPeakCalculators.Rows[row].Cells[i];
                         cell.Style = warningStyle;
-                        cell.ToolTipText = cell.ToolTipText ?? SettingsUIResources.EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign;
+                        // ToolTipText reads back as empty, never null, so a ?? here would keep the
+                        // empty string and the warning would never appear
+                        if (string.IsNullOrEmpty(cell.ToolTipText))
+                            cell.ToolTipText = SettingsUIResources.EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign;
                     }
                 }
                 // Show row in disabled style if the score is not eligible
@@ -1055,6 +1063,12 @@ namespace pwiz.Skyline.SettingsUI
 
         private void gridPeakCalculators_SelectionChanged(object sender, EventArgs e)
         {
+            // On .NET 8, disposing the DataGridView raises SelectionChanged during the dialog's
+            // teardown (net472 did not). The grid sets its own disposing state at the start of its
+            // Dispose, while the form's Disposing/IsDisposed are still false at this point (the
+            // Designer disposes components before base.Dispose), so guard on the grid itself.
+            if (gridPeakCalculators.IsDisposed || gridPeakCalculators.Disposing)
+                return;
             if (gridPeakCalculators.Rows.Count == 0 || _peakScoringModel == null)
                 return;
             var row = gridPeakCalculators.SelectedCells.Count > 0 ? gridPeakCalculators.SelectedCells[0].RowIndex : 0;

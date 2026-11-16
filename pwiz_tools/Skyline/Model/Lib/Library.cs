@@ -72,8 +72,20 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            return !ReferenceEquals(document.Settings.PeptideSettings.Libraries, previous.Settings.PeptideSettings.Libraries) ||
-                   !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults);
+            if (!ReferenceEquals(document.Settings.PeptideSettings.Libraries, previous.Settings.PeptideSettings.Libraries))
+                return true;
+            if (ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults))
+                return false;
+            // MIDAS libraries are built from the results, which makes this the one library manager
+            // that must also watch for results changes. A document with no MIDAS spectra and nothing
+            // left to load has no work a results change could create, and would otherwise pay for
+            // this on every results change - including the annotation-only changes that
+            // MeasuredResults.RequiresCacheUpdate and SrmSettingsDiff.EqualExceptAnnotations both
+            // take care to treat as no-ops. Both documents are checked for MIDAS spectra so that
+            // clearing the last flag still counts as a change, and an unloaded library still gets
+            // its retry, since a load that failed on a transient error is retried from here.
+            return HasMidasSpectra(document) || HasMidasSpectra(previous) ||
+                   document.Settings.PeptideSettings.Libraries.LibrarySpecsUnloaded.Any();
         }
 
         protected override string IsNotLoadedExplained(SrmDocument document)
@@ -84,11 +96,32 @@ namespace pwiz.Skyline.Model.Lib
                 var missingFiles = MidasLibrary.GetMissingFiles(document, new Library[0]);
                 if (missingFiles.Any())
                 {
+                    // Still not loaded either way, but say which of the two things is being waited on.
+                    if (!IsReadyForMidasWork(document))
+                        return @"Waiting for the results to finish loading before building the MIDAS library";
                     return TextUtil.LineSeparate(@"MIDAS library is missing files:",
                         TextUtil.LineSeparate(missingFiles));
                 }
             }
             return !libraries.HasLibraries ? null : libraries.IsNotLoadedExplained;
+        }
+
+        private static bool HasMidasSpectra(SrmDocument document)
+        {
+            var results = document.Settings.MeasuredResults;
+            return results != null && results.MSDataFileInfos.Any(fileInfo => fileInfo.HasMidasSpectra);
+        }
+
+        /// <summary>
+        /// True when MIDAS library work may be started for this document. The spectra themselves are
+        /// read from the raw data files, so waiting costs nothing, but the settings change that
+        /// applies the new library recalculates all results - and that must not happen while results
+        /// loading is still joining per-file caches and deleting them.
+        /// </summary>
+        private static bool IsReadyForMidasWork(SrmDocument document)
+        {
+            var results = document.Settings.MeasuredResults;
+            return results == null || results.IsLoaded;
         }
 
         protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
@@ -139,7 +172,15 @@ namespace pwiz.Skyline.Model.Lib
                     }
                 }
 
-                var missingMidasFiles = MidasLibrary.GetMissingFiles(document, libraries.Libraries);
+                // Leave the MIDAS work until the results are loaded. Starting earlier gains nothing,
+                // because the spectra come from the raw files, and it is repeated and thrown away for
+                // every partial cache the importer joins.
+                // Read from docCurrent, which is what the readiness check and libraries above both
+                // come from. EqualsId compares identity, not instance, so document can be an older
+                // copy of the same document and its MSDataFileInfos correspondingly stale.
+                var missingMidasFiles = IsReadyForMidasWork(docCurrent)
+                    ? MidasLibrary.GetMissingFiles(docCurrent, libraries.Libraries)
+                    : Array.Empty<string>();
                 var midasLibPath = MidasLibSpec.GetLibraryFileName(container.DocumentFilePath);
                 var midasLibSpec = libraries.MidasLibrarySpecs.FirstOrDefault(libSpec => Equals(libSpec.FilePath, midasLibPath));
                 var newMidasLibSpec = missingMidasFiles.Any() && midasLibSpec == null;
@@ -630,15 +671,6 @@ namespace pwiz.Skyline.Model.Lib
         LibrarySpec LibrarySpec { get; }
     }
 
-    /// <summary>
-    /// Extra interface that can be added to an <see cref="ILibraryBuilder"/> class to provide
-    /// a warning to the users before the build begins and possibly to decide not to build.
-    /// </summary>
-    public interface ILibraryBuildWarning
-    {
-        string GetWarning();
-    }
-
     public enum LibraryRedundancy { best, all, all_redundant }
 
     public enum WorkflowType
@@ -945,6 +977,14 @@ namespace pwiz.Skyline.Model.Lib
         public abstract IEnumerable<LibKey> Keys { get; }
 
         /// <summary>
+        /// Returns the keys of the library entries for a peptide sequence, at any charge.
+        /// </summary>
+        public virtual IEnumerable<LibKey> GetKeysWithSequence(Target target)
+        {
+            return Array.Empty<LibKey>();
+        }
+
+        /// <summary>
         /// Returns a list of <see cref="RetentionTimeSource"/> objects representing
         /// the data files that this Library can provide peptide retention time
         /// values for.
@@ -1051,6 +1091,23 @@ namespace pwiz.Skyline.Model.Lib
         public virtual bool HasExplicitBounds
         {
             get { return false; }
+        }
+
+        /// <summary>
+        /// The levels at which this library reports global (experiment-wide) q-values. Empty for
+        /// a library that has none.
+        /// </summary>
+        public virtual ImmutableList<GlobalQValueLevel> GlobalQValueLevels
+        {
+            get { return ImmutableList<GlobalQValueLevel>.EMPTY; }
+        }
+
+        /// <summary>
+        /// The global statistics of the entry with the given key, or <see cref="LibraryGlobalScores.EMPTY"/>.
+        /// </summary>
+        public virtual LibraryGlobalScores GetGlobalScores(LibKey key)
+        {
+            return LibraryGlobalScores.EMPTY;
         }
 
         public Dictionary<Target, double> GetMedianRetentionTimes()
@@ -1407,6 +1464,11 @@ namespace pwiz.Skyline.Model.Lib
                     foreach (var entry in _libraryEntries)
                         yield return entry.Key;
             }
+        }
+
+        public override IEnumerable<LibKey> GetKeysWithSequence(Target target)
+        {
+            return IsLoaded ? LibraryEntriesWithSequence(target).Select(entry => entry.Key) : Array.Empty<LibKey>();
         }
 
         protected IEnumerable<TInfo> LibraryEntriesWithSequences(IEnumerable<Target> peptideSequences)
@@ -2831,6 +2893,16 @@ namespace pwiz.Skyline.Model.Lib
                     res.ScoreType = biblioAdditionalInfo.ScoreType ?? res.ScoreType;
                 }
             }
+
+            // Global statistics describe the library entry, so a redundant spectrum shows its entry's values
+            var globalScores = _library?.GetGlobalScores(pepInfo.Key) ?? LibraryGlobalScores.EMPTY;
+            res.PrecursorQValue = globalScores.PrecursorQValue;
+            res.PrecursorPep = globalScores.PrecursorPep;
+            res.PeptideQValue = globalScores.PeptideQValue;
+            res.PeptidePep = globalScores.PeptidePep;
+            var bestProteinGroup = globalScores.BestProteinGroup;
+            res.ProteinQValue = bestProteinGroup?.QValue;
+            res.ProteinPep = bestProteinGroup?.Pep;
             return res;
         }
     }

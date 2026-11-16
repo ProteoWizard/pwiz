@@ -98,7 +98,7 @@ namespace pwiz.SkylineTest
             };
 
             // Add each of those calculated m/z's to the spectrum in reverse order with increasing intensity value
-            foreach (var expectedIon in expectedIons.Reverse())
+            foreach (var expectedIon in Enumerable.Reverse(expectedIons))
             {
                 mzIntensities.Add(new SpectrumPeaksInfo.MI
                 {
@@ -128,9 +128,12 @@ namespace pwiz.SkylineTest
                 {
                     Assert.Fail("Ranked peak #{0} has no matched ion with m/z {1}", i, expectedIon.PredictedMz);
                 }
-                AssertEx.AreEqual(expectedIon.IonType, matchedIon.IonType);
-                AssertEx.AreEqual(expectedIon.Ordinal, matchedIon.Ordinal);
-                AssertEx.AreEqual(expectedIon.Losses, matchedIon.Losses);
+                else
+                {
+                    AssertEx.AreEqual(expectedIon.IonType, matchedIon.IonType);
+                    AssertEx.AreEqual(expectedIon.Ordinal, matchedIon.Ordinal);
+                    AssertEx.AreEqual(expectedIon.Losses, matchedIon.Losses);
+                }
             }
         }
 

@@ -105,7 +105,7 @@
         <li>Enter “Yeast_mini” in the <b>Name</b> field of the <b>Edit Library</b> form.</li>
         <li>Click the <b>Browse</b> button.</li>
         <li>Navigate to the MRMer subfolder under the ExistingQuant folder created earlier.</li>
-        <li>Select the file “Yeast_MRMer_mini.blib” which contains only spectra for the yeast peptides used in this study.</li>
+        <li>Select the file “Yeast_MRMer_min.blib” which contains only spectra for the yeast peptides used in this study.</li>
         <li>Click the <b>Open</b> button.</li>
         <li>Click the <b>OK</b> button in the <b>Edit Library</b> form.</li>
         <li>Click the <b>OK</b> button in the <b>Edit Libraries</b> form.</li>
@@ -629,11 +629,13 @@
     </p>
     <ul>
         <li>Click the <b>Cancel</b> button in the error message.</li>
+        <li>Click the <b>Cancel</b> button in the <b>Import Transition List: Identify Columns</b> form.</li>
         <li>On the <b>Settings</b> menu, click <b>Transition Settings</b>.</li>
         <li>Click the <b>Instrument</b> tab.</li>
         <li>In the <b>Max m/z</b> field, enter “1800”.</li>
         <li>Click the <b>OK</b> button.</li>
         <li>On the <b>Edit</b> menu, click <b>Paste</b> (Ctrl-V) again.</li>
+        <li>Click the <b>OK</b> button in the <b>Import Transition List: Identify Columns</b> form.</li>
         <li>On the <b>Edit</b> menu, choose <b>Collapse All</b> and click <b>Peptides</b> (Ctrl-shift-D).</li>
     </ul>
     <p class="keep-next">
@@ -653,7 +655,7 @@
     <ul>
         <li>Select the “AGL<b><u>C</u></b>QTFVYGG<b><u>C</u></b>R” peptide.</li>
         <li>On the <b>Edit</b> menu, click <b>Modify Peptide</b>.</li>
-        <li>Select the blank entry from the <b>Isotope heavy</b> dropdown list for the “Label: 13C(6)N15(4) C-term R” to remove the stable
+        <li>Select the blank entry from the <b>Isotope heavy</b> dropdown list for the “Label:13C(6) (C-term R)” to remove the stable
             isotope label from this C-terminal Arginine.</li>
         <li>Select <b>&lt;Add…&gt;</b> from the <b>Isotope heavy</b> dropdown list for the V residue in this
             peptide.</li>
@@ -706,8 +708,8 @@
         To create labeled precursors for the two remaining peptides, perform the following steps:
     </p>
     <ul>
-        <li>Right-click on the peptide “IVGGWE<b><u>C</u></b>EK”, and click <b>Modifiy</b>.</li>
-        <li>Select the blank entry from the <b>Isotope heavy</b> dropdown list for the “Label: 13C96)15N(2)(C-term K)” to remove the stable
+        <li>Right-click on the peptide “IVGGWE<b><u>C</u></b>EK”, and click <b>Modify</b>.</li>
+        <li>Select the blank entry from the <b>Isotope heavy</b> dropdown list for the “Label:13C(6)15N(2) (C-term K)” to remove the stable
             isotope label from this C-terminal Lysine.</li>
         <li>Select the “Label:13C” modification from the <b>Isotope heavy</b> dropdown list for the V residue in this peptide.</li>
         <li>Click the <b>OK</b> button.</li>
@@ -725,7 +727,7 @@
         You now have a Skyline document that accurately reflects the information in the original Study 7 transition list. 
     </p>
     <ul>
-        <li>Save this document to “Study 7.sky” in the Study 7 subfolder of the ExistingQuant folder.</li>
+        <li>Save this document to “Study7.sky” in the Study 7 subfolder of the ExistingQuant folder.</li>
     </ul>
     <h2>Importing Data from a Multiple Sample WIFF File</h2>
     <p>
@@ -762,11 +764,11 @@
         <img src="s-20.png" />
     </p>
     <ul>
-        <li>Click the <b>Remove</b> button to accept this operation.</li>
+        <li>Make sure the <b>Remove</b> option is selected to accept this operation.</li>
         <li>Click the <b>OK</b> button. </li>
     </ul>
     <p>
-        Skyline will begin importing the data from this WIFF file into its high-performance data file (Study 7.skyd), where it can be accessed much
+        Skyline will begin importing the data from this WIFF file into its high-performance data file (Study7.skyd), where it can be accessed much
         faster, and where all imported data for a document is compressed into a single file for easy sharing.
     </p>
     <h2>Inspecting and Adjusting Peak Integration</h2>
@@ -881,7 +883,7 @@
         <b>Peak Areas</b> view, do the following:
     </p>
     <ul>
-        <li>Right-click in the <b>Peak Areas</b> graph, choose <b>Normalize To</b> and click <b>Heavy</b>.</li>
+        <li>Right-click in the <b>Peak Areas</b> graph, choose <b>Normalized To</b> and click <b>Heavy</b>.</li>
         <li>Review again the 6 peptides that appeared well behaved.</li>
     </ul>
     <p class="keep-next">
@@ -934,7 +936,7 @@
         use it now to take another look at the HGFLP<b><span class="blue">R</span></b> peptide, by doing the following:
     </p>
     <ul>
-        <li>Right-click the <b>Peak Areas</b> chart, choose <b>Normalize To</b> and click <b>Total</b>.</li>
+        <li>Right-click the <b>Peak Areas</b> chart, choose <b>Normalized To</b> and click <b>Total</b>.</li>
     </ul>
     <p class="keep-next">
         The chart should change to something like:
@@ -1061,8 +1063,8 @@
         <li>Close the <b>Document Grid</b> by clicking the X in its upper-right corner.</li>
         <li>Select the peptide “SSDLVALSGGHTFGK<b>”</b> in the <b>Targets</b> view.</li>
         <li>On the <b>View</b> menu, choose <b>Peak Areas</b> and click <b>Replicate Comparison</b> (F7).</li>
-        <li>Right-click on the <b>Peak Areas</b> graph, choose <b>Group By</b> and click <b>Concentration</b>.</li>
-        <li>Right-click on the <b>Peak Areas</b> graph, choose <b>Normalize To</b> and click <b>Heavy</b>.</li>
+        <li>Right-click on the <b>Peak Areas</b> graph, choose <b>Group By</b> and click <b>Analyte Concentration</b>.</li>
+        <li>Right-click on the <b>Peak Areas</b> graph, choose <b>Normalized To</b> and click <b>Heavy</b>.</li>
     </ul>
     <p class="keep-next">
         The <b>Peak Areas</b> graph should now look like:
@@ -1100,6 +1102,8 @@
         <li>Navigate to the Study II subfolder under the Study 7 subfolder of the ExistingQuant folder created at the beginning of this tutorial.</li>
         <li>Select the “Study 7ii (site 52).sky” file.</li>
         <li>Click the <b>Open</b> button.</li>
+        <li>On the <b>View</b> menu, choose <b>Peak Areas</b> and click <b>Peptide Comparison</b> (Ctrl-F7).</li>
+        <li>Right-click on the <b>Peak Areas</b> chart and click <b>CV Values</b>, which you unchecked above.</li>
     </ul>
     <p class="keep-next">
         The file will open quickly, and you will see that the CV values for the injected isotope labeled standards are different,
@@ -1131,7 +1135,7 @@
     </p>
     <ul>
         <li>On the <b>View</b> menu, choose <b>Peak Areas</b> and click <b>Replicate Comparison</b> (F7).</li>
-        <li>Right-click on the <b>Peak Areas</b> graph, choose <b>Normalize To</b> and click <b>Heavy</b>.</li>
+        <li>Right-click on the <b>Peak Areas</b> graph, choose <b>Normalized To</b> and click <b>Heavy</b>.</li>
     </ul>
     <p>
         You will find that the charts for all peptides, even INDISHTQSVSA<b><span class="blue">K</span></b> look quite nice in this data set.
@@ -1147,7 +1151,7 @@
         un-normalized data:
     </p>
     <ul>
-        <li>Right-click on the <b>Peak Areas</b> chart, choose <b>Normalize To</b> and click <b>None</b>.</li>
+        <li>Right-click on the <b>Peak Areas</b> chart, choose <b>Normalized To</b> and click <b>None</b>.</li>
     </ul>
     <p class="keep-next">
         It would be hard to guess from this chart that the normalization would be so effective:
@@ -1161,7 +1165,7 @@
     <ul>
         <li>Select the light precursor “363.7059++” of the peptide HGFLP<b><span class="blue">R</span></b>.</li>
         <li>Right-click on the <b>Peak Areas</b> chart, choose <b>Transitions</b> and click <b>All</b>.</li>
-        <li>Right-click on the <b>Peak Areas</b> chart, choose <b>Normalize To</b> and click <b>Heavy</b>.</li>
+        <li>Right-click on the <b>Peak Areas</b> chart, choose <b>Normalized To</b> and click <b>Heavy</b>.</li>
     </ul>
     <p class="keep-next">
         Here also, you will see clear evidence of interference on the y3 transition:

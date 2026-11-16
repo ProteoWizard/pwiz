@@ -113,7 +113,7 @@ namespace pwiz.Skyline.ToolsUI
         public DocumentLocation GetDocumentLocation()
         {
             DocumentLocation documentLocation = null;
-            Program.MainWindow.Invoke(new Action(() =>
+            Program.MainWindow.Invoke(() =>
             {
                 if (!_skylineWindow.SelectedPath.Equals(new IdentityPath(SequenceTree.NODE_INSERT_ID)))
                 {
@@ -127,7 +127,7 @@ namespace pwiz.Skyline.ToolsUI
                             chromatogramSet.MSDataFileInfos.First().FileId.GlobalIndex);
                     }
                 }
-            }));
+            });
             return documentLocation;
         }
 
@@ -138,7 +138,7 @@ namespace pwiz.Skyline.ToolsUI
         [Obsolete]
         public void SetDocumentLocation(DocumentLocation documentLocation)
         {
-            Program.MainWindow.Invoke(new Action(() =>
+            Program.MainWindow.Invoke(() =>
             {
                 if (documentLocation == null)
                     Program.MainWindow.SelectPath(new IdentityPath(SequenceTree.NODE_INSERT_ID));
@@ -147,7 +147,7 @@ namespace pwiz.Skyline.ToolsUI
                     Bookmark bookmark = Bookmark.ToBookmark(documentLocation, Program.MainWindow.DocumentUI);
                     Program.MainWindow.NavigateToBookmark(bookmark);
                 }
-            }));
+            });
         }
 
         public string GetDocumentLocationName()
@@ -292,20 +292,20 @@ namespace pwiz.Skyline.ToolsUI
 
         public void ImportFasta(string textFasta)
         {
-            Program.MainWindow.Invoke(new Action(() =>
+            Program.MainWindow.Invoke(() =>
             {
                 _skylineWindow.ImportFasta(new StringReader(textFasta), Helpers.CountLinesInString(textFasta),
                     false, ToolsUIResources.ToolService_ImportFasta_Insert_proteins, new SkylineWindow.ImportFastaInfo(false, textFasta));
-            }));
+            });
         }
 
         public void InsertSmallMoleculeTransitionList(string textCSV)
         {
-            Program.MainWindow.Invoke(new Action(() =>
+            Program.MainWindow.Invoke(() =>
             {
                 _skylineWindow.InsertSmallMoleculeTransitionList(textCSV,
                     Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
-            }));
+            });
         }
 
         public void AddSpectralLibrary(string libraryName, string libraryPath)
@@ -318,13 +318,13 @@ namespace pwiz.Skyline.ToolsUI
             }
 
             // CONSIDER: Add this Library Spec to Settings.Default.SpectralLibraryList?
-            Program.MainWindow.Invoke(new Action(() =>
+            Program.MainWindow.Invoke(() =>
             {
                 _skylineWindow.ModifyDocument(ToolsUIResources.LibrarySpec_Add_spectral_library, doc =>
                     doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(
                         lib.LibrarySpecs.Union(new[] { librarySpec }).ToArray()))), AuditLogEntry.SettingsLogFunction);
                 Settings.Default.SpectralLibraryList.Add(librarySpec);
-            }));
+            });
         }
 
         private readonly object _documentChangeSendersLock = new object();
@@ -384,11 +384,11 @@ namespace pwiz.Skyline.ToolsUI
                     catch (TimeoutException)
                     {
                         var error = @"No response from " + documentChangeSender.Value.Name; 
-                        _skylineWindow.BeginInvoke(new Action(() =>
+                        _skylineWindow.BeginInvoke(() =>
                         {
                             _skylineWindow.ShowImmediateWindow();
                             _skylineWindow.ImmediateWindow.WriteLine(error);
-                        }));
+                        });
                         if (!documentChangeSender.Value.CountTimeout(MAX_TIMEOUT_COUNT))
                         {
                             deadSenders.Add(documentChangeSender.Key);
@@ -471,10 +471,10 @@ namespace pwiz.Skyline.ToolsUI
         public void DeleteElements(string[] elementLocatorStrings)
         {
             var elementLocators = elementLocatorStrings.Select(ElementLocator.Parse).ToList();
-            _skylineWindow.Invoke(new Action(() =>
+            _skylineWindow.Invoke(() =>
             {
                 DeleteElementsNow(elementLocators);
-            }));
+            });
         }
 
         private void DeleteElementsNow(IEnumerable<ElementLocator> elementLocators)
@@ -510,17 +510,17 @@ namespace pwiz.Skyline.ToolsUI
 
         public void ImportProperties(string csvText)
         {
-            _skylineWindow.Invoke(new Action(() =>
+            _skylineWindow.Invoke(() =>
             {
                 _skylineWindow.ImportAnnotations(new StringReader(csvText),
                     new MessageInfo(MessageType.imported_annotations, _skylineWindow.Document.DocumentType,
                         ToolsUIResources.ToolService_ImportProperties_Import_Properties_from_external_tool));
-            }));
+            });
         }
 
         public void ImportPeakBoundaries(string csvText)
         {
-            _skylineWindow.Invoke(new Action(() =>
+            _skylineWindow.Invoke(() =>
             {
                 lock (_skylineWindow.GetDocumentChangeLock())
                 {
@@ -558,14 +558,14 @@ namespace pwiz.Skyline.ToolsUI
                                 _skylineWindow.DocumentUI.DocumentType,
                                 ToolsUIResources.ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool)));
                 }
-            }));
+            });
         }
 
         public string GetSelectedElementLocator(string elementType)
         {
             ElementRef result = null;
             Exception exception = null;
-            _skylineWindow.Invoke(new Action(() => 
+            _skylineWindow.Invoke(() => 
             {
                 try
                 {
@@ -575,7 +575,7 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     exception = e;
                 }
-            }));
+            });
             if (exception != null)
             {
                 ExceptionUtil.WrapAndThrowException(exception);

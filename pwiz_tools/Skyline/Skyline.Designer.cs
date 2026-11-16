@@ -81,6 +81,7 @@ namespace pwiz.Skyline
             this.runPeptideSearchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.encyclopeDiaSearchMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.diannSearchMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ospreySearchMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importFeatureDetectionMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -93,6 +94,7 @@ namespace pwiz.Skyline
             this.importMassListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importDocumentMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importAnnotationsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importLayoutMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportTransitionListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportIsolationListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -104,6 +106,7 @@ namespace pwiz.Skyline
             this.chromatogramsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mProphetFeaturesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportAnnotationsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportLayoutMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mruBeforeToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.mruAfterToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.exitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -176,11 +179,18 @@ namespace pwiz.Skyline
             this.panel1.Controls.Add(this.dockPanel);
             resources.ApplyResources(this.panel1, "panel1");
             this.panel1.Name = "panel1";
+            this.panel1.Layout += new System.Windows.Forms.LayoutEventHandler(this.panel1_Layout);
             // 
             // dockPanel
             // 
             this.dockPanel.ActiveAutoHideContent = null;
             resources.ApplyResources(this.dockPanel, "dockPanel");
+            // Neither docked nor anchored: SkylineWindow sizes it from panel1 in panel1_Layout. The
+            // Anchor/Location/Size that used to live in Skyline[.<lang>].resx only work if the panel
+            // really starts at its designer size; in a Windows container it does not - the size is
+            // lost and the panel is left at Control's 200x100 default with anchor deltas it can
+            // never grow out of, so the docked panes collapse to nothing and every graph geometry
+            // test reads wrong values.
             this.dockPanel.Name = "dockPanel";
             this.dockPanel.ActiveDocumentChanged += new System.EventHandler(this.dockPanel_ActiveDocumentChanged);
             // 
@@ -476,6 +486,7 @@ namespace pwiz.Skyline
             this.runPeptideSearchToolStripMenuItem,
             this.encyclopeDiaSearchMenuItem,
             this.diannSearchMenuItem,
+            this.ospreySearchMenuItem,
             this.importFeatureDetectionMenuItem});
             this.searchStripMenuItem.Name = "searchStripMenuItem";
             resources.ApplyResources(this.searchStripMenuItem, "searchStripMenuItem");
@@ -501,6 +512,13 @@ namespace pwiz.Skyline
             this.modeUIHandler.SetUIMode(this.diannSearchMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.diannSearchMenuItem.Click += new System.EventHandler(this.diannSearchMenuItem_Click);
             //
+            // ospreySearchMenuItem
+            //
+            this.ospreySearchMenuItem.Name = "ospreySearchMenuItem";
+            resources.ApplyResources(this.ospreySearchMenuItem, "ospreySearchMenuItem");
+            this.modeUIHandler.SetUIMode(this.ospreySearchMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.ospreySearchMenuItem.Click += new System.EventHandler(this.ospreySearchMenuItem_Click);
+            //
             // importFeatureDetectionMenuItem
             // 
             this.importFeatureDetectionMenuItem.Name = "importFeatureDetectionMenuItem";
@@ -519,7 +537,8 @@ namespace pwiz.Skyline
             this.importAssayLibraryMenuItem,
             this.importMassListMenuItem,
             this.importDocumentMenuItem,
-            this.importAnnotationsMenuItem});
+            this.importAnnotationsMenuItem,
+            this.importLayoutMenuItem});
             this.importToolStripMenuItem.Name = "importToolStripMenuItem";
             resources.ApplyResources(this.importToolStripMenuItem, "importToolStripMenuItem");
             // 
@@ -582,9 +601,15 @@ namespace pwiz.Skyline
             this.importAnnotationsMenuItem.Name = "importAnnotationsMenuItem";
             resources.ApplyResources(this.importAnnotationsMenuItem, "importAnnotationsMenuItem");
             this.importAnnotationsMenuItem.Click += new System.EventHandler(this.importAnnotationsMenuItem_Click);
-            // 
+            //
+            // importLayoutMenuItem
+            //
+            this.importLayoutMenuItem.Name = "importLayoutMenuItem";
+            resources.ApplyResources(this.importLayoutMenuItem, "importLayoutMenuItem");
+            this.importLayoutMenuItem.Click += new System.EventHandler(this.importLayoutMenuItem_Click);
+            //
             // exportToolStripMenuItem
-            // 
+            //
             this.exportToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.exportTransitionListMenuItem,
             this.exportIsolationListMenuItem,
@@ -595,7 +620,8 @@ namespace pwiz.Skyline
             this.exportSpectralLibraryMenuItem,
             this.chromatogramsToolStripMenuItem,
             this.mProphetFeaturesMenuItem,
-            this.exportAnnotationsMenuItem});
+            this.exportAnnotationsMenuItem,
+            this.exportLayoutMenuItem});
             this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
             resources.ApplyResources(this.exportToolStripMenuItem, "exportToolStripMenuItem");
             // 
@@ -656,9 +682,15 @@ namespace pwiz.Skyline
             this.exportAnnotationsMenuItem.Name = "exportAnnotationsMenuItem";
             resources.ApplyResources(this.exportAnnotationsMenuItem, "exportAnnotationsMenuItem");
             this.exportAnnotationsMenuItem.Click += new System.EventHandler(this.exportAnnotationsMenuItem_Click);
-            // 
+            //
+            // exportLayoutMenuItem
+            //
+            this.exportLayoutMenuItem.Name = "exportLayoutMenuItem";
+            resources.ApplyResources(this.exportLayoutMenuItem, "exportLayoutMenuItem");
+            this.exportLayoutMenuItem.Click += new System.EventHandler(this.exportLayoutMenuItem_Click);
+            //
             // mruBeforeToolStripSeparator
-            // 
+            //
             this.mruBeforeToolStripSeparator.Name = "mruBeforeToolStripSeparator";
             resources.ApplyResources(this.mruBeforeToolStripSeparator, "mruBeforeToolStripSeparator");
             // 
@@ -1123,6 +1155,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem importAssayLibraryMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportAnnotationsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importAnnotationsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportLayoutMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem importLayoutMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparatorSelectUI;
         private System.Windows.Forms.ToolStripDropDownButton modeUIToolBarDropDownButton;
         // targetsAt1FDRToolStripMenuItem moved to RetentionTimesContextMenu
@@ -1141,6 +1175,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem runPeptideSearchToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem encyclopeDiaSearchMenuItem;
         private System.Windows.Forms.ToolStripMenuItem diannSearchMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem ospreySearchMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importFeatureDetectionMenuItem;
         private System.Windows.Forms.ToolStripMenuItem ardiaPublishMenuItem;
         private System.Windows.Forms.ToolStripMenuItem searchToolsMenuItem;
