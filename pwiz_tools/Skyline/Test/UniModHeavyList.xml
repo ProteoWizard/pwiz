@@ -151,4 +151,6 @@
   <static_modification name="Trimethyl:13C(3)2H(9) (R)" aminoacid="R" formula="C'3H'9-C3H9" unimod_id="1414" />
   <static_modification name="Trimethyl:2H(9) (K)" aminoacid="K" formula="H'9-H9" unimod_id="1371" />
   <static_modification name="Trimethyl:2H(9) (R)" aminoacid="R" formula="H'9-H9" unimod_id="1371" />
+  <static_modification name="Label:13C(2)15N(1) (G)" aminoacid="G" label_13C="true" label_15N="true" unimod_id="2088" />
+  <static_modification name="Label:2H(8) (K)" aminoacid="K" formula="H'8-H8" unimod_id="2146" />
 </HeavyModList>

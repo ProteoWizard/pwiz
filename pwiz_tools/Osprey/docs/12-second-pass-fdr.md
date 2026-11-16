@@ -52,8 +52,21 @@ fails in seconds rather than after Stage 1-5.
 
 | Mode | Retrain? | Null population | Level |
 |------|----------|-----------------|-------|
-| `protein-compact` (default) | no (frozen model) | competition constrained to the protein stratum | precursor |
+| `protein-compact` (default) | no (frozen model) | stratified: the protein stratum and its complement, each against its own decoys | precursor; the stratum's experiment peptide q from a peptide-level competition over the same bests |
 | `transfer` | no | pass-1 q carried through; only moved peaks re-mapped | precursor + peptide |
+
+The **experiment peptide q-value and peptide PEP** of an on-stratum survivor come from a
+peptide-level competition over the same per-entry bests
+(`StreamedCompetitionState.CompetePeptides`): each peptide's best target and best decoy
+precursor, competed by base_id and conservative q, as the first pass does it in
+`PercolatorQValues.ComputeExperimentPeptideQMap`, with the PEP fitted on those winners. A
+base_id is grouped under its target's modified sequence, taken from the survivor entries
+(`ExperimentQFloors.TargetPeptideFor`) rather than the library, which a `--task
+SecondPassFDR` node holds without its generated decoys. Before this, the second pass copied
+each precursor's q into the peptide field, so the charge states of one peptide disagreed.
+The RUN peptide q is still set to the run precursor q on this path
+(`Pass2PerFileWorker`): replacing it would move the protein FDR gate, which reads run
+peptide q.
 
 These two are the whole list. `percolator` was removed for retraining against a
 decoy-depleted null (above), and the `OSPREY_PROTEIN_COMPACT_RETRAIN` A/B toggle went with
@@ -68,14 +81,19 @@ improves with **no added evidence**. Measured on the 82-file SEA-AD cohort: **1.
 at a nominal 1%, accepting 34,325**, against **1.53% and 37,624** for `protein-compact`. It
 is dominated on both axes, which is why it is a removal rather than a demotion.
 
-`protein-compact` has the same paired-subsetting bias - its stratum gate is target-conditioned
-too, tracked as **[#4581](https://github.com/ProteoWizard/pwiz/issues/4581)** (open). The
-mixed-pass statistics that ride along were [#4560](https://github.com/ProteoWizard/pwiz/issues/4560),
-closed 2026-09-18 by contract rather than by a code change: an off-stratum survivor carries
-pass-2 run-scope statistics and pass-1 experiment-scope statistics, `Score` stays pass 2 so
-it pairs with the run q it competed on, and an unchanged row takes run q 1.0 as "did not
-compete" (`Pass2FdrSidecar.FinishRecord`). The difference is that `protein-compact` also brings genuinely new protein-level
-evidence to the ranking, where `transfer-compete` brought none. See also issue #4484 (closed)
+`protein-compact` had the same paired-subsetting bias until it competed the stratum's
+complement too ([#4581](https://github.com/ProteoWizard/pwiz/issues/4581)): its stratum is
+chosen by target evidence, so it takes most of the high-scoring targets and only the base rate
+of the high-scoring decoys, and the complement used to keep (or pool) its first-pass q while
+the decoys the stratum excluded counted against no one. Both halves now compete against their
+own paired decoys - see below and [protein-shuffled-entrapment.md](protein-shuffled-entrapment.md),
+which also explains why the standard entrapment design could not see it. An off-stratum
+survivor carries pass-2 run-scope and experiment-scope q-values from the complement's
+competition, with the pass-1 aggregate score and PEP the complement ranked on
+(`Pass2FdrSidecar.FinishRecord`), which retires the mixed-pass contract of
+[#4560](https://github.com/ProteoWizard/pwiz/issues/4560). The difference from
+`transfer-compete` is that `protein-compact` also brings genuinely new protein-level evidence
+to the ranking, where `transfer-compete` brought none. See also issue #4484 (closed)
 for the default decision, and #4363 (closed) for the depleted-null finding.
 
 **Interaction with `OSPREY_EXPERIMENT_AGG`**: after a first pass run under the
@@ -107,10 +125,16 @@ is selected against (#4581). The competition is
 **constrained to the protein stratum** — the `base_id`s of proteins that had ≥2 peptides pass first-pass
 protein FDR, admitted as target+decoy pairs (the stratum is built by first-pass
 protein parsimony; see [08-protein-parsimony.md](08-protein-parsimony.md)).
-Off-stratum survivors keep their first-pass q-values, so the report is
-`pass-1 ∪ stratum-passers`. Constraining the competition to a biologically
-pre-filtered set reduces the multiple-testing burden (independent filtering,
-Bourgon 2010).
+The **complement** - every other precursor - competes separately against its own
+paired decoys, at run scope in the rescore worker and at experiment scope on the
+first-pass experiment aggregate scores (`StreamingFdr.ComputeComplementExperimentQ`).
+A peak Stage 6 moved competes on its new score in whichever half its `base_id`
+belongs to. Constraining the stratum's competition to a biologically pre-filtered
+set reduces its multiple-testing burden (independent filtering, Bourgon 2010);
+competing the complement against the decoys the stratum excluded is what keeps
+the reported union calibrated. Each half carries its own conservative `+1`, so on
+a very small analysis (a few hundred precursors) a half with fewer than about 100
+targets above its first decoy accepts nothing at 1%.
 
 ## Frozen vs. retrain
 

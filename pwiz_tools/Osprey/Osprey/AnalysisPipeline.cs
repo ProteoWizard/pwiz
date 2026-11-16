@@ -175,8 +175,7 @@ namespace pwiz.Osprey
                 var ospreyCtx = (PipelineContext)ctx;
                 ospreyCtx.LogInfo(LogTag.TASK, @"{0}:done ({1:F1}s)",
                     task.Name, elapsed.TotalSeconds);
-                if (OspreyEnvironment.BlockReadMb > 0)
-                    ospreyCtx.LogInfo(LogTag.PATH, @"{0}: {1}", task.Name, BlockReadStats.Text());
+                ospreyCtx.LogInfo(LogTag.PATH, @"{0}: {1}", task.Name, BlockReadStats.Text());
                 // DIAGNOSTIC (OSPREY_DROP_BETWEEN_TASKS=1): make the in-process pipeline behave like
                 // the HPC split - this task drops everything but the library, and the next reloads
                 // what it needs from artifacts. Off by default; the whole experiment reverts

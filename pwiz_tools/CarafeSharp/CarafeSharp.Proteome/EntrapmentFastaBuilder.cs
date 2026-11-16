@@ -40,6 +40,10 @@ namespace pwiz.CarafeSharp.Proteome
     /// entry per sequence, headed <c>db|accession_pepNNNNN|entry</c> (joined with ';' across
     /// source proteins), with entrapment accessions and entry names suffixed <c>_p_target</c>
     /// and decoy headers prefixed <c>decoy_</c>. Output order is by target sequence, ordinal.
+    /// Beyond Carafe, further entrapment peptides can be placed on target proteins
+    /// (<see cref="EntrapmentFastaSettings.EntrapmentInTargetsRatio"/>): those carry the target
+    /// protein's label without the suffix, and the manifest's <c>peptide_type</c> alone marks
+    /// them as entrapment.
     /// </summary>
     public sealed class EntrapmentFastaBuilder
     {
@@ -108,7 +112,7 @@ namespace pwiz.CarafeSharp.Proteome
             Log(@"Reading FASTA: " + _settings.InputFasta);
             Log(@"Use enzyme: " + digester.Enzyme.Name);
 
-            var quartets = DigestTargets(digester, result);
+            var quartets = DigestTargets(digester, result, out var proteins);
             // Built once and reused for every candidate. I and L are isobaric, so a generated
             // sequence whose I-to-L form matches a real target is effectively that target.
             var targetSet = new HashSet<string>(quartets.Select(q => q.Target));
@@ -119,6 +123,8 @@ namespace pwiz.CarafeSharp.Proteome
             result.QuartetsBuilt = quartets.Count;
 
             var kept = DropUnusable(quartets, targetSet, result);
+            if (_settings.AddEntrapment && _settings.EntrapmentInTargetsRatio > 0)
+                AssignEntrapmentProteins(kept, proteins, result);
             // Stable ordering: by target so pair indices are reproducible, and each quartet's
             // sources by accession then entry name (stable, as Java's List.sort is) so the
             // header's first accession is deterministic.
@@ -185,7 +191,20 @@ namespace pwiz.CarafeSharp.Proteome
                 if (z < 1 || z > 10)
                     throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, @"invalid charge state (allowed 1..10): {0}", z));
             }
+            if (_settings.EntrapmentInTargetsRatio < 0 || _settings.EntrapmentInTargetsRatio > 1)
+            {
+                throw new ArgumentException(string.Format(CultureInfo.InvariantCulture,
+                    @"the ratio of entrapment peptides placed on target proteins must be in [0, 1]: {0}", _settings.EntrapmentInTargetsRatio));
+            }
+            if (_settings.EntrapmentInTargetsRatio > 0 && !_settings.AddEntrapment)
+                throw new ArgumentException(@"placing entrapment peptides on target proteins needs entrapment");
         }
+
+        /// <summary>
+        /// The ratio of targets that carry an entrapment peptide: the standard entrapment plus
+        /// the entrapment placed on target proteins.
+        /// </summary>
+        private double TotalEntrapmentRatio => _settings.EntrapmentRatio + _settings.EntrapmentInTargetsRatio;
 
         /// <summary>The checks on the files <see cref="Run"/> writes, which a build without files has no need of.</summary>
         private void ValidateOutputs()
@@ -218,9 +237,10 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary>
         /// Step 1: every unique peptide of every protein, with its source proteins in FASTA
         /// order. A peptide is filtered (unknown residue, then m/z window) only when first seen;
-        /// once kept, later proteins only add sources.
+        /// once kept, later proteins only add sources. <paramref name="proteins"/> is every
+        /// record parsed, in FASTA order, which the draw of target proteins for entrapment is over.
         /// </summary>
-        private List<EntrapmentQuartet> DigestTargets(Digester digester, EntrapmentFastaResult result)
+        private List<EntrapmentQuartet> DigestTargets(Digester digester, EntrapmentFastaResult result, out List<ProteinRecord> proteins)
         {
             var mzFilter = _settings.ApplyMzFilter
                 ? new ModifiedPrecursorMzFilter(_settings.Modifications, _settings.Charges,
@@ -228,12 +248,14 @@ namespace pwiz.CarafeSharp.Proteome
                 : null;
             var byTarget = new Dictionary<string, EntrapmentQuartet>();
             var quartets = new List<EntrapmentQuartet>();
+            proteins = new List<ProteinRecord>();
             foreach (var entry in FastaReader.ReadFile(_settings.InputFasta, Log))
             {
                 var record = ProteinRecord.Parse(entry.Header, entry.Sequence);
                 if (record == null)
                     continue;
                 result.Proteins++;
+                proteins.Add(record);
                 foreach (string peptide in digester.Digest(record.Sequence))
                 {
                     if (byTarget.TryGetValue(peptide, out var existing))
@@ -272,7 +294,12 @@ namespace pwiz.CarafeSharp.Proteome
         private void AssignEntrapment(List<EntrapmentQuartet> quartets, ISet<string> targetSet,
             ISet<string> targetSetIl, Digester digester, EntrapmentFastaResult result)
         {
-            double ratio = _settings.EntrapmentRatio;
+            if (_settings.EntrapmentRatio < 0)
+            {
+                throw new ArgumentException(string.Format(CultureInfo.InvariantCulture,
+                    @"entrapment ratio cannot be negative: {0}", _settings.EntrapmentRatio));
+            }
+            double ratio = TotalEntrapmentRatio;
             if (ratio > 1.0)
             {
                 throw new ArgumentException(string.Format(CultureInfo.InvariantCulture,
@@ -304,27 +331,70 @@ namespace pwiz.CarafeSharp.Proteome
         }
 
         /// <summary>
-        /// Every quartet in target order when the ratio selects them all, else a seeded
-        /// Fisher-Yates draw of round(ratio * n), put back in target order.
+        /// Every quartet in target order when the total ratio selects them all, else a seeded
+        /// Fisher-Yates draw of round(ratio * n), put back in target order. The ratio is the
+        /// standard entrapment plus the entrapment placed on target proteins, so the draw is
+        /// unchanged by the latter when it is zero.
         /// </summary>
         private List<EntrapmentQuartet> SelectEntrapmentTargets(List<EntrapmentQuartet> quartets)
         {
             var ordered = new List<EntrapmentQuartet>(quartets);
             ordered.Sort((a, b) => string.CompareOrdinal(a.Target, b.Target));
-            int nSelected = unchecked((int)JavaText.Round(_settings.EntrapmentRatio * ordered.Count));
+            int nSelected = unchecked((int)JavaText.Round(TotalEntrapmentRatio * ordered.Count));
             if (nSelected >= ordered.Count)
                 return ordered;
 
             var shuffled = new List<EntrapmentQuartet>(ordered);
-            var rng = new JavaRandom(_settings.EntrapmentSeed);
-            for (int i = shuffled.Count - 1; i > 0; i--)
-            {
-                int j = rng.NextInt(i + 1);
-                (shuffled[i], shuffled[j]) = (shuffled[j], shuffled[i]);
-            }
+            Shuffle(shuffled, new JavaRandom(_settings.EntrapmentSeed));
             var selected = shuffled.GetRange(0, nSelected);
             selected.Sort((a, b) => string.CompareOrdinal(a.Target, b.Target));
             return selected;
+        }
+
+        /// <summary>
+        /// Step 3b: places the entrapment peptides of the in-targets ratio, round(ratio * n) of
+        /// the n targets digested, on target proteins, so that an entrapment peptide can receive
+        /// protein evidence as a false target does. The candidates are the kept quartets with
+        /// entrapment, in target order; a Fisher-Yates draw seeded on its own (the other draws
+        /// are unchanged by it) picks them, and each picked quartet, in target order, takes one
+        /// protein drawn uniformly, with the same generator, from the FASTA's records that have a
+        /// kept target (as the audit's prototype drew uniformly over the manifest's accessions).
+        /// Done after the drop pass so that the count written is the count asked for and every
+        /// protein drawn is in the library; the drop pass can only leave fewer candidates than
+        /// that, in which case every one is placed.
+        /// </summary>
+        private void AssignEntrapmentProteins(List<EntrapmentQuartet> kept, List<ProteinRecord> proteins, EntrapmentFastaResult result)
+        {
+            var inLibrary = new HashSet<ProteinRecord>(kept.SelectMany(q => q.Sources));
+            var pool = proteins.Where(inLibrary.Contains).ToList();
+            var candidates = kept.Where(q => q.PTarget != null).ToList();
+            candidates.Sort((a, b) => string.CompareOrdinal(a.Target, b.Target));
+            int nChosen = Math.Min(unchecked((int)JavaText.Round(_settings.EntrapmentInTargetsRatio * result.QuartetsBuilt)), candidates.Count);
+            var rng = new JavaRandom(_settings.EntrapmentProteinSeed);
+            var chosen = candidates;
+            if (nChosen < candidates.Count)
+            {
+                var shuffled = new List<EntrapmentQuartet>(candidates);
+                Shuffle(shuffled, rng);
+                chosen = shuffled.GetRange(0, nChosen);
+                chosen.Sort((a, b) => string.CompareOrdinal(a.Target, b.Target));
+            }
+            foreach (var quartet in chosen)
+                quartet.PTargetSources = new List<ProteinRecord> { pool[rng.NextInt(pool.Count)] };
+            result.EntrapmentOnTargetProteins = chosen.Count;
+            Log(string.Format(CultureInfo.InvariantCulture,
+                @"Entrapment peptides placed on target proteins: {0} of {1}, drawn from {2} proteins",
+                chosen.Count, candidates.Count, pool.Count));
+        }
+
+        /// <summary>Fisher-Yates in place with Java's generator, as Carafe's <c>Collections.shuffle</c> draws.</summary>
+        private static void Shuffle<T>(List<T> list, JavaRandom rng)
+        {
+            for (int i = list.Count - 1; i > 0; i--)
+            {
+                int j = rng.NextInt(i + 1);
+                (list[i], list[j]) = (list[j], list[i]);
+            }
         }
 
         private void AssignForeignEntrapment(List<EntrapmentQuartet> selected, ISet<string> targetSet,
@@ -340,7 +410,7 @@ namespace pwiz.CarafeSharp.Proteome
                 // Not fatal, but it silently changes what was asked for, so say so first.
                 Log(string.Format(CultureInfo.InvariantCulture,
                     @"WARNING: Foreign entrapment pool has {0} peptides for {1} selected targets; the achieved ratio will be below the requested {2:F3}",
-                    pool.Available, selected.Count, _settings.EntrapmentRatio));
+                    pool.Available, selected.Count, TotalEntrapmentRatio));
             }
             // Assignment order is deliberately uncorrelated with mass (it is sequence order):
             // sweeping in mass order lets each target consume the supply just above it.
@@ -460,7 +530,9 @@ namespace pwiz.CarafeSharp.Proteome
 
         /// <summary>
         /// Step 4: one entry per peptide. The per-protein counter advances in lockstep across
-        /// every source of a shared peptide, so a joined header carries coherent suffixes.
+        /// every source of a shared peptide, so a joined header carries coherent suffixes; an
+        /// entrapment peptide placed on a target protein advances that protein's counter too, so
+        /// its header is one more entry of that protein.
         /// </summary>
         private void WriteFasta(List<EntrapmentQuartet> kept, EntrapmentFastaResult result, string path)
         {
@@ -470,17 +542,8 @@ namespace pwiz.CarafeSharp.Proteome
             {
                 foreach (var quartet in kept)
                 {
-                    var counters = new int?[quartet.Sources.Count];
-                    if (_settings.UniqueAccessions)
-                    {
-                        for (int i = 0; i < quartet.Sources.Count; i++)
-                        {
-                            string accession = quartet.Sources[i].Accession;
-                            peptideCounters.TryGetValue(accession, out int count);
-                            peptideCounters[accession] = ++count;
-                            counters[i] = count;
-                        }
-                    }
+                    var counters = NextCounters(quartet.Sources, peptideCounters);
+                    var entrapmentCounters = quartet.PTargetSources != null ? NextCounters(quartet.PTargetSources, peptideCounters) : counters;
                     if (quartet.Sources.Count > 1)
                         result.SharedEntries++;
 
@@ -488,7 +551,7 @@ namespace pwiz.CarafeSharp.Proteome
                     result.TargetEntries++;
                     if (quartet.PTarget != null)
                     {
-                        WriteEntry(writer, JoinedLabel(quartet, counters, true, false), quartet.PTarget);
+                        WriteEntry(writer, JoinedLabel(quartet, entrapmentCounters, true, false), quartet.PTarget);
                         result.PTargetEntries++;
                     }
                     if (quartet.Decoy != null)
@@ -498,7 +561,7 @@ namespace pwiz.CarafeSharp.Proteome
                     }
                     if (quartet.PDecoy != null)
                     {
-                        WriteEntry(writer, JoinedLabel(quartet, counters, true, true), quartet.PDecoy);
+                        WriteEntry(writer, JoinedLabel(quartet, entrapmentCounters, true, true), quartet.PDecoy);
                         result.PDecoyEntries++;
                     }
                 }
@@ -542,17 +605,39 @@ namespace pwiz.CarafeSharp.Proteome
         }
 
         /// <summary>
-        /// The ';'-joined labels of every source, each with its counter when
-        /// <paramref name="counters"/> gives one.
+        /// The next per-protein counter of each of <paramref name="sources"/>, advanced in
+        /// <paramref name="peptideCounters"/>; all null when accessions are not made unique.
+        /// </summary>
+        private int?[] NextCounters(List<ProteinRecord> sources, Dictionary<string, int> peptideCounters)
+        {
+            var counters = new int?[sources.Count];
+            if (!_settings.UniqueAccessions)
+                return counters;
+            for (int i = 0; i < sources.Count; i++)
+            {
+                string accession = sources[i].Accession;
+                peptideCounters.TryGetValue(accession, out int count);
+                peptideCounters[accession] = ++count;
+                counters[i] = count;
+            }
+            return counters;
+        }
+
+        /// <summary>
+        /// The ';'-joined labels of every source of the peptide kind, each with its counter when
+        /// <paramref name="counters"/> gives one. An entrapment peptide placed on a target protein
+        /// is labeled as that protein's, without the entrapment suffix.
         /// </summary>
         private string JoinedLabel(EntrapmentQuartet quartet, int?[] counters, bool pTarget, bool decoy)
         {
+            var sources = pTarget ? quartet.EntrapmentSources : quartet.Sources;
+            bool suffixed = pTarget && quartet.PTargetSources == null;
             var sb = new StringBuilder();
-            for (int i = 0; i < quartet.Sources.Count; i++)
+            for (int i = 0; i < sources.Count; i++)
             {
                 if (i > 0)
                     sb.Append(';');
-                sb.Append(BuildProteinLabel(quartet.Sources[i], pTarget, decoy, _settings.EntrapmentSuffix,
+                sb.Append(BuildProteinLabel(sources[i], suffixed, decoy, _settings.EntrapmentSuffix,
                     _settings.DecoyPrefix, counters?[i], _settings.PeptideSuffixFormat));
             }
             return sb.ToString();

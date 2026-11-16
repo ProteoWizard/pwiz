@@ -49,6 +49,9 @@ namespace pwiz.Osprey.FDR
         /// <summary>Posterior error probability.</summary>
         public double Pep { get; set; }
 
+        /// <summary>Experiment-wide peptide-level posterior error probability.</summary>
+        public double ExperimentPeptidePep { get; set; }
+
         /// <summary>
         /// The per-entry score the experiment-scope competitions ranked this entry on
         /// (sidecar v4, issue #4522); see <see cref="Core.FdrEntry.ExperimentAggregateScore"/>.
@@ -62,6 +65,7 @@ namespace pwiz.Osprey.FDR
             ExperimentPrecursorQvalue = 1.0;
             ExperimentPeptideQvalue = 1.0;
             Pep = 1.0;
+            ExperimentPeptidePep = 1.0;
         }
     }
 
@@ -139,6 +143,14 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>Number of iterations used per fold.</summary>
         public List<int> IterationsPerFold { get; set; }
+
+        /// <summary>
+        /// Train-only tree runs with <see cref="PercolatorConfig.ReportTrainEntryFolds"/>
+        /// (OSPREY_GBT_OOF, or round 1 of the two-round training): the fold each input entry was held out of
+        /// (the one model that did not train on it), or -1 for an entry outside the training
+        /// subset. Null otherwise.
+        /// </summary>
+        public int[] TrainEntryFolds { get; set; }
 
         /// <summary>
         /// Set when <see cref="PercolatorTrainer.RunPercolator"/> wrote a

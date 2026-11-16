@@ -25,6 +25,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using JetBrains.Annotations;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -2270,6 +2271,7 @@ namespace pwiz.Skyline.Model.Results
         protected IList<ChromPeak> _chromPeaks;
         protected IList<float> _scores;
         private TimeIntensitiesGroup _timeIntensitiesGroup;
+        private readonly Lock _timeIntensitiesLock = new Lock();
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
                                      FeatureNames scoreTypeIndices,
@@ -2330,11 +2332,21 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                if (_timeIntensitiesGroup == null)
+                var timeIntensitiesGroup = _timeIntensitiesGroup;
+                if (timeIntensitiesGroup == null)
                 {
-                    _timeIntensitiesGroup = _chromatogramCache?.ReadTimeIntensities(Header);
+                    // Threads calculating report rows can ask for the same group at the same time,
+                    // and the points should only be read once
+                    lock (_timeIntensitiesLock)
+                    {
+                        if (_timeIntensitiesGroup == null)
+                        {
+                            _timeIntensitiesGroup = _chromatogramCache?.ReadTimeIntensities(Header);
+                        }
+                        timeIntensitiesGroup = _timeIntensitiesGroup;
+                    }
                 }
-                return _timeIntensitiesGroup;
+                return timeIntensitiesGroup;
             }
         }
 

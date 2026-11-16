@@ -28,7 +28,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.CarafeSharp.Training;
-using static TorchSharp.torch;
 
 namespace pwiz.CarafeSharp.Test
 {
@@ -68,7 +67,7 @@ namespace pwiz.CarafeSharp.Test
 
         public TestContext TestContext { get; set; }
 
-        [TestMethod]
+        [TestMethod, TestCategory(TestData.FULL_PARITY_CATEGORY)]
         public void TestFineTuneMatchesCarafe()
         {
             CompareFineTunes(TestData.FineTunedLibraries);
@@ -153,7 +152,7 @@ namespace pwiz.CarafeSharp.Test
         private void CheckPretrainedScores(PretrainedModels pretrained, JsonElement carafe,
             IReadOnlyList<RtTrainingExample> rtTest, IReadOnlyList<Ms2TrainingExample> ms2Test)
         {
-            using (var rt = RtModel.FromPretrained(pretrained, CPU))
+            using (var rt = RtModel.FromPretrained(pretrained, TestData.ComparisonDevice))
             {
                 var score = RtMetrics.Evaluate(rt, rtTest);
                 var expected = carafe.GetProperty(@"rt").GetProperty(@"pretrained");
@@ -162,7 +161,7 @@ namespace pwiz.CarafeSharp.Test
                 Assert.AreEqual(expected.GetProperty(@"r2").GetDouble(), score.R2, PRETRAINED_METRIC_TOLERANCE);
                 Assert.AreEqual(expected.GetProperty(@"mae_normalized").GetDouble(), score.MedianAbsoluteError, PRETRAINED_METRIC_TOLERANCE);
             }
-            using (var ms2 = Ms2Model.FromPretrained(pretrained, CPU))
+            using (var ms2 = Ms2Model.FromPretrained(pretrained, TestData.ComparisonDevice))
             {
                 var score = Ms2Metrics.Evaluate(ms2, ms2Test);
                 var expected = carafe.GetProperty(@"ms2").GetProperty(@"pretrained");
@@ -177,7 +176,7 @@ namespace pwiz.CarafeSharp.Test
             string output = Path.Combine(Path.GetTempPath(), @"CarafeSharpFineTune_" + Guid.NewGuid().ToString(@"N"));
             try
             {
-                var result = FineTuneRun.Run(rtRows, ms2Rows, pretrained, new FineTuneOptions(), output, TestContext.WriteLine);
+                var result = FineTuneRun.Run(rtRows, ms2Rows, pretrained, new FineTuneOptions { Device = TestData.ComparisonDevice }, output, TestContext.WriteLine);
                 var expectedRt = carafe.GetProperty(@"rt").GetProperty(@"finetuned");
                 var expectedMs2 = carafe.GetProperty(@"ms2").GetProperty(@"finetuned");
                 TestContext.WriteLine(@"RT fine-tuned: ours {0} in {1:F0} s; Carafe R2 {2:F6}", result.RtFineTuned,
@@ -189,7 +188,7 @@ namespace pwiz.CarafeSharp.Test
                 Assert.IsTrue(result.UseFineTunedMs2);
                 Assert.IsTrue(File.Exists(Path.Combine(output, FineTuneRun.MS2_MODEL_FILE)));
                 // The saved weights reload and predict as the trained model did.
-                using (var reloaded = Ms2Model.FromSafetensors(Path.Combine(output, FineTuneRun.MS2_MODEL_FILE), CPU))
+                using (var reloaded = Ms2Model.FromSafetensors(Path.Combine(output, FineTuneRun.MS2_MODEL_FILE), TestData.ComparisonDevice))
                     Assert.AreEqual(result.Ms2FineTuned.Cos, Ms2Metrics.Evaluate(reloaded, CheckMs2SplitQuiet(ms2Rows)).Cos, 1e-6);
             }
             finally

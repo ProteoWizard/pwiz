@@ -164,12 +164,12 @@ namespace pwiz.Osprey.Tasks
             var cwtInvalid = new List<string>();
 
             _ctx.LogBlockReads(@"Planning before the consensus pass");
-            using (var scanProgress = new ProgressReporter(
-                       ScoringTaskShared.IsSingleFileSearch(config)
-                           ? OspreyTasksResources.Stage6Planner_ScanFiles_Multi_charge_consensus_planning
-                           : CountText.Format(fileNames.Count, OspreyTasksResources.Stage6Planner_ScanFiles_Cross_run_consensus_for_1_file,
-                               OspreyTasksResources.Stage6Planner_ScanFiles_Cross_run_consensus_across__0__files),
-                       fileNames.Count))
+            ProgressReporter.Run(
+                ScoringTaskShared.IsSingleFileSearch(config)
+                    ? OspreyTasksResources.Stage6Planner_ScanFiles_Multi_charge_consensus_planning
+                    : CountText.Format(fileNames.Count, OspreyTasksResources.Stage6Planner_ScanFiles_Cross_run_consensus_for_1_file,
+                        OspreyTasksResources.Stage6Planner_ScanFiles_Cross_run_consensus_across__0__files),
+                fileNames.Count, scanProgress =>
             {
                 int done = 0;
                 // Loading a file's survivors, choosing its multi-charge targets and range-checking
@@ -205,8 +205,7 @@ namespace pwiz.Osprey.Tasks
                     scanProgress.Report(++done);
                 });
                 CwtCandidateLoader.ThrowIfAnyInvalid(cwtInvalid, fileNames.Count);
-                scanProgress.Complete();
-            }
+            });
 
             _ctx.LogInfo(CountText.Format(fileNames.Count,
                 OspreyTasksResources.Stage6Planner_ScanFiles_Multi_charge_consensus___1__charge_states_will_be_re_scored_at_the_peak_boundaries_of_the_,

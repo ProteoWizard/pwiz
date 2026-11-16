@@ -210,6 +210,15 @@ namespace pwiz.Osprey.Core {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to DIA-NN Parquet.
+        /// </summary>
+        public static string LibraryFormatExtension_LOCALIZED_VALUES_DIA_NN_Parquet {
+            get {
+                return ResourceManager.GetString("LibraryFormatExtension_LOCALIZED_VALUES_DIA_NN_Parquet", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to DIA-NN TSV.
         /// </summary>
         public static string LibraryFormatExtension_LOCALIZED_VALUES_DIA_NN_TSV {
@@ -227,6 +236,15 @@ namespace pwiz.Osprey.Core {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to A DIA-NN {0} library cannot be read; convert it to the DIA-NN {1} library format with: {2}.
+        /// </summary>
+        public static string LibrarySource_FromPath_A_DIA_NN__0__library_cannot_be_read__convert_it_to_the_DIA_NN__1__library_format_with_ {
+            get {
+                return ResourceManager.GetString("LibrarySource_FromPath_A_DIA_NN__0__library_cannot_be_read__convert_it_to_the_DIA_NN__1__library_format_with_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to EncyclopeDIA {0} spectral libraries are no longer supported; convert the library to DIA-NN TSV ({1}) or BiblioSpec ({2})..
         /// </summary>

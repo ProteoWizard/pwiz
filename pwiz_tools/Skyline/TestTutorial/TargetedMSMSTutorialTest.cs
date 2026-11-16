@@ -1199,13 +1199,7 @@ namespace pwiz.SkylineTestTutorial
 
             var propertyGrid = graphExtension.PropertiesSheet;
             Assert.IsNotNull(propertyGrid);
-            SpectrumProperties currentProperties = null;
-            RunUI(() => currentProperties = propertyGrid.SelectedObject as SpectrumProperties);
-            Assert.IsNotNull(currentProperties);
-
-            // To write new json string for the expected property values into the output stream uncomment the next line
-            //Trace.Write(currentProperties.Serialize());
-            Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
+            WaitForPropertySheet(() => propertyGrid.SelectedObject, expectedProperties);
 
             // Checks the number of properties displayed is the expected number
             // Checks that the property sheet updates upon switching peptides
@@ -1301,16 +1295,7 @@ namespace pwiz.SkylineTestTutorial
             }); 
             WaitForConditionUI(() => msGraph.PropertiesVisible);
             WaitForGraphs();
-            SpectrumProperties currentProperties = null;
-            RunUI(() =>
-            {
-                currentProperties = msGraph.PropertiesSheet.SelectedObject as SpectrumProperties;
-            });
-                
-            Assert.IsNotNull(currentProperties);
-            // To write new json string for the expected property values into the output stream uncomment the next line
-            //Trace.Write(currentProperties.Serialize());
-            Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
+            var currentProperties = WaitForPropertySheet(() => msGraph.PropertiesSheet.SelectedObject, expectedProperties);
             Assert.IsTrue(propertiesButton.Checked);
             // make sure properties are updated when spectrum combo selection changes
             RunUI(() =>

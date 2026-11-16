@@ -654,6 +654,7 @@ namespace pwiz.Osprey.Test
         public void TestEnvFlagZeroCountsAsOff()
         {
             const string name = @"OSPREY_TEST_FLAG_4673";
+            var envVar = new EnvVar(name, EnvVarGroup.diagnostic, @"A test flag");
             string saved = Environment.GetEnvironmentVariable(name);
             try
             {
@@ -662,16 +663,16 @@ namespace pwiz.Osprey.Test
                 Environment.SetEnvironmentVariable(name, @"0");
                 Assert.IsFalse(string.IsNullOrEmpty(Environment.GetEnvironmentVariable(name)),
                     @"'0' is a non-empty value - this is why an IsNullOrEmpty gate turns on for it");
-                Assert.IsFalse(OspreyEnvironment.IsSetAndNotZero(name), @"'0' must count as OFF");
+                Assert.IsFalse(OspreyEnvironment.IsSetAndNotZero(envVar), @"'0' must count as OFF");
 
                 Environment.SetEnvironmentVariable(name, @"1");
-                Assert.IsTrue(OspreyEnvironment.IsSetAndNotZero(name), @"'1' must count as ON");
+                Assert.IsTrue(OspreyEnvironment.IsSetAndNotZero(envVar), @"'1' must count as ON");
 
                 Environment.SetEnvironmentVariable(name, null);
-                Assert.IsFalse(OspreyEnvironment.IsSetAndNotZero(name), @"unset must count as OFF");
+                Assert.IsFalse(OspreyEnvironment.IsSetAndNotZero(envVar), @"unset must count as OFF");
 
                 Environment.SetEnvironmentVariable(name, string.Empty);
-                Assert.IsFalse(OspreyEnvironment.IsSetAndNotZero(name), @"empty must count as OFF");
+                Assert.IsFalse(OspreyEnvironment.IsSetAndNotZero(envVar), @"empty must count as OFF");
             }
             finally
             {

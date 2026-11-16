@@ -83,9 +83,9 @@ artifact**, so the multi-GB spectra caches there are harmless):
    design** - that is its safety argument - so modes 1-4 pass identically whether it
    ran or was deleted outright. They catch an *over*-release (the released-spectrum
    tripwire throws) but are structurally blind to it silently not happening, and
-   every defect found reviewing #4534 was in that blind spot. Verified by
-   construction: with `OSPREY_RELEASE_LIBRARY_FRAGMENTS=0` the other legs stay green
-   and only mode 6 goes red.
+   every defect found reviewing #4534 was in that blind spot. (Verified by
+   construction while the `OSPREY_RELEASE_LIBRARY_FRAGMENTS=0` opt-out existed: the
+   other legs stayed green and only mode 6 went red.)
 
    Asserts presence and non-zero counts, **never absolute counts** - those move with any
    scoring change. It does assert counts against *each other* (issue #4650): on every leg

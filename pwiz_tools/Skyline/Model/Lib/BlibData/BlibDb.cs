@@ -953,9 +953,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             return modifications;
         }
 
+        /// <summary>The accessions of a spectrum's protein text, one per <c>;</c>-separated label as a predicted library spells several.</summary>
         private static IReadOnlyList<string> ProteinsOf(string protein)
         {
-            return string.IsNullOrEmpty(protein) ? Array.Empty<string>() : new[] { protein };
+            return string.IsNullOrEmpty(protein) ? Array.Empty<string>() : protein.Split(';');
         }
 
         /// <summary>The peaks of the spectrum as the record's blobs and annotations, with their count.</summary>

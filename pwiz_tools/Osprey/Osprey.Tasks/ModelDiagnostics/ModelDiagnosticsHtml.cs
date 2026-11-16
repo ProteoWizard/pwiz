@@ -22,6 +22,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using pwiz.Osprey.FDR.ModelDiagnostics;
 
@@ -51,7 +52,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         public static string Render(ModelDiagnosticsData data)
         {
             string template = LoadTemplate();
-            string json = JsonConvert.SerializeObject(data, JsonSettings);
+            string json = SerializeData(data);
             // The token lives inside a <script type="application/json"> element,
             // so the only sequence that could break out is a literal </script>.
             // JSON strings here are Osprey feature labels + file names -- no tags
@@ -61,6 +62,23 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             if (idx < 0)
                 throw new InvalidOperationException(@"model-diagnostics template is missing its data token");
             return template.Substring(0, idx) + json + template.Substring(idx + DataToken.Length);
+        }
+
+        /// <summary>
+        /// The page's JSON: <paramref name="data"/> as serialized, plus the equal-chance alarms
+        /// (<see cref="EqualChanceAlarms"/>) under their own top-level key. Derived at render time
+        /// from the data alone, so a page re-rendered from the retained sidecars carries them too
+        /// and the sidecars themselves are unchanged.
+        /// </summary>
+        internal static string SerializeData(ModelDiagnosticsData data)
+        {
+            var serializer = JsonSerializer.Create(JsonSettings);
+            var root = JObject.FromObject(data, serializer);
+            var equalChance = EqualChanceAlarms.Build(data);
+            root[EqualChanceAlarms.JSON_KEY] = equalChance == null
+                ? JValue.CreateNull()
+                : JToken.FromObject(equalChance, serializer);
+            return JsonConvert.SerializeObject(root, JsonSettings);
         }
 
         private static string LoadTemplate()

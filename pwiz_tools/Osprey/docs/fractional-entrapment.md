@@ -143,6 +143,60 @@ a full 1:1 library.
   physically plausible, occupied precursor m/z rather than being shifted off it, so its
   MS1 behaviour mirrors a true false target rather than an easily-rejected artifact.
 
+## Decoy-based FDP by run count (no entrapment needed)
+
+The Reproducibility tab's **"Precursors by number of runs detected"** histogram groups
+the reported precursors by k, the number of runs each is detected in. False precursors do
+not reproduce, so they pile up at low k; a growing k=1 bump is the signature of an FDR gate
+that is struggling. The entrapment curve on that chart puts a number on each k-slice, but
+only when the library carries entrapment. The report also estimates the same per-slice FDP
+from the **decoys** (issue #4489), so every dataset gets it:
+
+- `N_T(k)` = target-side precursors detected in exactly k runs: real targets plus any
+  entrapment, since decoys are drawn against both.
+- `N_D(k)` = decoy precursors detected in exactly k runs.
+- **Per slice:** `FDP(k) = N_D(k) / N_T(k)`.
+- **Run-count floor:** `FDP(≥k) = Σ_{j≥k} N_D(j) / Σ_{j≥k} N_T(j)`, which is the FDP of
+  the set a "detected in at least k runs" requirement would keep. At k=1 it is the plain
+  decoy-to-target ratio of everything reported.
+
+Osprey makes one decoy for each target-side library entry, so the target-to-decoy ratio is
+1 and the estimator needs no ratio factor. A slice (or tail) that holds no target has no
+estimate and is left blank.
+
+**The decoy's run count must be counted by the targets' rule.** A decoy counts as
+detected in run r only if its own q clears the same per-run gate there (and, for the
+experiment-wide view, its own experiment q too). Run-level q is winner-only per file, so
+a decoy has one only in a run where it won its target-decoy competition, just as a target
+has one only where it won. Apart from that competition, the decoy's count does not depend
+on its paired target. It never inherits the target's run set; a decoy counted that way
+would follow the true targets rather than the false ones. The estimate depends on this
+symmetry: decoys are null draws, so when each decoy is counted by the targets' rule, its k
+distribution follows the false targets' distribution.
+
+**Pass 1 only.** In pass 2, Stage 6 gap-fill re-scores targets that passed into the runs
+where they were missing. A decoy is re-scored there only alongside its target. A false
+target that passed therefore climbs to higher k, and a decoy does not. That would bias the
+pass-2 curve low at high k and high at k=1, so the pass-2 views leave it out. The
+entrapment curve stays, because gap-fill treats entrapment like any other target.
+
+**An approximation, not a q-value.** A precursor's k mixes its true detections with null
+wins in runs where it is absent. A real peptide present in 5 of 20 runs can reach k=7 by
+winning two null competitions, while those null wins count only toward its decoy's k when
+the decoy wins instead. This blurs the estimate between neighbouring slices: it reads
+somewhat high at low k and low at middle k. The cumulative `FDP(≥k)` sums over slices, so
+it is less affected than the per-slice curve. Read both as trends, like the entrapment
+curve.
+
+Both q scopes carry the estimate (`decoyRunCountHistogram`, `decoyFdpByRunCount` and
+`decoyFdpAtLeastRunCount` in each pass-1 `crossRun` view of the report JSON). The
+histogram overlays `FDP(k)` as a dashed curve on the right axis, beside the entrapment
+curve when there is one. On an entrapment dataset the two should roughly agree, which
+makes the pair a cross-check: if they diverge widely, either the decoys or the entrapment
+is not behaving as a null for the real false targets. The **"Decoy-estimated FDP vs
+required reproducibility"** card plots `FDP(≥k)` for both scopes. Like the rest of the
+report, it is diagnostics only and does not change Osprey's output.
+
 ## References
 
 1. Elias JE, Gygi SP. Target-decoy search strategy for increased confidence in

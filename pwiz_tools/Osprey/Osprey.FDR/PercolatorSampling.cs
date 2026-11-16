@@ -373,36 +373,10 @@ namespace pwiz.Osprey.FDR
                 return all;
             }
 
-            // Build peptide groups (group by target peptide via base_id)
-            var baseIdToTargetPeptide = new Dictionary<uint, string>();
-            for (int i = 0; i < n; i++)
-            {
-                uint baseId = entryIds[i] & PercolatorEntry.BASE_ID_MASK;
-                if (!labels[i])
-                {
-                    if (!baseIdToTargetPeptide.ContainsKey(baseId))
-                        baseIdToTargetPeptide[baseId] = peptides[i];
-                }
-            }
-
-            var peptideGroups = new Dictionary<string, List<int>>();
-            for (int i = 0; i < n; i++)
-            {
-                uint baseId = entryIds[i] & PercolatorEntry.BASE_ID_MASK;
-                string key;
-                if (!baseIdToTargetPeptide.TryGetValue(baseId, out key))
-                    key = peptides[i];
-                List<int> list;
-                if (!peptideGroups.TryGetValue(key, out list))
-                {
-                    list = new List<int>();
-                    peptideGroups[key] = list;
-                }
-                list.Add(i);
-            }
-
-            // Sort deterministically and shuffle with Fisher-Yates
-            var groups = new List<KeyValuePair<string, List<int>>>(peptideGroups);
+            // Build peptide groups (group by target peptide via base_id), then sort
+            // deterministically and shuffle with Fisher-Yates
+            var groups = new List<KeyValuePair<string, List<int>>>(
+                BuildPeptideGroups(labels, entryIds, peptides));
             groups.Sort((a, b) => string.Compare(a.Key, b.Key, StringComparison.Ordinal)); // Array.Sort OK: Keys are distinct peptide-group dictionary keys, so the comparator never ties (the following Fisher-Yates shuffle then randomizes deterministically)
 
             ulong rngState = seed;
@@ -431,6 +405,57 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
+        /// The score-ranked counterpart of <see cref="SubsampleByPeptideGroup"/>, for round 2 of
+        /// the two-round tree training: the same peptide groups (a target, its paired decoy and the
+        /// peptide's other charge states stay together), taken in descending order of each group's
+        /// BEST row score instead of a shuffle, until the next group would pass
+        /// <paramref name="maxEntries"/>. Groups whose best scores tie are taken in ordinal key
+        /// order, so the selection is a total order. Returns ascending indices.
+        /// </summary>
+        internal static int[] SelectTopScoringGroups(
+            bool[] labels, uint[] entryIds, string[] peptides, double[] scores, int maxEntries)
+        {
+            int n = labels.Length;
+            if (n <= maxEntries)
+            {
+                var all = new int[n];
+                for (int i = 0; i < n; i++)
+                    all[i] = i;
+                return all;
+            }
+
+            // Each group carries its best score, so the sort compares fields, not lookups.
+            var peptideGroups = BuildPeptideGroups(labels, entryIds, peptides);
+            var groups = new List<ScoredGroup>(peptideGroups.Count);
+            foreach (var group in peptideGroups)
+            {
+                double best = double.NegativeInfinity;
+                foreach (int i in group.Value)
+                {
+                    if (scores[i] > best)
+                        best = scores[i];
+                }
+                groups.Add(new ScoredGroup(group.Key, group.Value, best));
+            }
+            groups.Sort((a, b) => // Array.Sort OK: Keys are distinct peptide-group dictionary keys, so the ordinal key tie-break makes this a total order
+            {
+                int c = b.BestScore.CompareTo(a.BestScore);
+                return c != 0 ? c : string.Compare(a.Key, b.Key, StringComparison.Ordinal);
+            });
+
+            var selected = new List<int>(maxEntries);
+            foreach (var group in groups)
+            {
+                if (selected.Count + group.Rows.Count > maxEntries && selected.Count > 0)
+                    break;
+                selected.AddRange(group.Rows);
+            }
+
+            selected.Sort(); // Array.Sort OK: selected holds distinct entry indices, so no ties; single primitive array anyway
+            return selected.ToArray();
+        }
+
+        /// <summary>
         /// Bucket entry indices by source file name, preserving first-seen file
         /// order. The streaming feature loads (issue #4355 Phase 4) iterate these
         /// buckets so <c>loadFileFeatures</c> is called exactly once per file and
@@ -452,6 +477,59 @@ namespace pwiz.Osprey.FDR
                 list.Add(i);
             }
             return byFile;
+        }
+
+        /// <summary>
+        /// Group entries by target peptide via base_id, as <see cref="SubsampleByPeptideGroup"/>
+        /// does: a decoy joins its paired target's group, and an entry with no target in the set
+        /// keys on its own peptide.
+        /// </summary>
+        private static Dictionary<string, List<int>> BuildPeptideGroups(
+            bool[] labels, uint[] entryIds, string[] peptides)
+        {
+            int n = labels.Length;
+            var baseIdToTargetPeptide = new Dictionary<uint, string>();
+            for (int i = 0; i < n; i++)
+            {
+                uint baseId = entryIds[i] & PercolatorEntry.BASE_ID_MASK;
+                if (!labels[i])
+                {
+                    if (!baseIdToTargetPeptide.ContainsKey(baseId))
+                        baseIdToTargetPeptide[baseId] = peptides[i];
+                }
+            }
+
+            var peptideGroups = new Dictionary<string, List<int>>();
+            for (int i = 0; i < n; i++)
+            {
+                uint baseId = entryIds[i] & PercolatorEntry.BASE_ID_MASK;
+                string key;
+                if (!baseIdToTargetPeptide.TryGetValue(baseId, out key))
+                    key = peptides[i];
+                List<int> list;
+                if (!peptideGroups.TryGetValue(key, out list))
+                {
+                    list = new List<int>();
+                    peptideGroups[key] = list;
+                }
+                list.Add(i);
+            }
+            return peptideGroups;
+        }
+
+        /// <summary>A peptide group's key and rows, with the best row score it is ranked by.</summary>
+        private readonly struct ScoredGroup
+        {
+            public ScoredGroup(string key, List<int> rows, double bestScore)
+            {
+                Key = key;
+                Rows = rows;
+                BestScore = bestScore;
+            }
+
+            public string Key { get; }
+            public List<int> Rows { get; }
+            public double BestScore { get; }
         }
     }
 }

@@ -145,6 +145,42 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to (row {0}) Invalid {1} &apos;{2}&apos;.
+        /// </summary>
+        public static string DiannParquetLoader_AddRow___row__0___Invalid__1____2__ {
+            get {
+                return ResourceManager.GetString("DiannParquetLoader_AddRow___row__0___Invalid__1____2__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to (row {0}) Missing {1}.
+        /// </summary>
+        public static string DiannParquetLoader_AddRow___row__0___Missing__1_ {
+            get {
+                return ResourceManager.GetString("DiannParquetLoader_AddRow___row__0___Missing__1_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0:N0} library rows have errors. Fix the library and load it again:.
+        /// </summary>
+        public static string DiannParquetLoader_Load__0__library_rows_have_errors__Fix_the_library_and_load_it_again_ {
+            get {
+                return ResourceManager.GetString("DiannParquetLoader_Load__0__library_rows_have_errors__Fix_the_library_and_load_it_again_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The DIA-NN library {0} has no rows: DIA-NN writes an empty library when its search identifies nothing..
+        /// </summary>
+        public static string DiannParquetLoader_Load_The_DIA_NN_library__0__has_no_rows__DIA_NN_writes_an_empty_library_when_its_search_identifies_nothing_ {
+            get {
+                return ResourceManager.GetString("DiannParquetLoader_Load_The_DIA_NN_library__0__has_no_rows__DIA_NN_writes_an_empty_library_when_its_search_identifies_nothing_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to (line {0}, column {1}) Invalid {2} &apos;{3}&apos;.
         /// </summary>
         public static string DiannTsvLoader_LineReader___line__0___column__1___Invalid__2____3__ {
@@ -700,6 +736,24 @@ namespace pwiz.Osprey.IO {
                 return ResourceManager.GetString("ParquetScoreCache_LoadCwtCandidatesFromParquet__0___the_stored_peak_candidates_in" +
                         "_row_group__1__have_an_unexpected_type___2____The_file_is_damaged_or_was_written" +
                         "_by_a_different_version_of_Osprey_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} has no reference XIC, which the training export reads. It was written by a run that did not request the export. Run the analysis again with the export requested..
+        /// </summary>
+        public static string ParquetScoreCache_LoadTrainingExportRows__0__has_no_reference_XIC__which_the_training_export_reads__It_was_written_by_a_run_that_did_not_request_the_export__Run_the_analysis_again_with_the_export_requested_ {
+            get {
+                return ResourceManager.GetString("ParquetScoreCache_LoadTrainingExportRows__0__has_no_reference_XIC__which_the_training_export_reads__It_was_written_by_a_run_that_did_not_request_the_export__Run_the_analysis_again_with_the_export_requested_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} has no reference XIC, which the training export needs: it was scored without the export requested. Score the runs again with the export requested..
+        /// </summary>
+        public static string ParquetScoreCache_StreamReconciledScoresParquet__0__has_no_reference_XIC__which_the_training_export_needs__Score_the_runs_again_with_the_export_requested_ {
+            get {
+                return ResourceManager.GetString("ParquetScoreCache_StreamReconciledScoresParquet__0__has_no_reference_XIC__which_the_training_export_needs__Score_the_runs_again_with_the_export_requested_", resourceCulture);
             }
         }
         

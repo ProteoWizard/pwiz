@@ -52,17 +52,6 @@ namespace pwiz.Osprey.Chromatography
         public double OutlierRetention { get; set; }
 
         /// <summary>
-        /// When true (default), residuals are recomputed from the current fit
-        /// each iteration, which is the classical Cleveland (1979) robust
-        /// LOESS algorithm. When false, robustness iterations reuse absolute
-        /// residuals from the initial fit throughout the loop (legacy
-        /// behavior). Default matches Rust calibration_ml.rs v26.3.1 and
-        /// later; override via OSPREY_LOESS_CLASSICAL_ROBUST=0 in both tools
-        /// together when validating against legacy behavior.
-        /// </summary>
-        public bool ClassicalRobustIterations { get; set; }
-
-        /// <summary>
         /// Fit a single global robust (Theil-Sen) line instead of a LOESS curve, and
         /// report the calibration as <see cref="RTCalibrationMethod.Linear"/>.
         /// LOESS bandwidth is a *fraction* of the points, so its local window
@@ -82,7 +71,6 @@ namespace pwiz.Osprey.Chromatography
             MinPoints = 20;
             RobustnessIterations = 2;
             OutlierRetention = 0.8;
-            ClassicalRobustIterations = true;
             LinearFit = false;
         }
     }
@@ -153,8 +141,7 @@ namespace pwiz.Osprey.Chromatography
 
             // Fit LOESS with robustness iterations
             LoessModel model = LoessRegression.Fit(x, y, _config.Bandwidth,
-                _config.Degree, _config.RobustnessIterations,
-                _config.ClassicalRobustIterations);
+                _config.Degree, _config.RobustnessIterations);
             double[] fitted = model.FittedY;
 
             // Outlier removal: remove worst fraction, refit

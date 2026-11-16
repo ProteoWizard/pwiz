@@ -49,7 +49,7 @@ namespace pwiz.CarafeSharp.Test
         /// <summary>
         /// Carafe 2.2.0 (origin/main) AIGear's options, plus CarafeSharp's own (-pretrained,
         /// -model, -model_info, -activation, -analyzer, -rt_model, -rt_align, -rt_select,
-        /// -rt_reference, -log_file, -timestamp, -memstamp), in Carafe's spelling. The declarations
+        /// -rt_reference, -entrapment_in_targets, -log_file, -timestamp, -memstamp), in Carafe's spelling. The declarations
         /// must cover exactly these - spelled the standard way, an underscore a hyphen - so a Carafe
         /// command line is accepted whole and nothing is declared that neither tool knows.
         /// </summary>
@@ -59,7 +59,7 @@ namespace pwiz.CarafeSharp.Test
             @"maxLength min_pep_mz max_pep_mz min_pep_charge max_pep_charge lf_type lf_format " +
             @"lf_frag_mz_min lf_frag_mz_max lf_top_n_frag lf_min_n_frag lf_frag_n_min rf_rt_win " +
             @"rt_win_offset rt_max data_type build_entrapment_fasta manifest entrapment_db " +
-            @"entrapment_ratio entrapment_seed decoy_seed reconcile_manifest predicted_library " +
+            @"entrapment_ratio entrapment_in_targets entrapment_seed decoy_seed reconcile_manifest predicted_library " +
             @"build_koina_library koina_url koina_ms2_model koina_rt_model nce_ms n_ion_min " +
             @"c_ion_min nce ms_instrument device se mode tf seed python mod2mass user_var_mods " +
             @"model_dir ms2_model verbose ai_version pretrained model model_info activation analyzer rt_model rt_align " +

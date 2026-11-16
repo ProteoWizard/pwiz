@@ -196,7 +196,6 @@ sample SD (n-1 denominator, two left-to-right passes), and
 - `MinPoints = min(20, n)`
 - `RobustnessIterations = 2`
 - `OutlierRetention = 1.0` (LDA + S/N already filtered, so no percentile trim)
-- `ClassicalRobustIterations = OspreyEnvironment.LoessClassicalRobust` (default true)
 
 The fit sorts by `(libraryRt, measuredRt)` with a stable LINQ `OrderBy/ThenBy`
 (`RTCalibration.cs:126-129`) — critical because multi-charge peptides share a library
@@ -242,12 +241,9 @@ q/S-N filtering), matching Rust's `accumulated_matches.len()` (`Calibrator.cs:28
    parallelized with `Parallel.For` (each output index is independent) to close the
    gap with Rust's auto-vectorized serial loop.
 
-**Classical vs legacy robust iterations**
-(`LoessRegression.cs:229-237, 291-298`): when `classicalRobust` is true (production
-default via the env var), residuals are recomputed from the current fit at the top of
-each iteration (Cleveland 1979). When false, the initial-fit residuals are reused
-across all iterations (legacy single-refresh). Toggle with
-`OSPREY_LOESS_CLASSICAL_ROBUST=0`.
+**Robust iterations** (`LoessRegression.Fit`): residuals are recomputed from the current
+fit at the top of each iteration (classical Cleveland 1979), as Rust `calibration_ml.rs`
+v26.3.1+. The legacy single-refresh arm (`OSPREY_LOESS_CLASSICAL_ROBUST=0`) was retired.
 
 ### Prediction and interpolation
 
@@ -360,7 +356,6 @@ console report the same window number (issue #4364).
 | `--resolution {auto\|hram\|unit}` | `auto`: measured from the data ([20-command-line.md](20-command-line.md#resolution-detection)) | Selects the main-search scorer and the mass-error unit context; the calibration XCorr is always unit-resolution regardless (`Calibrator.cs:72`). |
 | `--fragment-tolerance` / `--fragment-unit` | ppm; forced `mz 0.5` at unit resolution | Base fragment tolerance used before calibration and as the fallback when uncalibrated (`ScoringPipeline.cs:192`). Also sets the mass-error unit ("ppm"/"Th"). |
 | `PrecursorTolerance` (config, ppm) | `10.0` | Window for MS1 M+0 isotope extraction (`Calibrator.cs:1305-1308`). |
-| `OSPREY_LOESS_CLASSICAL_ROBUST` (env) | on (unset ⇒ classical) | `0` reverts LOESS to legacy single-refresh residuals (`OspreyEnvironment.cs:72`, `LoessRegression.cs:291-298`). |
 | `OSPREY_EXIT_AFTER_CALIBRATION` (env) | off | Exit after Stage 3, skipping the main search (`OspreyEnvironment.cs:79`). |
 | `OSPREY_LOAD_CALIBRATION=<path>` (env) | unset | Load a Rust-produced `.calibration.json` instead of computing; used for cross-impl bisection (`PerFileScoringTask.cs:1623-1667`). |
 

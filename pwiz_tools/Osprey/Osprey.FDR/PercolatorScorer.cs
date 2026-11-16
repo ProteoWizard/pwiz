@@ -79,7 +79,8 @@ namespace pwiz.Osprey.FDR
             Func<string, double[]> loadFileApexRts,
             IFdrOutputSink sink,
             Action<FeatureContributions> captureContributions = null,
-            bool applyExperimentAgg = true)
+            bool applyExperimentAgg = true,
+            Dictionary<int, int> heldOutFoldByRow = null)
         {
             if (loadFileFeatures == null)
                 throw new InvalidOperationException(
@@ -163,7 +164,8 @@ namespace pwiz.Osprey.FDR
                         // scoring dominates the run.
                         ScoreRowsGbt(projRows.Count,
                             r => ResolveFeatureRow(rows, projRows[r].ParquetIndex, projRows[r].CoelutionSum, nFeatures),
-                            gbtModels, standardizer, nFeatures, finalScores, gi, config.NThreads);
+                            gbtModels, standardizer, nFeatures, finalScores, gi, config.NThreads,
+                            heldOutFoldByRow);
                         // The per-feature report IS a cross-row accumulation, so it stays serial and
                         // in row order, after the parallel pass.
                         if (share != null)
@@ -251,9 +253,11 @@ namespace pwiz.Osprey.FDR
             Dictionary<uint, double> expPrecByWinnerId = isSingleFile
                 ? null : PercolatorQValues.ComputeExperimentPrecursorQMap(
                     finalScores, labels, entryIds, applyExperimentAgg);
-            Dictionary<string, double> expPeptByPeptide = isSingleFile
-                ? null : PercolatorQValues.ComputeExperimentPeptideQMap(
-                    finalScores, labels, entryIds, peptides, applyExperimentAgg);
+            // The peptide competition runs either way, for its PEP; its q is used only when
+            // multi-file, as before.
+            var expPeptCompetition = PercolatorQValues.ComputeExperimentPeptideQMap(
+                finalScores, labels, entryIds, peptides, out var peptidePepByPeptide, applyExperimentAgg);
+            Dictionary<string, double> expPeptByPeptide = isSingleFile ? null : expPeptCompetition;
 
             // The score those experiment competitions ranked each entry on (sidecar v4, issue
             // #4522), persisted beside the q-values they produced. Built even on the
@@ -342,6 +346,7 @@ namespace pwiz.Osprey.FDR
                         epe = floorPept;
 
                     double pep = pepByEntryId.TryGetValue(entryIds[g], out double pv) ? pv : 1.0;
+                    double peptidePep = peptidePepByPeptide.TryGetValue(pept, out double ppv) ? ppv : 1.0;
 
                     double ea = expAggByEntryId.TryGetValue(entryIds[g], out double eav)
                         ? eav : finalScores[g];
@@ -353,7 +358,7 @@ namespace pwiz.Osprey.FDR
                         : double.NaN;
                     sink.Accept(fileIdx, r, projRows[r].EntryId, projRows[r].IsDecoy,
                         projRows[r].Charge, pept, finalScores[g], ea, apexRt,
-                        new FdrQValues(rp, rpe, ep, epe, pep));
+                        new FdrQValues(rp, rpe, ep, epe, pep, peptidePep));
                 }
                 wgi += count;
                 fileIdx++;
@@ -614,7 +619,8 @@ namespace pwiz.Osprey.FDR
             int nFeatures,
             double[] scores,
             int baseIndex,
-            int nThreads)
+            int nThreads,
+            IReadOnlyDictionary<int, int> heldOutFoldByRow = null)
         {
             if (count == 0)
                 return;
@@ -629,7 +635,12 @@ namespace pwiz.Osprey.FDR
                 {
                     Array.Copy(rawRowAt(r), 0, featureBuf, 0, nFeatures);
                     standardizer.TransformSlice(featureBuf);
-                    scores[baseIndex + r] = AverageGbtScore(gbtModels, featureBuf);
+                    // A training row is scored by the one fold model that held it out
+                    // (OSPREY_GBT_OOF); the others trained on it.
+                    int fold;
+                    scores[baseIndex + r] = heldOutFoldByRow != null && heldOutFoldByRow.TryGetValue(baseIndex + r, out fold)
+                        ? gbtModels[fold].ScoreSingle(featureBuf)
+                        : AverageGbtScore(gbtModels, featureBuf);
                 }
             });
         }

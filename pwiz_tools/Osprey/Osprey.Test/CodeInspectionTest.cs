@@ -249,65 +249,76 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// <see cref="OspreyEnvironment.KnownVariables"/> names exactly the OSPREY_* variables the
-        /// production code reads. Startup refuses any other OSPREY_* name, so a reader added
-        /// without a line there would be refused the moment someone set its variable, and a line
-        /// left behind for a deleted reader would quietly admit a variable that no longer does
-        /// anything. A read is a whole string literal naming the variable (<c>@"OSPREY_X"</c>);
-        /// a name inside a message or a comment is not one. The registry's own initializer is
-        /// left out of the scan, or every name in it would count as its own reader.
+        /// Osprey reads the environment in exactly one place, <see cref="EnvVar.Value"/>, so every
+        /// variable it reads is an <see cref="EnvVar"/> declaration - with the group and the
+        /// description its constructor requires - and so is in the catalog <c>--help-env</c>
+        /// prints and the startup check refuses other names against. This is the one property of
+        /// that design the type system cannot express: nothing stops a file from calling
+        /// <see cref="Environment.GetEnvironmentVariable(string)"/> directly, and a variable read
+        /// that way would be undocumented, unchecked and refused at startup the moment someone set
+        /// it. There is no exemption tag: a new reader declares an <see cref="EnvVar"/>.
+        ///
+        /// <para>Also checked here, against the catalog itself: every whole <c>"OSPREY_X"</c>
+        /// literal in production code (a name passed to a message) is catalogued, so a message
+        /// cannot keep naming a retired variable; every entry has a description; and the
+        /// catalog holds the variables the pipeline reads in every assembly, not just the
+        /// executable's.</para>
         /// </summary>
         [TestMethod]
-        public void TestOspreyVariablesAreRegistered()
+        public void TestEnvironmentReadThroughEnvVar()
         {
             string sourceRoot = FindOspreySourceRoot();
-            var pattern = new Regex("@?\"(OSPREY_[A-Z0-9_]+)\"");
-            var read = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var unregistered = new List<string>();
+            const string accessorFile = "Osprey.Core/EnvVar.cs";
+            var rawAccess = new Regex(@"\b((Get|Set)EnvironmentVariables?|ExpandEnvironmentVariables)\s*\(");
+            var nameLiteral = new Regex("@?\"(OSPREY_[A-Z0-9_]+)\"");
+            var catalog = EnvVarUsage.Catalog;
+            var catalogued = new HashSet<string>(catalog.Select(e => e.Name), StringComparer.OrdinalIgnoreCase);
+            var violations = new List<string>();
+            var uncatalogued = new List<string>();
             foreach (var file in EnumerateProductionCsFiles(sourceRoot))
             {
+                string rel = RelativePath(sourceRoot, file).Replace('\\', '/');
                 string[] lines;
                 try { lines = File.ReadAllLines(file); }
                 catch (IOException) { continue; }
 
-                bool inRegistry = false;
                 for (int i = 0; i < lines.Length; i++)
                 {
                     string line = lines[i];
-                    if (line.Contains(nameof(OspreyEnvironment.KnownVariables) + " = new"))
-                    {
-                        inRegistry = true;
-                        continue;
-                    }
-                    if (inRegistry)
-                    {
-                        inRegistry = line.Trim() != "};";
-                        continue;
-                    }
                     int commentIdx = IndexOfLineComment(line);
                     string codePart = commentIdx >= 0 ? line.Substring(0, commentIdx) : line;
-                    foreach (Match match in pattern.Matches(codePart))
+                    if (rawAccess.IsMatch(codePart) && !string.Equals(rel, accessorFile, StringComparison.OrdinalIgnoreCase))
+                        violations.Add(string.Format("{0}:{1}: {2}", rel, i + 1, line.Trim()));
+                    foreach (Match match in nameLiteral.Matches(codePart))
                     {
-                        string name = match.Groups[1].Value;
-                        read.Add(name);
-                        if (!OspreyEnvironment.KnownVariables.Contains(name))
-                        {
-                            string rel = RelativePath(sourceRoot, file).Replace('\\', '/');
-                            unregistered.Add(string.Format("{0}:{1}: {2}", rel, i + 1, name));
-                        }
+                        if (!catalogued.Contains(match.Groups[1].Value))
+                            uncatalogued.Add(string.Format("{0}:{1}: {2}", rel, i + 1, match.Groups[1].Value));
                     }
                 }
             }
-            var unread = OspreyEnvironment.KnownVariables.Where(name => !read.Contains(name))
-                .OrderBy(name => name, StringComparer.Ordinal).ToList();
 
-            Assert.AreEqual(0, unregistered.Count,
-                "OSPREY_* variable read but not in OspreyEnvironment.KnownVariables, so startup " +
-                "would refuse it. Add it there.\n" + string.Join("\n", unregistered));
-            Assert.AreEqual(0, unread.Count,
-                "OspreyEnvironment.KnownVariables names a variable nothing reads any more. Remove " +
-                "it, so startup refuses it like any other name this build does not know.\n" +
-                string.Join("\n", unread));
+            Assert.AreEqual(0, violations.Count,
+                "Environment read or written outside EnvVar. Declare the variable as a static EnvVar beside " +
+                "the code that reads it - new EnvVar(@\"OSPREY_X\", EnvVarGroup.<kind>, @\"<description>\") - " +
+                "and read its Value, so the environment help lists it and startup accepts it.\n" +
+                string.Join("\n", violations));
+            Assert.AreEqual(0, uncatalogued.Count,
+                "OSPREY_* name in production code that no EnvVar declares: a message naming a variable " +
+                "this build does not read, which startup would refuse. Declare it, or stop naming it.\n" +
+                string.Join("\n", uncatalogued));
+            foreach (var entry in catalog)
+                Assert.IsFalse(string.IsNullOrWhiteSpace(entry.Description), entry.Name);
+            // One declaration from each assembly that reads the environment, so the reflection walk
+            // over referenced assemblies cannot silently stop at the executable.
+            foreach (string name in new[] { @"OSPREY_LOG_MEMORY", @"OSPREY_DUMP_STAGE7_WINNERS",
+                         @"OSPREY_DIAG_XCORR_SCAN", @"OSPREY_PARQUET_WRITE_THREADS", @"OSPREY_DUMP_CAL_SAMPLE" })
+            {
+                Assert.IsTrue(catalogued.Contains(name), name);
+            }
+            // --help-env lists every entry whole, on one line.
+            string usage = EnvVarUsage.BuildUsage(@"ascii", 78);
+            foreach (var entry in catalog)
+                StringAssert.Contains(usage, entry.Usage);
         }
 
         /// <summary>
