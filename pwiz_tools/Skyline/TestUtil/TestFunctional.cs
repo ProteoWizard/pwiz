@@ -1277,6 +1277,28 @@ namespace pwiz.SkylineTestUtil
             return WaitForConditionUI(WAIT_TIME, func, timeoutMessage);
         }
 
+        /// <summary>
+        /// Waits for a property sheet to show the expected values, since some are filled in only after
+        /// asynchronous loading completes. On timeout, fails listing the differing properties and all of
+        /// the actual values, in the dictionary form the tests declare their expected values in. Values
+        /// shown there are formatted for the current culture, so culture-dependent expected values still
+        /// need their ToString(CultureInfo.CurrentCulture) or resource form when pasted into a test.
+        /// </summary>
+        public static T WaitForPropertySheet<T>(Func<object> getSelectedObject, T expectedProperties) where T : GlobalizedObject
+        {
+            GlobalizedObject currentProperties = null;
+            WaitForConditionUI(() =>
+                {
+                    currentProperties = getSelectedObject() as GlobalizedObject;
+                    return expectedProperties.IsSameAs(currentProperties);
+                },
+                () => TextUtil.LineSeparate(new[] { @"Property sheet differs from expected values:" }
+                    .Concat(expectedProperties.GetDifference(currentProperties))
+                    .Append(@"Actual values:")
+                    .Append(currentProperties?.Serialize())));
+            return (T)currentProperties;
+        }
+
         public static bool TryWaitForConditionUI(Func<bool> func)
         {
             return TryWaitForConditionUI(WAIT_TIME, func);

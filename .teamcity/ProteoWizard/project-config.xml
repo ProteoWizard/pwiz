@@ -14,6 +14,8 @@
     <param name="env.PYTHON_HdOME" value="C:\Program Files (x86)\Microsoft Visual Studio\Shared\Python39_64" />
     <param name="env.TCA_PASSWORD" value="credentialsJSON:34e91ce9-8ade-49c7-8e2b-50913c6b7afa" spec="password display='normal'" />
     <param name="prositconfig_production_xml" value="credentialsJSON:51c86fd5-8d26-42c8-bfe9-8cf0025f9b7a" spec="password readOnly='true' display='hidden'" />
+    <param name="release.metadata.aws.access.key.id" value="AKIA6RINVLEH5YQMMNPP" />
+    <param name="release.metadata.aws.secret.access.key" value="credentialsJSON:695d4ca4-e2cd-43b7-b748-b9788778eabe" spec="password display='hidden'" />
     <param name="teamcity.activeBuildBranch.age.hours" value="0" />
     <param name="teamcity.activeVcsBranch.age.days" value="3" />
   </parameters>
