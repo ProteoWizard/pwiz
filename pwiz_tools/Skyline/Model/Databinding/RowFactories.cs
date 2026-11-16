@@ -208,13 +208,24 @@ namespace pwiz.Skyline.Model.Databinding
             ExportReport(CancellationToken, stream, viewInfo, layout, factory, rowItemExporter, progressMonitor, ref status);
         }
 
+        /// <summary>
+        /// True if a report shown with the layout can stream its rows instead of going through
+        /// BindingListSource, which is the only thing that applies sorts, filters, pivots and clustering.
+        /// The report itself can still need BindingListSource, when
+        /// <c>ViewInfo.GetStreamingRowItemEnumerator</c> returns null.
+        /// </summary>
+        public static bool CanStreamRows(ViewLayout layout)
+        {
+            return layout == null || (layout.RowTransforms.Count == 0 && layout.ClusterSpec == null);
+        }
+
         public static void ExportReport(CancellationToken cancellationToken, Stream stream,
             ViewInfo viewInfo, ViewLayout layout, IRowSource rowSource,
             IReportExporter rowItemExporter, IProgressMonitor progressMonitor,
             ref IProgressStatus status)
         {
             RowItemEnumerator rowItemEnumerator = null;
-            if (layout == null || layout.RowTransforms.Count == 0)
+            if (CanStreamRows(layout))
             {
                 rowItemEnumerator = viewInfo.GetStreamingRowItemEnumerator(cancellationToken, rowSource);
             }

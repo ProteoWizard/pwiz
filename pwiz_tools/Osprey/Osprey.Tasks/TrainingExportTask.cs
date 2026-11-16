@@ -28,10 +28,11 @@ namespace pwiz.Osprey.Tasks
     /// <see cref="ModelDiagnosticsTask"/>. Selecting it asks for the training export
     /// (<c>--training-export</c>, <see cref="TrainingExportWriter"/>) and runs the canonical
     /// pipeline, where each run's <c>&lt;stem&gt;.training.parquet</c> is a declared output of
-    /// <see cref="PerFileRescoreTask"/>. On a finished analysis every other task therefore
-    /// rehydrates from its stamps and PerFileRescoring writes only the missing exports, from
-    /// each run's own artifacts with no re-scoring; on an unfinished one the analysis runs with
-    /// the export, exactly as if the flag had been given up front. It adds no node type to an
+    /// <see cref="PerFileRescoreTask"/>. On an analysis that ran without the export,
+    /// PerFileScoring and PerFileRescoring run again, because their parquets carry the reference
+    /// XIC the export reads only when it is requested, and the FDR tasks rehydrate from their
+    /// stamps (#5023); on an unfinished one the analysis runs with the export, exactly as if the
+    /// flag had been given up front. It adds no node type to an
     /// HPC chain: the export rides the per-file PerFileRescoring nodes (P17). It names no output
     /// of its own either (the base <see cref="OspreyTask.DescribeOutput"/>), so the startup
     /// lines read as they do for <c>--training-export</c> alone: the blib, and the training

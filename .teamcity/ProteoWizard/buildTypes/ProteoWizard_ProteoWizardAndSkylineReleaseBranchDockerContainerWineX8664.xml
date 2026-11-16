@@ -219,6 +219,18 @@ docker-entrypoint.sh /docker2singularity.sh chambm/pwiz-skyline-i-agree-to-the-v
           <param name="secure:github_access_token" value="credentialsJSON:b3f6322b-e1d2-4bd3-9b40-b7048111ad01" />
         </parameters>
       </extension>
+      <extension id="KEEP_RULE_15" type="keepRules">
+        <parameters>
+          <param name="filters.1.pattern" value="+:&lt;default&gt;" />
+          <param name="filters.1.type" value="branchPattern" />
+          <param name="keepData.1.type" value="everything" />
+          <param name="limit.buildsCount" value="30" />
+          <param name="limit.type" value="lastNBuilds" />
+          <param name="partitions.1.type" value="perBranch" />
+          <param name="preserveArtifacts" value="true" />
+          <param name="ruleDisabled" value="false" />
+        </parameters>
+      </extension>
     </build-extensions>
     <artifact-dependencies>
       <dependency id="ARTIFACT_DEPENDENCY_2279" sourceBuildTypeId="ProteoWizard_CoreWindowsX8664SkylineReleaseBranch" cleanDestination="true">
@@ -247,17 +259,10 @@ docker-entrypoint.sh /docker2singularity.sh chambm/pwiz-skyline-i-agree-to-the-v
       </depend-on>
     </dependencies>
     <cleanup>
-      <policy type="days" cleanup-level="HISTORY_ENTRY">
-        <parameters>
-          <param name="artifactPatterns" value="+:**/*" />
-          <param name="keepDays.count" value="30" />
-        </parameters>
-      </policy>
-      <policy type="daysAndBuilds" cleanup-level="ARTIFACTS">
+      <policy type="days" cleanup-level="ARTIFACTS">
         <parameters>
           <param name="artifactPatterns"><![CDATA[*.tbz2
 *.simg]]></param>
-          <param name="keepBuilds.count" value="1" />
           <param name="keepDays.count" value="7" />
         </parameters>
       </policy>
