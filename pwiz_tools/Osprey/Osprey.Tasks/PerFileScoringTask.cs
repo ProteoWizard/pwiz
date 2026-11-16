@@ -220,9 +220,7 @@ namespace pwiz.Osprey.Tasks
         {
             return base.ValidityKey(ctx) + PinFeatureMask.For(ctx.Config).RecordedFeaturesValidityKeySuffix()
                 // Whether the parquets carry the reference XIC, which only the training export reads.
-                + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config)
-                // A loaded calibration replaces Stage 3's, which centres every search here.
-                + OspreyEnvironment.LoadCalibrationValidityKeySuffix();
+                + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config);
         }
 
         public override IEnumerable<string> Outputs(PipelineContext ctx)
@@ -2069,10 +2067,9 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Resolve the per-file RT/MS1/MS2 calibration: load a cached/Rust
-        /// calibration JSON when OSPREY_LOAD_CALIBRATION points at one, else
-        /// compute it via <see cref="Calibrator"/>; then persist the full
-        /// calibration JSON next to the input. Returns the RT calibration (null
+        /// Resolve the per-file RT/MS1/MS2 calibration: compute it via
+        /// <see cref="Calibrator"/>, then persist the full calibration JSON
+        /// next to the input. Returns the RT calibration (null
         /// when disabled / not computed); <paramref name="ms2Cal"/> and
         /// <paramref name="ms1Cal"/> receive the mass calibrations (Uncalibrated
         /// when none). Extracted from ProcessFile (pure code motion).
@@ -2090,68 +2087,20 @@ namespace pwiz.Osprey.Tasks
             RTCalibration rtCalibration = null;
             ms2Cal = MzCalibrationResult.Uncalibrated();
             ms1Cal = MzCalibrationResult.Uncalibrated();
-            // CAL-view per-file diagnostics for --model-diagnostics; null on the cached-JSON
-            // load path (no calibration matches available) and on a normal run.
+            // CAL-view per-file diagnostics for --model-diagnostics; null when calibration
+            // is off and on a normal run.
             calDiagnostics = null;
             // The wide pre-calibration RT tolerance (the "before" number in the
             // console calibration summary). Set by the compute path below; stays 0
-            // when calibration is loaded from a cached JSON (no summary emitted then).
+            // when calibration is off (no summary emitted then).
             double calInitialRtTolerance = 0.0;
             // Total matches scored during pass 1 of calibration; threaded
             // into CalibrationMetadata.NumSampledPrecursors to match Rust's
             // accumulated_matches.len() (Stellar Single: 192289). Stays 0
-            // when calibration is loaded from a cached JSON.
+            // when calibration is off.
             int numSampledPrecursorsForMetadata = 0;
 
-            // BISECT: load Rust's calibration JSON instead of computing our own.
-            // This eliminates calibration noise from the feature comparison.
-            // Usage: OSPREY_LOAD_CALIBRATION=Ste-...20.calibration.json
-            string loadCalPath = OspreyEnvironment.LoadCalibrationPath;
-            if (!string.IsNullOrEmpty(loadCalPath) && File.Exists(loadCalPath))
-            {
-                ctx.LogInfo(LogTag.BISECT, string.Format(@"Loading calibration from: {0}", loadCalPath));
-                var calParams = CalibrationIO.LoadCalibration(loadCalPath);
-                if (calParams.RtCalibration != null && calParams.RtCalibration.ModelParams != null)
-                {
-                    var mp = calParams.RtCalibration.ModelParams;
-                    rtCalibration = RTCalibration.FromModelParams(
-                        mp.LibraryRts, mp.FittedRts, mp.AbsResiduals,
-                        calParams.RtCalibration.ResidualSD);
-                    ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ResolveCalibration_Loaded_RT_calibration___0__points__R2__1_,
-                        calParams.RtCalibration.NPoints, calParams.RtCalibration.RSquared));
-                }
-                if (calParams.Ms2Calibration != null && calParams.Ms2Calibration.Calibrated)
-                {
-                    ms2Cal = new MzCalibrationResult
-                    {
-                        Mean = calParams.Ms2Calibration.Mean,
-                        Median = calParams.Ms2Calibration.Median,
-                        SD = calParams.Ms2Calibration.SD,
-                        Count = calParams.Ms2Calibration.Count,
-                        Unit = calParams.Ms2Calibration.Unit,
-                        AdjustedTolerance = calParams.Ms2Calibration.AdjustedTolerance,
-                        Calibrated = true
-                    };
-                    ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ResolveCalibration_Loaded_MS2_calibration__mean__0___1___SD__2_,
-                        ms2Cal.Mean, MzCalibration.GetUnitText(ms2Cal.Unit), ms2Cal.SD));
-                }
-                if (calParams.Ms1Calibration != null && calParams.Ms1Calibration.Calibrated)
-                {
-                    ms1Cal = new MzCalibrationResult
-                    {
-                        Mean = calParams.Ms1Calibration.Mean,
-                        Median = calParams.Ms1Calibration.Median,
-                        SD = calParams.Ms1Calibration.SD,
-                        Count = calParams.Ms1Calibration.Count,
-                        Unit = calParams.Ms1Calibration.Unit,
-                        AdjustedTolerance = calParams.Ms1Calibration.AdjustedTolerance,
-                        Calibrated = true
-                    };
-                    ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ResolveCalibration_Loaded_MS1_calibration__mean__0___1___SD__2_,
-                        ms1Cal.Mean, MzCalibration.GetUnitText(ms1Cal.Unit), ms1Cal.SD));
-                }
-            }
-            else if (config.RtCalibration.Enabled)
+            if (config.RtCalibration.Enabled)
             {
                 var swCal = Stopwatch.StartNew();
                 rtCalibration = new Calibrator(ctx).RunCalibration(
@@ -2178,10 +2127,9 @@ namespace pwiz.Osprey.Tasks
             ctx.Diagnostics?.WriteCalibrationSummary(rtCalibration, ms1Cal, ms2Cal);
 
             // Save the full calibration state to {inputStem}.calibration.json
-            // in the same directory as the mzML input. Same schema as Rust
-            // so the file is round-trippable via OSPREY_LOAD_CALIBRATION in
-            // either tool. Enables HPC "compute cal once, reuse on another
-            // node" and the cross-runtime cal-swap bisection.
+            // in the same directory as the mzML input. Same schema as Rust,
+            // so either tool can read the other's. Enables HPC "compute cal
+            // once, reuse on another node".
             try
             {
                 var calParams = new CalibrationParams

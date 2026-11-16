@@ -357,7 +357,6 @@ console report the same window number (issue #4364).
 | `--fragment-tolerance` / `--fragment-unit` | ppm; forced `mz 0.5` at unit resolution | Base fragment tolerance used before calibration and as the fallback when uncalibrated (`ScoringPipeline.cs:192`). Also sets the mass-error unit ("ppm"/"Th"). |
 | `PrecursorTolerance` (config, ppm) | `10.0` | Window for MS1 M+0 isotope extraction (`Calibrator.cs:1305-1308`). |
 | `OSPREY_EXIT_AFTER_CALIBRATION` (env) | off | Exit after Stage 3, skipping the main search (`OspreyEnvironment.cs:79`). |
-| `OSPREY_LOAD_CALIBRATION=<path>` (env) | unset | Load a Rust-produced `.calibration.json` instead of computing; used for cross-impl bisection (`PerFileScoringTask.cs:1623-1667`). |
 
 ### Diagnostic env vars (shared with Rust; each has a `*_ONLY` abort variant)
 

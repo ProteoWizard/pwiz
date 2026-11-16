@@ -325,8 +325,6 @@ namespace pwiz.Osprey.Scoring
                 MzCalibration.CalibratedTolerance(ms2Calibration,
                     config.FragmentTolerance.Tolerance, config.FragmentTolerance.Unit,
                     out calTol, out calUnit);
-                if (calUnit == ToleranceUnit.Ppm && OspreyEnvironment.MinFragmentTolerancePpm.HasValue)
-                    calTol = Math.Max(calTol, OspreyEnvironment.MinFragmentTolerancePpm.Value);
                 searchFragTol = new FragmentToleranceConfig
                 {
                     Tolerance = calTol,

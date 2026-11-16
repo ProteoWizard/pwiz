@@ -159,10 +159,6 @@
     <value>唯一库字符串：{0:N0} / 共 {1:N0}（减少 {2:F1}%）</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="OspreyEnvironment_DescribeExperimentAgg_Experiment_aggregation___0___default___best_observation_per_unit_" xml:space="preserve">
-    <value>实验汇总：{0}（默认 - 每个单元取最佳观测值）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="ResolutionModeExtension_LOCALIZED_VALUES_HRAM" xml:space="preserve">
     <value>HRAM</value>
   </data>

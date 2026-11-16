@@ -47,7 +47,7 @@ namespace pwiz.Osprey.Tasks
     /// per-base_id bests and no aggregation. SecondPassFDR folds the bests out of the per-run
     /// sidecars via <see cref="Pass2FdrSidecar.FileCompetitionFromRecords"/>. Emitting bests here
     /// would be a partial join in the wrong stage and would freeze the aggregation method into
-    /// Stage 6, making mean-best-N (#4484) a worker change instead of a Stage 7 change.</para>
+    /// Stage 6, making a different aggregation a worker change instead of a Stage 7 change.</para>
     ///
     /// <para><b>Absence is a stop, never a default.</b> Phase 1 produced seven defects and six
     /// were one of two shapes: a missing input becoming a plausible value, or the right values

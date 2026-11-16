@@ -79,6 +79,11 @@ namespace pwiz.Osprey.Tasks
         public const string EXT_MODEL = @"." + FdrScoresSidecar.LABEL_FIRST_PASS + @".model.json";
         public const string EXT_STRATUM = @"." + FdrScoresSidecar.LABEL_FIRST_PASS + @".stratum.json";
 
+        /// <summary>The value every model file records for <see cref="ModelDto.ExperimentAgg"/>:
+        /// the default of the retired OSPREY_EXPERIMENT_AGG, each precursor's best run, which
+        /// is now the only experiment-wide aggregation.</summary>
+        private const string EXPERIMENT_AGG_MAX = @"max";
+
         /// <summary>Serializable slice of <see cref="PercolatorResults"/> the frozen scorer needs,
         /// plus the pass-1 provenance a SecondPassFDR node cannot otherwise know.</summary>
         private sealed class ModelDto
@@ -101,12 +106,14 @@ namespace pwiz.Osprey.Tasks
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public GbtModelData[] FoldGbtModels { get; set; }
 
-            /// <summary>Normalized OSPREY_EXPERIMENT_AGG of the process that TRAINED this model.
-            /// Deliberately added WITHOUT bumping <see cref="SchemaVersion"/>: it is an optional
-            /// additive property, so an older reader ignores it and this reader sees null on an
-            /// older file. Bumping the version would instead make every pre-existing sidecar
-            /// unreadable, which on a SecondPassFDR node is the hard fail-fast, not a graceful
-            /// degradation.</summary>
+            /// <summary>The experiment-wide aggregation of the process that TRAINED this model,
+            /// from when the retired OSPREY_EXPERIMENT_AGG could choose one. Always written as
+            /// <see cref="EXPERIMENT_AGG_MAX"/>, the only aggregation now, so the file is the
+            /// same bytes it was; read back only for the log. Deliberately added WITHOUT bumping
+            /// <see cref="SchemaVersion"/>: it is an optional additive property, so an older
+            /// reader ignores it and this reader sees null on an older file. Bumping the version
+            /// would instead make every pre-existing sidecar unreadable, which on a SecondPassFDR
+            /// node is the hard fail-fast, not a graceful degradation.</summary>
             public string ExperimentAgg { get; set; }
 
             /// <summary>The name of each feature the model was trained on, in vector order
@@ -214,12 +221,10 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         /// <param name="path">Sidecar path to write.</param>
         /// <param name="model">The trained 1st-pass model.</param>
-        /// <param name="experimentAgg">Normalized OSPREY_EXPERIMENT_AGG of the training process;
-        ///   see <see cref="Serialize"/>.</param>
         /// <param name="stamp">The writing task's validity stamp, embedded as the first property.</param>
-        public static bool Save(string path, PercolatorResults model, string experimentAgg, ArtifactStamp stamp)
+        public static bool Save(string path, PercolatorResults model, ArtifactStamp stamp)
         {
-            string json = Serialize(model, experimentAgg, stamp);
+            string json = Serialize(model, stamp);
             if (json == null)
                 return false;
             WriteText(path, json);
@@ -234,12 +239,8 @@ namespace pwiz.Osprey.Tasks
         /// file that cannot be written.
         /// </summary>
         /// <param name="model">The trained 1st-pass model.</param>
-        /// <param name="experimentAgg">Normalized OSPREY_EXPERIMENT_AGG of the training process,
-        ///   stamped so a SecondPassFDR node reads the pass-1 arm instead of guessing it from its own
-        ///   environment. Comes from the caller (which holds the byproduct) rather than being
-        ///   re-read here, so this stays a pure serializer.</param>
         /// <param name="stamp">The writing task's validity stamp, embedded as the first property.</param>
-        public static string Serialize(PercolatorResults model, string experimentAgg, ArtifactStamp stamp)
+        public static string Serialize(PercolatorResults model, ArtifactStamp stamp)
         {
             if (stamp == null)
                 throw new ArgumentNullException(nameof(stamp));
@@ -253,7 +254,7 @@ namespace pwiz.Osprey.Tasks
                 NumFeatures = model.Standardizer.NumFeatures,
                 Means = model.Standardizer.Means,
                 Stds = model.Standardizer.Stds,
-                ExperimentAgg = experimentAgg,
+                ExperimentAgg = EXPERIMENT_AGG_MAX,
                 FeatureNames = model.FeatureNames,
                 TrainingAnalysis = model.TrainingAnalysis == null ? null
                     : JToken.Parse(JsonConvert.SerializeObject(model.TrainingAnalysis,
@@ -346,9 +347,8 @@ namespace pwiz.Osprey.Tasks
         /// (standardizer + per-fold weights/biases, or standardizer + per-fold tree ensembles);
         /// <see cref="FrozenModelScorer.TryCreate"/> needs nothing else.
         ///
-        /// <see cref="Sidecar.ExperimentAgg"/> is null when the sidecar predates that field, so
-        /// null there means "unknown", never "max" - a caller that gates on the arm must treat it
-        /// as unknown rather than assuming the default. <see cref="Sidecar.StratumBaseIds"/> is
+        /// <see cref="Sidecar.ExperimentAgg"/> is null when the sidecar predates that field.
+        /// <see cref="Sidecar.StratumBaseIds"/> is
         /// null under every mode but protein-compact, and likewise on an older sidecar.
         ///
         /// A model whose recorded feature names are not this run's FDR features

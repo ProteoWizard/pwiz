@@ -449,8 +449,8 @@ namespace pwiz.Osprey
 
         // The protein-best training column (issue #4580): on by default for HRAM data, off at unit
         // resolution (ResolutionDefaults), so like --feature-set it declares no single default. Off
-        // is the one-round first pass that preceded it, bit for bit; the developer switches that shape it stay environment
-        // variables (OSPREY_PROTEIN_BEST_DECOY, OSPREY_PROTEIN_BEST_SHUFFLE). A block body, so the
+        // is the one-round first pass that preceded it, bit for bit; the developer switch that shapes it stays an environment
+        // variable (OSPREY_PROTEIN_BEST_SHUFFLE). A block body, so the
         // handler is an Action: an assignment of a bool would bind to the Func overload, whose false
         // (off) ends the parse and drops every argument after it.
         public static readonly OspreyArgument ARG_PROTEIN_BEST = new OspreyArgument(OspreyArgNames.PROTEIN_BEST,

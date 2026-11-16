@@ -96,12 +96,6 @@ competition, with the pass-1 aggregate score and PEP the complement ranked on
 to the ranking, where `transfer-compete` brought none. See also issue #4484 (closed)
 for the default decision, and #4363 (closed) for the depleted-null finding.
 
-**Interaction with `OSPREY_EXPERIMENT_AGG`**: after a first pass run under the
-experimental `mean-best-<N>` aggregation, `protein-compact` is **refused** - it would
-rewrite the reported experiment q from a MAX-aggregated competition. `transfer` is the
-compatible mode. See
-[Experiment-wide aggregation](07-fdr-control.md#experiment-wide-aggregation-osprey_experiment_agg).
-
 ### `transfer` - first-pass calibration
 
 **In one sentence:** the second pass maps each re-scored peak through the first pass's calibrated
@@ -243,7 +237,7 @@ disk. Three experiment-wide artifacts carry it:
 
 | Artifact | Carries |
 |---|---|
-| `<blib-stem>.1st-pass.model.json` | the frozen Percolator model (standardizer + per-fold weights and biases, or per-fold tree ensembles under `OSPREY_FDR_MODEL=gbdt`) and the first pass's `OSPREY_EXPERIMENT_AGG` provenance |
+| `<blib-stem>.1st-pass.model.json` | the frozen Percolator model (standardizer + per-fold weights and biases, or per-fold tree ensembles under `OSPREY_FDR_MODEL=gbdt`) |
 | `<blib-stem>.1st-pass.stratum.json` | the protein stratum, under `protein-compact`. Split out of the model file in #4633, because first-pass protein FDR computes it and training does not |
 | `<blib-stem>.1st-pass.fdr_experiment.bin` | the first pass's experiment-scope q-values |
 
@@ -283,14 +277,6 @@ until the end of the task, so any interruption threw it away.
 stamps, so a consumer still sees one sidecar. **Both must ride
 the HPC relay**: an orchestrator that copies the model between phase directories
 and not the stratum reaches this fail-fast under the default mode.
-
-**Interaction with `mean-best-<N>`, worth knowing before a sweep**: a first pass
-run under `OSPREY_EXPERIMENT_AGG=mean-best-<N>` is REFUSED by the default mode,
-because the reported column would carry two statistics — on-stratum precursors
-max-aggregated, off-stratum precursors on their first-pass mean(best-N) q. Set
-`OSPREY_PASS2_QVALUE=transfer` for those arms. The failure is deliberate: an
-effective default that silently depended on the first pass's aggregation arm
-would be harder to reason about than an explicit variable.
 
 ## Flags and switches
 

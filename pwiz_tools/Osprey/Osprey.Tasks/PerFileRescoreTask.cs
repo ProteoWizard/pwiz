@@ -336,12 +336,8 @@ namespace pwiz.Osprey.Tasks
 
         public override string ValidityKey(PipelineContext ctx)
         {
-            // Stage 6 rescore + reconciliation gate on the experiment precursor q-value, which
-            // the experiment-wide aggregation changes, so the reconciled parquets this task
-            // writes differ across arms and must be invalidated alongside FirstPassFdrTask's Stage-5
-            // outputs. Same shared suffix, so the two cannot disagree.
-            // Same shared suffix for the 2nd-pass mode, for the same reason: this task writes the
-            // per-file 2nd-pass sidecar, whose q-values ARE the mode's output.
+            // The 2nd-pass mode, by the same shared suffix FirstPassFdrTask uses: this task writes
+            // the per-file 2nd-pass sidecar, whose q-values ARE the mode's output.
             // The sidecar format version belongs here too, not only in FirstPassFdrTask: this
             // task WRITES the 2nd-pass sidecar, so a record-layout change (v3 -> v4) invalidates
             // its output exactly as it invalidates the 1st-pass one. Without it, FirstPassFDR
@@ -355,7 +351,6 @@ namespace pwiz.Osprey.Tasks
                 // version. A term here would invalidate this task for a format that did not move,
                 // and invalidating FirstPassFDR costs a 5-hour Stage 5 re-run at 446 files.
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
-                + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 + OspreyEnvironment.TransferReconciliationValidityKeySuffix(ctx.Config)
                 // The worker's competition now gives the stratum's complement its own run q.
@@ -373,12 +368,10 @@ namespace pwiz.Osprey.Tasks
                 // model, so the classifier that trained it keys this task too (empty for the SVM).
                 + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config)
                 // The reconciled parquet carries the reference XIC only for the training export.
-                + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config)
-                // Planning recomputes Stage 4's CWT peak candidates (#5024). The settings that
-                // change them are in the base key already (search hash, pick, ftolmin, fcorr,
-                // refxic, rtlocal, xic); the loaded calibration is the one added here, as in
-                // PerFileScoring's key.
-                + OspreyEnvironment.LoadCalibrationValidityKeySuffix();
+                + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config);
+                // Planning recomputes Stage 4's CWT peak candidates (#5024); the settings that
+                // change them are in the base key already (search hash, pick, fcorr, refxic,
+                // rtlocal, xic).
         }
 
         /// <summary>

@@ -161,10 +161,8 @@ filter, `PerFileScoringTask.cs:1758`).
 - `CalibrationMetadata.SearchHash` exists as a field (`CalibrationParams.cs:125`, with
   `NullValueHandling.Ignore`) to keep schema parity, but `ResolveCalibration` never assigns it,
   so the C# `.calibration.json` omits the `search_hash` key entirely.
-- The only load path is `OSPREY_LOAD_CALIBRATION` (`PerFileScoringTask.cs:1623`, via
-  `OspreyEnvironment.LoadCalibrationPath`), an explicit cross-impl bisection hook that loads a
-  named JSON instead of computing. When it is unset and RT calibration is enabled, calibration
-  is always recomputed and re-saved.
+- Nothing loads a calibration in place of computing one: with RT calibration enabled,
+  calibration is always recomputed and re-saved.
 - Reuse-across-runs is instead decided by the validity stamp the file carries as its FIRST
   property, `osprey_validity` (Section 8), whose key already folds the search + library
   hashes. `PerFileScoring` treats a run as done only when this file AND its
@@ -501,10 +499,8 @@ checked by a harness via the `OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT` hook (`FdrScore
 The v3→v4 bump (2026-08-10, issue #4522) appended `experiment_aggregate_score`. `svm_score` is
 the per-ROW discriminant, which is what the RUN-scope q-values compete on; the EXPERIMENT-scope
 q-values compete on a per-entry roll-up across runs instead, and that quantity was never
-persisted — so a consumer re-gating at experiment scope had to rebuild the roll-up itself and
-branch on `OSPREY_EXPERIMENT_AGG`, which is silently wrong on exactly the arms where the
-aggregation is under study. The new field is that roll-up: max over the entry's rows across runs
-under the default aggregation, `ComputeBaseIdMeanBestN`'s value under mean-best-N, produced by
+persisted — so a consumer re-gating at experiment scope had to rebuild the roll-up itself. The
+new field is that roll-up: the max over the entry's rows across runs, produced by
 `PercolatorQValues.ComputeExperimentAggregateScoreMap` (resident/flat) and
 `StreamingFdr.StreamingFirstPassQ.BuildExperimentAggregateScoreMap` (streaming), which
 `FdrTest.TestStreamingFirstPassQMatchesFlat` pins against each other. Every row of an entry
@@ -752,7 +748,6 @@ a specific wrong answer:
 |---|---|
 | reconciliation parameter hash | toggling reconciliation between runs reuses the prior shape |
 | FDR sidecar format version | a resume across a format bump skips the task, then every reader refuses the old file by version and defaults are written instead |
-| experiment-aggregation mode | an A/B arm re-run in a directory holding the other arm's results reuses the previous mode's q and reports it as the new measurement |
 | pass-2 q-value mode | a sidecar written under `transfer` carries no stratum, so a `protein-compact` re-run adopts an artifact that cannot answer its question |
 | training-sample settings | a resume adopts maximum-trained scores as though the reservoir had produced them |
 | feature set or mask (`;featmask=` / `;featset=`, `PinFeatureMask.ValidityKeySuffix`) | an arm that hides different features from the classifier adopts another arm's model and q-values. Emitted for every set and mask: `;featmask=default` for the `core` set (the term the core-only default had), `;featmask=none` for `all` (the same features as the empty mask, so either adopts the other's outputs), `;featset=<names beyond the core>` for `efficient` and `default`, `;featmask=none\|<names>` when `OSPREY_FEATURE_MASK` overrides the set. Its `;fdrcols=unmasked` term marks the layout where a masked feature is absent from the FDR vectors: a model or feature sums written when masked features were zero columns are 97 wide where this layout's are 21, and a frozen model of the wrong width declines every vector |
@@ -760,7 +755,7 @@ a specific wrong answer:
 | classifier and tree settings (`OSPREY_FDR_MODEL=gbdt` only, the `;fdrmodel=gbdt` term) | a percolator directory re-run as gbdt, a gbdt directory written while the lean first pass still trained the SVM, or one `OSPREY_GBT_*` sweep point re-run as the next reports "skipping (outputs valid)" and hands back the other arm's results. Empty for the linear SVM, so no existing directory is invalidated (`PercolatorEngine.GbdtValidityKeySuffix`) |
 
 `PerFileRescoring` appends its own set for the same reasons - the reconciliation hash and
-sidecar format version, the experiment-aggregation, pass-2 q and training-sample arms, the
+sidecar format version, the pass-2 q and training-sample arms, the
 survivor-streaming switch, whose two paths must not adopt each other's output, and the
 classifier term, because its competition scores with the first-pass model. `SecondPassFDR`
 carries the classifier term for the same reason. Both also carry the feature mask, since they
@@ -911,7 +906,6 @@ written or reused. Defaults from `Osprey/OspreyCommandArgs.cs` + `Osprey.Core/Os
 | `--run-fdr <v>` | 0.01 | Folded into `ReconciliationParameterHash` (⇒ `osprey.reconciliation_hash`) |
 | `reconciliation.enabled` / `reconciliation.consensus_fdr` (config) | enabled; 0.01 | Folded into `ReconciliationParameterHash` |
 | `--library <path>` | required | File name + size + mtime ⇒ `LibraryIdentityHash` ⇒ `osprey.library_hash` and the library reload cache identity |
-| `OSPREY_LOAD_CALIBRATION` (env) | unset | Loads a named `.calibration.json` instead of computing (cross-impl bisection hook) |
 | `OSPREY_EXIT_AFTER_CALIBRATION` (env) | unset | Exits after Stage 3, having written `.calibration.json` |
 | `OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT` (env) | unset | Test hook for FDR sidecar byte-parity harness |
 
@@ -978,8 +972,8 @@ deliberate way to reuse artifacts across builds.
   `.calibration.json`** - Rust doc: the calibration file is reused when its `search_hash`
   matches and deleted+recomputed when it is stale. C# never writes `search_hash` into the
   calibration JSON (the field exists for schema parity but is unset), and reuse is instead the
-  embedded validity stamp's decision (`osprey_validity`); the only direct-load path is the
-  `OSPREY_LOAD_CALIBRATION` bisection hook. Evidence: `PerFileScoringTask.cs:1702` (metadata
+  embedded validity stamp's decision (`osprey_validity`), and nothing loads a calibration in
+  place of computing one. Evidence: `PerFileScoringTask.cs:1702` (metadata
   built without `SearchHash`), `CalibrationParams.cs:125`, `CalibrationIO.cs:42`. Net recalibrate-
   on-stale behavior is preserved via the stamp. Severity: minor.
 

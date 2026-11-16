@@ -178,15 +178,11 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// The search centre Stage 4 used for a run with no first-pass RT calibration
         /// (<see cref="ScoringContext.FallbackRtMap"/>): the range mapping when calibration ran and
-        /// failed, none when it was off or a calibration file was loaded in its place
-        /// (OSPREY_LOAD_CALIBRATION), as <c>PerFileScoringTask.ResolveCalibration</c> decides.
+        /// failed, none when it was off, as <c>PerFileScoringTask.ResolveCalibration</c> decides.
         /// </summary>
         private static RTCalibration FallbackRtMap(OspreyConfig config, IReadOnlyList<LibraryEntry> fullLibrary,
             SpectraWindowIndex spectraIndex)
         {
-            string loadCalPath = OspreyEnvironment.LoadCalibrationPath;
-            if (!string.IsNullOrEmpty(loadCalPath) && File.Exists(loadCalPath))
-                return null;
             if (!config.RtCalibration.Enabled)
                 return null;
             return RtRangeMapping.Measure(fullLibrary, spectraIndex.AllMs2Rts).FallbackRtMap();

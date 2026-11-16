@@ -286,16 +286,6 @@ namespace pwiz.Osprey.Core {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Experiment aggregation: {0} (default - best observation per unit).
-        /// </summary>
-        public static string OspreyEnvironment_DescribeExperimentAgg_Experiment_aggregation___0___default___best_observation_per_unit_ {
-            get {
-                return ResourceManager.GetString("OspreyEnvironment_DescribeExperimentAgg_Experiment_aggregation___0___default___be" +
-                        "st_observation_per_unit_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to HRAM.
         /// </summary>
         public static string ResolutionModeExtension_LOCALIZED_VALUES_HRAM {

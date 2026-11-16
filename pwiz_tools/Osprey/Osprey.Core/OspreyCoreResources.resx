@@ -169,9 +169,6 @@
   <data name="LibraryStringInterner_LogSummary_Unique_library_strings___0_____1__total___2___reduced_" xml:space="preserve">
     <value>Unique library strings: {0:N0} / {1:N0} total ({2:F1}% reduced)</value>
   </data>
-  <data name="OspreyEnvironment_DescribeExperimentAgg_Experiment_aggregation___0___default___best_observation_per_unit_" xml:space="preserve">
-    <value>Experiment aggregation: {0} (default - best observation per unit)</value>
-  </data>
   <data name="ResolutionModeExtension_LOCALIZED_VALUES_HRAM" xml:space="preserve">
     <value>HRAM</value>
   </data>

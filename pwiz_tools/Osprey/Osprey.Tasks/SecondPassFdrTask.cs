@@ -273,14 +273,8 @@ namespace pwiz.Osprey.Tasks
 
         public override string ValidityKey(PipelineContext ctx)
         {
-            // The experiment-wide aggregation reaches this task's outputs (the .blib and the
-            // 2nd-pass FDR sidecars) through the experiment q it changes upstream, so it has to
-            // invalidate them too. Without it, flipping the arm re-ran Stage 5 - FirstPassFdrTask
-            // did carry the suffix - while THIS task's .blib and sidecars were reused from the
-            // other arm, leaving one output directory holding two arms' results.
             // The 2nd-pass mode decides the q this task writes into the .blib and the 2nd-pass
-            // sidecars, so it invalidates them by exactly the argument the aggregation suffix
-            // makes above - one arm's .blib must never be reused as another's.
+            // sidecars, so it invalidates them: one arm's .blib must never be reused as another's.
             // And the sidecar format version, for the same reason FirstPassFdrTask carries it:
             // this task writes the 2nd-pass sidecars, so a record-layout change invalidates them.
             // And the MEANING of the 2nd-pass sidecar's protein column, which issue #4559
@@ -306,7 +300,6 @@ namespace pwiz.Osprey.Tasks
                 // a resume keeps a blib the current build would not write.
                 + @";blibout=" + BlibSpectrum.FORMAT_VERSION
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
-                + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 + OspreyEnvironment.TransferReconciliationValidityKeySuffix(ctx.Config)
                 // The fold now gives the stratum's complement its own experiment q.

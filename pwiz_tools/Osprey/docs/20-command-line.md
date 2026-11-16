@@ -508,7 +508,7 @@ and *diagnostics* (extra files or log lines). The list cannot drift from the cod
   names the closest catalogued name (`OSPREY_PASS2_QVALUES` ... did you mean
   `OSPREY_PASS2_QVALUE`?). Osprey claims the `OSPREY_` prefix.
 - A switch that lists its values refuses any other value at startup (`OSPREY_PASS2_QVALUE`,
-  `OSPREY_FDR_MODEL`, `OSPREY_EXPERIMENT_AGG`, `OSPREY_DETERMINISTIC_MATH`,
+  `OSPREY_FDR_MODEL`, `OSPREY_DETERMINISTIC_MATH`,
   `OSPREY_SERIAL_READ_SCOPE`, `OSPREY_STUB_IDENTITY`): a value typo would otherwise run the
   default arm under the name of the one asked for. A retired arm is refused the same way:
   `OSPREY_STUB_IDENTITY` lists only `1|2`, and `OSPREY_BLOCK_READ_MB` accepts only a positive
@@ -529,8 +529,6 @@ The catalog text is developer text and is not translated. The ones most likely t
 | `OSPREY_FDR_MODEL` | First-pass classifier: unset / `svm` = linear SVM (**default**), `gbdt` = **experimental** gradient-boosted trees (C#-only). An unrecognized value is a startup ERROR. Replaced the removed `--fdr-method` | [07](07-fdr-control.md) |
 | `OSPREY_GBT_*` | GBDT hyperparameters; apply only under `OSPREY_FDR_MODEL=gbdt` | [07](07-fdr-control.md) |
 | `OSPREY_DETERMINISTIC_MATH` | Exp/Log in GBDT training: unset / `1` = managed fdlibm port, bit-identical on Windows and Linux (**default**); `0` = `System.Math`, which calls the OS C library and can differ in the last bit between OSes (an A/B arm for timing and for reproducing pre-switch models; keys the gbdt tasks). Anything else is a startup ERROR | [07](07-fdr-control.md) |
-| `OSPREY_EXPERIMENT_AGG` | Experimental first-pass experiment-wide aggregation (`max` / `mean-best-<N>`) | [07](07-fdr-control.md) |
-| `OSPREY_MEANBEST2_FLOOR_MEAN` / `OSPREY_MEANBEST2_FLOOR_PCT` | Missing-run floor arm for `mean-best-<N>` (decoy mean / decoy percentile instead of the default median) | [07](07-fdr-control.md) |
 | `OSPREY_DIAGNOSTICS` | Turns on the bundle of cross-impl bisection dumps (was the `-d` / `--diagnostics` argument) | [18](18-peptide-trace.md) |
 | `OSPREY_DUMP_*` / `OSPREY_DIAG_*` | Cross-impl bisection dumps, one at a time | [18](18-peptide-trace.md) |
 

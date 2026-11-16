@@ -52,9 +52,7 @@ namespace pwiz.Osprey.FDR
     public static class PercolatorEngine
     {
         /// <summary>The <c>passLabel</c> value that marks the FIRST pass. Named rather than
-        /// repeated as a literal because OSPREY_EXPERIMENT_AGG now gates on it: a drift between
-        /// the default and the comparison would silently re-enable the aggregation on the 2nd
-        /// pass, which is the defect this constant exists to stop recurring.</summary>
+        /// repeated as a literal because <see cref="PassDisplayName"/> compares against it.</summary>
         public const string FIRST_PASS_LABEL = @"First-pass";
 
         // [PATH] cost buckets of RunStreamingFirstPass's two score passes. LANE buckets are timed
@@ -265,8 +263,7 @@ namespace pwiz.Osprey.FDR
         /// <see cref="ScoringSettings.GbtOutOfFold"/>. FirstPassFDR, PerFileRescoring and
         /// SecondPassFDR append it, because each writes output that model determines.
         ///
-        /// <para>Empty for the linear SVM on purpose, in the shape of
-        /// <see cref="OspreyEnvironment.ExperimentAggValidityKeySuffix"/>: the SVM's outputs never
+        /// <para>Empty for the linear SVM on purpose: the SVM's outputs never
         /// changed, so an unconditional term would invalidate every percolator output directory to
         /// record nothing. Keyed for gbdt because without it one arm's directory was adopted by
         /// the other - a percolator directory re-run as gbdt, a gbdt directory written before the
@@ -689,16 +686,9 @@ namespace pwiz.Osprey.FDR
             //    straight onto the projection rows and streaming the q-value outputs
             //    to the sink (no PercolatorResult list). Reuses the flat identity
             //    arrays already built above.
-            // OSPREY_EXPERIMENT_AGG applies to the FIRST pass only. The 2nd pass re-runs this same
-            // projection scorer over the post-reconciliation survivor pool, where the aggregation's
-            // premises no longer hold (appended gap-fill rows inflate a group's run count with
-            // fabricated detections; the decoy floor would come from the compaction-depleted
-            // survivor decoys rather than the full null). Before this gate the shared QMap
-            // primitives re-aggregated there silently.
             PercolatorScorer.ScoreProjectionAndComputeFdrInPlace(
                 perFile, labels, entryIds, peptides, trainResults, percConfig,
                 loadFileFeatures, loadFileApexRts, sink, captureContributions,
-                applyExperimentAgg: passLabel == FIRST_PASS_LABEL,
                 heldOutFoldByRow: heldOutFoldByRow);
             return false;
         }
@@ -1474,13 +1464,7 @@ namespace pwiz.Osprey.FDR
             // recomputed per row (bias first, then the averaged-weight dot product in feature order;
             // a tree ensemble scores the file up front instead), byte-for-byte the resident score
             // loop, only without the O(n) finalScores array.
-            // Gate the aggregation on the pass label, exactly as the resident and projection score
-            // passes do. This method has one caller and it passes FIRST_PASS_LABEL, so today the
-            // gate is a no-op - but an ungated read of MeanBestN here is the identical shape of the
-            // defect that let the 2nd pass re-aggregate on the other two paths, and a future
-            // second-pass caller would reintroduce it silently.
-            var streamingQ = new StreamingFdr.StreamingFirstPassQ(
-                passLabel == FIRST_PASS_LABEL ? OspreyEnvironment.MeanBestN : 0);
+            var streamingQ = new StreamingFdr.StreamingFirstPassQ();
             var clampFloors = new PercolatorQValues.ExperimentQClampFloors();
             // Each file's first global row ordinal - the g its first row takes in the plain loop -
             // from pass 0's counts, so a lane can stamp a file's ordinals before the files ahead of
@@ -1550,10 +1534,10 @@ namespace pwiz.Osprey.FDR
                             percConfig.NThreads, HeldOutFoldsOf(heldOutFolds, fileName));
                         t = lane1.Stop(LANE1_SCORE, t);
                     }
-                    // The competition's share of this file, reduced here when it is a first-seen
-                    // maximum (the default max mode) and the file holds the rows pass 0 counted, so
-                    // its ordinals are right. Otherwise the consumer adds the rows one at a time.
-                    if (streamingQ.ReducesByFile && count == rowCounts[f])
+                    // The competition's share of this file, reduced here - every reduction is a
+                    // first-seen maximum - when the file holds the rows pass 0 counted, so its
+                    // ordinals are right. Otherwise the consumer adds the rows one at a time.
+                    if (count == rowCounts[f])
                     {
                         var competition = streamingQ.BeginFile();
                         int g0 = firstOrdinal[f];
@@ -2187,7 +2171,7 @@ namespace pwiz.Osprey.FDR
                 PercolatorScorer.ScoreRowsWithModel(count,
                     r => PercolatorScorer.ResolveFeatureRow(rawRows, (uint)r, rows.CoelutionSums[r], _rawFeatures),
                     _round1, _rawFeatures, priorScores, 0, _threads, heldOut);
-                return ProteinBestFeature.ComputeColumn(_request.Membership, _request.TopN, _request.DecoyOwn,
+                return ProteinBestFeature.ComputeColumn(_request.Membership, _request.TopN,
                     baseIds, rows.IsDecoys, priorScores, out floor);
             }
 

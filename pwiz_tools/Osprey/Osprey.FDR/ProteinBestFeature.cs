@@ -39,11 +39,9 @@ namespace pwiz.Osprey.FDR
     /// precursor scores, the same for every candidate, and also the value when there is no sibling.
     /// A shared peptide takes the largest value across its accessions.</para>
     ///
-    /// <para>Paired (the default): a decoy reads exactly the value computed for its paired target's
-    /// peptide from TARGET sibling scores, so it gets the same evidence a false target would at that
-    /// spot. Own: a decoy's value comes from decoy sibling scores on the same accessions, and a
-    /// target's from target scores. Entrapment peptides are targets, on whatever accession the
-    /// library gives them.</para>
+    /// <para>A decoy reads exactly the value computed for its paired target's peptide from TARGET
+    /// sibling scores, so it gets the same evidence a false target would at that spot. Entrapment
+    /// peptides are targets, on whatever accession the library gives them.</para>
     /// </summary>
     public static class ProteinBestFeature
     {
@@ -56,18 +54,18 @@ namespace pwiz.Osprey.FDR
         /// hold several candidate peaks) and may come in any order. A precursor with no row has no
         /// score, so it cannot appear as a sibling.
         /// </summary>
-        public static double[] ComputeColumn(ProteinBestMembership membership, int topN, bool decoyOwn,
+        public static double[] ComputeColumn(ProteinBestMembership membership, int topN,
             IReadOnlyList<uint> baseIds, IReadOnlyList<bool> isDecoys, IReadOnlyList<double> priorScores)
         {
-            return ComputeColumn(membership, topN, decoyOwn, baseIds, isDecoys, priorScores, out _);
+            return ComputeColumn(membership, topN, baseIds, isDecoys, priorScores, out _);
         }
 
         /// <summary>
-        /// <see cref="ComputeColumn(ProteinBestMembership,int,bool,IReadOnlyList{uint},IReadOnlyList{bool},IReadOnlyList{double})"/>,
+        /// <see cref="ComputeColumn(ProteinBestMembership,int,IReadOnlyList{uint},IReadOnlyList{bool},IReadOnlyList{double})"/>,
         /// also returning the run's <paramref name="floor"/>, which the second pass gives a row the
         /// first pass had no value for.
         /// </summary>
-        public static double[] ComputeColumn(ProteinBestMembership membership, int topN, bool decoyOwn,
+        public static double[] ComputeColumn(ProteinBestMembership membership, int topN,
             IReadOnlyList<uint> baseIds, IReadOnlyList<bool> isDecoys, IReadOnlyList<double> priorScores,
             out double floor)
         {
@@ -75,17 +73,16 @@ namespace pwiz.Osprey.FDR
                 throw new ArgumentOutOfRangeException(nameof(topN), @"The protein-best column needs at least the top sibling.");
             int count = baseIds.Count;
             floor = DecoyMedianFloor(baseIds, isDecoys, priorScores);
-            var targets = new SideValues(membership, topN, floor, BestByPeptide(membership, baseIds, isDecoys, priorScores, false));
-            var decoys = decoyOwn
-                ? new SideValues(membership, topN, floor, BestByPeptide(membership, baseIds, isDecoys, priorScores, true))
-                : targets;
+            // A decoy shares its paired target's base_id, so it maps to the target's peptide and
+            // reads the same value from the target siblings' tallies.
+            var targets = new SideValues(membership, topN, floor, BestTargetByPeptide(membership, baseIds, isDecoys, priorScores));
             var column = new double[count];
             for (int r = 0; r < count; r++)
             {
                 int peptide = membership.PeptideOf(baseIds[r]);
                 column[r] = peptide < 0
                     ? floor
-                    : (isDecoys[r] ? decoys : targets).ValueFor(peptide);
+                    : targets.ValueFor(peptide);
             }
             return column;
         }
@@ -142,16 +139,16 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Each peptide's best row score on one side (targets or decoys), or null when it has no
-        /// row there. By the total order, so the result does not depend on the rows' order.
+        /// Each peptide's best target row score, or null when it has no target row. By the total
+        /// order, so the result does not depend on the rows' order.
         /// </summary>
-        private static double?[] BestByPeptide(ProteinBestMembership membership, IReadOnlyList<uint> baseIds,
-            IReadOnlyList<bool> isDecoys, IReadOnlyList<double> priorScores, bool decoySide)
+        private static double?[] BestTargetByPeptide(ProteinBestMembership membership, IReadOnlyList<uint> baseIds,
+            IReadOnlyList<bool> isDecoys, IReadOnlyList<double> priorScores)
         {
             var best = new double?[membership.PeptideCount];
             for (int r = 0; r < baseIds.Count; r++)
             {
-                if (isDecoys[r] != decoySide)
+                if (isDecoys[r])
                     continue;
                 int peptide = membership.PeptideOf(baseIds[r]);
                 if (peptide < 0)
@@ -164,7 +161,7 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// One side's protein tallies for a run: each protein's best N+1 peptide scores, which is
+        /// The target side's protein tallies for a run: each protein's best N+1 peptide scores, which is
         /// enough for any peptide on it to read the top N without itself. Peptides are visited in
         /// ascending index and scores compared by the total order, so a protein's tally is one
         /// fixed list whatever order the rows came in. Sums run from the highest score down, a
@@ -267,16 +264,14 @@ namespace pwiz.Osprey.FDR
     {
         /// <param name="membership">Which peptides sit on which proteins.</param>
         /// <param name="topN">1 for the top sibling, N for the mean of the top N.</param>
-        /// <param name="decoyOwn">Decoys read decoy siblings.</param>
         /// <param name="persistRun">Optional: given each run the score pass scores, with the
         /// run's column, so the second pass can score that run's rescored rows with it. Called
         /// from the score pass's file lanes, one call per run.</param>
-        public ProteinBestRequest(ProteinBestMembership membership, int topN, bool decoyOwn,
+        public ProteinBestRequest(ProteinBestMembership membership, int topN,
             Action<string, ProteinBestRunValues> persistRun = null)
         {
             Membership = membership;
             TopN = topN;
-            DecoyOwn = decoyOwn;
             PersistRun = persistRun;
         }
 
@@ -287,9 +282,6 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>1 takes the top sibling; N >= 2 the mean of the top N.</summary>
         public int TopN { get; }
-
-        /// <summary>A decoy reads decoy siblings, not its paired target's value.</summary>
-        public bool DecoyOwn { get; }
     }
 
     /// <summary>
@@ -333,7 +325,7 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>
         /// One run's values from its first-pass rows, in any order, as
-        /// <see cref="ProteinBestFeature.ComputeColumn(ProteinBestMembership,int,bool,IReadOnlyList{uint},IReadOnlyList{bool},IReadOnlyList{double},out double)"/>
+        /// <see cref="ProteinBestFeature.ComputeColumn(ProteinBestMembership,int,IReadOnlyList{uint},IReadOnlyList{bool},IReadOnlyList{double},out double)"/>
         /// computed them. Rows of one entry_id must agree, which the column guarantees; a
         /// disagreement is a defect, not a choice between them.
         /// </summary>

@@ -810,11 +810,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // ObserveCutoff rather than rebuilt here. Comparing a decoy's per-run row score
             // against an experiment-scope cutoff mixes two different rankings and is simply wrong.
             //
-            // Rebuilding the aggregate locally would be a max over rows, which is right ONLY for
-            // the default aggregation; under OSPREY_EXPERIMENT_AGG mean-best-N the competition
-            // ranks on the mean of the best N per-run scores and a max-based cutoff is silently
-            // wrong on exactly the arms where the aggregation is being studied. Reading the
-            // persisted value removes that whole class of error.
+            // Reading the persisted value, rather than rebuilding it here as a max over rows,
+            // keeps this cutoff on whatever the competition ranked, by construction.
             //
             // Recorded for EVERY class, not just accepted rows: a decoy needs its own aggregate to
             // compare against the cutoff and has no q to pre-filter on. Bounded by the number of
@@ -1856,7 +1853,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 // absDeltaRt > SCAN_RT_WINDOW skip - so the cast still runs. (int)NaN is
                 // int.MinValue on net472/x64 (this project targets net472 and net8.0), which
                 // indexes out of bounds and would abort a whole search from a diagnostics-only
-                // panel. StreamingDecoyFloor.Add clamps both ends for this same reason.
+                // panel.
                 int bin = (int)(absDeltaRt / SCAN_RT_WINDOW * DELTA_RT_BINS);
                 if (bin >= DELTA_RT_BINS)
                     bin = DELTA_RT_BINS - 1;

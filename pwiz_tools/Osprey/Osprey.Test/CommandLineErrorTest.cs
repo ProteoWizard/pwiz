@@ -48,7 +48,7 @@ namespace pwiz.Osprey.Test
         // The startup-checked variables the cases below set.
         private static readonly string[] STARTUP_VARIABLES =
         {
-            @"OSPREY_PASS2_QVALUE", @"OSPREY_EXPERIMENT_AGG", @"OSPREY_SERIAL_READ_SCOPE",
+            @"OSPREY_PASS2_QVALUE", @"OSPREY_SERIAL_READ_SCOPE",
             @"OSPREY_STUB_IDENTITY", @"OSPREY_BLOCK_READ_MB"
         };
 
@@ -59,6 +59,8 @@ namespace pwiz.Osprey.Test
             @"OSPREY_STAGE7_STREAM", @"OSPREY_STAGE6_STREAM_SURVIVORS", @"OSPREY_FDR_PROJECTION",
             @"OSPREY_ALLOW_UNFIXED_RESIDENT",
             @"OSPREY_DUMP_PERCOLATOR", @"OSPREY_PERCOLATOR_ONLY", @"OSPREY_DUMP_RESCORED",
+            @"OSPREY_EXPERIMENT_AGG", @"OSPREY_MEANBEST2_FLOOR_MEAN", @"OSPREY_MEANBEST2_FLOOR_PCT",
+            @"OSPREY_MIN_FRAGMENT_TOLERANCE", @"OSPREY_LOAD_CALIBRATION", @"OSPREY_PROTEIN_BEST_DECOY",
             @"OSPREY_PASS2_QVALUES"
         };
 
@@ -169,14 +171,13 @@ namespace pwiz.Osprey.Test
             output = RunCommandAndValidateError(Variable(@"OSPREY_PASS2_QVALUES", @"transfer"),
                 InputLibraryOutput(input, library));
             StringAssert.Contains(output, @"OSPREY_PASS2_QVALUE?");
-            // A switch with listed values refuses any other value, whether or not it has a
-            // message of its own: the default arm would run under the name of the one asked for.
-            foreach (string name in new[] { @"OSPREY_EXPERIMENT_AGG", @"OSPREY_SERIAL_READ_SCOPE" })
-            {
-                output = RunCommandAndValidateError(Variable(name, @"bogus"), InputLibraryOutput(input, library));
-                StringAssert.Contains(output, name);
-                StringAssert.Contains(output, @"bogus");
-            }
+            // A switch with listed values refuses any other value even without a message of its
+            // own, as OSPREY_PASS2_QVALUE does with one: the default arm would run under the name
+            // of the one asked for.
+            const string serialReadScope = @"OSPREY_SERIAL_READ_SCOPE";
+            output = RunCommandAndValidateError(Variable(serialReadScope, @"bogus"), InputLibraryOutput(input, library));
+            StringAssert.Contains(output, serialReadScope);
+            StringAssert.Contains(output, @"bogus");
             // Empty is unset, for an unknown name as for a known one: the run goes on, here to the
             // ModelDiagnostics error above, which stays the only error line.
             output = RunCommandAndValidateError(Variable(UNRECOGNIZED_VARIABLES[0], string.Empty), modelDiagnostics);

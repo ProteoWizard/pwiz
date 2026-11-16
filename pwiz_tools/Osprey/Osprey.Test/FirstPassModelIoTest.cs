@@ -173,7 +173,7 @@ namespace pwiz.Osprey.Test
                 @"osprey_stratum_roundtrip_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
-                Assert.IsTrue(FirstPassModelIO.Save(path, model, @"mean-best-3", TestStamps.Any),
+                Assert.IsTrue(FirstPassModelIO.Save(path, model, TestStamps.Any),
                     @"SVM model should persist");
                 Assert.IsTrue(File.Exists(path), @"sidecar should exist after Save");
 
@@ -182,10 +182,9 @@ namespace pwiz.Osprey.Test
                 var reloaded = sidecar.Model;
                 Assert.IsNotNull(reloaded, @"reloaded model should not be null");
 
-                // Pass-1 provenance survives the round trip. This is what lets a --task
-                // SecondPassFDR node - which never trained pass 1 - gate on the arm that
-                // actually produced the q-values instead of on its own environment.
-                Assert.AreEqual(@"mean-best-3", sidecar.ExperimentAgg, @"recorded pass-1 aggregation arm");
+                // The file still records the experiment-wide aggregation, as it did when
+                // OSPREY_EXPERIMENT_AGG could choose another, so its bytes are unchanged.
+                Assert.AreEqual(@"max", sidecar.ExperimentAgg, @"recorded pass-1 aggregation");
 
                 // The stratum is a SEPARATE artifact, written when protein FDR ends rather than
                 // when training does, so the model file carries none of it. Deliberately
@@ -283,10 +282,10 @@ namespace pwiz.Osprey.Test
                 @"osprey_model_linear_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
-                Assert.IsTrue(FirstPassModelIO.Save(path, model, @"max", TestStamps.Any), @"tree model should persist");
+                Assert.IsTrue(FirstPassModelIO.Save(path, model, TestStamps.Any), @"tree model should persist");
                 var sidecar = FirstPassModelIO.Load(path, PinFeatureMask.Hram);
                 Assert.IsNotNull(sidecar, @"reloaded tree sidecar should not be null");
-                Assert.AreEqual(@"max", sidecar.ExperimentAgg, @"recorded pass-1 aggregation arm");
+                Assert.AreEqual(@"max", sidecar.ExperimentAgg, @"recorded pass-1 aggregation");
                 var reloaded = sidecar.Model;
                 Assert.IsNotNull(reloaded.FoldGbtModels, @"a tree model must reload as trees");
                 Assert.AreEqual(model.FoldGbtModels.Count, reloaded.FoldGbtModels.Count, @"fold count");
@@ -340,7 +339,7 @@ namespace pwiz.Osprey.Test
                     FoldGbtModels = new List<GradientBoostedTrees> { model.FoldGbtModels[0], null }
                 }, @"a fold with no ensemble");
 
-                Assert.IsTrue(FirstPassModelIO.Save(linearPath, MakeSvmModel(), @"max", TestStamps.Any), @"SVM model should persist");
+                Assert.IsTrue(FirstPassModelIO.Save(linearPath, MakeSvmModel(), TestStamps.Any), @"SVM model should persist");
                 Assert.IsNull(JObject.Parse(File.ReadAllText(linearPath))[@"FoldGbtModels"],
                     @"a linear model's file must not gain a tree property");
             }
@@ -367,10 +366,10 @@ namespace pwiz.Osprey.Test
                 {
                     Standardizer = FeatureStandardizer.FromMeansStds(new[] { 0.0, 1.0 }, new[] { 1.0, 1.0 }),
                 };
-                Assert.IsFalse(FirstPassModelIO.Save(path, noWeights, @"max", TestStamps.Any),
+                Assert.IsFalse(FirstPassModelIO.Save(path, noWeights, TestStamps.Any),
                     @"model without weights or trees should not persist");
                 Assert.IsFalse(File.Exists(path), @"no sidecar should be written when Save declines");
-                Assert.IsFalse(FirstPassModelIO.Save(path, null, @"max", TestStamps.Any), @"null model should not persist");
+                Assert.IsFalse(FirstPassModelIO.Save(path, null, TestStamps.Any), @"null model should not persist");
             }
             finally
             {
@@ -529,7 +528,7 @@ namespace pwiz.Osprey.Test
         private static void AssertLoadForAnalysisPairsByStamp(OspreyConfig config)
         {
             Assert.IsNull(FirstPassModelIO.LoadForAnalysis(config), @"no model file: nothing to load");
-            Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(config), MakeSvmModel(), @"max", TestStamps.Any));
+            Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(config), MakeSvmModel(), TestStamps.Any));
 
             var modelOnly = FirstPassModelIO.LoadForAnalysis(config);
             Assert.IsNotNull(modelOnly);
@@ -611,7 +610,7 @@ namespace pwiz.Osprey.Test
 
         private static void SaveModelAndStratum(OspreyConfig config, ArtifactStamp stamp)
         {
-            Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(config), MakeSvmModel(), @"max", stamp));
+            Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(config), MakeSvmModel(), stamp));
             Assert.IsTrue(FirstPassModelIO.SaveStratum(FirstPassModelIO.StratumPathFor(config),
                 new HashSet<uint> { 1, 2, 3 }, stamp));
         }
@@ -702,7 +701,7 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(fdrIndices.Length, model.FoldWeights[0].Length, @"trained weight count");
                 CollectionAssert.AreEqual(fdrNames, model.FeatureNames, @"the model must name the features it trained on");
 
-                Assert.IsTrue(FirstPassModelIO.Save(modelPath, model, null, TestStamps.Any), @"model should persist");
+                Assert.IsTrue(FirstPassModelIO.Save(modelPath, model, TestStamps.Any), @"model should persist");
                 var reloaded = FirstPassModelIO.Load(modelPath, PinFeatureMask.Hram);
                 Assert.IsNotNull(reloaded, @"a model trained on the FDR features should reload");
                 CollectionAssert.AreEqual(fdrNames, reloaded.Model.FeatureNames, @"the names must travel with the saved model");
@@ -710,7 +709,7 @@ namespace pwiz.Osprey.Test
                 // A model whose names are not this run's FDR features (another mask's, say) would
                 // weigh each column as some other feature, so it does not load.
                 model.FeatureNames = fdrNames.Reverse().ToArray();
-                Assert.IsTrue(FirstPassModelIO.Save(modelPath, model, null, TestStamps.Any));
+                Assert.IsTrue(FirstPassModelIO.Save(modelPath, model, TestStamps.Any));
                 Assert.IsNull(FirstPassModelIO.Load(modelPath, PinFeatureMask.Hram), @"a model laid out another way must not load");
             }
             finally
@@ -759,7 +758,7 @@ namespace pwiz.Osprey.Test
             // A sidecar written BEFORE the arm was recorded must still load - the field was added
             // without bumping SchemaVersion precisely so pre-existing sidecars stay readable, and
             // a SecondPassFDR node that could not read one would hard fail-fast instead of degrading.
-            // The arm then reports null, which the caller must treat as UNKNOWN, not as "max".
+            // The arm then reports null.
             AssertLoadsWithArm(
                 @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
                 @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0] }", null, @"pre-provenance sidecar");
@@ -795,7 +794,7 @@ namespace pwiz.Osprey.Test
                 @"osprey_model_pinned_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
-                Assert.IsTrue(FirstPassModelIO.Save(path, model, @"max", TestStamps.Any), @"pinned SVM model should persist");
+                Assert.IsTrue(FirstPassModelIO.Save(path, model, TestStamps.Any), @"pinned SVM model should persist");
                 Assert.AreEqual(PinnedLinearModelFile(TestStamps.Any), File.ReadAllText(path));
             }
             finally
@@ -811,7 +810,7 @@ namespace pwiz.Osprey.Test
                 @"osprey_model_declined_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
-                Assert.IsFalse(FirstPassModelIO.Save(path, model, @"max", TestStamps.Any), what + @" should not persist");
+                Assert.IsFalse(FirstPassModelIO.Save(path, model, TestStamps.Any), what + @" should not persist");
                 Assert.IsFalse(File.Exists(path), what + @" should leave no file behind");
             }
             finally

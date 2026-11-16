@@ -677,11 +677,10 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// Both suffixes must be emitted for EVERY arm, the default included.
-        /// This is the property that separates them from
-        /// <see cref="OspreyEnvironment.ExperimentAggValidityKeySuffix"/>, whose
+        /// These suffixes must be emitted for EVERY arm, the default included.
+        /// This is the property that separates them from the suffixes whose
         /// default arm deliberately emits nothing: that arm's output never
-        /// changed, and these two arms' outputs did.
+        /// changed, and these arms' outputs did.
         /// </summary>
         private static void AssertSuffixesAreUnconditional()
         {

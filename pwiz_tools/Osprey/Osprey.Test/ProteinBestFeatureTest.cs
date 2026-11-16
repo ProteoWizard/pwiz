@@ -55,7 +55,7 @@ namespace pwiz.Osprey.Test
             AssertSelfExclusionAcrossCharges();
             AssertTopNPaddedWithFloor();
             AssertSharedPeptideTakesLargest();
-            AssertPairedAndOwnDecoys();
+            AssertPairedDecoys();
             AssertFloorIsExactMedianOfDecoyPrecursors();
             AssertShuffleKeepsGroupSizes();
             AssertOrderIndependentBits();
@@ -88,10 +88,10 @@ namespace pwiz.Osprey.Test
                 return this;
             }
 
-            public double[] Column(int topN, bool decoyOwn, ProteinBestMembership membership = null)
+            public double[] Column(int topN, ProteinBestMembership membership = null)
             {
                 return ProteinBestFeature.ComputeColumn(membership ?? ProteinBestMembership.Build(PRECURSORS),
-                    topN, decoyOwn, BaseIds, IsDecoys, Scores);
+                    topN, BaseIds, IsDecoys, Scores);
             }
         }
 
@@ -101,7 +101,7 @@ namespace pwiz.Osprey.Test
             // a second candidate peak of it 150, and A must read none of them.
             var run = new Run().Target(1, 100).Target(2, 200).Target(2, 150).Target(3, 5)
                 .Decoy(1, 1).Decoy(3, 3);
-            var column = run.Column(1, false);
+            var column = run.Column(1);
             Assert.AreEqual(5, column[0], @"charge 1 of A reads B, not its own other charge");
             Assert.AreEqual(5, column[1], @"charge 2 of A reads B");
             Assert.AreEqual(5, column[2], @"another peak of charge 2 of A reads B");
@@ -115,12 +115,12 @@ namespace pwiz.Osprey.Test
                 .Decoy(1, 1).Decoy(3, 3);
             const double floor = 2;
             // A's siblings are C and B: two of three, padded once.
-            Assert.AreEqual((7 + 5 + floor) / 3, run.Column(3, false)[0], TOLERANCE);
+            Assert.AreEqual((7 + 5 + floor) / 3, run.Column(3)[0], TOLERANCE);
             // Two of two: the same run reads no floor at all.
-            Assert.AreEqual((7 + 5) / 2.0, run.Column(2, false)[0], TOLERANCE);
+            Assert.AreEqual((7 + 5) / 2.0, run.Column(2)[0], TOLERANCE);
             foreach (int topN in new[] { 1, 2, 16 })
             {
-                var column = run.Column(topN, false);
+                var column = run.Column(topN);
                 // E is alone on its protein, F is on none, and 99 is not in the library.
                 Assert.AreEqual(floor, column[4], @"no sibling reads the floor exactly");
                 Assert.AreEqual(floor, column[5], @"no protein reads the floor exactly");
@@ -128,7 +128,7 @@ namespace pwiz.Osprey.Test
             }
             // A precursor with no row has no score, so it is no sibling: B alone reads A, and D has
             // no row at all, so C reads A.
-            var sparse = new Run().Target(1, 100).Target(4, 7).Decoy(1, 1).Decoy(3, 3).Column(1, false);
+            var sparse = new Run().Target(1, 100).Target(4, 7).Decoy(1, 1).Decoy(3, 3).Column(1);
             Assert.AreEqual(7, sparse[0]);
             Assert.AreEqual(100, sparse[1]);
         }
@@ -137,34 +137,25 @@ namespace pwiz.Osprey.Test
         {
             // C on P1 reads A (10) and on Q1 reads D (40): the largest.
             var run = new Run().Target(1, 10).Target(4, 1).Target(5, 40).Decoy(1, 0);
-            Assert.AreEqual(40, run.Column(1, false)[1]);
+            Assert.AreEqual(40, run.Column(1)[1]);
             // With A above D it is P1's value instead, whichever accession comes first.
             run = new Run().Target(1, 50).Target(4, 1).Target(5, 40).Decoy(1, 0);
-            Assert.AreEqual(50, run.Column(1, false)[1]);
+            Assert.AreEqual(50, run.Column(1)[1]);
         }
 
-        private static void AssertPairedAndOwnDecoys()
+        private static void AssertPairedDecoys()
         {
             var run = new Run().Target(1, 100).Target(3, 5)
                 .Decoy(1, 1).Decoy(3, 3);
             // Paired: decoy of A reads what A reads, from target B, even though it has its own
             // decoy sibling; the decoy of B reads what B reads, target A.
-            var paired = run.Column(1, false);
+            var paired = run.Column(1);
             Assert.AreEqual(paired[0], paired[2], @"decoy reads its paired target's value");
             Assert.AreEqual(5, paired[2]);
             Assert.AreEqual(100, paired[3]);
             // A paired decoy reads its target's value even when the target has no row in this run.
-            var targetMissing = new Run().Target(3, 5).Decoy(1, 1).Column(1, false);
+            var targetMissing = new Run().Target(3, 5).Decoy(1, 1).Column(1);
             Assert.AreEqual(5, targetMissing[1]);
-            // Own: the decoy reads decoy siblings only; the targets are unchanged.
-            var own = run.Column(1, true);
-            Assert.AreEqual(5, own[0]);
-            Assert.AreEqual(100, own[1]);
-            Assert.AreEqual(3, own[2], @"own decoy reads the decoy of B");
-            Assert.AreEqual(1, own[3], @"own decoy reads the decoy of A");
-            // Own, and no decoy sibling, reads the floor rather than target evidence.
-            var ownAlone = new Run().Target(3, 5).Decoy(1, 1).Column(1, true);
-            Assert.AreEqual(1, ownAlone[1], @"the floor of the one decoy precursor");
         }
 
         private static void AssertFloorIsExactMedianOfDecoyPrecursors()
@@ -250,16 +241,13 @@ namespace pwiz.Osprey.Test
             var backward = ProteinBestMembership.Build(precursors.AsEnumerable().Reverse(), 42UL);
             foreach (int topN in new[] { 1, 4, 16 })
             {
-                foreach (bool decoyOwn in new[] { false, true })
+                var expected = run.Column(topN, forward);
+                var actual = permuted.Column(topN, backward);
+                for (int s = 0; s < rows; s++)
                 {
-                    var expected = run.Column(topN, decoyOwn, forward);
-                    var actual = permuted.Column(topN, decoyOwn, backward);
-                    for (int s = 0; s < rows; s++)
-                    {
-                        Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected[order[s]]),
-                            BitConverter.DoubleToInt64Bits(actual[s]),
-                            string.Format(@"topN {0}, own {1}, row {2}", topN, decoyOwn, s));
-                    }
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected[order[s]]),
+                        BitConverter.DoubleToInt64Bits(actual[s]),
+                        string.Format(@"topN {0}, row {1}", topN, s));
                 }
             }
         }
@@ -271,17 +259,16 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(string.Empty, OspreyEnvironment.ProteinBestValidityKeySuffix(new OspreyConfig { ProteinBest = false }));
 
             // The key: empty when off, so no existing directory moves; every setting otherwise.
-            Assert.AreEqual(string.Empty, OspreyEnvironment.ProteinBestValidityKeySuffix(0, true, true));
-            string max = OspreyEnvironment.ProteinBestValidityKeySuffix(1, false, false);
+            Assert.AreEqual(string.Empty, OspreyEnvironment.ProteinBestValidityKeySuffix(0, true));
+            string max = OspreyEnvironment.ProteinBestValidityKeySuffix(1, false);
             Assert.AreEqual(@";proteinbest=max;proteinbestdecoy=paired", max);
             var keys = new HashSet<string>
             {
                 max,
-                OspreyEnvironment.ProteinBestValidityKeySuffix(4, false, false),
-                OspreyEnvironment.ProteinBestValidityKeySuffix(1, true, false),
-                OspreyEnvironment.ProteinBestValidityKeySuffix(1, false, true)
+                OspreyEnvironment.ProteinBestValidityKeySuffix(4, false),
+                OspreyEnvironment.ProteinBestValidityKeySuffix(1, true)
             };
-            Assert.AreEqual(4, keys.Count, string.Join(@" ", keys));
+            Assert.AreEqual(3, keys.Count, string.Join(@" ", keys));
         }
 
         private static void AssertModifiedFormsAreOnePeptide()
@@ -300,11 +287,11 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(2, membership.PeptideCount, @"the two forms of PEPTMIDE are one peptide");
             // Decoy precursors 1 and 3 at 1 and 3 make a floor of 2.
             var run = new Run().Target(1, 100).Target(2, 90).Target(3, 5).Decoy(1, 1).Decoy(3, 3);
-            var top1 = run.Column(1, false, membership);
+            var top1 = run.Column(1, membership);
             Assert.AreEqual(5, top1[0], @"PEPTMIDE reads OTHERK, not its oxidized form");
             Assert.AreEqual(5, top1[1], @"the oxidized form reads OTHERK, not PEPTMIDE");
             Assert.AreEqual(100, top1[2], @"OTHERK reads the best form of PEPTMIDE");
-            var top2 = run.Column(2, false, membership);
+            var top2 = run.Column(2, membership);
             Assert.AreEqual((100 + 2) / 2.0, top2[2], TOLERANCE, @"PEPTMIDE counts once, padded with the floor");
         }
 

@@ -38,7 +38,6 @@ namespace pwiz.Osprey.Test
 {
     public partial class SubsetPipelineTest
     {
-        private const string PROTEIN_BEST_DECOY = @"OSPREY_PROTEIN_BEST_DECOY";
         private const string PROTEIN_BEST_SHUFFLE = @"OSPREY_PROTEIN_BEST_SHUFFLE";
         private const string PREFILTER_SIZE = @"OSPREY_GBT_PREFILTER_SIZE";
         // The environment variable --protein-best replaced, which is now refused as unknown.
@@ -220,18 +219,12 @@ namespace pwiz.Osprey.Test
             AssertProteinBestAnalysis(transferDir);
             AssertScoresIdentical(onScores, FirstPassScores(transferDir), @"transfer has the same first pass");
 
-            // Each developer arm is a different column.
-            foreach (var other in new[]
-                     {
-                         new Dictionary<string, string>(ProteinBestVariables()) { [PROTEIN_BEST_DECOY] = OspreyEnvironment.PROTEIN_BEST_DECOY_OWN },
-                         new Dictionary<string, string>(ProteinBestVariables()) { [PROTEIN_BEST_SHUFFLE] = @"1" }
-                     })
-            {
-                RunAnalysis(onDir, DataInputs(), other, OnArgs(onDir));
-                var arm = FirstPassScores(onDir);
-                Assert.AreEqual(onScores.Count, arm.Count);
-                AssertScoresDiffer(onScores, arm, string.Join(@" ", other.Values));
-            }
+            // The developer arm is a different column.
+            var other = new Dictionary<string, string>(ProteinBestVariables()) { [PROTEIN_BEST_SHUFFLE] = @"1" };
+            RunAnalysis(onDir, DataInputs(), other, OnArgs(onDir));
+            var arm = FirstPassScores(onDir);
+            Assert.AreEqual(onScores.Count, arm.Count);
+            AssertScoresDiffer(onScores, arm, string.Join(@" ", other.Values));
         }
 
         /// <summary>
@@ -245,7 +238,6 @@ namespace pwiz.Osprey.Test
             var defaults = new Dictionary<string, string>(Verifier(false))
             {
                 [PREFILTER_SIZE] = string.Empty,
-                [PROTEIN_BEST_DECOY] = string.Empty,
                 [PROTEIN_BEST_SHUFFLE] = string.Empty
             };
             string offDir = CreateDir(@"protein-best-svm-off");
@@ -355,19 +347,17 @@ namespace pwiz.Osprey.Test
                     Program.EXIT_CODE_FAILURE_TO_START, extraArgs)).Where(CommandStatusWriter.IsErrorLine).ToArray();
             void assertNames(string[] errors, string name) => StringAssert.Contains(string.Join(@" ", errors), name);
 
-            // Off, with a switch that shapes it: the baseline would run under the baseline's key.
+            // Off, with the switch that shapes it: the baseline would run under the baseline's key.
             var off = ProteinBestArgs(false);
-            assertNames(refused(new Dictionary<string, string>(ProteinBestVariables()) { [PROTEIN_BEST_DECOY] = OspreyEnvironment.PROTEIN_BEST_DECOY_OWN }, off), PROTEIN_BEST_DECOY);
             assertNames(refused(new Dictionary<string, string>(ProteinBestVariables()) { [PROTEIN_BEST_SHUFFLE] = @"1" }, off), PROTEIN_BEST_SHUFFLE);
             // The environment variable the setting replaced is unknown now, so it cannot be mistaken for a lever.
             assertNames(refused(new Dictionary<string, string>(ProteinBestVariables()) { [RETIRED_PROTEIN_BEST] = @"max" }), RETIRED_PROTEIN_BEST);
-            // On, without the two-round training that delivers it, or with a switch value it does not know.
+            // On, without the two-round training that delivers it.
             var on = ProteinBestArgs(true);
             assertNames(refused(new Dictionary<string, string>(ProteinBestVariables()) { [PREFILTER_SIZE] = @"0" }, on), PREFILTER_SIZE);
-            assertNames(refused(new Dictionary<string, string>(ProteinBestVariables()) { [PROTEIN_BEST_DECOY] = @"both" }, on), PROTEIN_BEST_DECOY);
         }
 
-        /// <summary>The subset's variables with two-round training at the subset's size and the developer switches unset.</summary>
+        /// <summary>The subset's variables with two-round training at the subset's size and the developer switch unset.</summary>
         private static IReadOnlyDictionary<string, string> ProteinBestVariables()
         {
             var variables = new Dictionary<string, string>(Verifier(false));
@@ -376,13 +366,12 @@ namespace pwiz.Osprey.Test
             return variables;
         }
 
-        /// <summary>Only the arm's own variables: two-round training at 2000 rows and the developer switches unset.</summary>
+        /// <summary>Only the arm's own variables: two-round training at 2000 rows and the developer switch unset.</summary>
         private static IReadOnlyDictionary<string, string> ProteinBestArm()
         {
             return new Dictionary<string, string>
             {
                 { PREFILTER_SIZE, @"2000" },
-                { PROTEIN_BEST_DECOY, string.Empty },
                 { PROTEIN_BEST_SHUFFLE, string.Empty }
             };
         }

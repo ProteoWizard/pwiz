@@ -1165,18 +1165,6 @@
     <value>保存校准文件失败：{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileScoringTask_ResolveCalibration_Loaded_MS1_calibration__mean__0___1___SD__2_" xml:space="preserve">
-    <value>已加载 MS1 校准：平均值={0:F4} {1}，SD={2:F4}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_ResolveCalibration_Loaded_MS2_calibration__mean__0___1___SD__2_" xml:space="preserve">
-    <value>已加载 MS2 校准：平均值={0:F4} {1}，SD={2:F4}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_ResolveCalibration_Loaded_RT_calibration___0__points__R2__1_" xml:space="preserve">
-    <value>已加载 RT 校准：{0} 个点，R2={1:F4}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PerFileScoringTask_ResolveCalibration_Saved_calibration_to__0_" xml:space="preserve">
     <value>已将校准保存到 {0}</value>
     <comment>Needs Review:New resource</comment>

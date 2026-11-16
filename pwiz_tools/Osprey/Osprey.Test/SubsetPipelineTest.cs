@@ -906,7 +906,7 @@ namespace pwiz.Osprey.Test
 
             // The gradient-boosted trees in place of the linear SVM (OSPREY_FDR_MODEL=gbdt). The
             // variable is read once at class load, so an override cannot reach it; set the value it
-            // parses to, as the pass-2 leg below does for OSPREY_EXPERIMENT_AGG.
+            // parses to.
             string gbdtDir = CreateDir(@"fdr-model-gbdt");
             var savedFdrModel = OspreyEnvironment.FdrModel;
             try
@@ -927,30 +927,17 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_FDRBENCH_PER_RUN.ArgumentText);
             AssertHasRows(bench);
 
-            // The non-default second-pass arms the regression's mode 10 runs: first-pass q-values
-            // transferred, and the experiment score as the mean of each precursor's best two runs.
+            // The non-default second-pass arm: first-pass q-values transferred.
             string transferDir = CreateDir(@"pass2-transfer");
-            int savedMeanBestN = OspreyEnvironment.MeanBestN;
-            try
+            string transferLog = RunAnalysis(transferDir, DataInputs(), new Dictionary<string, string>
             {
-                // OSPREY_EXPERIMENT_AGG is parsed once at class load, so an override cannot reach
-                // it; set the value it parses to, as MeanBestNAggregationTest does.
-                OspreyEnvironment.MeanBestN = 2;
-                string transferLog = RunAnalysis(transferDir, DataInputs(), new Dictionary<string, string>
-                {
-                    { @"OSPREY_PASS2_VERIFY_WORKER", string.Empty },
-                    { @"OSPREY_PASS2_QVALUE", @"transfer" }
-                });
-                AssertHasLine(transferLog, PathLine(LogKey.ROUTE_PASS2_QVALUE, @"transfer"));
-                AssertHasLine(transferLog, PathLine(LogKey.ROUTE_EXPERIMENT_AGG, OspreyEnvironment.ExperimentAgg));
-                // Transfer's per-file half runs in the rescore worker like every other mode
-                // (#4665), so Stage 7 folds run by run instead of holding every run's survivors.
-                AssertHasLine(transferLog, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
-            }
-            finally
-            {
-                OspreyEnvironment.MeanBestN = savedMeanBestN;
-            }
+                { @"OSPREY_PASS2_VERIFY_WORKER", string.Empty },
+                { @"OSPREY_PASS2_QVALUE", @"transfer" }
+            });
+            AssertHasLine(transferLog, PathLine(LogKey.ROUTE_PASS2_QVALUE, @"transfer"));
+            // Transfer's per-file half runs in the rescore worker like every other mode
+            // (#4665), so Stage 7 folds run by run instead of holding every run's survivors.
+            AssertHasLine(transferLog, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
             Assert.IsTrue(BlibComparer.CountRows(Path.Combine(transferDir, BLIB_FILE), @"RefSpectra") > 0,
                 @"the transfer arm reported no precursors");
             // And it leaves the files the default leaves: transfer once completed without writing

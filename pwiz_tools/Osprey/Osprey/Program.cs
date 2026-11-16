@@ -623,27 +623,9 @@ namespace pwiz.Osprey
                 string scanMajorSwitches = OspreyEnvironment.DescribeScanMajorSwitches();
                 if (scanMajorSwitches != null)
                     LogInfo(scanMajorSwitches);
-                // Always print which experiment-wide aggregation is in force, active or not.
-                // Reported HERE and not from Stage 5 because FirstPassFdrTask.Run is skipped on
-                // --task SecondPassFDR, on a Rehydrate, and on any warm resume - exactly the runs
-                // whose q-values an operator is most likely to attribute to the wrong arm.
-                LogInfo(OspreyEnvironment.DescribeExperimentAgg());
                 // Always printed, on or off: the default changed, so a log that did not name it could
                 // not tell which first pass trained, and a warm resume skips the stage that would.
                 LogInfo(OspreyEnvironment.DescribeProteinBest(config));
-                // Abort, do not fall back: the default arm's q-values filed under the name of the
-                // arm the caller asked for, as for OSPREY_PASS2_QVALUE below. It used to warn and run
-                // max, which a mistyped sweep cell could not be told apart from.
-                if (OspreyEnvironment.ExperimentAggUnrecognized)
-                {
-                    LogError(string.Format(
-                        @"OSPREY_EXPERIMENT_AGG is set to an unrecognized value. Use '{0}', or '{1}<N>' " +
-                        @"with N in [2, {2}] (e.g. '{1}2'), or unset it for the default ('{0}').",
-                        OspreyEnvironment.EXPERIMENT_AGG_MAX,
-                        OspreyEnvironment.EXPERIMENT_AGG_MEAN_BEST_PREFIX,
-                        OspreyEnvironment.MEAN_BEST_N_MAX));
-                    return EXIT_CODE_FAILURE_TO_START;
-                }
                 // OSPREY_FDR_MODEL: abort on an unrecognized value, do not fall back. A run that
                 // asked for trees and trained the linear SVM is the #4491 defect, and its output
                 // reads exactly like a tree result. The classifier is named only when it is the
@@ -809,10 +791,8 @@ namespace pwiz.Osprey
                     LogInfo(setVariables);
                 LogInfo(string.Format(OspreyResources.Program_Run_Protein_FDR___0_, config.EffectiveProteinFdr));
                 LogInfo(string.Format(OspreyResources.Program_Run_Threads___0_, config.NThreads));
-                // Machine twins of the banner: the liveness anchor a route assertion needs
-                // before it can trust an absence, and the aggregation arm, which the prose
-                // above states for a person.
-                LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_EXPERIMENT_AGG, OspreyEnvironment.ExperimentAgg));
+                // Machine twin of the banner: the liveness anchor a route assertion needs before
+                // it can trust an absence.
                 LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_STARTUP, @"threads={0}", config.NThreads));
                 LogInfo(string.Empty);
 
@@ -1150,14 +1130,6 @@ namespace pwiz.Osprey
 
             bool hasInputFiles = config.HasInputFiles;
 
-            // OSPREY_EXPERIMENT_AGG family, before any I/O. Checked here rather than at the
-            // Stage-5 consuming site so a bad combination costs a second instead of the hours a
-            // large run spends reaching FirstPassFDR, and so a warm resume - which skips
-            // FirstPassFdrTask.Run entirely - is still checked.
-            string aggErr = OspreyEnvironment.ValidateExperimentAggSettings(
-                ExperimentAggFileCount(config, hasInputFiles));
-            if (aggErr != null)
-                return aggErr;
             string proteinBestErr = OspreyEnvironment.ValidateProteinBestSettings(config);
             if (proteinBestErr != null)
                 return proteinBestErr;
@@ -1533,21 +1505,6 @@ namespace pwiz.Osprey
             foreach (var kv in collisions)
                 sb.Append('\n').AppendFormat(@"  '{0}': {1}", kv.Key, string.Join(@", ", kv.Value));
             return sb.ToString();
-        }
-
-        /// <summary>
-        /// How many runs this invocation will aggregate across for the experiment-wide
-        /// competition, or 0 when that is not a property of this invocation. The per-file HPC
-        /// workers (SpectraCache / PerFileScoring / PerFileRescoring) each see ONE input and
-        /// never compute an experiment-wide score, so reporting their input count would refuse
-        /// every worker of a legitimate distributed mean(best-N) run. Which tasks those are
-        /// is the task's own fact (<see cref="ISelectableTask.IsPerFileWorker"/>).
-        /// </summary>
-        private static int ExperimentAggFileCount(OspreyConfig config, bool hasInputFiles)
-        {
-            if (config.SelectedTask?.IsPerFileWorker == true)
-                return 0;
-            return hasInputFiles ? config.InputFiles.Count : 0;
         }
 
         /// <summary>

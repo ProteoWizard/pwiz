@@ -79,7 +79,6 @@ namespace pwiz.Osprey.FDR
             Func<string, double[]> loadFileApexRts,
             IFdrOutputSink sink,
             Action<FeatureContributions> captureContributions = null,
-            bool applyExperimentAgg = true,
             Dictionary<int, int> heldOutFoldByRow = null)
         {
             if (loadFileFeatures == null)
@@ -238,11 +237,11 @@ namespace pwiz.Osprey.FDR
             bool isSingleFile = nonEmptyFiles <= 1;
             Dictionary<uint, double> expPrecByWinnerId = isSingleFile
                 ? null : PercolatorQValues.ComputeExperimentPrecursorQMap(
-                    finalScores, labels, entryIds, applyExperimentAgg);
+                    finalScores, labels, entryIds);
             // The peptide competition runs either way, for its PEP; its q is used only when
             // multi-file, as before.
             var expPeptCompetition = PercolatorQValues.ComputeExperimentPeptideQMap(
-                finalScores, labels, entryIds, peptides, out var peptidePepByPeptide, applyExperimentAgg);
+                finalScores, labels, entryIds, peptides, out var peptidePepByPeptide);
             Dictionary<string, double> expPeptByPeptide = isSingleFile ? null : expPeptCompetition;
 
             // The score those experiment competitions ranked each entry on (sidecar v4, issue
@@ -251,7 +250,7 @@ namespace pwiz.Osprey.FDR
             // aggregate is the entry's max over its own rows -- which is still not the per-row
             // Score, because a precursor carries several pre-compaction rows per file.
             var expAggByEntryId = PercolatorQValues.ComputeExperimentAggregateScoreMap(
-                finalScores, labels, entryIds, applyExperimentAgg);
+                finalScores, entryIds);
 
             // Best-of-runs monotonicity floors (issue #4390): the min-over-runs combined run q
             // that ClampExperimentQToBestRunFlat floors experiment q up to, keyed by EntryId and
