@@ -82,9 +82,12 @@ namespace pwiz.Osprey.Test
 
             Assert.AreEqual(legacy, OspreyEnvironment.PickValidityKeySuffix(unitConfig.Scoring));
             Assert.AreEqual(OspreyEnvironment.DEFAULT_XIC_FRAGMENTS, unitConfig.Scoring.XicFragments);
-            Assert.IsFalse(unitConfig.Scoring.GbtOutOfFold);
+            // Out-of-fold scoring is on wherever gbdt trains; it changes nothing under the SVM.
+            Assert.IsTrue(unitConfig.Scoring.GbtOutOfFold);
+            Assert.AreEqual(0.5, unitConfig.RtCalibration.MinRtTolerance);
 
-            Assert.AreEqual(legacy + @";tcwin=0.4;fcorr=7;refxic=corr;rtlocal=15", OspreyEnvironment.PickValidityKeySuffix(hramConfig.Scoring));
+            Assert.AreEqual(legacy + @";fcorr=7;refxic=corr;rtlocal=15", OspreyEnvironment.PickValidityKeySuffix(hramConfig.Scoring));
+            Assert.AreEqual(1.0, hramConfig.RtCalibration.MinRtTolerance);
             Assert.AreEqual(12, hramConfig.Scoring.XicFragments);
             Assert.IsTrue(hramConfig.Scoring.GbtOutOfFold);
             // A shallow clone (per-file scoring, the correlation re-extraction) carries the settings
@@ -1101,21 +1104,21 @@ namespace pwiz.Osprey.Test
                 // The complement's q changed meaning without a byte or mode string moving (issue
                 // #4581), so the two tasks that write it must key on it and the rest must not -
                 // FirstPassFDR least of all, whose re-run costs hours at cohort scale.
-                bool expectStrata = task.Name == PerFileRescoreTask.TASK_NAME ||
-                                    task.Name == SecondPassFdrTask.TASK_NAME;
+                bool expectStrata = OspreyEnvironment.Pass2ProteinCompact &&
+                                    (task.Name == PerFileRescoreTask.TASK_NAME || task.Name == SecondPassFdrTask.TASK_NAME);
                 Assert.AreEqual(expectStrata, key.Contains(OspreyEnvironment.PASS2_STRATA_TERM), string.Format(
                     @"{0} must {1} key on the protein-compact complement competition",
                     task.Name, expectStrata ? @"" : @"NOT "));
             }
-            Assert.AreEqual(OspreyEnvironment.PASS2_STRATA_TERM, OspreyEnvironment.Pass2StrataValidityKeySuffix(),
-                @"the default protein-compact mode carries the complement term");
+            Assert.AreEqual(string.Empty, OspreyEnvironment.Pass2StrataValidityKeySuffix(),
+                @"the default transfer does not compete a complement, so its outputs keep their key");
             using (OspreyEnvironment.OverrideVariables(new Dictionary<string, string>
                    {
-                       { @"OSPREY_PASS2_QVALUE", OspreyEnvironment.PASS2_QVALUE_TRANSFER }
+                       { @"OSPREY_PASS2_QVALUE", OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT }
                    }))
             {
-                Assert.AreEqual(string.Empty, OspreyEnvironment.Pass2StrataValidityKeySuffix(),
-                    @"transfer does not compete a complement, so its outputs keep their key");
+                Assert.AreEqual(OspreyEnvironment.PASS2_STRATA_TERM, OspreyEnvironment.Pass2StrataValidityKeySuffix(),
+                    @"the protein-compact mode carries the complement term");
             }
             AssertReconRefitKeysTheTasksItReaches(tasks, ctx);
             AssertTransferReconciliationSetKeysTheBlibGate(tasks);
@@ -1133,30 +1136,31 @@ namespace pwiz.Osprey.Test
             var defaultCtx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core }, tasks, null, null, null);
             var looserCtx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core, ExperimentFdr = 0.05 }, tasks, null, null, null);
             var peptideCtx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core, FdrLevel = FdrLevel.Peptide }, tasks, null, null, null);
-            foreach (var task in tasks)
-            {
-                Assert.AreEqual(task.ValidityKey(defaultCtx), task.ValidityKey(looserCtx),
-                    string.Format(@"{0} must not key on {1} under protein-compact", task.Name,
-                        OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText));
-            }
             using (OspreyEnvironment.OverrideVariables(new Dictionary<string, string>
                    {
-                       { @"OSPREY_PASS2_QVALUE", OspreyEnvironment.PASS2_QVALUE_TRANSFER }
+                       { @"OSPREY_PASS2_QVALUE", OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT }
                    }))
             {
                 foreach (var task in tasks)
                 {
-                    bool expect = task.Name == FirstPassFdrTask.TASK_NAME ||
-                                  task.Name == PerFileRescoreTask.TASK_NAME ||
-                                  task.Name == SecondPassFdrTask.TASK_NAME;
-                    string key = task.ValidityKey(defaultCtx);
-                    Assert.AreEqual(expect, key != task.ValidityKey(looserCtx), string.Format(
-                        @"{0} must {1} key on {2} under transfer", task.Name, expect ? @"" : @"NOT ",
-                        OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText));
-                    Assert.AreEqual(expect, key != task.ValidityKey(peptideCtx), string.Format(
-                        @"{0} must {1} key on {2} under transfer", task.Name, expect ? @"" : @"NOT ",
-                        OspreyCommandArgs.ARG_FDR_LEVEL.ArgumentText));
+                    Assert.AreEqual(task.ValidityKey(defaultCtx), task.ValidityKey(looserCtx),
+                        string.Format(@"{0} must not key on {1} under protein-compact", task.Name,
+                            OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText));
                 }
+            }
+            // Under the default, the transfer, the three tasks key on the reported set.
+            foreach (var task in tasks)
+            {
+                bool expect = task.Name == FirstPassFdrTask.TASK_NAME ||
+                              task.Name == PerFileRescoreTask.TASK_NAME ||
+                              task.Name == SecondPassFdrTask.TASK_NAME;
+                string key = task.ValidityKey(defaultCtx);
+                Assert.AreEqual(expect, key != task.ValidityKey(looserCtx), string.Format(
+                    @"{0} must {1} key on {2} under transfer", task.Name, expect ? @"" : @"NOT ",
+                    OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText));
+                Assert.AreEqual(expect, key != task.ValidityKey(peptideCtx), string.Format(
+                    @"{0} must {1} key on {2} under transfer", task.Name, expect ? @"" : @"NOT ",
+                    OspreyCommandArgs.ARG_FDR_LEVEL.ArgumentText));
             }
         }
 
@@ -1170,23 +1174,26 @@ namespace pwiz.Osprey.Test
             const string term = @";reconrefit=off";
             Assert.AreEqual(string.Empty, OspreyEnvironment.ReconRefitValidityKeySuffix(false));
             Assert.AreEqual(term, OspreyEnvironment.ReconRefitValidityKeySuffix(true));
+            // Off is the default, and keys as OSPREY_RECON_REFIT=off did before it was, so those
+            // directories are adopted.
+            Assert.AreEqual(term, OspreyEnvironment.ReconRefitValidityKeySuffix());
             var unset = tasks.ToDictionary(task => task.Name, task => task.ValidityKey(ctx));
-            foreach (var key in unset)
-                Assert.IsFalse(key.Value.Contains(@"reconrefit"), key.Key + @" must not key on an unset OSPREY_RECON_REFIT");
+            foreach (var task in tasks)
+            {
+                bool expect = task.Name == PerFileRescoreTask.TASK_NAME || task.Name == SecondPassFdrTask.TASK_NAME;
+                Assert.AreEqual(expect, unset[task.Name].Contains(term), string.Format(
+                    @"{0} must {1} key on the reconciliation refit being off", task.Name, expect ? @"" : @"NOT "));
+            }
             using (OspreyEnvironment.OverrideVariables(new Dictionary<string, string>
                    {
-                       { @"OSPREY_RECON_REFIT", @"off" }
+                       { @"OSPREY_RECON_REFIT", @"on" }
                    }))
             {
-                Assert.AreEqual(term, OspreyEnvironment.ReconRefitValidityKeySuffix());
+                Assert.AreEqual(string.Empty, OspreyEnvironment.ReconRefitValidityKeySuffix());
                 foreach (var task in tasks)
                 {
-                    string key = task.ValidityKey(ctx);
-                    bool expect = task.Name == PerFileRescoreTask.TASK_NAME || task.Name == SecondPassFdrTask.TASK_NAME;
-                    Assert.AreEqual(expect, key.Contains(term), string.Format(
-                        @"{0} must {1} key on OSPREY_RECON_REFIT=off", task.Name, expect ? @"" : @"NOT "));
-                    // Nothing else in the key moves.
-                    Assert.AreEqual(unset[task.Name], key.Replace(term, string.Empty), task.Name);
+                    // The refit keys as every run before the variable existed did: nothing else in the key moves.
+                    Assert.AreEqual(unset[task.Name].Replace(term, string.Empty), task.ValidityKey(ctx), task.Name);
                 }
             }
         }

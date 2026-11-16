@@ -744,7 +744,7 @@ namespace pwiz.Osprey.Core
             @"Experiment, gbdt first pass only: 1 scores each training row with only the fold model that held " +
             @"it out, instead of the mean of every fold model, two of which trained on it. Changes the validity " +
             @"key. A resumed first pass retrains rather than adopt the saved model. " +
-            @"Second-pass rescoring still scores training rows with the fold mean. On by default for HRAM data; " +
+            @"Second-pass rescoring still scores training rows with the fold mean. On by default; " +
             @"0 turns it off.")
             { Values = new[] { @"0", @"1" } };
 
@@ -885,14 +885,14 @@ namespace pwiz.Osprey.Core
             NumberStyles.Float, CultureInfo.InvariantCulture, out double loessBandwidth) ? loessBandwidth : null;
 
         private static readonly EnvVar ENV_MIN_RT_TOLERANCE = new EnvVar(@"OSPREY_MIN_RT_TOLERANCE", EnvVarGroup.behavior,
-            @"Experiment: the RT search-window floor in minutes in place of the configured 0.5. " +
+            @"Experiment: the RT search-window floor in minutes in place of the resolution's default. " +
             @"Enters the search identity.")
-            { ValueExample = @"<minutes>", DefaultValue = @"0.5" };
+            { ValueExample = @"<minutes>", DefaultValue = @"1.0 for HRAM data, 0.5 at unit resolution" };
 
         /// <summary>
-        /// OSPREY_MIN_RT_TOLERANCE (experiment): the RT search-window floor in minutes in place of the configured
-        /// 0.5, to price precursors whose library RT the calibration maps badly (the SEA-AD gradient tail). It
-        /// enters the search identity, so every task keys on it. Null when unset.
+        /// OSPREY_MIN_RT_TOLERANCE (experiment): the RT search-window floor in minutes in place of the
+        /// resolution's default (<see cref="ResolutionDefaults.MinRtTolerance"/>). It enters the search
+        /// identity, so every task keys on it. Null when unset.
         /// </summary>
         public static readonly double? MinRtTolerance = double.TryParse(ENV_MIN_RT_TOLERANCE.Value,
             NumberStyles.Float, CultureInfo.InvariantCulture, out double minRtTolerance) ? minRtTolerance : null;
@@ -900,7 +900,7 @@ namespace pwiz.Osprey.Core
         private static readonly EnvVar ENV_TC_HALF_WINDOW = new EnvVar(@"OSPREY_TC_HALF_WINDOW", EnvVarGroup.behavior,
             @"Experiment: half-width in minutes of the window the tc_* time-correlation features " +
             @"correlate over, in place of 0.15. Keyed into every task.")
-            { ValueExample = @"<minutes>", DefaultValue = @"0.40 for HRAM data, 0.15 at unit resolution", AcceptsValue = IsPositiveNumber };
+            { ValueExample = @"<minutes>", DefaultValue = @"0.15", AcceptsValue = IsPositiveNumber };
 
         private static readonly EnvVar ENV_LOCAL_RT_TOLERANCE = new EnvVar(@"OSPREY_LOCAL_RT_TOLERANCE", EnvVarGroup.behavior,
             @"Experiment: widen the RT search window at each library RT from the residual spread of this " +
@@ -983,20 +983,23 @@ namespace pwiz.Osprey.Core
         }
 
         private static readonly EnvVar ENV_RECON_REFIT = new EnvVar(@"OSPREY_RECON_REFIT", EnvVarGroup.behavior,
-            @"Experiment: off plans cross-run reconciliation and gap-fill with each run's first-pass RT " +
-            @"calibration instead of refitting it on the consensus. Keys the reconciliation and second-pass outputs.")
-            { Values = new[] { RECON_REFIT_OFF } };
+            @"Experiment: on refits each run's RT calibration on the cross-run consensus before " +
+            @"reconciliation and gap-fill plan with it; off, the default, plans with each run's first-pass " +
+            @"calibration. Keys the reconciliation and second-pass outputs.")
+            { Values = new[] { RECON_REFIT_OFF, RECON_REFIT_ON }, DefaultValue = RECON_REFIT_OFF };
 
         /// <summary>
-        /// OSPREY_RECON_REFIT (experiment): <c>off</c> skips the Stage 6 consensus refit, so each run is
-        /// planned with its own first-pass RT calibration. Unset refits as before. Any other value throws.
+        /// OSPREY_RECON_REFIT (experiment): true, the default, skips the Stage 6 consensus refit, so each
+        /// run is planned with its own first-pass RT calibration: under the transfer second pass the refit
+        /// only re-picks peaks. <c>on</c> refits as builds before 2026-11 did. Any other value throws.
         /// </summary>
         public static bool ReconciliationRefitOff => ParseReconRefit(ENV_RECON_REFIT.Value);
 
         /// <summary>
         /// The validity-key term of <see cref="ReconciliationRefitOff"/> for the tasks whose output
-        /// the refit reaches (PerFileRescoring, SecondPassFDR): EMPTY when unset, so no directory
-        /// written with the refit is invalidated, and <c>;reconrefit=off</c> otherwise.
+        /// the refit reaches (PerFileRescoring, SecondPassFDR): <c>;reconrefit=off</c> without the refit,
+        /// as runs that set OSPREY_RECON_REFIT=off before it was the default keyed, and empty with it,
+        /// as every run before the variable existed keyed.
         /// </summary>
         public static string ReconRefitValidityKeySuffix()
         {
@@ -1010,16 +1013,20 @@ namespace pwiz.Osprey.Core
         }
 
         private const string RECON_REFIT_OFF = @"off";
+        private const string RECON_REFIT_ON = @"on";
 
         private static bool ParseReconRefit(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
-                return false;
-            if (value.Trim().ToLowerInvariant() == RECON_REFIT_OFF)
                 return true;
+            string v = value.Trim().ToLowerInvariant();
+            if (v == RECON_REFIT_OFF)
+                return true;
+            if (v == RECON_REFIT_ON)
+                return false;
             throw new InvalidOperationException(string.Format(
                 OspreyCoreResources.OspreyEnvironment_ParseSingleValueSwitch__0__must_be___1___or_unset__not___2___,
-                @"OSPREY_RECON_REFIT", RECON_REFIT_OFF, value));
+                @"OSPREY_RECON_REFIT", RECON_REFIT_OFF + @"' or '" + RECON_REFIT_ON, value));
         }
 
         private static readonly EnvVar ENV_DUMP_RUN_PEP = new EnvVar(@"OSPREY_DUMP_RUN_PEP", EnvVarGroup.diagnostic,
@@ -1038,29 +1045,34 @@ namespace pwiz.Osprey.Core
             ENV_DUMP_RUN_PEP.Value);
 
         private static readonly EnvVar ENV_PEP_FORMULA = new EnvVar(@"OSPREY_PEP_FORMULA", EnvVarGroup.behavior,
-            @"Experiment: ratio estimates PEP as (D/T) fD(s) / fT(s) instead of pi0 fD / (pi0 fD " +
-            @"+ (1 - pi0) fT), which overstates PEP by about 1 / (1 - pi0). Unset keeps the " +
-            @"current formula.")
-            { Values = new[] { @"ratio" } };
+            @"Experiment: ratio, the default, estimates PEP as (D/T) fD(s) / fT(s); mixture estimates " +
+            @"pi0 fD / (pi0 fD + (1 - pi0) fT), as builds before 2026-11 did, which overstates PEP by " +
+            @"about 1 / (1 - pi0).")
+            { Values = new[] { PEP_FORMULA_RATIO, PEP_FORMULA_MIXTURE }, DefaultValue = PEP_FORMULA_RATIO };
 
         /// <summary>
-        /// OSPREY_PEP_FORMULA=ratio (experiment): <c>PepEstimator</c> estimates PEP as
-        /// (D/T) fD(s) / fT(s) - with paired competition the expected false target winners at a score
-        /// equal the decoy winners there - instead of pi0 fD / (pi0 fD + (1 - pi0) fT), which treats the
-        /// density of ALL target winners (false and true) as the true-match density and so overstates PEP
-        /// by about 1 / (1 - pi0). Unset keeps the current formula; any other value throws.
+        /// True, the default: <c>PepEstimator</c> estimates PEP as (D/T) fD(s) / fT(s) - with paired
+        /// competition the expected false target winners at a score equal the decoy winners there.
+        /// OSPREY_PEP_FORMULA=mixture (experiment) estimates pi0 fD / (pi0 fD + (1 - pi0) fT) instead,
+        /// which treats the density of ALL target winners (false and true) as the true-match density
+        /// and so overstates PEP by about 1 / (1 - pi0); detections are the same. Any other value throws.
         /// </summary>
         public static readonly bool PepRatioForm = ParsePepFormula(ENV_PEP_FORMULA.Value);
+
+        private const string PEP_FORMULA_RATIO = @"ratio";
+        private const string PEP_FORMULA_MIXTURE = @"mixture";
 
         private static bool ParsePepFormula(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
-                return false;
-            if (string.Equals(value.Trim(), @"ratio", StringComparison.OrdinalIgnoreCase))
                 return true;
+            if (string.Equals(value.Trim(), PEP_FORMULA_RATIO, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (string.Equals(value.Trim(), PEP_FORMULA_MIXTURE, StringComparison.OrdinalIgnoreCase))
+                return false;
             throw new InvalidOperationException(string.Format(
                 OspreyCoreResources.OspreyEnvironment_ParseSingleValueSwitch__0__must_be___1___or_unset__not___2___,
-                @"OSPREY_PEP_FORMULA", @"ratio", value));
+                @"OSPREY_PEP_FORMULA", PEP_FORMULA_RATIO + @"' or '" + PEP_FORMULA_MIXTURE, value));
         }
 
         private static string[] ParseFeatureMask(string value)
@@ -1460,9 +1472,10 @@ namespace pwiz.Osprey.Core
         public static string Pass2QValue => NormalizePass2QValue(Pass2QValueSetting);
 
         private static readonly EnvVar ENV_PASS2_QVALUE = new EnvVar(@"OSPREY_PASS2_QVALUE", EnvVarGroup.behavior,
-            @"How the second pass assigns reported q-values: protein-compact constrains the competition to " +
-            @"detected proteins; transfer carries the first-pass q through and re-scores only moved peaks.")
-            { Values = new[] { @"protein-compact", @"transfer" }, DefaultValue = @"protein-compact" };
+            @"How the second pass assigns reported q-values: transfer, the default, carries the first-pass q " +
+            @"through and re-scores only moved peaks; protein-compact (experiment) constrains the competition " +
+            @"to detected proteins.")
+            { Values = new[] { @"transfer", @"protein-compact" }, DefaultValue = @"transfer" };
 
         /// <summary>OSPREY_PASS2_QVALUE exactly as set, for a message that must quote what the
         /// user typed. Null when unset.</summary>
@@ -1732,7 +1745,7 @@ namespace pwiz.Osprey.Core
         private static string NormalizePass2QValue(string raw)
         {
             if (string.IsNullOrWhiteSpace(raw))
-                return PASS2_QVALUE_PROTEIN_COMPACT;
+                return PASS2_QVALUE_TRANSFER;
             string v = raw.Trim().ToLowerInvariant();
             if (v == PASS2_QVALUE_TRANSFER)
                 return PASS2_QVALUE_TRANSFER;
@@ -1741,7 +1754,7 @@ namespace pwiz.Osprey.Core
             // An unrecognized token normalizes to the default only so the other statics are
             // well-formed; the run does not get here, because Program aborts at startup on
             // IsUnrecognizedPass2QValue.
-            return PASS2_QVALUE_PROTEIN_COMPACT;
+            return PASS2_QVALUE_TRANSFER;
         }
 
         private static bool IsUnrecognizedPass2QValue(string raw)

@@ -262,7 +262,7 @@ namespace pwiz.Osprey.Test
         {
             AssertHpcChainMatchesStraight(new Subset(_dataDir, LIBRARY_FILE, @"unit", RUN_NAMES));
             AssertHpcChainMatchesStraight(new Subset(_dataDir, LIBRARY_FILE, @"unit", RUN_NAMES,
-                OspreyEnvironment.PASS2_QVALUE_TRANSFER), OspreyEnvironment.PASS2_QVALUE_TRANSFER + @"-");
+                OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT), OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT + @"-");
         }
 
         /// <summary>
@@ -1149,9 +1149,10 @@ namespace pwiz.Osprey.Test
                 return fields;
             });
             string singleHitsDir = CreateDir(@"one-protein-per-peptide");
+            // The protein stratum exists only for the protein-compact competition.
             string singleHitsLog = RunOspreyExpecting(SearchArgs(singleHitsDir, singleHits,
                     OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, @"0"),
-                Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);
+                WithVariable(Verifier(false), PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT), Program.EXIT_CODE_FAILURE_TO_START);
             // The detected-peptide count varies with the search, so the line is matched on either
             // side of it (a string argument ignores the N0 format).
             var stratumLine = string.Format(
@@ -1454,7 +1455,9 @@ namespace pwiz.Osprey.Test
         {
             AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
             AssertHasLine(log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
-            AssertHasLine(log, PathLine(LogKey.ROUTE_SECOND_PASS_FOLD, @"verify=on"));
+            // The default second pass is the transfer, which folds no competition and so has no
+            // verifier; the protein-compact legs check that fold (AssertCompetitionFoldSplit).
+            AssertHasLine(log, PathLine(LogKey.ROUTE_PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_TRANSFER));
             // The library-fragment release ran at both of its points (issue #4532).
             foreach (string scope in new[] { LogKey.SCOPE_RESCORE_GAP_FILL, LogKey.SCOPE_RETAINED_SUMMARY })
             {
@@ -1625,8 +1628,8 @@ namespace pwiz.Osprey.Test
                 // writes the answer for every run (#4665), so a SecondPassFDR node needs no
                 // per-run 1st-pass file.
                 ShipFiles(phase3, phase4Dir, PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, FdrScoresSidecar.EXT));
-                // The decoy side of a competition; the transfer competes nothing and writes none.
-                if (data.Pass2Mode == null)
+                // The decoy side of a competition; the transfer, the default, competes nothing and writes none.
+                if (data.Pass2Mode == OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT)
                     ShipFiles(phase3, phase4Dir, PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, Pass2CompetitionDecoys.EXT));
             }
             ShipFiles(dirPrefix + @"phase2", phase4Dir, OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT),
@@ -1639,7 +1642,7 @@ namespace pwiz.Osprey.Test
             // Every run's per-file worker answer was folded - SecondPassFDR refuses to start
             // otherwise, so the fold line is the evidence it ran. It and the verifier belong to
             // the competition; the transfer fold has neither.
-            if (data.Pass2Mode == null)
+            if (data.Pass2Mode == OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT)
                 AssertCompetitionFoldSplit(data, straightLog, phase4Log);
 
             AssertBlibsEqual(straightBlib, Path.Combine(phase4Dir, BLIB_FILE));
@@ -1941,6 +1944,9 @@ namespace pwiz.Osprey.Test
             foreach (string product in products)
             {
                 string path = Path.Combine(workDir, product);
+                // The competition decoys exist only under protein-compact; the transfer writes none.
+                if (product.EndsWith(Pass2CompetitionDecoys.EXT, StringComparison.Ordinal) && !File.Exists(path))
+                    continue;
                 Assert.IsTrue(File.Exists(path), @"no rescore product to cut: " + path);
                 File.Delete(path);
             }
@@ -2165,9 +2171,9 @@ namespace pwiz.Osprey.Test
         private void AssertKeyChangeRecomputes(string workDir, string expectedBlib)
         {
             string log = RunAnalysis(workDir, DataInputs(),
-                WithVariable(Verifier(true), PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_TRANSFER));
+                WithVariable(Verifier(true), PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
             AssertTasks(log, new[] { PerFileScoringTask.TASK_NAME }, KEYED_TASKS);
-            AssertHasLine(log, PathLine(LogKey.ROUTE_PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_TRANSFER));
+            AssertHasLine(log, PathLine(LogKey.ROUTE_PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
             Assert.IsFalse(OtherBuildWarning(null, null, null).IsMatch(log), log);
 
             log = RunAnalysis(workDir, DataInputs(), Verifier(true));

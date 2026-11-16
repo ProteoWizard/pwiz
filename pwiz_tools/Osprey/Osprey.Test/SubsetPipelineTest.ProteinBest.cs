@@ -87,7 +87,7 @@ namespace pwiz.Osprey.Test
                 AssertProteinBestArms();
                 // The four-task chain under both second-pass modes: the PerFileRescoring nodes
                 // score with the columns FirstPassFDR wrote, shipped to them with the rest.
-                foreach (string pass2Mode in new[] { null, OspreyEnvironment.PASS2_QVALUE_TRANSFER })
+                foreach (string pass2Mode in new[] { null, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT })
                 {
                     AssertHpcChainMatchesStraight(new Subset(_dataDir, LIBRARY_FILE, @"unit", RUN_NAMES, pass2Mode,
                         ProteinBestArm(), ProteinBestArgs(true)), @"protein-best-" + (pass2Mode ?? @"default") + @"-");
@@ -107,7 +107,15 @@ namespace pwiz.Osprey.Test
         private void AssertProteinBestOffIsPreColumnAnalysis()
         {
             string offDir = CreateDir(@"protein-best-pre-column");
-            var variables = new Dictionary<string, string>(Verifier(false)) { [PREFILTER_SIZE] = string.Empty };
+            // With the second-pass defaults the digest was pinned under, before transfer, refit off
+            // and the ratio PEP became the defaults.
+            var variables = new Dictionary<string, string>(Verifier(false))
+            {
+                [PREFILTER_SIZE] = string.Empty,
+                [PASS2_QVALUE] = OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT,
+                [@"OSPREY_RECON_REFIT"] = @"on",
+                [@"OSPREY_PEP_FORMULA"] = @"mixture"
+            };
             string log = RunAnalysis(offDir, DataInputs(), variables);
             AssertProteinBestLogged(log, false, variables);
             Assert.AreEqual(0, ProteinBestColumns(offDir).Length, @"off writes no column");
@@ -211,13 +219,13 @@ namespace pwiz.Osprey.Test
             AssertScoresIdentical(onScores, FirstPassScores(threadDir), @"one thread");
             AssertBlibsEqual(expectedBlib, Path.Combine(threadDir, BLIB_FILE));
 
-            // The transfer second pass: the same first pass, its own complete analysis.
-            string transferDir = CreateDir(@"protein-best-transfer");
-            var transfer = new Dictionary<string, string>(ProteinBestVariables())
-                { [PASS2_QVALUE] = OspreyEnvironment.PASS2_QVALUE_TRANSFER };
-            RunAnalysis(transferDir, DataInputs(), transfer, OnArgs(transferDir));
-            AssertProteinBestAnalysis(transferDir);
-            AssertScoresIdentical(onScores, FirstPassScores(transferDir), @"transfer has the same first pass");
+            // The protein-compact second pass: the same first pass, its own complete analysis.
+            string compactDir = CreateDir(@"protein-best-protein-compact");
+            var compact = new Dictionary<string, string>(ProteinBestVariables())
+                { [PASS2_QVALUE] = OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT };
+            RunAnalysis(compactDir, DataInputs(), compact, OnArgs(compactDir));
+            AssertProteinBestAnalysis(compactDir);
+            AssertScoresIdentical(onScores, FirstPassScores(compactDir), @"protein-compact has the same first pass");
 
             // The developer arm is a different column.
             var other = new Dictionary<string, string>(ProteinBestVariables()) { [PROTEIN_BEST_SHUFFLE] = @"1" };

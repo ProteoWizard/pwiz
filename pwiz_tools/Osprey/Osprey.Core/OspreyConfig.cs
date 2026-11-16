@@ -615,6 +615,7 @@ namespace pwiz.Osprey.Core
             if (!ProteinBestGiven)
                 ProteinBest = defaults.ProteinBest;
             Scoring = OspreyEnvironment.OverrideScoringSettings(defaults.Scoring);
+            RtCalibration.MinRtTolerance = OspreyEnvironment.MinRtTolerance ?? defaults.MinRtTolerance;
             if (mode != ResolutionMode.UnitResolution)
                 return;
             if (!FragmentUnitGiven)
