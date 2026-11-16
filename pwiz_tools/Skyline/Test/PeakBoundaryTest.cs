@@ -190,7 +190,7 @@ namespace pwiz.SkylineTest
                 Assert.AreSame(docNew, docRoundTrip);
 
                 // Test that a line matching more than one molecule is applied to all of them
-                TestDuplicateMolecules(docResults, peakBoundaryFileTsv);
+                TestDuplicateMolecules(docResults, docNew, peakBoundaryFileTsv);
 
 
                 // 1. Empty file - 
@@ -667,19 +667,20 @@ namespace pwiz.SkylineTest
         /// <summary>
         /// A line of the peak boundaries file whose modified sequence matches more than one molecule in the
         /// document has to be applied to every one of them. Builds a document in which every molecule appears
-        /// twice, by importing the document into itself, and checks that both copies get the same boundaries.
+        /// twice, by importing the document into itself, and checks that both copies get the boundaries that
+        /// importing the same file into the original document produced.
         /// </summary>
-        private void TestDuplicateMolecules(SrmDocument docResults, string importFile)
+        private void TestDuplicateMolecules(SrmDocument docResults, SrmDocument docExpected, string importFile)
         {
             var docDuplicated = ImportDocumentIntoItself(docResults);
-            int countGroups = docResults.MoleculeTransitionGroups.Count();
+            var groupsExpected = docExpected.MoleculeTransitionGroups.ToArray();
+            int countGroups = groupsExpected.Length;
             AssertEx.AreEqual(docResults.MoleculeCount * 2, docDuplicated.MoleculeCount);
             AssertEx.AreEqual(countGroups * 2, docDuplicated.MoleculeTransitionGroups.Count());
 
             var docNew = ImportFileToDoc(docDuplicated, ref importFile);
             var groups = docNew.MoleculeTransitionGroups.ToArray();
             AssertEx.AreEqual(countGroups * 2, groups.Length);
-            bool anyBoundarySet = false;
             for (int i = 0; i < countGroups; i++)
             {
                 // The copies were appended after the originals, so they are countGroups apart
@@ -687,20 +688,27 @@ namespace pwiz.SkylineTest
                 var groupCopy = groups[i + countGroups];
                 AssertEx.AreEqual(groupOriginal.TransitionGroup.Peptide.Target, groupCopy.TransitionGroup.Peptide.Target);
                 Assert.AreNotSame(groupOriginal.Id, groupCopy.Id);
-                var chromInfoOriginal = groupOriginal.ChromInfos.ToList()[0];
-                var chromInfoCopy = groupCopy.ChromInfos.ToList()[0];
-                AssertEx.IsTrue(
-                    ApproxEqualNullable(chromInfoOriginal.StartRetentionTime, chromInfoCopy.StartRetentionTime, RT_TOLERANCE),
-                    string.Format("Start time {0} on the duplicate of {1} does not match {2}", chromInfoCopy.StartRetentionTime,
-                        groupOriginal.TransitionGroup.Peptide, chromInfoOriginal.StartRetentionTime));
-                AssertEx.IsTrue(
-                    ApproxEqualNullable(chromInfoOriginal.EndRetentionTime, chromInfoCopy.EndRetentionTime, RT_TOLERANCE),
-                    string.Format("End time {0} on the duplicate of {1} does not match {2}", chromInfoCopy.EndRetentionTime,
-                        groupOriginal.TransitionGroup.Peptide, chromInfoOriginal.EndRetentionTime));
-                anyBoundarySet = anyBoundarySet || chromInfoOriginal.StartRetentionTime.HasValue;
+                AssertSameBoundaries(groupsExpected[i], groupOriginal);
+                AssertSameBoundaries(groupsExpected[i], groupCopy);
             }
-            // Guard against the whole check passing because nothing was imported at all
-            AssertEx.IsTrue(anyBoundarySet, "The import set no peak boundaries");
+        }
+
+        private void AssertSameBoundaries(TransitionGroupDocNode groupExpected, TransitionGroupDocNode groupActual)
+        {
+            var chromInfosExpected = groupExpected.ChromInfos.ToList();
+            var chromInfosActual = groupActual.ChromInfos.ToList();
+            AssertEx.AreEqual(chromInfosExpected.Count, chromInfosActual.Count);
+            for (int i = 0; i < chromInfosExpected.Count; i++)
+            {
+                var expected = chromInfosExpected[i];
+                var actual = chromInfosActual[i];
+                AssertEx.IsTrue(ApproxEqualNullable(expected.StartRetentionTime, actual.StartRetentionTime, RT_TOLERANCE),
+                    string.Format("Start time {0} on {1} in file {2} does not match {3}", actual.StartRetentionTime,
+                        groupActual.TransitionGroup.Peptide, i, expected.StartRetentionTime));
+                AssertEx.IsTrue(ApproxEqualNullable(expected.EndRetentionTime, actual.EndRetentionTime, RT_TOLERANCE),
+                    string.Format("End time {0} on {1} in file {2} does not match {3}", actual.EndRetentionTime,
+                        groupActual.TransitionGroup.Peptide, i, expected.EndRetentionTime));
+            }
         }
 
         /// <summary>
@@ -714,12 +722,10 @@ namespace pwiz.SkylineTest
             {
                 doc.Serialize(writer, null, SkylineVersion.CURRENT, null);
             }
-            using (var reader = new StringReader(sb.ToString()))
-            {
-                return doc.ImportDocumentXml(reader, null, MeasuredResults.MergeAction.merge_names, false,
-                    null, Settings.Default.StaticModList, Settings.Default.HeavyModList, null,
-                    out _, out _, false);
-            }
+            using var reader = new StringReader(sb.ToString());
+            return doc.ImportDocumentXml(reader, null, MeasuredResults.MergeAction.merge_names, false,
+                null, Settings.Default.StaticModList, Settings.Default.HeavyModList, null,
+                out _, out _, false);
         }
 
         private PeakBoundaryImporter DoImport(SrmDocument docResults, string importText,
