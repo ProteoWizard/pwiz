@@ -43,6 +43,8 @@ namespace pwiz.Skyline.Model
 
         private readonly object _statusLock;
         private MultiProgressStatus _status;
+        // Notices already written during the current import, guarded by _statusLock
+        private readonly HashSet<string> _importNotices;
 
         public MultiFileLoader(bool synchronousMode)
         {
@@ -50,6 +52,7 @@ namespace pwiz.Skyline.Model
             _loadingPaths = new Dictionary<MsDataFileUri, int>();
             _synchronousMode = synchronousMode;
             _statusLock = new object();
+            _importNotices = new HashSet<string>();
             ResetStatus();
         }
 
@@ -77,7 +80,24 @@ namespace pwiz.Skyline.Model
 
         public void ResetStatus()
         {
-            ChangeStatus(s => new MultiProgressStatus(_synchronousMode));
+            lock (_statusLock)
+            {
+                // The status resets when no files remain loading, which ends the import
+                _importNotices.Clear();
+                ChangeStatus(s => new MultiProgressStatus(_synchronousMode));
+            }
+        }
+
+        /// <summary>
+        /// Returns true the first time a notice is offered during an import, and false after
+        /// that until the import ends, so that a notice every file reaches is written once.
+        /// </summary>
+        public bool IsFirstImportNotice(string notice)
+        {
+            lock (_statusLock)
+            {
+                return _importNotices.Add(notice);
+            }
         }
 
         private MultiProgressStatus ChangeStatus(Func<MultiProgressStatus, MultiProgressStatus> change)
@@ -426,6 +446,11 @@ namespace pwiz.Skyline.Model
             return IsCanceledItem(filePath);
         }
 
+        public bool IsFirstImportNotice(string notice)
+        {
+            return _chromatogramManager.IsFirstImportNotice(notice);
+        }
+
         public int DocumentChangeCount
         {
             get { return _chromatogramManager.DocumentChangeCount; }
@@ -486,6 +511,14 @@ namespace pwiz.Skyline.Model
         public override UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
             return _loadMonitor.UpdateProgress(status);
+        }
+
+        /// <summary>
+        /// True if no other file in the same import has already written this notice.
+        /// </summary>
+        public bool IsFirstImportNotice(string notice)
+        {
+            return _loadMonitor.IsFirstImportNotice(notice);
         }
     }
 }

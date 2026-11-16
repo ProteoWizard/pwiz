@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using pwiz.Common.SystemUtil;
@@ -61,25 +60,6 @@ namespace pwiz.SkylineTest
                 "This line is unaffected and should be written as is."
             };
             CollectionAssert.AreEqual(expectedOutput, capture.CapturedMessages);
-        }
-    }
-
-    public class UserMessageCapture : IDisposable
-    {
-        private Action<string, object[]> _originalWriteUserMessage;
-        
-        public UserMessageCapture()
-        {
-            _originalWriteUserMessage = Messages.WriteUserMessage; // Save the original delegate
-            CapturedMessages = new List<string>();
-            Messages.WriteUserMessage = (message, args) => CapturedMessages.Add(string.Format(message, args));
-        }
-        
-        public List<string> CapturedMessages { get; private set; }
-
-        public void Dispose()
-        {
-            Messages.WriteUserMessage = _originalWriteUserMessage;
         }
     }
 }
