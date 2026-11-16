@@ -214,20 +214,33 @@ namespace pwiz.Skyline
                 {
                     Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
 
-                    if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT))
-                    {
-                        OpenSharedFile(dlg.FileName);
-                    }
-                    else if (dlg.FileName.EndsWith(SkypFile.EXT))
-                    {
-                        OpenSkypFile(dlg.FileName, this);
-                    }
-                    else
-                    {
-                        OpenFile(dlg.FileName);
-                    }
+                    OpenDocumentFilePath(dlg.FileName, this);
                 }
             }
+        }
+
+        /// <summary>
+        /// Opens a file path that points to a document. Decides whether to call OpenSharedFile, OpenSkypFile,
+        /// or OpenFile based on the file extension and/or its first few bytes.
+        /// </summary>
+        public bool OpenDocumentFilePath(string path, FormEx parentWindow = null)
+        {
+            if (path.EndsWith(SrmDocumentSharing.EXT))
+                return OpenSharedFile(path, parentWindow);
+            if (path.EndsWith(SkypFile.EXT))
+                return OpenSkypFile(path, parentWindow);
+
+            // A fairly common support question is "why won't this Skyline file open?" when they are actually
+            // trying to open a .skyd file or somesuch.  Probably an artifact of Windows hiding file extensions.
+            // Try to work around it by finding a plausible matching .sky file when asked to open a .sky? file.
+            if (!path.EndsWith(SrmDocument.EXT) && !SrmDocument.IsSkylineFile(path, out _)) // Tolerate rename, eg foo.ski
+            {
+                path = SrmDocument.FindSiblingSkylineFile(path);
+            }
+
+            if (SrmDocumentSharing.IsZipFile(path))
+                return OpenSharedFile(path, parentWindow);
+            return OpenFile(path, parentWindow);
         }
 
         public bool OpenSharedFile(string zipPath, FormEx parentWindow = null)
@@ -314,14 +327,6 @@ namespace pwiz.Skyline
 
             Exception exception = null;
             SrmDocument document = null;
-
-            // A fairly common support question is "why won't this Skyline file open?" when they are actually
-            // trying to open a .skyd file or somesuch.  Probably an artifact of Windows hiding file extensions.
-            // Try to work around it by finding a plausible matching .sky file when asked to open a .sky? file.
-            if (!path.EndsWith(SrmDocument.EXT) && !SrmDocument.IsSkylineFile(path, out _)) // Tolerate rename, eg foo.ski
-            {
-                path = SrmDocument.FindSiblingSkylineFile(path);
-            }
 
             try
             {
