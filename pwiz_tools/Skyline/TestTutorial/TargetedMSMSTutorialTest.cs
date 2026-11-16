@@ -49,6 +49,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
 
 
 namespace pwiz.SkylineTestTutorial
@@ -1382,7 +1383,9 @@ namespace pwiz.SkylineTestTutorial
         {
             // Initializing localized expected values
             var asSmallMolecules = AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none;
-            var mzObserved = (951.6229f).ToString(Formats.Mz, CultureInfo.CurrentCulture);
+            const float mzPeak = 951.6229f;
+            const float intensityPeak = 3814516;
+            var mzObserved = mzPeak.ToString(Formats.Mz, CultureInfo.CurrentCulture);
             var mzMatched = (951.4782f).ToString(Formats.Mz, CultureInfo.CurrentCulture);
             var massError = -152.1f;
             var massErrorString = string.Format(CultureInfo.CurrentCulture, Resources.GraphSpectrum_MassErrorFormat_ppm, (massError > 0 ? @"+" : string.Empty), massError);
@@ -1392,11 +1395,27 @@ namespace pwiz.SkylineTestTutorial
                              $"{GraphsResources.GraphSpectrum_ToolTip_Rank}\t1\n"+
                              $"{GraphsResources.GraphSpectrum_ToolTip_MatchedIons}\t{GraphsResources.ToolTipImplementation_RenderTip_Calculated_Mass}\n"+
                              $"{fragName}\t{mzMatched}  {massErrorString}";
+            // Hover points come from the y8 peak's data coordinates, since pixel positions change with DPI
+            Point labelPoint = Point.Empty, stickPoint = Point.Empty, abovePoint = Point.Empty;
+            RunUI(() =>
+            {
+                var pane = SkylineWindow.GraphSpectrum.ZedGraphControl.GraphPane;
+                var label = pane.GraphObjList.OfType<TextObj>().FirstOrDefault(t => Math.Abs(t.Location.X - mzPeak) < 0.001);
+                Assert.IsNotNull(label);
+                using (var g = SkylineWindow.GraphSpectrum.ZedGraphControl.CreateGraphics())
+                {
+                    var labelRect = pane.GetRectScreen(label, g);
+                    labelPoint = Point.Round(new PointF(labelRect.X + labelRect.Width / 2, labelRect.Y + labelRect.Height / 2));
+                }
+                stickPoint = Point.Round(pane.GeneralTransform(new PointF(mzPeak, intensityPeak / 2), CoordType.AxisXYScale));
+                // Above the chart rectangle, where there are no peaks or labels
+                abovePoint = new Point(stickPoint.X, (int)(pane.Rect.Top + pane.Chart.Rect.Top) / 2);
+            });
             var testData = new Dictionary<Point, string>()
             {
-                {new Point(191, 95), testString},
-                {new Point(169, 175), testString},
-                {new Point(190, 5), null}, // No peak here
+                {labelPoint, testString},
+                {stickPoint, testString},
+                {abovePoint, null}, // No peak here
             };
 
             foreach (var testPoint in testData)

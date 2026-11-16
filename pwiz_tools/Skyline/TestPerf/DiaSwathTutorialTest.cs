@@ -1431,17 +1431,6 @@ namespace TestPerf
             }
         }
 
-        private static Bitmap ClipDockingRect(Bitmap bmp, Rectangle rectFrame)
-        {
-            const int hBorder = 20;
-            const int topBorder = 100;
-            const int bottomBorder = 10;
-            var rectClip = new Rectangle(rectFrame.X - hBorder, rectFrame.Y - topBorder, rectFrame.Width + hBorder * 2,
-                rectFrame.Height + topBorder + bottomBorder);
-            bmp = ClipBitmap(bmp, rectClip);
-            return bmp;
-        }
-
         private void RunQValueSummaryTest()
         {
             if (!IsTtof || _analysisValues.IsWholeProteome)

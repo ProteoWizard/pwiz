@@ -946,17 +946,6 @@ namespace TestPerf
                 FileEx.SafeDelete(file);
         }
 
-        private static Bitmap ClipDockingRect(Bitmap bmp, Rectangle rectFrame)
-        {
-            const int hBorder = 20;
-            const int topBorder = 100;
-            const int bottomBorder = 10;
-            var rectClip = new Rectangle(rectFrame.X - hBorder, rectFrame.Y - topBorder, rectFrame.Width + hBorder * 2,
-                rectFrame.Height + topBorder + bottomBorder);
-            bmp = ClipBitmap(bmp, rectClip);
-            return bmp;
-        }
-
         private void PrintAnalysisSettingsAndResultSummary(IDictionary<string, object> diaUmpireParameters, SearchSettingsControl.DdaSearchSettings searchSettings, AnalysisValues analysisValues)
         {
             var interestingParameters = new List<string>();

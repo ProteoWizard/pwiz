@@ -1839,6 +1839,20 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// Clips a screen shot to a floating docking window's screen bounds, with room above
+        /// it for the docking indicators.
+        /// </summary>
+        protected static Bitmap ClipDockingRect(Bitmap bmp, Rectangle rectFrame)
+        {
+            int hBorder = Scaled(20);
+            int topBorder = Scaled(100);
+            int bottomBorder = Scaled(10);
+            var rectClip = new Rectangle(rectFrame.X - hBorder, rectFrame.Y - topBorder, rectFrame.Width + hBorder * 2,
+                rectFrame.Height + topBorder + bottomBorder);
+            return ClipBitmap(bmp, rectClip);
+        }
+
+        /// <summary>
         /// Returns a function which clips out the rectangle of a control from its parent form's rectangle.
         /// </summary>
         public Func<Bitmap, Bitmap> ClipControl(Control control)
