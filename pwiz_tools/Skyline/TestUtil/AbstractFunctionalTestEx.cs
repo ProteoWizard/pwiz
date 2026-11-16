@@ -627,6 +627,8 @@ namespace pwiz.SkylineTestUtil
         {
             AssertEx.IsTrue(graphChromatogram.IsOverFullScanPoint(x, y, paneKey),
                 string.Format("No full-scan point near ({0}, {1})", x, y));
+            AssertEx.IsFalse(graphChromatogram.IsOverLabel(x, y, paneKey),
+                string.Format("({0}, {1}) is on a label, which hides the full-scan point", x, y));
             graphChromatogram.TestMouseMove(x, y, paneKey);
         }
 

@@ -3811,6 +3811,16 @@ namespace pwiz.Skyline.Controls.Graphs
             return FindFullScanPoint(mouse) != null;
         }
 
+        /// <summary>
+        /// True if the point is on a label, where a press does not select a full scan.
+        /// </summary>
+        public bool IsOverLabel(double x, double y, PaneKey? paneKey)
+        {
+            var mouse = TransformCoordinates(x, y, paneKey);
+            using var g = CreateGraphics();
+            return FindNearestObject(mouse, g, out _, out var nearest) && nearest is TextObj;
+        }
+
         public void TestMouseDown(double x, double y, PaneKey? paneKey)
         {
             var mouse = TransformCoordinates(x, y, paneKey);

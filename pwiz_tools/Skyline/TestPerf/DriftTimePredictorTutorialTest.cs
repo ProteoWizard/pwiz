@@ -244,8 +244,10 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 PauseForFullScanGraphScreenShot("Full scan unzoomed 3D MS1 graph");
 
                 const double clickTime2 = 41.02;
+                // Below the apex, which lies at the bottom edge of the peak label, where the press would hit the label
+                const double clickIntensity2 = 5.5E+4;
                 RunUI(() => fullScanGraph.SetZoom(true));
-                ClickChromatogram(clickTime2, 5.8E+4, PaneKey.PRODUCTS);
+                ClickChromatogram(clickTime2, clickIntensity2, PaneKey.PRODUCTS);
                 PauseForFullScanGraphScreenShot("Full scan 3D MS/MS graph");
                 ValidateClickTime(fullScanGraph, clickTime2);
 
@@ -270,7 +272,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                     RenameReplicate(manageResultsDlg, 1, "Yeast_BSA");
                     OkDialog(manageResultsDlg, manageResultsDlg.OkDialog);
 
-                    ClickChromatogram(clickTime2, 5.8E+4, PaneKey.PRODUCTS);
+                    ClickChromatogram(clickTime2, clickIntensity2, PaneKey.PRODUCTS);
 
                     fullScanGraph = FindOpenForm<GraphFullScan>();
                     RunUI(() =>
