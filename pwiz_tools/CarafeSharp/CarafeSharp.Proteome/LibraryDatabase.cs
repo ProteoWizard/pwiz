@@ -52,7 +52,7 @@ namespace pwiz.CarafeSharp.Proteome
                 proteins.Add(JavaText.StripTerminalAsterisks(record.Sequence));
             }
             var peptides = new HashSet<string>(StringComparer.Ordinal);
-            using (var progress = new ProgressReporter(@"Digesting proteins", proteins.Count))
+            ProgressReporter.Run(@"Digesting proteins", proteins.Count, progress =>
             {
                 int digested = 0;
                 foreach (string protein in proteins)
@@ -64,7 +64,7 @@ namespace pwiz.CarafeSharp.Proteome
                     }
                     progress.Report(++digested);
                 }
-            }
+            });
             log?.Invoke(string.Format(@"Protein sequences:{0}, total unique peptide sequences:{1}", records, peptides.Count));
             return peptides;
         }

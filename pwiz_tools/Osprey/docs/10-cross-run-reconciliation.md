@@ -101,7 +101,6 @@ The refit configuration (`CalibrationRefit.cs:92-98`):
 - `Bandwidth = 0.3`
 - `OutlierRetention = 1.0` — outlier removal disabled (these are FDR-controlled detections; LOESS robustness iterations still downweight stragglers)
 - `MinPoints = MIN_CONSENSUS_POINTS = 20`
-- `ClassicalRobustIterations = OspreyEnvironment.LoessClassicalRobust` — mirrors the Stage 4 initial calibration so refit fitted values stay cross-impl identical
 
 If fewer than 20 consensus points exist for a run, or the fit throws, `Refit` returns null and that run falls back to its original first-pass calibration (`CalibrationRefit.cs:81-82, 104-110`; consumed in `RunReconciliationPlanner.PlanRun` and `ReconciliationPlanner.cs:156-157`).
 
@@ -223,7 +222,6 @@ The plan (`format_version = 4`) carries the validity stamp, the non-Keep actions
 | `--reconciliation-compaction-fdr <threshold>` (`OspreyCommandArgs.cs:116-117`) | `0.01` | Peptide-q gate for first-pass compaction, which sets the pool reconciliation operates on. Loosen (e.g. 0.05) to broaden the reconciliation pool. Not the consensus gate itself. |
 | `--protein-fdr <threshold>` (`config.EffectiveProteinFdr`, passed in `Stage6Planner.ScanFiles`) | protein machinery always runs; threshold 0.01 | Enables the Step 1 protein-rescue branch for borderline peptide-level evidence. When 0 / disabled, the rescue branch is off (`ConsensusRts.cs:249`). |
 | `--experiment-fdr <threshold>` | `0.01` | The second-pass (Stage 7) experiment FDR threshold; not consumed by planning itself. |
-| `OspreyEnvironment.LoessClassicalRobust` (`CalibrationRefit.cs:97`) | `true` | Must match Stage 4 initial calibration; drives refit robustness iterations for cross-impl parity. |
 | `OSPREY_DUMP_INV_PREDICT` (+ `_ONLY`) | off | Diagnostic: dumps one `InvPredictRecord` per consensus detection (apex_rt, library_rt, weight) for cross-impl bisection (`Stage6Planner.BuildConsensus`). |
 | `OSPREY_DUMP_CONSENSUS` (+ `_ONLY`) | off | Stage 6 cross-impl bisection dump of the consensus RT table (`Stage6Planner.BuildConsensus`, in FirstPassFDR). `OSPREY_DUMP_RECONCILIATION` and `OSPREY_DUMP_MULTICHARGE` (+ `_ONLY`) are Rust-only: removed from C# on 2026-10-11 (each held or pulled every run's entries at once (O(files x entries)) only to serve a diagnostic). `OSPREY_DUMP_REFIT` and `OSPREY_DUMP_LOESS_FIT` (+ `_ONLY`) are Rust-only too: removed from C# on 2026-10-16 (each wrote every run's refit at once; each run's refit is now in its own `<stem>.reconciliation.json` as `refined_rt_calibration`). Setting a removed name fails at startup like any unknown `OSPREY_*` name. |
 | `OSPREY_TRACE_PEPTIDE` | off | Per-peptide trace through consensus, planning, and gap-fill (18-peptide-trace.md). |

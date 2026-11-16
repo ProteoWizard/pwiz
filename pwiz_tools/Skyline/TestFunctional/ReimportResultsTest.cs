@@ -151,6 +151,38 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(peak2.Item2, transitionChromInfo.EndRetentionTime, deltaRetentionTime);
             Assert.AreEqual(expectedReimportedArea2 + expectedReimportedBackground2, transitionChromInfo.Area, 50);
             Assert.AreEqual(0, transitionChromInfo.BackgroundArea);
+
+            // A Rescore must replace NaN peak shape values on a user-set peak even though the rest of the peak comes out the same.
+            var transitionPath = SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Transitions, 0);
+            var expectedPeakShapeValues = SkylineWindow.Document.MoleculeTransitions.First().Results[0].First().PeakShapeValues;
+            Assert.IsNotNull(expectedPeakShapeValues);
+            RunUI(() => SkylineWindow.ModifyDocument(@"Set NaN peak shape values", document =>
+            {
+                var nodeTran = (TransitionDocNode) document.FindNode(transitionPath);
+                var results = new Results<TransitionChromInfo>(nodeTran.Results.Select(chromInfos =>
+                    new ChromInfoList<TransitionChromInfo>(chromInfos.Select(WithNaNPeakShapeValues))).ToList());
+                return (SrmDocument) document.ReplaceChild(transitionPath.Parent, nodeTran.ChangeResults(results));
+            }));
+            transitionChromInfo = SkylineWindow.Document.MoleculeTransitions.First().Results[0].First();
+            Assert.IsTrue(float.IsNaN(transitionChromInfo.PeakShapeValues.Value.ShapeCorrelation));
+
+            manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
+            doc = SkylineWindow.Document;
+            RunDlg<RescoreResultsDlg>(manageResultsDlg.Rescore, dlg => dlg.Rescore(false));
+            WaitForDocumentChangeLoaded(doc);
+            transitionChromInfo = SkylineWindow.Document.MoleculeTransitions.First().Results[0].First();
+            Assert.AreEqual(UserSet.TRUE, transitionChromInfo.UserSet);
+            Assert.AreEqual(expectedPeakShapeValues, transitionChromInfo.PeakShapeValues);
+        }
+
+        private static TransitionChromInfo WithNaNPeakShapeValues(TransitionChromInfo chromInfo)
+        {
+            return new TransitionChromInfo(chromInfo.FileId, chromInfo.OptimizationStep, chromInfo.MassError,
+                chromInfo.RetentionTime, chromInfo.StartRetentionTime, chromInfo.EndRetentionTime,
+                chromInfo.IonMobility, chromInfo.Area, chromInfo.BackgroundArea, chromInfo.Height, chromInfo.Fwhm,
+                chromInfo.IsFwhmDegenerate, chromInfo.IsTruncated, chromInfo.PointsAcrossPeak, chromInfo.Identified,
+                chromInfo.Rank, chromInfo.RankByLevel, chromInfo.Annotations, chromInfo.UserSet,
+                chromInfo.IsForcedIntegration, new PeakShapeValues(float.NaN, float.NaN, float.NaN, float.NaN));
         }
 
         private static Tuple<double, double> ChangePeakBounds(GraphChromatogram graphChromatogram, double startTime, double endTime)

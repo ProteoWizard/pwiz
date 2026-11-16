@@ -1,8 +1,8 @@
 @echo off
 REM Regenerates Google.Protobuf C# code from the .proto files in this directory.
 REM Mirrors pwiz_tools/Skyline/ProtocolBuffers/generatecode.bat: reuse Skyline's
-REM checked-in protoc.exe 3.8.0 so the generated C# stays compatible with the matching
-REM Google.Protobuf.dll 3.7.0 in pwiz_tools/Shared/Lib.
+REM checked-in protoc.exe 3.8.0, whose generated C# the Google.Protobuf package
+REM referenced by UNIFI.csproj and Skyline.csproj still supports.
 REM
 REM Run by hand after editing unifi.proto or waters_connect.proto. Output lands in
 REM GeneratedCode/ and is committed alongside the .proto sources.

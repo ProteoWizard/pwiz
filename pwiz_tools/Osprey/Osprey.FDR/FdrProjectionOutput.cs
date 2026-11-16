@@ -183,7 +183,7 @@ namespace pwiz.Osprey.FDR
     }
 
     /// <summary>
-    /// Output sink of the streaming first pass (<c>PercolatorScorer.RunStreamingFirstPass</c>).
+    /// Output sink of the streaming first pass (<c>PercolatorEngine.RunStreamingFirstPass</c>).
     /// It receives the pass's output at the granularity each part actually has, rather than one
     /// call per row carrying all of it:
     /// <list type="bullet">

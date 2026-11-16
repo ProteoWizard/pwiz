@@ -192,7 +192,6 @@ namespace pwiz.Osprey.Test
                 BoundaryEndRatioMedian = 0.2,
                 NCoelutingClaimants = 3,
                 NSameApexClaimants = 1,
-                DdcNeighborCount = 0,
                 IonMz = Enumerable.Range(0, n).Select(i => 100.0 + i * 0.5).ToArray(),
                 IonFlags = Enumerable.Range(0, n).Select(i => (byte)(i % 256)).ToArray(),
                 ApexIntensity = F(1),

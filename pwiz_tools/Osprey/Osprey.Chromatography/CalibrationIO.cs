@@ -26,6 +26,7 @@ using System.IO;
 using Newtonsoft.Json;
 using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Chromatography
 {
@@ -51,7 +52,10 @@ namespace pwiz.Osprey.Chromatography
                 throw new ArgumentException(@"path must not be null or empty", nameof(path));
             calibration.OspreyValidity = stamp?.ToString() ?? throw new ArgumentNullException(nameof(stamp));
 
-            string json = JsonConvert.SerializeObject(calibration, Formatting.Indented);
+            // Newtonsoft indents with the platform line ending; the file is LF on every platform,
+            // so a Windows run and a Linux run of one search write the same bytes.
+            string json = JsonConvert.SerializeObject(calibration, Formatting.Indented)
+                .Replace(TextUtil.CRLF, TextUtil.LF);
             using (var saver = new SimpleFileSaver(path))
             {
                 File.WriteAllText(saver.SafeName, json);

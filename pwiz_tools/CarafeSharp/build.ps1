@@ -18,7 +18,10 @@
     them does not rebuild the other.
 
     Tests read their reference data from <Downloads>/Perftests (or %CARAFESHARP_TESTDATA%);
-    see docs/04-testing.md. Without the data, data-dependent tests report Inconclusive.
+    see docs/04-testing.md. The default pass reads none: its parity tests run on the committed
+    subsets, and the full-size comparisons are the FullParity and Astral categories, which
+    scripts/Compare-CarafeParity.ps1 runs. A data-dependent test run without its data reports
+    Inconclusive.
     -TestData Fetch downloads and extracts the packages a run needs; -TestData Verify checks
     them file by file.
 
@@ -39,8 +42,9 @@
 
 .PARAMETER TestCategory
     Run only this test category (for example Astral or Cuda). By default the CPU build runs
-    every test except the Cuda, Astral and Regression categories, and the CUDA build runs the
-    Cuda category with a GPU required. Regression is the golden comparator regression.ps1 runs.
+    every test except the Cuda, Astral, Regression and FullParity categories, and the CUDA build
+    runs the Cuda category with a GPU required. Regression is the golden comparator regression.ps1
+    runs; FullParity and Astral are the full-size Carafe comparisons scripts/Compare-CarafeParity.ps1 runs.
 
 .PARAMETER RequireData
     Fail when any test did not run to a pass or fail (NotExecuted or Inconclusive), which is
@@ -77,7 +81,7 @@
 .EXAMPLE
     ./build.ps1 -NoBuild -TestCategory Astral  # the Astral parity tests on the existing build
 .EXAMPLE
-    ./build.ps1 -TestData Fetch -RequireData   # fetch the test data, then build and run every test
+    ./build.ps1 -NoTests -TestData Fetch       # build, and fetch the Stellar packages (regression.ps1, the parity script)
 .EXAMPLE
     ./build.ps1 -NoBuild -NoTests -TestData Verify -TestDataPackage all  # check every package
 #>
@@ -94,7 +98,10 @@ param(
     [switch]$Coverage,
     [switch]$TeamCity,
     [ValidateSet('quiet', 'minimal', 'normal', 'detailed', 'diagnostic')]
-    [string]$Verbosity = 'minimal'
+    [string]$Verbosity = 'minimal',
+    # Also log every restore and build warning to this file (appended), for Osprey's
+    # tcinspect.ps1 to judge. Osprey's tcbuild.bat passes it.
+    [string]$BuildWarningsPath
 )
 
 $ErrorActionPreference = 'Stop'
@@ -224,7 +231,12 @@ if ($TestData) {
 if (-not $NoBuild) {
     Write-Step "Building CarafeSharp.sln ($Configuration|$platform, libtorch $Torch)"
     $buildStart = Get-Date
-    & dotnet build $sln -c $Configuration "-p:Platform=$platform" "-p:CarafeSharpTorch=$Torch" "-v:$Verbosity" -nologo
+    $warningsLogger = @()
+    if ($BuildWarningsPath) {
+        Import-Module (Join-Path $scriptRoot '..\..\scripts\BuildWarnings.psm1') -Force
+        $warningsLogger = Get-BuildWarningsLoggerArgs $BuildWarningsPath
+    }
+    & dotnet build $sln -c $Configuration "-p:Platform=$platform" "-p:CarafeSharpTorch=$Torch" "-v:$Verbosity" -nologo @warningsLogger
     if ($LASTEXITCODE -ne 0) {
         Stop-WithProblem "Build failed (exit $LASTEXITCODE)" $LASTEXITCODE
     }
@@ -254,8 +266,9 @@ if ($TestCategory) {
 } elseif ($Torch -eq 'cuda') {
     $filters += 'TestCategory=Cuda'
 } else {
-    # Regression is the golden comparator, which regression.ps1 runs on a run folder.
-    $filters += 'TestCategory!=Cuda', 'TestCategory!=Astral', 'TestCategory!=Regression'
+    # Regression is the golden comparator, which regression.ps1 runs on a run folder, and
+    # FullParity the full-size Carafe comparisons, which scripts/Compare-CarafeParity.ps1 runs.
+    $filters += 'TestCategory!=Cuda', 'TestCategory!=Astral', 'TestCategory!=Regression', 'TestCategory!=FullParity'
 }
 if ($TestName) {
     $filters += "FullyQualifiedName~$TestName"

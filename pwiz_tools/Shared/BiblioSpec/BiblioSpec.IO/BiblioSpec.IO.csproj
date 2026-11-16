@@ -16,7 +16,9 @@
        process wrapper: the BlibBuild / BlibFilter runners Skyline uses are the sibling
        BiblioSpecUtil project. Depends on CommonUtil (the atomic file writer), System.Data.SQLite
        and Ionic.Zlib (PROdotnetzip, whose deflate bytes are stock zlib's, as Skyline's own writer
-       and Rust osprey's produce), at the versions Skyline, Osprey and CarafeSharp already carry. -->
+       and Rust osprey's produce), at the versions Skyline, Osprey and CarafeSharp already carry.
+       Also home to the DIA-NN library .parquet column reader (DiannLibraryParquetReader), the
+       one input format BiblioSpec's port and Osprey both read, so it has one definition. -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
@@ -28,6 +30,11 @@
     <Company>University of Washington</Company>
     <Product>BiblioSpec</Product>
     <Copyright>Copyright (c) University of Washington 2026</Copyright>
+    <!-- Parquet.Net, as pwiz's patched build (see ..\..\Lib\Parquet\ParquetNet.targets), for
+         DiannLibraryParquetReader: the DIA-NN library .parquet columns BiblioSpec's
+         DiaNNSpecLibReader and Osprey's library loader both read. Every consumer of this
+         project already deploys the same Parquet.dll. -->
+    <ReferenceParquetNet>true</ReferenceParquetNet>
   </PropertyGroup>
 
   <ItemGroup>

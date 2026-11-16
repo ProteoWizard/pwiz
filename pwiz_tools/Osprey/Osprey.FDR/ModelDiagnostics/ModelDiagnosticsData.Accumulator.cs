@@ -104,6 +104,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             private readonly CrossRunStream _expStream;
             private readonly CrossRunStream _entRunStream;
             private readonly CrossRunStream _entExpStream;
+            // Decoys under the same two gates (#4489), for the decoy-based per-k FDP. Run-count
+            // tallies only (no union / intersection): O(distinct decoys that pass in ANY run).
+            // Per-run null passes are largely fresh in each run, so that grows with the run
+            // count, bounded by the decoy library - the same bound the target tallies have.
+            private readonly CrossRunStream _decRunStream;
+            private readonly CrossRunStream _decExpStream;
             private bool _anyEntrapment;
 
             // Win fraction: base_id -> [best target score, best decoy score] + target-side class
@@ -159,6 +165,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 _expStream = new CrossRunStream(_nFiles);
                 _entRunStream = new CrossRunStream(_nFiles);
                 _entExpStream = new CrossRunStream(_nFiles);
+                _decRunStream = new CrossRunStream(_nFiles, true);
+                _decExpStream = new CrossRunStream(_nFiles, true);
             }
 
             /// <summary>
@@ -256,6 +264,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 private readonly HashSet<string> _expKeys = new HashSet<string>(StringComparer.Ordinal);
                 private readonly HashSet<string> _entRunKeys = new HashSet<string>(StringComparer.Ordinal);
                 private readonly HashSet<string> _entExpKeys = new HashSet<string>(StringComparer.Ordinal);
+                private readonly HashSet<string> _decRunKeys = new HashSet<string>(StringComparer.Ordinal);
+                private readonly HashSet<string> _decExpKeys = new HashSet<string>(StringComparer.Ordinal);
                 private readonly Dictionary<uint, double[]> _bt = new Dictionary<uint, double[]>();
                 private readonly Dictionary<uint, EntrapmentClass> _tClass = new Dictionary<uint, EntrapmentClass>();
                 // Pass 1 only: the precursor's first-seen entrapment flag and lowest experiment q,
@@ -329,9 +339,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         && pcls == EntrapmentClass.PTarget;
                     if (q.EffectiveRunQvalue(owner._fdrLevel) <= owner._runFdr)
                     {
+                        bool expOk = q.EffectiveExperimentQvalue(owner._fdrLevel) <= owner._runFdr;
                         if (isDecoy)
                         {
                             _decoys++;
+                            _decRunKeys.Add(key);
+                            if (expOk)
+                                _decExpKeys.Add(key);
                         }
                         else
                         {
@@ -340,7 +354,6 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                             else
                                 _targets++;
 
-                            bool expOk = q.EffectiveExperimentQvalue(owner._fdrLevel) <= owner._runFdr;
                             if (isEntrap)
                             {
                                 _entRunKeys.Add(key);
@@ -444,6 +457,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     acc._expStream.AddFile(FileIdx, _expKeys);
                     acc._entRunStream.AddFile(FileIdx, _entRunKeys);
                     acc._entExpStream.AddFile(FileIdx, _entExpKeys);
+                    acc._decRunStream.AddFile(FileIdx, _decRunKeys);
+                    acc._decExpStream.AddFile(FileIdx, _decExpKeys);
                     if (_entRunKeys.Count > 0)
                         acc._anyEntrapment = true;
 
@@ -559,12 +574,14 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 _expStream.Finish();
                 _entRunStream.Finish();
                 _entExpStream.Finish();
+                _decRunStream.Finish();
+                _decExpStream.Finish();
 
                 data.CrossRun = new CrossRunDetection
                 {
                     RunNames = _runNames,
-                    PerRun = ComputeCrossRunView(_runStream, _anyEntrapment ? _entRunStream : null, _nFiles, r),
-                    Experiment = ComputeCrossRunView(_expStream, _anyEntrapment ? _entExpStream : null, _nFiles, r),
+                    PerRun = ComputeCrossRunView(_runStream, _anyEntrapment ? _entRunStream : null, _decRunStream, _nFiles, r),
+                    Experiment = ComputeCrossRunView(_expStream, _anyEntrapment ? _entExpStream : null, _decExpStream, _nFiles, r),
                 };
 
                 data.WinFraction = BuildWinFractionFromReduced(_bt, _tClass);
@@ -647,12 +664,14 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 _expStream.Finish();
                 _entRunStream.Finish();
                 _entExpStream.Finish();
-                pass2.CrossRun = new CrossRunDetection
+                _decRunStream.Finish();
+                _decExpStream.Finish();
+                pass2.CrossRun = WithoutDecoyFdp(new CrossRunDetection
                 {
                     RunNames = _runNames,
-                    PerRun = ComputeCrossRunView(_runStream, _anyEntrapment ? _entRunStream : null, _nFiles, r),
-                    Experiment = ComputeCrossRunView(_expStream, _anyEntrapment ? _entExpStream : null, _nFiles, r),
-                };
+                    PerRun = ComputeCrossRunView(_runStream, _anyEntrapment ? _entRunStream : null, _decRunStream, _nFiles, r),
+                    Experiment = ComputeCrossRunView(_expStream, _anyEntrapment ? _entExpStream : null, _decExpStream, _nFiles, r),
+                });
 
                 pass2.FdpViews = BuildPass2FdpViews(precs, _entrapmentRatio);
                 pass2.CoAssignment = coAssignment;
@@ -710,10 +729,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 // seed: the intersection starts as run 0's set, not as the empty set.
                 private HashSet<string> _inter;
                 private int _curFile = -1;
+                // Keeps only the per-key run-count tally (and the per-run count): no union or
+                // intersection, whose arrays stay zero. For a series read only through
+                // RunCount - the decoys - the union would duplicate every key the tally holds.
+                private readonly bool _runCountOnly;
 
-                internal CrossRunStream(int nFiles)
+                internal CrossRunStream(int nFiles, bool runCountOnly = false)
                 {
                     _nFiles = nFiles;
+                    _runCountOnly = runCountOnly;
                     PerRunCount = new int[nFiles];
                     CumUnion = new int[nFiles];
                     CumIntersection = new int[nFiles];
@@ -761,13 +785,16 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     for (int i = Math.Max(_curFile, 0); i < target && i < _nFiles; i++)
                     {
                         PerRunCount[i] = _current.Count;
-                        _union.UnionWith(_current);
-                        CumUnion[i] = _union.Count;
-                        if (_inter == null)
-                            _inter = new HashSet<string>(_current, StringComparer.Ordinal);
-                        else
-                            _inter.IntersectWith(_current);
-                        CumIntersection[i] = _inter.Count;
+                        if (!_runCountOnly)
+                        {
+                            _union.UnionWith(_current);
+                            CumUnion[i] = _union.Count;
+                            if (_inter == null)
+                                _inter = new HashSet<string>(_current, StringComparer.Ordinal);
+                            else
+                                _inter.IntersectWith(_current);
+                            CumIntersection[i] = _inter.Count;
+                        }
                         foreach (var key in _current)
                         {
                             _runCount.TryGetValue(key, out int c);

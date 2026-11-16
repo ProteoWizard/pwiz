@@ -66,6 +66,26 @@ namespace pwiz.Osprey.FDR
         public int MaxTrainSize { get; set; }
 
         /// <summary>
+        /// Rows in the round-2 training subset of the two-round tree training
+        /// (<c>OSPREY_GBT_PREFILTER_SIZE</c>), or 0 (the default) for the usual single round.
+        /// Read only by the streamed first pass, and only for the tree model: there round 1
+        /// trains on the random <see cref="MaxTrainSize"/> subsample as usual, its fold models
+        /// score every best-per-precursor candidate, and round 2 retrains on the best-scoring
+        /// peptide groups up to this many rows. See <see cref="PercolatorTrainer.TrainWithScorePrefilter"/>.
+        /// </summary>
+        public int PrefilterTrainSize { get; set; }
+
+        /// <summary>
+        /// Report <see cref="PercolatorResults.TrainEntryFolds"/> from a train-only tree run, so
+        /// the caller can score each training row with only the fold model that held it out.
+        /// Set from <c>OSPREY_GBT_OOF</c> by the Tasks-layer config build, so the trainer reads no
+        /// environment; round 1 of the two-round training also sets it on its own copy, because
+        /// it scores its training rows out of fold either way. Copied by
+        /// <see cref="CloneForTrainOnly"/>.
+        /// </summary>
+        public bool ReportTrainEntryFolds { get; set; }
+
+        /// <summary>
         /// Optional per-feature metadata (machine name, display label, expected
         /// direction) in PIN-index order -- a single vector of
         /// <see cref="OspreyFeatureInfo"/> populated by the Tasks layer from the
@@ -85,6 +105,16 @@ namespace pwiz.Osprey.FDR
         /// the production scoring path so it adds no work. Never used for scoring.
         /// </summary>
         public bool CollectFeatureHistograms { get; set; }
+
+        /// <summary>
+        /// If true, <see cref="PercolatorTrainer.RunPercolator"/> measures what each fold did with
+        /// each feature on its training subset (<see cref="TrainingSetAnalysis"/>) before
+        /// returning. Set on every production run, not only under <c>--model-diagnostics</c>: the
+        /// per-fold training sets exist only inside the trainer, so a report written later from
+        /// the persisted model could not otherwise show them (doc 00, P16). Its cost is bounded
+        /// by <see cref="MaxTrainSize"/>, not by the cohort. Never used for scoring.
+        /// </summary>
+        public bool CollectTrainingAnalysis { get; set; }
 
         /// <summary>
         /// If true, <see cref="PercolatorTrainer.RunPercolator"/> trains the fold
@@ -127,8 +157,9 @@ namespace pwiz.Osprey.FDR
         public GbtParams GbtParams { get; set; }
 
         /// <summary>
-        /// Worker threads for the gradient-boosted-trees full-population score pass
-        /// (from <c>--threads</c>). Used ONLY there: the linear score pass stays serial
+        /// Worker threads for the gradient-boosted trees (from <c>--threads</c>): the full-population
+        /// score pass, and tree training, where each concurrently training fold gets
+        /// <c>NThreads / NFolds</c> of them. The linear score pass stays serial
         /// because its feature-contribution accumulator is a running float sum whose
         /// order is byte-parity-locked, whereas a tree score is a pure per-row function
         /// that accumulates nothing. Defaults to the machine's processor count.
@@ -179,10 +210,13 @@ namespace pwiz.Osprey.FDR
                 CValues = CValues,
                 CSelectionTolerance = CSelectionTolerance,
                 MaxTrainSize = MaxTrainSize,
+                PrefilterTrainSize = PrefilterTrainSize,
+                ReportTrainEntryFolds = ReportTrainEntryFolds,
                 FeatureInfos = FeatureInfos,
                 UseGradientBoostedTrees = UseGradientBoostedTrees,
                 GbtParams = GbtParams,
                 NThreads = NThreads,
+                CollectTrainingAnalysis = CollectTrainingAnalysis,
                 TrainOnly = true,
                 Diagnostics = Diagnostics
             };

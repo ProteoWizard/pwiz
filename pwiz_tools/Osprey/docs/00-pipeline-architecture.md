@@ -1114,12 +1114,11 @@ the version and is the deliberate developer escape hatch for reusing artifacts a
 ### What the key is made of, and why it decides correctness
 
 Each task composes its own key: a base of search parameters, library identity and the
-peak-pick arm, plus per-task additions - `FirstPassFDR` adds six, `PerFileRescoring`
-seven, `SecondPassFDR` seven. `PerFileRescoring`'s seventh is the one to know about:
-`LibraryFragmentRelease.ValidityKeySuffix` branches on the per-leg flags, which is exactly
-why a `SecondPassFDR` process and a `PerFileRescoring` process compute different keys for
-the same task - the asymmetry the who-wrote-it rule above (task and version, not key)
-exists to work around.
+peak-pick arm, plus per-task additions. A key may fold in a per-leg term, and then a
+`SecondPassFDR` process and a `PerFileRescoring` process compute different keys for the
+same task - the asymmetry the who-wrote-it rule above (task and version, not key) exists
+to work around. (The library-fragment release term was the one that did, until its
+`OSPREY_RELEASE_LIBRARY_FRAGMENTS=0` opt-out was retired.)
 **The exact composition, and the defect each component was added to prevent, is
 invalidation mechanics and lives in [14-intermediate-files](14-intermediate-files.md).**
 

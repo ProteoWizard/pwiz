@@ -140,8 +140,8 @@ namespace pwiz.Osprey.Tasks
                 throw new ArgumentNullException(nameof(retainedBaseIds));
 
             var rows = new FirstPassFoldRows();
-            using (var progress = new ProgressReporter(
-                       OspreyTasksResources.RescoreHydration_FoldPreCompactionPerRun_Reading_first_pass_results_for_the_model_diagnostics_report, parquetPaths.Count))
+            ProgressReporter.Run(
+                OspreyTasksResources.RescoreHydration_FoldPreCompactionPerRun_Reading_first_pass_results_for_the_model_diagnostics_report, parquetPaths.Count, progress =>
             {
                 for (int i = 0; i < parquetPaths.Count; i++)
                 {
@@ -181,7 +181,7 @@ namespace pwiz.Osprey.Tasks
                         string.Format(@"(post-GC, diagnostics fold, run {0} of {1})",
                             i + 1, parquetPaths.Count));
                 }
-            }
+            });
         }
 
         /// <summary>

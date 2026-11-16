@@ -227,7 +227,6 @@ ladder.
 | `boundary_end_ratio_median` | double | Median over core ions of XIC(end scan) / XIC max |
 | `n_coeluting_claimants` | int32 | Claimants in this isolation window whose final `[start_rt, end_rt]` contains this apex |
 | `n_same_apex_claimants` | int32 | Claimants whose apex is this same scan |
-| `ddc_neighbor_n` | int32 | Targets the double-counting dedup would call colliding with this one (see below) |
 
 ### Per-ion blobs (`n_slots` elements each)
 
@@ -286,7 +285,7 @@ with a Savitzky-Golay filter; Osprey's XICs are unsmoothed - see Risks).
 
 | Key | Value |
 |---|---|
-| `osprey.training_export.format_version` | `2` (version 1 carried experiment q-value and PEP columns) |
+| `osprey.training_export.format_version` | `3` (version 1 carried experiment q-value and PEP columns; version 2 carried `ddc_neighbor_n` and the `osprey.ddc.*` keys) |
 | `osprey.version`, `osprey.search_hash`, `osprey.library_hash` | As in the scores parquet |
 | `osprey.file_name` | Run stem |
 | `osprey.training_export.rows` | Rows written |
@@ -300,7 +299,6 @@ with a Savitzky-Golay filter; Osprey's XICs are unsmoothed - see Risks).
 | `osprey.isolation_mz_min`, `osprey.isolation_mz_max` | Range of the run's isolation windows |
 | `osprey.fragment_tolerance`, `osprey.fragment_tolerance_unit` | The MS2-calibrated tolerance every match above used (`ppm` or `Th`) |
 | `osprey.ms2_calibration.calibrated`, `.mean`, `.sd`, `.unit` | The run's MS2 mass calibration |
-| `osprey.ddc.tolerance`, `osprey.ddc.tolerance_unit`, `osprey.ddc.rt_neighborhood` | The double-counting dedup's tolerance and RT neighborhood for this run |
 | `osprey.ms2_scan_window` | `lower,upper`: the union of every isolation window's measured m/z range (`IN_SCAN_RANGE` uses each window's own), or empty when no window has peaks |
 | `osprey.instrument_vendor`, `osprey.instrument_model` | From the run's data file (see Source metadata), or empty without it |
 | `osprey.source_ms2_sampled` | MS2 spectra the three histograms below were counted over; `0` without the data file |
@@ -383,17 +381,6 @@ not claimants.
 
 The `BETTER_CLAIMANT_*` bits say whether the ion's intensity is more likely the other
 precursor's: some sharer in that scope has a lower run q (ties broken by the higher score).
-
-**`ddc_neighbor_n`** is the double-counting dedup's own collision test
-(`ScoringPipeline.SharesDoubleCountingFragments`: half the smaller top-6 list matching within its
-3-SD tolerance), counted over this run's reconciled targets in the same window whose apex lies
-within `osprey.ddc.rt_neighborhood` of this one. The test counts the first entry's fragments
-matched in the second, so it is not symmetric; each pair is asked in the dedup's order (apex RT,
-then base_id, then entry_id - `ScoringPipeline.CompareDoubleCountingOrder`), earlier entry first. That neighborhood is 5 x the median spacing
-between consecutive MS2 retention times of the WHOLE run - all windows interleaved - so on a
-DIA cycle it is a fraction of one cycle and the count is almost always 0 (0.01% of rows on the
-Stellar smoke run). It is exported as the scorer defines it; the co-elution scope above is the
-broader measure.
 
 ---
 

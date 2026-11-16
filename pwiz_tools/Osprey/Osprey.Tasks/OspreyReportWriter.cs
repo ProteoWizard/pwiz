@@ -153,10 +153,10 @@ namespace pwiz.Osprey.Tasks
             // report off therefore produced no visible output for the entire report step.
             int groupIdx = 0;
             var rows = new List<string[]>(groups.Count);
-            using (var progress = new ProgressReporter(
-                       CountText.Format(groups.Count, OspreyTasksResources.OspreyReportWriter_WriteProteinGroups_Building_the_protein_group_report_for_1_group,
-                           OspreyTasksResources.OspreyReportWriter_WriteProteinGroups_Building_the_protein_group_report_for__0__groups),
-                       groups.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(
+                CountText.Format(groups.Count, OspreyTasksResources.OspreyReportWriter_WriteProteinGroups_Building_the_protein_group_report_for_1_group,
+                    OspreyTasksResources.OspreyReportWriter_WriteProteinGroups_Building_the_protein_group_report_for__0__groups),
+                groups.Count, progress =>
             {
                 foreach (var g in groups)
                 {
@@ -199,7 +199,7 @@ namespace pwiz.Osprey.Tasks
                         string.Join(@";", libUnique),
                     });
                 }
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
 
             // Deterministic order: passing first, then most confident, then by accessions
             // (the group identity -- distinct, so the ordering is total). Stable OrderBy
@@ -279,11 +279,11 @@ namespace pwiz.Osprey.Tasks
             // pass per file - a 46 s silence at 82 files on the 2026-08-15 measurement, with only
             // the caller's heading in front of it (#4571).
             int runIdx = 0;
-            using (var progress = new ProgressReporter(
-                       nFiles == 1
-                           ? OspreyTasksResources.OspreyReportWriter_WriteSummary_Per_replicate_protein_FDR_for_1_file
-                           : string.Format(OspreyTasksResources.OspreyReportWriter_WriteSummary_Per_replicate_protein_FDR_for__0__files, nFiles),
-                       nFiles, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(
+                nFiles == 1
+                    ? OspreyTasksResources.OspreyReportWriter_WriteSummary_Per_replicate_protein_FDR_for_1_file
+                    : string.Format(OspreyTasksResources.OspreyReportWriter_WriteSummary_Per_replicate_protein_FDR_for__0__files, nFiles),
+                nFiles, progress =>
             {
                 foreach (var kvp in rescored.StreamFiles())
                 {
@@ -302,7 +302,7 @@ namespace pwiz.Osprey.Tasks
                         proteins.ToString(CultureInfo.InvariantCulture),
                     });
                 }
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
 
             // Experiment row: precursors + peptides passing EXPERIMENT-level FDR (a
             // precursor detected in any run counts once), folded above, and the

@@ -852,7 +852,10 @@ namespace pwiz.Skyline.Model.Results
                    peak.Fwhm == Fwhm &&
                    peak.IsFwhmDegenerate == IsFwhmDegenerate &&
                    Equals(peak.IsTruncated, IsTruncated) &&
-                   Equals(peak.Identified, Identified);
+                   Equals(peak.Identified, Identified) &&
+                   Equals(peak.PointsAcross, PointsAcrossPeak) &&
+                   peak.IsForcedIntegration == IsForcedIntegration &&
+                   Equals(peak.PeakShapeValues, PeakShapeValues);
         }
 
         /// <summary>

@@ -30,63 +30,49 @@ namespace pwiz.Osprey.Tasks
     /// <summary>
     /// The library-fragment release (issue #4532): the set arithmetic, plus the ONE predicate
     /// that decides whether a given leg of the pipeline performs it.
-    /// <see cref="OspreyEnvironment.ReleaseLibraryFragments"/> carries the rationale and the
-    /// safety argument.
+    ///
+    /// <para>At the Stage 5 -> 6 boundary, drop <c>LibraryEntry.Fragments</c> for every library
+    /// entry that can no longer be scored or written - everything outside the compaction
+    /// survivors and the gap-fill candidates. The identity fields (<c>ModifiedSequence</c> /
+    /// <c>ProteinIds</c> / m/z / RT) are KEPT on every entry. The library is otherwise held to the
+    /// end of Stage 7 to write 37,078 spectra out of 6,275,151 entries - 0.6%. Measured as an A/B
+    /// on 4 SEA-AD files against the full 12.7 GB library: Stage 7 peak working set 28.5 -&gt;
+    /// 17.7 GB. Few files is the MAXIMUM-saving case - the library is fixed while the retained
+    /// set grows with file count.</para>
+    ///
+    /// <para>Why fragments and not whole entries: <c>ProteinFdr.BuildProteinParsimony</c>
+    /// and <c>FirstPassFdrTask.BuildProteinCompactStratum</c> both walk the ENTIRE library
+    /// after Stage 5, including entries already judged false. They read only the identity
+    /// fields, never the spectra - so dropping entries would silently move protein FDR,
+    /// while dropping fragments cannot. The blib write is safe for a separate reason:
+    /// <c>BlibOutputWriter.PrepareSpectra</c> reads fragments only for
+    /// <c>bestByPrecursor</c>, which is derived from the post-compaction survivors, so
+    /// blib-written is a SUBSET of what is retained here.</para>
+    ///
+    /// <para>The release is output-neutral, so it has no opt-out and no validity-key term: the
+    /// <c>OSPREY_RELEASE_LIBRARY_FRAGMENTS=0</c> resident arm that once served as the A/B
+    /// byte-identity oracle was retired with the other parity-only paths. Regression mode 6
+    /// asserts that it engages.</para>
     ///
     /// <para><see cref="BuildRetainedBaseIds"/> is a pure function of its inputs so it can be
-    /// tested without a pipeline; <see cref="RunsOnThisLeg"/> needs the config and is the single source
-    /// of truth for BOTH the call sites and the validity-key suffix. That is deliberate: those
-    /// two must never be able to disagree, because the suffix's whole job is to record which
-    /// arm produced an output directory.</para>
+    /// tested without a pipeline; <see cref="RunsOnThisLeg"/> needs the config and is the single
+    /// source of truth for the call sites.</para>
     /// </summary>
     internal static class LibraryFragmentRelease
     {
         /// <summary>
-        /// Whether the release actually executes on THIS leg. Not simply
-        /// <see cref="OspreyEnvironment.ReleaseLibraryFragments"/>: the release rides specific
-        /// code paths, and a leg that cannot reach one of them keeps the whole library resident
-        /// no matter what the flag says.
-        ///
-        /// <para>Two things gate it: whether the LEG admits a release at all
-        /// (<see cref="LegAdmitsRelease"/>, a pure function of the config) and whether the env
-        /// arm asked for one. SecondPassFDR releases against the analysis-wide summary on disk;
-        /// every other leg releases on Stage 5's projection path, which since
-        /// <c>OSPREY_FDR_PROJECTION</c> was removed (2026-10-10) is the only first pass.</para>
+        /// Whether the release executes on THIS leg. The release rides specific code paths, and
+        /// a leg that cannot reach one of them keeps the whole library resident
+        /// (<see cref="LegAdmitsRelease"/>). SecondPassFDR releases against the analysis-wide
+        /// summary on disk; every other leg releases on Stage 5's projection path.
         /// </summary>
         public static bool RunsOnThisLeg(PipelineContext ctx)
         {
-            if (!OspreyEnvironment.ReleaseLibraryFragments || ctx?.Config == null)
-                return false;
-            return LegAdmitsRelease(ctx.Config);
+            return ctx?.Config != null && LegAdmitsRelease(ctx.Config);
         }
 
         /// <summary>
-        /// Cache-validity suffix for the release arm. EMPTY when the release RAN, and equally
-        /// EMPTY where <see cref="LegAdmitsRelease"/> is false - on such a leg the two arms are
-        /// literally the same run, so a term would invalidate output directories to record a
-        /// difference that cannot exist. It is emitted only for the case that matters: a leg
-        /// that COULD have released and did not.
-        ///
-        /// <para>Keyed on <see cref="RunsOnThisLeg"/> rather than on
-        /// <see cref="OspreyEnvironment.ReleaseLibraryFragments"/> alone, because the flag is not
-        /// what the outputs record. A leg that never released - the flag was on but the leg
-        /// could not reach a release path - would otherwise
-        /// stamp the same EMPTY suffix as a leg that did, and a later run WITH the release could
-        /// adopt those outputs, skip the work, and report the release arm's memory profile
-        /// without ever executing it. That is the self-confirming A/B the suffix exists to
-        /// prevent, left open one gate upstream.</para>
-        /// </summary>
-        public static string ValidityKeySuffix(PipelineContext ctx)
-        {
-            if (RunsOnThisLeg(ctx))
-                return string.Empty;
-            return ctx?.Config != null && LegAdmitsRelease(ctx.Config) ? @";libfrag=0" : string.Empty;
-        }
-
-        /// <summary>
-        /// Whether this leg can perform a release AT ALL, whatever the env arms say. Separate
-        /// from <see cref="RunsOnThisLeg"/> because the validity key needs the distinction:
-        /// "did not release" is worth recording only where releasing was possible.
+        /// Whether this leg can perform a release AT ALL.
         ///
         /// <para><c>StopAfterStage5</c> (<c>--task FirstPassFDR</c>) is excluded for TWO
         /// independent reasons, either alone disqualifying. (1) The gap-fill plan is NOT

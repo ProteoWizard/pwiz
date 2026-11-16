@@ -389,10 +389,6 @@
     <value>{2}：{1:N0}個の第1パス中間ファイルのうち{0:N0}個を書き込めなかったため、次のタスクを実行できません。各ファイルについては上記の警告を参照してください。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_LogRunLevelTotal_Total___0__precursors_pass_run_level_FDR_across__1__files" xml:space="preserve">
-    <value>合計：{1:N0}個のファイル全体で{0:N0}個のプリカーサーがランレベルFDRを通過</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_OnlyDiagnosticsProductOutstanding_Model_diagnostics___0__is_missing__so_the_first_pass_is_re_run_to_build_the_report_" xml:space="preserve">
     <value>モデル診断：{0}がないため、レポートを構築するために第1パスを再実行します。</value>
     <comment>Needs Review:New resource</comment>

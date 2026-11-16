@@ -39,6 +39,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public bool ModelIsTreeEnsemble { get; set; }
             public double[] FeatureHistEdges { get; set; }
             public List<FeatureRow> Model { get; set; }
+            public TrainingSetView TrainingSet { get; set; }
 
             /// <summary>
             /// The views of <paramref name="contributions"/>, or null when no model was trained.
@@ -55,6 +56,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     ModelIsTreeEnsemble = contributions.IsTreeEnsemble,
                     FeatureHistEdges = contributions.HistogramEdges,
                     Model = BuildFeatureRows(contributions),
+                    TrainingSet = TrainingSetView.From(contributions),
                 };
             }
 
@@ -72,6 +74,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 data.ModelIsTreeEnsemble = view.ModelIsTreeEnsemble;
                 data.FeatureHistEdges = view.FeatureHistEdges;
                 data.Model = view.Model ?? new List<FeatureRow>();
+                data.TrainingSet = view.TrainingSet;
             }
         }
     }

@@ -129,7 +129,7 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Bounded-memory streaming form of <see cref="PercolatorQValues.ComputeFullPopulationPrecursorFdr"/> for
+        /// Bounded-memory streaming full-population precursor competition, for
         /// OSPREY_PASS2_QVALUE=transfer-compete. Streams one file's 1st-pass population at a time
         /// (run-level competition + conservative q per file) while accumulating only the
         /// per-base_id best target/decoy observation for the experiment-level competition.
@@ -243,14 +243,10 @@ namespace pwiz.Osprey.FDR
                 // scores, the global survivor id set and the protein stratum - and a per-file
                 // worker can be handed all three: the model and the stratum already ride the
                 // phase2 -> phase3 -> phase4 relay, and the survivor id set is ~50 MB.
-                // TEMPORARY, and deliberately expensive: while the per-file half moves to
-                // PerFileRescoring (#4486), the WORKER's answer is authoritative and this
-                // recomputation exists only to check it. Recomputing here costs the file's
-                // 1st-pass sidecar read and frozen rescore all over again - the very work the
-                // move removes - which is the point: the shipped path is the one producing
-                // output, and this is the oracle that says so. DELETE THIS RECOMPUTE, its
-                // parameter and the assert below before the PR merges; what survives is the
-                // fold over authoritativeContribution.
+                // The WORKER's answer is authoritative; recomputing it here is the
+                // OSPREY_PASS2_VERIFY_WORKER test instrument, off by default. It costs the
+                // file's 1st-pass sidecar read and frozen rescore all over again - the very work
+                // the per-file worker (#4486) removed - which is why it is opt-in.
                 var authoritative = authoritativeContribution?.Invoke(fileKey);
                 FileCompetition contribution;
                 if (authoritative != null && !verifyAgainstRecompute)

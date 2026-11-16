@@ -72,8 +72,17 @@ namespace pwiz.Osprey.Tasks
         /// The TSV counterpart of <see cref="BLIB_READER_TERM"/>: what the reader makes of a .tsv
         /// (peaks merged, typed, the modified sequence's text) changes with its version too, so
         /// outputs scored under an earlier reader are not adopted by a search under this one.
+        /// It is <see cref="DiannTsvLoader.READER_VERSION"/>, which a test holds it to.
         /// </summary>
-        public const string TSV_READER_TERM = @";tsvreader=4";
+        public const string TSV_READER_TERM = @";tsvreader=5";
+
+        /// <summary>
+        /// The .parquet counterpart: a DIA-NN .parquet is read by its own column mapping
+        /// (<see cref="DiannParquetLoader.READER_VERSION"/>) into the .tsv reader's row assembly,
+        /// so both versions are in it, held to the loaders' constants by a test as
+        /// <see cref="TSV_READER_TERM"/> is.
+        /// </summary>
+        public const string PARQUET_READER_TERM = TSV_READER_TERM + @";parquetreader=1";
 
         // ---- The selection contract (ISelectableTask) ------------------------------------
         // What a task IS, answered by the task; the two facts default to FAIL CLOSED, so a
@@ -224,6 +233,8 @@ namespace pwiz.Osprey.Tasks
                     return BLIB_READER_TERM;
                 case LibraryFormat.DiannTsv:
                     return TSV_READER_TERM;
+                case LibraryFormat.DiannParquet:
+                    return PARQUET_READER_TERM;
                 default:
                     return string.Empty;
             }

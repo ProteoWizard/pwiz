@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
@@ -107,6 +108,15 @@ namespace pwiz.Osprey.Tasks
             /// unreadable, which on a SecondPassFDR node is the hard fail-fast, not a graceful
             /// degradation.</summary>
             public string ExperimentAgg { get; set; }
+
+            /// <summary>The <see cref="TrainingSetAnalysis"/> of the trained folds, which a report
+            /// written by a later process reads back because the fold training sets exist nowhere
+            /// else (doc 00, P16). Optional and additive like <see cref="ExperimentAgg"/>: omitted
+            /// when null, ignored by an older reader, null from an older file. Held as a token
+            /// because its undefined values (a constant feature's correlation) are NaN, which the
+            /// round-trip converter refuses; they are written as the string "NaN".</summary>
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public JToken TrainingAnalysis { get; set; }
         }
 
         /// <summary>Serializable form of the protein-compact stratum: the base ids of every
@@ -237,6 +247,9 @@ namespace pwiz.Osprey.Tasks
                 Means = model.Standardizer.Means,
                 Stds = model.Standardizer.Stds,
                 ExperimentAgg = experimentAgg,
+                TrainingAnalysis = model.TrainingAnalysis == null ? null
+                    : JToken.Parse(JsonConvert.SerializeObject(model.TrainingAnalysis,
+                        new JsonSerializerSettings { FloatFormatHandling = FloatFormatHandling.String })),
             };
             if (model.IsGradientBoostedTrees)
             {
@@ -353,6 +366,7 @@ namespace pwiz.Osprey.Tasks
                     : LoadLinearModel(dto);
                 if (model == null)
                     return null;
+                model.TrainingAnalysis = ReadTrainingAnalysis(dto.TrainingAnalysis);
 
                 return new Sidecar
                 {
@@ -452,6 +466,25 @@ namespace pwiz.Osprey.Tasks
         {
             return data != null && data.FeatureCount == numFeatures &&
                    data.Objective == GbtObjective.LogisticBinary;
+        }
+
+        /// <summary>
+        /// The persisted training-set analysis, or null when absent or unreadable. A report view
+        /// must not make the model it rides with unloadable, so a bad analysis is dropped rather
+        /// than failing <see cref="Load"/>.
+        /// </summary>
+        private static TrainingSetAnalysis ReadTrainingAnalysis(JToken token)
+        {
+            if (token == null)
+                return null;
+            try
+            {
+                return token.ToObject<TrainingSetAnalysis>();
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
         }
 
         /// <summary>

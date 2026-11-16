@@ -18,14 +18,4 @@
     <ProjectReference Include="..\..\..\..\analysis\Analysis.csproj" />
   </ItemGroup>
 
-  <!-- Google.Protobuf is referenced through UNIFI.csproj as a HintPath Reference, which
-       MSBuild treats as non-transitive for compile-time use in dependents. Re-declare it
-       here so the test compilation can use Pwiz.Vendor.UNIFI.Protobuf types directly. -->
-  <ItemGroup>
-    <Reference Include="Google.Protobuf">
-      <HintPath>$(PwizToolsRoot)\Shared\Lib\Google.Protobuf.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
-  </ItemGroup>
-
 </Project>
