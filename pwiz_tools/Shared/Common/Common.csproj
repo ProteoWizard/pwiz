@@ -85,6 +85,10 @@
     <_SliceVfsCompiled Condition="'$(_SliceVfsPrebuilt)' != 'true' AND '$(OS)' == 'Windows_NT'">true</_SliceVfsCompiled>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="SliceVfs\**" />
+  </ItemGroup>
+
   <Target Name="LocateSliceVfsMSBuild"
           Condition="'$(_SliceVfsCompiled)' == 'true' AND '$(VsMSBuildExe)' == ''">
     <!-- vswhere.exe is always under Program Files (x86); see Mobilion.csproj -->
