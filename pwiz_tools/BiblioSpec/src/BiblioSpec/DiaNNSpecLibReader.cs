@@ -185,7 +185,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
 
             Verbosity.Status($"Reading library entries from {libEntry} in {_specLibFile}.");
             LoadSpecLibFromParquet($"{libEntry} in {_specLibFile}", archive.OpenSeekable(libEntry));
-            reportLabel = $"{reportEntry} in {Path.GetFileName(_specLibFile)}";
+            reportLabel = $"{reportEntry} in {_specLibFile}";
             reportRows = ReadDiannReportParquetAsync(archive.OpenSeekable(reportEntry), reportLabel)
                 .ToBlockingEnumerable();
         }
@@ -366,7 +366,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
                     if (!_specLib.EntryByName.TryGetValue(precursorIdStr, out var entry))
                         throw new BlibException(false,
                             $"could not find precursorId '{precursorIdStr}' in speclib; is " +
-                            $"'{reportLabel}' the correct report TSV file?");
+                            $"'{reportLabel}' the correct report?");
 
                     psm.Score = globalQValue;
                     psm.PrecursorQValue = globalQValue;
@@ -536,7 +536,19 @@ public sealed class DiaNNSpecLibReader : BuildParser
     /// </remarks>
     private static IEnumerable<DiannReportRow> ReadDiannReportParquet(string reportPath)
     {
-        return ReadDiannReportParquetAsync(File.OpenRead(reportPath), reportPath).ToBlockingEnumerable();
+        return ReadDiannReportParquetAsync(reportPath).ToBlockingEnumerable();
+    }
+
+    /// <summary>
+    /// Opens <paramref name="reportPath"/> inside the iterator, so the handle is taken when
+    /// enumeration starts rather than when this is called and cannot leak if the caller never
+    /// enumerates.
+    /// </summary>
+    private static async IAsyncEnumerable<DiannReportRow> ReadDiannReportParquetAsync(string reportPath)
+    {
+        await foreach (var row in ReadDiannReportParquetAsync(File.OpenRead(reportPath), reportPath)
+                           .ConfigureAwait(false))
+            yield return row;
     }
 
     /// <summary>
@@ -617,6 +629,11 @@ public sealed class DiaNNSpecLibReader : BuildParser
             case "RT.Stop": yield return "RT_End"; break;
         }
     }
+
+    /// <summary>True for a text column: Parquet.Net 6 types one as ReadOnlyMemory&lt;char&gt;,
+    /// 4.x as string. Matches DiannLibraryParquetReader.IsText.</summary>
+    private static bool IsTextColumn(Parquet.Schema.DataField field) =>
+        field.ClrType == typeof(string) || field.ClrType == typeof(ReadOnlyMemory<char>);
 
     private static Parquet.Schema.DataField? FindDataField(Parquet.Schema.ParquetSchema schema, string name)
     {
@@ -704,14 +721,20 @@ public sealed class DiaNNSpecLibReader : BuildParser
     private static async Task<float[]> ReadFloatColumn(Parquet.ParquetRowGroupReader rgReader, Parquet.Schema.DataField field,
         float nullValue = 0f)
     {
-        // Spectronaut writes the report's Q_Value as a string. Parquet.Net 6
-        // types a string column as ReadOnlyMemory<char>, which ReadBoxedColumn does not dispatch.
-        if (field.ClrType == typeof(ReadOnlyMemory<char>))
+        // Spectronaut writes the report's Q_Value as a string. Parquet.Net 6 types a string
+        // column as ReadOnlyMemory<char>, which ReadBoxedColumn does not dispatch.
+        if (IsTextColumn(field))
         {
             var text = await ReadStringColumn(rgReader, field).ConfigureAwait(false);
             var parsed = new float[text.Length];
             for (int i = 0; i < text.Length; i++)
-                float.TryParse(text[i], NumberStyles.Float, CultureInfo.InvariantCulture, out parsed[i]);
+            {
+                // A cell that will not parse is missing, not zero: zero is the BEST possible
+                // q-value and would make a junk row outscore every real one.
+                if (!float.TryParse(text[i], NumberStyles.Float, CultureInfo.InvariantCulture,
+                                    out parsed[i]))
+                    parsed[i] = nullValue;
+            }
             return parsed;
         }
 
@@ -1278,6 +1301,10 @@ public sealed class DiaNNSpecLibReader : BuildParser
         return result.ToString();
     }
 
+    /// <summary>Delta mass of each Unimod title already looked up. Unimod.Modification(string)
+    /// scans the whole table, and this runs once per modified residue of every entry.</summary>
+    private static readonly Dictionary<string, double?> _unimodTitleCache = new(StringComparer.Ordinal);
+
     private static readonly char[] _nonNumericMod = { 'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
                                                        'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
                                                        ' ','\t',';',',','/','\\','+','-','(',')','[',']','{','}','<','>','=','!','@','#','$','%','^','&','*' };
@@ -1305,14 +1332,16 @@ public sealed class DiaNNSpecLibReader : BuildParser
             int site = title.LastIndexOf(" (", StringComparison.Ordinal);
             if (site > 0) title = title.Substring(0, site);
         }
-        var mod = Unimod.Modification(title);
-        if (mod is null)
+        if (!_unimodTitleCache.TryGetValue(title, out var cached))
         {
-            mass = 0;
-            return false;
+            var mod = Unimod.Modification(title);
+            cached = mod is null
+                ? null
+                : GetUnimodDeltaMass((int)mod.Cvid - (int)CVID.UNIMOD_unimod_root_node);
+            _unimodTitleCache[title] = cached;
         }
-        mass = GetUnimodDeltaMass((int)mod.Cvid - (int)CVID.UNIMOD_unimod_root_node);
-        return true;
+        mass = cached ?? 0;
+        return cached.HasValue;
     }
 
     private static double GetUnimodDeltaMass(int unimodId)

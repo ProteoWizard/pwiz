@@ -323,11 +323,19 @@ namespace pwiz.BiblioSpec.IO
                 var text = ReadStrings(group, column);
                 for (int i = 0; i < rowCount; i++)
                 {
-                    if (bool.TryParse(text[i], out var flag))
+                    if (string.IsNullOrEmpty(text[i]))
+                        values[i] = 0L;          // as a null cell reads zero on the typed paths
+                    else if (bool.TryParse(text[i], out var flag))
                         values[i] = flag ? 1L : 0L;
                     else if (long.TryParse(text[i], NumberStyles.Integer, CultureInfo.InvariantCulture,
                                  out var number))
                         values[i] = number;
+                    else
+                        // Zeroing an unrecognized value would silently change the column's
+                        // meaning for the whole library, so say so instead.
+                        throw new InvalidDataException(string.Format(CultureInfo.InvariantCulture,
+                            @"Parquet column '{0}' has the value '{1}', which is neither a number nor true/false.",
+                            field.Name, text[i]));
                 }
                 return values;
             }

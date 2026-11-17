@@ -1,6 +1,7 @@
 /*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
