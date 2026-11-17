@@ -18,6 +18,7 @@
  */
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Model;
@@ -106,8 +107,8 @@ namespace pwiz.SkylineTestFunctional
             string frankenFolder = TestFilesDir.GetTestPath("frankenfolder");
             Directory.CreateDirectory(frankenFolder);
             string frankenDocumentPath = Path.Combine(frankenFolder, "FrankenDocument.sky");
-            File.Copy(version2Path, frankenDocumentPath);
-            File.Copy(SrmDocument.GetAuditLogPath(otherDocumentPath), SrmDocument.GetAuditLogPath(frankenDocumentPath));
+            CopyFile(version2Path, frankenDocumentPath);
+            CopyFile(SrmDocument.GetAuditLogPath(otherDocumentPath), SrmDocument.GetAuditLogPath(frankenDocumentPath));
 
             // Open the document which has the mismatched audit log
             RunDlg<AlertDlg>(()=>SkylineWindow.OpenFile(frankenDocumentPath), alertDlg=>alertDlg.ClickNo());
@@ -138,6 +139,17 @@ namespace pwiz.SkylineTestFunctional
         private void OpenSharedFile(string skyZipPath)
         {
             RunUI(()=>SkylineWindow.OpenSharedFile(skyZipPath));
+        }
+
+        /// <summary>
+        /// Copies a file which, because these shared files are opened in place, may be inside of
+        /// the .sky.zip instead of on disk.
+        /// </summary>
+        private static void CopyFile(string sourcePath, string destinationPath)
+        {
+            using var sourceStream = new FilePath(sourcePath).OpenSequentialStream();
+            using var destinationStream = File.Create(destinationPath);
+            sourceStream.CopyTo(destinationStream);
         }
     }
 }

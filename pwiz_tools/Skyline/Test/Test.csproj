@@ -71,6 +71,7 @@
        sources. All need to land in the output dir so AbstractUnitTest can
        find them via GetTestPath. -->
   <ItemGroup>
+    <None Include="ChromatogramCacheFromZipTest.zip" CopyToOutputDirectory="PreserveNewest" />
     <None Include="ChromatogramExporterTest.zip" CopyToOutputDirectory="PreserveNewest" />
     <None Include="ClickOnceInstallationsTest.zip" CopyToOutputDirectory="PreserveNewest" />
     <None Include="PortableSettingsProviderTest.zip" CopyToOutputDirectory="PreserveNewest" />
