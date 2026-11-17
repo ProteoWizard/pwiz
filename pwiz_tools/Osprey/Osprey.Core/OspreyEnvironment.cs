@@ -769,6 +769,55 @@ namespace pwiz.Osprey.Core
         private const int MAX_XIC_FRAGMENTS = 20;
 
         /// <summary>
+        /// The run-log line naming every setting that defaults by resolution or is chosen by a developer
+        /// variable, with the value the search uses, and what set each one that is not its default. The
+        /// defaults moved with the resolution and again in 2026-11, so the log is the one record of what
+        /// a run searched with; a warm resume, which skips the stages that would show it, logs it too.
+        /// </summary>
+        public static string DescribeSearchSettings(OspreyConfig config)
+        {
+            var scoring = config.Scoring;
+            var given = new List<string>();
+            foreach (var envVar in new[]
+                     {
+                         ENV_FDR_MODEL, ENV_XIC_FRAGMENTS, ENV_CORR_FRAGMENT_TOLERANCE, ENV_REF_XIC, ENV_LOCAL_RT_TOLERANCE,
+                         ENV_TC_HALF_WINDOW, ENV_GBT_OOF, ENV_MIN_RT_TOLERANCE, ENV_LOESS_BANDWIDTH, ENV_PASS2_QVALUE, ENV_RECON_REFIT, ENV_PEP_FORMULA
+                     })
+            {
+                if (envVar.IsSet)
+                    given.Add(envVar.Name + @"=" + envVar.Value.Trim());
+            }
+            if (config.ProteinBestGiven)
+                given.Add(OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST));
+            var ic = CultureInfo.InvariantCulture;
+            return string.Format(ic,
+                @"Search settings: classifier {0}, protein-best {1}, XIC fragments {2}, correlation tolerance {3}, " +
+                @"reference XIC {4}, local RT tolerance {5}, tc half window {6} min, gbdt out-of-fold {7}, " +
+                @"RT tolerance floor {8} min, LOESS bandwidth {9}, pass-2 {10}, reconciliation refit {11}, PEP {12} ({13})",
+                config.FdrClassifier == FdrClassifier.Gbdt ? @"gbdt" : @"svm",
+                OnOff(config.ProteinBest),
+                scoring.XicFragments,
+                scoring.CorrFragmentTolerancePpm.HasValue ? scoring.CorrFragmentTolerancePpm.Value.ToString(ic) + @" ppm" : @"off",
+                scoring.RefXicByCorrelation ? @"corr" : @"intensity",
+                scoring.LocalRtToleranceNeighbors.HasValue ? scoring.LocalRtToleranceNeighbors.Value.ToString(ic) + @" neighbors" : @"off",
+                (scoring.TcHalfWindowMinutes ?? LEGACY_TC_HALF_WINDOW_MINUTES).ToString(ic),
+                OnOff(scoring.GbtOutOfFold),
+                config.RtCalibration.MinRtTolerance.ToString(ic),
+                config.RtCalibration.LoessBandwidth.ToString(ic),
+                Pass2QValue,
+                OnOff(!ReconciliationRefitOff),
+                PepRatioForm ? PEP_FORMULA_RATIO : PEP_FORMULA_MIXTURE,
+                given.Count == 0
+                    ? string.Format(ic, @"the defaults for {0} data", config.ResolutionMode)
+                    : @"defaults, except " + string.Join(@", ", given));
+        }
+
+        private static string OnOff(bool on)
+        {
+            return on ? @"on" : @"off";
+        }
+
+        /// <summary>
         /// <paramref name="defaults"/> with each setting a developer variable sets replaced by the
         /// variable's value: OSPREY_XIC_FRAGMENTS, OSPREY_CORR_FRAGMENT_TOLERANCE and
         /// OSPREY_LOCAL_RT_TOLERANCE (off turns either off), OSPREY_REF_XIC, OSPREY_TC_HALF_WINDOW
@@ -873,12 +922,12 @@ namespace pwiz.Osprey.Core
 
         private static readonly EnvVar ENV_LOESS_BANDWIDTH = new EnvVar(@"OSPREY_LOESS_BANDWIDTH", EnvVarGroup.behavior,
             @"Experiment: the RT calibration LOESS bandwidth (fraction of points per local fit) " +
-            @"in place of 0.3. Enters the search identity.")
-            { ValueExample = @"<fraction>", DefaultValue = @"0.3" };
+            @"in place of the resolution's default. Enters the search identity.")
+            { ValueExample = @"<fraction>", DefaultValue = @"0.10 for HRAM data, 0.3 at unit resolution" };
 
         /// <summary>
         /// OSPREY_LOESS_BANDWIDTH (experiment): the RT calibration LOESS bandwidth (fraction of points per local fit)
-        /// in place of 0.3, to let the curve follow a library whose RTs bend at the gradient end, as DIA-NN 1.7.12's
+        /// in place of the resolution's default (<see cref="ResolutionDefaults.LoessBandwidth"/>), to let the curve follow a library whose RTs bend at the gradient end, as DIA-NN 1.7.12's
         /// 20-segment spline does. It enters the search identity, so every task keys on it. Null when unset.
         /// </summary>
         public static readonly double? LoessBandwidth = double.TryParse(ENV_LOESS_BANDWIDTH.Value,
@@ -899,8 +948,8 @@ namespace pwiz.Osprey.Core
 
         private static readonly EnvVar ENV_TC_HALF_WINDOW = new EnvVar(@"OSPREY_TC_HALF_WINDOW", EnvVarGroup.behavior,
             @"Experiment: half-width in minutes of the window the tc_* time-correlation features " +
-            @"correlate over, in place of 0.15. Keyed into every task.")
-            { ValueExample = @"<minutes>", DefaultValue = @"0.15", AcceptsValue = IsPositiveNumber };
+            @"correlate over, in place of the resolution's default. Keyed into every task.")
+            { ValueExample = @"<minutes>", DefaultValue = @"0.40 for HRAM data, 0.15 at unit resolution", AcceptsValue = IsPositiveNumber };
 
         private static readonly EnvVar ENV_LOCAL_RT_TOLERANCE = new EnvVar(@"OSPREY_LOCAL_RT_TOLERANCE", EnvVarGroup.behavior,
             @"Experiment: widen the RT search window at each library RT from the residual spread of this " +
@@ -1299,6 +1348,25 @@ namespace pwiz.Osprey.Core
                     argText, OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST, OspreyArgNames.VALUE_OFF));
             }
             return null;
+        }
+
+        /// <summary>
+        /// Why <paramref name="config"/>'s <c>--protein-best</c> and second-pass mode cannot run
+        /// together, or null when they can. The protein-best column and the protein-compact competition
+        /// both credit a precursor for its protein's other detections, so together they count that
+        /// evidence twice: on 3 SEA-AD files a reported q of 1% read 1.47% true FDP, where protein-best
+        /// with the transfer read 0.91%. Checked once the resolution is known, because HRAM data turns
+        /// the column on by default.
+        /// </summary>
+        public static string ValidatePass2WithProteinBest(OspreyConfig config)
+        {
+            if (!config.ProteinBest || !Pass2ProteinCompact)
+                return null;
+            return string.Format(@"{0} cannot be used with OSPREY_PASS2_QVALUE={1}: both credit a precursor for its " +
+                                 @"protein's other detections, and together report more false discoveries than their " +
+                                 @"q-values claim. Unset OSPREY_PASS2_QVALUE, or use {2}.",
+                OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST), PASS2_QVALUE_PROTEIN_COMPACT,
+                OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST, OspreyArgNames.VALUE_OFF));
         }
 
         private static string DescribeProteinBestTopN(int topN)

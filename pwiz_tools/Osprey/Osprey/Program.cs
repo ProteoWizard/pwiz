@@ -605,6 +605,7 @@ namespace pwiz.Osprey
                         ? LibraryBuildWorkflow.PhaseOutput(config)
                         : config.SelectedTask?.DescribeOutput(config) ?? config.OutputBlib));
                 LogResolution(config, resolutionDetected, resolutionDetection);
+                LogInfo(OspreyEnvironment.DescribeSearchSettings(config));
                 LogInfo(string.Format(OspreyResources.Program_Run_Fragment_tolerance___0___1_,
                     config.FragmentTolerance.Tolerance,
                     config.FragmentTolerance.Unit.GetLocalizedString()));
@@ -732,6 +733,13 @@ namespace pwiz.Osprey
                 if (featureSelection.FdrFeatureIndices.Length == 0)
                 {
                     LogError(@"OSPREY_FEATURE_MASK masks every PIN feature, which leaves the FDR classifier nothing to train on.");
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
+                // Refused once the resolution is known, because HRAM data turns the protein-best column on by default.
+                string pass2Err = OspreyEnvironment.ValidatePass2WithProteinBest(config);
+                if (pass2Err != null)
+                {
+                    LogError(pass2Err);
                     return EXIT_CODE_FAILURE_TO_START;
                 }
                 // Not an error: OSPREY_FEATURE_MASK=none is the same request on any data, but say what it did not get.

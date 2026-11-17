@@ -85,13 +85,11 @@ namespace pwiz.Osprey.Test
                 OspreyEnvironment.FdrModel = FdrClassifier.Gbdt;
                 AssertProteinBestRefusals(FdrClassifier.Gbdt);
                 AssertProteinBestArms();
-                // The four-task chain under both second-pass modes: the PerFileRescoring nodes
-                // score with the columns FirstPassFDR wrote, shipped to them with the rest.
-                foreach (string pass2Mode in new[] { null, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT })
-                {
-                    AssertHpcChainMatchesStraight(new Subset(_dataDir, LIBRARY_FILE, @"unit", RUN_NAMES, pass2Mode,
-                        ProteinBestArm(), ProteinBestArgs(true)), @"protein-best-" + (pass2Mode ?? @"default") + @"-");
-                }
+                // The four-task chain under the transfer second pass, the only one the column runs
+                // with: the PerFileRescoring nodes score with the columns FirstPassFDR wrote, shipped
+                // to them with the rest.
+                AssertHpcChainMatchesStraight(new Subset(_dataDir, LIBRARY_FILE, @"unit", RUN_NAMES, null,
+                    ProteinBestArm(), ProteinBestArgs(true)), @"protein-best-default-");
             }
             finally
             {
@@ -219,13 +217,14 @@ namespace pwiz.Osprey.Test
             AssertScoresIdentical(onScores, FirstPassScores(threadDir), @"one thread");
             AssertBlibsEqual(expectedBlib, Path.Combine(threadDir, BLIB_FILE));
 
-            // The protein-compact second pass: the same first pass, its own complete analysis.
+            // The protein-compact second pass is refused with the column: both credit a precursor for
+            // its protein's other detections.
             string compactDir = CreateDir(@"protein-best-protein-compact");
             var compact = new Dictionary<string, string>(ProteinBestVariables())
                 { [PASS2_QVALUE] = OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT };
-            RunAnalysis(compactDir, DataInputs(), compact, OnArgs(compactDir));
-            AssertProteinBestAnalysis(compactDir);
-            AssertScoresIdentical(onScores, FirstPassScores(compactDir), @"protein-compact has the same first pass");
+            string refused = RunOspreyExpecting(SearchArgs(compactDir, Path.Combine(_dataDir, LIBRARY_FILE), OnArgs(compactDir)),
+                compact, Program.EXIT_CODE_FAILURE_TO_START);
+            StringAssert.Contains(refused, @"cannot be used with OSPREY_PASS2_QVALUE=" + OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT);
 
             // The developer arm is a different column.
             var other = new Dictionary<string, string>(ProteinBestVariables()) { [PROTEIN_BEST_SHUFFLE] = @"1" };

@@ -1295,8 +1295,8 @@ Experiment-wide, to **every** node:
   clothes - 11 minutes and a 41.5 GB peak on the 446-run CHS cohort of issue #4650, for the
   625,620 base_ids already sitting on disk in that run's 2,502,512-byte summary
 - `<blib-stem>.1st-pass.model.json` - **mandatory on an ordinary run**, because
-  the default pass-2 mode is a frozen one (`protein-compact`); an unset
-  `OSPREY_PASS2_QVALUE` is not an opt-out
+  both pass-2 modes are frozen ones (`transfer`, the default, and `protein-compact`);
+  an unset `OSPREY_PASS2_QVALUE` is not an opt-out
 - `<blib-stem>.1st-pass.stratum.json` - the protein-compact stratum, a separate file because
   a different phase produces it (P7)
 
@@ -1327,7 +1327,7 @@ Per run, for **every** run in the cohort:
 Experiment-wide:
 - `<blib-stem>.1st-pass.fdr_experiment.bin`
 - `<blib-stem>.1st-pass.model.json`
-- `<blib-stem>.1st-pass.stratum.json` - the protein-compact stratum. The default
+- `<blib-stem>.1st-pass.stratum.json` - the protein-compact stratum. The protein-compact
   pass-2 mode reloads both this and the model here when neither was published in-process,
   which is every distributed `SecondPassFDR` node
 - `<blib-stem>.1st-pass.model-diagnostics.json`, when `--model-diagnostics` is on - the

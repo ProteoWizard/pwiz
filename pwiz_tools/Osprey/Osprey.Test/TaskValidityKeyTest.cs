@@ -68,7 +68,8 @@ namespace pwiz.Osprey.Test
             var variables = new[]
             {
                 @"OSPREY_TC_HALF_WINDOW", @"OSPREY_CORR_FRAGMENT_TOLERANCE", @"OSPREY_REF_XIC",
-                @"OSPREY_LOCAL_RT_TOLERANCE", @"OSPREY_XIC_FRAGMENTS", @"OSPREY_GBT_OOF"
+                @"OSPREY_LOCAL_RT_TOLERANCE", @"OSPREY_XIC_FRAGMENTS", @"OSPREY_GBT_OOF", @"OSPREY_MIN_RT_TOLERANCE",
+                @"OSPREY_LOESS_BANDWIDTH"
             };
             string set = variables.FirstOrDefault(name => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(name)));
             if (set != null)
@@ -85,9 +86,16 @@ namespace pwiz.Osprey.Test
             // Out-of-fold scoring is on wherever gbdt trains; it changes nothing under the SVM.
             Assert.IsTrue(unitConfig.Scoring.GbtOutOfFold);
             Assert.AreEqual(0.5, unitConfig.RtCalibration.MinRtTolerance);
+            Assert.AreEqual(0.3, unitConfig.RtCalibration.LoessBandwidth);
 
-            Assert.AreEqual(legacy + @";fcorr=7;refxic=corr;rtlocal=15", OspreyEnvironment.PickValidityKeySuffix(hramConfig.Scoring));
+            Assert.AreEqual(legacy + @";tcwin=0.4;fcorr=7;refxic=corr;rtlocal=15", OspreyEnvironment.PickValidityKeySuffix(hramConfig.Scoring));
             Assert.AreEqual(1.0, hramConfig.RtCalibration.MinRtTolerance);
+            Assert.AreEqual(0.10, hramConfig.RtCalibration.LoessBandwidth);
+            // The run log names what each resolution searched with.
+            string hramSettings = OspreyEnvironment.DescribeSearchSettings(hramConfig);
+            StringAssert.Contains(hramSettings, @"classifier gbdt, protein-best on, XIC fragments 12, correlation tolerance 7 ppm");
+            StringAssert.Contains(hramSettings, @"tc half window 0.4 min, gbdt out-of-fold on, RT tolerance floor 1 min, LOESS bandwidth 0.1, pass-2 transfer, reconciliation refit off, PEP ratio");
+            StringAssert.Contains(OspreyEnvironment.DescribeSearchSettings(unitConfig), @"classifier svm, protein-best off, XIC fragments 6, correlation tolerance off");
             Assert.AreEqual(12, hramConfig.Scoring.XicFragments);
             Assert.IsTrue(hramConfig.Scoring.GbtOutOfFold);
             // A shallow clone (per-file scoring, the correlation re-extraction) carries the settings

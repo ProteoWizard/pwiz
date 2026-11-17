@@ -52,8 +52,8 @@ fails in seconds rather than after Stage 1-5.
 
 | Mode | Retrain? | Null population | Level |
 |------|----------|-----------------|-------|
-| `protein-compact` (default) | no (frozen model) | stratified: the protein stratum and its complement, each against its own decoys | precursor; the stratum's experiment peptide q from a peptide-level competition over the same bests |
-| `transfer` | no | none: pass-1 experiment q kept; moved and gap-filled peaks mapped through the pass-1 score-to-q table (first-pass calibration) | precursor + peptide |
+| `protein-compact` | no (frozen model) | stratified: the protein stratum and its complement, each against its own decoys | precursor; the stratum's experiment peptide q from a peptide-level competition over the same bests |
+| `transfer` (default) | no | none: pass-1 experiment q kept; moved and gap-filled peaks mapped through the pass-1 score-to-q table (first-pass calibration) | precursor + peptide |
 
 The **experiment peptide q-value and peptide PEP** of an on-stratum survivor come from a
 peptide-level competition over the same per-entry bests
@@ -260,8 +260,8 @@ than reporting looser FDR than a cold run under the same flag.
 There is no longer anything to degrade TO - the retrain that used to be the fallback is
 gone - so the abort is the only outcome, not the stricter of two.
 
-Because `protein-compact` is now the DEFAULT, this fail-fast reaches ordinary
-runs, not just explicitly flagged ones. A distributed `--task SecondPassFDR` node
+Because `protein-compact` was the default until 2026-11, this fail-fast reached ordinary
+runs, not just explicitly flagged ones; under the `transfer` default it reaches only runs that ask for `protein-compact`. A distributed `--task SecondPassFDR` node
 never trained pass 1 and cannot rebuild the stratum (that needs the full library
 plus the first-pass detected peptides), so both the model and the stratum are
 reloaded from disk.

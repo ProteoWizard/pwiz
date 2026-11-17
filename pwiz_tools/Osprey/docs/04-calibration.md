@@ -191,7 +191,7 @@ sample SD (n-1 denominator, two left-to-right passes), and
 `RunCalibrationScoringPass` builds an `RTCalibratorConfig` and calls
 `RTCalibrator.Fit` (`Calibrator.cs:501-519`; `RTCalibration.cs:100`):
 
-- `Bandwidth = config.RtCalibration.LoessBandwidth` (default 0.3)
+- `Bandwidth = config.RtCalibration.LoessBandwidth` (0.3 by default, 0.10 for HRAM data: `ResolutionDefaults`)
 - `Degree = 1` (local linear)
 - `MinPoints = min(20, n)`
 - `RobustnessIterations = 2`
@@ -345,11 +345,11 @@ console report the same window number (issue #4364).
 | Flag / config / env var | Default | Effect on this stage |
 |---|---|---|
 | `RtCalibration.Enabled` (config) | `true` | Master switch. When false, discovery is skipped and the main search uses `FallbackRtTolerance` with raw library RTs (`PerFileScoringTask.cs:1668`). No dedicated CLI flag. |
-| `RtCalibration.LoessBandwidth` | `0.3` | Fraction of points per local LOESS fit (`Calibrator.cs:503`). |
+| `RtCalibration.LoessBandwidth` | `0.3` (HRAM: `0.10`) | Fraction of points per local LOESS fit (`Calibrator.cs:503`). |
 | `RtCalibration.MinCalibrationPoints` | `200` | Pass-1 LOESS floor; below it, calibration fails to fallback (`Calibrator.cs:259, 479`). |
 | `RtCalibration.RtToleranceFactor` | `3.0` | Multiplier on the residual/MAD spread. Note: the search path multiplies `MAD·1.4826` by a hardcoded `3.0` in `SearchWindowHalfWidth`, not this config field. |
 | `RtCalibration.FallbackRtTolerance` | `2.0` min | RT tolerance when calibration is disabled or fails (`ScoringPipeline.cs:185`). |
-| `RtCalibration.MinRtTolerance` | `0.5` min | Lower clamp on the search RT window (`ScoringPipeline.cs:176`) and on the pass tolerances (`Calibrator.cs:291-293`). |
+| `RtCalibration.MinRtTolerance` | `0.5` min (HRAM: `1.0`) | Lower clamp on the search RT window (`ScoringPipeline.cs:176`) and on the pass tolerances (`Calibrator.cs:291-293`). |
 | `RtCalibration.MaxRtTolerance` | `3.0` min | Upper clamp (hard cap) on the search RT window. |
 | `RtCalibration.CalibrationSampleSize` | `100000` | Target sampled entries; `0` = use all (`Calibrator.cs:197, 759`). |
 | `RtCalibration.CalibrationRetryFactor` | `2.0` | Present on the config but **unused** by the C# `Calibrator` (see Divergences). |
