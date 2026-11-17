@@ -319,7 +319,10 @@ namespace pwiz.ProteowizardWrapper
                 if (!DateTime.TryParse(stampText, CultureInfo.InvariantCulture, DateTimeStyles.None, out runStartTime) &&
                     !DateTime.TryParse(stampText, out runStartTime))
                     return null;
-                return runStartTime;
+                // TryParse converts to local time with Kind=Local. The .skyd stores a Local value as a point in
+                // time and returns it in the time zone of the computer that opens it, so drop the Kind and keep
+                // the clock time.
+                return DateTime.SpecifyKind(runStartTime, DateTimeKind.Unspecified);
             }
         }
 

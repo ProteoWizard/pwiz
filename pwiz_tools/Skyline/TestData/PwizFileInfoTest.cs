@@ -445,7 +445,9 @@ namespace pwiz.SkylineTestData
         /// The acquired time Skyline reads from a Thermo file must be the clock time the file stores, on any
         /// computer and on any date. The reader converts the stored time to UTC with the host's offset and
         /// <see cref="MsDataFileImpl.RunStartTime"/> converts it back, so both must use the offset on the
-        /// acquisition date.
+        /// acquisition date. The value must also carry no time zone, because the .skyd stores a
+        /// <see cref="DateTimeKind.Local"/> value as a point in time and returns it in the time zone of the computer
+        /// that opens the .skyd.
         /// </summary>
         [TestMethod]
         public void TestRunStartTime()
@@ -456,8 +458,11 @@ namespace pwiz.SkylineTestData
             // Stores 2009-07-02 10:36:38, a date in daylight saving time in North America and Europe
             var path = TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Thermo, "090701-LTQVelos-unittest-01.raw");
             using var msDataFile = new MsDataFileImpl(path);
-            AssertEx.AreEqual<DateTime?>(new DateTime(2009, 7, 2, 10, 36, 38), msDataFile.RunStartTime,
+            var runStartTime = msDataFile.RunStartTime;
+            AssertEx.AreEqual<DateTime?>(new DateTime(2009, 7, 2, 10, 36, 38), runStartTime,
                 @"RunStartTime must be the clock time the file stores");
+            AssertEx.AreEqual(DateTimeKind.Unspecified, runStartTime.Value.Kind,
+                @"RunStartTime must have no time zone, so the .skyd stores the clock time on any computer");
         }
 
         [TestMethod]
