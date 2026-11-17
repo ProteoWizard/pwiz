@@ -1135,8 +1135,8 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// A result file matched by a line of the peak boundaries file, resolved down to everything a
         /// <see cref="PeakBoundaryChange"/> needs. Resolving this once per distinct file name in the file,
-        /// instead of once per line, keeps <see cref="ChromatogramSet.FindFile"/> and
-        /// <see cref="ChromatogramSet.GetFileInfo"/> off the per-line path.
+        /// instead of once per line, keeps <see cref="ChromatogramSet.FindFile(MsDataFileUri)"/> and
+        /// <see cref="ChromatogramSet.GetFileInfo(ChromFileInfoId)"/> off the per-line path.
         /// </summary>
         private class ResultFileMatch
         {

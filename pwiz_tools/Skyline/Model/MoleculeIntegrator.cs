@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model
     /// The chromatograms for a precursor are read from the .skyd file once and then reused for every
     /// change to that precursor. That matters when many peaks on the same molecule are being changed, as
     /// when importing a peak boundaries file: going through
-    /// <see cref="SrmDocument.ChangePeak(IdentityPath,string,pwiz.CommonMsData.MsDataFileUri,Transition,double?,double?,UserSet,PeakIdentification?,bool)"/>
+    /// <c>SrmDocument.ChangePeak</c>
     /// instead would re-read and re-match the chromatograms for every change, and would rebuild the whole
     /// document each time.
     /// </para>
@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Model
 
         /// <summary>
         /// Passed through to
-        /// <see cref="TransitionGroupDocNode.ChangePeak(DocSettings.SrmSettings,ChromatogramGroupInfo,int,ChromFileInfoId,DocSettings.OptimizableRegression,Transition,double?,double?,PeakIdentification,UserSet,bool)"/>.
+        /// <c>TransitionGroupDocNode.ChangePeak</c>.
         /// Defaults to false.
         /// </summary>
         public bool PreserveMissingPeaks { get; set; }
@@ -169,7 +169,7 @@ namespace pwiz.Skyline.Model
                         ? ModelResources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_replicate__1__
                         : ModelResources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_file__1__,
                     TransitionGroupDocNode.GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz, string.Empty),
-                    chromInfos.Count == 0 ? (object) chromatogramSet.Name : change.FilePath));
+                    chromInfos.Count == 0 ? chromatogramSet.Name : change.FilePath));
             }
             return chromGroupInfo;
         }
@@ -179,7 +179,7 @@ namespace pwiz.Skyline.Model
         /// molecule is going to need the first time the precursor is used.
         /// <para>
         /// The replicates are matched one at a time, exactly as
-        /// <see cref="SrmDocument.ChangePeak(IdentityPath,string,pwiz.CommonMsData.MsDataFileUri,Transition,double?,double?,UserSet,PeakIdentification?,bool)"/>
+        /// <c>SrmDocument.ChangePeak</c>
         /// does, so which chromatogram is chosen never differs from what the document would have picked. What
         /// makes it fast is that their peaks are then all read in a single pass, instead of a seek and a read
         /// under <see cref="ChromatogramCache"/>'s read lock per replicate. Only the replicates named in
