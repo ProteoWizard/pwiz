@@ -145,6 +145,7 @@ public sealed class WatersConnectDataSource : IUnifiDataSource, IDisposable
         chromatogram.AltId = info.AltId;
         chromatogram.Q1 = info.Q1;
         chromatogram.Q3 = info.Q3;
+        chromatogram.CollisionEnergy = info.CollisionEnergy;
         chromatogram.Polarity = info.Polarity;
         chromatogram.AcquiredTimeRange = info.AcquiredTimeRange;
 
@@ -497,6 +498,11 @@ public sealed class WatersConnectDataSource : IUnifiDataSource, IDisposable
             string title = entry.GetPropertyOrEmpty("title");
             double q1 = entry.GetPropertyAsDouble("msTechnique.basicMsProperties.precursorMz");
             double q3 = entry.GetPropertyAsDouble("msTechnique.basicMsProperties.productMz");
+            // CE may be missing, null, "NaN" or a quoted number; only a finite number is kept, as a
+            // magnitude like the MassLynx reader. Skyline reads it to tell CE optimization steps apart.
+            double collisionEnergy = entry.GetPropertyAsDouble("msTechnique.fragmentationProperties.collisionEnergy");
+            if (double.IsNaN(collisionEnergy) || double.IsInfinity(collisionEnergy))
+                collisionEnergy = 0;
             string polarity = entry.GetPropertyAtPath("msTechnique.basicMsProperties.ionisationMode")?.GetString() ?? string.Empty;
             UnifiPolarity p = polarity switch
             {
@@ -515,6 +521,7 @@ public sealed class WatersConnectDataSource : IUnifiDataSource, IDisposable
                 Name = title,
                 Q1 = q1,
                 Q3 = q3,
+                CollisionEnergy = Math.Abs(collisionEnergy),
                 Polarity = p,
             };
             _chromatogramInfoList.Add(info);

@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -29,6 +30,7 @@ using System.Security.Authentication;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
 using pwiz.Common.SystemUtil;
@@ -38,8 +40,11 @@ using pwiz.CommonFileDialogs;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
+using WatersConnectModel = pwiz.Skyline.Model.WatersConnect;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -74,6 +79,8 @@ namespace pwiz.SkylineTestFunctional
             TestMethodExport(exportMethodDlg);
 
             VerifyBehaviorReplacement();
+
+            TestCeOptimizationExport();
 
             _authenticationError = true;
             exportMethodDlg = ShowDialog<ExportMethodDlg>(() =>
@@ -386,6 +393,204 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => methodFileDlg.RefreshForTest());
             WaitForConditionUI(5000, () => methodFileDlg.ListViewItems.Any(i => i.Text == serverFolderName),
                 () => "The server-side folder did not appear after refresh.");
+        }
+
+        /// <summary>
+        /// Verifies a CE optimization export. waters_connect records the CE of every channel, so each CE step
+        /// keeps the real product m/z instead of the per-step product m/z shift other instruments need. The CE
+        /// rises by the step size across the steps, and only one step of the adduct is the quant ion.
+        /// </summary>
+        private void TestCeOptimizationExport()
+        {
+            var document = SkylineWindow.Document;
+            var ceRegression = document.Settings.TransitionSettings.Prediction.CollisionEnergy;
+            var optimizedCompounds = ExportCompounds(document, ExportOptimize.CE, ceRegression.StepSize, ceRegression.StepCount);
+            var plainCompounds = ExportCompounds(document, null, 0, 0);
+            var optimizedAdducts = optimizedCompounds.SelectMany(compound => compound.Adducts).ToList();
+            var plainAdducts = plainCompounds.SelectMany(compound => compound.Adducts).ToList();
+            Assert.AreEqual(plainAdducts.Count, optimizedAdducts.Count);
+            for (int i = 0; i < optimizedAdducts.Count; i++)
+            {
+                var transitions = optimizedAdducts[i].Transitions;
+                // The product m/z values are exactly those of the export without optimization
+                AssertEx.AreEqualDeep(plainAdducts[i].Transitions.Select(t => t.ProductMz).ToList(),
+                    transitions.Select(t => t.ProductMz).Distinct().ToList());
+                foreach (var steps in transitions.GroupBy(t => t.ProductMz))
+                {
+                    var collisionEnergies = steps.Select(t => t.CollisionEnergy).ToList();
+                    Assert.IsTrue(collisionEnergies.Count > 1, "Expected several CE steps at product m/z {0}", steps.Key);
+                    for (int step = 1; step < collisionEnergies.Count; step++)
+                        AssertEx.AreEqual(ceRegression.StepSize, collisionEnergies[step] - collisionEnergies[step - 1], 1e-6);
+                }
+                // The quant ion is the center step, not whichever step ParseMethod happens to see first
+                var quantIons = transitions.Where(t => t.IsQuanIon).ToList();
+                Assert.AreEqual(1, quantIons.Count);
+                var quantIonSteps = transitions.Where(t => t.ProductMz == quantIons[0].ProductMz)
+                    .Select(t => t.CollisionEnergy).OrderBy(ce => ce).ToList();
+                AssertEx.AreEqual(quantIonSteps[quantIonSteps.Count / 2], quantIons[0].CollisionEnergy, 1e-6,
+                    @"The quant ion is not the center CE step");
+            }
+
+            // The uploaded payload is the first to repeat a product m/z, so check it against the server's schema
+            ValidateJsonAgainstSchema(SerializeMethod(optimizedCompounds), TestFilesDir.GetTestPath("method-dev-spec.json"));
+
+            ValidateCeCannotIdentifyStep(document, ceRegression);
+            ValidateTruncatedSeries(document, ceRegression);
+            ValidateSeriesWithoutCenterStep(document);
+        }
+
+        /// <summary>
+        /// When the collision energy of the center step is not positive, that step is not exported at all, so
+        /// the quant ion has to move to the exported step nearest the center instead of being left to
+        /// ParseMethod, which would mark the first row of the adduct whatever its step or transition.
+        /// </summary>
+        private static void ValidateSeriesWithoutCenterStep(SrmDocument document)
+        {
+            // A regression giving a negative collision energy at step 0, reached only with no explicit values
+            var negativeCe = new CollisionEnergyRegression(@"Negative center",
+                new[] { new ChargeRegressionLine(1, 0, -5) }, 6, 5);
+            var documentNegativeCe = ClearExplicitCollisionEnergies(document).ChangeSettings(
+                document.Settings.ChangeTransitionPrediction(prediction => prediction.ChangeCollisionEnergy(negativeCe)));
+            var optimized = ExportCompounds(documentNegativeCe, ExportOptimize.CE, negativeCe.StepSize, negativeCe.StepCount)
+                .SelectMany(compound => compound.Adducts).ToList();
+            // The export without optimization marks the quant ion transition of each adduct
+            var plain = ExportCompounds(documentNegativeCe, null, 0, 0)
+                .SelectMany(compound => compound.Adducts).ToList();
+            Assert.AreEqual(plain.Count, optimized.Count);
+            for (int i = 0; i < optimized.Count; i++)
+            {
+                var steps = optimized[i].Transitions.GroupBy(TransitionKey).ToList();
+                Assert.IsTrue(steps.All(g => g.All(t => t.CollisionEnergy > 0)),
+                    "A step with a non-positive collision energy was exported for {0}", optimized[i].Name);
+                Assert.IsTrue(steps.All(g => g.Count() < negativeCe.StepCount * 2 + 1),
+                    "No step was dropped for {0}, so the case under test was not exercised", optimized[i].Name);
+
+                var quantIons = optimized[i].Transitions.Where(t => t.IsQuanIon).ToList();
+                Assert.AreEqual(1, quantIons.Count, "Adduct {0} does not have exactly one quant ion", optimized[i].Name);
+                // The quant ion stays on the transition the unoptimized export marks, at its lowest exported
+                // step, which is the one nearest the missing center
+                var plainQuantIon = plain[i].Transitions.Single(t => t.IsQuanIon);
+                AssertEx.AreEqual(plainQuantIon.ProductMz, quantIons[0].ProductMz, 1e-6,
+                    @"The quant ion moved to another transition");
+                var quantIonSteps = steps.Single(g => g.Key == TransitionKey(quantIons[0]));
+                AssertEx.AreEqual(quantIonSteps.Min(t => t.CollisionEnergy), quantIons[0].CollisionEnergy, 1e-6,
+                    @"The quant ion is not the exported step nearest the center");
+            }
+        }
+
+        /// <summary>
+        /// Returns the document with every explicit collision energy removed, so that the collision energy
+        /// comes from the regression.
+        /// </summary>
+        private static SrmDocument ClearExplicitCollisionEnergies(SrmDocument document)
+        {
+            var moleculeGroups = document.MoleculeGroups.Select(nodeGroup => (DocNode) nodeGroup.ChangeChildren(
+                nodeGroup.Molecules.Select(nodeMol => (DocNode) nodeMol.ChangeChildren(
+                    nodeMol.TransitionGroups.Select(nodeTranGroup =>
+                    {
+                        var transitions = nodeTranGroup.Transitions.Select(nodeTran => (DocNode) nodeTran
+                            .ChangeExplicitValues(nodeTran.ExplicitValues.ChangeCollisionEnergy(null))).ToList();
+                        return (DocNode) nodeTranGroup
+                            .ChangeExplicitValues(nodeTranGroup.ExplicitValues.ChangeCollisionEnergy(null))
+                            .ChangeChildren(transitions);
+                    }).ToList())).ToList())).ToList();
+            return (SrmDocument) document.ChangeChildren(moleculeGroups);
+        }
+
+        /// <summary>
+        /// With a step size large enough to take the low steps below zero volts, those steps are not written
+        /// at all, and the quant ion moves to the written step nearest the center rather than being left to
+        /// land on the lowest one.
+        /// </summary>
+        private static void ValidateTruncatedSeries(SrmDocument document, OptimizableRegression ceRegression)
+        {
+            var wideSteps = (CollisionEnergyRegression) ceRegression.ChangeStepSize(6);
+            var documentWideSteps = document.ChangeSettings(document.Settings.ChangeTransitionPrediction(
+                prediction => prediction.ChangeCollisionEnergy(wideSteps)));
+            var adducts = ExportCompounds(documentWideSteps, ExportOptimize.CE, wideSteps.StepSize, wideSteps.StepCount)
+                .SelectMany(compound => compound.Adducts).ToList();
+            // The same export without optimization gives the collision energy of the center step
+            var centerCeByTransition = ExportCompounds(documentWideSteps, null, 0, 0)
+                .SelectMany(compound => compound.Adducts).SelectMany(adduct => adduct.Transitions)
+                .ToDictionary(TransitionKey, t => t.CollisionEnergy);
+            bool anyTruncated = false;
+            foreach (var adduct in adducts)
+            {
+                var quantIons = adduct.Transitions.Where(t => t.IsQuanIon).ToList();
+                Assert.AreEqual(1, quantIons.Count, "Adduct {0} does not have exactly one quant ion", adduct.Name);
+                foreach (var steps in adduct.Transitions.GroupBy(TransitionKey))
+                {
+                    var collisionEnergies = steps.Select(t => t.CollisionEnergy).ToList();
+                    Assert.AreEqual(collisionEnergies.Count, collisionEnergies.Distinct().Count(),
+                        "Steps of {0} do not have distinct collision energies", steps.Key);
+                    if (collisionEnergies.Count < wideSteps.StepCount * 2 + 1)
+                        anyTruncated = true;
+                    // The quant ion is the written step whose CE is nearest the center step's CE
+                    if (!steps.Any(t => t.IsQuanIon))
+                        continue;
+                    var centerCe = centerCeByTransition[steps.Key];
+                    var nearestCe = collisionEnergies.OrderBy(ce => Math.Abs(ce - centerCe)).First();
+                    AssertEx.AreEqual(nearestCe, steps.First(t => t.IsQuanIon).CollisionEnergy, 1e-6,
+                        @"The quant ion is not the written step nearest the center");
+                }
+            }
+            Assert.IsTrue(anyTruncated, "No series was truncated, so the case under test was not exercised");
+        }
+
+        /// <summary>
+        /// With no collision energy predictor the optimization step is not applied to the collision energy, so
+        /// the steps are still told apart by a stepped product m/z rather than becoming identical channels.
+        /// </summary>
+        private static void ValidateCeCannotIdentifyStep(SrmDocument document, OptimizableRegression ceRegression)
+        {
+            var documentNoPredictor = document.ChangeSettings(document.Settings.ChangeTransitionPrediction(
+                prediction => prediction.ChangeCollisionEnergy(CollisionEnergyList.NONE)));
+            var adducts = ExportCompounds(documentNoPredictor, ExportOptimize.CE, ceRegression.StepSize, ceRegression.StepCount)
+                .SelectMany(compound => compound.Adducts);
+            foreach (var adduct in adducts)
+            {
+                Assert.AreEqual(adduct.Transitions.Count, adduct.Transitions.Select(t => t.ProductMz).Distinct().Count(),
+                    "Steps of {0} share a product m/z although their collision energies are equal", adduct.Name);
+            }
+        }
+
+        private static string TransitionKey(WatersConnectModel.Transition transition)
+        {
+            return string.Format(@"{0:F04} -> {1:F04}", transition.PrecursorMz, transition.ProductMz);
+        }
+
+        private static IList<WatersConnectModel.Compound> ExportCompounds(SrmDocument document, string optimizeType,
+            double optimizeStepSize, int optimizeStepCount)
+        {
+            var exporter = new WatersConnectMethodExporter(document, null)
+            {
+                OptimizeType = optimizeType,
+                OptimizeStepSize = optimizeStepSize,
+                OptimizeStepCount = optimizeStepCount
+            };
+            exporter.Export(null);
+            // ParsingContext is static and only ExportMethod sets it, so clear what an earlier export left
+            WatersConnectModel.ParseableObject.ParsingContext.Clear();
+            return exporter.MemoryOutput.Values
+                .SelectMany(output => exporter.ParseMethod(output.ToString()).Compounds).ToList();
+        }
+
+        /// <summary>
+        /// Serializes compounds the way the exporter uploads them, so the payload can be schema checked.
+        /// </summary>
+        private static string SerializeMethod(IEnumerable<WatersConnectModel.Compound> compounds)
+        {
+            var method = new WatersConnectModel.MethodModel
+            {
+                Name = @"TestMethod",
+                DestinationFolderId = Guid.Empty.ToString(),
+                TemplateVersionId = Guid.Empty.ToString(),
+                CreationMode = @"Single",
+                ScheduleType = @"FullGradientTime",
+                Compounds = compounds.ToArray()
+            };
+            return JsonConvert.SerializeObject(method, Formatting.Indented,
+                new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
         }
 
         private void TestAuthenticationError(ExportMethodDlg exportMethodDlg)

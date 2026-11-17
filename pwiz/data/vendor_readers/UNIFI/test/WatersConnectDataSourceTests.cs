@@ -87,6 +87,52 @@ public class WatersConnectDataSourceTests
     }
 
     [TestMethod]
+    public void Discovery_MrmChannels_ReadCollisionEnergy()
+    {
+        // The MRM channel list reports fragmentationProperties.collisionEnergy, which older
+        // servers fill with NaN and newer ones with a number (sometimes quoted). Only a finite
+        // value is kept, as a magnitude; everything else reads as 0, meaning not reported.
+        var handler = new ScriptedHandler();
+        handler.AddOAuth();
+        handler.AddInjectionMetadata();
+        handler.AddChannelsArray("[]", """
+            [
+              { "title": "145>100.98 20eV", "retentionTimes": [0.1], "intensities": [10],
+                "msTechnique": { "basicMsProperties": { "precursorMz": 145.0, "productMz": 100.98, "ionisationMode": "Positive" },
+                                 "fragmentationProperties": { "collisionEnergy": 20.0 } } },
+              { "title": "145>100.98 22eV", "retentionTimes": [0.1], "intensities": [11],
+                "msTechnique": { "basicMsProperties": { "precursorMz": 145.0, "productMz": 100.98, "ionisationMode": "Positive" },
+                                 "fragmentationProperties": { "collisionEnergy": "22" } } },
+              { "title": "145>100.98 -24eV", "retentionTimes": [0.1], "intensities": [12],
+                "msTechnique": { "basicMsProperties": { "precursorMz": 145.0, "productMz": 100.98, "ionisationMode": "Negative" },
+                                 "fragmentationProperties": { "collisionEnergy": -24 } } },
+              { "title": "145>100.98 NaN", "retentionTimes": [0.1], "intensities": [13],
+                "msTechnique": { "basicMsProperties": { "precursorMz": 145.0, "productMz": 100.98, "ionisationMode": "Positive" },
+                                 "fragmentationProperties": { "collisionEnergy": "NaN" } } },
+              { "title": "145>100.98 null", "retentionTimes": [0.1], "intensities": [14],
+                "msTechnique": { "basicMsProperties": { "precursorMz": 145.0, "productMz": 100.98, "ionisationMode": "Positive" },
+                                 "fragmentationProperties": { "collisionEnergy": null } } },
+              { "title": "145>100.98 missing", "retentionTimes": [0.1], "intensities": [15],
+                "msTechnique": { "basicMsProperties": { "precursorMz": 145.0, "productMz": 100.98, "ionisationMode": "Positive" } } }
+            ]
+            """);
+
+        using var src = BuildSource(handler);
+
+        var mrm = src.ChromatogramInfo.Where(info => info.Type == ChromatogramType.MRM).ToList();
+        Assert.AreEqual(6, mrm.Count);
+        CollectionAssert.AreEqual(new[] { 20.0, 22.0, 24.0, 0.0, 0.0, 0.0 }, mrm.Select(info => info.CollisionEnergy).ToArray());
+        Assert.AreEqual(145.0, mrm[0].Q1);
+        Assert.AreEqual(100.98, mrm[0].Q3);
+        Assert.AreEqual(UnifiPolarity.Negative, mrm[2].Polarity);
+
+        var chromatogram = new UnifiChromatogram();
+        src.GetChromatogram(mrm[1].Index, chromatogram, getBinaryData: false);
+        Assert.AreEqual(22.0, chromatogram.CollisionEnergy);
+        handler.AssertExhausted();
+    }
+
+    [TestMethod]
     public void GetSpectrum_FetchesContinuumChunkPerChannel()
     {
         var handler = new ScriptedHandler();
@@ -276,14 +322,14 @@ public class WatersConnectDataSourceTests
         // The data source ctor walks: /channels, /channels/ms/tic, /channels/mrm in order.
         // Default the TIC + MRM responses to empty arrays so tests that only care about
         // channel + spectrum behavior don't have to stub every chromatogram endpoint.
-        public void AddChannelsArray(string body)
+        public void AddChannelsArray(string body, string mrmBody = "[]")
         {
             Expect("GET", $"{Host}/waters_connect/v2.0/injection-data/{InjectionId}/channels",
                 _ => Json(body));
             Expect("GET", $"{Host}/waters_connect/v2.0/injection-data/{InjectionId}/channels/ms/tic",
                 _ => Json("[]"));
             Expect("GET", $"{Host}/waters_connect/v2.0/injection-data/{InjectionId}/channels/mrm",
-                _ => Json("[]"));
+                _ => Json(mrmBody));
         }
 
         public void AssertExhausted()

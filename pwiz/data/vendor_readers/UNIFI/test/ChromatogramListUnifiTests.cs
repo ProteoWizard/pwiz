@@ -111,6 +111,7 @@ public class ChromatogramListUnifiTests
             ArrayLength = 2,
             Q1 = 489.5,
             Q3 = 120.0,
+            CollisionEnergy = 25.0,
             Polarity = UnifiPolarity.Positive,
             TimeArray = new[] { 0.5, 1.0 },
             IntensityArray = new[] { 1234.0, 5678.0 },
@@ -122,8 +123,29 @@ public class ChromatogramListUnifiTests
         Assert.IsTrue(c.Params.HasCVParam(CVID.MS_positive_scan));
         Assert.AreEqual(489.5, c.Precursor.IsolationWindow.CvParam(CVID.MS_isolation_window_target_m_z).ValueAs<double>());
         Assert.AreEqual(120.0, c.Product.IsolationWindow.CvParam(CVID.MS_isolation_window_target_m_z).ValueAs<double>());
+        // waters_connect reports the CE of each MRM channel; Skyline reads it to tell CE optimization steps apart
+        var collisionEnergy = c.Precursor.Activation.CvParam(CVID.MS_collision_energy);
+        Assert.AreEqual(25.0, collisionEnergy.ValueAs<double>());
+        Assert.AreEqual(CVID.UO_electronvolt, collisionEnergy.Units);
         CollectionAssert.AreEqual(new[] { 0.5, 1.0 }, c.BinaryDataArrays[0].Data);
         CollectionAssert.AreEqual(new[] { 1234.0, 5678.0 }, c.BinaryDataArrays[1].Data);
+    }
+
+    [TestMethod]
+    public void GetChromatogram_SRM_WithoutCollisionEnergy_SetsNoActivation()
+    {
+        // Every MRM channel on older waters_connect servers reports its CE as NaN, which the data
+        // source stores as 0; the chromatogram then carries no collision energy, as before.
+        var infos = new List<UnifiChromatogramInfo>
+        {
+            new() { Index = 0, Type = ChromatogramType.MRM, Name = "Q1=489 -> Q3=120 +" },
+        };
+        var src = new FakeSource(infos);
+        src.ChromatogramFor[0] = new UnifiChromatogram { Q1 = 489.5, Q3 = 120.0, CollisionEnergy = 0 };
+        var list = new ChromatogramList_UNIFI(src, false);
+        var c = list.GetChromatogram(0, getBinaryData: false);
+
+        Assert.IsFalse(c.Precursor.Activation.HasCVParam(CVID.MS_collision_energy));
     }
 
     [TestMethod]
@@ -193,6 +215,7 @@ public class ChromatogramListUnifiTests
             chromatogram.ArrayLength = src.ArrayLength;
             chromatogram.Q1 = src.Q1;
             chromatogram.Q3 = src.Q3;
+            chromatogram.CollisionEnergy = src.CollisionEnergy;
             chromatogram.Polarity = src.Polarity;
             chromatogram.Type = src.Type;
             chromatogram.Name = src.Name;

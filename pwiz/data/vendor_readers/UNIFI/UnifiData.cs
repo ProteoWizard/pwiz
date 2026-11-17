@@ -86,6 +86,8 @@ public class UnifiChromatogramInfo
     public double Q1 { get; set; }
     /// <summary>Q3 m/z for SRM; 0 otherwise.</summary>
     public double Q3 { get; set; }
+    /// <summary>Collision energy of an SRM channel in eV, as a magnitude; 0 when not reported.</summary>
+    public double CollisionEnergy { get; set; }
     /// <summary>(start, end) acquisition time range, in seconds.</summary>
     public (double Start, double End) AcquiredTimeRange { get; set; }
     /// <summary>Polarity of the underlying scan function.</summary>

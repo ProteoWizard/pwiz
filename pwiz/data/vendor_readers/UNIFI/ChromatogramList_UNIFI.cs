@@ -187,6 +187,8 @@ public sealed class ChromatogramList_UNIFI : ChromatogramListBase
             result.Params.Set(TranslatePolarity(chromatogram.Polarity));
 
         result.Precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, chromatogram.Q1, CVID.MS_m_z);
+        if (chromatogram.CollisionEnergy > 0)
+            result.Precursor.Activation.Set(CVID.MS_collision_energy, chromatogram.CollisionEnergy, CVID.UO_electronvolt);
         result.Product.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, chromatogram.Q3, CVID.MS_m_z);
 
         if (getBinaryData) AppendTimeIntensity(result, chromatogram, CVID.MS_number_of_detector_counts);

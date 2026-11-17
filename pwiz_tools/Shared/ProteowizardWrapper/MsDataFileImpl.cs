@@ -699,6 +699,14 @@ namespace pwiz.ProteowizardWrapper
             get { return _msDataFile.softwareList.Any(software => software.hasCVParamChild(CVID.MS_Shimadzu_Corporation_software)); }
         }
 
+        /// <summary>
+        /// True for data acquired with waters_connect, whether read from the server or from a file converted from it.
+        /// </summary>
+        public bool IsWatersConnectFile
+        {
+            get { return _msDataFile.softwareList.Any(software => software.hasCVParam(CVID.MS_waters_connect)); }
+        }
+
         private string InstrumentVendorName
         {
             get
