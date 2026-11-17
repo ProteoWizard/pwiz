@@ -80,6 +80,21 @@ namespace pwiz.Common.GUI
             }
         }
 
+        /// <summary>
+        /// Repaints the border of a captured docked dockable form: the 1px interior border DigitalRune
+        /// draws at any display scale, with square corners. A docked form cannot be told from a window
+        /// by its border colors at high DPI, so callers that know the form is docked use this.
+        /// </summary>
+        public static Bitmap CleanupDockedBorder(this Bitmap bmp)
+        {
+            var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
+            var colorCounts = GetColorCounts(bmp, rect);
+            // All white border means it is actually a graph so don't draw anything on it
+            if (colorCounts.Count == 1 && colorCounts.Keys.First().ToArgb() == Color.White.ToArgb())
+                return bmp;
+            return bmp.CleanupBorderInternal(INTERIOR_BORDER_COLOR, rect, 0, null);
+        }
+
         public static Bitmap CleanupBorder(this Bitmap bmp, Rectangle rectWindow, int cornerRadius, Rectangle? excludeRect = null)
         {
             return bmp.CleanupBorder(STANDARD_BORDER_COLOR, rectWindow, cornerRadius, excludeRect);

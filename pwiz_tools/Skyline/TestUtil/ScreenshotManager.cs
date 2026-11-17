@@ -515,7 +515,9 @@ namespace pwiz.SkylineTestUtil
                 // Only for unprocessed window screenshots
                 // Floating windows only have a transparent titlebar border
                 var form = activeWindow as DockableForm;
-                shotPic = shotPic.CleanupBorder(form is { DockState: DockState.Floating });
+                shotPic = form != null && ScreenCapture.IsDocked(form)
+                    ? shotPic.CleanupDockedBorder()
+                    : shotPic.CleanupBorder(form is { DockState: DockState.Floating });
             }
 
             if (scale.HasValue)

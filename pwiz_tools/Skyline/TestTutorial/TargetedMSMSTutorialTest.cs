@@ -1407,7 +1407,14 @@ namespace pwiz.SkylineTestTutorial
                     var labelRect = pane.GetRectScreen(label, g);
                     labelPoint = Point.Round(new PointF(labelRect.X + labelRect.Width / 2, labelRect.Y + labelRect.Height / 2));
                 }
-                stickPoint = Point.Round(pane.GeneralTransform(new PointF(mzPeak, intensityPeak / 2), CoordType.AxisXYScale));
+                // Above every neighboring stick, which can be less than a pixel away, so that only the
+                // y8 stick reaches the mouse whichever way its pixel position rounds
+                var neighborMax = pane.CurveList.OfType<StickItem>()
+                    .SelectMany(stick => Enumerable.Range(0, stick.NPts).Select(i => stick.Points[i]))
+                    .Where(pt => Math.Abs(pt.X - mzPeak) > 0.001 && Math.Abs(pt.X - mzPeak) < 10)
+                    .Select(pt => pt.Y).DefaultIfEmpty(0).Max();
+                Assert.IsTrue(neighborMax < intensityPeak);
+                stickPoint = Point.Round(pane.GeneralTransform(new PointF(mzPeak, (float) (intensityPeak + neighborMax) / 2), CoordType.AxisXYScale));
                 // Above the chart rectangle, where there are no peaks or labels
                 abovePoint = new Point(stickPoint.X, (int)(pane.Rect.Top + pane.Chart.Rect.Top) / 2);
             });

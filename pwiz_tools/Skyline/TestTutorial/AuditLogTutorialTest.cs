@@ -162,14 +162,14 @@ namespace pwiz.SkylineTestTutorial
 
             RunUIForScreenShot(() => SkylineWindow.ShowUndo());
             PauseForScreenShot("Undo list expanded.", null, bmp => 
-                ClipBitmap(bmp.CleanupBorder(), new Rectangle(0, 0, 713, 131)));
+                ClipBitmap(bmp.CleanupBorder(), new Rectangle(Point.Empty, ScaledSize(SkylineWindow, 713, 131))));
             RunUIForScreenShot(() => SkylineWindow.ShowUndo(false));
 
             RunUI(SkylineWindow.Undo);
 
             RunUIForScreenShot(() => SkylineWindow.ShowRedo());
             PauseForScreenShot("Redo list expanded.", null, bmp =>
-                ClipBitmap(bmp.CleanupBorder(), new Rectangle(0, 0, 743, 127)));
+                ClipBitmap(bmp.CleanupBorder(), new Rectangle(Point.Empty, ScaledSize(SkylineWindow, 743, 127))));
             RunUIForScreenShot(() => SkylineWindow.ShowRedo(false));
 
             RunUI(SkylineWindow.Redo);
@@ -427,7 +427,7 @@ namespace pwiz.SkylineTestTutorial
             RunUIForScreenShot(() => SkylineWindow.AuditLogForm.Parent.Parent.Width += Scaled(100));    // Wider to remove the horizontal scrollbar
             ShowReportsDropdown(AuditLogStrings.AuditLogForm_AuditLogForm_All_Info);
             PauseForScreenShot<AuditLogForm>("Audit Log Reports menu", null, bmp =>
-                ClipBitmap(bmp.CleanupBorder(true), new Rectangle(0, 0, 503, bmp.Height)));
+                ClipBitmap(bmp.CleanupBorder(true), new Rectangle(0, 0, ScaledWidth(SkylineWindow, 503), bmp.Height)));
             HideReportsDropdown();
 
             // TODO(nicksh): Audit log reason field does not currently support fill down

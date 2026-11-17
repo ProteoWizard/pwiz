@@ -1659,7 +1659,7 @@ namespace pwiz.SkylineTestUtil
                 var formLocation = new Point(SkylineWindow.DesktopBounds.Left + 200, SkylineWindow.DesktopBounds.Top + 200);
                 documentGridForm.NavBar.ReportsButton.HideDropDown();
                 var originalSize = documentGridForm.Size;
-                rectForm = new Rectangle(formLocation, new Size(documentGridForm.Width, ddHeight + 75));
+                rectForm = new Rectangle(formLocation, new Size(documentGridForm.Width, ddHeight + Scaled(75)));
                 // Make sure the dropdown fits into the window with some margin.
                 documentGridForm.FloatingPane.FloatAt(rectForm);
                 documentGridForm.NavBar.ReportsButton.ShowDropDown(); // TODO: Should deny closing until the screenshot is complete

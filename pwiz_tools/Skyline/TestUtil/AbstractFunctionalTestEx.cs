@@ -754,7 +754,7 @@ namespace pwiz.SkylineTestUtil
 
             if (pause)
             {
-                RunUI(() => annotationDefDlg.Height = 442);  // Shorter for screenshots
+                RunUI(() => annotationDefDlg.Height = ScaledHeight(annotationDefDlg, 442));  // Shorter for screenshots
                 PauseForScreenShot<DefineAnnotationDlg>("Define Annotation form - " + annotationName);
             }
 
