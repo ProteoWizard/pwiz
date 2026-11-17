@@ -33,6 +33,20 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             return property?.Value.ToString();
         }
 
+        /// <summary>
+        /// True if two waters_connect ids name the same item. The server writes the same GUID in more
+        /// than one format (e.g. "3616abca-1c42-..." in a listing, "3616ABCA1C42..." in a sample set's
+        /// properties), so GUIDs are compared by value; anything else is compared ignoring case.
+        /// </summary>
+        public static bool IdEquals(string id1, string id2)
+        {
+            if (id1 == null || id2 == null)
+                return false;
+            if (Guid.TryParse(id1, out var guid1) && Guid.TryParse(id2, out var guid2))
+                return guid1 == guid2;
+            return string.Equals(id1, id2, StringComparison.OrdinalIgnoreCase);
+        }
+
         public static DateTime? GetDateProperty(JObject jobject, string propertyName)
         {
             string value = GetProperty(jobject, propertyName);

@@ -2180,15 +2180,30 @@ namespace pwiz.Skyline
         {
             // get all the valid data sources (files and sub directories) in this directory.
             IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths;
-            try
+            if (sourceDir.StartsWith(WatersConnectUrl.UrlPrefix))
             {
-                listNamedPaths = DataSourceUtil.GetDataSources(sourceDir, recursive).ToArray();
+                try
+                {
+                    listNamedPaths = GetWatersConnectDataSources(sourceDir);
+                }
+                catch (Exception e)
+                {
+                    _out.WriteException(Resources.Error___0_, e);
+                    return null;
+                }
             }
-            catch(IOException e)
+            else
             {
-                _out.WriteLine(SkylineResources.CommandLine_GetDataSources_Error__Failure_reading_file_information_from_directory__0__, sourceDir);
-                _out.WriteException(e);
-                return null;
+                try
+                {
+                    listNamedPaths = DataSourceUtil.GetDataSources(sourceDir, recursive).ToArray();
+                }
+                catch (IOException e)
+                {
+                    _out.WriteLine(SkylineResources.CommandLine_GetDataSources_Error__Failure_reading_file_information_from_directory__0__, sourceDir);
+                    _out.WriteException(e);
+                    return null;
+                }
             }
             if (!listNamedPaths.Any())
             {
@@ -2208,6 +2223,20 @@ namespace pwiz.Skyline
             }
             
             return listNamedPaths;
+        }
+
+        /// <summary>
+        /// Lists the injections in a waters_connect sample set, named by a friendly path, a path-form URL
+        /// or "waters_connect:sampleSetId=...", as one replicate per injection named after the injection.
+        /// A sample set holds no sub-folders, so --import-all and --import-all-files behave the same.
+        /// </summary>
+        private static IList<KeyValuePair<string, MsDataFileUri[]>> GetWatersConnectDataSources(string sampleSetPath)
+        {
+            var sampleSetUrl = (WatersConnectUrl) CommandArgs.ParseImportFileValue(sampleSetPath);
+            return sampleSetUrl.ListSampleSetInjections()
+                .Select(injectionUrl => new KeyValuePair<string, MsDataFileUri[]>(
+                    injectionUrl.GetFileNameWithoutExtension(), new MsDataFileUri[] { injectionUrl }))
+                .ToArray();
         }
 
         private bool ApplyNamingPattern(IEnumerable<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths, Regex namingPattern, 
@@ -3711,13 +3740,14 @@ namespace pwiz.Skyline
 
         /// <summary>
         /// Resolves a waters_connect data source specified on the command line to a concrete injection.
-        /// A friendly path "waters_connect:&lt;account alias&gt;/Path/To/Injection" or a path-form URL without
-        /// an injection id is navigated on the server (via the saved account) to fill in the ids the import
-        /// requires. Non-waters_connect and already-resolved URLs are returned unchanged.
+        /// A friendly path "waters_connect:&lt;account alias&gt;/Path/To/Injection", a path-form URL, or an
+        /// id form "waters_connect:sampleSetId=...&amp;injectionId=..." is looked up on the server (via the
+        /// saved account) to fill in the ids and path the import requires. Non-waters_connect and
+        /// already-resolved URLs are returned unchanged.
         /// </summary>
         private static MsDataFileUri ResolveWatersConnectImportUri(MsDataFileUri uri)
         {
-            if (uri is WatersConnectUrl watersConnectUrl && watersConnectUrl.InjectionId == null)
+            if (uri is WatersConnectUrl watersConnectUrl)
                 return watersConnectUrl.ResolveInjection();
             return uri;
         }
@@ -4369,6 +4399,10 @@ namespace pwiz.Skyline
                 return false;
             }
 
+            // A waters_connect method's template and destination are on the server, not local files
+            bool exportingToWatersConnect = Equals(type, ExportFileType.Method) &&
+                                            Equals(args.MethodInstrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT);
+
             if (Equals(type, ExportFileType.Method))
             {
                 // If the instrument type is either just Thermo or a Thermo instrument type that
@@ -4412,9 +4446,10 @@ namespace pwiz.Skyline
                     _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__A_template_file_is_required_to_export_a_method_);
                     return false;
                 }
-                if (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT6400) || Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT_MASSHUNTER_12_METHOD)
+                if (!exportingToWatersConnect &&
+                    (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT6400) || Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT_MASSHUNTER_12_METHOD)
                         ? !Directory.Exists(args.TemplateFile)
-                        : !File.Exists(args.TemplateFile))
+                        : !File.Exists(args.TemplateFile)))
                 {
                     _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__The_template_file__0__does_not_exist_, args.TemplateFile);
                     return false;
@@ -4493,7 +4528,7 @@ namespace pwiz.Skyline
              * documentation after all...
              */
 
-            if (Equals(type, ExportFileType.Method))
+            if (Equals(type, ExportFileType.Method) && !exportingToWatersConnect)
             {
                 string extension = Path.GetExtension(args.TemplateFile);
                 if (!Equals(ExportInstrumentType.MethodExtension(args.MethodInstrumentType), extension))
@@ -4653,6 +4688,8 @@ namespace pwiz.Skyline
                 }
             }
             _exportProperties.PolarityFilter = args.ExportPolarityFilter;
+            if (exportingToWatersConnect)
+                return ExportWatersConnectMethod(args);
             if(!HandleExceptions(args, () =>
                    {
                        _exportProperties.ExportFile(instrument, type, args.ExportPath, _doc, args.TemplateFile);
@@ -4681,6 +4718,42 @@ namespace pwiz.Skyline
                                ? Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_
                                : Resources.CommandLine_ExportInstrumentFile_Method__0__exported_successfully_,
                            exportPath);
+            return true;
+        }
+
+        /// <summary>
+        /// Exports a method to a waters_connect server. The template (--exp-template) and the folder and
+        /// name of the new method (--exp-file) are named by path or by id and resolved on the server, and
+        /// the method is then uploaded as the Export Method dialog would upload it.
+        /// </summary>
+        private bool ExportWatersConnectMethod(CommandArgs args)
+        {
+            string methodName = null;
+            WatersConnectMethodExporter exporter = null;
+            bool exported = HandleExceptions(args, () =>
+            {
+                var templateUrl = WatersConnectUrl.ResolveAcquisitionMethod(args.TemplateFile);
+                var folderUrl = WatersConnectUrl.ResolveMethodDestination(args.ExportPath, templateUrl, out methodName);
+                _exportProperties.SkylineDocumentFileName = Path.GetFileName(args.SkylineFile);
+                // The exporter takes the method name as the folder URL's injection id, the way the
+                // Export Method dialog passes it
+                exporter = (WatersConnectMethodExporter) _exportProperties.ExportFile(
+                    ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT, ExportFileType.Method,
+                    folderUrl.ChangeInjectionId(methodName).ToString(), _doc, templateUrl.ToString());
+                return true;
+            }, x => _out.WriteException(Resources.Error___0_, x));
+            if (!exported)
+                return false;
+            if (!exporter.UploadSuccessful)
+            {
+                // Nothing was left to upload, e.g. after the polarity filter
+                _out.WriteLine(TextUtil.SpaceSeparate(Resources.CommandStatusWriter_WriteLine_Error_,
+                    Resources.CommandLine_ExportInstrumentFile_No_method_will_be_exported_));
+                return false;
+            }
+
+            _out.WriteLine(exporter.UploadResult);
+            _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Method__0__exported_successfully_, methodName);
             return true;
         }
 
