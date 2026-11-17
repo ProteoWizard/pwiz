@@ -4,8 +4,8 @@ namespace Pwiz.Data.MsData.Tests;
 
 /// <summary>
 /// Guards the host time zone adjustment in <see cref="ReaderConfig.FormatStartTimeStamp(DateTime, bool)"/>.
-/// The offset must be the one on the acquisition date, so the same file read in the same time zone gives the
-/// same <c>startTimeStamp</c> whether it is read in summer or in winter.
+/// The offset must be the one on the acquisition date, not on the date the file is read, so a summer and a winter
+/// acquisition in the same time zone get different offsets.
 /// </summary>
 [TestClass]
 public class FormatStartTimeStampTests
@@ -27,28 +27,22 @@ public class FormatStartTimeStampTests
                         DayOfWeek.Sunday))
             });
 
-        var importedInSummer = new DateTime(2025, 5, 21, 12, 0, 0);
-        var importedInWinter = new DateTime(2026, 3, 7, 12, 0, 0);
-
         // The Thermo SDK returns the instrument's local clock reading labeled Kind=Utc.
         var acquiredInSummer = new DateTime(2025, 5, 19, 15, 47, 11, DateTimeKind.Utc);
-        AssertStartTimeStamp("2025-05-19T22:47:11Z", acquiredInSummer, pacific, importedInSummer);
-        AssertStartTimeStamp("2025-05-19T22:47:11Z", acquiredInSummer, pacific, importedInWinter);
+        AssertStartTimeStamp("2025-05-19T22:47:11Z", acquiredInSummer, pacific);
 
         var acquiredInWinter = new DateTime(2025, 1, 15, 15, 47, 11, DateTimeKind.Utc);
-        AssertStartTimeStamp("2025-01-15T23:47:11Z", acquiredInWinter, pacific, importedInSummer);
-        AssertStartTimeStamp("2025-01-15T23:47:11Z", acquiredInWinter, pacific, importedInWinter);
+        AssertStartTimeStamp("2025-01-15T23:47:11Z", acquiredInWinter, pacific);
 
-        // With the adjustment off the stored value is written unchanged.
         Assert.AreEqual("2025-05-19T15:47:11Z",
-            ReaderConfig.FormatStartTimeStamp(acquiredInSummer, false, pacific, importedInWinter));
+            ReaderConfig.FormatStartTimeStamp(acquiredInSummer, false, pacific),
+            "startTimeStamp with the adjustment off must be the stored value");
     }
 
-    private static void AssertStartTimeStamp(string expected, DateTime acquired, TimeZoneInfo hostZone,
-        DateTime hostNow)
+    private static void AssertStartTimeStamp(string expected, DateTime acquired, TimeZoneInfo hostZone)
     {
-        Assert.AreEqual(expected, ReaderConfig.FormatStartTimeStamp(acquired, true, hostZone, hostNow),
-            $"startTimeStamp for a file acquired {acquired:yyyy-MM-dd HH:mm:ss} and read on {hostNow:yyyy-MM-dd} " +
+        Assert.AreEqual(expected, ReaderConfig.FormatStartTimeStamp(acquired, true, hostZone),
+            $"startTimeStamp for a file acquired {acquired:yyyy-MM-dd HH:mm:ss} " +
             "must use the UTC offset on the acquisition date");
     }
 }

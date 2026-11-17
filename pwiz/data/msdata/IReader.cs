@@ -310,19 +310,18 @@ public sealed class ReaderConfig
     /// </remarks>
     public static string? FormatStartTimeStamp(DateTime sdkDate, bool adjustToHostTimeZone)
     {
-        return FormatStartTimeStamp(sdkDate, adjustToHostTimeZone, TimeZoneInfo.Local, DateTime.Now);
+        return FormatStartTimeStamp(sdkDate, adjustToHostTimeZone, TimeZoneInfo.Local);
     }
 
     /// <summary>
-    /// <see cref="FormatStartTimeStamp(DateTime, bool)"/> with the host time zone and the current time
-    /// supplied by the caller, so a test gives the same result on any computer and on any date.
+    /// <see cref="FormatStartTimeStamp(DateTime, bool)"/> with the host time zone supplied by the caller,
+    /// so a test gives the same result on any computer.
     /// </summary>
     /// <param name="sdkDate">The vendor SDK's acquisition time, unmodified.</param>
     /// <param name="adjustToHostTimeZone">See <see cref="FormatStartTimeStamp(DateTime, bool)"/>.</param>
     /// <param name="hostZone">The time zone the file is read in.</param>
-    /// <param name="hostNow">The time the file is read.</param>
     internal static string? FormatStartTimeStamp(DateTime sdkDate, bool adjustToHostTimeZone,
-        TimeZoneInfo hostZone, DateTime hostNow)
+        TimeZoneInfo hostZone)
     {
         if (sdkDate == default) return null;
 
