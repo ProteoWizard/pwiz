@@ -40,11 +40,11 @@ namespace pwiz.Osprey.Test
     {
         private const string PROTEIN_BEST_SHUFFLE = @"OSPREY_PROTEIN_BEST_SHUFFLE";
         private const string PREFILTER_SIZE = @"OSPREY_GBT_PREFILTER_SIZE";
-        // The environment variable --protein-best replaced, which is now refused as unknown.
+        // The environment variable --protein-boost best replaced, which is now refused as unknown.
         private const string RETIRED_PROTEIN_BEST = @"OSPREY_PROTEIN_BEST";
 
         /// <summary>
-        /// Both passes' scores and run q-values of the subset analysis with <c>--protein-best off</c>,
+        /// Both passes' scores and run q-values of the subset analysis with <c>--protein-boost compact</c>,
         /// as digested by <see cref="AnalysisDigest"/>: the value the default analysis produced at
         /// c0c2bcd43c, before the column existed, captured there with the same digest. Off must stay
         /// that analysis bit for bit; a reviewed change to the one-round first pass recaptures it.
@@ -62,7 +62,7 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The protein-best column (<c>--protein-best</c>, off by default) through the whole pipeline
+        /// The protein-best column (<c>--protein-boost best</c>, off by default) through the whole pipeline
         /// on the subset: the default, off, reproduces the analysis that preceded the column bit for
         /// bit; on trains two rounds at the default size; a run with it completes both
         /// passes under both second-pass modes and writes FDRBench for both passes and a library;
@@ -98,7 +98,7 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The default, <c>--protein-best off</c>, with no two-round training asked for, is the
+        /// The default, <c>--protein-boost compact</c>, with no two-round training asked for, is the
         /// one-round first pass that was the default before the column: the same scores and q-values
         /// in both passes, to the bit, as <see cref="PreProteinBestDigest"/> pins, and no column written.
         /// </summary>
@@ -236,7 +236,7 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// The linear SVM (the default classifier) with nothing asked for but the column
-        /// (<c>--protein-best on</c>): the two-round training at its default size, a complete analysis
+        /// (<c>--protein-boost best</c>): the two-round training at its default size, a complete analysis
         /// whose saved model is linear and scores with the column, and whose first-pass scores differ
         /// from the default analysis, with the column off.
         /// </summary>
@@ -295,7 +295,7 @@ namespace pwiz.Osprey.Test
         {
             using (EnvVar.OverrideVariables(variables))
             {
-                StringAssert.Contains(log, OspreyEnvironment.DescribeProteinBest(new OspreyConfig { ProteinBest = on }));
+                StringAssert.Contains(log, OspreyEnvironment.DescribeProteinBest(new OspreyConfig { ProteinBoost = on ? ProteinBoost.best : ProteinBoost.compact }));
             }
         }
 
@@ -323,7 +323,7 @@ namespace pwiz.Osprey.Test
 
         private static string[] ProteinBestArgs(bool on)
         {
-            return new[] { OspreyCommandArgs.ARG_PROTEIN_BEST.ArgumentText, on ? OspreyArgNames.VALUE_ON : OspreyArgNames.VALUE_OFF };
+            return new[] { OspreyCommandArgs.ARG_PROTEIN_BOOST.ArgumentText, (on ? ProteinBoost.best : ProteinBoost.compact).ToString() };
         }
 
         private static string[] ProteinBestColumns(string workDir)

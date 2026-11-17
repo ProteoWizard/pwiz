@@ -648,7 +648,7 @@ namespace pwiz.Osprey
                 if (OspreyEnvironment.Pass2QValueUnrecognized)
                 {
                     // Why 'percolator' and 'transfer-compete' were removed, with the entrapment
-                    // numbers, is in docs/12-second-pass-fdr.md and on OspreyEnvironment.Pass2QValue.
+                    // numbers, is in docs/12-second-pass-fdr.md and on OspreyEnvironment.Pass2QValueOverride.
                     LogError(string.Format(
                         @"OSPREY_PASS2_QVALUE='{2}' is not recognized. Use '{0}' or '{1}', or unset it " +
                         @"for the default ('{1}'). The 'percolator' and 'transfer-compete' modes were removed.",
@@ -695,7 +695,7 @@ namespace pwiz.Osprey
                         @"and cannot be set together with OSPREY_GBT_PREFILTER_Q.", OspreyEnvironment.GbtPrefilterLocalFdrSetting));
                     return EXIT_CODE_FAILURE_TO_START;
                 }
-                // Abort for the same reason: without a size (or --protein-best on's default one) there is no round 2, so the switches
+                // Abort for the same reason: without a size (or --protein-boost best's default one) there is no round 2, so the switches
                 // would do nothing while the run kept the one-round baseline's key.
                 if (OspreyEnvironment.PrefilterSwitchesWithoutSize(OspreyEnvironment.GbtPrefilterQSetting,
                         OspreyEnvironment.GbtPrefilterLocalFdrSetting, OspreyEnvironment.GbtPrefilterSample,
@@ -703,7 +703,7 @@ namespace pwiz.Osprey
                 {
                     LogError(string.Format(@"OSPREY_GBT_PREFILTER_Q, OSPREY_GBT_PREFILTER_LFDR and OSPREY_GBT_PREFILTER_SAMPLE shape round 2 " +
                              @"of the two-round training and need it on: {0}, or OSPREY_GBT_PREFILTER_SIZE (the row cap) above 0.",
-                             OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST, OspreyArgNames.VALUE_ON)));
+                             OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.best.ToString())));
                     return EXIT_CODE_FAILURE_TO_START;
                 }
                 // Abort for the same reason: the mask is resolved when the FDR stage first loads
@@ -735,7 +735,7 @@ namespace pwiz.Osprey
                     LogError(@"OSPREY_FEATURE_MASK masks every PIN feature, which leaves the FDR classifier nothing to train on.");
                     return EXIT_CODE_FAILURE_TO_START;
                 }
-                // Refused once the resolution is known, because HRAM data turns the protein-best column on by default.
+                // Refused once the resolution is known, because HRAM data defaults to --protein-boost best.
                 string pass2Err = OspreyEnvironment.ValidatePass2WithProteinBest(config);
                 if (pass2Err != null)
                 {

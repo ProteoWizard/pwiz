@@ -98,7 +98,7 @@ namespace pwiz.Osprey.Tasks
             // OSPREY_PASS2_QVALUE selects how this 2nd pass assigns reported q-values.
             // Log the active mode once so a run's provenance is in the log. An unrecognized
             // token never reaches here: Program aborts at startup.
-            if (OspreyEnvironment.Pass2TransferQ)
+            if (config.Pass2TransferQ)
             {
                 // The pass-1 model scores the moved peaks and each file maps score to run q with
                 // its own first-pass table; experiment q stays anchored on the best peak.
@@ -107,7 +107,7 @@ namespace pwiz.Osprey.Tasks
                     @"cross-run reconciliation get a new run-level q-value.",
                     OspreyEnvironment.PASS2_QVALUE_TRANSFER));
             }
-            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_PASS2_QVALUE, OspreyEnvironment.Pass2QValue));
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_PASS2_QVALUE, config.Pass2QValue));
 
             EnsureFrozenFirstPassPublished(ctx);
 
@@ -115,7 +115,7 @@ namespace pwiz.Osprey.Tasks
                 return;
 
             var pass2Writer = new Pass2SidecarWriter(config, taskName, taskValidityKey);
-            RequireWorkerAnswers(rescored.FileNames, pass2Writer);
+            RequireWorkerAnswers(rescored.FileNames, pass2Writer, config);
 
             // LogInfo, not LogVerbose: this is the heading for the longest stretch of work left
             // in Stage 7, and a --verbose-only heading is invisible on the runs that actually take
@@ -127,7 +127,7 @@ namespace pwiz.Osprey.Tasks
             // protein-compact or transfer and nothing else. Both read the same per-run answers;
             // they differ only in how a record becomes an experiment-scope value - re-competed
             // over the stratum, or carried from the first pass.
-            if (OspreyEnvironment.Pass2ProteinCompact)
+            if (config.Pass2ProteinCompact)
                 ComputePass2FrozenCompetition(ctx, rescored, perFileParquetPaths, config, pass2Writer);
             else
                 ComputePass2TransferFold(ctx, rescored, config, pass2Writer);
@@ -159,13 +159,14 @@ namespace pwiz.Osprey.Tasks
         /// a time partway through a fold that has already spent minutes per run. A key with no
         /// matching input file is in the list too: its answer has nowhere to be.</para>
         /// </summary>
-        private static void RequireWorkerAnswers(IReadOnlyList<string> fileNames, Pass2SidecarWriter writer)
+        private static void RequireWorkerAnswers(IReadOnlyList<string> fileNames, Pass2SidecarWriter writer,
+            OspreyConfig config)
         {
             var missing = new List<string>();
             foreach (string fileName in fileNames)
             {
                 string inputFile = writer.InputFor(fileName);
-                if (inputFile == null || !HasWorkerStamp(inputFile))
+                if (inputFile == null || !HasWorkerStamp(inputFile, config))
                     missing.Add(fileName);
             }
             if (missing.Count == 0)
@@ -208,7 +209,7 @@ namespace pwiz.Osprey.Tasks
                 OspreyTasksResources.Pass2FdrSidecar_EnsureFrozenFirstPassPublished_Reloaded_the_saved_first_pass_model_for_second_pass_FDR__first_pass_experiment_,
                 reloaded.ExperimentAgg ?? @"not recorded"));
 
-            if (OspreyEnvironment.Pass2ProteinCompact && reloaded.StratumBaseIds != null &&
+            if (ctx.Config.Pass2ProteinCompact && reloaded.StratumBaseIds != null &&
                 !ctx.TryGet<ProteinCompactStratum>(out _))
             {
                 ctx.Publish(new ProteinCompactStratum(reloaded.StratumBaseIds));
@@ -480,7 +481,7 @@ namespace pwiz.Osprey.Tasks
         /// SecondPassFDR reads the run's gap-fill entry ids from it. A plan left by an earlier
         /// run, or a kill between the plan and the parquet, leaves a run that is not done.</para>
         /// </summary>
-        internal static bool HasWorkerStamp(string inputFile)
+        internal static bool HasWorkerStamp(string inputFile, OspreyConfig config)
         {
             var reconciled = ParquetScoreCache.ReadStamp(ParquetScoreCache.GetReconciledScoresPath(inputFile));
             if (reconciled == null ||
@@ -493,7 +494,7 @@ namespace pwiz.Osprey.Tasks
                 return false;
             if (!IsSameStamp(ArtifactStamp.TryReadJsonHead(ReconciliationFile.PathForInput(inputFile)), reconciled))
                 return false;
-            return !OspreyEnvironment.Pass2ProteinCompact ||
+            return !config.Pass2ProteinCompact ||
                    IsSameStamp(Pass2CompetitionDecoys.ReadStamp(Pass2CompetitionDecoys.PathFor(inputFile)), reconciled);
         }
 
@@ -1115,7 +1116,7 @@ namespace pwiz.Osprey.Tasks
             HashSet<uint> stratum = null;
             bool haveInputs =
                 ctx.TryGet<FirstPassPercolatorModel>(out var frozen) && frozen?.Results != null;
-            if (haveInputs && OspreyEnvironment.Pass2ProteinCompact)
+            if (haveInputs && config.Pass2ProteinCompact)
             {
                 // An empty stratum is an input (no protein had 2 or more detected peptides);
                 // only a missing one is not. If nothing passes, the .blib write says so.
@@ -1185,7 +1186,7 @@ namespace pwiz.Osprey.Tasks
             // to keep its 1st-pass q, which left the decoys the stratum excluded counting against
             // no one (issue #4581). The full-population form this method also served was
             // transfer-compete, removed because its competition ran over a target-conditioned
-            // subset - see the OspreyEnvironment.Pass2QValue remarks and issue #4581.
+            // subset - see the OspreyEnvironment.Pass2QValueOverride remarks and issue #4581.
             if (stratumBaseIds == null)
             {
                 throw new ArgumentNullException(nameof(stratumBaseIds),
@@ -2160,7 +2161,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// One run's protein-best column (<c>--protein-best</c>), read from beside its
+        /// One run's protein-best column (<c>--protein-boost best</c>), read from beside its
         /// first-pass FDR scores file, for a frozen model that scores with it; null for a model
         /// that does not, which is every run with the column off.
         ///

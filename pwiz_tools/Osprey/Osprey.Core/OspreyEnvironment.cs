@@ -518,7 +518,7 @@ namespace pwiz.Osprey.Core
 
         /// <summary>The <see cref="FdrModel"/> spelling of the linear SVM, the unit-resolution default. Accepted so a
         /// sweep script can name both arms explicitly rather than unsetting the variable for
-        /// one of them, as <see cref="PASS2_QVALUE_PROTEIN_COMPACT"/> spells its default.</summary>
+        /// one of them.</summary>
         public const string FDR_MODEL_SVM = @"svm";
 
         /// <summary>The <see cref="FdrModel"/> value that selects gradient-boosted trees.</summary>
@@ -787,15 +787,15 @@ namespace pwiz.Osprey.Core
                 if (envVar.IsSet)
                     given.Add(envVar.Name + @"=" + envVar.Value.Trim());
             }
-            if (config.ProteinBestGiven)
-                given.Add(OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST));
+            if (config.ProteinBoostGiven)
+                given.Add(OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST));
             var ic = CultureInfo.InvariantCulture;
             return string.Format(ic,
-                @"Search settings: classifier {0}, protein-best {1}, XIC fragments {2}, correlation tolerance {3}, " +
+                @"Search settings: classifier {0}, protein boost {1}, XIC fragments {2}, correlation tolerance {3}, " +
                 @"reference XIC {4}, local RT tolerance {5}, tc half window {6} min, gbdt out-of-fold {7}, " +
-                @"RT tolerance floor {8} min, LOESS bandwidth {9}, pass-2 {10}, reconciliation refit {11}, PEP {12} ({13})",
+                @"RT tolerance floor {8} min, LOESS bandwidth {9}, reconciliation refit {10}, PEP {11} ({12})",
                 config.FdrClassifier == FdrClassifier.Gbdt ? @"gbdt" : @"svm",
-                OnOff(config.ProteinBest),
+                config.ProteinBoost,
                 scoring.XicFragments,
                 scoring.CorrFragmentTolerancePpm.HasValue ? scoring.CorrFragmentTolerancePpm.Value.ToString(ic) + @" ppm" : @"off",
                 scoring.RefXicByCorrelation ? @"corr" : @"intensity",
@@ -804,7 +804,6 @@ namespace pwiz.Osprey.Core
                 OnOff(scoring.GbtOutOfFold),
                 config.RtCalibration.MinRtTolerance.ToString(ic),
                 config.RtCalibration.LoessBandwidth.ToString(ic),
-                Pass2QValue,
                 OnOff(!ReconciliationRefitOff),
                 PepRatioForm ? PEP_FORMULA_RATIO : PEP_FORMULA_MIXTURE,
                 given.Count == 0
@@ -1159,12 +1158,12 @@ namespace pwiz.Osprey.Core
             @"the N rows of the best-scoring peptide groups. Changes the validity key. Loads the features of every candidate " +
             @"during training (about double the resident features). Ignored, with a warning, by the " +
             @"projection path. 0 is off. Unset, it is " + PROTEIN_BEST_PREFILTER_SIZE.ToString(CultureInfo.InvariantCulture) + @" with " +
-            OspreyArgNames.PREFIX + OspreyArgNames.PROTEIN_BEST + @" on, whose column needs round 2, and off with it off (the default).")
+            OspreyArgNames.PREFIX + OspreyArgNames.PROTEIN_BOOST + @" best, whose column needs round 2, and off otherwise.")
             { ValueExample = @"<N>" };
 
         /// <summary>
         /// OSPREY_GBT_PREFILTER_SIZE=N: two-round first-pass training, as set (0 when unset; the size a
-        /// run trains with is <see cref="PrefilterSizeFor"/>, which defaults it for --protein-best). Round 1 trains as usual
+        /// run trains with is <see cref="PrefilterSizeFor"/>, which defaults it for --protein-boost best). Round 1 trains as usual
         /// on the random MaxTrainSize subsample; its fold models then score every best-per-precursor candidate, and
         /// round 2 retrains on the N rows of the peptide groups that score best. Either classifier, the name
         /// notwithstanding; 0 when unset. Keyed through the classifier validity-key term
@@ -1250,7 +1249,7 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// The round-2 row count of the two-round first-pass training with <c>--protein-best on</c> and
+        /// The round-2 row count of the two-round first-pass training with <c>--protein-boost best</c> and
         /// OSPREY_GBT_PREFILTER_SIZE unset: the column reaches the model only through round 2, and this
         /// is the size every protein-best experiment trained with.
         /// </summary>
@@ -1267,7 +1266,7 @@ namespace pwiz.Osprey.Core
         public const int PROTEIN_BEST_TOP_N = 1;
 
         private static readonly EnvVar ENV_PROTEIN_BEST_SHUFFLE = new EnvVar(@"OSPREY_PROTEIN_BEST_SHUFFLE", EnvVarGroup.behavior,
-            @"With " + OspreyArgNames.PREFIX + OspreyArgNames.PROTEIN_BEST + @" on, the negative control: 1 permutes which " +
+            @"With " + OspreyArgNames.PREFIX + OspreyArgNames.PROTEIN_BOOST + @" best, the negative control: 1 permutes which " +
             @"peptide has which accessions, seeded, keeping every protein's peptide count. Changes the validity key.")
             { Values = new[] { @"0", @"1" }, DefaultValue = @"0" };
 
@@ -1333,25 +1332,25 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static string ValidateProteinBestSettings(OspreyConfig config)
         {
-            string argText = OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST);
+            string argText = OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.best.ToString());
             if (!config.ProteinBest)
             {
                 return ENV_PROTEIN_BEST_SHUFFLE.IsSet
                     ? string.Format(@"OSPREY_PROTEIN_BEST_SHUFFLE shapes the column {0} adds " +
-                                    @"and cannot be set with {1}.", argText, OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST, OspreyArgNames.VALUE_OFF))
+                                    @"and cannot be set with {1}.", argText, OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, config.ProteinBoost.ToString()))
                     : null;
             }
             if (PrefilterSizeFor(true) <= 0)
             {
                 return string.Format(@"{0} reaches the model through round 2 of the two-round training: " +
                                      @"OSPREY_GBT_PREFILTER_SIZE=0 turns that off. Unset it, or use {1}.",
-                    argText, OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST, OspreyArgNames.VALUE_OFF));
+                    argText, OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.compact.ToString()));
             }
             return null;
         }
 
         /// <summary>
-        /// Why <paramref name="config"/>'s <c>--protein-best</c> and second-pass mode cannot run
+        /// Why <paramref name="config"/>'s <c>--protein-boost best</c> and second-pass mode cannot run
         /// together, or null when they can. The protein-best column and the protein-compact competition
         /// both credit a precursor for its protein's other detections, so together they count that
         /// evidence twice: on 3 SEA-AD files a reported q of 1% read 1.47% true FDP, where protein-best
@@ -1360,13 +1359,13 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static string ValidatePass2WithProteinBest(OspreyConfig config)
         {
-            if (!config.ProteinBest || !Pass2ProteinCompact)
+            if (!config.ProteinBest || !config.Pass2ProteinCompact)
                 return null;
             return string.Format(@"{0} cannot be used with OSPREY_PASS2_QVALUE={1}: both credit a precursor for its " +
                                  @"protein's other detections, and together report more false discoveries than their " +
                                  @"q-values claim. Unset OSPREY_PASS2_QVALUE, or use {2}.",
-                OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST), PASS2_QVALUE_PROTEIN_COMPACT,
-                OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST, OspreyArgNames.VALUE_OFF));
+                OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.best.ToString()), PASS2_QVALUE_PROTEIN_COMPACT,
+                OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.compact.ToString()));
         }
 
         private static string DescribeProteinBestTopN(int topN)
@@ -1466,12 +1465,12 @@ namespace pwiz.Osprey.Core
         /// Set to 1 to A/B against the serial decode without a rebuild.</summary>
         public static readonly int MzmlDecodeThreads = ParseIntOrNull(ENV_MZML_DECODE_THREADS) ?? 8;
 
-        /// <summary>The <see cref="Pass2QValue"/> confidence-transfer mode: do NOT retrain
+        /// <summary>The <see cref="OspreyConfig.Pass2QValue"/> confidence-transfer mode: do NOT retrain
         /// or re-estimate a null; score each reconciled peak with the frozen 1st-pass model
         /// and map it to a q via the full pre-compaction 1st-pass score-&gt;q table.</summary>
         public const string PASS2_QVALUE_TRANSFER = @"transfer";
 
-        /// <summary>The <see cref="Pass2QValue"/> protein-anchored constrained mode: the FROZEN
+        /// <summary>The <see cref="OspreyConfig.Pass2QValue"/> protein-anchored constrained mode: the FROZEN
         /// 1st-pass model (no retrain), with the target-decoy competition CONSTRAINED to the
         /// peptides of proteins
         /// detected in the 1st pass -- included as target+decoy PAIRS so the stratum's null
@@ -1493,7 +1492,7 @@ namespace pwiz.Osprey.Core
         /// precursor/peptide q-values AFTER Stage 6 reconciliation. The 2nd-pass peak
         /// RE-SCORING (better peak choices against the consensus) is kept in ALL modes;
         /// only the q-value step changes.
-        ///   <see cref="PASS2_QVALUE_PROTEIN_COMPACT"/> (default): frozen 1st-pass model, with
+        ///   <see cref="PASS2_QVALUE_PROTEIN_COMPACT"/>: frozen 1st-pass model, with
         ///     the target-decoy competition stratified - the protein stratum and its complement
         ///     each compete against their own paired decoys.
         ///   <see cref="PASS2_QVALUE_TRANSFER"/>: carry the pass-1 q through and recompute ONLY
@@ -1505,7 +1504,8 @@ namespace pwiz.Osprey.Core
         ///     NOTE: the per-run-only redesign (#4438) REPLACED the earlier full pre-compaction
         ///     score-&gt;q table, which is why transfer no longer needs the O(files) resident
         ///     pool. Re-adding a resident pool for it is the #4446 regression.
-        /// Unset normalizes to the default; an unrecognized value is a startup ERROR (see
+        /// Null when unset, and <see cref="OspreyConfig.Pass2QValue"/> then follows <c>--protein-boost</c>:
+        /// protein-compact under compact, the transfer otherwise. An unrecognized value is a startup ERROR (see
         /// <see cref="Pass2QValueUnrecognized"/>). Re-read on each access, so a command-line
         /// test can set it (<see cref="OverrideVariables"/>).
         ///
@@ -1531,19 +1531,23 @@ namespace pwiz.Osprey.Core
         /// the frozen ones instead.
         ///
         /// Switching modes within one output directory is now SAFE: the mode participates in
-        /// the resume validity key through <see cref="Pass2QValueValidityKeySuffix()"/>, so a
+        /// the resume validity key through <see cref="Pass2QValueValidityKeySuffix(OspreyConfig)"/>, so a
         /// re-run under a different mode invalidates the previous mode's outputs instead of
         /// adopting its cached q-values. That retires the standing "use a FRESH --output-dir
         /// per mode" limitation, which became far more than an experimental-mode caveat once
         /// this variable acquired a non-percolator default.
         /// </summary>
-        public static string Pass2QValue => NormalizePass2QValue(Pass2QValueSetting);
+        public static string Pass2QValueOverride =>
+            string.IsNullOrWhiteSpace(Pass2QValueSetting) ? null : NormalizePass2QValue(Pass2QValueSetting);
 
         private static readonly EnvVar ENV_PASS2_QVALUE = new EnvVar(@"OSPREY_PASS2_QVALUE", EnvVarGroup.behavior,
-            @"How the second pass assigns reported q-values: transfer, the default, carries the first-pass q " +
-            @"through and re-scores only moved peaks; protein-compact (experiment) constrains the competition " +
-            @"to detected proteins.")
-            { Values = new[] { @"transfer", @"protein-compact" }, DefaultValue = @"transfer" };
+            @"How the second pass assigns reported q-values, in place of the one " + OspreyArgNames.PREFIX +
+            OspreyArgNames.PROTEIN_BOOST + @" implies: transfer carries the first-pass q through and re-scores " +
+            @"only moved peaks; protein-compact constrains the competition to detected proteins.")
+            {
+                Values = new[] { @"transfer", @"protein-compact" },
+                DefaultValue = @"protein-compact with " + OspreyArgNames.PREFIX + OspreyArgNames.PROTEIN_BOOST + @" compact, transfer otherwise"
+            };
 
         /// <summary>OSPREY_PASS2_QVALUE exactly as set, for a message that must quote what the
         /// user typed. Null when unset.</summary>
@@ -1556,16 +1560,6 @@ namespace pwiz.Osprey.Core
         /// still pass. Checked at startup, not at SecondPassFDR, so the run fails in seconds
         /// instead of after Stage 1-5.</summary>
         public static bool Pass2QValueUnrecognized => IsUnrecognizedPass2QValue(Pass2QValueSetting);
-
-        /// <summary>True when <see cref="Pass2QValue"/> selects the frozen-model
-        /// confidence-transfer path (OSPREY_PASS2_QVALUE=transfer).</summary>
-        public static bool Pass2TransferQ =>
-            string.Equals(Pass2QValue, PASS2_QVALUE_TRANSFER, StringComparison.Ordinal);
-
-        /// <summary>True when <see cref="Pass2QValue"/> selects the protein-anchored
-        /// constrained competition (OSPREY_PASS2_QVALUE=protein-compact).</summary>
-        public static bool Pass2ProteinCompact =>
-            string.Equals(Pass2QValue, PASS2_QVALUE_PROTEIN_COMPACT, StringComparison.Ordinal);
 
         private static readonly EnvVar ENV_PASS2_VERIFY_WORKER = new EnvVar(@"OSPREY_PASS2_VERIFY_WORKER", EnvVarGroup.diagnostic,
             @"Re-run the per-file second-pass competition in SecondPassFDR and assert it against the " +
@@ -1668,17 +1662,17 @@ namespace pwiz.Osprey.Core
         /// <c>percolator</c> retrain to <see cref="PASS2_QVALUE_PROTEIN_COMPACT"/>, so an empty
         /// suffix would let a run adopt the other mode's cached q-values.
         ///
-        /// This is the tagging the <see cref="Pass2QValue"/> remarks used to defer, and it
+        /// This is the tagging the <see cref="OspreyConfig.Pass2QValue"/> remarks used to defer, and it
         /// retires the "use a FRESH --output-dir per mode" limitation they carried.
         /// </summary>
-        public static string Pass2QValueValidityKeySuffix()
+        public static string Pass2QValueValidityKeySuffix(OspreyConfig config)
         {
-            return Pass2QValueValidityKeySuffix(Pass2QValue);
+            return Pass2QValueValidityKeySuffix(config.Pass2QValue);
         }
 
         /// <summary>
-        /// <see cref="Pass2QValueValidityKeySuffix()"/> for an explicitly supplied mode, in the
-        /// normalized form <see cref="Pass2QValue"/> holds.
+        /// <see cref="Pass2QValueValidityKeySuffix(OspreyConfig)"/> for an explicitly supplied mode, in the
+        /// normalized form <see cref="OspreyConfig.Pass2QValue"/> holds.
         /// </summary>
         public static string Pass2QValueValidityKeySuffix(string normalizedPass2QValue)
         {
@@ -1698,7 +1692,7 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static string TransferReconciliationValidityKeySuffix(OspreyConfig config)
         {
-            if (!Pass2TransferQ)
+            if (!config.Pass2TransferQ)
                 return string.Empty;
             return string.Format(CultureInfo.InvariantCulture,
                 @";reconset=output@{0},{1:R};recondecoys=0;pepfloor=reported",
@@ -1757,9 +1751,9 @@ namespace pwiz.Osprey.Core
         /// PerFileRescoring and SecondPassFDR - not FirstPassFDR, whose outputs did not change.
         /// Empty under <see cref="PASS2_QVALUE_TRANSFER"/>, which the change does not reach.
         /// </summary>
-        public static string Pass2StrataValidityKeySuffix()
+        public static string Pass2StrataValidityKeySuffix(OspreyConfig config)
         {
-            return Pass2ProteinCompact ? PASS2_STRATA_TERM : string.Empty;
+            return config.Pass2ProteinCompact ? PASS2_STRATA_TERM : string.Empty;
         }
 
         /// <summary>

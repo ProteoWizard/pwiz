@@ -58,7 +58,7 @@ namespace pwiz.Osprey.IO
         public const string KEY_RUN_FDR = @"osprey.run_fdr";
         /// <summary>A search output's experiment-level FDR threshold.</summary>
         public const string KEY_EXPERIMENT_FDR = @"osprey.experiment_fdr";
-        /// <summary>A search output trained with the protein-best column (<c>--protein-best on</c>): <c>on</c>; absent when off.</summary>
+        /// <summary>A search output trained with the protein-best column (<c>--protein-boost best</c>): <c>on</c>; absent when off.</summary>
         public const string KEY_PROTEIN_BEST = @"osprey.protein_best";
         /// <summary>A search output's PIN feature set (<c>--feature-set</c>, or the resolution's default) when not <c>core</c>; absent for <c>core</c> or under OSPREY_FEATURE_MASK.</summary>
         public const string KEY_FEATURE_SET = @"osprey.feature_set";

@@ -254,9 +254,9 @@ namespace pwiz.Osprey.Test
 
         private static void AssertSettingsKey()
         {
-            // --protein-best on is the maximum, the arm the OSPREY_PROTEIN_BEST=max experiment ran.
+            // --protein-boost best is the maximum, the arm the OSPREY_PROTEIN_BEST=max experiment ran.
             Assert.AreEqual(1, OspreyEnvironment.PROTEIN_BEST_TOP_N);
-            Assert.AreEqual(string.Empty, OspreyEnvironment.ProteinBestValidityKeySuffix(new OspreyConfig { ProteinBest = false }));
+            Assert.AreEqual(string.Empty, OspreyEnvironment.ProteinBestValidityKeySuffix(new OspreyConfig { ProteinBoost = ProteinBoost.compact }));
 
             // The key: empty when off, so no existing directory moves; every setting otherwise.
             Assert.AreEqual(string.Empty, OspreyEnvironment.ProteinBestValidityKeySuffix(0, true));

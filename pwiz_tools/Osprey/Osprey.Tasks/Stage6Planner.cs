@@ -157,7 +157,7 @@ namespace pwiz.Osprey.Tasks
             // nothing: reconciliation improves only each run's peak, so only the precursors the
             // blib will report can use a reconciled peak. Protein-compact keeps every precursor
             // that passed at any level in any run, which its competition reads.
-            var outputSet = OspreyEnvironment.Pass2TransferQ
+            var outputSet = config.Pass2TransferQ
                 ? new ExperimentOutputSet(config.FdrLevel, config.ExperimentFdr)
                 : null;
 
@@ -179,7 +179,7 @@ namespace pwiz.Osprey.Tasks
                     var fileEntries = loadFileEntries(fileNames[i]);
                     // Counted as the rescore will select them (PerFileRescoreTask).
                     var targets = MultiChargeConsensus.SelectRescoreTargets(fileEntries, config.RunFdr);
-                    if (OspreyEnvironment.Pass2TransferQ)
+                    if (config.Pass2TransferQ)
                         targets = MultiChargeConsensus.ReportedOnly(targets, fileEntries, config.FdrLevel, config.ExperimentFdr);
                     return (Entries: fileEntries, Targets: targets);
                 }, (i, file) =>

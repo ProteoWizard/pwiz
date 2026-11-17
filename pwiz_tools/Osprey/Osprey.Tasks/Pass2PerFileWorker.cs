@@ -147,7 +147,7 @@ namespace pwiz.Osprey.Tasks
         /// when there was a competition (null under transfer).</param>
         /// <param name="logWarning">Where a per-file warning goes.</param>
         /// <param name="firstPassStamp">The frozen model's stamp, which every run's protein-best
-        /// column must carry when the model scores with one (<c>--protein-best</c>).</param>
+        /// column must carry when the model scores with one (<c>--protein-boost best</c>).</param>
         public Pass2PerFileWorker(
             FrozenModelScorer scorer, PinFeatureSelection features, bool transfer, HashSet<uint> stratumBaseIds,
             IReadOnlyDictionary<uint, FdrExperimentRecord> pass1Experiment,

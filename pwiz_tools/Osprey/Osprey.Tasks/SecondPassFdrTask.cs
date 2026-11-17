@@ -137,7 +137,7 @@ namespace pwiz.Osprey.Tasks
                 // The decoy side of that file's competition - the null this stage folds. Also an
                 // input, for the same reason and from the same producer, where there is a
                 // competition: the transfer competes nothing.
-                if (OspreyEnvironment.Pass2ProteinCompact)
+                if (ctx.Config.Pass2ProteinCompact)
                     yield return Pass2CompetitionDecoys.PathFor(input);
                 // The run's plan, which the worker writes beside its answer under the same stamp:
                 // the gap-fill entry ids are read from it, and a run whose plan is missing is
@@ -159,7 +159,7 @@ namespace pwiz.Osprey.Tasks
             // re-competes each run's records inside the stratum and refuses to run without both
             // (ComputePass2FrozenCompetition). The transfer carries pass-1 values forward and
             // needs neither: it reloads a model it finds, and nothing on its path reads it.
-            if (OspreyEnvironment.Pass2ProteinCompact)
+            if (ctx.Config.Pass2ProteinCompact)
             {
                 string modelPath = FirstPassModelIO.PathFor(ctx.Config);
                 if (!string.IsNullOrEmpty(modelPath))
@@ -300,10 +300,10 @@ namespace pwiz.Osprey.Tasks
                 // a resume keeps a blib the current build would not write.
                 + @";blibout=" + BlibSpectrum.FORMAT_VERSION
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
-                + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                + OspreyEnvironment.Pass2QValueValidityKeySuffix(ctx.Config)
                 + OspreyEnvironment.TransferReconciliationValidityKeySuffix(ctx.Config)
                 // The fold now gives the stratum's complement its own experiment q.
-                + OspreyEnvironment.Pass2StrataValidityKeySuffix()
+                + OspreyEnvironment.Pass2StrataValidityKeySuffix(ctx.Config)
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
                 + PinFeatureMask.For(ctx.Config).ValidityKeySuffix()
                 + PinFeatureMask.For(ctx.Config).RescoreValidityKeySuffix()
@@ -632,7 +632,7 @@ namespace pwiz.Osprey.Tasks
             if (config.ModelDiagnostics)
             {
                 HashSet<uint> stratumBaseIds = null;
-                if (OspreyEnvironment.Pass2ProteinCompact &&
+                if (ctx.Config.Pass2ProteinCompact &&
                     ctx.TryGet<ProteinCompactStratum>(out var pcStratum))
                     stratumBaseIds = pcStratum.BaseIds;
                 // Folds the run-by-run reductions the pass-2 cards are made of instead of
@@ -821,7 +821,7 @@ namespace pwiz.Osprey.Tasks
             // different - complete, plausible, wrong - co-assignment panel.
             Pass2FdrSidecar.EnsureFrozenFirstPassPublished(ctx);
             HashSet<uint> stratumBaseIds = null;
-            if (OspreyEnvironment.Pass2ProteinCompact &&
+            if (ctx.Config.Pass2ProteinCompact &&
                 ctx.TryGet<ProteinCompactStratum>(out var pcStratum))
             {
                 stratumBaseIds = pcStratum.BaseIds;

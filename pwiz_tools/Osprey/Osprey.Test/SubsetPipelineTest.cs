@@ -262,7 +262,7 @@ namespace pwiz.Osprey.Test
         {
             AssertHpcChainMatchesStraight(new Subset(_dataDir, LIBRARY_FILE, @"unit", RUN_NAMES));
             AssertHpcChainMatchesStraight(new Subset(_dataDir, LIBRARY_FILE, @"unit", RUN_NAMES,
-                OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT), OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT + @"-");
+                OspreyEnvironment.PASS2_QVALUE_TRANSFER), OspreyEnvironment.PASS2_QVALUE_TRANSFER + @"-");
         }
 
         /// <summary>
@@ -1455,9 +1455,9 @@ namespace pwiz.Osprey.Test
         {
             AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
             AssertHasLine(log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
-            // The default second pass is the transfer, which folds no competition and so has no
-            // verifier; the protein-compact legs check that fold (AssertCompetitionFoldSplit).
-            AssertHasLine(log, PathLine(LogKey.ROUTE_PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_TRANSFER));
+            // Unit resolution runs without the protein-best column, so its default second pass is
+            // protein-compact; the HPC chain legs check its fold (AssertCompetitionFoldSplit).
+            AssertHasLine(log, PathLine(LogKey.ROUTE_PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
             // The library-fragment release ran at both of its points (issue #4532).
             foreach (string scope in new[] { LogKey.SCOPE_RESCORE_GAP_FILL, LogKey.SCOPE_RETAINED_SUMMARY })
             {
@@ -1628,8 +1628,8 @@ namespace pwiz.Osprey.Test
                 // writes the answer for every run (#4665), so a SecondPassFDR node needs no
                 // per-run 1st-pass file.
                 ShipFiles(phase3, phase4Dir, PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, FdrScoresSidecar.EXT));
-                // The decoy side of a competition; the transfer, the default, competes nothing and writes none.
-                if (data.Pass2Mode == OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT)
+                // The decoy side of a competition; the transfer competes nothing and writes none.
+                if (data.EffectivePass2Mode == OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT)
                     ShipFiles(phase3, phase4Dir, PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, Pass2CompetitionDecoys.EXT));
             }
             ShipFiles(dirPrefix + @"phase2", phase4Dir, OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT),
@@ -1642,7 +1642,7 @@ namespace pwiz.Osprey.Test
             // Every run's per-file worker answer was folded - SecondPassFDR refuses to start
             // otherwise, so the fold line is the evidence it ran. It and the verifier belong to
             // the competition; the transfer fold has neither.
-            if (data.Pass2Mode == OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT)
+            if (data.EffectivePass2Mode == OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT)
                 AssertCompetitionFoldSplit(data, straightLog, phase4Log);
 
             AssertBlibsEqual(straightBlib, Path.Combine(phase4Dir, BLIB_FILE));
@@ -2171,9 +2171,9 @@ namespace pwiz.Osprey.Test
         private void AssertKeyChangeRecomputes(string workDir, string expectedBlib)
         {
             string log = RunAnalysis(workDir, DataInputs(),
-                WithVariable(Verifier(true), PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
+                WithVariable(Verifier(true), PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_TRANSFER));
             AssertTasks(log, new[] { PerFileScoringTask.TASK_NAME }, KEYED_TASKS);
-            AssertHasLine(log, PathLine(LogKey.ROUTE_PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
+            AssertHasLine(log, PathLine(LogKey.ROUTE_PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_TRANSFER));
             Assert.IsFalse(OtherBuildWarning(null, null, null).IsMatch(log), log);
 
             log = RunAnalysis(workDir, DataInputs(), Verifier(true));
@@ -2608,6 +2608,26 @@ namespace pwiz.Osprey.Test
 
             /// <summary>The OSPREY_PASS2_QVALUE every phase runs under, or null for the default.</summary>
             public string Pass2Mode { get; }
+
+            /// <summary>
+            /// The second pass every phase runs: <see cref="Pass2Mode"/>, else the default, which follows
+            /// <c>--protein-boost</c> (<see cref="OspreyConfig.Pass2QValue"/>) and so, unless an argument
+            /// sets it, the resolution: best for HRAM data, compact at unit resolution and for detection
+            /// here, whose subsets measure as unit resolution.
+            /// </summary>
+            public string EffectivePass2Mode
+            {
+                get
+                {
+                    if (Pass2Mode != null)
+                        return Pass2Mode;
+                    int i = Array.IndexOf(MoreArgs, OspreyCommandArgs.ARG_PROTEIN_BOOST.ArgumentText);
+                    bool compact = i >= 0
+                        ? MoreArgs[i + 1] == ProteinBoost.compact.ToString()
+                        : Resolution != OspreyCommandArgs.RESOLUTION_HRAM;
+                    return compact ? OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT : OspreyEnvironment.PASS2_QVALUE_TRANSFER;
+                }
+            }
 
             /// <summary>Further variables every phase runs under (an experimental arm), or null.</summary>
             public IReadOnlyDictionary<string, string> MoreVariables { get; }

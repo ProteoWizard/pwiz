@@ -272,7 +272,7 @@ namespace pwiz.Osprey.FDR
         /// back the other arm's numbers.</para>
         ///
         /// <para>The one exception for the SVM is the two-round training
-        /// (<c>OSPREY_GBT_PREFILTER_SIZE</c> and its switches, and <c>--protein-best on</c>),
+        /// (<c>OSPREY_GBT_PREFILTER_SIZE</c> and its switches, and <c>--protein-boost best</c>),
         /// which trains a different model under either classifier and appends its terms whenever it is on.</para>
         ///
         /// <para>Kept out of the base task key and out of <c>SearchParameterHash</c>, which must
@@ -284,9 +284,9 @@ namespace pwiz.Osprey.FDR
         {
             string suffix = GbdtValidityKeySuffix(config?.FdrClassifier ?? FdrClassifier.LinearSvm, BuildGbtParams(),
                 OspreyEnvironment.GbtMaxIterations, OspreyEnvironment.GbtInnerFolds, config?.Scoring.GbtOutOfFold ?? false);
-            // The two-round training (OSPREY_GBT_PREFILTER_SIZE, or its --protein-best on default size)
+            // The two-round training (OSPREY_GBT_PREFILTER_SIZE, or its --protein-boost best default size)
             // trains a different model, so it is keyed when on - and only then, so a one-round key
-            // (--protein-best off, the default) is unchanged. The same terms under either classifier: the linear
+            // (no protein-best column, the default) is unchanged. The same terms under either classifier: the linear
             // SVM's key has no fdrmodel term, the tree model's does, so the two cannot collide.
             bool proteinBest = config?.ProteinBest ?? false;
             int prefilterSize = OspreyEnvironment.PrefilterSizeFor(proteinBest);
@@ -1255,9 +1255,9 @@ namespace pwiz.Osprey.FDR
             // model the saved scores came from.
             if (percConfig.ProteinBest != null && pretrainedModel != null)
             {
-                log.LogInfo(string.Format(@"{0} is on: retraining the first-pass model, because " +
+                log.LogInfo(string.Format(@"{0}: retraining the first-pass model, because " +
                                           @"the column needs round 1's models, which are not saved.",
-                    OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST)));
+                    OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.best.ToString())));
                 pretrainedModel = null;
             }
             if (pretrainedModel != null)
@@ -1365,7 +1365,7 @@ namespace pwiz.Osprey.FDR
             // default gbdt run never trained a tree.
             var trainConfig = percConfig.CloneForTrainOnly();
             PercolatorResults trainResults;
-            // --protein-best: set once round 1 has trained. Null on every other path, which
+            // --protein-boost best: set once round 1 has trained. Null on every other path, which
             // scores the rows as loaded.
             ProteinBestColumn proteinBestColumn = null;
             if (pretrainedModel != null)

@@ -187,8 +187,8 @@
   <data name="_perf_stats" xml:space="preserve">
     <value>Emit the machine-parseable {0} lines that scripts and performance tools read (off by default)</value>
   </data>
-  <data name="_protein_best" xml:space="preserve">
-    <value>Train the first pass with a protein-aware column: for each candidate, the best first-round score among the other peptides of its protein in the same run. It needs the two-round first-pass training, which it turns on. The default is {0} for {1} data and {2} at {3} resolution.</value>
+  <data name="_protein_boost" xml:space="preserve">
+    <value>How a detection is boosted by the other detections of its protein: {0} trains the first pass with a protein-aware column (for each candidate, the best first-round score among the other peptides of its protein in the same run, which turns on the two-round first-pass training); {1} competes the precursors of the proteins the first pass detected apart from the rest in the second pass, and will be removed; {2} boosts nothing. The default is {0} for {3} data and {1} at {4} resolution.</value>
   </data>
   <data name="_protein_fdr" xml:space="preserve">
     <value>Protein-level FDR threshold (default: 0.01)</value>
@@ -328,8 +328,8 @@
   <data name="_parallel_files_scoring_property" xml:space="preserve">
     <value>Parallel files (scoring)</value>
   </data>
-  <data name="_protein_best_property" xml:space="preserve">
-    <value>Protein-best training column</value>
+  <data name="_protein_boost_property" xml:space="preserve">
+    <value>Protein boost</value>
   </data>
   <data name="_protein_fdr_property" xml:space="preserve">
     <value>Protein FDR</value>

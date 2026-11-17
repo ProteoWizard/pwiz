@@ -442,19 +442,21 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(0.05, decoyValue);
                 Assert.IsFalse(column.TryGetValue(gapFillId, out _));
 
-                // A model of the other --protein-best arm is refused by a message naming both
+                // A model of the other --protein-boost best arm is refused by a message naming both
                 // settings, the model's first, and the task to re-run - not the missing-file one.
-                string on = OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST, OspreyArgNames.VALUE_ON);
-                string off = OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST, OspreyArgNames.VALUE_OFF);
-                string modelOn = PerFileRescoreTask.ProteinBestMismatchMessage(true, false);
-                string modelOff = PerFileRescoreTask.ProteinBestMismatchMessage(false, true);
+                string on = OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.best.ToString());
+                string off = OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.off.ToString());
+                string modelOn = PerFileRescoreTask.ProteinBestMismatchMessage(true, ProteinBoost.off);
+                string modelOff = PerFileRescoreTask.ProteinBestMismatchMessage(false, ProteinBoost.best);
                 Assert.AreEqual(string.Format(
                     OspreyTasksResources.PerFileRescoreTask_CreatePass2Worker_Second_pass_FDR_cannot_run__the_saved_first_pass_model_was_trained_with__0___but_this_run_has__1___Run__2__again_with__1__,
                     on, off, OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME)), modelOn);
-                StringAssert.Contains(modelOff, off);
+                // A model without the column names both boosts that train none.
+                string none = OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.compact + @"|" + ProteinBoost.off);
+                StringAssert.Contains(modelOff, none);
                 StringAssert.Contains(modelOff, on);
                 Assert.IsTrue(modelOn.IndexOf(on, StringComparison.Ordinal) < modelOn.IndexOf(off, StringComparison.Ordinal));
-                Assert.IsTrue(modelOff.IndexOf(off, StringComparison.Ordinal) < modelOff.IndexOf(on, StringComparison.Ordinal));
+                Assert.IsTrue(modelOff.IndexOf(none, StringComparison.Ordinal) < modelOff.IndexOf(on, StringComparison.Ordinal));
                 Assert.AreNotEqual(OspreyTasksResources.Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__,
                     OspreyTasksResources.PerFileRescoreTask_CreatePass2Worker_Second_pass_FDR_cannot_run__the_saved_first_pass_model_was_trained_with__0___but_this_run_has__1___Run__2__again_with__1__);
             }

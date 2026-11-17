@@ -43,7 +43,7 @@ namespace pwiz.Osprey.Core
         public const string EXPERIMENT_FDR = @"experiment-fdr";
         public const string RECONCILIATION_COMPACTION_FDR = @"reconciliation-compaction-fdr";
         public const string PROTEIN_FDR = @"protein-fdr";
-        public const string PROTEIN_BEST = @"protein-best";
+        public const string PROTEIN_BOOST = @"protein-boost";
         public const string VALUE_ON = @"on";
         public const string VALUE_OFF = @"off";
         public const string FEATURE_SET = @"feature-set";
