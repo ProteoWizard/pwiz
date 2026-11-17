@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
@@ -98,6 +99,40 @@ namespace pwiz.Osprey.FDR
             /// the trained weight disagrees with the declared score direction.
             /// </summary>
             public bool IsUnexpectedDirection { get; }
+
+            /// <summary>
+            /// Sample standard deviation of the standardized weight across the cross-validation
+            /// folds (whose mean is <see cref="Coefficient"/>), or NaN with fewer than two folds or
+            /// no weights. With <see cref="FoldWeightMin"/> / <see cref="FoldWeightMax"/>, whether
+            /// the trained composition is reproducible from fold to fold.
+            /// </summary>
+            public double FoldWeightSd { get; private set; } = double.NaN;
+
+            /// <summary>Smallest per-fold standardized weight, or NaN with no weights.</summary>
+            public double FoldWeightMin { get; private set; } = double.NaN;
+
+            /// <summary>Largest per-fold standardized weight, or NaN with no weights.</summary>
+            public double FoldWeightMax { get; private set; } = double.NaN;
+
+            /// <summary>
+            /// Whether every fold's weight has the same sign (zero counts as either). A weight that
+            /// flips sign between folds is the collinearity tell: a correlated partner is carrying
+            /// the signal and the two trade weight.
+            /// </summary>
+            public bool IsFoldSignConsistent { get; private set; }
+
+            /// <summary>Set the fold-to-fold spread of this feature's weight.</summary>
+            internal void SetFoldWeights(IReadOnlyList<double[]> foldWeights)
+            {
+                if (foldWeights == null || foldWeights.Count == 0)
+                    return;
+                var w = foldWeights.Select(f => f[Index]).ToArray();
+                double mean = w.Average();
+                FoldWeightSd = w.Length > 1 ? Math.Sqrt(w.Sum(v => (v - mean) * (v - mean)) / (w.Length - 1)) : double.NaN;
+                FoldWeightMin = w.Min();
+                FoldWeightMax = w.Max();
+                IsFoldSignConsistent = FoldWeightMin >= 0 || FoldWeightMax <= 0;
+            }
 
             /// <param name="index">Zero-based feature index.</param>
             /// <param name="name">Internal feature name, or null.</param>
@@ -184,15 +219,12 @@ namespace pwiz.Osprey.FDR
             }
 
             /// <summary>
-            /// The order-dependent half of <see cref="Add(double[],bool)"/>: the class count and
-            /// the running per-feature sums, for the vector starting at
-            /// <paramref name="offset"/> in <paramref name="standardizedFeatures"/>. Floating-point
-            /// addition does not associate, so a caller that splits the work across files must
-            /// still call this once per row in the original row order to reproduce the sums
-            /// exactly; the histogram half has no such constraint (see
-            /// <see cref="MergeHistograms"/>).
+            /// The class count and running per-feature sums half of <see cref="Add(double[],bool)"/>,
+            /// for the vector starting at <paramref name="offset"/>. Floating-point addition does
+            /// not associate, so the row order is part of the sums; a cross-run total adds whole
+            /// runs' shares in run order instead (<see cref="Add(FeatureSums)"/>).
             /// </summary>
-            public void AddSums(double[] standardizedFeatures, int offset, bool isDecoy)
+            private void AddSums(double[] standardizedFeatures, int offset, bool isDecoy)
             {
                 if (isDecoy)
                 {
@@ -209,13 +241,11 @@ namespace pwiz.Osprey.FDR
             }
 
             /// <summary>
-            /// The order-free half of <see cref="Add(double[],bool)"/>: bins the vector starting
-            /// at <paramref name="offset"/> into the per-feature class histograms, when this
-            /// accumulator collects them. Integer counts, so partial accumulators built per file
-            /// and combined with <see cref="MergeHistograms"/> give exactly the counts one
-            /// accumulator fed every row would.
+            /// The histogram half of <see cref="Add(double[],bool)"/>: bins the vector starting at
+            /// <paramref name="offset"/> into the per-feature class histograms, when this
+            /// accumulator collects them.
             /// </summary>
-            public void AddHistogram(double[] standardizedFeatures, int offset, bool isDecoy)
+            private void AddHistogram(double[] standardizedFeatures, int offset, bool isDecoy)
             {
                 if (_histTarget == null)
                     return;
@@ -229,21 +259,56 @@ namespace pwiz.Osprey.FDR
             }
 
             /// <summary>
-            /// Adds <paramref name="other"/>'s histogram counts into this accumulator's. Only the
-            /// histograms: the sums and class counts are deliberately not merged, because merging
-            /// partial floating-point sums would not reproduce the row-order sum - feed those
-            /// through <see cref="AddSums"/> instead.
+            /// This accumulator's counts, sums and histograms as one run's <see cref="FeatureSums"/>
+            /// share, for the run's first-pass FDR sidecar. Requires histograms.
             /// </summary>
-            public void MergeHistograms(Accumulator other)
+            public FeatureSums ToFeatureSums()
             {
-                if (_histTarget == null || other?._histTarget == null)
+                if (_histTarget == null)
+                    throw new InvalidOperationException(@"A feature-sums share needs an accumulator that collects histograms.");
+                var share = new FeatureSums(_sumTarget.Length, HistBinCount)
+                {
+                    TargetCount = _nTarget,
+                    DecoyCount = _nDecoy
+                };
+                Array.Copy(_sumTarget, share.TargetSums, _sumTarget.Length);
+                Array.Copy(_sumDecoy, share.DecoySums, _sumDecoy.Length);
+                for (int j = 0; j < _histTarget.Length; j++)
+                {
+                    Array.Copy(_histTarget[j], share.TargetHistograms[j], HistBinCount);
+                    Array.Copy(_histDecoy[j], share.DecoyHistograms[j], HistBinCount);
+                }
+                return share;
+            }
+
+            /// <summary>
+            /// Add one run's <see cref="FeatureSums"/> share. Callers add the shares in run order:
+            /// the sums are floating-point, so that order is part of the result, and it is the
+            /// same whichever lanes scored the runs and whether a run was scored or resumed.
+            /// </summary>
+            public void Add(FeatureSums share)
+            {
+                if (share.FeatureCount != _sumTarget.Length || (_histTarget != null && share.BinCount != HistBinCount))
+                {
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture,
+                        @"A feature-sums share of {0} features x {1} bins cannot be added to {2} features x {3} bins.",
+                        share.FeatureCount, share.BinCount, _sumTarget.Length, HistBinCount));
+                }
+                _nTarget += share.TargetCount;
+                _nDecoy += share.DecoyCount;
+                for (int j = 0; j < _sumTarget.Length; j++)
+                {
+                    _sumTarget[j] += share.TargetSums[j];
+                    _sumDecoy[j] += share.DecoySums[j];
+                }
+                if (_histTarget == null)
                     return;
                 for (int j = 0; j < _histTarget.Length; j++)
                 {
                     for (int b = 0; b < HistBinCount; b++)
                     {
-                        _histTarget[j][b] += other._histTarget[j][b];
-                        _histDecoy[j][b] += other._histDecoy[j][b];
+                        _histTarget[j][b] += share.TargetHistograms[j][b];
+                        _histDecoy[j][b] += share.DecoyHistograms[j][b];
                     }
                 }
             }
@@ -285,8 +350,11 @@ namespace pwiz.Osprey.FDR
             /// </summary>
             /// <param name="foldWeights">Per-fold standardized weight vectors.</param>
             /// <param name="featureInfos">Per-feature metadata (name / label / direction), or null.</param>
+            /// <param name="trainingAnalysis">What training did with each feature, or null when the
+            /// model carries none (<see cref="FeatureContributions.TrainingAnalysis"/>).</param>
             public FeatureContributions Build(
-                IReadOnlyList<double[]> foldWeights, OspreyFeatureInfo[] featureInfos)
+                IReadOnlyList<double[]> foldWeights, OspreyFeatureInfo[] featureInfos,
+                TrainingSetAnalysis trainingAnalysis = null)
             {
                 int p = _sumTarget.Length;
                 int nFolds = foldWeights.Count;
@@ -300,8 +368,14 @@ namespace pwiz.Osprey.FDR
                 double nFoldsD = nFolds;
                 for (int j = 0; j < p; j++)
                     avgWeights[j] /= nFoldsD;
-                return new FeatureContributions(avgWeights, _sumTarget, _sumDecoy,
-                    _nTarget, _nDecoy, featureInfos, _histTarget, _histDecoy);
+                var contributions = new FeatureContributions(avgWeights, _sumTarget, _sumDecoy,
+                    _nTarget, _nDecoy, featureInfos, _histTarget, _histDecoy)
+                {
+                    TrainingAnalysis = trainingAnalysis
+                };
+                foreach (var feature in contributions.Features)
+                    feature.SetFoldWeights(foldWeights);
+                return contributions;
             }
 
             /// <summary>
@@ -314,10 +388,15 @@ namespace pwiz.Osprey.FDR
             /// "degenerate".
             /// </summary>
             /// <param name="featureInfos">Per-feature metadata (name / label / direction), or null.</param>
-            public FeatureContributions BuildForTreeEnsemble(OspreyFeatureInfo[] featureInfos)
+            /// <param name="trainingAnalysis">What training did with each feature, or null.</param>
+            public FeatureContributions BuildForTreeEnsemble(OspreyFeatureInfo[] featureInfos,
+                TrainingSetAnalysis trainingAnalysis = null)
             {
                 return new FeatureContributions(null, _sumTarget, _sumDecoy,
-                    _nTarget, _nDecoy, featureInfos, _histTarget, _histDecoy);
+                    _nTarget, _nDecoy, featureInfos, _histTarget, _histDecoy)
+                {
+                    TrainingAnalysis = trainingAnalysis
+                };
             }
         }
 
@@ -326,11 +405,11 @@ namespace pwiz.Osprey.FDR
         // construction), wide enough to hold the discriminating tails; out-of-range
         // values clamp into the end bins. Shared by every feature so the HTML can
         // draw them on one axis.
-        private const int HistBinCount = 60;
+        internal const int HistBinCount = 60;
         private const double HistLo = -5.0;
         private const double HistHi = 7.0;
 
-        private static int HistBin(double v)
+        internal static int HistBin(double v)
         {
             double t = (v - HistLo) / (HistHi - HistLo);
             int b = (int)(t * HistBinCount);
@@ -393,6 +472,14 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>Per-feature decoy-class standardized-value histograms, or <c>null</c>.</summary>
         public IReadOnlyList<int[]> DecoyHistograms { get; }
+
+        /// <summary>
+        /// What cross-validated training did with each feature on the rows it trained on - final
+        /// training-set separation, ROC curves, permutation importance, correlation groups - or
+        /// null when the model carries none (a model persisted by an older build). Unlike the rest
+        /// of this object it describes the training subset, not the full scored population.
+        /// </summary>
+        public TrainingSetAnalysis TrainingAnalysis { get; private set; }
 
         /// <summary>
         /// Decompose the trained linear model into per-feature contributions, or with no weights

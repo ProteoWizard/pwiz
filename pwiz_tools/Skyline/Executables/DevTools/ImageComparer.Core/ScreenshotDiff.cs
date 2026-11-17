@@ -243,14 +243,7 @@ namespace ImageComparer.Core
             get
             {
                 if (SizesDiffer)
-                {
-                    var diffWidth = PercentDiffText(_sizeNew.Width, _sizeOld.Width);
-                    var diffHeight = PercentDiffText(_sizeNew.Height, _sizeOld.Height);
-                    if (Equals(diffWidth, diffHeight))
-                        return $@" ({diffWidth})";
-                    else
-                        return $@" ({diffWidth} x {diffHeight})";
-                }
+                    return $@" ({SizeRatioText(_sizeOld, _sizeNew)})";
                 if (PixelsDiffer)
                     return $@" ({PixelCount} pixels)";
                 if (BytesDiffer)
@@ -272,6 +265,16 @@ namespace ImageComparer.Core
                 }
                 return string.Empty;
             }
+        }
+
+        /// <summary>
+        /// The new size as a percentage of the old, one percentage when both dimensions agree.
+        /// </summary>
+        public static string SizeRatioText(Size sizeOld, Size sizeNew)
+        {
+            var diffWidth = PercentDiffText(sizeNew.Width, sizeOld.Width);
+            var diffHeight = PercentDiffText(sizeNew.Height, sizeOld.Height);
+            return Equals(diffWidth, diffHeight) ? diffWidth : $@"{diffWidth} x {diffHeight}";
         }
 
         private static string PercentDiffText(int newLength, int oldLength)

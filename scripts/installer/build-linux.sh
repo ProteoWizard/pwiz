@@ -39,13 +39,17 @@ RID=linux-x64
 mkdir -p "$OUT_DIR"
 
 # Version: 4.0.YYDOY-gitsha, identical derivation to build.ps1 (date +%y%j gives YYDOY already,
-# zero-padded, so lexical sort matches chronological). Falls back to 4.0.0-dev without git, so a
-# source-tarball build still produces a versioned artifact.
+# zero-padded, so lexical sort matches chronological). YYDOY is HEAD's committer date, as
+# build/PwizVersion.targets computes it (%ci, since %cs needs git 2.20), falling back to today's
+# UTC date when git gives none. Falls back to 4.0.0-dev without git, so a source-tarball build
+# still produces a versioned artifact.
 GITSHA="$(git -C "$PWIZ_SHARP" rev-parse --short=7 HEAD 2>/dev/null || true)"
+COMMIT_DATE="$(git -C "$PWIZ_SHARP" log -1 --format=%ci HEAD 2>/dev/null | cut -c1-10 || true)"
+YYDOY="$(date -u -d "$COMMIT_DATE" +%y%j 2>/dev/null || date -u +%y%j)"
 if [ -z "$GITSHA" ]; then
     APP_VERSION="4.0.0-dev"
 else
-    APP_VERSION="4.0.$(date +%y%j)-$GITSHA"
+    APP_VERSION="4.0.$YYDOY-$GITSHA"
 fi
 echo "==> Stamping version: $APP_VERSION"
 

@@ -214,7 +214,8 @@ namespace TestRunnerLib
             bool isParallelClient = false,
             bool reportHeaps = false,
             bool reportHandles = false,
-            bool sortHandlesByCount = false)
+            bool sortHandlesByCount = false,
+            bool aiConnector = false)
         {
             _buildMode = buildMode;
             _log = log;
@@ -261,6 +262,7 @@ namespace TestRunnerLib
             Skyline.Set("FunctionalTest", true);
             Skyline.Set("SkylineOffscreen", !demoMode && offscreen);
             Skyline.Set("DemoMode", demoMode);
+            Skyline.Set("AiConnector", aiConnector);
             Skyline.Set("UseOriginalURLs", originalURLs);
             Skyline.Set("NoVendorReaders", !useVendorReaders);
             Skyline.Set("NoSaveSettings", true);

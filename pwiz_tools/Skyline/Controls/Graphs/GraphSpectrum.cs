@@ -793,60 +793,32 @@ namespace pwiz.Skyline.Controls.Graphs
                     else if (!Settings.PeptideSettings.Libraries.HasLibraries || !Settings.PeptideSettings.Libraries.IsLoaded)
                         return null;
 
-                    var spectra = new List<SpectrumDisplayInfo>(Settings
-                        .GetBestSpectra(LookupTarget, DocNode.PrecursorAdduct, LookupMods)
-                        .Select(s => new SpectrumDisplayInfo(s, DocNode)));
+                    if (Peptide.IsCustomMolecule)
+                        return _spectra = GetExactPrecursorSpectra();
+
+                    // All charges and label types of a peptide are evidence for each of its precursors,
+                    // so list the spectra of all of them, the exact precursor first
+                    var libraryPrecursors = Settings.GetLibraryPrecursors(LookupTarget, LookupMods, DocNode.PrecursorAdduct, true)
+                        .OrderBy(p => p.IsPrecursor(DocNode) ? 0 : 1)
+                        .ThenBy(p => p.Adduct.AdductCharge == DocNode.PrecursorCharge ? 0 : 1)
+                        .ThenBy(p => p.Adduct.AdductCharge)
+                        .ToList();
+                    var libraries = Settings.PeptideSettings.Libraries;
+                    var spectra = new List<SpectrumDisplayInfo>(libraryPrecursors.SelectMany(p =>
+                        libraries.GetSpectra(p.Key, p.LabelType, true)
+                            .Select(s => new SpectrumDisplayInfo(s, DocNode, null, p.Adduct))));
 
                     // Showing redundant spectra is only supported for full-scan filtering when
                     // the document has results files imported.
-                    if ((Settings.TransitionSettings.FullScan.IsEnabled || Settings.PeptideSettings.Libraries.HasMidasLibrary) && Settings.HasResults)
+                    if (IsShowingRedundantSpectra)
                     {
                         try
                         {
-                            var spectraRedundant = new List<SpectrumDisplayInfo>();
-                            var dictReplicateNameFiles = new Dictionary<string, HashSet<string>>();
-                            foreach (var spectrumInfo in Settings.GetRedundantSpectra(Peptide, LookupTarget, DocNode.PrecursorAdduct, DocNode.LabelType, LookupMods))
+                            foreach (var precursor in libraryPrecursors)
                             {
-                                var matchingFile = Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(spectrumInfo.FilePath));
-                                if (matchingFile == null)
-                                    continue;
-
-                                var replicateName = matchingFile.Chromatograms.Name;
-                                spectraRedundant.Add(new SpectrumDisplayInfo(spectrumInfo, DocNode, replicateName,
-                                    matchingFile.FilePath, matchingFile.FileOrder, spectrumInfo.RetentionTime, false));
-
-                                // Include the best spectrum twice, once displayed in the normal
-                                // way and once displayed with its replicate and retention time.
-                                if (spectrumInfo.IsBest)
-                                {
-                                    var iBest = spectra.IndexOf(s =>
-                                        Equals(s.Name, spectrumInfo.Name) &&
-                                        Equals(s.LabelType, spectrumInfo.LabelType));
-                                    if (iBest != -1)
-                                    {
-                                        spectra[iBest] = new SpectrumDisplayInfo(spectra[iBest].SpectrumInfo, DocNode,
-                                            replicateName, matchingFile.FilePath, 0, spectrumInfo.RetentionTime, true);
-                                    }
-                                }
-
-                                if (!dictReplicateNameFiles.TryGetValue(replicateName, out var setFiles))
-                                {
-                                    setFiles = new HashSet<string>();
-                                    dictReplicateNameFiles.Add(replicateName, setFiles);
-                                }
-
-                                setFiles.Add(spectrumInfo.FilePath);
+                                AddRedundantSpectra(spectra, libraries.GetSpectra(precursor.Key, precursor.LabelType, false),
+                                    precursor.Adduct);
                             }
-
-                            // Determine if replicate name is sufficient to uniquely identify the file
-                            foreach (var spectrumInfo in spectraRedundant)
-                            {
-                                var replicateName = spectrumInfo.ReplicateName;
-                                if (replicateName != null && dictReplicateNameFiles[replicateName].Count < 2)
-                                    spectrumInfo.IsReplicateUnique = true;
-                            }
-                            spectraRedundant.Sort();
-                            spectra.AddRange(spectraRedundant);
                         }
                         catch (Exception)
                         {
@@ -857,6 +829,88 @@ namespace pwiz.Skyline.Controls.Graphs
                     _spectra = ImmutableList<SpectrumDisplayInfo>.ValueOf(spectra);
                     return _spectra;
                 }
+            }
+
+            private bool IsShowingRedundantSpectra
+            {
+                get
+                {
+                    return (Settings.TransitionSettings.FullScan.IsEnabled || Settings.PeptideSettings.Libraries.HasMidasLibrary) &&
+                           Settings.HasResults;
+                }
+            }
+
+            private ImmutableList<SpectrumDisplayInfo> GetExactPrecursorSpectra()
+            {
+                var spectra = new List<SpectrumDisplayInfo>(Settings
+                    .GetBestSpectra(LookupTarget, DocNode.PrecursorAdduct, LookupMods)
+                    .Select(s => new SpectrumDisplayInfo(s, DocNode)));
+                if (IsShowingRedundantSpectra)
+                {
+                    try
+                    {
+                        AddRedundantSpectra(spectra, Settings.GetRedundantSpectra(Peptide, LookupTarget,
+                            DocNode.PrecursorAdduct, DocNode.LabelType, LookupMods), DocNode.PrecursorAdduct);
+                    }
+                    catch (Exception)
+                    {
+                        // ignored
+                    }
+                }
+                return ImmutableList<SpectrumDisplayInfo>.ValueOf(spectra);
+            }
+
+            /// <summary>
+            /// Adds the spectra of one library precursor in each replicate, sorted by file and time.
+            /// </summary>
+            private void AddRedundantSpectra(List<SpectrumDisplayInfo> spectra, IEnumerable<SpectrumInfoLibrary> spectrumInfos, Adduct adduct)
+            {
+                var spectraRedundant = new List<SpectrumDisplayInfo>();
+                var dictReplicateNameFiles = new Dictionary<string, HashSet<string>>();
+                foreach (var spectrumInfo in spectrumInfos)
+                {
+                    var matchingFile = Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(spectrumInfo.FilePath));
+                    if (matchingFile == null)
+                        continue;
+
+                    var replicateName = matchingFile.Chromatograms.Name;
+                    spectraRedundant.Add(new SpectrumDisplayInfo(spectrumInfo, DocNode, replicateName,
+                        matchingFile.FilePath, matchingFile.FileOrder, spectrumInfo.RetentionTime, false, adduct));
+
+                    // Include the best spectrum twice, once displayed in the normal
+                    // way and once displayed with its replicate and retention time.
+                    if (spectrumInfo.IsBest)
+                    {
+                        var iBest = spectra.IndexOf(s =>
+                            s.IsBest &&
+                            Equals(s.Name, spectrumInfo.Name) &&
+                            Equals(s.LabelType, spectrumInfo.LabelType) &&
+                            s.Adduct.AdductCharge == adduct.AdductCharge);
+                        if (iBest != -1)
+                        {
+                            spectra[iBest] = new SpectrumDisplayInfo(spectra[iBest].SpectrumInfo, DocNode,
+                                replicateName, matchingFile.FilePath, 0, spectrumInfo.RetentionTime, true, adduct);
+                        }
+                    }
+
+                    if (!dictReplicateNameFiles.TryGetValue(replicateName, out var setFiles))
+                    {
+                        setFiles = new HashSet<string>();
+                        dictReplicateNameFiles.Add(replicateName, setFiles);
+                    }
+
+                    setFiles.Add(spectrumInfo.FilePath);
+                }
+
+                // Determine if replicate name is sufficient to uniquely identify the file
+                foreach (var spectrumInfo in spectraRedundant)
+                {
+                    var replicateName = spectrumInfo.ReplicateName;
+                    if (replicateName != null && dictReplicateNameFiles[replicateName].Count < 2)
+                        spectrumInfo.IsReplicateUnique = true;
+                }
+                spectraRedundant.Sort();
+                spectra.AddRange(spectraRedundant);
             }
 
             public bool TryGetKoinaSpectrum(IsotopeLabelType labelType, int nce, out SpectrumDisplayInfo spectrum)
@@ -1050,6 +1104,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             return new SpectrumGraphItem(peptide, precursor, selection.NodeTran, spectrumInfoR, spectrum.Name)
             {
+                SpectrumLabelType = spectrum.LabelType,
+                SpectrumAdduct = spectrum.Adduct,
                 ShowTypes = types,
                 ShowCharges = charges,
                 ShowLosses = losses,

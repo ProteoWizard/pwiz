@@ -103,6 +103,12 @@ namespace pwiz.Skyline
 
 
 
+        private void panel1_Layout(object sender, LayoutEventArgs e)
+        {
+            // Extend 1 px past panel1 on the left, right and bottom, hiding the outer borders of the docked panes.
+            dockPanel.SetBounds(-1, 0, panel1.ClientSize.Width + 2, panel1.ClientSize.Height + 1);
+        }
+
         private void dockPanel_ActiveDocumentChanged(object sender, EventArgs e)
         {
             try

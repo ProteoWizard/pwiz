@@ -25,29 +25,25 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
-using pwiz.Osprey.Core;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Osprey.IO
 {
     /// <summary>
-    /// Per-file <c>&lt;stem&gt;.reconciliation.json</c> Stage 5 → Stage 6
-    /// boundary file. Carries everything a Stage 6 worker needs to do
-    /// per-file rescore + gap-fill + reconciled parquet write-back without
-    /// re-running any of the joined Stage 5 work: the non-Keep
-    /// reconciliation actions for the file (split into two homogeneous
-    /// arrays so the JSON has no discriminator field gymnastics), the
-    /// gap-fill targets for the file, and the refined RT calibration.
+    /// Per-run <c>&lt;stem&gt;.reconciliation.json</c>: the run's Stage 6 plan. Written by
+    /// <c>PerFileRescoring</c> as it plans the run, just before rescoring it, and read by
+    /// <c>SecondPassFDR</c> for the run's gap-fill entry ids. Carries the non-Keep
+    /// reconciliation actions for the run (split into two homogeneous arrays so the JSON has
+    /// no discriminator field gymnastics), the run's gap-fill targets, and its refined RT
+    /// calibration - only content specific to the run it is named for.
     ///
-    /// Mirrors <c>osprey/crates/osprey/src/reconciliation_io.rs</c>.
-    /// Field declaration order is alphabetical at every nesting level
-    /// (matches Rust). All <see cref="double"/> values are routed through
-    /// <see cref="RoundtripDoubleConverter"/> on this side and through a
-    /// matching custom <c>serde_json</c> formatter on the Rust side, so
-    /// every f64 is emitted as the same canonical fixed-point decimal
-    /// form on both runtimes — sidestepping the
-    /// Newtonsoft-<c>R</c>/Grisu vs. Rust-<c>ryu</c> threshold
-    /// disagreement on small values like <c>4.58e-5</c>. Cross-impl byte
-    /// parity is verified by a sibling test in each language.
+    /// Descends from <c>osprey/crates/osprey/src/reconciliation_io.rs</c>. Field declaration
+    /// order is alphabetical at every nesting level (as in Rust). All <see cref="double"/>
+    /// values are routed through <see cref="RoundtripDoubleConverter"/>, so every f64 is
+    /// emitted in the same canonical fixed-point decimal form as Rust's custom formatter. The
+    /// Rust file also carries fields this one dropped at v4; a cross-impl comparison strips
+    /// them, along with the validity stamp.
     /// </summary>
     public class ReconciliationFile
     {
@@ -57,58 +53,40 @@ namespace pwiz.Osprey.IO
         /// Current schema version. Bump on incompatible changes.
         ///
         /// v1: initial format.
-        /// v2: added <c>file_stems</c> so per-file Stage 6 rescore workers
-        ///     can compute the reconciliation parameter hash that the
-        ///     downstream <c>--task SecondPassFDR</c> node expects (the
-        ///     hash is computed over all files in the join, not the
-        ///     worker's single parquet). Old v1 files deserialize with an
-        ///     empty <see cref="FileStems"/> list; the worker falls back
-        ///     to its <c>OspreyConfig.InputFiles</c> stems in that case,
-        ///     preserving v1 behavior.
-        /// v3: added <c>first_pass_base_ids</c>, the JOIN-WIDE set of base_ids
-        ///     that survived first-pass compaction. FirstPassFDR computes it with
-        ///     every file in memory; a per-file HPC rescore worker uses it to
-        ///     compact to exactly the set the in-memory straight-through pipeline
-        ///     used, instead of recomputing a PER-FILE subset that drops cross-file
-        ///     entries (regression mode3 divergence). Required in v3 (see Load).
-        ///     NOTE: the Rust reconciliation_io.rs needs the matching field to keep
-        ///     cross-impl byte parity.
+        /// v2: added <c>file_stems</c>, the join's file set.
+        /// v3: added <c>first_pass_base_ids</c>, the join-wide first-pass passing base_ids.
+        /// v4: removed <c>file_stems</c>, <c>first_pass_base_ids</c>, <c>library_hash</c> and
+        ///     <c>search_hash</c>. Each was the same in every run's file and nothing read it:
+        ///     the base_ids moved to the analysis-wide retained summary, and the embedded
+        ///     validity stamp covers search and library identity. On an 82-run cohort the base
+        ///     ids alone were ~466 MB of identical copies.
         /// </summary>
-        public const int CurrentFormatVersion = 3;
+        public const int CurrentFormatVersion = 4;
 
-        // JSON keys a load error names, so a user can find them in the file.
-        private const string KEY_FILE_STEMS = @"file_stems";
+        // JSON key a load error names, so a user can find it in the file.
         private const string KEY_FORMAT_VERSION = @"format_version";
 
-        [JsonProperty(KEY_FILE_STEMS, Order = 0)]
-        public List<string> FileStems { get; set; }
-
         /// <summary>
-        /// Join-wide first-pass passing base_ids (sorted ascending for
-        /// deterministic, byte-parity output). See v3 note above.
+        /// The writing task's <see cref="ArtifactStamp"/>, serialized FIRST so a resume check
+        /// reads it without parsing the rest of a multi-megabyte document
+        /// (<see cref="ArtifactStamp.TryReadJsonHead"/>). Set by <see cref="Save"/>.
         /// </summary>
-        [JsonProperty(@"first_pass_base_ids", Order = 1)]
-        public uint[] FirstPassBaseIds { get; set; }
+        [JsonProperty(ArtifactStamp.JSON_PROPERTY, Order = -100)]
+        public string OspreyValidity { get; set; }
 
-        [JsonProperty(@"forced_integration_actions", Order = 2)]
+        [JsonProperty(@"forced_integration_actions", Order = 0)]
         public List<ForcedIntegrationEntry> ForcedIntegrationActions { get; set; }
 
-        [JsonProperty(KEY_FORMAT_VERSION, Order = 3)]
+        [JsonProperty(KEY_FORMAT_VERSION, Order = 1)]
         public int FormatVersion { get; set; }
 
-        [JsonProperty(@"gap_fill_targets", Order = 4)]
+        [JsonProperty(@"gap_fill_targets", Order = 2)]
         public List<GapFillEntry> GapFillTargets { get; set; }
 
-        [JsonProperty(@"library_hash", Order = 5)]
-        public string LibraryHash { get; set; }
-
-        [JsonProperty(@"refined_rt_calibration", Order = 6, NullValueHandling = NullValueHandling.Include)]
+        [JsonProperty(@"refined_rt_calibration", Order = 3, NullValueHandling = NullValueHandling.Include)]
         public RefinedRtCalibrationJson RefinedRtCalibration { get; set; }
 
-        [JsonProperty(@"search_hash", Order = 7)]
-        public string SearchHash { get; set; }
-
-        [JsonProperty(@"use_cwt_peak_actions", Order = 8)]
+        [JsonProperty(@"use_cwt_peak_actions", Order = 4)]
         public List<UseCwtPeakEntry> UseCwtPeakActions { get; set; }
 
         /// <summary>
@@ -132,33 +110,7 @@ namespace pwiz.Osprey.IO
                 throw new InvalidDataException(string.Format(
                     OspreyIOResources.ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_,
                     path, parsed.FormatVersion, CurrentFormatVersion, KEY_FORMAT_VERSION,
-                    OspreyTaskNames.TaskFilePattern(OspreyTaskNames.FIRST_PASS_FDR)));
-            }
-            // v2 envelopes must carry the planner's full join file_stems set;
-            // a deserialized v2 file with file_stems missing or empty would
-            // silently flow through RescoreHydration with joinFileStems = []
-            // and cause downstream --task SecondPassFDR to compute a single-file
-            // ReconciliationParameterHash for what was meant to be a
-            // multi-file join. JsonProperty does not enforce required, so
-            // assert it here. Matches the Rust serde behavior (file_stems is
-            // a required field, not defaulted).
-            if (parsed.FileStems == null || parsed.FileStems.Count == 0)
-            {
-                throw new InvalidDataException(string.Format(
-                    OspreyIOResources.ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_list_the_input_files_it_,
-                    path, CurrentFormatVersion, KEY_FORMAT_VERSION, KEY_FILE_STEMS,
-                    OspreyTaskNames.TaskFilePattern(OspreyTaskNames.FIRST_PASS_FDR)));
-            }
-            // v3 required: the join-wide first-pass base_id set. A per-file HPC
-            // worker MUST have this to compact to the same set as the in-memory
-            // pipeline; without it the worker would recompute a per-file subset
-            // and silently diverge (regression mode3). Fail loudly instead.
-            if (parsed.FirstPassBaseIds == null)
-            {
-                throw new InvalidDataException(string.Format(
-                    OspreyIOResources.ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_carry_the_first_pass_,
-                    path, CurrentFormatVersion, KEY_FORMAT_VERSION,
-                    OspreyTaskNames.TaskFilePattern(OspreyTaskNames.FIRST_PASS_FDR)));
+                    @"*" + EXT));
             }
             return parsed;
         }
@@ -174,12 +126,13 @@ namespace pwiz.Osprey.IO
         /// the <c>.tmp</c> next to the missing destination, recoverable
         /// by hand or by re-running.
         /// </summary>
-        public static void Save(string path, ReconciliationFile file)
+        public static void Save(string path, ReconciliationFile file, ArtifactStamp stamp)
         {
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentException(@"path must not be null or empty", nameof(path));
             if (file == null)
                 throw new ArgumentNullException(nameof(file));
+            file.OspreyValidity = stamp?.ToString() ?? throw new ArgumentNullException(nameof(stamp));
 
             string parent = Path.GetDirectoryName(Path.GetFullPath(path));
             if (!string.IsNullOrEmpty(parent))
@@ -188,12 +141,12 @@ namespace pwiz.Osprey.IO
             // LF line endings and a trailing newline, for byte parity with the Rust side.
             string json = RoundtripDoubleConverter.SerializeIndented(file);
 
-            // Atomic write via FileSaver: a sibling temp file is
+            // Atomic write via SimpleFileSaver: a sibling temp file is
             // promoted to the destination on Commit; on exception, the
-            // using-block disposes FileSaver which deletes the temp
+            // using-block disposes SimpleFileSaver which deletes the temp
             // without touching the destination. See
-            // Osprey.Core.FileSaver for details.
-            using (var saver = new FileSaver(path))
+            // pwiz.Common.SystemUtil.SimpleFileSaver for details.
+            using (var saver = new SimpleFileSaver(path))
             {
                 File.WriteAllText(saver.SafeName, json);
                 saver.Commit();

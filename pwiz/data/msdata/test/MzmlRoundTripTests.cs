@@ -137,6 +137,23 @@ public class MzmlRoundTripTests
         var rt = scan.CvParam(CVID.MS_scan_start_time);
         Assert.AreEqual(CVID.UO_minute, rt.Units);
         Assert.AreEqual(90.0, rt.TimeInSeconds(), 1e-9, "1.5 min * 60");
+
+        // Terms newer than this build's CV (e.g. UO:0010069 "bar" on a pressure trace from a newer
+        // msconvert) read as CVID_Unknown instead of aborting the import. Same-length swaps keep
+        // any index offsets valid.
+        const string countsUnit = "unitAccession=\"MS:1000131\"";   // number of detector counts
+        const string positiveScan = "accession=\"MS:1000130\"";     // positive scan
+        StringAssert.Contains(xml, countsUnit, StringComparison.Ordinal);
+        StringAssert.Contains(xml, positiveScan, StringComparison.Ordinal);
+        var newerXml = xml.Replace(countsUnit, "unitAccession=\"UO:9999999\"", StringComparison.Ordinal)
+                          .Replace(positiveScan, "accession=\"MS:9999999\"", StringComparison.Ordinal);
+        var newerSpec = new MzmlReader().Read(newerXml).Run.SpectrumList!.GetSpectrum(0);
+        Assert.IsFalse(newerSpec.Params.HasCVParam(CVID.MS_positive_scan));
+        Assert.IsTrue(newerSpec.Params.CVParams.Exists(p => p.Cvid == CVID.CVID_Unknown),
+            "unknown term kept as a CVID_Unknown cvParam");
+        var newerIntensity = newerSpec.GetIntensityArray()!;
+        Assert.AreEqual(CVID.CVID_Unknown, newerIntensity.CvParam(CVID.MS_intensity_array).Units);
+        CollectionAssert.AreEqual(new[] { 50.0, 100.0, 150.0, 200.0 }, newerIntensity.Data);
     }
 
     [TestMethod]

@@ -145,31 +145,11 @@ namespace pwiz.Osprey.FDR {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Running {0} Percolator on {1:N0} precursor candidate peaks....
-        /// </summary>
-        public static string PercolatorEngine_DispatchSvm_Running__0__Percolator_on__1__precursor_candidate_peaks___ {
-            get {
-                return ResourceManager.GetString("PercolatorEngine_DispatchSvm_Running__0__Percolator_on__1__precursor_candidate_pe" +
-                        "aks___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to First-pass.
         /// </summary>
         public static string PercolatorEngine_PassDisplayName_First_pass {
             get {
                 return ResourceManager.GetString("PercolatorEngine_PassDisplayName_First_pass", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} Percolator results: {1:N0} targets, {2:N0} decoys pass {3:P1} FDR.
-        /// </summary>
-        public static string PercolatorEngine_RunPercolatorFdr__0__Percolator_results___1__targets___2__decoys_pass__3__FDR {
-            get {
-                return ResourceManager.GetString("PercolatorEngine_RunPercolatorFdr__0__Percolator_results___1__targets___2__decoys" +
-                        "_pass__3__FDR", resourceCulture);
             }
         }
         
@@ -180,16 +160,6 @@ namespace pwiz.Osprey.FDR {
             get {
                 return ResourceManager.GetString("PercolatorEngine_RunPercolatorFdr_Running__0__Percolator_on__1__precursor_candida" +
                         "te_peaks___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0}: scoring all {1:N0} precursor candidate peaks with the saved first-pass model (no retraining), then target-decoy competition for q-values and PEP..
-        /// </summary>
-        public static string PercolatorEngine_RunPercolatorStreaming__0___scoring_all__1__precursor_candidate_peaks_with_the_saved_first_pass_model__no_ {
-            get {
-                return ResourceManager.GetString("PercolatorEngine_RunPercolatorStreaming__0___scoring_all__1__precursor_candidate_" +
-                        "peaks_with_the_saved_first_pass_model__no_", resourceCulture);
             }
         }
         

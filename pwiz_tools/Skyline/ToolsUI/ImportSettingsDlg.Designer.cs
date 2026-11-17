@@ -53,6 +53,7 @@ namespace pwiz.Skyline.ToolsUI
             resources.ApplyResources(this.cbUninstall, "cbUninstall");
             this.cbUninstall.Name = "cbUninstall";
             this.cbUninstall.UseVisualStyleBackColor = true;
+            this.cbUninstall.CheckedChanged += new System.EventHandler(this.cbUninstall_CheckedChanged);
             //
             // btnOk
             //

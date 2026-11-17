@@ -36,7 +36,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonUtil", "..\Shared\Com
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonBaseUI", "..\Shared\CommonBaseUI\CommonBaseUI.csproj", "{6C0B2B6E-4C39-4F5A-9E2D-7A1B3C8D5E40}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiblioSpec", "..\Shared\BiblioSpec\BiblioSpec.csproj", "{32CC9B1A-9442-4B56-AF34-FB47595278A1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiblioSpecUtil", "..\Shared\BiblioSpec\BiblioSpecUtil\BiblioSpecUtil.csproj", "{32CC9B1A-9442-4B56-AF34-FB47595278A1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestRunner", "TestRunner\TestRunner.csproj", "{B92CA24E-0867-4B99-88F8-EF542A4AFE87}"
 	ProjectSection(ProjectDependencies) = postProject

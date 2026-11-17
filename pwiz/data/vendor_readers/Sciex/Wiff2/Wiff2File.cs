@@ -496,34 +496,80 @@ internal sealed class Wiff2Experiment : AbstractWiffExperiment
     /// <inheritdoc/>
     public override ZtScanBin? ZtScan { get; }
 
-    public override WiffExperimentType ExperimentType => _exp.ScanType switch
+    // "TOFMS" / "TOFMSMS" are what the ZenoTOF writes. Triple-quad style acquisitions (seen in
+    // an ACO-CE compound optimization file) report "ProductIon" for their MS2 experiments and
+    // "Q1MI" (Q1 multiple ion) for single-point Q1 monitoring, which is SIM: the legacy .wiff
+    // SDK's SIM experiment type is the same Q1 MI scan. Like legacy SIM, it becomes one SIM
+    // chromatogram per monitored ion, and spectra only when simAsSpectra is set.
+    public override WiffExperimentType ExperimentType => ExperimentTypeFor(_exp.ScanType);
+
+    /// <summary>The experiment type for an SDK <c>IExperiment.ScanType</c> string.</summary>
+    internal static WiffExperimentType ExperimentTypeFor(string? scanType) => scanType switch
     {
         "TOFMS" => WiffExperimentType.MS,
         "TOFMSMS" => WiffExperimentType.Product,
+        "ProductIon" => WiffExperimentType.Product,
+        "Q1MI" => WiffExperimentType.SIM,
         "MRM" => WiffExperimentType.MRM,
         "SIM" => WiffExperimentType.SIM,
         _ => WiffExperimentType.MS,
     };
 
-    public override WiffPolarity Polarity => _exp.IsPositivePolarityScan ? WiffPolarity.Positive : WiffPolarity.Negative;
+    /// <summary>
+    /// True for a "Q1MI" (Q1 multiple ion) experiment: one measured intensity per monitored ion,
+    /// each ion being the centre of its mass range's isolation window.
+    /// </summary>
+    internal static bool IsQ1MultipleIon(string? scanType) => scanType == "Q1MI";
 
-    public override double StartMass
+    /// <summary>
+    /// The monitored m/z of each mass range of a "Q1MI" experiment, in mass range order: the
+    /// centre of its isolation window. Null for any other experiment, or if a range has none.
+    /// </summary>
+    internal static double[]? Q1MultipleIonMzs(IExperiment exp)
     {
-        get
+        if (!IsQ1MultipleIon(exp.ScanType) || exp.MassRanges is not { Length: > 0 } ranges)
+            return null;
+        var mzs = new double[ranges.Length];
+        for (int i = 0; i < ranges.Length; i++)
         {
-            if (_exp.MassRanges is { Length: > 0 } ranges && ranges[0]?.SelectionWindow is IScanWindow sw)
-                return sw.Start;
-            return 0;
+            if (ranges[i]?.IsolationWindow is not IScanWindow iw)
+                return null;
+            mzs[i] = (iw.Start + iw.End) / 2;
         }
+        return mzs;
     }
 
-    public override double EndMass
+    public override WiffPolarity Polarity => _exp.IsPositivePolarityScan ? WiffPolarity.Positive : WiffPolarity.Negative;
+
+    public override double StartMass => ScanRange?.Start ?? 0;
+
+    public override double EndMass => ScanRange?.End ?? 0;
+
+    /// <summary>
+    /// The experiment's scanned m/z range: its selection window, or, on a "Q1MI" experiment
+    /// where the SDK leaves that unbounded (0 to double.MaxValue), the span of the isolation
+    /// windows Q1 actually transmitted.
+    /// </summary>
+    private (double Start, double End)? ScanRange
     {
         get
         {
-            if (_exp.MassRanges is { Length: > 0 } ranges && ranges[0]?.SelectionWindow is IScanWindow sw)
-                return sw.End;
-            return 0;
+            if (_exp.MassRanges is not { Length: > 0 } ranges || ranges[0] is not { } range)
+                return null;
+            if (IsQ1MultipleIon(_exp.ScanType) && range.SelectionWindow is not { End: < double.MaxValue })
+            {
+                double start = double.MaxValue, end = double.MinValue;
+                foreach (var r in ranges)
+                {
+                    if (r?.IsolationWindow is not IScanWindow iw)
+                        continue;
+                    start = Math.Min(start, iw.Start);
+                    end = Math.Max(end, iw.End);
+                }
+                if (start <= end)
+                    return (start, end);
+            }
+            return range.SelectionWindow is IScanWindow sw ? (sw.Start, sw.End) : null;
         }
     }
 
@@ -549,8 +595,17 @@ internal sealed class Wiff2Experiment : AbstractWiffExperiment
     public override AbstractWiffSpectrum? GetSpectrum(int cycle1Based, bool addZeros, bool centroid)
     {
         double scanTime = GetRetentionTime(cycle1Based);
-        var sdkSpec = FetchSpectrumWithRetry(scanTime, addZeros, centroid);
-        return sdkSpec is null ? null : new Wiff2Spectrum(sdkSpec, _exp, scanTime, ZtScan);
+        // A "Q1MI" spectrum is one measured intensity per monitored ion, already a centroid:
+        // the SDK's centroider turns it into an empty spectrum, and framing zeros (skipped for
+        // centroid data, as in WiffFile) would break the point-per-mass-range m/z mapping.
+        if (IsQ1MultipleIon(_exp.ScanType))
+        {
+            centroid = false;
+            addZeros = false;
+        }
+        // No read here: cpp's Spectrum2Impl is built from the scan time alone and reads the SDK
+        // spectrum only when asked for the precursor or the data (WiffFile2.ipp:741-852).
+        return new Wiff2Spectrum(this, _exp, scanTime, addZeros, centroid, ZtScan);
     }
 
     public override (double[] Times, double[] Intensities) GetBpc()
@@ -580,11 +635,39 @@ internal sealed class Wiff2Experiment : AbstractWiffExperiment
         }
     }
 
-    // wiff2 has no MRM/SIM transitions (cpp WiffFile2 returns 0).
+    // wiff2 MRM experiments are not read as transitions yet.
     public override IReadOnlyList<WiffMrmTarget> SrmTransitions => Array.Empty<WiffMrmTarget>();
-    public override IReadOnlyList<WiffSimTarget> SimTransitions => Array.Empty<WiffSimTarget>();
+
+    private IReadOnlyList<WiffSimTarget>? _simTargets;
+
+    /// <summary>
+    /// One SIM target per monitored ion of a "Q1MI" experiment. The SDK's mass ranges carry no
+    /// dwell time, collision energy, schedule or compound name, so those are left at 0 / null.
+    /// </summary>
+    public override IReadOnlyList<WiffSimTarget> SimTransitions => _simTargets ??=
+        Q1MultipleIonMzs(_exp)?.Select(mz => new WiffSimTarget
+        {
+            Mass = mz,
+            DwellTimeMs = 0,
+            CollisionEnergy = 0,
+            StartTime = 0,
+            EndTime = 0,
+            CompoundName = null,
+        }).ToArray() ?? Array.Empty<WiffSimTarget>();
+
     public override (double[] Times, double[] Intensities) GetSic(int transitionIndex)
-        => (Array.Empty<double>(), Array.Empty<double>());
+    {
+        if (transitionIndex < 0 || transitionIndex >= SimTransitions.Count)
+            return (Array.Empty<double>(), Array.Empty<double>());
+        var req = _api.RequestFactory.CreateMrmXicReadRequest();
+        req.SampleId = _sample.Id;
+        req.ExperimentId = _exp.Id;
+        req.MassIndexes = new List<int> { transitionIndex };
+        var reader = _api.GetMrmXic(req);
+        if (!reader.MoveNext() || reader.GetCurrent() is not { } xic)
+            return (Array.Empty<double>(), Array.Empty<double>());
+        return (xic.XValues ?? Array.Empty<double>(), xic.YValues ?? Array.Empty<double>());
+    }
 
     // wiff2 SDK doesn't surface per-cycle base-peak metadata; cpp's WiffFile2 path
     // skips emitting MS_base_peak_* on wiff2 spectra. Returning null lets the
@@ -612,7 +695,7 @@ internal sealed class Wiff2Experiment : AbstractWiffExperiment
 
     /// <summary>cpp <c>Spectrum2Impl::getSpectrumWithOptions</c> port: fall back when
     /// AddFramingZeros / ConvertToCentroid throw and disable that option for the rest of the run.</summary>
-    private ISpectrum? FetchSpectrumWithRetry(double scanTime, bool addZeros, bool centroid)
+    internal ISpectrum? FetchSpectrumWithRetry(double scanTime, bool addZeros, bool centroid)
     {
         addZeros = addZeros && !s_framingZerosThrowsError;
         centroid = centroid && !s_doCentroidThrowsError;
@@ -643,44 +726,68 @@ internal sealed class Wiff2Experiment : AbstractWiffExperiment
     }
 }
 
-/// <summary><see cref="AbstractWiffSpectrum"/> backed by the modern SCIEX <see cref="ISpectrum"/>.</summary>
+/// <summary>
+/// <see cref="AbstractWiffSpectrum"/> backed by the modern SCIEX <see cref="ISpectrum"/>, read on
+/// first use. Port of cpp <c>Spectrum2Impl</c>: the peaks come from a read with the requested
+/// framing zeros and centroiding, and the precursor from whatever has been read already, or from a
+/// plain read when nothing has (<c>getLastSpectrum</c>), so a metadata-only request never pays
+/// for the SDK's centroider.
+/// </summary>
 internal sealed class Wiff2Spectrum : AbstractWiffSpectrum
 {
-    private readonly ISpectrum _sdk;
+    private readonly Wiff2Experiment _experiment;
     private readonly IExperiment _exp;
-    private readonly IPrecursor? _precursor;
-    private readonly IIsolationWindow? _iso;
     private readonly double _scanTime;
-
+    private readonly bool _addZeros;
+    private readonly bool _centroid;
     private readonly ZtScanBin? _ztScan;
 
-    public Wiff2Spectrum(ISpectrum sdk, IExperiment exp, double scanTime, ZtScanBin? ztScan = null)
+    private ISpectrum? _data;
+    private bool _dataRead;
+    private ISpectrum? _plain;
+    private bool _plainRead;
+
+    public Wiff2Spectrum(Wiff2Experiment experiment, IExperiment exp, double scanTime,
+        bool addZeros, bool centroid, ZtScanBin? ztScan = null)
     {
-        _sdk = sdk;
+        _experiment = experiment;
         _exp = exp;
         _scanTime = scanTime;
-        _precursor = sdk.Precursor;
-        _iso = _precursor?.IsolationWindow;
+        _addZeros = addZeros;
+        _centroid = centroid;
         _ztScan = ztScan;
     }
 
-    // wiff2 always reports profile data in our pipeline; SDK-side centroiding is opt-in via
-    // ConvertToCentroid (we currently never set it true), so treat the cached spectrum as profile.
+    // wiff2 reports profile data unless the SDK is asked to centroid (ConvertToCentroid), which
+    // the spectrum list then marks itself; SIM ("Q1MI") spectra are marked centroid there too.
     public override bool CentroidMode => false;
-    public override double[] XValues => _sdk.XValues ?? Array.Empty<double>();
-    public override double[] YValues => _sdk.YValues ?? Array.Empty<double>();
+    public override double[] XValues
+    {
+        get
+        {
+            var x = DataSpectrum?.XValues ?? Array.Empty<double>();
+            // A "Q1MI" (Q1 multiple ion) experiment monitors one ion per mass range, and the SDK
+            // reports each point's m/z as 0, so put each at its ion's m/z; anything that does not
+            // fit that shape is left as is.
+            if (Wiff2Experiment.Q1MultipleIonMzs(_exp) is not { } mzs || mzs.Length != x.Length || x.Any(v => v != 0))
+                return x;
+            return mzs;
+        }
+    }
+    public override double[] YValues => DataSpectrum?.YValues ?? Array.Empty<double>();
 
-    public override bool HasPrecursorInfo => _iso is not null && _iso.IsolationWindowTarget != 0;
-    public override double PrecursorMz => _iso?.IsolationWindowTarget ?? 0;
-    public override int PrecursorCharge => _precursor?.PrecursorChargeState ?? 0;
+    public override bool HasPrecursorInfo => Isolation is { } iso && iso.IsolationWindowTarget != 0;
+    public override double PrecursorMz => Isolation?.IsolationWindowTarget ?? 0;
+    public override int PrecursorCharge => Precursor?.PrecursorChargeState ?? 0;
 
     // cpp WiffFile2.ipp:732 — `Spectrum2Impl::getHasIsolationInfo()` is
-    // `experiment->experimentType == Product`, i.e. only a "TOFMSMS" scan carries isolation
-    // info. cpp's SpectrumList_ABI.cpp:172 gates the whole getIsolationInfo call on it, so a
-    // non-TOFMSMS experiment emits no collision energy even when the SDK's ISpectrum happens to
-    // carry a Precursor with a CE ramp (which is exactly what a CE-optimization acquisition
-    // looks like — see CEOptPGMOG_redo.wiff2, where C# used to emit CE and cpp emitted none).
-    public override bool HasIsolationInfo => _exp.ScanType == "TOFMSMS";
+    // `experiment->experimentType == Product`, i.e. only a product ion scan ("TOFMSMS", or
+    // "ProductIon" on a triple-quad style acquisition) carries isolation info. cpp's
+    // SpectrumList_ABI.cpp:172 gates the whole getIsolationInfo call on it, so a non-product
+    // experiment emits no collision energy even when the SDK's ISpectrum happens to carry a
+    // Precursor with a CE ramp (see CEOptPGMOG_redo.wiff2, where C# used to emit CE and cpp
+    // emitted none).
+    public override bool HasIsolationInfo => Wiff2Experiment.ExperimentTypeFor(_exp.ScanType) == WiffExperimentType.Product;
 
     // cpp WiffFile2.ipp:734-757 (Spectrum2Impl::getIsolationInfo). Note cpp's early returns:
     // a null Precursor, a null IsolationWindow, or a null CollisionEnergy all leave
@@ -690,12 +797,12 @@ internal sealed class Wiff2Spectrum : AbstractWiffSpectrum
     {
         get
         {
-            if (!HasIsolationInfo || _precursor is null || _iso is null) return 0;
+            if (!HasIsolationInfo || Precursor is not { } precursor || precursor.IsolationWindow is null) return 0;
             // A ZT Scan bin's CE is a point on a hardware ramp the SDK does not record per bin —
             // ISpectrum.Precursor.CollisionEnergy reports the ramp MIDPOINT on every bin of the
             // sweep. Reconstruct it from the method's endpoints instead. See ZtScanBin.
             if (_ztScan is not null) return _ztScan.CollisionEnergy;
-            var ce = _precursor.CollisionEnergy;
+            var ce = precursor.CollisionEnergy;
             if (ce is null) return 0;
             double rampStart = ce.CollisionEnergyRampStart;
             double rampEnd = ce.CollisionEnergyRampEnd;
@@ -725,13 +832,13 @@ internal sealed class Wiff2Spectrum : AbstractWiffSpectrum
     // unset/zero SDK values (which signal "no isolation window specified") don't produce
     // a bogus offset == target_m_z.
     public override double IsolationLowerOffset =>
-        _iso is null || _iso.LowerOffset <= 0 || _iso.UpperOffset <= 0
+        Isolation is not { } iso || iso.LowerOffset <= 0 || iso.UpperOffset <= 0
             ? 0
-            : Math.Max(0, _iso.IsolationWindowTarget - _iso.LowerOffset);
+            : Math.Max(0, iso.IsolationWindowTarget - iso.LowerOffset);
     public override double IsolationUpperOffset =>
-        _iso is null || _iso.LowerOffset <= 0 || _iso.UpperOffset <= 0
+        Isolation is not { } iso || iso.LowerOffset <= 0 || iso.UpperOffset <= 0
             ? 0
-            : Math.Max(0, _iso.UpperOffset - _iso.IsolationWindowTarget);
+            : Math.Max(0, iso.UpperOffset - iso.IsolationWindowTarget);
     public override double ElectronKineticEnergy => _exp.ElectronKe ?? 0;
 
     // cpp WiffFile2.ipp:194 — `Spectrum2Impl::getStartTime() { return scanTime; }`, where
@@ -745,9 +852,45 @@ internal sealed class Wiff2Spectrum : AbstractWiffSpectrum
     // per-cycle base-peak metadata; cpp emits these only for legacy WIFF.
     public override (double Mz, double Intensity)? BasePeak => null;
 
-    // wiff2 doesn't go through SrmAsSpectra/SimAsSpectra (the wiff2 reader rejects
-    // MRM/SIM experiments outright per cpp SpectrumList_ABI.cpp:288-292), so a
-    // wiff2 spectrum's experiment type is never MRM or SIM here. The MS / Product
-    // / Precursor distinction doesn't change XValues handling, so default to MS.
-    public override WiffExperimentType ExperimentType => WiffExperimentType.MS;
+    public override WiffExperimentType ExperimentType => Wiff2Experiment.ExperimentTypeFor(_exp.ScanType);
+
+    private IPrecursor? Precursor => MetadataSpectrum?.Precursor;
+
+    private IIsolationWindow? Isolation => Precursor?.IsolationWindow;
+
+    /// <summary>The read with the requested framing zeros and centroiding, made once.</summary>
+    private ISpectrum? DataSpectrum
+    {
+        get
+        {
+            if (!_dataRead)
+            {
+                _data = _plainRead && !_addZeros && !_centroid
+                    ? _plain
+                    : _experiment.FetchSpectrumWithRetry(_scanTime, _addZeros, _centroid);
+                _dataRead = true;
+            }
+            return _data;
+        }
+    }
+
+    /// <summary>
+    /// cpp <c>Spectrum2Impl::getLastSpectrum</c>: the spectrum already read, or a plain read
+    /// (no framing zeros, no centroiding) when there is none - framing and centroiding change the
+    /// peaks, not the precursor.
+    /// </summary>
+    private ISpectrum? MetadataSpectrum
+    {
+        get
+        {
+            if (_dataRead)
+                return _data;
+            if (!_plainRead)
+            {
+                _plain = _experiment.FetchSpectrumWithRetry(_scanTime, false, false);
+                _plainRead = true;
+            }
+            return _plain;
+        }
+    }
 }

@@ -44,7 +44,7 @@ namespace pwiz.Osprey.Tasks
     /// calibration is done in place (no extra copy) rather than into a new array.
     ///
     /// <para>With <c>serialBlockReads</c>, windows load through
-    /// <see cref="SpectraWindowIndex.LoadWindowSerialRead"/>, for a caller that reads every
+    /// <see cref="SpectraWindowIndex.LoadWindowSerialRead(int)"/>, for a caller that reads every
     /// window of a run from a cold disk.</para>
     /// </summary>
     public class StreamingWindowSpectraProvider : IWindowSpectraProvider

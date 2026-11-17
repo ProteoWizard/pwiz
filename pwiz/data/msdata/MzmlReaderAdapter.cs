@@ -1,5 +1,6 @@
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData.Mzml;
+using Pwiz.Data.MsData.Spectra;
 
 namespace Pwiz.Data.MsData.Readers;
 
@@ -72,6 +73,7 @@ public sealed class MzmlReaderAdapter : IReader
             result.Run.SpectrumList = new SpectrumList_Mzml(filename, lazyReader,
                 idx.SpectrumIds, idx.SpectrumOffsets, dpPwiz,
                 config?.MzmlDecodeThreads ?? 1);
+            ApplyIgnoreCalibrationScans(result, config);
             return;
         }
 
@@ -80,6 +82,19 @@ public sealed class MzmlReaderAdapter : IReader
         var parsed = new MzmlReader().Read(stream);
         CopyInto(parsed, result);
         MSDataFile.FillInCommonMetadata(filename, result);
+        ApplyIgnoreCalibrationScans(result, config);
+    }
+
+    /// <summary>
+    /// Honors <see cref="ReaderConfig.IgnoreCalibrationScans"/> for the formats that carry
+    /// "calibration spectrum" as a label rather than a vendor notion of a calibration function.
+    /// Shared with the mzMLb and mz5 readers, since the same run must not keep its calibration
+    /// spectra in one of those formats and lose them in another.
+    /// </summary>
+    internal static void ApplyIgnoreCalibrationScans(MSData result, ReaderConfig? config)
+    {
+        if (config?.IgnoreCalibrationScans == true)
+            SpectrumList_IgnoreCalibrationScans.Apply(result);
     }
 
     internal static void CopyInto(MSData source, MSData dest)

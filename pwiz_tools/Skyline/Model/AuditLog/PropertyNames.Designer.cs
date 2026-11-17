@@ -1537,6 +1537,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cutoff.
+        /// </summary>
+        public static string GlobalQValueFilter_Cutoff {
+            get {
+                return ResourceManager.GetString("GlobalQValueFilter_Cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value.
+        /// </summary>
+        public static string GlobalQValueFilter_Level {
+            get {
+                return ResourceManager.GetString("GlobalQValueFilter_Level", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Value to compare against.
         /// </summary>
         public static string GroupComparisonDef_CaseValue {
@@ -1834,6 +1852,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Global cutoff.
+        /// </summary>
+        public static string ImportFastaSettings_QValueFilter {
+            get {
+                return ResourceManager.GetString("ImportFastaSettings_QValueFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Import Peptide Search.
         /// </summary>
         public static string ImportPeptideSearchSettings {
@@ -1931,7 +1958,16 @@ namespace pwiz.Skyline.Model.AuditLog {
                 return ResourceManager.GetString("ImportPeptideSearchSettings_ModificationsSettings", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey search settings.
+        /// </summary>
+        public static string ImportPeptideSearchSettings_OspreySearchSettings {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchSettings_OspreySearchSettings", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Import results settings.
         /// </summary>
@@ -2822,7 +2858,79 @@ namespace pwiz.Skyline.Model.AuditLog {
                 return ResourceManager.GetString("OptimizationLibrary_DatabasePathAuditLog", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Experiment FDR.
+        /// </summary>
+        public static string OspreySearchSettings_ExperimentFdr {
+            get {
+                return ResourceManager.GetString("OspreySearchSettings_ExperimentFdr", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment tolerance.
+        /// </summary>
+        public static string OspreySearchSettings_FragmentTolerance {
+            get {
+                return ResourceManager.GetString("OspreySearchSettings_FragmentTolerance", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment tolerance unit.
+        /// </summary>
+        public static string OspreySearchSettings_FragmentUnit {
+            get {
+                return ResourceManager.GetString("OspreySearchSettings_FragmentUnit", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey non-default settings.
+        /// </summary>
+        public static string OspreySearchSettings_NonDefaultAdditionalSettings {
+            get {
+                return ResourceManager.GetString("OspreySearchSettings_NonDefaultAdditionalSettings", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Protein FDR.
+        /// </summary>
+        public static string OspreySearchSettings_ProteinFdr {
+            get {
+                return ResourceManager.GetString("OspreySearchSettings_ProteinFdr", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to MS/MS resolution.
+        /// </summary>
+        public static string OspreySearchSettings_Resolution {
+            get {
+                return ResourceManager.GetString("OspreySearchSettings_Resolution", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Run FDR.
+        /// </summary>
+        public static string OspreySearchSettings_RunFdr {
+            get {
+                return ResourceManager.GetString("OspreySearchSettings_RunFdr", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Threads.
+        /// </summary>
+        public static string OspreySearchSettings_Threads {
+            get {
+                return ResourceManager.GetString("OspreySearchSettings_Threads", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Find minimal protein list.
         /// </summary>
@@ -5178,6 +5286,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ViewLibrarySettings_AssociateProteins {
             get {
                 return ResourceManager.GetString("ViewLibrarySettings_AssociateProteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Global cutoff.
+        /// </summary>
+        public static string ViewLibrarySettings_QValueFilter {
+            get {
+                return ResourceManager.GetString("ViewLibrarySettings_QValueFilter", resourceCulture);
             }
         }
         

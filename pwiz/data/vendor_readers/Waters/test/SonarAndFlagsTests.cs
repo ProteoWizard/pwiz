@@ -1,3 +1,4 @@
+using Pwiz.Analysis;
 using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Readers;
 
@@ -55,6 +56,14 @@ public class SonarAndFlagsTests
             .HasCombinedIonMobility, "IMS file with combine on → true");
         Assert.IsFalse(Open("ATEHLSTLSEK_profile.raw", new ReaderConfig { CombineIonMobilitySpectra = true })
             .HasCombinedIonMobility, "non-IMS file with combine on → still false");
+
+        // The capabilities have to survive lockmass correction, which Skyline layers between
+        // the Waters list and SpectrumList_IonMobility: that wrapper finds them through
+        // Innermost, and a refiner it cannot see through leaves it probing mzML-style metadata.
+        var combined = Open("HDMSe_Short_noLM.raw", new ReaderConfig { CombineIonMobilitySpectra = true });
+        var ionMobility = new SpectrumList_IonMobility(
+            new SpectrumList_LockmassRefiner(combined, 785.8426, 785.8426, 0.1));
+        Assert.IsTrue(ionMobility.HasCombinedIonMobility, "combined IMS through the lockmass refiner");
     }
 
     [TestMethod]
@@ -81,6 +90,13 @@ public class SonarAndFlagsTests
             // With the flag on, the answer matches whether the file has a lockmass function.
             var slIgnore = Open(fixture, new ReaderConfig { IgnoreCalibrationScans = true });
             anyWithLockmass |= slIgnore.CalibrationSpectraAreOmitted;
+
+            // And lockmass correction must not hide it: Skyline puts the refiner over every
+            // Waters list it corrects, then asks the refiner. Answering false there sends it
+            // looking for a lockspray function in a list the reader already cleaned.
+            var refined = new SpectrumList_LockmassRefiner(slIgnore, 785.8426, 785.8426, 0.1);
+            Assert.AreEqual(slIgnore.CalibrationSpectraAreOmitted, refined.CalibrationSpectraAreOmitted,
+                $"{fixture} through the lockmass refiner");
         }
         // Sanity: at least one fixture in this corpus has a lockmass function — otherwise the
         // test isn't actually exercising the true-branch and we'd silently pass.

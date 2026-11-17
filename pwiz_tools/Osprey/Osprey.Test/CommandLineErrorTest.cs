@@ -48,7 +48,18 @@ namespace pwiz.Osprey.Test
         // The startup-checked variables the cases below set.
         private static readonly string[] STARTUP_VARIABLES =
         {
-            @"OSPREY_PASS2_QVALUE", @"OSPREY_STAGE7_STREAM", @"OSPREY_ALLOW_UNFIXED_RESIDENT"
+            @"OSPREY_PASS2_QVALUE", @"OSPREY_EXPERIMENT_AGG", @"OSPREY_SERIAL_READ_SCOPE",
+            @"OSPREY_STUB_IDENTITY", @"OSPREY_BLOCK_READ_MB"
+        };
+
+        // OSPREY_* names this build does not read: switches retired by name, a Rust-only dump and
+        // a misspelling. Each must be refused by name, the same as an unknown argument.
+        private static readonly string[] UNRECOGNIZED_VARIABLES =
+        {
+            @"OSPREY_STAGE7_STREAM", @"OSPREY_STAGE6_STREAM_SURVIVORS", @"OSPREY_FDR_PROJECTION",
+            @"OSPREY_ALLOW_UNFIXED_RESIDENT",
+            @"OSPREY_DUMP_PERCOLATOR", @"OSPREY_PERCOLATOR_ONLY", @"OSPREY_DUMP_RESCORED",
+            @"OSPREY_PASS2_QVALUES"
         };
 
         private string _testDir;
@@ -141,22 +152,34 @@ namespace pwiz.Osprey.Test
                 InputLibraryOutput(input, library));
             StringAssert.Contains(output, @"OSPREY_PASS2_QVALUE");
             StringAssert.Contains(output, @"bogus");
-            output = RunCommandAndValidateError(Variable(@"OSPREY_STAGE7_STREAM", @"1"),
+            // A retired 0 arm is refused, not run as the default under its name.
+            foreach (string name in new[] { @"OSPREY_STUB_IDENTITY", @"OSPREY_BLOCK_READ_MB" })
+            {
+                output = RunCommandAndValidateError(Variable(name, @"0"), InputLibraryOutput(input, library));
+                StringAssert.Contains(output, name);
+            }
+            foreach (string name in UNRECOGNIZED_VARIABLES)
+            {
+                Assert.IsFalse(EnvVarUsage.Catalog.Any(e => e.Name == name), name);
+                output = RunCommandAndValidateError(Variable(name, @"1"), InputLibraryOutput(input, library));
+                StringAssert.Contains(output, name);
+                StringAssert.Contains(output, OspreyCommandArgs.ARG_HELP_ENV.ArgumentText);
+            }
+            // A misspelling is answered with the name it is closest to.
+            output = RunCommandAndValidateError(Variable(@"OSPREY_PASS2_QVALUES", @"transfer"),
                 InputLibraryOutput(input, library));
-            StringAssert.Contains(output, @"OSPREY_STAGE7_STREAM");
-            // The training export under the one pass-2 mode that computes each run's q-values in
-            // SecondPassFDR, after the export is written: refused, never an export on the wrong q.
-            output = RunCommandAndValidateError(Variable(@"OSPREY_PASS2_QVALUE", OspreyEnvironment.PASS2_QVALUE_TRANSFER),
-                InputLibraryOutput(input, library).Concat(new[] { OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText }).ToArray());
-            AssertErrorMessage(output, string.Format(
-                OspreyResources.Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_the_run_q_values_in__2__after_the_per_run_export_,
-                OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText, @"OSPREY_PASS2_QVALUE=" + OspreyEnvironment.PASS2_QVALUE_TRANSFER,
-                SecondPassFdrTask.TASK_NAME));
-            // A retired allowance token is a warning, not an error: the run goes on, here to
-            // the ModelDiagnostics error above, which stays the only error line.
-            output = RunCommandAndValidateError(Variable(@"OSPREY_ALLOW_UNFIXED_RESIDENT", @"hpc-merge"),
-                modelDiagnostics);
-            StringAssert.Contains(output, @"hpc-merge");
+            StringAssert.Contains(output, @"OSPREY_PASS2_QVALUE?");
+            // A switch with listed values refuses any other value, whether or not it has a
+            // message of its own: the default arm would run under the name of the one asked for.
+            foreach (string name in new[] { @"OSPREY_EXPERIMENT_AGG", @"OSPREY_SERIAL_READ_SCOPE" })
+            {
+                output = RunCommandAndValidateError(Variable(name, @"bogus"), InputLibraryOutput(input, library));
+                StringAssert.Contains(output, name);
+                StringAssert.Contains(output, @"bogus");
+            }
+            // Empty is unset, for an unknown name as for a known one: the run goes on, here to the
+            // ModelDiagnostics error above, which stays the only error line.
+            output = RunCommandAndValidateError(Variable(UNRECOGNIZED_VARIABLES[0], string.Empty), modelDiagnostics);
             AssertErrorMessage(output, noFirstPass);
 
             // --culture: a name .NET does not know stops the run with .NET's own message (which
@@ -178,7 +201,7 @@ namespace pwiz.Osprey.Test
             using (new CultureScope(CultureInfo.GetCultureInfo(otherCulture)))
             {
                 AssertErrorMessage(output, string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_,
-                    Program.USAGE_INPUT));
+                    OspreyCommandArgs.UsageInput));
             }
             // --culture is applied to formatting and resource lookup for the whole run (the scope
             // RunCommand holds), and not only parsed.

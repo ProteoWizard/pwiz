@@ -149,29 +149,36 @@ namespace pwiz.Common.CommandLine
         public bool IsEmpty { get { return string.IsNullOrEmpty(Name); } }
         public bool IsNameOnly { get { return string.IsNullOrEmpty(Value); } }
 
+        /// <summary>
+        /// True when this pair names <paramref name="arg"/>, which it is then bound to, after the
+        /// strict grammar's checks: a flag given a value, a required value missing, a value
+        /// outside the declared list. The parser applies those checks itself, with the grammar's
+        /// rules and the argument as typed, and binds with <see cref="Bind"/>.
+        /// </summary>
         public bool IsMatch(ArgumentBase arg)
         {
             if (!Name.Equals(arg.Name))
                 return false;
             if (arg.ValueExample == null && !IsNameOnly)
                 throw new ValueUnexpectedException(arg);
-            if (arg.ValueExample != null)
-            {
-                if (IsNameOnly)
-                {
-                    if (!arg.OptionalValue)
-                        throw new ValueMissingException(arg);
-                }
-                else
-                {
-                    var val = Value;
-                    if (!arg.HasValueChecking && !arg.IsValidValue(val))
-                        throw new ValueInvalidException(arg, Value, arg.ValuesForError);
-                }
-            }
+            if (arg.ValueExample != null && IsNameOnly && !arg.OptionalValue)
+                throw new ValueMissingException(arg);
 
-            Match = arg;
+            Bind(arg, !arg.HasValueChecking);
             return true;
+        }
+
+        /// <summary>
+        /// Binds this pair to the argument the parser matched it to, so the typed coercions can
+        /// name it, refusing a value outside the argument's declared list when
+        /// <paramref name="validateListedValues"/> asks, with the argument spelled as
+        /// <paramref name="argText"/> (as typed) in that error, or its own text when null.
+        /// </summary>
+        public void Bind(ArgumentBase arg, bool validateListedValues, string argText = null)
+        {
+            if (validateListedValues && !IsNameOnly && !arg.IsValidValue(Value))
+                throw new ValueInvalidException(arg, Value, arg.ValuesForError, argText ?? arg.ArgumentText);
+            Match = arg;
         }
 
         public bool IsValue(string value)

@@ -130,6 +130,15 @@
   <data name="BackgroundProteomeList_Title_Edit_Background_Proteomes" xml:space="preserve">
     <value>Edit Background Proteomes</value>
   </data>
+  <data name="CarafeModelList_GetDisplayName_Default__AlphaPeptDeep_" xml:space="preserve">
+    <value>Default (AlphaPeptDeep)</value>
+  </data>
+  <data name="CarafeModelList_Label_Models" xml:space="preserve">
+    <value>&amp;Models:</value>
+  </data>
+  <data name="CarafeModelList_Title_Edit_Carafe_Models" xml:space="preserve">
+    <value>Edit Carafe Models</value>
+  </data>
   <data name="CollisionEnergyList_Label_Collision_Energy_Regression" xml:space="preserve">
     <value>&amp;Collision Energy Regression:</value>
   </data>

@@ -57,8 +57,7 @@ namespace pwiz.SkylineTestFunctional
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(
                 documentSettingsDlg.EditAnnotationList);
-            var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
-            string dlgId = GetOpenFormId<DefineAnnotationDlg>();
+            var defineAnnotationDlg = ShowMcpConnectorForm<DefineAnnotationDlg>(editListDlg.AddItem, out var dlgId);
 
             // SetFormValue against the "Name" LABEL sets the editable field it labels (the Name
             // TextBox, AnnotationName), not the label itself.

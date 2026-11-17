@@ -1,4 +1,5 @@
 using System.Globalization;
+using Pwiz.Analysis.Demux;
 using Pwiz.Analysis.Filters;
 using Pwiz.Analysis.PeakFilters;
 using Pwiz.Analysis.PeakPicking;
@@ -25,7 +26,7 @@ public delegate ISpectrumList SpectrumListFilterBuilder(string args, ISpectrumLi
 /// <c>"threshold count 50 most-intense"</c> into <see cref="ISpectrumList"/> wrappers.
 /// Port of pwiz::analysis::SpectrumListFactory (slimmed — registers the filters we've ported so far).
 /// </summary>
-public static class SpectrumListFactory
+public static partial class SpectrumListFactory
 {
     private static readonly Dictionary<string, SpectrumListFilterBuilder> s_builders = BuildDefaultRegistry();
 
@@ -917,17 +918,30 @@ public static class SpectrumListFactory
             MinimumWindowSize = double.Parse(TakeKeyValue(ref args, "minWindowSize=", "0.2"), NumberStyles.Float, CultureInfo.InvariantCulture),
             RemoveNonOverlappingEdges = bool.Parse(TakeKeyValue(ref args, "removeNonOverlappingEdges=", "false")),
             Optimization = ParseOptimization(TakeKeyValue(ref args, "optimization=", "none")),
+            SolveThreads = int.Parse(TakeKeyValue(ref args, "solveThreads=", "1"), CultureInfo.InvariantCulture),
+            Interpolation = ParseInterpolation(TakeKeyValue(ref args, "interpolation=", "spline")),
+            // Not in cpp: Poisson-weighted NNLS refit.
+            PoissonWeights = bool.Parse(TakeKeyValue(ref args, "poissonWeights=", "false")),
         };
 
         args = args.Trim();
         if (!string.IsNullOrEmpty(args))
             throw new ArgumentException($"demultiplex: unhandled text in argument string: \"{args}\"");
 
-        if (p.MassError.Value <= 0 || p.NnlsEps <= 0 || p.DemuxBlockExtra < 0)
-            throw new ArgumentException("demultiplex: massError and nnlsEps must be > 0; demuxBlockExtra must be ≥ 0");
+        if (p.MassError.Value <= 0 || p.NnlsEps <= 0 || p.DemuxBlockExtra < 0 || p.SolveThreads < 1)
+            throw new ArgumentException("demultiplex: massError and nnlsEps must be > 0; demuxBlockExtra must be ≥ 0; solveThreads must be ≥ 1");
 
         return new SpectrumListDemux(inner, p);
     }
+
+    private static DemuxInterpolation ParseInterpolation(string s) =>
+        s.ToLowerInvariant() switch
+        {
+            "spline" => DemuxInterpolation.NaturalSpline,
+            "natural3" => DemuxInterpolation.NaturalThreePoint,
+            "makima" => DemuxInterpolation.Makima,
+            _ => throw new ArgumentException($"demultiplex: unknown interpolation '{s}' (spline, natural3 or makima)"),
+        };
 
     private static SpectrumListDemux.Optimization ParseOptimization(string s) =>
         s.ToLowerInvariant() switch

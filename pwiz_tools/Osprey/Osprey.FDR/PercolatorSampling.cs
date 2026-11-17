@@ -147,7 +147,7 @@ namespace pwiz.Osprey.FDR
         /// <paramref name="bestPerPrecursor"/> returns the post-dedup indices so the
         /// caller can emit its own path-specific [COUNT] dedup line. Owned here so
         /// the direct (<see cref="PercolatorTrainer.RunPercolator"/>) and streaming
-        /// (PercolatorEngine.RunPercolatorStreaming) paths select identical subsets
+        /// paths select identical subsets
         /// for identical input instead of hand-mirroring the dedup + index map-back.
         /// </summary>
         /// <returns>
@@ -237,8 +237,8 @@ namespace pwiz.Osprey.FDR
             // be survivable: every row would report run 0, the whole population would collapse to
             // one within-run comparison, and the selection would silently be the cross-run MAXIMUM
             // again while the log and the validity key both claim the reservoir. Unreachable from
-            // the three real callers - the projection path passes fileStart, the direct and
-            // RunPercolatorStreaming paths pass entries carrying FileName - which is why it throws
+            // the real callers - the projection path passes fileStart, the direct path passes
+            // entries carrying FileName - which is why it throws
             // rather than degrading.
             if (pickRun && n > 0 && fileStartLocal == null && entries.Count == 0)
             {
@@ -373,7 +373,121 @@ namespace pwiz.Osprey.FDR
                 return all;
             }
 
-            // Build peptide groups (group by target peptide via base_id)
+            // Build peptide groups (group by target peptide via base_id), then sort
+            // deterministically and shuffle with Fisher-Yates
+            var groups = new List<KeyValuePair<string, List<int>>>(
+                BuildPeptideGroups(labels, entryIds, peptides));
+            groups.Sort((a, b) => string.Compare(a.Key, b.Key, StringComparison.Ordinal)); // Array.Sort OK: Keys are distinct peptide-group dictionary keys, so the comparator never ties (the following Fisher-Yates shuffle then randomizes deterministically)
+
+            ulong rngState = seed;
+            for (int i = groups.Count - 1; i >= 1; i--)
+            {
+                rngState ^= rngState << 13;
+                rngState ^= rngState >> 7;
+                rngState ^= rngState << 17;
+                int j = (int)(rngState % (ulong)(i + 1));
+                var tmp = groups[i];
+                groups[i] = groups[j];
+                groups[j] = tmp;
+            }
+
+            // Select groups until we reach maxEntries
+            var selected = new List<int>(maxEntries);
+            foreach (var group in groups)
+            {
+                if (selected.Count + group.Value.Count > maxEntries && selected.Count > 0)
+                    break;
+                selected.AddRange(group.Value);
+            }
+
+            selected.Sort(); // Array.Sort OK: selected holds distinct entry indices, so no ties; single primitive array anyway
+            return selected.ToArray();
+        }
+
+        /// <summary>
+        /// The score-ranked counterpart of <see cref="SubsampleByPeptideGroup"/>, for round 2 of
+        /// the two-round tree training: the same peptide groups (a target, its paired decoy and the
+        /// peptide's other charge states stay together), taken in descending order of each group's
+        /// BEST row score instead of a shuffle, until the next group would pass
+        /// <paramref name="maxEntries"/>. Groups whose best scores tie are taken in ordinal key
+        /// order, so the selection is a total order. Returns ascending indices.
+        /// </summary>
+        internal static int[] SelectTopScoringGroups(
+            bool[] labels, uint[] entryIds, string[] peptides, double[] scores, int maxEntries)
+        {
+            int n = labels.Length;
+            if (n <= maxEntries)
+            {
+                var all = new int[n];
+                for (int i = 0; i < n; i++)
+                    all[i] = i;
+                return all;
+            }
+
+            // Each group carries its best score, so the sort compares fields, not lookups.
+            var peptideGroups = BuildPeptideGroups(labels, entryIds, peptides);
+            var groups = new List<ScoredGroup>(peptideGroups.Count);
+            foreach (var group in peptideGroups)
+            {
+                double best = double.NegativeInfinity;
+                foreach (int i in group.Value)
+                {
+                    if (scores[i] > best)
+                        best = scores[i];
+                }
+                groups.Add(new ScoredGroup(group.Key, group.Value, best));
+            }
+            groups.Sort((a, b) => // Array.Sort OK: Keys are distinct peptide-group dictionary keys, so the ordinal key tie-break makes this a total order
+            {
+                int c = b.BestScore.CompareTo(a.BestScore);
+                return c != 0 ? c : string.Compare(a.Key, b.Key, StringComparison.Ordinal);
+            });
+
+            var selected = new List<int>(maxEntries);
+            foreach (var group in groups)
+            {
+                if (selected.Count + group.Rows.Count > maxEntries && selected.Count > 0)
+                    break;
+                selected.AddRange(group.Rows);
+            }
+
+            selected.Sort(); // Array.Sort OK: selected holds distinct entry indices, so no ties; single primitive array anyway
+            return selected.ToArray();
+        }
+
+        /// <summary>
+        /// Bucket entry indices by source file name, preserving first-seen file
+        /// order. The streaming feature loads (issue #4355 Phase 4) iterate these
+        /// buckets so <c>loadFileFeatures</c> is called exactly once per file and
+        /// only one file's rows are held resident at a time.
+        /// </summary>
+        internal static Dictionary<string, List<int>> GroupIndicesByFileName(
+            IList<PercolatorEntry> entries)
+        {
+            var byFile = new Dictionary<string, List<int>>(StringComparer.Ordinal);
+            for (int i = 0; i < entries.Count; i++)
+            {
+                string file = entries[i].FileName;
+                List<int> list;
+                if (!byFile.TryGetValue(file, out list))
+                {
+                    list = new List<int>();
+                    byFile[file] = list;
+                }
+                list.Add(i);
+            }
+            return byFile;
+        }
+
+        /// <summary>
+        /// Group entries by target peptide via base_id, as <see cref="SubsampleByPeptideGroup"/>
+        /// does: a decoy joins its paired target's group, and an entry with no target in the set
+        /// keys on its own peptide.
+        /// </summary>
+        private static Dictionary<string, List<int>> BuildPeptideGroups(
+            bool[] labels, uint[] entryIds, string[] peptides)
+        {
+            int n = labels.Length;
             var baseIdToTargetPeptide = new Dictionary<uint, string>();
             for (int i = 0; i < n; i++)
             {
@@ -400,34 +514,22 @@ namespace pwiz.Osprey.FDR
                 }
                 list.Add(i);
             }
+            return peptideGroups;
+        }
 
-            // Sort deterministically and shuffle with Fisher-Yates
-            var groups = new List<KeyValuePair<string, List<int>>>(peptideGroups);
-            groups.Sort((a, b) => string.Compare(a.Key, b.Key, StringComparison.Ordinal)); // Array.Sort OK: Keys are distinct peptide-group dictionary keys, so the comparator never ties (the following Fisher-Yates shuffle then randomizes deterministically)
-
-            ulong rngState = seed;
-            for (int i = groups.Count - 1; i >= 1; i--)
+        /// <summary>A peptide group's key and rows, with the best row score it is ranked by.</summary>
+        private readonly struct ScoredGroup
+        {
+            public ScoredGroup(string key, List<int> rows, double bestScore)
             {
-                rngState ^= rngState << 13;
-                rngState ^= rngState >> 7;
-                rngState ^= rngState << 17;
-                int j = (int)(rngState % (ulong)(i + 1));
-                var tmp = groups[i];
-                groups[i] = groups[j];
-                groups[j] = tmp;
+                Key = key;
+                Rows = rows;
+                BestScore = bestScore;
             }
 
-            // Select groups until we reach maxEntries
-            var selected = new List<int>(maxEntries);
-            foreach (var group in groups)
-            {
-                if (selected.Count + group.Value.Count > maxEntries && selected.Count > 0)
-                    break;
-                selected.AddRange(group.Value);
-            }
-
-            selected.Sort(); // Array.Sort OK: selected holds distinct entry indices, so no ties; single primitive array anyway
-            return selected.ToArray();
+            public string Key { get; }
+            public List<int> Rows { get; }
+            public double BestScore { get; }
         }
     }
 }

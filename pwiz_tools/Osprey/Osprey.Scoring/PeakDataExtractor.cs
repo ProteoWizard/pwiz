@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 
@@ -379,18 +380,18 @@ namespace pwiz.Osprey.Scoring
             if (_diagnostics?.ShouldDumpSearchXicFor(candidate.Id) ?? false)
             {
                 string peakDumpPath = @"cs_search_xic_entry_" + candidate.Id + @".txt";
-                // A fresh FileSaver per call: "append" becomes read-existing,
+                // A fresh SimpleFileSaver per call: "append" becomes read-existing,
                 // write-existing-plus-new-section, commit. DiagnosticFileLock.For is
                 // keyed by path and shared with OspreyFileDiagnostics.WriteSearchXicDump,
                 // which writes this SAME file earlier in one candidate's scoring - without
-                // a shared lock, two independent FileSaver commits to one path race
+                // a shared lock, two independent SimpleFileSaver commits to one path race
                 // silently instead of the OS-level open conflict a plain writer would have
                 // thrown. Gated to specific candidate ids via OSPREY_DUMP_SEARCH_XIC, so
                 // call volume and the re-read cost are both small.
                 lock (DiagnosticFileLock.For(peakDumpPath))
                 {
                     string existing = File.Exists(peakDumpPath) ? File.ReadAllText(peakDumpPath) : null;
-                    using (var saver = new FileSaver(peakDumpPath))
+                    using (var saver = new SimpleFileSaver(peakDumpPath))
                     {
                         using (var dw = new StreamWriter(saver.SafeName))
                         {
@@ -446,66 +447,72 @@ namespace pwiz.Osprey.Scoring
                 return false;
             }
 
-            // For CWT-path entries (no override), Rust pipeline.rs:7406-7424
-            // RECOMPUTES the peak's apex_index / apex_intensity using
+            // RECOMPUTE the peak's apex_index / apex_intensity using
             // ref_xic[si..=ei] (the highest-total-intensity single
-            // fragment), discarding the apex_index that came out of
+            // fragment), as Rust pipeline.rs:7406-7424 does for CWT-path
+            // entries, discarding the apex_index that came out of
             // detect_cwt_consensus_peaks (which used ref_signal -- the
             // SUM of all fragment intensities). When a peak's max in
             // the summed signal sits at a different scan than the max
             // in the single ref_xic, leaving the consensus apex_index
             // in place produces divergent peak_apex / peak_sharpness
             // vs Rust on the reconciled .scores.parquet (~32k rows on
-            // Stellar before this fix). Override entries are excluded
-            // because Rust's override branch (pipeline.rs:7155-7223)
-            // uses the override-supplied apex_index directly without
-            // refining it -- match by skipping the recompute.
-            if (!overrideBounds.HasValue)
+            // Stellar before this fix).
+            //
+            // Override entries (reconciliation re-scoring) are refined the
+            // same way, deliberately unlike Rust's override branch
+            // (pipeline.rs:7155-7223), which keeps the scan nearest the
+            // consensus apex RT. That scan can carry no signal in the ref_xic
+            // while the rest of the peak does, giving peak_apex = 0 with a
+            // normal peak_area: a feature combination the first-pass model
+            // never trains on (a first-pass apex is the ref_xic max, so a zero
+            // apex there means a zero area). A model weighting peak_apex
+            // negatively scored such re-scored decoys near +14 and emptied the
+            // protein stratum of a library-decoy search (63 of 1,356 reported
+            // on the two-window Stellar subset).
+            int si = bestPeak.StartIndex;
+            int ei = bestPeak.EndIndex;
+            int newApexIdx = si;
+            double newApexVal = refXicIntensities[si];
+            for (int i = si + 1; i <= ei; i++)
             {
-                int si = bestPeak.StartIndex;
-                int ei = bestPeak.EndIndex;
-                int newApexIdx = si;
-                double newApexVal = refXicIntensities[si];
-                for (int i = si + 1; i <= ei; i++)
+                // Use `>=` to match Rust's `max_by` last-on-tie.
+                if (refXicIntensities[i] >= newApexVal)
                 {
-                    // Use `>=` to match Rust's `max_by` last-on-tie.
-                    if (refXicIntensities[i] >= newApexVal)
-                    {
-                        newApexVal = refXicIntensities[i];
-                        newApexIdx = i;
-                    }
+                    newApexVal = refXicIntensities[i];
+                    newApexIdx = i;
                 }
-                // Rust pipeline.rs:7433-7444 RECOMPUTES `peak.area` and
-                // `peak.signal_to_noise` from `ref_xic[si..=ei]` here, NOT
-                // preserving the original CWT detection's values. The
-                // original area/SNR came from the consensus signal's
-                // boundary (which can differ from the CWT apex's
-                // [start..end] in the ref_xic). Preserving them produces
-                // ~560 bounds_area / ~546 bounds_snr divergent rows on
-                // Stellar where the parquet reports the WRONG (consensus-
-                // boundary) area for the WINNING (ref_xic-boundary) peak.
-                // peak_area / peak_sharpness as PIN features already
-                // recompute correctly via the peak-shape calculators; this
-                // recompute keeps the parquet's bounds_area / bounds_snr
-                // consistent with that.
-                double[] refRtsAll = xics[refXicIdx].RetentionTimes;
-                double newArea = PeakDetector.TrapezoidalArea(
-                    refRtsAll, refXicIntensities, si, ei);
-                double newSnr = PeakDetector.ComputeSnr(
-                    refXicIntensities, newApexIdx, si, ei);
-                bestPeak = new XICPeakBounds
-                {
-                    ApexRt = refRtsAll[newApexIdx],
-                    ApexIntensity = newApexVal,
-                    ApexIndex = newApexIdx,
-                    StartRt = refRtsAll[si],
-                    EndRt = refRtsAll[ei],
-                    StartIndex = si,
-                    EndIndex = ei,
-                    Area = newArea,
-                    SignalToNoise = newSnr,
-                };
             }
+            // Rust pipeline.rs:7433-7444 RECOMPUTES `peak.area` and
+            // `peak.signal_to_noise` from `ref_xic[si..=ei]` here, NOT
+            // preserving the original CWT detection's values. The
+            // original area/SNR came from the consensus signal's
+            // boundary (which can differ from the CWT apex's
+            // [start..end] in the ref_xic). Preserving them produces
+            // ~560 bounds_area / ~546 bounds_snr divergent rows on
+            // Stellar where the parquet reports the WRONG (consensus-
+            // boundary) area for the WINNING (ref_xic-boundary) peak.
+            // peak_area / peak_sharpness as PIN features already
+            // recompute correctly via the peak-shape calculators; this
+            // recompute keeps the parquet's bounds_area / bounds_snr
+            // consistent with that.
+            double[] refRtsAll = xics[refXicIdx].RetentionTimes;
+            double newArea = PeakDetector.TrapezoidalArea(
+                refRtsAll, refXicIntensities, si, ei);
+            double newSnr = PeakDetector.ComputeSnr(
+                refXicIntensities, newApexIdx, si, ei);
+            bestPeak = new XICPeakBounds
+            {
+                ApexRt = refRtsAll[newApexIdx],
+                ApexIntensity = newApexVal,
+                ApexIndex = newApexIdx,
+                StartRt = refRtsAll[si],
+                EndRt = refRtsAll[ei],
+                StartIndex = si,
+                EndIndex = ei,
+                Area = newArea,
+                SignalToNoise = newSnr,
+            };
 
             int apexGlobalIdx = startScan + bestPeak.ApexIndex;
 

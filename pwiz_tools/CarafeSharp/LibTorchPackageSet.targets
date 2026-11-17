@@ -1,0 +1,86 @@
+<Project>
+
+  <!-- Writes the list of NuGet packages that hold a libtorch runtime the application downloads when it
+       first needs it, rather than shipping (pwiz.CarafeSharp.Models.LibTorchPackageSet reads it, and
+       LibTorchRuntimeInstaller installs from it). The importing project restores the runtime package
+       without using its assets, for example
+         <PackageReference Include="libtorch-cuda-12.8-win-x64" Version="2.10.0" ExcludeAssets="all" />
+       and sets:
+         LibTorchPackageSetId       the runtime package id, here libtorch-cuda-12.8-win-x64
+         LibTorchPackageSetVersion  its version
+         LibTorchPackageSetFile     where in the output folder to write the list
+       The runtime package itself holds no files: its dependencies, the part packages, do. Each one's
+       SHA-512 is the one NuGet recorded when restore downloaded it, so the application installs exactly
+       the packages this build was tested with. -->
+
+  <UsingTask TaskName="WriteLibTorchPackageSet" TaskFactory="RoslynCodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <PackageRoot ParameterType="System.String" Required="true" />
+      <PackageId ParameterType="System.String" Required="true" />
+      <PackageVersion ParameterType="System.String" Required="true" />
+      <OutputFile ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Using Namespace="System.Collections.Generic" />
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Linq" />
+      <Using Namespace="System.Xml.Linq" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        string PackageFolder(string id, string version)
+        {
+            return Path.Combine(PackageRoot, id.ToLowerInvariant(), version.ToLowerInvariant());
+        }
+
+        string nuspecPath = Path.Combine(PackageFolder(PackageId, PackageVersion), PackageId.ToLowerInvariant() + ".nuspec");
+        if (!File.Exists(nuspecPath))
+        {
+            Log.LogError("{0} {1} is not restored: {2} does not exist.", PackageId, PackageVersion, nuspecPath);
+            return false;
+        }
+        var lines = new List<string> { PackageId + "\t" + PackageVersion };
+        var dependencies = XDocument.Load(nuspecPath).Descendants()
+            .Where(element => element.Name.LocalName == "dependency")
+            .Select(element => (Id: (string) element.Attribute("id"), Version: ((string) element.Attribute("version")).Trim('[', ']')))
+            .Distinct()
+            .OrderBy(dependency => dependency.Id, StringComparer.OrdinalIgnoreCase);
+        foreach (var dependency in dependencies)
+        {
+            string folder = PackageFolder(dependency.Id, dependency.Version);
+            string fileName = (dependency.Id + "." + dependency.Version).ToLowerInvariant() + ".nupkg";
+            string packagePath = Path.Combine(folder, fileName);
+            string hashPath = packagePath + ".sha512";
+            if (!File.Exists(packagePath) || !File.Exists(hashPath))
+            {
+                Log.LogError("{0} {1} is not restored: {2} or its .sha512 does not exist.", dependency.Id, dependency.Version, packagePath);
+                return false;
+            }
+            lines.Add(string.Join("\t", dependency.Id, dependency.Version, File.ReadAllText(hashPath).Trim(),
+                new FileInfo(packagePath).Length.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+        }
+        Directory.CreateDirectory(Path.GetDirectoryName(OutputFile));
+        string text = string.Join("\n", lines) + "\n";
+        if (!File.Exists(OutputFile) || File.ReadAllText(OutputFile) != text)
+            File.WriteAllText(OutputFile, text);
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <!-- Before AssignTargetPaths, so the list is an output item that also reaches the output folders
+       of the projects that reference this one -->
+  <Target Name="WriteLibTorchPackageSet" BeforeTargets="AssignTargetPaths"
+          Condition="'$(LibTorchPackageSetId)' != ''">
+    <PropertyGroup>
+      <_LibTorchPackageSetIntermediateFile>$(IntermediateOutputPath)$(LibTorchPackageSetFile)</_LibTorchPackageSetIntermediateFile>
+    </PropertyGroup>
+    <WriteLibTorchPackageSet PackageRoot="$(NuGetPackageRoot)" PackageId="$(LibTorchPackageSetId)"
+                             PackageVersion="$(LibTorchPackageSetVersion)" OutputFile="$(_LibTorchPackageSetIntermediateFile)" />
+    <ItemGroup>
+      <None Include="$(_LibTorchPackageSetIntermediateFile)" Link="$(LibTorchPackageSetFile)"
+            CopyToOutputDirectory="PreserveNewest" Visible="false" />
+      <FileWrites Include="$(_LibTorchPackageSetIntermediateFile)" />
+    </ItemGroup>
+  </Target>
+
+</Project>

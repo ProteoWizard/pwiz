@@ -29,10 +29,13 @@ public sealed class OverlapDemultiplexer : IDemultiplexer
         /// <summary>Interpolate each multiplexed-spectrum row to the demuxed spectrum's RT via
         /// cubic Hermite splines. Cpp default true.</summary>
         public bool InterpolateRetentionTime { get; init; } = true;
+
+        /// <summary>How rows are interpolated when <see cref="InterpolateRetentionTime"/> is true.
+        /// Default <see cref="DemuxInterpolation.NaturalSpline"/>, as cpp.</summary>
+        public DemuxInterpolation Interpolation { get; init; } = DemuxInterpolation.NaturalSpline;
     }
 
     private const int OverlapRegionsInApprox = 7;
-    private const int CyclesInBlock = 3;
 
     private readonly Params _params;
     private ISpectrumList? _spectrumList;
@@ -129,22 +132,33 @@ public sealed class OverlapDemultiplexer : IDemultiplexer
                 ?? throw new InvalidOperationException(
                     "BuildDeconvBlock() MS2 spectrum missing scan_start_time required for interpolation.");
 
-            // For each chosen mux spectrum, find CyclesInBlock cycles' worth of identically-isolated
+            // For each chosen mux spectrum, find the interpolant's cycles' worth of identically-isolated
             // spectra (stride = SpectraPerCycle), record their (RT, binned-intensities) pairs, and
             // interpolate to the demuxed spectrum's RT.
             int specPerCycle = _maskCodec.SpectraPerCycle;
             var binnedIntensitiesCache = new List<Matrix<double>>();
             var scanTimesCache = new List<double[]>();
+            var rowInterpolation = new List<DemuxInterpolation>();
             for (int row = 0; row < scansInDeconv.Count; row++)
             {
-                var binMatrix = DenseMatrix.Create(CyclesInBlock, numTransitions, 0);
-                var times = new double[CyclesInBlock];
+                var interpolation = _params.Interpolation;
                 var interpolationIndices = new List<int>();
-                if (!DemuxHelpers.FindNearbySpectra(interpolationIndices, _spectrumList,
-                    scansInDeconv[row], CyclesInBlock, specPerCycle))
-                    throw new InvalidOperationException(
-                        "BuildDeconvBlock() Not enough spectra to interpolate for the overlap.");
+                if (!FindInterpolationSpectra(interpolationIndices, scansInDeconv[row], deconvStartTime,
+                        RetentionTimeInterpolator.Samples(interpolation), specPerCycle))
+                {
+                    // Too short a run for a wider interpolant: fall back to the 3-point natural spline.
+                    interpolation = DemuxInterpolation.NaturalThreePoint;
+                    if (RetentionTimeInterpolator.Samples(_params.Interpolation) <= 3 ||
+                        !FindInterpolationSpectra(interpolationIndices, scansInDeconv[row], deconvStartTime,
+                            RetentionTimeInterpolator.Samples(interpolation), specPerCycle))
+                    {
+                        throw new InvalidOperationException(
+                            "BuildDeconvBlock() Not enough spectra to interpolate for the overlap.");
+                    }
+                }
 
+                var binMatrix = DenseMatrix.Create(interpolationIndices.Count, numTransitions, 0);
+                var times = new double[interpolationIndices.Count];
                 for (int i = 0; i < interpolationIndices.Count; i++)
                 {
                     var s = _spectrumList.GetSpectrum(interpolationIndices[i], getBinaryData: true);
@@ -155,11 +169,12 @@ public sealed class OverlapDemultiplexer : IDemultiplexer
                 }
                 binnedIntensitiesCache.Add(binMatrix);
                 scanTimesCache.Add(times);
+                rowInterpolation.Add(interpolation);
             }
 
             for (int row = 0; row < OverlapRegionsInApprox; row++)
                 InterpolateMuxRegion(signal, row, deconvStartTime,
-                    binnedIntensitiesCache[row], scanTimesCache[row]);
+                    binnedIntensitiesCache[row], scanTimesCache[row], rowInterpolation[row]);
         }
         else
         {
@@ -204,15 +219,50 @@ public sealed class OverlapDemultiplexer : IDemultiplexer
                 "GetMatrixBlockIndices() Not enough spectra to demultiplex this block");
     }
 
+    /// <summary>The <paramref name="samples"/> acquisitions of a mux spectrum's window to interpolate
+    /// through. An even count is split evenly around the target time, not around the center scan.</summary>
+    private bool FindInterpolationSpectra(List<int> indices, int centerIndex, double targetTime, int samples,
+        int specPerCycle)
+    {
+        int backward = -1;
+        if (samples % 2 == 0)
+        {
+            // With binary data: the cache holds decoded spectra, and this one is read for interpolation anyway.
+            double centerTime = TryGetStartTime(_spectrumList!.GetSpectrum(centerIndex, getBinaryData: true)) ?? targetTime;
+            backward = centerTime > targetTime ? samples / 2 : samples / 2 - 1;
+        }
+        return DemuxHelpers.FindNearbySpectra(indices, _spectrumList!, centerIndex, samples, specPerCycle, backward);
+    }
+
     private static void InterpolateMuxRegion(Matrix<double> signal, int rowToFill,
-        double timeToInterpolate, Matrix<double> intensities, double[] scanTimes)
+        double timeToInterpolate, Matrix<double> intensities, double[] scanTimes,
+        DemuxInterpolation interpolation)
     {
         int numTransitions = intensities.ColumnCount;
+        if (interpolation == DemuxInterpolation.NaturalSpline)
+        {
+            for (int transition = 0; transition < numTransitions; transition++)
+            {
+                var values = new double[scanTimes.Length];
+                for (int i = 0; i < values.Length; i++) values[i] = intensities[i, transition];
+                double interp = InterpolateOne(timeToInterpolate, scanTimes, values);
+                signal[rowToFill, transition] = System.Math.Max(0.0, interp);
+            }
+            return;
+        }
+
+        // The interpolants need increasing times; FindNearbySpectra returns file order, so this sort
+        // is a guard, done once for every transition. Acquisition times are distinct, so it is stable enough.
+        int n = scanTimes.Length;
+        var order = new int[n];
+        for (int i = 0; i < n; i++) order[i] = i;
+        var sortedTimes = (double[])scanTimes.Clone();
+        Array.Sort(sortedTimes, order);
+        var sortedValues = new double[n];
         for (int transition = 0; transition < numTransitions; transition++)
         {
-            var values = new double[scanTimes.Length];
-            for (int i = 0; i < values.Length; i++) values[i] = intensities[i, transition];
-            double interp = InterpolateOne(timeToInterpolate, scanTimes, values);
+            for (int i = 0; i < n; i++) sortedValues[i] = intensities[order[i], transition];
+            double interp = RetentionTimeInterpolator.Interpolate(interpolation, sortedTimes, sortedValues, timeToInterpolate);
             signal[rowToFill, transition] = System.Math.Max(0.0, interp);
         }
     }

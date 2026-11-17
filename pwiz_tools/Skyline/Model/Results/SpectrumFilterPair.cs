@@ -109,7 +109,6 @@ namespace pwiz.Skyline.Model.Results
         public int? OptStep { get; }
         private double? CollisionEnergy { get; }
         private IonMobilityFilter IonMobilityInfo { get; set; }
-        private bool HasCombinedIonMobility { get; set; } // When true, data was read in 3-array format, which affects spectrum ID format
         internal SpectrumProductFilter[] Ms1ProductFilters { get; set; }
         private SpectrumProductFilter[] SimProductFilters { get; set; }
         public SpectrumProductFilter[] Ms2ProductFilters { get; set; }

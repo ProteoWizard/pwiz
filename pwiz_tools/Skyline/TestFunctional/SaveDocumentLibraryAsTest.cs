@@ -16,10 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Database;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.SkylineTestUtil;
 
@@ -74,12 +77,58 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             Assert.AreEqual(newName, GetDocumentLibraryName(SkylineWindow.Document));
             AssertAllLibInfoNames(SkylineWindow.Document, newName);
+
+            // Save As copies the library the document library spec names, which a document built in
+            // memory may hold somewhere other than beside its .sky file. Mark a copy held elsewhere
+            // so the test can tell which file reached the new name.
+            string elsewhereDir = TestFilesDir.GetTestPath("Elsewhere");
+            Directory.CreateDirectory(elsewhereDir);
+            string elsewhereLibPath = Path.Combine(elsewhereDir, "Elsewhere" + BiblioSpecLiteSpec.EXT);
+            File.Copy(BiblioSpecLiteSpec.GetLibraryFileName(renamedPath), elsewhereLibPath);
+            ExecuteSql(elsewhereLibPath, "CREATE TABLE " + MARKER_TABLE + " (Id INTEGER)");
+            RunUI(() => SkylineWindow.ModifyDocument("Move document library", doc =>
+                doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(libs =>
+                    libs.ChangeLibrarySpecs(libs.LibrarySpecs.Select(spec => spec.IsDocumentLibrary
+                        ? spec.ChangeFilePath(elsewhereLibPath)
+                        : spec).ToArray())))));
+            WaitForDocumentLoaded();
+            Assert.AreEqual(elsewhereLibPath, GetDocumentLibrarySpec(SkylineWindow.Document).FilePath);
+
+            const string movedName = "Moved";
+            string movedPath = TestFilesDir.GetTestPath(movedName + SrmDocument.EXT);
+            RunUI(() => Assert.IsTrue(SkylineWindow.SaveDocument(movedPath)));
+            string movedLibPath = BiblioSpecLiteSpec.GetLibraryFileName(movedPath);
+            Assert.AreEqual(movedLibPath, GetDocumentLibrarySpec(SkylineWindow.Document).FilePath);
+            AssertAllLibInfoNames(SkylineWindow.Document, movedName);
+            Assert.IsTrue(HasMarkerTable(movedLibPath));
+        }
+
+        private const string MARKER_TABLE = "SaveDocumentLibraryAsMarker";
+
+        private static void ExecuteSql(string libraryPath, string sql)
+        {
+            using var connection = new SQLiteConnection(string.Format("Data Source='{0}';Version=3", libraryPath));
+            connection.Open();
+            using var command = new SQLiteCommand(sql, connection);
+            command.ExecuteNonQuery();
+        }
+
+        private static bool HasMarkerTable(string libraryPath)
+        {
+            using var connection = new SQLiteConnection(string.Format("Data Source='{0}';Version=3", libraryPath));
+            connection.Open();
+            return SqliteOperations.TableExists(connection, MARKER_TABLE);
+        }
+
+        private static LibrarySpec GetDocumentLibrarySpec(SrmDocument document)
+        {
+            return document.Settings.PeptideSettings.Libraries.LibrarySpecs
+                .First(spec => spec != null && spec.IsDocumentLibrary);
         }
 
         private static string GetDocumentLibraryName(SrmDocument document)
         {
-            return document.Settings.PeptideSettings.Libraries.LibrarySpecs
-                .First(spec => spec != null && spec.IsDocumentLibrary).Name;
+            return GetDocumentLibrarySpec(document).Name;
         }
 
         /// <summary>

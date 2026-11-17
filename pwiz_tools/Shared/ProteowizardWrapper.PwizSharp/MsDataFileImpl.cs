@@ -1,6 +1,7 @@
 /*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2009 University of Washington - Seattle, WA
  * 
@@ -103,6 +104,9 @@ namespace pwiz.ProteowizardWrapper
         private readonly bool _requireVendorCentroidedMS1;
         private readonly bool _requireVendorCentroidedMS2;
 
+        private readonly SpectrumListDemux.Params _demultiplexParams; // null: never demultiplex
+        private SpectrumListDemux.Scheme _demultiplexScheme; // null: not demultiplexed
+
         private readonly bool _trimNativeID;
 
         private DetailLevel _detailMsLevel = DetailLevel.InstantMetadata;
@@ -187,7 +191,8 @@ namespace pwiz.ProteowizardWrapper
             bool combineIonMobilitySpectra = true, // Ask for IMS data in 3-array format by default (not guaranteed)
             bool trimNativeId = true,
             bool passEntireDiaPasefFrame = false, // Ask for Bruker DiaPASEF frames as a single chunk
-            int mzmlDecodeThreads = 1 // >1 decodes mzML binary arrays on a thread pool
+            int mzmlDecodeThreads = 1, // >1 decodes mzML binary arrays on a thread pool
+            SpectrumListDemux.Params demultiplex = null // Demultiplex overlapping-window or MSX DIA, when the run is multiplexed
             )
         {
 
@@ -228,8 +233,25 @@ namespace pwiz.ProteowizardWrapper
                 FULL_READER_LIST.Read(path, _msDataFile, sampleIndex, _config);
                 _requireVendorCentroidedMS1 = requireVendorCentroidedMS1;
                 _requireVendorCentroidedMS2 = requireVendorCentroidedMS2;
+                _demultiplexParams = demultiplex;
                 _trimNativeID = trimNativeId;
             }
+        }
+
+        /// <summary>
+        /// The multiplexing scheme of this run (see <see cref="SpectrumListDemux.DetectScheme"/>),
+        /// or null when it is not multiplexed. Reads only metadata, so a caller can ask before
+        /// deciding how to read the run. When demultiplex settings were given to the constructor,
+        /// this is <see cref="DemultiplexScheme"/> and <paramref name="demultiplex"/> is not used.
+        /// </summary>
+        public SpectrumListDemux.Scheme DetectDemultiplexScheme(SpectrumListDemux.Params demultiplex = null)
+        {
+            if (_demultiplexParams != null)
+                return DemultiplexScheme;
+            var spectra = SpectrumList;
+            if (spectra == null || HasSrmSpectraInList())
+                return null;
+            return SpectrumListDemux.DetectScheme(spectra, demultiplex);
         }
 
         // Uncomment to run leak check for C++/CLI objects
@@ -272,6 +294,21 @@ namespace pwiz.ProteowizardWrapper
 
         public bool RequireVendorCentoridedMs1 => _requireVendorCentroidedMS1;
         public bool RequireVendorCentoridedMs2 => _requireVendorCentroidedMS2;
+
+        /// <summary>
+        /// The multiplexing scheme the spectra were demultiplexed from, or null when they are
+        /// read as acquired: no <c>demultiplex</c> settings were given, or the run is not
+        /// multiplexed. When set, every spectrum and the spectrum count are those of the
+        /// demultiplexed run.
+        /// </summary>
+        public SpectrumListDemux.Scheme DemultiplexScheme
+        {
+            get
+            {
+                _ = SpectrumList; // Building the spectrum list decides it
+                return _demultiplexScheme;
+            }
+        }
 
         public DateTime? RunStartTime
         {
@@ -523,8 +560,12 @@ namespace pwiz.ProteowizardWrapper
 
         public bool IsWatersLockmassSpectrum(MsDataSpectrum s)
         {
-            return _lockmassFunction.HasValue && 
-                   MsDataSpectrum.WatersFunctionNumberFromId(s.Id, s.IonMobilities != null) >= _lockmassFunction.Value;
+            if (!IsWatersFile)
+                return false;
+            if (s.IsCalibrationSpectrum)
+                return true; // Explicitly labeled MS:1000928 "calibration spectrum" - authoritative, whatever the file's nativeID dialect
+            return _lockmassFunction.HasValue && s.WatersFunctionNumber.HasValue &&
+                   s.WatersFunctionNumber.Value >= _lockmassFunction.Value;
         }
 
         public IEnumerable<string> GetFileContentList()
@@ -656,9 +697,15 @@ namespace pwiz.ProteowizardWrapper
             get { return _msDataFile.FileDescription.SourceFiles.Any(source => source.HasCVParam(CVID.MS_Thermo_RAW_format)); }
         }
 
+        private bool? _isWatersFile;
+
         public bool IsWatersFile
         {
-            get { return _msDataFile.FileDescription.SourceFiles.Any(source => source.HasCVParam(CVID.MS_Waters_raw_format)); }
+            get
+            {
+                return _isWatersFile ??=
+                    _msDataFile.FileDescription.SourceFiles.Any(source => source.HasCVParam(CVID.MS_Waters_raw_format));
+            }
         }
 
         public bool PassEntireDiaPasefFrame
@@ -828,6 +875,19 @@ namespace pwiz.ProteowizardWrapper
                             _lockmassParameters.LockmassTolerance ?? LockMassParameters.LOCKMASS_TOLERANCE_DEFAULT);
 #endif
                     }
+                    // Demultiplex after centroiding and lockmass, as msconvert orders the filters.
+                    // Only a run with a scheme the demultiplexer can represent is wrapped, so the
+                    // same settings can be passed for every file. The algorithm (Optimization)
+                    // follows the detected scheme, whatever the settings say.
+                    if (_demultiplexParams != null && _spectrumList != null && !hasSrmSpectra)
+                    {
+                        _demultiplexScheme = SpectrumListDemux.DetectScheme(_spectrumList, _demultiplexParams);
+                        if (_demultiplexScheme != null)
+                        {
+                            _spectrumList = new SpectrumListDemux(_spectrumList,
+                                _demultiplexParams with { Optimization = _demultiplexScheme.Optimization });
+                        }
+                    }
                     // Ion mobility info
                     if (_spectrumList != null) // No ion mobility for chromatogram-only files
                     {
@@ -851,8 +911,7 @@ namespace pwiz.ProteowizardWrapper
                             var msLevel = GetMsLevel(spectrum);
                             if (msLevel == 1)
                             {
-                                var function = MsDataSpectrum.WatersFunctionNumberFromId(Id.Abbreviate(spectrum.Id), 
-                                    HasCombinedIonMobilitySpectra && spectrum.Id.Contains(MERGED_TAG));
+                                var function = MsDataSpectrum.WatersFunctionNumberFromNativeId(spectrum.Id);
                                 if (function > 1)
                                     _lockmassFunction = function; // Ignore all scans in this function for chromatogram extraction purposes
                             }
@@ -870,7 +929,9 @@ namespace pwiz.ProteowizardWrapper
 
         public SpectrumMetadata GetSpectrumMetadata(int spectrumIndex)
         {
-            return GetSpectrumMetadata(_msDataFile.Run.SpectrumList.GetSpectrum(spectrumIndex, DetailLevel.FullMetadata));
+            // A demultiplexed run is indexed by its demultiplexed spectra.
+            var spectra = DemultiplexScheme != null ? SpectrumList : _msDataFile.Run.SpectrumList;
+            return GetSpectrumMetadata(spectra.GetSpectrum(spectrumIndex, DetailLevel.FullMetadata));
         }
 
         public double? GetMaxIonMobility()
@@ -879,6 +940,12 @@ namespace pwiz.ProteowizardWrapper
         }
 
         public bool HasCombinedIonMobilitySpectra => SpectrumList != null && IonMobilityUnits != eIonMobilityUnits.none &&  _ionMobilitySpectrumList != null && _ionMobilitySpectrumList.HasCombinedIonMobility;
+
+        /// <summary>
+        /// True when the reader has already left calibration scans out of the spectrum list, which is
+        /// what tells us not to go looking for a Waters lockmass function ourselves.
+        /// </summary>
+        public bool CalibrationSpectraAreOmitted => SpectrumList != null && SpectrumList.CalibrationSpectraAreOmitted;
 
         /// <summary>
         /// Gets the value of the MS_sample_name CV param of first sample in the MSData object, or null if there is no sample information.
@@ -1381,6 +1448,9 @@ namespace pwiz.ProteowizardWrapper
             var msDataSpectrum = new MsDataSpectrum
             {
                 Id = _trimNativeID ? Id.Abbreviate(idText) : idText,
+                IsCalibrationSpectrum = spectrum.HasCVParam(CVID.MS_calibration_spectrum),
+                // Waters-only question, and parsing the id allocates - skip it for every other vendor
+                WatersFunctionNumber = IsWatersFile ? MsDataSpectrum.WatersFunctionNumberFromNativeId(idText) : null,
                 Level = GetMsLevel(spectrum) ?? 0,
                 Index = spectrum.Index,
                 RetentionTime = GetStartTime(spectrum),
@@ -2480,9 +2550,64 @@ namespace pwiz.ProteowizardWrapper
         public string InstrumentSerialNumber { get; set; }
         public string InstrumentVendor { get; set; }
 
-        public static int WatersFunctionNumberFromId(string id, bool isCombinedIonMobility)
+        /// <summary>
+        /// True when this spectrum is explicitly labeled as a calibration (Waters lockmass) scan with
+        /// MS:1000928. Authoritative wherever it appears - no inference needed.
+        /// </summary>
+        public bool IsCalibrationSpectrum { get; set; }
+
+        /// <summary>
+        /// The Waters function number this spectrum belongs to, or null when the file's nativeIDs are
+        /// not in a layout that carries one. Null means "do not reason about Waters functions here".
+        /// </summary>
+        public int? WatersFunctionNumber { get; set; }
+
+        // Waters nativeID layouts that carry a function number, keyed by their field names in order and
+        // mapped to the position of the function field. MS:1000769 defines "function=N process=M scan=K";
+        // our own Waters reader also emits "merged=N function=M block=K" for 3-array IMS and
+        // "merged=N function=M process=P scans=A-B" when DDA processing merges several scans.
+        //
+        // Being absent from this table is how a dialect declines to be reasoned about, and the
+        // waters_connect (Waters DATA Convert) forms - "channel=2 process=0 spectrum=1 scan=1" and
+        // "channel=3 process=0 spectra=19,21 scan=20" - are absent deliberately. waters_connect splits
+        // scan types into "channels" where MassLynx uses "functions"; the numberings are not
+        // interchangeable, and reading one as the other discards real data. It also lockmass corrects
+        // and drops the reference scans rather than exporting them, so there is nothing to infer; the
+        // only thing that would identify one is an explicit MS:1000928.
+        private static readonly Dictionary<string, int> WATERS_FUNCTION_ID_LAYOUTS = new Dictionary<string, int>
         {
-            return int.Parse(id.Split('.')[isCombinedIonMobility ? 1 :0]); // Yes, this will throw if it's not in dotted format - and that's good
+            { @"function.process.scan", 0 },
+            { @"merged.function.block", 1 },
+            { @"merged.function.process.scans", 1 }
+        };
+
+        /// <summary>
+        /// Determine the Waters function number from a full nativeID, e.g. "function=2 process=0 scan=1".
+        /// Returns null for any layout that does not carry one - notably the waters_connect dialect - so
+        /// that callers decline to guess rather than misread some other numbering as a function number.
+        /// </summary>
+        public static int? WatersFunctionNumberFromNativeId(string nativeId)
+        {
+            if (string.IsNullOrEmpty(nativeId))
+                return null;
+            // Identify the layout from its field names before parsing anything, so that a field this
+            // method does not need is free to hold something other than a plain integer - the merged DDA
+            // form ends in "scans=1-5", and waters_connect ids can carry "spectra=19,21".
+            var tokens = nativeId.Split(' ');
+            var keys = new string[tokens.Length];
+            for (var i = 0; i < tokens.Length; i++)
+            {
+                var separator = tokens[i].IndexOf('=');
+                if (separator < 0)
+                    return null;
+                keys[i] = tokens[i].Substring(0, separator);
+            }
+            if (!WATERS_FUNCTION_ID_LAYOUTS.TryGetValue(string.Join(@".", keys), out var field))
+                return null;
+            var functionValue = tokens[field].Substring(tokens[field].IndexOf('=') + 1);
+            return int.TryParse(functionValue, out var function)
+                ? function
+                : null;
         }
 
         public override string ToString() // For debugging convenience, not user-facing

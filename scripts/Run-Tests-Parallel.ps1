@@ -58,6 +58,9 @@ when CoverageSnapshotDir is set.
 param(
     [Parameter(Mandatory)] [string] $TestProjects,
     [ValidateSet('Debug', 'Release')] [string] $Configuration = 'Release',
+    # Must match the platform the projects were built with: `dotnet test --no-build` looks for the
+    # test assembly under bin\<Platform>\<Config>. build.bat builds x64.
+    [ValidateSet('x64', 'AnyCPU')] [string] $Platform = 'x64',
     [switch] $IAgreeToVendorLicenses,
     [switch] $AutomatedBuild,
     [switch] $WithoutMascot,
@@ -78,7 +81,7 @@ foreach ($d in @($TestResultsDir, $LogDir)) {
     if (-not (Test-Path $d)) { New-Item -ItemType Directory -Path $d -Force | Out-Null }
 }
 
-$msbuildProps = @("-p:Configuration=$Configuration")
+$msbuildProps = @("-p:Configuration=$Configuration", "-p:Platform=$Platform")
 if ($IAgreeToVendorLicenses) { $msbuildProps += '-p:IAgreeToVendorLicenses=true' }
 if ($AutomatedBuild) { $msbuildProps += '-p:AutomatedBuild=true' }
 if ($WithoutMascot) { $msbuildProps += '-p:MascotSupport=false' }

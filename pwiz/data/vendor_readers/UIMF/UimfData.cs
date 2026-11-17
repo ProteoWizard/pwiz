@@ -52,6 +52,7 @@ public sealed class UimfData : IDisposable
     private readonly DataReader _reader;
     private readonly List<UimfIndexEntry> _index = new();
     private readonly HashSet<UimfFrameType> _frameTypes = new();
+    private readonly HashSet<int> _calibrationFrames = new();
     private readonly int _frameCount;
     private readonly int _binsPerFrame;
     private bool _disposed;
@@ -91,6 +92,8 @@ public sealed class UimfData : IDisposable
                     FrameType: (UimfFrameType)reader.GetInt32(2));
                 _index.Add(entry);
                 _frameTypes.Add(entry.FrameType);
+                if (entry.FrameType == UimfFrameType.Calibration)
+                    _calibrationFrames.Add(entry.Frame);
             }
         }
 
@@ -112,6 +115,10 @@ public sealed class UimfData : IDisposable
 
     /// <summary>Number of frames reported by <c>GlobalParams.NumFrames</c>.</summary>
     public int FrameCount => _frameCount;
+
+    /// <summary>Number of distinct calibration frames, taken from the index built at open, so
+    /// that leaving them out of a frame count costs no further read.</summary>
+    public int CalibrationFrameCount => _calibrationFrames.Count;
 
     /// <summary>Total drift bins per frame (cpp's <c>driftScansPerFrame_</c>).</summary>
     public int DriftScansPerFrame => _binsPerFrame;
@@ -239,8 +246,10 @@ public sealed class UimfData : IDisposable
 
     /// <summary>File-level TIC. cpp UIMFReader.cpp:311-322. Walks
     /// <c>DataReader.GetTICByFrame(0,0,0,0)</c> (all-frames sentinel) and pairs each
-    /// frame's TIC value with its retention time.</summary>
-    public (double[] TimeMinutes, double[] Intensities) GetTic()
+    /// frame's TIC value with its retention time. <paramref name="ignoreCalibrationFrames"/> leaves
+    /// out the frames that <c>ReaderConfig.IgnoreCalibrationScans</c> keeps out of the spectrum
+    /// list, so that every TIC point has a spectrum in the output behind it.</summary>
+    public (double[] TimeMinutes, double[] Intensities) GetTic(bool ignoreCalibrationFrames = false)
     {
         ThrowIfDisposed();
         var times = new List<double>(_frameCount);
@@ -248,6 +257,9 @@ public sealed class UimfData : IDisposable
         var ticByFrame = _reader.GetTICByFrame(0, 0, 0, 0);
         foreach (var kv in ticByFrame)
         {
+            if (ignoreCalibrationFrames && _calibrationFrames.Contains(kv.Key))
+                continue;
+
             times.Add(_reader.GetFrameStartTimeMinutesEstimated(kv.Key));
             intensities.Add(kv.Value);
         }

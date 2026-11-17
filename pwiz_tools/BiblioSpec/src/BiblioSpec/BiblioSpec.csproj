@@ -21,6 +21,10 @@
          sibling .raw (via WatersPusherInterval) when none is forced, mirroring the native
          BlibBuild's USE_WATERS_READER path. -->
     <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Waters\Waters.csproj" />
+    <!-- The .blib schema and the one writer every tool of ours writes .blib files through:
+         BlibMaker (BlibBuild, BlibFilter) writes its libraries with BlibWriter, as Osprey and
+         CarafeSharp do, so a library any of them writes is the same database for every reader. -->
+    <ProjectReference Include="$(PwizRepoRoot)pwiz_tools\Shared\BiblioSpec\BiblioSpec.IO\BiblioSpec.IO.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,10 +51,14 @@
        consumed via P/Invoke from MascotShimInterop.cs.
        ============================================================ -->
   <PropertyGroup>
-    <!-- msparser ships in pwiz-msconvert-pr/libraries/, so Mascot support is ON
-         by default. Pass -p:MascotSupport=false (or build.bat 'without-mascot')
-         to compile the Mascot reader out of BiblioSpec. -->
-    <MascotSupport Condition="'$(MascotSupport)' == ''">true</MascotSupport>
+    <!-- msparser ships in libraries/ as an archive that is extracted only with the vendor
+         licenses agreed to, so Mascot support is ON by default exactly when they are (or a
+         prebuilt shim is supplied), as in the cpp build. Otherwise a no-vendor build would
+         depend on whether an earlier vendor build left msparser extracted. Pass
+         -p:MascotSupport=false (or build.bat 'without-mascot') to compile the Mascot reader
+         out of BiblioSpec. BiblioSpec.Tests.csproj repeats this default. -->
+    <MascotSupport Condition="'$(MascotSupport)' == '' AND ('$(IAgreeToVendorLicenses)' == 'true' OR '$(PwizPrebuiltNativeShimDir)' != '')">true</MascotSupport>
+    <MascotSupport Condition="'$(MascotSupport)' == ''">false</MascotSupport>
 
     <!-- $(PwizPrebuiltNativeShimDir): a directory holding MascotShim.dll, msparser.dll and
          msparser-config/ already built for Windows - the artifact of the Native shims CI config
@@ -93,8 +101,8 @@
          Jamroot.jam:626/674 and the Mobilion.csproj ExtractMobilionAssemblies
          pattern. CI agents only ship the .7z; the headers + lib appear under
          vs2015/ (Windows) or gnu/ (Linux) when the archive is extracted into
-         the libraries dir. Idempotent — incremental check on Inputs/Outputs
-         skips when the header already exists. -->
+         the libraries dir. Idempotent — ExtractMascotAssemblies skips until the
+         archive is newer than its stamp. -->
     <MascotArchive Condition="'$(OS)' == 'Windows_NT'">$(PwizLibrariesPath)\msparser_3_1_0_x86_win64.7z</MascotArchive>
     <MascotArchive Condition="'$(OS)' != 'Windows_NT'">$(PwizLibrariesPath)/msparser_3_1_0_x86_linux64.7z</MascotArchive>
     <SevenZaExe Condition="'$(OS)' == 'Windows_NT'">$(PwizLibrariesPath)\7za.exe</SevenZaExe>
@@ -137,17 +145,19 @@
   <!-- 2. Extract msparser SDK out of the encrypted 7z archive. cpp Jamroot's
        msparser unpack at Jamroot.jam:626 (Windows) / :674 (Linux) does the
        same step; Mobilion.csproj uses an equivalent ExtractMobilionAssemblies
-       target. Inputs/Outputs make it idempotent — skipped when the header
-       already exists. Gated on IAgreeToVendorLicenses=true (matches cpp's
+       target. Inputs/Outputs make it idempotent — skipped until the archive
+       is newer than the stamp the target touches. Gated on IAgreeToVendorLicenses=true (matches cpp's
        i-agree-to-the-vendor-licenses flag + Mobilion's gate); dev boxes
        that have manually pre-extracted msparser don't need to set it. -->
   <Target Name="ExtractMascotAssemblies"
           Condition="'$(MascotSupport)' == 'true' AND '$(IAgreeToVendorLicenses)' == 'true' AND '$(_MascotShimPrebuilt)' != 'true'"
           BeforeTargets="BuildMascotShim"
-          Inputs="$(MascotArchive)"
-          Outputs="$(MascotParserPath)\include\ms_mascotresfile_dat.hpp">
+          Inputs="$(MascotArchive);$(MascotParserPath)\include\ms_mascotresfile_dat.hpp"
+          Outputs="$(BaseIntermediateOutputPath)ExtractMascotAssemblies.stamp">
     <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(PwizLibrariesPath)&quot; &quot;$(MascotArchive)&quot;"
           StandardOutputImportance="low" />
+    <!-- Outputs is this stamp, not the extracted files: see $(SevenZaExe) in Directory.Build.props. -->
+    <Touch Files="$(BaseIntermediateOutputPath)ExtractMascotAssemblies.stamp" AlwaysCreate="true" />
   </Target>
 
   <!-- MascotShim is native and built, not vendored, so it cannot cross-compile: a Linux cmake

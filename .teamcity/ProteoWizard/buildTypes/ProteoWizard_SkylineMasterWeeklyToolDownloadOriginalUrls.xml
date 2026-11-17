@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="50dc05bb-4df8-464e-a756-d1903661690b" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Skyline master weekly tool download original URLs</name>
+  <description>Runs the tests that download search engines and Java with originalurls=on, so each tool comes from its real download location instead of the S3 test mirror</description>
+  <settings>
+    <inherits>
+      <ref id="ProteoWizard_GitHubReportingConfig" />
+      <ref id="ProteoWizard_WindowsBase" />
+    </inherits>
+    <options>
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutDirectory" value="%WINDOWS_CHECKOUT_DIR%" />
+      <option name="checkoutMode" value="ON_AGENT" />
+      <option name="executionTimeoutMin" value="120" />
+    </options>
+    <parameters>
+      <param name="env.SKYLINE_TEST_ARGS" value="originalurls=on test=TestConvertFastaToKoinaInputCsv,TestDdaSearch,TestDdaSearchComet,TestDdaSearchTide,TestDdaSearchMsgfPlus,TestDdaSearchMsFragger,TestDiannSearch1_9_1" />
+    </parameters>
+    <build-runners order="Set_PYTHON_HOME_if_unset_by_agent, Skyline_Clean, Build_and_run_original_URL_tests">
+      <runner id="Skyline_Clean" name="Clean" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="clean.bat" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="Build_and_run_original_URL_tests" name="Build Skyline and run the tool download tests" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="pwiz_tools/Skyline/build.bat" />
+          <param name="command.parameters" value="--i-agree-to-the-vendor-licenses --automated --require-vendor-support" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizard_PwizGithubMasterWithPRs" />
+    </vcs-settings>
+    <requirements>
+      <contains id="RQ_1978" name="teamcity.agent.jvm.os.name" value="Windows" />
+      <not-exists id="RQ_1979" name="VS2013" />
+    </requirements>
+    <build-triggers>
+      <build-trigger id="weeklyTrigger" type="schedulingTrigger">
+        <parameters>
+          <param name="branchFilter" value="+:&lt;default&gt;" />
+          <param name="cronExpression_dm" value="*" />
+          <param name="cronExpression_dw" value="?" />
+          <param name="cronExpression_hour" value="*" />
+          <param name="cronExpression_min" value="0" />
+          <param name="cronExpression_month" value="*" />
+          <param name="cronExpression_sec" value="0" />
+          <param name="cronExpression_year" value="*" />
+          <param name="dayOfWeek" value="Saturday" />
+          <param name="enableQueueOptimization" value="true" />
+          <param name="hour" value="6" />
+          <param name="minute" value="0" />
+          <param name="promoteWatchedBuild" value="true" />
+          <param name="revisionRule" value="lastFinished" />
+          <param name="revisionRuleBuildBranch" value="&lt;default&gt;" />
+          <param name="schedulingPolicy" value="weekly" />
+          <param name="timezone" value="SERVER" />
+          <param name="triggerBuildWithPendingChangesOnly" value="false" />
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <cleanup>
+      <policy type="days" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepDays.count" value="30" />
+        </parameters>
+      </policy>
+    </cleanup>
+  </settings>
+</build-type>

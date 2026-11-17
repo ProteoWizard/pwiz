@@ -172,8 +172,8 @@
   <data name="CommandArgs_ParseArgsInternal_Error__The_specified_working_directory__0__does_not_exist_" xml:space="preserve">
     <value>エラー： 指定の作業ディレクトリ{0}は存在しません。</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_" xml:space="preserve">
-    <value>エラー： 予期しない引数 --{0}</value>
+  <data name="CommandArgs_UnknownArgumentMessage_Unexpected_argument__0_" xml:space="preserve">
+    <value>予期しない引数 {0}</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_No_isolation_list_will_be_exported_" xml:space="preserve">
     <value>単離リストはエクスポートされません。</value>

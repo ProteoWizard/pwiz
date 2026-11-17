@@ -3,10 +3,10 @@
 Build the Skyline / Skyline-daily installer (Inno Setup) from a .NET build of Skyline.
 
 .DESCRIPTION
-Packaging pipeline on top of the Skyline build (build.bat, or Skyline.csproj built
-Release x64 from Visual Studio):
-  1. Locate the Skyline build output (bin\x64\<Config>\net10.0-windows) and read the
-     channel (Skyline.exe or Skyline-daily.exe) and version off the exe.
+Packaging pipeline on top of the Skyline build (build.bat):
+  1. Build Skyline.csproj x64 into an emptied bin\installer-build\<Config>, a folder
+     Skyline is never run from, and read the channel (Skyline.exe or Skyline-daily.exe)
+     and version off the exe.
   2. Stage a filtered copy: everything the build put next to Skyline except the
      NuGet doc-comment XML files, the non-Windows native runtimes and any stray
      RID-named publish folder.
@@ -30,11 +30,7 @@ The installer itself is described in Setup.iss. Test-Installer.ps1 exercises a b
 installer end to end (silent install, SkylineCmd smoke, uninstall).
 
 .PARAMETER Configuration
-Which Skyline build to package. Release by default.
-
-.PARAMETER SkylineBinDir
-The Skyline build output directory to package. Default: the newest of
-..\..\bin\x64\<Configuration>\net10.0-windows and ..\..\bin\<Configuration>\net10.0-windows.
+Which Skyline configuration to build and package. Release by default.
 
 .PARAMETER OutputDir
 Where the installers land. Default ..\..\bin\installer (gitignored).
@@ -49,13 +45,11 @@ Unsigned when omitted.
 
 .USAGE
     pwsh -File pwiz_tools/Skyline/Executables/Installer/build.ps1
-    pwsh -File pwiz_tools/Skyline/Executables/Installer/build.ps1 -SkylineBinDir C:\other\bin\x64\Release\net10.0-windows
 #>
 #requires -Version 7.0
 [CmdletBinding()]
 param(
     [ValidateSet('Debug', 'Release')] [string] $Configuration = 'Release',
-    [string] $SkylineBinDir,
     [string] $OutputDir,
     [string] $SignToolCommand
 )
@@ -71,28 +65,21 @@ $OutputDir = [System.IO.Path]::GetFullPath($OutputDir)
 $stagingDir = Join-Path $OutputDir 'stage'
 $cacheDir   = Join-Path $pwizSharpInstaller 'cache'
 
-# 1. Skyline build output. Platform-aware and newest wins, like Stage-Tests.ps1: Visual
-#    Studio and build.bat write bin\x64\<Config>\<TFM>, a plain "dotnet build" bin\<Config>\<TFM>.
-if (-not $SkylineBinDir) {
-    $candidates = @(
-        (Join-Path $skylineDir "bin\x64\$Configuration\net10.0-windows"),
-        (Join-Path $skylineDir "bin\$Configuration\net10.0-windows")
-    ) | Where-Object { Test-Path $_ }
-    $SkylineBinDir = $candidates |
-        Sort-Object { (Get-ChildItem $_ -Filter 'Skyline*.exe' | Measure-Object LastWriteTimeUtc -Maximum).Maximum } -Descending |
-        Select-Object -First 1
-    if (-not $SkylineBinDir) {
-        throw "No Skyline build output found under $skylineDir\bin for $Configuration. Run build.bat --build-only first."
-    }
-}
-# Trimmed: Resolve-Path keeps a trailing separator, and the relative paths staged below
-# are cut at this length.
-$SkylineBinDir = (Resolve-Path $SkylineBinDir).Path.TrimEnd('\', '/')
+# 1. Build Skyline into an emptied folder of its own, which Skyline is never run from, so
+#    that nothing a run writes beside the exe can reach the installer: its user.config,
+#    its logs, or the Tools folder of installed external tools and downloaded search
+#    engines, some of which may not be redistributed. The referenced projects build into their usual outputs, incrementally.
+$SkylineBinDir = Join-Path $skylineDir "bin\installer-build\$Configuration"
+if (Test-Path $SkylineBinDir) { Remove-Item $SkylineBinDir -Recurse -Force }
+Write-Host "==> dotnet build Skyline.csproj ($Configuration) into $SkylineBinDir" -ForegroundColor Cyan
+dotnet build (Join-Path $skylineDir 'Skyline.csproj') -c $Configuration -p:Platform=x64 `
+    -p:IAgreeToVendorLicenses=true "-p:SkylineOutDir=$SkylineBinDir" --nologo
+if ($LASTEXITCODE -ne 0) { throw "dotnet build of Skyline.csproj failed." }
 
 # The channel is whichever exe the build produced (MSBuildAssemblyName picks it).
 $channelExe = @('Skyline-daily.exe', 'Skyline.exe') | Where-Object { Test-Path (Join-Path $SkylineBinDir $_) } | Select-Object -First 1
 if (-not $channelExe) {
-    throw "Neither Skyline-daily.exe nor Skyline.exe is in $SkylineBinDir; is this a Skyline build output directory?"
+    throw "The build put neither Skyline-daily.exe nor Skyline.exe in $SkylineBinDir."
 }
 $appName = [System.IO.Path]::GetFileNameWithoutExtension($channelExe)
 foreach ($required in @('SkylineCmd.exe', 'msconvert.exe', 'BlibBuild.exe')) {
@@ -114,7 +101,7 @@ Write-Host "==> $appName $appVersion ($informationalVersion) from $SkylineBinDir
 # 2. Stage a filtered copy. Everything Skyline builds next to itself ships - vendor
 #    readers, BlibBuild, msconvert, Hardklor, the localized satellites - except:
 #      <name>.xml       NuGet doc-comment file beside a <name>.dll / <name>.exe. Data XML
-#                       with no such sibling (unimod.xml, modifications.xml, which BlibBuild
+#                       with no such sibling (modifications.xml, which BlibBuild
 #                       reads from its own directory) ships.
 #      runtimes\<rid>   native packages' cross-platform copies; x64 Windows keeps win-x64 + win
 #      <rid>\           a self-contained publish folder at the bin root (a stray
@@ -131,10 +118,35 @@ function Should-Skip([System.IO.FileInfo] $file, [string] $relName) {
 }
 
 Write-Host "`n==> stage payload" -ForegroundColor Cyan
+$binFiles = Get-ChildItem $SkylineBinDir -Recurse -File
+
+# Tests and test harnesses never ship. Test projects build into their own output, and
+# Stage-Tests.ps1 merges them with Skyline under bin\staging, so finding one here means
+# a test project wrote into Skyline's output.
+# Checked before copying, so such a build fails before a multi-GB copy. The names
+# cover the harnesses and the test projects; the MSTest / test platform assemblies every
+# test project brings along also catch a test project that is not in the list.
+$testAssemblies = @('AutoQCTest', 'CommonTest', 'ExampleArgCollector', 'SharedBatchTest',
+    'SkylineBatchTest', 'SkylineNightly', 'SkylineNightlyShim', 'SkylineTester', 'Test',
+    'TestArgCollector', 'TestCommandLineInteractiveTool', 'TestConnected', 'TestData',
+    'TestFunctional', 'TestHarness', 'TestInteractiveTool', 'TestPerf', 'TestRunner',
+    'TestRunnerLib', 'TestTutorial', 'TestUtil')
+$testPatterns = @('Microsoft.VisualStudio.TestPlatform.*', 'Microsoft.TestPlatform.*',
+    'Microsoft.Testing.*', 'Microsoft.VisualStudio.CodeCoverage.*', 'testhost*')
+$testFiles = $binFiles | Where-Object {
+    $file = $_
+    $file.Extension -in '.dll', '.exe' -and (
+        $testAssemblies -contains ($file.BaseName -replace '\.resources$', '') -or
+        ($testPatterns | Where-Object { $file.Name -like $_ }))
+} | ForEach-Object { $_.FullName.Substring($SkylineBinDir.Length + 1) }
+if ($testFiles) {
+    throw "$SkylineBinDir contains test files, which must not ship. A test project built into the Skyline output:`n    $($testFiles -join "`n    ")"
+}
+
 if (Test-Path $stagingDir) { Remove-Item $stagingDir -Recurse -Force }
 New-Item -ItemType Directory $stagingDir -Force | Out-Null
 $copied = 0; $bytesCopied = 0L; $bytesSkipped = 0L
-Get-ChildItem $SkylineBinDir -Recurse -File | ForEach-Object {
+$binFiles | ForEach-Object {
     $rel = $_.FullName.Substring($SkylineBinDir.Length + 1)
     if (Should-Skip $_ $rel) { $bytesSkipped += $_.Length; return }
     $dest = Join-Path $stagingDir $rel
@@ -148,11 +160,11 @@ foreach ($ico in @('SkylineDoc.ico', 'SkylineData.ico', 'SkylineDocPointer.ico')
     Copy-Item (Join-Path $skylineDir $ico) $stagingDir
 }
 Write-Host "    $copied files ($([math]::Round($bytesCopied/1MB, 1)) MB), $([math]::Round($bytesSkipped/1MB, 1)) MB skipped"
-foreach ($dataXml in @('unimod.xml', 'modifications.xml')) {
+foreach ($dataXml in @('modifications.xml')) {
     if (-not (Test-Path (Join-Path $stagingDir $dataXml))) { throw "$dataXml did not make it into the stage; BlibBuild needs it." }
 }
 if (Test-Path (Join-Path $stagingDir 'coreclr.dll')) {
-    throw "The stage contains coreclr.dll: $SkylineBinDir looks like a self-contained publish, not the framework-dependent build the installer expects."
+    throw "The stage contains coreclr.dll: the build of Skyline was self-contained, not the framework-dependent build the installer expects."
 }
 
 # 3. Product name, install URL and update manifest. Skyline's app.config is where a

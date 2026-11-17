@@ -44,8 +44,7 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// <c>apex_rt</c>, the detection apex retention time. Wanted by the pass that writes the
-        /// per-file FDR sidecar (format v7) and by
-        /// <c>ParquetScoreCache.ReadApexRtsByParquetIndex</c>; nothing else reads it.
+        /// per-file FDR sidecar (format v7); nothing else reads it.
         /// </summary>
         ApexRt = 1,
 

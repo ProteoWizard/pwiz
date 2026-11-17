@@ -42,9 +42,16 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// Number of decoys successfully paired with a target. Equals
-        /// <see cref="NPairedViaManifest"/> + <see cref="NPairedViaComposition"/>.
+        /// <see cref="NPairedViaTable"/> + <see cref="NPairedViaManifest"/> +
+        /// <see cref="NPairedViaComposition"/>.
         /// </summary>
         public int NPaired { get; set; }
+
+        /// <summary>
+        /// Of <see cref="NPaired"/>, how many a blib's own <c>DecoyPairs</c> table resolved;
+        /// the only mechanism a blib pairs by.
+        /// </summary>
+        public int NPairedViaTable { get; set; }
 
         /// <summary>
         /// Of <see cref="NPaired"/>, how many were resolved by the

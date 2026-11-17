@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Parquet;
 using Parquet.Schema;
@@ -45,9 +46,9 @@ namespace pwiz.SkylineTestFunctional
         {
             // Boxing a Nullable<T> with HasValue produces a boxed T, so assert
             // against the underlying value type rather than the nullable wrapper.
-            var nullableDateTime = ParquetReportExporter.ConvertToStorageType(DateTime.UtcNow, typeof(DateTime?));
+            var nullableDateTime = new ParquetReportExporter.StorageType(typeof(DateTime?)).ConvertValue(DateTime.UtcNow);
             Assert.IsInstanceOfType(nullableDateTime, typeof(DateTime));
-            var nullableFloat = ParquetReportExporter.ConvertToStorageType(1f, typeof(float?));
+            var nullableFloat = new ParquetReportExporter.StorageType(typeof(float?)).ConvertValue(1f);
             Assert.IsInstanceOfType(nullableFloat, typeof(float?));
         }
 
@@ -68,6 +69,7 @@ namespace pwiz.SkylineTestFunctional
                 CollectionAssert.AreEqual(new[] { 0, 0, 0 }, col.RepetitionLevels.ToArray());
                 CollectionAssert.AreEqual(new[] { 1, 3, 0 }, col.DefinitionLevels.ToArray());
             });
+            VerifyWriterExceptionPropagates(items);
         }
 
         [TestMethod]
@@ -104,9 +106,16 @@ namespace pwiz.SkylineTestFunctional
 
         private static MemoryStream ExportReport<T>(IList<T> items, params string[] propertyNames)
         {
+            var stream = new MemoryStream();
+            ExportReport(stream, items, propertyNames);
+            stream.Position = 0;
+            return stream;
+        }
+
+        private static void ExportReport<T>(Stream stream, IList<T> items, params string[] propertyNames)
+        {
             var viewSpec = new ViewSpec().SetColumns(propertyNames.Select(name =>
                 new ColumnSpec(PropertyPath.Root.Property(name))));
-            var stream = new MemoryStream();
             var dataSchema = SkylineDataSchema.MemoryDataSchema(new SrmDocument(SrmSettingsList.GetDefault()),
                 DataSchemaLocalizer.INVARIANT);
             var viewInfo = new ViewInfo(dataSchema, typeof(T), viewSpec);
@@ -114,8 +123,6 @@ namespace pwiz.SkylineTestFunctional
             IProgressStatus status = new ProgressStatus();
             RowFactories.ExportReport(CancellationToken.None, stream, viewInfo, null, new StaticRowSource(items),
                 rowItemExporter, new SilentProgressMonitor(), ref status);
-            stream.Position = 0;
-            return stream;
         }
 
         private static void ReadParquet(Stream stream, Action<ParquetReader> check)
@@ -128,6 +135,40 @@ namespace pwiz.SkylineTestFunctional
             {
                 check(ParquetReader.CreateAsync(stream).GetAwaiter().GetResult());
             });
+        }
+
+        /// <summary>
+        /// An exception on the writer thread, such as a full disk, has to come back to the caller
+        /// as the original exception instead of hanging the export waiting for the writer.
+        /// </summary>
+        private static void VerifyWriterExceptionPropagates(IList<MyObject> items)
+        {
+            AssertEx.ThrowsException<IOException>(() =>
+                ExportReport(new FailAfterMagicStream(), items, nameof(MyObject.FloatArray)));
+        }
+
+        /// <summary>
+        /// Accepts the "PAR1" magic which creating the ParquetWriter writes, and fails the first
+        /// write after that, which is the first row group.
+        /// </summary>
+        private class FailAfterMagicStream : MemoryStream
+        {
+            private const int MAGIC_LENGTH = 4;
+
+            public override void Write(byte[] buffer, int offset, int count)
+            {
+                if (Length + count > MAGIC_LENGTH)
+                {
+                    throw new IOException(@"Simulated disk full");
+                }
+                base.Write(buffer, offset, count);
+            }
+
+            public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            {
+                Write(buffer, offset, count);
+                return Task.CompletedTask;
+            }
         }
 
         class MyObject

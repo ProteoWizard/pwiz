@@ -360,15 +360,27 @@ internal sealed class WatersRawFile : IDisposable
     /// Returns the lockmass function index, or null if the file has no lockmass function.
     /// Cached after the first lookup since the answer doesn't change for an open file.
     /// </summary>
+    /// <remarks>
+    /// Locked so the cache is published whole: unguarded, a second caller could see the checked
+    /// flag before the value was stored and report no lockmass function. The lock serializes
+    /// this lookup only, not SDK access in general, so SpectrumList_Waters resolves it in its
+    /// constructor - as cpp does - before any other thread can be reading from the file.
+    /// </remarks>
     public int? GetLockMassFunction()
     {
-        if (_lockmassChecked) return _lockmassFunction;
-        _lockmassChecked = true;
-        if (NativeMethods.getLockMassFunction(_info, out bool has, out int which) == 0 && has)
-            _lockmassFunction = which;
-        return _lockmassFunction;
+        lock (_lockmassLock)
+        {
+            if (!_lockmassChecked)
+            {
+                if (NativeMethods.getLockMassFunction(_info, out bool has, out int which) == 0 && has)
+                    _lockmassFunction = which;
+                _lockmassChecked = true;
+            }
+            return _lockmassFunction;
+        }
     }
 
+    private readonly object _lockmassLock = new();
     private bool _lockmassChecked;
     private int? _lockmassFunction;
 

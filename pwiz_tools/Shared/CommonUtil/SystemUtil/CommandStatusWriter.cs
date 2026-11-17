@@ -21,6 +21,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -35,6 +36,25 @@ namespace pwiz.Common.SystemUtil
     /// </summary>
     public class CommandStatusWriter : TextWriter
     {
+        // ReSharper disable LocalizableElement
+        /// <summary>The prefix <see cref="IsTimeStamped"/> puts on every line.</summary>
+        private const string TIME_STAMP_FORMAT = "[yyyy/MM/dd HH:mm:ss]\t";
+        // ReSharper restore LocalizableElement
+        private static readonly Regex TIME_STAMP = new Regex(@"^\[\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}\]\t", RegexOptions.Compiled);
+
+        /// <summary>
+        /// The line without the prefix <see cref="IsTimeStamped"/> writes, or the line itself when it
+        /// has none: for a reader of a stamped command's output that wants the text alone, such as a
+        /// progress monitor showing the lines under its own clock.
+        /// </summary>
+        public static string StripTimeStamp(string line)
+        {
+            if (string.IsNullOrEmpty(line) || line[0] != '[')
+                return line;
+            var match = TIME_STAMP.Match(line);
+            return match.Success ? line.Substring(match.Length) : line;
+        }
+
         private TextWriter _writer;
 
         public CommandStatusWriter(TextWriter writer)
@@ -132,9 +152,7 @@ namespace pwiz.Common.SystemUtil
                 return;
             var message = new StringBuilder();
             if (IsTimeStamped)
-                // ReSharper disable LocalizableElement
-                message.Append(DateTime.Now.ToString("[yyyy/MM/dd HH:mm:ss]\t"));
-                // ReSharper restore LocalizableElement
+                message.Append(DateTime.Now.ToString(TIME_STAMP_FORMAT));
             if (IsMemStamped)
             {
                 lock (writer)

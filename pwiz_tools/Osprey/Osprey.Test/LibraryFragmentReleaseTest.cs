@@ -47,7 +47,6 @@ namespace pwiz.Osprey.Test
             ValidateOnlyUnscorableFragmentsAreReleased();
             ValidateIdentityFieldsSurvive();
             ValidateEveryLegThatHoldsTheLibraryReleasesIt();
-            ValidateValidityKeySuffixTracksWhetherTheReleaseRan();
         }
 
         /// <summary>
@@ -172,66 +171,6 @@ namespace pwiz.Osprey.Test
                 OutputFdrBench = @"bench.tsv",
                 FdrBenchPass = OspreyConfig.FDRBENCH_PASS_1 | OspreyConfig.FDRBENCH_PASS_2
             });
-
-            bool savedProjection = OspreyEnvironment.UseFdrProjection;
-            bool savedRelease = OspreyEnvironment.ReleaseLibraryFragments;
-            try
-            {
-                OspreyEnvironment.UseFdrProjection = false;
-                AssertRunsOnLeg(false, @"OSPREY_FDR_PROJECTION=0", new OspreyConfig());
-                OspreyEnvironment.UseFdrProjection = savedProjection;
-
-                OspreyEnvironment.ReleaseLibraryFragments = false;
-                AssertRunsOnLeg(false, @"OSPREY_RELEASE_LIBRARY_FRAGMENTS=0", new OspreyConfig());
-            }
-            finally
-            {
-                OspreyEnvironment.UseFdrProjection = savedProjection;
-                OspreyEnvironment.ReleaseLibraryFragments = savedRelease;
-            }
-        }
-
-        /// <summary>
-        /// The suffix records whether the release RAN, not whether the flag was set. Keying it
-        /// on the flag alone left the guarantee resting one gate upstream: a leg that never
-        /// released (Stage 5 forced onto the resident path, say) stamped the same EMPTY suffix
-        /// as a leg that did, so a later run WITH the release could adopt those outputs, skip
-        /// the work, and report the release arm's memory profile without ever executing it.
-        ///
-        /// <para>It is EMPTY on a leg that could not have released either. There the two arms
-        /// are literally the same run, so a term would invalidate output directories - forcing
-        /// hours of re-scoring on an HPC resume - to record a difference that cannot exist.</para>
-        /// </summary>
-        private static void ValidateValidityKeySuffixTracksWhetherTheReleaseRan()
-        {
-            bool savedProjection = OspreyEnvironment.UseFdrProjection;
-            bool savedRelease = OspreyEnvironment.ReleaseLibraryFragments;
-            try
-            {
-                AssertSuffix(true, @"straight-through, released", new OspreyConfig());
-                AssertSuffix(true, OspreyCommandArgs.ARG_TASK + SecondPassFdrTask.TASK_NAME + @", released",
-                    TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME));
-                AssertSuffix(true, OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME + @" cannot release",
-                    TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME));
-
-                OspreyEnvironment.UseFdrProjection = false;
-                AssertSuffix(false, @"could have released, Stage 5 went resident instead",
-                    new OspreyConfig());
-                // SecondPassFDR's release is its own and does not ride the Stage 5 path.
-                AssertSuffix(true, OspreyCommandArgs.ARG_TASK + SecondPassFdrTask.TASK_NAME + @" ignores OSPREY_FDR_PROJECTION",
-                    TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME));
-                OspreyEnvironment.UseFdrProjection = savedProjection;
-
-                OspreyEnvironment.ReleaseLibraryFragments = false;
-                AssertSuffix(false, @"opted out where a release was possible", new OspreyConfig());
-                AssertSuffix(true, @"opted out where it was not possible anyway",
-                    TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME));
-            }
-            finally
-            {
-                OspreyEnvironment.UseFdrProjection = savedProjection;
-                OspreyEnvironment.ReleaseLibraryFragments = savedRelease;
-            }
         }
 
         private static void AssertRunsOnLeg(bool expected, string leg, OspreyConfig config)
@@ -239,14 +178,6 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(expected, LibraryFragmentRelease.RunsOnThisLeg(MakeContext(config)),
                 string.Format(@"{0}: the release must {1}run on this leg",
                     leg, expected ? string.Empty : @"NOT "));
-        }
-
-        private static void AssertSuffix(bool expectEmpty, string leg, OspreyConfig config)
-        {
-            string suffix = LibraryFragmentRelease.ValidityKeySuffix(MakeContext(config));
-            Assert.AreEqual(expectEmpty, suffix.Length == 0, string.Format(
-                @"{0}: expected {1} suffix, got '{2}'",
-                leg, expectEmpty ? @"an empty" : @"a non-empty", suffix));
         }
 
         private static PipelineContext MakeContext(OspreyConfig config)

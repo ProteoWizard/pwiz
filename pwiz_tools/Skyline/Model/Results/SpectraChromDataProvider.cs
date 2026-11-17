@@ -1242,13 +1242,13 @@ namespace pwiz.Skyline.Model.Results
                             // For Waters msE skip any lockspray data
                             if (_filter.IsWatersMse)
                             {
-                                // looking for the 3 in 3.0.1 (or the 10 in 10.0.1) or the 2 in 1.2.3 if it's combined ion mobility'
-                                if (MsDataSpectrum.WatersFunctionNumberFromId(nextSpectrum.Id, _dataFile.HasCombinedIonMobilitySpectra && nextSpectrum.IonMobilities != null) > 2)
+                                // Functions above 2 are lockspray, not data. Null when the file carries no
+                                // function number, in which case only an explicit MS:1000928 identifies lockspray.
+                                if (nextSpectrum.WatersFunctionNumber > 2 || nextSpectrum.IsCalibrationSpectrum)
                                     continue;
                             }
                             else if (_filter.IsWatersFile)
                             {
-                                // looking for the 3 in id string 3.0.1 (or the 10 in 10.0.1)
                                 if (_dataFile.IsWatersLockmassSpectrum(nextSpectrum))
                                     continue;
                             }
@@ -1718,7 +1718,6 @@ namespace pwiz.Skyline.Model.Results
 
         public bool ProvidesCollisionalCrossSectionConverter { get { return _dataFile.ProvidesCollisionalCrossSectionConverter; } }
         public eIonMobilityUnits IonMobilityUnits { get { return _dataFile.IonMobilityUnits; } }
-        public bool HasCombinedIonMobility { get { return _dataFile.HasCombinedIonMobilitySpectra; } } // When true, data source provides IMS data in 3-array format, which affects spectrum ID format
 
         public IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge, object obj)
         {

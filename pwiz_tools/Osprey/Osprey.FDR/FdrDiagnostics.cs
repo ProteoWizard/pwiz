@@ -37,16 +37,21 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.FDR
 {
     public static class FdrDiagnostics
     {
-        private static bool IsOne(string name)
+        private static bool IsOne(EnvVar envVar)
         {
-            return Environment.GetEnvironmentVariable(name) == @"1";
+            return envVar.Value == @"1";
         }
+
+        private static readonly EnvVar ENV_DUMP_STAGE7_WINNERS = new EnvVar(@"OSPREY_DUMP_STAGE7_WINNERS", EnvVarGroup.diagnostic,
+            @"Dump the whole cumulative protein FDR winners list, targets and decoys, to " +
+            @"cs_stage7_winners.tsv.");
 
         /// <summary>
         /// OSPREY_DUMP_STAGE7_WINNERS: dump the full cumulative-FDR winners
@@ -58,7 +63,10 @@ namespace pwiz.Osprey.FDR
         /// hiding cross-impl divergences driven by decoy-winner scores or
         /// sort-position interleaving in the cumulative sweep.
         /// </summary>
-        public static readonly bool DumpStage7Winners = IsOne(@"OSPREY_DUMP_STAGE7_WINNERS");
+        public static readonly bool DumpStage7Winners = IsOne(ENV_DUMP_STAGE7_WINNERS);
+
+        private static readonly EnvVar ENV_DUMP_BEST_PEPTIDE_SCORES = new EnvVar(@"OSPREY_DUMP_BEST_PEPTIDE_SCORES", EnvVarGroup.diagnostic,
+            @"Dump the per-peptide best scores that protein FDR ranks by to cs_best_peptide_scores.tsv.");
 
         /// <summary>
         /// OSPREY_DUMP_BEST_PEPTIDE_SCORES: dump the per-modseq aggregated
@@ -67,7 +75,11 @@ namespace pwiz.Osprey.FDR
         /// upstream aggregation divergences (e.g. different per-peptide max
         /// scores from compaction asymmetry) can be diffed directly.
         /// </summary>
-        public static readonly bool DumpBestPeptideScores = IsOne(@"OSPREY_DUMP_BEST_PEPTIDE_SCORES");
+        public static readonly bool DumpBestPeptideScores = IsOne(ENV_DUMP_BEST_PEPTIDE_SCORES);
+
+        private static readonly EnvVar ENV_DUMP_COASSIGN_ROWS = new EnvVar(@"OSPREY_DUMP_COASSIGN_ROWS", EnvVarGroup.diagnostic,
+            @"Write the peak co-assignment panel's input rows and acceptance boundaries to this directory.")
+            { ValueExample = @"<dir>" };
 
         /// <summary>
         /// OSPREY_DUMP_COASSIGN_ROWS: directory to write the peak co-assignment
@@ -90,7 +102,7 @@ namespace pwiz.Osprey.FDR
         /// BOUNDARY.</para>
         /// </summary>
         public static readonly string DumpCoAssignRowsDir =
-            Environment.GetEnvironmentVariable(@"OSPREY_DUMP_COASSIGN_ROWS");
+            ENV_DUMP_COASSIGN_ROWS.Value;
 
         /// <summary>
         /// Streaming sink for <see cref="DumpCoAssignRowsDir"/>: writes
@@ -110,12 +122,12 @@ namespace pwiz.Osprey.FDR
         /// <summary>
         /// The <see cref="CreateCoAssignRowDump"/> sink. A log, not an artifact: it writes
         /// the rows file directly at its final path rather than through
-        /// <see cref="FileSaver"/>. Seeing however far a panel got is the whole reason to
+        /// <see cref="SimpleFileSaver"/>. Seeing however far a panel got is the whole reason to
         /// stream rather than buffer, so a throw mid-panel should leave whatever rows were
         /// written, not discard them - a TSV degrades to a readable partial file, and
         /// nothing downstream reads this back to gate correctness, so presence not proving
         /// completeness costs nothing here. <c>WriteCutoffs</c> is a separate, ordinary
-        /// one-shot <see cref="FileSaver"/> write, since a boundary table is either fully
+        /// one-shot <see cref="SimpleFileSaver"/> write, since a boundary table is either fully
         /// known or not worth having at all.
         /// </summary>
         public sealed class CoAssignRowDump : IDisposable
@@ -204,7 +216,7 @@ namespace pwiz.Osprey.FDR
                 double experimentCutoffOffStratum, int acceptedInStratum, int acceptedOffStratum)
             {
                 var inv = CultureInfo.InvariantCulture;
-                using (var saver = new FileSaver(NameFor(_dir, _pass, _seq, @"cutoffs")))
+                using (var saver = new SimpleFileSaver(NameFor(_dir, _pass, _seq, @"cutoffs")))
                 {
                     using (var sw = new StreamWriter(saver.SafeName))
                     {
@@ -264,7 +276,7 @@ namespace pwiz.Osprey.FDR
         {
             const string path = @"cs_stage7_winners.tsv";
             var inv = CultureInfo.InvariantCulture;
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
@@ -298,7 +310,7 @@ namespace pwiz.Osprey.FDR
             var inv = CultureInfo.InvariantCulture;
             var keys = new List<string>(best.Keys);
             keys.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only (not parity-sensitive); keys are unique dictionary keys so the comparator never ties anyway
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {

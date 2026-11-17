@@ -115,7 +115,7 @@ public sealed class IsolationWindowFilter : ISpectrumDataFilter
     }
 
     /// <summary>First index whose value is not less than <paramref name="value"/>.</summary>
-    private static int LowerBound(IList<double> sorted, double value)
+    private static int LowerBound(List<double> sorted, double value)
     {
         int lo = 0, hi = sorted.Count;
         while (lo < hi)
@@ -128,7 +128,7 @@ public sealed class IsolationWindowFilter : ISpectrumDataFilter
     }
 
     /// <summary>First index whose value is greater than <paramref name="value"/>.</summary>
-    private static int UpperBound(IList<double> sorted, double value)
+    private static int UpperBound(List<double> sorted, double value)
     {
         int lo = 0, hi = sorted.Count;
         while (lo < hi)

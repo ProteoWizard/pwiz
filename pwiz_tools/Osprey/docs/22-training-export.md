@@ -24,9 +24,9 @@ Osprey decides nothing from this evidence. The consumer applies its own masking 
 |---|---|
 | Written by | `PerFileRescoring` (`Osprey.Tasks/PerFileRescoreTask.cs`), through `Osprey.Tasks/TrainingExportWriter.cs`. A declared output of that task, not a stage: the pipeline stays four stages (P17 in [00](00-pipeline-architecture.md)) |
 | Shape | per run, inside the fan-out: one run's artifacts at a time, and the spectra of the isolation windows in flight - one per worker thread, so up to `--threads` windows |
-| Enabled | only with `--training-export` (or `--task TrainingExport`, the same request as a selector); never under `--task ModelDiagnostics`. On an HPC chain it is written by the `--task PerFileRescoring` nodes; every other `--task` accepts the flag, because a wrapper hands every node the same options, and ignores it, and the startup line says where the export is written |
+| Enabled | only with `--training-export` (or `--task TrainingExport`, the same request as a selector); never under `--task ModelDiagnostics`. On an HPC chain it is written by the `--task PerFileRescoring` nodes, and the `--task PerFileScoring` nodes need the flag too: it makes them write the reference XIC the export reads (a `PerFileRescoring` node given Stage 4 parquets without it stops with that message). The FDR `--task`s accept the flag, because a wrapper hands every node the same options, and ignore it, and the startup line says where the export is written |
 | Reads | the run's `.scores-reconciled.parquet`, one q-value sidecar (below), `.calibration.json` and `.spectra.bin`; the run's data file for the instrument footer, when it is there; the library, and `<blib-stem>.1st-pass.retained_base_ids.bin` when it loads the library itself |
-| Writes | `<stem>.training.parquet` per run, and its `.PerFileRescoring.osprey.task` stamp. Nothing else |
+| Writes | `<stem>.training.parquet` per run, its validity stamp in its own footer (`osprey.validity`). Nothing else |
 
 **Off means absent.** With the option off the export is not a declared output, so nothing is
 written, stamped or logged, and every other artifact of the run is byte-identical to a run
@@ -41,42 +41,49 @@ thread, since the rescore's windows are released as it goes.
 
 **Two routes, one file.** With the flag up front, each run's export is written as soon as that
 run's reconciled parquet and per-run second pass have landed, while its spectra are in hand.
-With the flag added to a finished analysis, `PerFileRescoring` takes its export-only arm
-(`OnlyTrainingExportsOutstanding`): every other output of the task is current, so it writes each
-missing export from the run's own artifacts and re-scores nothing. Every run the in-flight
+With the flag on an analysis that ran with it but is missing exports, `PerFileRescoring` takes
+its export-only arm (`OnlyTrainingExportsOutstanding`): every other output of the task is
+current, so it writes each missing export from the run's own artifacts and re-scores nothing. Every run the in-flight
 route does not reach - one resumed as already re-scored, one with no re-scoring work - takes
 the same from-disk route at the end of the task. Both routes read the reconciled parquet and
 the q-value sidecar back from disk, so they write the same bytes. The one shortcut is the
 library: when the process already holds it, the export uses it rather than loading the
-`.libcache` again. A load of its own retains fragments only for the base_ids in the retained
+derived `.blib` again. A load of its own retains fragments only for the base_ids in the retained
 summary, as `--task SecondPassFDR` loads it: every row the export reads is a reconciled
 survivor, so none loses its spectrum.
 
 **What it checks before reading a run.** The reconciled parquet's footer, as
 `--task SecondPassFDR` checks it (`ParquetScoreCache.ValidateScoresParquetGroup`): this build's
 version, this search and library, and `osprey.reconciled`. A mismatch fails the run with the
-file named. A file written by another build of Osprey is named as such: adding the flag to an
-analysis a different build ran fails every export, because every other stage skips by its
-validity key, which carries no build, while the export reads the file. Add the flag with the
-build that ran the analysis, or run the analysis again with this one.
+file named. A file written by another build of Osprey is named as such. Adding the flag to an
+analysis a different build ran does not reach that check by resume: every artifact's validity
+stamp names the build that wrote it, and another build's artifacts are never current, so this
+build re-runs the analysis rather than exporting from it. Add the flag with the build that ran
+the analysis to export without re-running it.
 
 **When one run's export fails.** The failure is recorded and the other runs still export. The
 task then reports each failed run with its reason, sets exit code 1 and fails, so the analysis
-stops before `SecondPassFDR` writes the blib. Every other output is stamped as it lands, so a
+stops before `SecondPassFDR` writes the blib. Every other output carries its stamp from the moment it lands, so a
 re-run of the same command retries only the failed exports. An export that was asked for and
 not written is a failed run, not a warning; a run that needs the blib regardless drops the flag.
 
-**Pay later.** `PerFileRescoring`'s key does not change with the option, and neither does any
-other task's, so adding `--training-export` to a finished run's command line reports
-`PerFileScoring`, `FirstPassFDR` and `SecondPassFDR` as `skipping (outputs valid)` and runs only
-the export-only arm. (An analysis with a run that had no Stage 6 work is the exception:
-`PerFileRescoring` never counts as current there, because that run has no worker decoys file, so
-it takes its resume route instead - it reloads the first pass and re-scores nothing - and writes
-the exports at its end.) Measured on the 3-run Stellar set: the pay-later run took 15 s, 4-6 s per
-run for the export itself, against 6.5 minutes for the analysis. Each run's parquet was
-byte-identical to the one written with the flag up front, and every table of the blib but its
-`LibInfo` row (a fresh LSID and creation time on every write) was identical to the blib of the
-run without the flag.
+**Added later, it re-scores.** The export reads each row's reference XIC from the reconciled
+parquet, and nothing else does, so the scores parquets carry it only when the export is
+requested: ~9% of a SEA-AD scoring parquet saved on every run that does not export (#5023).
+The option therefore moves the `PerFileScoring` and `PerFileRescoring` keys, and adding
+`--training-export` to a finished run's command line runs those two tasks again, writing the
+reference XIC, while `FirstPassFDR` and `SecondPassFDR` report `skipping (outputs valid)`. Give
+the flag up front when the export is wanted. Each run's export is byte-identical to the one
+written with the flag up front either way, and the library is unchanged; a file reached without
+the reference XIC is refused rather than exported (`ParquetScoreCache.LoadTrainingExportRows`,
+`StreamReconciledScoresParquet`).
+
+The key term works both ways: an analysis run with the export and then re-run in the same
+directory without the flag also re-scores Stages 4 and 6, because its parquets are keyed on a
+schema that run would not write. Keep the flag on the command line of a directory that was
+exported, or remove the directory's parquets deliberately. Accepting a file that carries more
+than the run needs would mean comparing keys by more than equality everywhere a stamp is
+checked; for an opt-in product that has not been worth it.
 
 ---
 
@@ -101,22 +108,19 @@ One row per exported precursor per run, in ascending `entry_id` order:
 
 - **Targets only.** Decoys are never exported.
 - **Run q.** The precursor's run precursor q-value is at most `--training-export-max-q`. It is
-  the second-pass run q when `PerFileRescoring`'s per-run second pass wrote
-  `<stem>.2nd-pass.fdr_scores.bin`, and the first-pass run q from `<stem>.1st-pass.fdr_scores.bin`
-  otherwise (`TrainingExportWriter.RunQPath`); the footer's `osprey.training_export.run_q_pass`
-  says which. That is every run of an ordinary analysis, a single-run one included (measured on
-  Stellar: the worker wrote the second pass, and three runs of one command left the export
-  unchanged). "PerFileRescoring wrote it" means both its stamp beside the sidecar, the test
-  `SecondPassFDR` folds by, and the worker's `<stem>.2nd-pass.fdr_decoys.bin`, which only the
-  worker writes: the driver stamps every declared output that exists after a PerFileRescoring
-  run, a sidecar `SecondPassFDR` wrote included, so the stamp alone would flip the export on a
-  later invocation of the same command.
-  The first pass is used for two cases, and the export warns when it is. A run with no Stage 6
-  work never reaches the worker, and a `PerFileRescoring` with no readable saved first-pass model
-  has no worker at all; either way `SecondPassFDR` computes the run's second pass after the
-  export, so the q-values it reports can differ from the ones the export selected by. A row whose
-  apex reconciliation moved has no first-pass record at that apex; such rows are counted in a
-  warning and cannot be selected.
+  the **first-pass** run q from `<stem>.1st-pass.fdr_scores.bin` (`TrainingExportWriter.RunQPath`);
+  the footer's `osprey.training_export.run_q_pass` records it as `1`. The first pass competes the
+  whole run in one pool against every decoy - the undepleted, calibrated null a fine-tune should
+  learn from. The second pass's run q is a different statistic: under `protein-compact` it comes
+  from the protein stratum and its complement competing separately, each with its own conservative
+  `+1`, so on a small run a half accepts nothing at 1% (see [12-second-pass-fdr.md](12-second-pass-fdr.md)).
+  Selecting on it, as the export did until #4993 made that competition stratified, left two of the
+  three Stellar subset runs with no training rows at all (0 / 102 / 0 of 193 targets, against
+  118 / 111 / 121 at 1% in the first pass), and the RT fine-tune with one test row. The export
+  therefore reads a sidecar written before any re-scoring, so an export written while re-scoring
+  and one written later from disk agree, and `SecondPassFDR`'s reported q-values are expected to
+  differ from the ones the export selected by. A row whose apex reconciliation moved has no
+  first-pass record at that apex; such rows are counted in a warning and cannot be selected.
 - **No experiment-level values.** Experiment q-values and PEP exist only after `SecondPassFDR`,
   which runs after the export, and a per-run file is written once (P11). Join
   `<blib-stem>.2nd-pass.fdr_experiment.bin` by `entry_id` for them.
@@ -143,11 +147,19 @@ A run with nothing to export still gets a valid zero-row file with its footer (P
 
 ## File format
 
-Apache Parquet, ZSTD, written through `FileSaver` (`Osprey.IO/TrainingExportParquet.cs`), in row
-groups of 20,000 rows. Scalar columns are plain parquet columns. Every per-ion array is a
-`byte[]` column holding a **little-endian typed blob with no length prefix**, exactly the scores
-parquet's convention (`ParquetBlobCodec`): the element count is `bytes / sizeof(element)`, and
+Apache Parquet, ZSTD, written through `SimpleFileSaver`
+(`pwiz_tools/CarafeSharp/CarafeSharp.Contracts/TrainingExportParquet.cs`), in row groups of
+20,000 rows. Scalar columns are plain parquet columns. Every per-ion array is a `byte[]` column
+holding a **little-endian typed blob with no length prefix**, exactly the scores parquet's
+convention (`ParquetBlobCodec`, beside it): the element count is `bytes / sizeof(element)`, and
 an empty array is a NULL cell, never a zero-length blob.
+
+The writer, the reader and the record (`TrainingRecord`, whose property names follow the
+columns below) and the footer keys (`TrainingExportKeys`) are one assembly,
+`CarafeSharp.Contracts`, that Osprey writes through and CarafeSharp reads through: a renamed
+column or a format bump changes both tools or fails the build. The reader refuses a format
+version it does not read, a missing column, and a row whose per-ion arrays do not hold
+`4 * (L - 1)` slots.
 
 ### Slot order
 
@@ -219,7 +231,6 @@ ladder.
 | `boundary_end_ratio_median` | double | Median over core ions of XIC(end scan) / XIC max |
 | `n_coeluting_claimants` | int32 | Claimants in this isolation window whose final `[start_rt, end_rt]` contains this apex |
 | `n_same_apex_claimants` | int32 | Claimants whose apex is this same scan |
-| `ddc_neighbor_n` | int32 | Targets the double-counting dedup would call colliding with this one (see below) |
 
 ### Per-ion blobs (`n_slots` elements each)
 
@@ -278,21 +289,20 @@ with a Savitzky-Golay filter; Osprey's XICs are unsmoothed - see Risks).
 
 | Key | Value |
 |---|---|
-| `osprey.training_export.format_version` | `2` (version 1 carried experiment q-value and PEP columns) |
+| `osprey.training_export.format_version` | `3` (version 1 carried experiment q-value and PEP columns; version 2 carried `ddc_neighbor_n` and the `osprey.ddc.*` keys) |
 | `osprey.version`, `osprey.search_hash`, `osprey.library_hash` | As in the scores parquet |
 | `osprey.file_name` | Run stem |
 | `osprey.training_export.rows` | Rows written |
 | `osprey.training_export.max_q`, `osprey.training_export.claimant_q` | The thresholds applied |
 | `osprey.training_export.xics` | `true` / `false` |
 | `osprey.training_export.slot_order` | The slot layout, in words |
-| `osprey.training_export.run_q_pass` | `2` or `1`: the pass whose run q-values the rows were selected on (see Which rows) |
+| `osprey.training_export.run_q_pass` | `1`: the pass whose run q-values the rows were selected on, the first pass (see Which rows); `2` in exports written before that became the rule |
 | `osprey.training_export.mp_cosine_parity` | `N/M`: rows whose `mp_cosine_parity` is true, of all rows. A row with no fit counts as a match (both cosines are the no-fit value) |
 | `osprey.training_export.mp_cosine_parity_fitted` | `N/M`: the same over rows with a median-polish fit only - the count that tests the recomputation |
 | `osprey.rt_min`, `osprey.rt_max` | First and last MS2 retention time of the run, minutes |
 | `osprey.isolation_mz_min`, `osprey.isolation_mz_max` | Range of the run's isolation windows |
 | `osprey.fragment_tolerance`, `osprey.fragment_tolerance_unit` | The MS2-calibrated tolerance every match above used (`ppm` or `Th`) |
 | `osprey.ms2_calibration.calibrated`, `.mean`, `.sd`, `.unit` | The run's MS2 mass calibration |
-| `osprey.ddc.tolerance`, `osprey.ddc.tolerance_unit`, `osprey.ddc.rt_neighborhood` | The double-counting dedup's tolerance and RT neighborhood for this run |
 | `osprey.ms2_scan_window` | `lower,upper`: the union of every isolation window's measured m/z range (`IN_SCAN_RANGE` uses each window's own), or empty when no window has peaks |
 | `osprey.instrument_vendor`, `osprey.instrument_model` | From the run's data file (see Source metadata), or empty without it |
 | `osprey.source_ms2_sampled` | MS2 spectra the three histograms below were counted over; `0` without the data file |
@@ -376,17 +386,6 @@ not claimants.
 The `BETTER_CLAIMANT_*` bits say whether the ion's intensity is more likely the other
 precursor's: some sharer in that scope has a lower run q (ties broken by the higher score).
 
-**`ddc_neighbor_n`** is the double-counting dedup's own collision test
-(`ScoringPipeline.SharesDoubleCountingFragments`: half the smaller top-6 list matching within its
-3-SD tolerance), counted over this run's reconciled targets in the same window whose apex lies
-within `osprey.ddc.rt_neighborhood` of this one. The test counts the first entry's fragments
-matched in the second, so it is not symmetric; each pair is asked in the dedup's order (apex RT,
-then base_id, then entry_id - `ScoringPipeline.CompareDoubleCountingOrder`), earlier entry first. That neighborhood is 5 x the median spacing
-between consecutive MS2 retention times of the WHOLE run - all windows interleaved - so on a
-DIA cycle it is a fraction of one cycle and the count is almost always 0 (0.01% of rows on the
-Stellar smoke run). It is exported as the scorer defines it; the co-elution scope above is the
-broader measure.
-
 ---
 
 ## Source metadata
@@ -409,7 +408,7 @@ source metadata: they come from the spectra themselves (`IN_SCAN_RANGE` above).
 
 ## Resume and validity
 
-Each run's parquet is a declared output of `PerFileRescoring` and is stamped with that task's
+Each run's parquet is a declared output of `PerFileRescoring` and its embedded stamp carries that task's
 key plus the export's own terms (`PerFileRescoreTask.OutputValidityKey`):
 
 | Term | Why |
@@ -431,9 +430,14 @@ no cohort (P4) - no reconciliation hash beyond the one the task key already carr
 list - so an HPC node handed any subset of runs computes the key a straight-through run does.
 
 A rewritten input redoes that run's export and no other, and never re-scores. Resume is per run:
-a run whose parquet exists with a matching stamp is skipped, a stale stamp is cleared before its
-run is recomputed, and each run is stamped as it lands, so a killed export loses only the run in
-flight.
+a run whose parquet carries a current stamp is skipped, a stale one is simply overwritten when its
+run is recomputed, and each run's parquet carries its stamp from the commit that writes it, so a
+killed export loses only the run in flight.
+
+The stamp is provenance, not content: the reproducibility tests that compare two exports hash
+each file with the stamp bytes blanked, because the key names its inputs' file identities
+(name + size + mtime), which differ between two directories that wrote identical inputs at
+different times.
 
 ### HPC relay
 

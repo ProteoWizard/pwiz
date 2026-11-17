@@ -128,6 +128,12 @@ namespace MSConvertGUI
             _calculateSHA1Mutex = calculateSHA1Mutex;
         }
 
+        private static void ThrowIfUnsupportedWriteFormat(string option)
+        {
+            if (UnsupportedWriteFormats.TryGetReason(option, out var reason))
+                throw new Exception("[msconvert] " + option + ": " + reason);
+        }
+
         public Config ParseCommandLine(string outputFolder, string argv)
         {
 
@@ -135,11 +141,9 @@ namespace MSConvertGUI
             string filelistFilename = null;
             string configFilename = null;
 
-            var formatText = false;
             var formatMzMl = false;
             var formatMzMlB = false;
             var formatMzXml = false;
-            var formatMz5 = false;
             var formatMgf = false;
             var formatMs1 = false;
             var formatCms1 = false;
@@ -155,6 +159,7 @@ namespace MSConvertGUI
 
             for (var x = 0; x < commandList.Length; x++)
             {
+                ThrowIfUnsupportedWriteFormat(commandList[x]);
                 switch (commandList[x])
                 {
                     case "--filelist":
@@ -181,14 +186,8 @@ namespace MSConvertGUI
                     case "--mzXML":
                         formatMzXml = true;
                         break;
-                    case "--mz5":
-                        formatMz5 = true;
-                        break;
                     case "--mgf":
                         formatMgf = true;
-                        break;
-                    case "--text":
-                        formatText = true;
                         break;
                     case "--ms1":
                         formatMs1 = true;
@@ -274,6 +273,7 @@ namespace MSConvertGUI
 
                 for (var x = 0; x < commandList.Length; x++)
                 {
+                    ThrowIfUnsupportedWriteFormat(commandList[x]);
                     switch (commandList[x])
                     {
                         case "--filelist":
@@ -299,9 +299,6 @@ namespace MSConvertGUI
                             break;
                         case "--mgf":
                             formatMgf = true;
-                            break;
-                        case "--text":
-                            formatText = true;
                             break;
                         case "--ms1":
                             formatMs1 = true;
@@ -377,10 +374,8 @@ namespace MSConvertGUI
             if (config.Filenames.Count == 0)
                 throw new Exception("[msconvert] No files specified.");
 
-            var count = (formatText ? 1 : 0) 
-                + (formatMzMl ? 1 : 0)
+            var count = (formatMzMl ? 1 : 0)
                 + (formatMzXml ? 1 : 0)
-                + (formatMz5 ? 1 : 0)
                 + (formatMzMlB ? 1 : 0)
                 + (formatMgf ? 1 : 0)
                 + (formatMs1 ? 1 : 0)
@@ -388,10 +383,8 @@ namespace MSConvertGUI
                 + (formatMs2 ? 1 : 0)
                 + (formatCms2 ? 1 : 0);
             if (count > 1) throw new Exception("[msconvert] Multiple format flags specified.");
-            if (formatText) config.WriteConfig.Format = WriteFormat.Text;
             if (formatMzMl) config.WriteConfig.Format = WriteFormat.Mzml;
             if (formatMzXml) config.WriteConfig.Format = WriteFormat.MzXml;
-            if (formatMz5) config.WriteConfig.Format = WriteFormat.Mz5;
             if (formatMzMlB) config.WriteConfig.Format = WriteFormat.MzMLb;
             if (formatMgf) config.WriteConfig.Format = WriteFormat.Mgf;
             if (formatMs1) config.WriteConfig.Format = WriteFormat.Ms1;
@@ -405,17 +398,11 @@ namespace MSConvertGUI
             {
                 switch (config.WriteConfig.Format)
                 {
-                    case WriteFormat.Text:
-                        config.Extension = ".txt";
-                        break;
                     case WriteFormat.Mzml:
                         config.Extension = ".mzML";
                         break;
                     case WriteFormat.MzXml:
                         config.Extension = ".mzXML";
-                        break;
-                    case WriteFormat.Mz5:
-                        config.Extension = ".mz5";
                         break;
                     case WriteFormat.MzMLb:
                         config.Extension = ".mzMLb";
@@ -582,7 +569,6 @@ namespace MSConvertGUI
                                 msg = "Note: input contains only chromatogram data.";
                                 switch (config.WriteConfig.Format)
                                 {
-                                    case WriteFormat.Mz5:
                                     case WriteFormat.MzMLb:
                                     case WriteFormat.Mzml:
                                         break;

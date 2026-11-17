@@ -91,6 +91,8 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private readonly IReadOnlyDictionary<uint, FdrExperimentRecord> _experimentRecords;
 
+        private readonly SurvivorCountCheck _countCheck;
+
         /// <param name="perFileParquetPaths">file name -> its original
         /// <c>.scores.parquet</c>, the same map Stage 5 resolves sidecar paths from.</param>
         /// <param name="config">Run config, for the sidecar base-path resolution.</param>
@@ -108,6 +110,7 @@ namespace pwiz.Osprey.Tasks
             _config = config;
             _firstPassBaseIds = firstPassBaseIds;
             _sequencePool = sequencePool;
+            _countCheck = new SurvivorCountCheck(perFileParquetPaths?.Count ?? 0);
             _experimentRecords = FdrExperimentSidecar.ReadMap(
                 FdrExperimentSidecar.PathFor(config?.OutputBlib,
                     ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass),
@@ -119,6 +122,18 @@ namespace pwiz.Osprey.Tasks
         /// decoy flag and peptide from instead of decoding them. Null reads them from the file.
         /// </summary>
         internal LibraryIdentity Identity { get; set; }
+
+        /// <summary>
+        /// The survivor count the compaction gate reported, derived arithmetically from
+        /// rows-per-base_id summed over the passing set, or null when the caller has no such
+        /// count to check against. Once every file has been loaded from its Stage 4 parquet,
+        /// the loads must sum to it - see <see cref="SurvivorCountCheck"/>.
+        /// </summary>
+        internal long? ExpectedSurvivorCount
+        {
+            get { return _countCheck.Expected; }
+            set { _countCheck.Expected = value; }
+        }
 
         /// <summary>
         /// Load one file's survivors. Returns null with <paramref name="error"/> set
@@ -173,7 +188,7 @@ namespace pwiz.Osprey.Tasks
                     error = string.Format(
                         OspreyTasksResources.FirstPassSurvivorLoader_Load__0__was_written_by_an_older_Osprey_build_and_cannot_be_matched_to_its__scores_parquet__,
                         parquetPathOverride, ParquetScoreCache.EXT_SCORES,
-                        OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME));
+                        FdrScoresSidecar.FIRST_PASS_FILE_PATTERN);
                     return null;
                 }
                 parquetPath = parquetPathOverride;
@@ -220,7 +235,11 @@ namespace pwiz.Osprey.Tasks
             // Array.Sort OK: SortCanonicalResolved verifies every stub's ParquetIndex is
             // resolved, so the terminal key is unique per file and the comparison never ties.
             FdrEntry.SortCanonicalResolved(stubs, fileName);
-            return stubs;
+            // Only a Stage 4 load is comparable: a reconciled parquet adds the gap-fill rows.
+            if (parquetPathOverride != null)
+                return stubs;
+            error = _countCheck.Check(fileName, stubs.Count);
+            return error == null ? stubs : null;
         }
     }
 }

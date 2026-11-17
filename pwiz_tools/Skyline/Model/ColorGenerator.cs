@@ -77,9 +77,27 @@ namespace pwiz.Skyline.Model
         {
             // Get hash code for peptide name, then XOR the bytes to make a smaller hash,
             // then modulo to our color array size.
-            int hash = peptideName.GetHashCode();
+            int hash = GetStableHashCode(peptideName);
             int index = ((hash) ^ (hash >> 8) ^ (hash >> 16) ^ (hash >> 24))%_colors.Length;
             return index;
+        }
+
+        /// <summary>
+        /// The 64-bit .NET Framework string hash. .NET Core randomizes <see cref="string.GetHashCode()"/>
+        /// per process, which gave every peptide a new color each time Skyline started.
+        /// </summary>
+        private static int GetStableHashCode(string text)
+        {
+            int hash1 = 5381;
+            int hash2 = hash1;
+            for (int i = 0; i < text.Length; i += 2)
+            {
+                hash1 = ((hash1 << 5) + hash1) ^ text[i];
+                if (i + 1 >= text.Length)
+                    break;
+                hash2 = ((hash2 << 5) + hash2) ^ text[i + 1];
+            }
+            return hash1 + hash2 * 1566083941;
         }
 
         // These colors were generated using the SkylinePeptideColorGenerator utility.

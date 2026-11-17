@@ -372,6 +372,10 @@ ASALocalRun/
 /ai/.tmp/
 
 /*.log
+# Developer build shortcuts at the root (b.bat, bs.bat, bo.bat, bso.bat, ...), not build.bat
+/b.bat
+/b[os].bat
+/b[os]?.bat
 /libraries/msparser_*_win64
 /libraries/msparser_*_linux64
 /pwiz_tools/BiblioSpec/tests/inputs

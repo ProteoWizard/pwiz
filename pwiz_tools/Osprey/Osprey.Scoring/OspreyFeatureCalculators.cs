@@ -30,8 +30,8 @@ namespace pwiz.Osprey.Scoring
     /// The ordered set of Osprey scoring feature calculators, mirroring
     /// Skyline's <c>PeakFeatureCalculator.CALCULATORS</c>. The array index IS the
     /// parity-critical PIN feature index -- the position written into the
-    /// <c>double[21]</c> feature vector and the column order in the
-    /// <c>.cs_features.tsv</c> dump. This is the single place that order lives as
+    /// <c>double[21]</c> feature vector and the feature column order in
+    /// <c>.scores.parquet</c>. This is the single place that order lives as
     /// data.
     ///
     /// All 21 PIN features are now extracted, so every slot is populated and

@@ -35,4 +35,13 @@ public interface IVendorCentroidingSpectrumList
     /// <c>centroid spectrum</c> and <c>profile spectrum</c> at once.
     /// </remarks>
     Spectrum GetCentroidSpectrum(int index, bool getBinaryData, IntegerSet msLevelsToCentroid);
+
+    /// <summary>
+    /// <see cref="GetCentroidSpectrum(int, bool, IntegerSet)"/> at a <see cref="DetailLevel"/>, the
+    /// overload cpp's <c>SpectrumList_PeakPicker</c> calls on every vendor list. A reader whose
+    /// centroiding is costly overrides it so a metadata-only request never reaches its peak picker;
+    /// the default serves every level below <see cref="DetailLevel.FullData"/> as the metadata read.
+    /// </summary>
+    Spectrum GetCentroidSpectrum(int index, DetailLevel detailLevel, IntegerSet msLevelsToCentroid) =>
+        GetCentroidSpectrum(index, detailLevel >= DetailLevel.FullData, msLevelsToCentroid);
 }

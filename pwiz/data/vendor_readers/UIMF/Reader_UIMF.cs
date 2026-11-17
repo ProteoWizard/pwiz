@@ -71,7 +71,12 @@ public sealed class Reader_UIMF : IReader
         // already-MS1, but cpp still calls .set(MS_MS1_spectrum) for Prescan; mirror that).
         var fc = result.FileDescription.FileContent;
         if (data.FrameTypes.Contains(UimfFrameType.MS1)) fc.Set(CVID.MS_MS1_spectrum);
-        if (data.FrameTypes.Contains(UimfFrameType.Calibration)) fc.Set(CVID.MS_calibration_spectrum);
+        // Only declare calibration spectra that the spectrum list will actually present. Declaring
+        // them when IgnoreCalibrationScans has dropped them writes an mzML that advertises content
+        // it does not have, and the mzML reader keys off that declaration to decide whether a file
+        // is worth scanning for the term at all.
+        if (data.FrameTypes.Contains(UimfFrameType.Calibration) && !config.IgnoreCalibrationScans)
+            fc.Set(CVID.MS_calibration_spectrum);
         if (data.FrameTypes.Contains(UimfFrameType.Prescan)) fc.Set(CVID.MS_MS1_spectrum);
         if (data.FrameTypes.Contains(UimfFrameType.MS2)) fc.Set(CVID.MS_MSn_spectrum);
 
@@ -124,9 +129,11 @@ public sealed class Reader_UIMF : IReader
         }
 
         var spectrumList = new SpectrumList_UIMF(data, defaultInstrumentConfiguration: ic,
-            ignoreZeroIntensityPoints: config.IgnoreZeroIntensityPoints)
+            ignoreZeroIntensityPoints: config.IgnoreZeroIntensityPoints,
+            ignoreCalibrationScans: config.IgnoreCalibrationScans)
         { Dp = dp };
-        var chromatogramList = new ChromatogramList_UIMF(data) { Dp = dp };
+        var chromatogramList = new ChromatogramList_UIMF(data,
+            ignoreCalibrationScans: config.IgnoreCalibrationScans) { Dp = dp };
 
         result.Run.SpectrumList = spectrumList;
         result.Run.ChromatogramList = chromatogramList;

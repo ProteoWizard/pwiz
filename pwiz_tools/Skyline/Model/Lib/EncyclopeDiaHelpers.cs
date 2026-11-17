@@ -450,18 +450,16 @@ namespace pwiz.Skyline.Model.Lib
 
                 status = status.ChangeSegments(0, 2);
 
-                const string MSCONVERT_EXE = "msconvert";
-
                 status = status.ChangeMessage(LibResources.EncyclopeDiaHelpers_GetConvertedDiaDataFile_Converting_DIA_data_to_mzML);
                 progressMonitorForFile.UpdateProgress(status);
 
                 var pr = new ProcessRunner();
-                var psi = new ProcessStartInfo(PathEx.ResolveBundledExe(MSCONVERT_EXE))
+                var psi = new ProcessStartInfo(MsconvertExe.Path)
                 {
                     CreateNoWindow = true,
                     UseShellExecute = false,
                     Arguments =
-                        "-v -z --mzML " +
+                        $"{MsconvertExe.VERBOSE_PROGRESS_ARGS} -z --mzML " +
                         $"-o {Path.GetDirectoryName(outputFilepath).Quote()} " +
                         $"--outfile {Path.GetFileName(outputFilepath).Quote()} " +
                         " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +

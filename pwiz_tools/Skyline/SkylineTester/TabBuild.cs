@@ -129,7 +129,8 @@ namespace SkylineTester
             bool nukeBuild, 
             bool updateBuild,
             bool runBuildTests,
-            bool withTutorialPerf = false)
+            bool withTutorialPerf = false,
+            bool warningsAsErrors = true)
         {
             var commandShell = MainWindow.CommandShell;
             var branchParts = branchUrl.Split('/');
@@ -245,11 +246,15 @@ namespace SkylineTester
             // run, which the nightly never uses (it passes --no-tests and runs its tests
             // afterwards), so for the nightly it changes nothing. The Build tab leaves it off so
             // "run build verification tests" does not add the perf suite.
+            // --no-warnings-as-errors when warningsAsErrors is off, as it is for the nightly: a
+            // developer build fails on a warning, but a nightly that stops building over one runs
+            // no tests at all. TeamCity reports warnings for every commit instead.
             commandShell.Add("#@ Building Skyline...\n");
-            commandShell.Add("{0} " + BUILD_CONFIGURATION + " --i-agree-to-the-vendor-licenses{1}{2}",
+            commandShell.Add("{0} " + BUILD_CONFIGURATION + " --i-agree-to-the-vendor-licenses{1}{2}{3}",
                 Path.Combine(buildRoot, @"pwiz_tools\Skyline\build.bat").Quote(),
                 withTutorialPerf ? " --with-tutorial-perf" : string.Empty,
-                runBuildTests ? string.Empty : " --no-tests");
+                runBuildTests ? string.Empty : " --no-tests",
+                warningsAsErrors ? string.Empty : " --no-warnings-as-errors");
 
             commandShell.Add("# Build done.");
             return true;

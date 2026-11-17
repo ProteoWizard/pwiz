@@ -688,7 +688,13 @@ public static class MSDataDiff
                     or CVID.MS_MS_Numpress_short_logged_float_compression
                     or CVID.MS_MS_Numpress_linear_prediction_compression_followed_by_zlib_compression
                     or CVID.MS_MS_Numpress_positive_integer_compression_followed_by_zlib_compression
-                    or CVID.MS_MS_Numpress_short_logged_float_compression_followed_by_zlib_compression;
+                    or CVID.MS_MS_Numpress_short_logged_float_compression_followed_by_zlib_compression
+                    or CVID.MS_zstd_compression
+                    or CVID.MS_byte_shuffled_zstd_compression
+                    or CVID.MS_dictionary_encoded_zstd_compression
+                    or CVID.MS_MS_Numpress_linear_prediction_compression_followed_by_zstd_compression
+                    or CVID.MS_MS_Numpress_positive_integer_compression_followed_by_zstd_compression
+                    or CVID.MS_MS_Numpress_short_logged_float_compression_followed_by_zstd_compression;
     }
 
     private static void DiffCvParamLists(List<CVParam> a, List<CVParam> b, Context ctx)

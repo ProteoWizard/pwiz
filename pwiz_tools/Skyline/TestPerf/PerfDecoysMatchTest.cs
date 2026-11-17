@@ -214,6 +214,8 @@ namespace TestPerf
 
         private void ValidateTimeRange(GraphChromatogram graphChromatogram, double[] msMsRTs, double range, double gradientLength)
         {
+            // All ID times are drawn, but outliers do not extend chromatogram extraction
+            msMsRTs = SkylineWindow.Document.Settings.TransitionSettings.FullScan.RemoveOutlierIdTimes(msMsRTs);
             var statMsMsRTs = new Statistics(msMsRTs);
             double minRT = double.MaxValue, maxRT = double.MinValue;
             foreach (var curve in graphChromatogram.CurveList)

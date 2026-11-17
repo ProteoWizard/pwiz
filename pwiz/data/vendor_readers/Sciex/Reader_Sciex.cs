@@ -261,7 +261,7 @@ public sealed class Reader_Sciex : IReader, IMultiSampleReader
         {
             Dp = dpReader,
         };
-        result.Run.ChromatogramList = new ChromatogramList_Sciex(wiff, ownsWiff: false, globalChromsAreMs1Only)
+        result.Run.ChromatogramList = new ChromatogramList_Sciex(wiff, ownsWiff: false, globalChromsAreMs1Only, simAsSpectra)
         {
             Dp = dpReader,
         };

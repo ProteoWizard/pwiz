@@ -147,23 +147,9 @@ namespace pwiz.SkylineTestFunctional
                         Settings.Default.SearchToolList[SearchToolType.DIANN]);
             });
 
-            // SimpleFileDownloader normally rewrites URLs to the Skyline test mirror under
-            // unit tests. The mirror only has DIANN-2.5.0; for 1.9.1 we need to hit GitHub
-            // directly. Toggle UseOriginalURLs around the call (and only around the call
-            // — leave the global state untouched for any subsequent download).
             var progress = new SilentProgressMonitor();
-            bool savedUseOriginalUrls = Skyline.Program.UseOriginalURLs;
-            try
-            {
-                if (version == DiannHelpers.DIANN_191_VERSION)
-                    Skyline.Program.UseOriginalURLs = true;
-                AssertEx.IsTrue(SimpleFileDownloader.DownloadRequiredFiles(new[] { downloadInfo }, progress),
-                    $@"failed to download DIA-NN {version}");
-            }
-            finally
-            {
-                Skyline.Program.UseOriginalURLs = savedUseOriginalUrls;
-            }
+            AssertEx.IsTrue(SimpleFileDownloader.DownloadRequiredFiles(new[] { downloadInfo }, progress),
+                $@"failed to download DIA-NN {version}");
             string realDiannPath = downloadInfo.ToolPath;
             AssertEx.IsTrue(File.Exists(realDiannPath),
                 $@"DIA-NN {version} not at expected path after download: {realDiannPath}");

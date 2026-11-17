@@ -38,7 +38,7 @@ namespace pwiz.Osprey.Test
         /// </summary>
         public static int Run(string[] args, CommandStatusWriter writer)
         {
-            var savedOut = OspreyOutput.Out;
+            var savedOut = CommandOutput.Out;
             bool savedPerfStats = OspreyOutput.PerfStats;
             bool savedVerbose = OspreyOutput.Verbose;
             var savedDiagnosticsLog = OspreyDiagnosticsLog.Log;
@@ -50,7 +50,7 @@ namespace pwiz.Osprey.Test
             }
             finally
             {
-                OspreyOutput.Out = savedOut;
+                CommandOutput.Out = savedOut;
                 OspreyOutput.PerfStats = savedPerfStats;
                 OspreyOutput.Verbose = savedVerbose;
                 OspreyDiagnosticsLog.Log = savedDiagnosticsLog;

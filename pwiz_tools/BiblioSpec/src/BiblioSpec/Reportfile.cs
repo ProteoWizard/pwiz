@@ -95,6 +95,10 @@ public sealed class Reportfile : IDisposable
         _file.WriteLine(header);
     }
 
+    /// <summary>Format helper: C#'s <c>G</c> emits uppercase <c>E</c> for exponents; cpp's
+    /// <c>%g</c> uses lowercase. Force lowercase to keep .report goldens byte-identical.</summary>
+    private static string G6(double v) => v.ToString("G6", CultureInfo.InvariantCulture).Replace('E', 'e');
+
     /// <summary>
     /// cpp <c>writeMatches</c> at Reportfile.cpp:171 — write every match whose rank
     /// &lt;= <see cref="_topMatches"/> in the order given (caller has already sorted descending
@@ -108,10 +112,6 @@ public sealed class Reportfile : IDisposable
     /// <para>cpp prints the possible-charge list as comma-separated when more than one;
     /// preserved exactly via the loop at Reportfile.cpp:201-211.</para>
     /// </remarks>
-    /// <summary>Format helper: C#'s <c>G</c> emits uppercase <c>E</c> for exponents; cpp's
-    /// <c>%g</c> uses lowercase. Force lowercase to keep .report goldens byte-identical.</summary>
-    private static string G6(double v) => v.ToString("G6", CultureInfo.InvariantCulture).Replace('E', 'e');
-
     public void WriteMatches(IReadOnlyList<Match> results)
     {
         ArgumentNullException.ThrowIfNull(results);

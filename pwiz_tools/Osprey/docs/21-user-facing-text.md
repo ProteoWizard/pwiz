@@ -1,8 +1,8 @@
 # 21. User-Facing Text (C#)
 
 > Applies to every `LogInfo` / `LogWarning` / `LogError` line, every `ProgressReporter`
-> label, and every CLI error. Corresponds to `Osprey.Core/OspreyOutput.cs` (the one
-> output seam) and the `[TASK]` markers parsed by `perfviz.py` and `regression.ps1`.
+> label, and every CLI error. Corresponds to `CommandOutput` in CommonUtil (the one
+> output seam; `OspreyOutput` holds Osprey's gates on it) and the `[TASK]` markers parsed by `perfviz.py` and `regression.ps1`.
 
 The log is the only UI Osprey has. Its reader is a mass spectrometrist running a search,
 not the developer who named the classes, and many of the words in the code came from
@@ -93,7 +93,7 @@ keep the first language it saw. `DecoyMethod`, `ResolutionMode` and
 
 - **Default**: what the researcher reads. Everything above applies.
 - **`--verbose`**: code-path narration, per-file detail, the feature table.
-- **`-d` diagnostics**: developer output; may use any vocabulary, and lives off the
+- **`OSPREY_DIAGNOSTICS` dumps**: developer output; may use any vocabulary, and lives off the
   mainline path (see `00-pipeline-architecture.md`).
 
 ## Resources

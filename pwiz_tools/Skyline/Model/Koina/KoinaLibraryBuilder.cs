@@ -1,6 +1,7 @@
 /*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2019 University of Washington - Seattle, WA
  * 
@@ -115,6 +116,10 @@ namespace pwiz.Skyline.Model.Koina
             progressStatus = progressStatus.NextSegment();
 
             var specMzInfo = ms.Spectra.Select(m => m.SpecMzInfo).ToList();
+            // The proteins of each predicted spectrum's peptide, for the library's Proteins table
+            var peptideProteins = new LibraryPeptideProteins(_document, EntrapmentProteinIds);
+            foreach (var spectrum in ms.Spectra.Where(s => s.PeptidePrecursorNCE.NodePep != null))
+                spectrum.SpecMzInfo.Protein = peptideProteins.GetProteinId(spectrum.PeptidePrecursorNCE.NodePep);
 
             // Predict iRTs for peptides
             var distinctModifiedSequences = new HashSet<string>();
@@ -170,9 +175,30 @@ namespace pwiz.Skyline.Model.Koina
                 if (docLibraryNew == null)
                     return false;
             }
+            if (DecoyMethod != null || (EntrapmentTargets != null && EntrapmentTargets.Count > 0))
+                LibraryDecoyPairs.Write(LibrarySpec.FilePath, _document, EntrapmentTargets, DecoyMethod);
 
             return true;
         }
+
+        /// <summary>
+        /// How the document's decoys were made, when the library is to carry them paired with their
+        /// targets in a DecoyPairs table (<see cref="LibraryDecoyPairs"/>); null writes no table
+        /// unless there are <see cref="EntrapmentTargets"/>.
+        /// </summary>
+        public string DecoyMethod { get; set; }
+
+        /// <summary>The document predicted for: the open document, or the Predict For page's FASTA digest with its decoys and entrapment peptides.</summary>
+        public SrmDocument Document => _document;
+
+        /// <summary>The entrapment peptides among the document's, flagged as such in the DecoyPairs table; null for none.</summary>
+        public ICollection<Target> EntrapmentTargets { get; set; }
+
+        /// <summary>
+        /// The protein label CarafeSharp gave each generated entrapment peptide (sequence to label),
+        /// for the library's Proteins table with the document's proteins (<see cref="LibraryPeptideProteins"/>); null for none.
+        /// </summary>
+        public IReadOnlyDictionary<string, string> EntrapmentProteinIds { get; set; }
 
         public static List<KoinaIntensityModel.PeptidePrecursorNCE> ReadStandardPeptides(IrtStandard standard, int? nce)
         {

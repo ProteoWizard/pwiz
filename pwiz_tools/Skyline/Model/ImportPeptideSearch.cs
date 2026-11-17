@@ -167,6 +167,23 @@ namespace pwiz.Skyline.Model
                 stream.CloseStream();
         }
 
+        /// <summary>
+        /// Delete the document library so a search can write it afresh: the document's read streams
+        /// on it are closed and the cached <see cref="Library"/> is evicted from
+        /// <paramref name="libraryManager"/> first, since without both the delete fails or the next
+        /// load is served from the cache; then the .blib and its redundant library go.
+        /// </summary>
+        public static void DeleteDocumentLibrary(SrmDocument doc, LibraryManager libraryManager, string docBlibPath)
+        {
+            ClosePeptideSearchLibraryStreams(doc);
+            var docLibSpecs = doc.Settings.PeptideSettings.Libraries.LibrarySpecs
+                .Where(s => s != null && s.IsDocumentLibrary).ToArray();
+            if (docLibSpecs.Length > 0)
+                libraryManager.ReleaseLibraries(docLibSpecs);
+            FileEx.SafeDelete(docBlibPath, true);
+            FileEx.SafeDelete(BiblioSpecLiteSpec.GetRedundantName(docBlibPath), true);
+        }
+
         public bool LoadPeptideSearchLibrary(LibraryManager libraryManager, LibrarySpec libSpec, IProgressMonitor monitor)
         {
             if (libSpec == null)

@@ -1,0 +1,6 @@
+# Pinned model archives are compared by SHA-256; never let line-ending conversion touch them.
+*.zip binary
+*.pth binary
+*.safetensors binary
+*.pt binary
+*.json -text

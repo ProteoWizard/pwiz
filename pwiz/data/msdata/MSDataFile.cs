@@ -146,8 +146,6 @@ public static class MSDataFile
     /// <summary>
     /// Writes <paramref name="msd"/> to <paramref name="path"/> in the format selected by
     /// <paramref name="config"/>. Mirrors cpp <c>MSDataFile::write(MSData&amp;, path, WriteConfig, ...)</c>.
-    /// Throws <see cref="NotImplementedException"/> for formats that don't have a pwiz-sharp
-    /// writer yet (mz5 / mzMLb / text / MS1 / CMS1 / MS2 / CMS2).
     /// </summary>
     /// <param name="msd">The document to write.</param>
     /// <param name="path">Output file path; <see cref="WriteConfig.Gzip"/> appends .gz handling.</param>
@@ -227,7 +225,7 @@ public static class MSDataFile
                 break;
             default:
                 throw new NotImplementedException(
-                    $"pwiz-sharp doesn't yet implement a writer for {config.Format}.");
+                    $"pwiz-sharp has no writer for {config.Format}.");
         }
     }
 

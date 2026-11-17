@@ -178,6 +178,10 @@ namespace SkylineNightly
         [STAThread]
         static void Main(string[] args)
         {
+            // An exception on another thread (a finalizer, a timer) ends the process without reaching
+            // the handler below; leave it in the nightly log rather than nowhere.
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) => Nightly.LogUnhandledException(e.ExceptionObject);
+
             if (Settings.Default.SettingsUpgradeRequired)
             {
                 Settings.Default.Upgrade();
@@ -308,7 +312,10 @@ namespace SkylineNightly
             }
             catch (Exception ex)
             {
-                MessageBox.Show(@"Exception Caught: " + ex.Message, @"SkylineNightly.exe");
+                // The full exception, not just Message: a developer tool, and the inner exceptions and
+                // stack traces are the diagnosis (a TypeInitializationException's Message names only
+                // the type whose static setup failed).
+                MessageBox.Show(@"Exception Caught: " + ex, @"SkylineNightly.exe");
             }
         }
     }

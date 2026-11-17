@@ -87,6 +87,21 @@ namespace pwiz.Common.CommandLine
         {
         }
 
+        /// <summary>
+        /// Another tool's declaration, declared again for this host's context: what it says about
+        /// its name and value is copied (<see cref="ArgumentBase(ArgumentBase)"/>), and
+        /// <paramref name="processValue"/> is how this host records it.
+        /// </summary>
+        public Argument(ArgumentBase template, Action<TContext, NameValuePair> processValue)
+            : base(template)
+        {
+            ProcessValue = (c, p) =>
+            {
+                processValue(c, p);
+                return true;
+            };
+        }
+
         public Func<TContext, NameValuePair, bool> ProcessValue;
     }
 }

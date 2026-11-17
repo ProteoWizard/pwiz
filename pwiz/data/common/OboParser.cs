@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Pwiz.Data.Common.Obo;
 
@@ -67,8 +69,23 @@ public sealed class ObOntology
     /// <summary>Set of term prefixes seen (e.g. "MS", "UO").</summary>
     public SortedSet<string> Prefixes { get; } = new(StringComparer.Ordinal);
 
-    /// <summary>Parsed term table, keyed by numeric id.</summary>
-    public SortedDictionary<uint, OboTerm> Terms { get; } = new();
+    /// <summary>
+    /// Parsed terms in file order. A numeric id is unique only within a prefix: psi-ms.obo
+    /// carries both MS:1002001 and PEFF:1002001 (and a copy of the UO:0000001.. unit terms), so
+    /// this is a list rather than an id-keyed table - see <see cref="FindTerm"/>.
+    /// </summary>
+    public List<OboTerm> Terms { get; } = new();
+
+    /// <summary>The term with this accession (e.g. "MS", 1000031), or null when the file has none.</summary>
+    public OboTerm? FindTerm(string prefix, uint id)
+    {
+        foreach (var term in Terms)
+        {
+            if (term.Id == id && term.Prefix == prefix)
+                return term;
+        }
+        return null;
+    }
 
     /// <summary>Loads an OBO file from disk.</summary>
     public static ObOntology Load(string path)
@@ -92,11 +109,22 @@ public sealed class ObOntology
 
 /// <summary>
 /// Streaming OBO 1.2 parser. Port of pwiz/data::parseOBO.
-/// Recognizes: <c>[Term]</c> stanzas with <c>id</c>, <c>name</c>, <c>def</c>, <c>is_a</c>,
-/// <c>relationship</c>, <c>property_value</c>, <c>synonym</c> (EXACT only), <c>is_obsolete</c>.
+/// Recognizes: <c>[Term]</c> stanzas with <c>id</c>, <c>name</c>, <c>def</c> (or <c>comment</c>
+/// when there is no def), <c>is_a</c>, <c>relationship</c>, <c>property_value</c>,
+/// <c>synonym</c> / <c>exact_synonym</c> (EXACT only), <c>is_obsolete</c>, <c>xref</c>.
+/// Term ids, names and synonyms come out exactly as cpp obo.cpp reads them, which is what
+/// lets the CvGen build tool reproduce cvgen.cpp's enum identifiers.
 /// </summary>
 public static class OboParser
 {
+    // def: "(OBSOLETE )?text" [dbxrefs] {trailing qualifiers}. The text group is greedy and
+    // the dbxref group optional, so the closing quote is the last one that still leaves a
+    // valid tail - which is how escaped quotes inside the text survive and an NCIT
+    // {...="NCI"} qualifier does not swallow the definition. Same regex as cpp parse_def.
+    private static readonly Regex s_defRegex = new("^\"(OBSOLETE )?(.*)\"(\\s*\\[.*\\].*)?$", RegexOptions.Compiled);
+    private static readonly Regex s_synonymRegex = new("^\"(.*)\"\\s*(\\w+)?.*$", RegexOptions.Compiled);
+    private static readonly Regex s_exactSynonymRegex = new("^\"(.*)\".*$", RegexOptions.Compiled);
+
     /// <summary>Parses OBO content from <paramref name="reader"/> into <paramref name="target"/>.</summary>
     public static void Parse(TextReader reader, ObOntology target)
     {
@@ -106,24 +134,30 @@ public static class OboParser
         OboTerm? current = null;
         string? currentStanzaType = null;
         bool inHeader = true;
-        bool skipCurrent = false; // true when the current Term has a non-numeric id we can't represent
+        bool skipCurrent = false; // true when the current Term has an id that does not parse
 
         string? line;
         while ((line = reader.ReadLine()) is not null)
         {
             if (inHeader)
             {
-                if (line.StartsWith('['))
+                // The header ends at the first BLANK line, as cpp obo.cpp parse() does - not at
+                // the first stanza. unimod.obo has a blank line after its second line, so the
+                // two disagreed about whether "saved-by" and "default-namespace" are header:
+                // a "remark: namespace:" after a blank line would have given CvGen one prefix
+                // more than cvgen, shifting every later value block by 100,000,000.
+                if (string.IsNullOrWhiteSpace(line))
                 {
                     inHeader = false;
-                    // fall through to stanza handling
-                }
-                else
-                {
-                    if (!string.IsNullOrWhiteSpace(line))
-                        target.Header.Add(line);
                     continue;
                 }
+                if (!line.StartsWith('['))
+                {
+                    target.Header.Add(line);
+                    continue;
+                }
+                inHeader = false;
+                // fall through to stanza handling
             }
 
             if (line.StartsWith('['))
@@ -151,8 +185,8 @@ public static class OboParser
                 case "id":
                     if (!TryParseId(rest, out string prefix, out uint id))
                     {
-                        // Non-numeric term ids (e.g. NCIT:C25330) — the pwiz CVID enum only
-                        // covers numeric prefixes (MS/UO/UNIMOD/PEFF), so we skip them entirely.
+                        // cpp obo.cpp would throw here; skipping the stanza is the lenient
+                        // equivalent for an id neither side can represent.
                         skipCurrent = true;
                         break;
                     }
@@ -162,15 +196,32 @@ public static class OboParser
                     break;
 
                 case "name":
-                    current.Name = rest;
+                    current.Name = Unescape(rest);
                     break;
 
                 case "def":
-                    current.Def = ExtractQuoted(rest);
+                    ParseDef(rest, current);
+                    break;
+
+                case "comment":
+                    // Some OBO representations carry the definition in "comment" instead of
+                    // "def"; a def that follows overrides it (cpp obo.cpp parse_comment_as_def).
+                    if (current.Def.Length == 0)
+                    {
+                        current.Def = rest;
+                        current.IsObsolete = rest.Contains("obsolete", StringComparison.OrdinalIgnoreCase);
+                    }
                     break;
 
                 case "is_a":
-                    if (TryParseId(StripTrailingComment(rest), out _, out uint parentId))
+                    // Same-prefix only, as cpp parse_is_a. A parent id is stored bare and
+                    // CvLookup re-homes it into the CHILD's value block, so keeping a
+                    // cross-prefix parent would invent a relation: psi-ms.obo's five
+                    // "is_a: UO:0000000 ! unit" lines (MS:1000040/43/46, MS:1000807,
+                    // MS:1002814) would each land as (CVID)0 - the MS root - making CvIsA
+                    // answer true where cpp answers false.
+                    if (TryParseId(StripTrailingComment(rest), out string parentPrefix, out uint parentId)
+                        && parentPrefix == current.Prefix)
                         current.ParentsIsA.Add(parentId);
                     break;
 
@@ -183,9 +234,22 @@ public static class OboParser
                     break;
 
                 case "synonym":
-                    if (rest.Contains("EXACT", StringComparison.Ordinal))
-                        current.ExactSynonyms.Add(ExtractQuoted(rest));
+                {
+                    // Format: "text" SCOPE [dbxrefs]; only EXACT synonyms are kept.
+                    var match = s_synonymRegex.Match(rest);
+                    if (match.Success && match.Groups[2].Value == "EXACT")
+                        AddSynonym(current, match.Groups[1].Value);
                     break;
+                }
+
+                case "exact_synonym":
+                {
+                    // Pre-1.2 OBO spelling of an EXACT synonym.
+                    var match = s_exactSynonymRegex.Match(rest);
+                    if (match.Success)
+                        AddSynonym(current, match.Groups[1].Value);
+                    break;
+                }
 
                 case "is_obsolete":
                     current.IsObsolete = rest.Equals("true", StringComparison.OrdinalIgnoreCase);
@@ -206,7 +270,20 @@ public static class OboParser
     {
         if (term is null || stanzaType != "Term") return;
         if (term.Id == OboTerm.MaxId) return; // id line never seen or skipped
-        target.Terms[term.Id] = term;
+        target.Terms.Add(term);
+    }
+
+    private static void ParseDef(string rest, OboTerm term)
+    {
+        var match = s_defRegex.Match(rest);
+        if (!match.Success)
+        {
+            term.Def = ExtractQuoted(rest);
+            return;
+        }
+        term.Def = match.Groups[2].Value;
+        // Assignment, not |=: cpp parse_def overwrites whatever an earlier is_obsolete said.
+        term.IsObsolete = match.Groups[1].Success;
     }
 
     private static bool TryParseId(string text, out string prefix, out uint id)
@@ -216,14 +293,88 @@ public static class OboParser
         int colon = text.IndexOf(':');
         if (colon < 0) return false;
         prefix = text[..colon].Trim();
-        string idPart = text[(colon + 1)..].Trim();
+        string idPart = TranslateLetters(text[(colon + 1)..].Trim());
         return uint.TryParse(idPart, NumberStyles.Integer, CultureInfo.InvariantCulture, out id);
+    }
+
+    // An accession like NCIT:C25330 is not numeric, and the CVID enum needs a number: cpp
+    // obo.cpp unescape(id, translateLetters=true) maps A..Z to 1..26 (C25330 -> 325330),
+    // which is what the generated NCIT_* enum values encode.
+    private static string TranslateLetters(string id)
+    {
+        if (!id.Any(char.IsAsciiLetter))
+            return id;
+        var sb = new StringBuilder(id.Length + 4);
+        foreach (char c in id)
+        {
+            if (char.IsAsciiLetter(c))
+                sb.Append(char.ToUpperInvariant(c) - 'A' + 1);
+            else
+                sb.Append(c);
+        }
+        return sb.ToString();
     }
 
     private static string StripTrailingComment(string s)
     {
         int bang = s.IndexOf('!');
         return bang >= 0 ? s[..bang].Trim() : s;
+    }
+
+    // Mirrors cpp obo.cpp add_synonym. A synonym that differs from the term name only in which
+    // punctuation it uses ("LTQ Velos ETD" vs "LTQ Velos/ETD") escapes to the very same enum
+    // identifier as the term, so the differing characters are hex-encoded instead of
+    // underscored. Note this comparison rule is NOT the generator's escaping rule - cpp has
+    // the same two rules and they differ there too ('_' and the named UTF-8 escapes are
+    // special to CvidEnumGenerator.ToEscapedCharacters and not to this one) - so unifying
+    // them would diverge from cvgen rather than fix anything.
+    private static void AddSynonym(OboTerm term, string synonym)
+    {
+        string unescaped = Unescape(synonym);
+        string name = Unescape(term.Name);
+        if (NormalizeForComparison(unescaped) != NormalizeForComparison(name))
+        {
+            term.ExactSynonyms.Add(unescaped);
+            return;
+        }
+
+        // Equal normalizations mean equal UTF-16 lengths, so this compares position for
+        // position. cpp encodes one _xNN_ per differing BYTE; this encodes one per byte of the
+        // differing CHARACTER, which is the same thing for the ASCII punctuation every real
+        // case involves, and unlike cpp cannot emit a lone continuation byte (which is not
+        // valid UTF-8 and would come back as U+FFFD).
+        var encoded = new StringBuilder(unescaped.Length * 2);
+        for (int i = 0; i < unescaped.Length; ++i)
+        {
+            if (unescaped[i] == name[i])
+            {
+                encoded.Append(unescaped[i]);
+                continue;
+            }
+            foreach (byte b in Encoding.UTF8.GetBytes(unescaped[i].ToString()))
+                encoded.Append("_x").Append(b.ToString("X2", CultureInfo.InvariantCulture)).Append('_');
+        }
+        term.ExactSynonyms.Add(encoded.ToString());
+    }
+
+    private static string NormalizeForComparison(string s)
+    {
+        var sb = new StringBuilder(s.Length);
+        foreach (char c in s)
+            sb.Append(char.IsAsciiLetterOrDigit(c) ? c : '_');
+        return sb.ToString();
+    }
+
+    // OBO escapes the characters that are significant to its own syntax (a term name like
+    // "(?<=[ALIV])(?\!P)" would otherwise start a comment at the '!'). Mirrors cpp obo.cpp
+    // unescape(), so names and synonyms match the cpp-generated cv.cpp byte for byte.
+    private static string Unescape(string s)
+    {
+        if (!s.Contains('\\')) return s;
+        return s.Replace("\\!", "!").Replace("\\:", ":").Replace("\\,", ",")
+                .Replace("\\(", "(").Replace("\\)", ")")
+                .Replace("\\[", "[").Replace("\\]", "]")
+                .Replace("\\{", "{").Replace("\\}", "}");
     }
 
     private static string ExtractQuoted(string s)
@@ -244,8 +395,17 @@ public static class OboParser
         string relName = body[..space].Trim();
         string target = body[(space + 1)..].Trim();
 
+        // "xsd:" targets name a value TYPE, not a term, and must be skipped before the id is
+        // parsed (cpp parse_relationship does the same). TryParseId translates letters to
+        // digits for accessions like NCIT:C25330, so without this guard psi-ms.obo's 1366
+        // "relationship: has_value_type xsd:<type>" lines yield 1155 fabricated relations
+        // (xsd:float -> 61215120) and 211 silently dropped ones, sorted only by which
+        // spellings happen to overflow uint.
+        if (target.StartsWith("xsd:", StringComparison.OrdinalIgnoreCase))
+            return;
+
         if (!TryParseId(target, out string targetPrefix, out uint targetId))
-            return; // non-numeric target (e.g. NCIT:C25330) — skip
+            return; // target id neither numeric nor letter-encoded
 
         if (relName == "part_of" && targetPrefix == term.Prefix)
         {

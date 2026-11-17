@@ -168,13 +168,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 new MsDataFileScanHelper(SetSpectra, HandleLoadScanException,
                     false); // We need zero intensity points for proper display
 
-            GraphPane.Title.IsVisible = false;
             GraphPane.Legend.IsVisible = false;
-            // Scan filename / RT renders as the master-pane title, centred across the
-            // whole window. CreateGraph fills in the actual text per scan; ZedGraph
-            // reserves the title strip during DoLayout once the text is non-empty.
-            graphControl.MasterPane.Title.IsVisible = true;
-            graphControl.MasterPane.Title.Text = string.Empty;
+            // CreateGraph fills in the actual scan title per scan
+            SetScanTitle(string.Empty);
             // Make sure to use italics for "m/z"
             AbstractMSGraphItem.SetAxisText(GraphPane.XAxis, GraphsResources.AbstractMSGraphItem_CustomizeXAxis_MZ);
 
@@ -954,8 +950,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void HandleLoadScanExceptionUI(Exception ex)
         {
-            graphControl.MasterPane.Title.Text = GraphsResources.GraphFullScan_LoadScan_Spectrum_unavailable;
-            graphControl.MasterPane.Title.IsVisible = true;
+            SetScanTitle(GraphsResources.GraphFullScan_LoadScan_Spectrum_unavailable);
             MessageDlg.ShowException(this, ex);
         }
 
@@ -968,6 +963,38 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return _heatMapPane; }
         }
+
+        /// <summary>
+        /// Shows the scan title (file name and retention time, or a status message). With a single
+        /// pane it is the pane's own title, as it always was; in the multi-pane ion mobility layouts
+        /// it is the master pane title, centered across all the panes. Call after the pane layout
+        /// is set up. The master pane title text is set either way, since <see cref="TitleText"/>
+        /// reports it.
+        /// </summary>
+        private void SetScanTitle(string text)
+        {
+            var masterPane = graphControl.MasterPane;
+            bool singlePane = masterPane.PaneList.Count <= 1;
+            bool hadMasterTitle = HasMasterTitle;
+            masterPane.Title.Text = text;
+            masterPane.Title.IsVisible = !singlePane;
+            GraphPane.Title.Text = text;
+            GraphPane.Title.IsVisible = singlePane;
+
+            // The master pane reserves room for its title only when it lays out its panes, and
+            // the panes paint over an unreserved title. Lay out again when that room changes, but
+            // not otherwise, since the ion mobility layouts adjust pane widths after the layout.
+            if (HasMasterTitle != hadMasterTitle)
+            {
+                using (var g = graphControl.CreateGraphics())
+                {
+                    masterPane.DoLayout(g);
+                }
+            }
+        }
+
+        private bool HasMasterTitle =>
+            graphControl.MasterPane.Title.IsVisible && !string.IsNullOrEmpty(graphControl.MasterPane.Title.Text);
 
         private Color GetTransitionColor(TransitionFullScanInfo t)
         {
@@ -1087,8 +1114,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     // Need to check again once on the UI thread
                     if (ReferenceEquals(fullScans, _msDataFileScanHelper.MsDataSpectra))
                     {
-                        graphControl.MasterPane.Title.Text = GraphsResources.GraphFullScan_LoadScan_Loading___;
-                        graphControl.MasterPane.Title.IsVisible = true;
+                        SetScanTitle(GraphsResources.GraphFullScan_LoadScan_Loading___);
                         graphControl.Refresh();
                     }
                 });
@@ -1147,15 +1173,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 _heatMapPane.ShowHeatMap = showHeatmap;
                 double retentionTime = _msDataFileScanHelper.MsDataSpectra[0].RetentionTime ?? _msDataFileScanHelper.ScanProvider.Times[_msDataFileScanHelper.ScanIndex];
                 string titleText = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
-                // Show the scan title once at the top of the master pane (centered across
-                // the full window) so it doesn't anchor over only one pane in multi-pane modes.
-                graphControl.MasterPane.Title.Text = titleText;
-                graphControl.MasterPane.Title.IsVisible = true;
 
                 if (showStick && showHeatmap)
                 {
                     // S+H or S+H+M: stick on top, heatmap on bottom (+ optional mobilogram on right)
                     SetupDualPaneLayout(showMobilogram);
+                    SetScanTitle(titleText);
 
                     graphControl.IsEnableVPan = graphControl.IsEnableVZoom = true;
                     _heatMapPane.Legend.IsVisible = true;
@@ -1231,6 +1254,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     // H+M: heatmap + mobilogram side by side, no stick pane
                     SetupHeatmapMobilogramLayout();
+                    SetScanTitle(titleText);
 
                     graphControl.IsEnableVPan = graphControl.IsEnableVZoom = true;
                     _heatMapPane.Legend.IsVisible = true;
@@ -1265,6 +1289,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     // H only: single-pane heatmap
                     SetupSinglePaneLayout();
+                    SetScanTitle(titleText);
 
                     _heatMapPane.CurveList.Clear();
                     _heatMapPane.GraphObjList.Clear();
@@ -1282,14 +1307,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (!_showIonSeriesAnnotations)
                         AddTransitionLabels(_heatMapPane, null);
 
-                    _heatMapPane.Title.IsVisible = false;
-
                     FireSelectedScanChanged(retentionTime);
                 }
                 else
                 {
                     // S only: heatmap pane used for stick rendering (ShowHeatMap=false)
                     SetupSinglePaneLayout();
+                    SetScanTitle(titleText);
 
                     GraphPane.CurveList.Clear();
                     GraphPane.GraphObjList.Clear();
@@ -1307,8 +1331,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     AddExtractionBoxes(GraphPane);
                     if (!_showIonSeriesAnnotations)
                         AddTransitionLabels(GraphPane, massErrors);
-
-                    GraphPane.Title.IsVisible = false;
 
                     FireSelectedScanChanged(retentionTime);
                 }
@@ -1344,9 +1366,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     AddTransitionLabels(GraphPane, massErrors);
 
                 double retentionTime = _msDataFileScanHelper.MsDataSpectra[0].RetentionTime ?? _msDataFileScanHelper.ScanProvider.Times[_msDataFileScanHelper.ScanIndex];
-                graphControl.MasterPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
-                graphControl.MasterPane.Title.IsVisible = true;
-                GraphPane.Title.IsVisible = false;
+                SetScanTitle(string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime));
 
                 FireSelectedScanChanged(retentionTime);
             }
@@ -2232,8 +2252,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _mobilogramPane.CurveList.Clear();
                 _mobilogramPane.GraphObjList.Clear();
             }
-            graphControl.MasterPane.Title.Text = _msDataFileScanHelper.FileName;
-            graphControl.MasterPane.Title.IsVisible = true;
+            SetScanTitle(_msDataFileScanHelper.FileName);
         }
 
         [Browsable(true)]

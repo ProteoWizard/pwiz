@@ -62,6 +62,20 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public sealed class LibraryStringInterner
     {
+        /// <summary>
+        /// <paramref name="pool"/>'s shared instance for <paramref name="value"/>, or the value
+        /// unchanged when no pool was supplied. Empty is returned as-is: it carries no peptide
+        /// identity, so pooling it would only add a lookup and skew the pool's collapse summary.
+        /// The one rule every row reader that canonicalizes sequences applies, so rows read by
+        /// different readers share instances the same way.
+        /// </summary>
+        public static string Canonicalize(LibraryStringInterner pool, string value)
+        {
+            if (pool == null || string.IsNullOrEmpty(value))
+                return value;
+            return pool.Intern(value);
+        }
+
         private readonly Dictionary<string, string> _pool =
             new Dictionary<string, string>(StringComparer.Ordinal);
         private long _totalRefs;

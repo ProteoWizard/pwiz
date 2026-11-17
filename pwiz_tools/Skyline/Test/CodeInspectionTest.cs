@@ -419,7 +419,8 @@ namespace pwiz.SkylineTest
                 "DetectionsGraphController", // An intermediate type, actually exercised in DetectionsPlotTest
                 "MassErrorGraphController", // An intermediate type, actually exercised in MassErrorGraphsTest 
                 "PeptideSettingsUI.TabWithPage", // An intermediate type
-                "BackgroundEventThreadsTestForm" // Used in tests itself, not a UI thing    
+                "BackgroundEventThreadsTestForm", // Used in tests itself, not a UI thing
+                "SlowLoadingForm" // Used in TestMcpConnectorShowForm itself, not a UI thing
             };
 
             foreach (var formName in foundForms)
@@ -710,7 +711,7 @@ namespace pwiz.SkylineTest
                 { typeof(Kernel32Test), 5 },
                 { typeof(Ole32Test), 1 },
                 { typeof(Shell32Test), 1 },
-                { typeof(User32Test), 9 }
+                { typeof(User32Test), 11 }
             };
 
             // add types from production code. The pwiz.Common.SystemUtil.PInvoke namespace

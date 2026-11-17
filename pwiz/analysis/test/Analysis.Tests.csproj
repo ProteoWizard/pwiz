@@ -40,4 +40,11 @@
     <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
   </PropertyGroup>
 
+  <!-- Analysis.csproj registers the lockmass refiners on $(IAgreeToVendorLicenses) alone, not
+       $(NativeVendorsAvailable), because the Waters SDK also ships for Linux. Tests of what
+       the factory registers gate on this instead, so a licensed Linux build still covers it. -->
+  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_WATERS_SUPPORT</DefineConstants>
+  </PropertyGroup>
+
 </Project>

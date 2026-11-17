@@ -53,11 +53,19 @@
 
 .PARAMETER Sign
     Authenticode-sign Osprey.exe, the Setup.exe and its uninstaller. OFF by default. Also enabled by
-    setting OSPREY_SIGN=1. Requires signtool on PATH (or OSPREY_SIGNTOOL) and a
-    cert: either OSPREY_SIGN_PFX (+ OSPREY_SIGN_PFX_PASSWORD) or, with no PFX,
+    setting OSPREYDEV_SIGN=1. Requires signtool on PATH (or OSPREYDEV_SIGNTOOL) and a
+    cert: either OSPREYDEV_SIGN_PFX (+ OSPREYDEV_SIGN_PFX_PASSWORD) or, with no PFX,
     signtool's machine-store auto-select (/a). If signing is requested but the
     tool or cert is unavailable this script HARD-FAILS rather than shipping an
     unsigned artifact that looks signed.
+
+.PARAMETER IAgreeToVendorLicenses
+    Publish with the instrument vendor readers (-p:IAgreeToVendorLicenses=true), so the
+    package reads .raw, .d, .wiff and the other vendor formats as well as mzML. Their SDKs
+    are published beside Osprey.exe and their license terms (EULA.<Vendor>.txt) beside
+    LICENSE, as the ProteoWizard installer ships them. Linux packages get the
+    cross-platform readers only. Without it the package reads mzML only, which is what a
+    user is told when they give it a vendor file.
 
 .PARAMETER TeamCity
     Emit TeamCity service messages (progress + publishArtifacts) so a CI config
@@ -84,6 +92,7 @@ param(
     [switch]$NoZip,
     [switch]$IncludePdb,
     [switch]$Sign,
+    [switch]$IAgreeToVendorLicenses,
     [switch]$TeamCity
 )
 
@@ -126,33 +135,33 @@ function Publish-Artifact-Tc([string]$path) {
 
 # --- Signing (env-gated, hard-fail when requested-but-unavailable) -------
 function Test-OspreySignEnabled {
-    return $Sign -or ($env:OSPREY_SIGN -eq '1')
+    return $Sign -or ($env:OSPREYDEV_SIGN -eq '1')
 }
 
 # The signtool.exe path and the arguments that precede the file to sign, resolved
-# from the OSPREY_SIGN* environment. Shared by Invoke-OspreySign (Osprey.exe in the
+# from the OSPREYDEV_SIGN* environment. Shared by Invoke-OspreySign (Osprey.exe in the
 # stage) and New-OspreySetup, which hands the same command to ISCC so the Setup.exe
 # and its uninstaller are signed as part of the compile.
 function Get-OspreySignCommand {
-    $signtool = $env:OSPREY_SIGNTOOL
+    $signtool = $env:OSPREYDEV_SIGNTOOL
     if (-not $signtool) {
         $cmd = Get-Command signtool.exe -ErrorAction SilentlyContinue
         if ($cmd) { $signtool = $cmd.Source }
     }
     if (-not $signtool -or -not (Test-Path $signtool)) {
-        Write-Error "Signing requested but signtool.exe not found (set OSPREY_SIGNTOOL or add it to PATH). Refusing to ship an unsigned artifact."
+        Write-Error "Signing requested but signtool.exe not found (set OSPREYDEV_SIGNTOOL or add it to PATH). Refusing to ship an unsigned artifact."
         exit 3
     }
 
-    $timestampUrl = if ($env:OSPREY_SIGN_TIMESTAMP_URL) { $env:OSPREY_SIGN_TIMESTAMP_URL } else { 'http://timestamp.digicert.com' }
+    $timestampUrl = if ($env:OSPREYDEV_SIGN_TIMESTAMP_URL) { $env:OSPREYDEV_SIGN_TIMESTAMP_URL } else { 'http://timestamp.digicert.com' }
     $signArgs = @('sign', '/fd', 'SHA256', '/tr', $timestampUrl, '/td', 'SHA256')
-    if ($env:OSPREY_SIGN_PFX) {
-        if (-not (Test-Path $env:OSPREY_SIGN_PFX)) {
-            Write-Error "OSPREY_SIGN_PFX points to a missing file: $($env:OSPREY_SIGN_PFX)"
+    if ($env:OSPREYDEV_SIGN_PFX) {
+        if (-not (Test-Path $env:OSPREYDEV_SIGN_PFX)) {
+            Write-Error "OSPREYDEV_SIGN_PFX points to a missing file: $($env:OSPREYDEV_SIGN_PFX)"
             exit 3
         }
-        $signArgs += @('/f', $env:OSPREY_SIGN_PFX)
-        if ($env:OSPREY_SIGN_PFX_PASSWORD) { $signArgs += @('/p', $env:OSPREY_SIGN_PFX_PASSWORD) }
+        $signArgs += @('/f', $env:OSPREYDEV_SIGN_PFX)
+        if ($env:OSPREYDEV_SIGN_PFX_PASSWORD) { $signArgs += @('/p', $env:OSPREYDEV_SIGN_PFX_PASSWORD) }
     } else {
         # No PFX: let signtool auto-select a suitable cert from the machine store.
         $signArgs += '/a'
@@ -193,10 +202,15 @@ function New-OspreyStage {
         '--self-contained', 'true',
         '-p:PublishSingleFile=false',
         '-p:Platform=x64',
-        "-p:Version=$version",
+        # No -p:Version: as in build.ps1, a global property would also stamp the shared
+        # libraries (BiblioSpec.IO) with Osprey's version. Directory.Build.targets stamps
+        # the Osprey projects with $version from the same version.ps1; checked below.
         '-o', $stageDir,
         '-v', 'minimal', '--nologo'
     )
+    if ($IAgreeToVendorLicenses) {
+        $publishArgs += '-p:IAgreeToVendorLicenses=true'
+    }
     # Out-Host keeps publish output visible/logged without it leaking into this
     # function's return value (PowerShell returns the whole success stream).
     & dotnet @publishArgs | Out-Host
@@ -204,12 +218,41 @@ function New-OspreyStage {
         Write-Error "dotnet publish failed for $Rid (exit $LASTEXITCODE)"
         exit $LASTEXITCODE
     }
+    # The stamp target is ContinueOnError, so an unstamped publish still succeeds with the
+    # 26.1.1.0 placeholder; refuse to package it under a dated name.
+    $publishedVersion = [System.Reflection.AssemblyName]::GetAssemblyName((Join-Path $stageDir 'Osprey.dll')).Version.ToString()
+    if ($publishedVersion -ne $version) {
+        Write-Error "Published Osprey.dll is version $publishedVersion, expected $version; the version stamp in Directory.Build.targets did not run"
+        exit 3
+    }
+
+    # The agreement reaches the vendor projects only as a property, and a publish that did not
+    # receive it still succeeds, with every reader in its no-vendor-support mode. The Thermo
+    # SDK is managed and cross-platform, so its absence from either RID means the vendor
+    # readers were not built in.
+    # The native SDKs follow a second property (NativeVendorsAvailable, agreement AND a Windows
+    # target), so a Windows package is also checked for one of them: Bruker's timsdata.dll.
+    if ($IAgreeToVendorLicenses) {
+        $vendorSdks = @('ThermoFisher.CommonCore.RawFileReader.dll')
+        if ($Rid -like 'win-*') {
+            $vendorSdks += 'timsdata.dll'
+        }
+        foreach ($sdk in $vendorSdks) {
+            if (-not (Test-Path (Join-Path $stageDir $sdk))) {
+                Write-Error "Published $Rid without the vendor SDKs ($sdk is missing) although -IAgreeToVendorLicenses was given"
+                exit 3
+            }
+        }
+    }
 
     if (-not $IncludePdb) {
         Get-ChildItem -Path $stageDir -Filter *.pdb -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force
     }
 
     Add-OspreyDocs -StageDir $stageDir
+    if ($IAgreeToVendorLicenses) {
+        Add-VendorEulas -StageDir $stageDir
+    }
 
     # Sign the Windows exe inside the stage before zipping/Setup packaging.
     if ($Rid -like 'win-*') {
@@ -266,6 +309,21 @@ function Add-OspreyDocs {
     [System.IO.File]::WriteAllText($readmeStaged, $readme, (New-Object System.Text.UTF8Encoding $false))
 
     Copy-Item (Join-Path $repoRoot 'LICENSE') (Join-Path $StageDir 'LICENSE') -Force
+}
+
+# --- Vendor EULAs ---------------------------------------------------------
+# A package published with the vendor SDKs carries their license terms beside LICENSE, as the
+# ProteoWizard installer does (scripts/installer/build.ps1). Every EULA goes into every package:
+# which SDKs a RID can use is the vendor projects' decision, and a superfluous license file is
+# harmless where a missing one is not.
+function Add-VendorEulas {
+    param([string]$StageDir)
+    $eulas = Get-ChildItem (Join-Path $repoRoot 'pwiz\data\vendor_readers') -Filter 'EULA.*.txt' -Recurse -File
+    if (-not $eulas) {
+        Write-Error "No vendor EULAs found under pwiz/data/vendor_readers"
+        exit 3
+    }
+    $eulas | ForEach-Object { Copy-Item $_.FullName (Join-Path $StageDir $_.Name) -Force }
 }
 
 # --- Zip (single versioned top-level folder) ----------------------------

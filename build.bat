@@ -104,7 +104,10 @@ REM # only wraps its built-in .NET runner — not the Command Line runner that
 REM # invokes this script. Without this, CI builds would produce no coverage data.
 if defined TEAMCITY_VERSION set COVERAGE=1
 
-set MSBUILD_PROPS=-p:Configuration=%CONFIG%
+REM # x64, the platform Skyline, Osprey and the installer build pwiz-sharp with, so they all share
+REM # one bin\x64\<Config> tree and these tests run against the binaries that ship. Pwiz.sln's x64
+REM # configurations map every project to x64. Run-Tests-Parallel.ps1 passes the same platform.
+set MSBUILD_PROPS=-p:Configuration=%CONFIG% -p:Platform=x64
 if %IAGREE%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:IAgreeToVendorLicenses=true
 if %AUTOMATED%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:AutomatedBuild=true
 if %WITHOUT_MASCOT%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:MascotSupport=false
@@ -198,6 +201,17 @@ for %%r in ("%SCRIPT_DIR%\pwiz" "%SCRIPT_DIR%\scripts\installer" "%SCRIPT_DIR%\p
     )
 )
 if not defined TEST_TARGET (set "ERROR_TEXT=test discovery found no *.Tests.csproj under pwiz, scripts/installer or the pwiz_tools projects" & set EXIT=1 & goto error)
+
+REM # A no-vendor build compiled only msconvert above (Pwiz.sln also holds the vendor-gated
+REM # suites), but the test step runs every discovered suite with --no-build, so build each
+REM # one here; otherwise every suite fails with "The test source file ... was not found".
+if %IAGREE%==0 (
+    for %%p in (%TEST_TARGET%) do (
+        echo ##teamcity[progressMessage 'dotnet build %%~np ^(%CONFIG%, vendor=0^)']
+        dotnet build "%%p" -nologo %MSBUILD_PROPS%
+        if !ERRORLEVEL! NEQ 0 (set EXIT=1 & set "ERROR_TEXT=dotnet build %%~np failed" & goto error)
+    )
+)
 
 REM # Test step: scripts\Run-Tests-Parallel.ps1 spawns one parallel
 REM # `dotnet test <project>` job per csproj, each redirected to its own log

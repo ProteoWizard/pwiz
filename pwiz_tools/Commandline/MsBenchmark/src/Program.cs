@@ -116,7 +116,7 @@ public static class Program
         return 0;
     }
 
-    private static void EnumerateSpectra(string filename, IList<string> filters, DetailLevel detail,
+    private static void EnumerateSpectra(string filename, List<string> filters, DetailLevel detail,
                                           bool reverse, bool combineIms)
     {
         Console.Out.WriteLine($"Input:   {filename} ({new FileInfo(filename).Length / (1024L * 1024L)} MiB)");

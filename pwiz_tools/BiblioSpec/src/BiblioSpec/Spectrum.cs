@@ -414,7 +414,7 @@ public class Spectrum
     /// Find the peak with the largest intensity (ties broken by larger m/z). Returns
     /// <c>default</c> for an empty list.
     /// </summary>
-    private static PeakT FindBasePeak(IReadOnlyList<PeakT> peaks)
+    private static PeakT FindBasePeak(List<PeakT> peaks)
     {
         if (peaks.Count == 0) return default;
         var best = peaks[0];

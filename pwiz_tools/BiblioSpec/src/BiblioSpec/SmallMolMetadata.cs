@@ -1,5 +1,7 @@
 // Port of pwiz_tools/BiblioSpec/src/SmallMolMetadata.h
 
+using pwiz.BiblioSpec.IO;
+
 namespace Pwiz.Tools.BiblioSpec;
 
 /// <summary>
@@ -70,47 +72,25 @@ public sealed class SmallMolMetadata : IEquatable<SmallMolMetadata>
         HashCode.Combine(InchiKey, PrecursorAdduct, ChemicalFormula, MoleculeName, OtherKeys, PrecursorMzDeclared);
 
     /// <summary>
-    /// Schema for the SQL columns used to persist small-molecule metadata. Matches cpp
+    /// Schema for the SQL columns used to persist small-molecule metadata: the shared
+    /// <see cref="BlibSchema.SmallMoleculeColumns"/>, which match cpp
     /// <c>SmallMolMetadata::DEFINE_SQL_COLS_AND_COMMENTS</c>; order matters because cpp
     /// uses it for sorting.
     /// </summary>
-    public static readonly (string Name, string Description)[] SqlColumns =
-    {
-        ("moleculeName", "precursor molecule's name (not needed for peptides)"),
-        ("chemicalFormula", "precursor molecule's neutral formula, may include value for unexplained mass e.g. H84C44N12O13[+3.3122] (not needed for peptides)"),
-        ("precursorAdduct", "ionizing adduct e.g. [M+Na], [2M-H2O+2H] etc (not needed for peptides)"),
-        ("inchiKey", "molecular identifier for structure retrieval (not needed for peptides)"),
-        ("otherKeys", "alternative molecular identifiers for structure retrieval, tab separated name:value pairs e.g. cas:58-08-2\\thmdb:01847 (not needed for peptides)"),
-    };
+    public static readonly (string Name, string Description)[] SqlColumns = BlibSchema.SmallMoleculeColumns;
 
     /// <summary>Column names only, in cpp order.</summary>
-    public static IEnumerable<string> SqlColumnNames => SqlColumns.Select(c => c.Name);
+    public static IEnumerable<string> SqlColumnNames => BlibSchema.SmallMoleculeColumnNames;
 
     /// <summary>
     /// cpp <c>sql_col_decls()</c> equivalent: emit a CREATE-TABLE column list, one per line,
     /// each line terminated by a comma and the cpp inline-comment.
     /// </summary>
-    public static string SqlColumnDeclarations()
-    {
-        var sb = new System.Text.StringBuilder();
-        foreach (var (name, description) in SqlColumns)
-        {
-            sb.Append(name).Append(' ').Append("VARCHAR(128)").Append(", -- ").Append(description).Append('\n');
-        }
-        return sb.ToString();
-    }
+    public static string SqlColumnDeclarations() => BlibSchema.SmallMoleculeColumnDeclarations();
 
     /// <summary>
     /// cpp <c>sql_col_names_csv()</c> equivalent: leading-comma list of column names usable
     /// after an existing column list (e.g. <c>"id, peptide" + SqlColumnNamesCsv()</c>).
     /// </summary>
-    public static string SqlColumnNamesCsv()
-    {
-        var sb = new System.Text.StringBuilder();
-        foreach (var (name, _) in SqlColumns)
-        {
-            sb.Append(", ").Append(name);
-        }
-        return sb.ToString();
-    }
+    public static string SqlColumnNamesCsv() => BlibSchema.SmallMoleculeColumnNamesCsv();
 }

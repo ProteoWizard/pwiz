@@ -100,7 +100,9 @@ namespace pwiz.Skyline.Util
             var settings = Settings.Default;
             settings.MergeChanges(ReadSettings(BaseConfigFilePath), ReadSettings(SourcePath));
             settings.Save();
-            File.Copy(SourcePath, BaseConfigFilePath, true);
+            using var saver = new FileSaver(BaseConfigFilePath);
+            saver.CopyFile(SourcePath);
+            saver.Commit();
         }
 
         /// <summary>

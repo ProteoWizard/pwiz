@@ -23,8 +23,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Pipeline;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.Tasks;
 
@@ -34,7 +34,7 @@ namespace pwiz.Osprey.Test
     /// Pins <see cref="PipelineContext"/>'s byproduct cache + registry-driven
     /// lazy materialization. Focuses on the failure-surfacing contract: a
     /// consumer's <see cref="PipelineContext.Get{TInfo}"/> drives the registered
-    /// producer's <see cref="OspreyTask.Rehydrate"/>, and -- unlike the driver
+    /// producer's <see cref="OspreyTask.Rehydrate(PipelineContext)"/>, and -- unlike the driver
     /// loop, which inspects Run's bool -- must not silently swallow a failed
     /// rehydrate. The discriminator is the requested exit code: a genuine
     /// failure (ExitCode != 0) throws; a success-but-stop (ExitCode == 0, whose
@@ -336,105 +336,49 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// A DEFERRED milestone does its work on the first <c>Value</c> read, not when it is
-        /// published (issue #4597). PerFileRescore publishes <see cref="RescoredEntries"/>
-        /// that way because reaching the milestone after the streamed rescore means
-        /// re-reading every file's artifacts - whole-run join work at the end of a per-file
-        /// HPC task whose process exits there. Three things are pinned:
+        /// Publishing <see cref="RescoredEntries"/> materializes nothing, and reading its
+        /// <c>Value</c> is refused. Its runs are rebuilt one at a time by the consumer that
+        /// reads them (issue #4597), so a <c>--task PerFileRescoring</c> worker, which reads
+        /// nothing, pays for nothing.
         ///
-        /// <para>Publishing must not build. The DEBUG milestone-ordering guard inspects every
-        /// published <see cref="PerFileEntries"/>, so a guard that reached through
-        /// <c>Value</c> would make the DEBUG build pay the whole join at publish time - and
-        /// pay it before the rescore that fills the buffer has even run.</para>
+        /// <para>Publishing must not materialize. The DEBUG milestone-ordering guard inspects
+        /// every published <see cref="PerFileEntries"/>, so a guard that reached through the
+        /// entries would make the DEBUG build pay for a run before the rescore that fills it has
+        /// even run.</para>
         ///
-        /// <para>Reading builds, exactly once. The build overlays reconciled parquets and
-        /// appends gap-fill rows; running it twice over one buffer would duplicate them.</para>
-        ///
-        /// <para>Not reading builds nothing. That is the whole point: a
-        /// <c>--task PerFileRescoring</c> worker skips the join because nothing pulled it.</para>
+        /// <para><c>Value</c> must throw rather than hand back the buffer: its lists are EMPTY
+        /// by design, so a consumer that read it would receive one empty list per file with no
+        /// exception and no warning - the blib-with-no-precursors failure
+        /// <see cref="PerFileEntries"/> warns about.</para>
         /// </summary>
         [TestMethod]
-        public void TestDeferredMilestoneBuildsOnFirstValueRead()
+        public void TestRescoredMilestoneMaterializesOnlyPerFile()
         {
             var ctx = ContextFor(new StubProducerTask(publishBeforeStop: false, exitCode: 0));
             var buffer = BufferWithOneFile();
-            int builds = 0;
+            int materialized = 0;
             // Over a buffer that already carries an earlier milestone, which is the real
             // pipeline shape: PerFileScoring -> FirstPassFDR -> PerFileRescore all publish over
             // ONE list, and the DEBUG ordering guard runs on the second publish, not the first.
             ctx.Publish(new CompactedEntries(buffer));
             Assert.IsTrue(ctx.TryGet<CompactedEntries>(out _));
-            ctx.Publish(new RescoredEntries(buffer, () =>
+            ctx.Publish(new RescoredEntries(buffer, (fileName, entries) =>
             {
-                builds++;
-                buffer[0].Value.Add(new FdrEntry());
+                materialized++;
+                entries.Add(new FdrEntry());
             }));
-            Assert.AreEqual(0, builds, @"Publishing a deferred milestone must not build it");
+            Assert.AreEqual(0, materialized, @"Publishing the milestone must not materialize a run");
 
             Assert.IsTrue(ctx.TryGet<RescoredEntries>(out var milestone));
-            Assert.AreEqual(0, builds, @"Holding the milestone token is not a pull");
             Assert.AreSame(buffer, milestone.BufferIdentity);
-            Assert.AreEqual(0, builds, @"Reading the buffer's identity is not a pull either");
+            Assert.AreEqual(0, materialized, @"Reading the buffer's identity is not a pull");
+            Assert.ThrowsException<InvalidOperationException>(() => milestone.Value);
+            Assert.AreEqual(0, materialized, @"A refused Value read must not materialize either");
 
-            Assert.AreSame(buffer, milestone.Value);
-            Assert.AreEqual(1, builds);
-            Assert.AreEqual(1, buffer[0].Value.Count, @"The build fills the shared buffer in place");
-
-            var unused = milestone.Value;
-            Assert.AreEqual(1, builds, @"A second read must not re-run the build");
-            Assert.AreEqual(1, buffer[0].Value.Count);
-        }
-
-        /// <summary>
-        /// A build that THROWS stays thrown. The build refills survivor lists, then overlays
-        /// reconciled parquets and appends gap-fill rows, so a second attempt over the same
-        /// buffer would duplicate whatever the first one finished - and a reader who quietly
-        /// got the half-filled pool instead would write a blib from part of the run and report
-        /// a plausible wrong number. The failure is cached and re-thrown, and the partial work
-        /// is never resumed.
-        /// </summary>
-        [TestMethod]
-        public void TestDeferredMilestoneRethrowsAndDoesNotRebuildAfterFailure()
-        {
-            var buffer = BufferWithOneFile();
-            int builds = 0;
-            var milestone = new RescoredEntries(buffer, () =>
-            {
-                builds++;
-                buffer[0].Value.Add(new FdrEntry());   // the partial fill a retry must not repeat
-                throw new InvalidDataException(@"survivor refill failed");
-            });
-
-            for (int read = 0; read < 2; read++)
-            {
-                try
-                {
-                    var unused = milestone.Value;
-                    Assert.Fail(@"Expected the deferred build's failure to surface on read");
-                }
-                catch (InvalidDataException)
-                {
-                    // expected on BOTH reads: the exception is cached, not re-attempted
-                }
-            }
-            Assert.AreEqual(1, builds, @"A failed build must not be retried by the next reader");
-            Assert.AreEqual(1, buffer[0].Value.Count, @"and must not add to its own partial work");
-        }
-
-        /// <summary>
-        /// The undeferred constructor is the arm where the buffer already holds its
-        /// post-rescore state (the resident survivor pool, and both rehydrate paths): reading
-        /// it hands back the same list with nothing to run.
-        /// </summary>
-        [TestMethod]
-        public void TestUndeferredMilestoneReadsStraightThrough()
-        {
-            var buffer = BufferWithOneFile();
-            buffer[0].Value.Add(new FdrEntry());
-            var milestone = new RescoredEntries(buffer);
-            Assert.AreSame(buffer, milestone.Value);
-            Assert.AreSame(buffer, milestone.BufferIdentity);
-            Assert.AreEqual(1, milestone.Value[0].Value.Count);
+            Assert.AreEqual(1, milestone.MaterializeFile(@"file1").Count);
+            Assert.AreEqual(1, materialized);
+            milestone.DropFile(@"file1");
+            Assert.AreEqual(0, buffer[0].Value.Count, @"DropFile empties the run again");
         }
 
         /// <summary>
@@ -442,42 +386,15 @@ namespace pwiz.Osprey.Test
         /// fold without holding the run: each file is materialized as the consumer reaches it
         /// and DROPPED when the consumer moves on, so the peak is one file's survivors rather
         /// than every file's at once.
-        ///
-        /// <para>The last assertion is why this is a test and not a comment. After a stream the
-        /// buffer's lists are EMPTY rather than unbuilt, so a consumer that then read
-        /// <c>Value</c> would receive one empty list per file with no exception and no warning
-        /// - the blib-with-no-precursors failure <see cref="PerFileEntries"/> warns about. It
-        /// has to throw instead, because there is no honest value to return and rebuilding
-        /// silently would restore the very peak the stream exists to avoid.</para>
         /// </summary>
         [TestMethod]
-        public void TestStreamFilesDropsEachFileAndRefusesALaterValueRead()
+        public void TestStreamFilesDropsEachFile()
         {
-            // No per-file source - the resident A/B oracle, where the run kept its buffer and
-            // has nothing to rebuild a dropped file from. StreamFiles falls back to the
-            // whole-run build and drops nothing.
-            var resident = BufferWithFiles(@"file1", @"file2");
-            int residentBuilds = 0;
-            var residentMilestone = new RescoredEntries(resident, () =>
-            {
-                residentBuilds++;
-                foreach (var kv in resident)
-                    kv.Value.Add(new FdrEntry());
-            });
-            var residentWalk = new List<string>();
-            foreach (var kv in residentMilestone.StreamFiles())
-                residentWalk.Add(kv.Key);
-            Assert.AreEqual(1, residentBuilds);
-            CollectionAssert.AreEqual(new[] { @"file1", @"file2" }, residentWalk);
-            Assert.AreEqual(2, ResidentEntryCount(resident), @"The fallback walk must not drop");
-            Assert.AreSame(resident, residentMilestone.Value);
-
-            // With a per-file source: the whole-run build never runs, and exactly ONE file is
-            // resident at any point in the walk - the property the whole change exists for.
+            // Exactly ONE file is resident at any point in the walk - the property the whole
+            // change exists for.
             var streamed = BufferWithFiles(@"file1", @"file2");
-            int wholeRunBuilds = 0;
             var materialized = new List<string>();
-            var milestone = new RescoredEntries(streamed, () => wholeRunBuilds++,
+            var milestone = new RescoredEntries(streamed,
                 (fileName, entries) =>
                 {
                     materialized.Add(fileName);
@@ -489,7 +406,6 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(1, kv.Value.Count, @"The current file must arrive materialized");
                 residentDuringWalk.Add(ResidentEntryCount(streamed));
             }
-            Assert.AreEqual(0, wholeRunBuilds, @"A streamed walk must not build the whole-run pool");
             CollectionAssert.AreEqual(new[] { @"file1", @"file2" }, materialized);
             CollectionAssert.AreEqual(new[] { 1, 1 }, residentDuringWalk);
             Assert.AreEqual(0, ResidentEntryCount(streamed), @"The last file is dropped too");
@@ -499,8 +415,6 @@ namespace pwiz.Osprey.Test
             foreach (var kv in milestone.StreamFiles())
                 Assert.AreEqual(1, kv.Value.Count);
             CollectionAssert.AreEqual(new[] { @"file1", @"file2", @"file1", @"file2" }, materialized);
-
-            Assert.ThrowsException<InvalidOperationException>(() => milestone.Value);
         }
 
         /// <summary>
@@ -514,17 +428,17 @@ namespace pwiz.Osprey.Test
         /// overwritten and report q-values no run computed. Asserted by composing two overlays
         /// that both append, and reading back the sequence.</para>
         ///
-        /// <para>The refusal is the half that would otherwise fail silently. A resident run
-        /// stamps its entries in place and keeps them, so an overlay handed to it is simply
-        /// never called - the stage believes it applied something it did not, which is the
-        /// shape of defect this area has produced repeatedly.</para>
+        /// <para>The refusal is the half that would otherwise fail silently: an overlay handed
+        /// to a milestone with no source is never called, and the stage believes it applied
+        /// something it did not, which is the shape of defect this area has produced
+        /// repeatedly.</para>
         /// </summary>
         [TestMethod]
         public void TestPostMaterializeOverlaysRunInOrderAndOnlyWithAPerFileSource()
         {
             var buffer = BufferWithFiles(@"file1", @"file2");
             var applied = new List<string>();
-            var milestone = new RescoredEntries(buffer, () => { },
+            var milestone = new RescoredEntries(buffer,
                 (fileName, entries) => applied.Add(fileName + @":source"));
             milestone.AddPostMaterialize((fileName, entries) => applied.Add(fileName + @":first"));
             milestone.AddPostMaterialize((fileName, entries) => applied.Add(fileName + @":second"));
@@ -554,9 +468,9 @@ namespace pwiz.Osprey.Test
             CollectionAssert.AreEqual(
                 new[] { @"file2:source", @"file2:first", @"file2:second" }, applied);
 
-            var resident = new RescoredEntries(BufferWithFiles(@"file1"));
+            var sourceless = new RescoredEntries(BufferWithFiles(@"file1"), null);
             Assert.ThrowsException<InvalidOperationException>(
-                () => resident.AddPostMaterialize((fileName, entries) => { }));
+                () => sourceless.AddPostMaterialize((fileName, entries) => { }));
         }
 
         private static List<KeyValuePair<string, List<FdrEntry>>> BufferWithOneFile()

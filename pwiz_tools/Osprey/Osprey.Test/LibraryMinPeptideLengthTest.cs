@@ -162,10 +162,10 @@ namespace pwiz.Osprey.Test
                     new LibraryFragment { Mz = 200.0, RelativeIntensity = 0.8f }
                 }
             };
-            using (var writer = new BlibWriter(path))
+            using (var writer = new OspreyBlibWriter(path))
             {
                 writer.AddSpectrum(entry, @"test.mzML", 10.5);
-                writer.FinalizeDatabase();
+                writer.Complete();
             }
             return path;
         }

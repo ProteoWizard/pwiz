@@ -1224,7 +1224,12 @@ namespace pwiz.Skyline.Model
             {
                 newExplicitStaticMods = ExplicitMods.StaticModifications;
             }
-                
+            // Crosslinked peptides do not receive implicit static modifications, so keep them explicit
+            if (newExplicitStaticMods == null && !CrosslinkStructure.IsEmpty)
+            {
+                newExplicitStaticMods = ExplicitMods.StaticModifications;
+            }
+
             // Drop explicit mods if matching implicit mods are found in the target document.
             IList<TypedExplicitModifications> newExplicitHeavyMods = new List<TypedExplicitModifications>();
             // For each heavy label type, add explicit mods if static mods not found in the target document.

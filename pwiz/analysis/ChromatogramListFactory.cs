@@ -24,7 +24,7 @@ public delegate IChromatogramList ChromatogramListFilterBuilder(string args, ICh
 /// jump-table — it can still be applied programmatically via
 /// <see cref="ChromatogramListSavitzkyGolaySmoother"/>.)
 /// </remarks>
-public static class ChromatogramListFactory
+public static partial class ChromatogramListFactory
 {
     private static readonly Dictionary<string, ChromatogramListFilterBuilder> s_builders = BuildDefaultRegistry();
 

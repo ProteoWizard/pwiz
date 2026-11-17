@@ -40,6 +40,8 @@ public sealed class StoredZipArchive : IDisposable
     /// <summary>Entry names, in central-directory order.</summary>
     public IReadOnlyList<string> EntryNames => _entries.ConvertAll(e => e.Name);
 
+    /// <summary>Reads <paramref name="path"/>'s central directory, so its entries can then be
+    /// opened. Throws if it is not a zip, or if any entry in it is compressed.</summary>
     public StoredZipArchive(string path)
     {
         _path = path;
@@ -67,6 +69,7 @@ public sealed class StoredZipArchive : IDisposable
     public string? FindEntry(string suffix) =>
         _entries.Find(e => e.Name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))?.Name;
 
+    /// <summary>Closes every stream handed out by <see cref="OpenSeekable"/>.</summary>
     public void Dispose()
     {
         foreach (var s in _open)

@@ -385,8 +385,11 @@ namespace SkylineTester
             // withTutorialPerf: a nightly selects its tests at run time, so TestTutorial and
             // TestPerf have to be staged. build.bat now always builds them; the flag is kept so
             // the intent stays stated here.
+            // warningsAsErrors: false, so a warning cannot keep the nightly from building and
+            // running its tests; TeamCity's code inspection statuses report warnings instead.
             if (!TabBuild.CreateBuildCommands(branchUrl, buildRoot, architectureList,
-                    MainWindow.NukeBuild.Checked, MainWindow.UpdateBuild.Checked, false, true))
+                    MainWindow.NukeBuild.Checked, MainWindow.UpdateBuild.Checked, false, true,
+                    warningsAsErrors: false))
                 MainWindow.CommandShell.Add("# Nightly cancelled.");
             else
             {

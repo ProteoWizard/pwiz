@@ -178,6 +178,15 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "SkylineCmd --version exited with ${LASTEXITCODE}: $output" }
     if ($output -notlike "*$version*") { throw "SkylineCmd --version did not report ${version}: $output" }
     Write-Host "    SkylineCmd: $($output.Trim())"
+
+    # What a per-user Skyline writes beside itself: its settings, and downloads in Tools\.
+    # The uninstall must remove them for the install directory check below to pass.
+    if (-not $AllUsers) {
+        Set-Content -Path (Join-Path $installDir 'user.config') -Value '<configuration />'
+        $downloadDir = Join-Path $installDir 'Tools\libtorch-cuda-test.0.0.0'
+        New-Item -ItemType Directory -Path $downloadDir | Out-Null
+        Set-Content -Path (Join-Path $downloadDir 'libtorch-runtime.txt') -Value 'test'
+    }
 }
 catch {
     $failure = $_.Exception.Message

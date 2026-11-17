@@ -201,26 +201,6 @@ namespace pwiz.Osprey.Core {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Access denied: unable to create a file in the folder &apos;{0}&apos;. Adjust the folder write permissions or retry the operation after moving or copying files to a different folder..
-        /// </summary>
-        public static string FileSaver_GetTempFileName_Access_denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_ {
-            get {
-                return ResourceManager.GetString("FileSaver_GetTempFileName_Access_denied__unable_to_create_a_file_in_the_folder___" +
-                        "0____Adjust_the_folder_write_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to allocate a temporary file in the folder &apos;{0}&apos; after {1} attempts..
-        /// </summary>
-        public static string FileSaver_GetTempFileName_Failed_to_allocate_a_temporary_file_in_the_folder___0___after__1__attempts_ {
-            get {
-                return ResourceManager.GetString("FileSaver_GetTempFileName_Failed_to_allocate_a_temporary_file_in_the_folder___0__" +
-                        "_after__1__attempts_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to BiblioSpec.
         /// </summary>
         public static string LibraryFormatExtension_LOCALIZED_VALUES_BiblioSpec {
@@ -229,6 +209,15 @@ namespace pwiz.Osprey.Core {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to DIA-NN Parquet.
+        /// </summary>
+        public static string LibraryFormatExtension_LOCALIZED_VALUES_DIA_NN_Parquet {
+            get {
+                return ResourceManager.GetString("LibraryFormatExtension_LOCALIZED_VALUES_DIA_NN_Parquet", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to DIA-NN TSV.
         /// </summary>
@@ -247,6 +236,15 @@ namespace pwiz.Osprey.Core {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to A DIA-NN {0} library cannot be read; convert it to the DIA-NN {1} library format with: {2}.
+        /// </summary>
+        public static string LibrarySource_FromPath_A_DIA_NN__0__library_cannot_be_read__convert_it_to_the_DIA_NN__1__library_format_with_ {
+            get {
+                return ResourceManager.GetString("LibrarySource_FromPath_A_DIA_NN__0__library_cannot_be_read__convert_it_to_the_DIA_NN__1__library_format_with_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to EncyclopeDIA {0} spectral libraries are no longer supported; convert the library to DIA-NN TSV ({1}) or BiblioSpec ({2})..
         /// </summary>
@@ -294,60 +292,6 @@ namespace pwiz.Osprey.Core {
             get {
                 return ResourceManager.GetString("OspreyEnvironment_DescribeExperimentAgg_Experiment_aggregation___0___default___be" +
                         "st_observation_per_unit_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0}h{1:00}m.
-        /// </summary>
-        public static string ProgressReporter_FormatElapsed__0_h_1_00_m {
-            get {
-                return ResourceManager.GetString("ProgressReporter_FormatElapsed__0_h_1_00_m", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0}m{1:00}s.
-        /// </summary>
-        public static string ProgressReporter_FormatElapsed__0_m_1_00_s {
-            get {
-                return ResourceManager.GetString("ProgressReporter_FormatElapsed__0_m_1_00_s", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0}s.
-        /// </summary>
-        public static string ProgressReporter_FormatElapsed__0_s {
-            get {
-                return ResourceManager.GetString("ProgressReporter_FormatElapsed__0_s", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0}....
-        /// </summary>
-        public static string ProgressReporter_ProgressReporter__0____ {
-            get {
-                return ResourceManager.GetString("ProgressReporter_ProgressReporter__0____", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0}  {1:0.00}% ({2:N0}/{3:N0}, {4} elapsed).
-        /// </summary>
-        public static string ProgressReporter_Report__0____1_____2___3____4__elapsed_ {
-            get {
-                return ResourceManager.GetString("ProgressReporter_Report__0____1_____2___3____4__elapsed_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to auto.
-        /// </summary>
-        public static string ResolutionModeExtension_LOCALIZED_VALUES_auto {
-            get {
-                return ResourceManager.GetString("ResolutionModeExtension_LOCALIZED_VALUES_auto", resourceCulture);
             }
         }
         

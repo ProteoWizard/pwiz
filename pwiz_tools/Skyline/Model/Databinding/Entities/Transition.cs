@@ -54,10 +54,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                lock (this)
-                {
-                    return _precursor ??= new Precursor(DataSchema, IdentityPath.Parent);
-                }
+                return _precursor ??= new Precursor(DataSchema, IdentityPath.Parent);
             }
         }
 

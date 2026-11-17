@@ -356,15 +356,15 @@ public sealed class Reader_Agilent : IReader
     {
         // MIDAC exposes no device table, so cpp's getDeviceType() is a hard-coded Unknown for
         // ion mobility files; that hardware is always a quadrupole IMS-TOF.
-        if (hasIonMobilityData) return CVID.MS_quadrupole_ion_mobility_time_of_flight;
+        if (hasIonMobilityData) return CVID.MS_quadrupole_ion_mobility_time_of_flight_instrument;
 
         switch (deviceType)
         {
             case AgDeviceType.Quadrupole: return CVID.MS_quadrupole;
             case AgDeviceType.IonTrap: return CVID.MS_ion_trap;
             case AgDeviceType.TimeOfFlight: return CVID.MS_time_of_flight;
-            case AgDeviceType.TandemQuadrupole: return CVID.MS_triple_quadrupole;
-            case AgDeviceType.QuadrupoleTimeOfFlight: return CVID.MS_quadrupole_time_of_flight;
+            case AgDeviceType.TandemQuadrupole: return CVID.MS_triple_quadrupole_instrument;
+            case AgDeviceType.QuadrupoleTimeOfFlight: return CVID.MS_quadrupole_time_of_flight_instrument;
             default: return CVID.CVID_Unknown;
         }
     }

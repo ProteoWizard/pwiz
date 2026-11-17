@@ -155,6 +155,7 @@ namespace pwiz.Skyline.SettingsUI
         public ViewLibraryDlg(LibraryManager libMgr, String libName, IDocumentUIContainer documentContainer)
         {
             InitializeComponent();
+            QValueFilterControls = new GlobalQValueFilterControls(comboQValueLevel, textQValueCutoff);
 
             _graphHelper = GraphHelper.Attach(GraphControl);
             GraphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;
@@ -401,6 +402,11 @@ namespace pwiz.Skyline.SettingsUI
             set { cbAssociateProteins.Checked = value; }
         }
 
+        /// <summary>
+        /// The global q-value filter for Add All, offered when the library has global q-values.
+        /// </summary>
+        public GlobalQValueFilterControls QValueFilterControls { get; }
+
         public bool ChangeSelectedPeptide(string text)
         {
             foreach(ViewLibraryPepInfo pepInfo in listPeptide.Items)
@@ -497,6 +503,15 @@ namespace pwiz.Skyline.SettingsUI
             Settings.Default.ViewLibrarySplitMainDist = splitMain.SplitterDistance;
             Settings.Default.ViewLibraryPropertiesVisible = propertiesButton.Checked;
 
+            base.OnFormClosing(e);
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            // Unsubscribe here rather than in OnFormClosing. WinForms raises FormClosing on owned
+            // forms before the owner's own OnFormClosing, so a shutdown the owner goes on to cancel
+            // would leave this dialog open with the ion type and loss selectors disconnected.
+            // UpdateIonTypeMenu only subscribes when it builds the menu, so they never come back.
             var ionTypeSelector = GetHostedControl<IonTypeSelectionPanel>();
             if (ionTypeSelector != null)
             {
@@ -504,7 +519,7 @@ namespace pwiz.Skyline.SettingsUI
                 ionTypeSelector.HostedControl.LossChanged -= IonTypeSelector_LossChanged;
             }
 
-            base.OnFormClosing(e);
+            base.OnFormClosed(e);
         }
 
         #endregion
@@ -516,6 +531,7 @@ namespace pwiz.Skyline.SettingsUI
             // Order matters!!
             LoadLibrary();
             InitializePeptides();
+            UpdateQValueFilterControls();
             UpdatePageInfo();
             UpdateStatusArea();
             cbShowModMasses.Checked = Settings.Default.ShowModMassesInExplorer;
@@ -613,6 +629,41 @@ namespace pwiz.Skyline.SettingsUI
             }
             InitializeMatchCategoryComboBox();
             _currentRange = _peptides.Filter(null, comboFilterCategory.SelectedItem.ToString());
+        }
+
+        /// <summary>
+        /// Offers the global q-value levels the selected library has for filtering Add All, and
+        /// hides the controls when it has none.
+        /// </summary>
+        private void UpdateQValueFilterControls()
+        {
+            var levels = _selectedLibrary?.GlobalQValueLevels ?? ImmutableList<GlobalQValueLevel>.EMPTY;
+            QValueFilterControls.Levels = levels;
+            // These start visible in the designer so their handles exist before Load. A control
+            // whose handle is created when it is first shown moves within its parent's Controls
+            // collection, and the FlowLayoutPanel lays out in that order.
+            var visible = levels.Count > 0;
+            labelGlobalCutoff.Visible = comboQValueLevel.Visible = textQValueCutoff.Visible = visible;
+            WidenToFitAddAllOptions();
+        }
+
+        /// <summary>
+        /// Widens the form when the controls between Add All and Close would overlap Close.
+        /// </summary>
+        private void WidenToFitAddAllOptions()
+        {
+            const int gap = 6;
+            panel2.PerformLayout();
+            var overlap = flowAddAllOptions.Right + gap - btnCancel.Left;
+            if (overlap <= 0 || WindowState != FormWindowState.Normal)
+                return;
+            // The graph pane gets only its share of the extra width
+            Width += (int) Math.Ceiling((double) overlap * splitMain.Width / Math.Max(1, splitMain.Panel2.Width));
+        }
+
+        private bool HasLibraryProteinGroups
+        {
+            get { return _selectedLibrary != null && _selectedLibrary.GlobalQValueLevels.Contains(GlobalQValueLevel.protein); }
         }
 
         public bool MatchModifications()
@@ -2005,18 +2056,25 @@ namespace pwiz.Skyline.SettingsUI
 
         public ViewLibrarySettings FormSettings
         {
-            get { return new ViewLibrarySettings(cbAssociateProteins.Checked); }
+            get { return new ViewLibrarySettings(cbAssociateProteins.Checked, null); }
         }
 
         public class ViewLibrarySettings : AuditLogOperationSettings<ViewLibrarySettings>//, IAuditLogComparable
         {
-            public ViewLibrarySettings(bool associateProteins)
+            public ViewLibrarySettings(bool associateProteins, GlobalQValueFilter qValueFilter)
             {
                 AssociateProteins = associateProteins;
+                QValueFilter = qValueFilter;
             }
 
             [Track(defaultValues:typeof(DefaultValuesFalse))]
             public bool AssociateProteins { get; private set; }
+
+            /// <summary>
+            /// The filter Add All applied, null when adding a single entry or when there was none.
+            /// </summary>
+            [TrackChildren(defaultValues: typeof(DefaultValuesNull))]
+            public GlobalQValueFilter QValueFilter { get; private set; }
 
             /*public object GetDefaultObject(ObjectInfo<object> info)
             {
@@ -2046,7 +2104,12 @@ namespace pwiz.Skyline.SettingsUI
 
         private bool EnsureBackgroundProteome(SrmDocument document, ViewLibraryPepMatching pepMatcher, bool ensureDigested, AuditLogEntryCreatorList entryCreators)
         {
-            if (cbAssociateProteins.Checked)
+            if (cbAssociateProteins.Checked && HasLibraryProteinGroups)
+            {
+                // A library with protein q-values supplies its own protein groups
+                pepMatcher.UseLibraryProteinGroups = true;
+            }
+            else if (cbAssociateProteins.Checked)
             {
                 var backgroundProteome = document.Settings.PeptideSettings.BackgroundProteome;
                 if (backgroundProteome.BackgroundProteomeSpec.IsNone)
@@ -2190,14 +2253,19 @@ namespace pwiz.Skyline.SettingsUI
                     startingDocument.Settings.ChangePeptideModifications(
                         mods => _matcher.SafeMergeImplicitMods(startingDocument)));
 
+            if (!QValueFilterControls.TryGetFilter(this, out var qValueFilter))
+                return;
             var pepMatcher = new ViewLibraryPepMatching(startingDocumentImplicitMods,
                                                         _selectedLibrary,
                                                         _selectedSpec,
                                                         _matcher,
-                                                        _peptides);
+                                                        _peptides)
+            {
+                QValueFilter = qValueFilter
+            };
 
             var entryCreatorList = new AuditLogEntryCreatorList();
-            entryCreatorList.Add(FormSettings.EntryCreator);
+            entryCreatorList.Add(new ViewLibrarySettings(cbAssociateProteins.Checked, qValueFilter).EntryCreator);
             if (!EnsureBackgroundProteome(startingDocument, pepMatcher, true, entryCreatorList))
                 return;
             pepMatcher.AddAllPeptidesSelectedPath = Program.MainWindow.SelectedPath;
@@ -2240,9 +2308,10 @@ namespace pwiz.Skyline.SettingsUI
             string msg = string.Format(format,
                                         proteins, peptideCountDiff, groupCountDiff,
                                         newDocument.MoleculeTransitionCount - startingDocument.MoleculeTransitionCount);
-            var numSkipped = pepMatcher.SkippedPeptideCount;          
+            var numSkipped = pepMatcher.SkippedPeptideCount;
             var hasSkipped = numSkipped > 0;
-            var numUnmatchedPeptides = PeptidesCount - numMatchedPeptides;
+            var numQValueFiltered = pepMatcher.QValueFilteredCount;
+            var numUnmatchedPeptides = PeptidesCount - numMatchedPeptides - numQValueFiltered;
             var hasUnmatched = numUnmatchedPeptides > 0;
             if (hasSkipped || hasUnmatched)
             {
@@ -2260,6 +2329,12 @@ namespace pwiz.Skyline.SettingsUI
                                         ? SettingsUIResources.ViewLibraryDlg_AddAllPeptides__0__and__1__library__2__will_be_ignored
                                         : SettingsUIResources.ViewLibraryDlg_AddAllPeptides__0__1__library__2__will_be_ignored,
                                     duplicatePeptides, unmatchedPeptides, entrySuffix));
+            }
+            if (numQValueFiltered > 0)
+            {
+                msg = TextUtil.LineSeparate(msg, string.Empty, string.Format(
+                    SettingsUIResources.ViewLibraryDlg_AddAllPeptides__0__library_entries_fail_the_global_cutoff_and_will_not_be_added,
+                    numQValueFiltered));
             }
             var dlg = new MultiButtonMsgDlg(msg, SettingsUIResources.ViewLibraryDlg_AddAllPeptides_Add_All)
             {

@@ -50,8 +50,8 @@
   <Target Name="ExtractWatersAssemblies"
           Condition="'$(IAgreeToVendorLicenses)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
-          Inputs="$(WatersArchive)"
-          Outputs="$(WatersAssembliesDir)\$(WatersNativeLib)">
+          Inputs="$(WatersArchive);$(WatersAssembliesDir)\$(WatersNativeLib)"
+          Outputs="$(WatersAssembliesDir)/.ExtractWatersAssemblies-$(WatersNativeLibArchiveDir).stamp">
     <MakeDir Directories="$(WatersAssembliesDir)" />
     <!-- Forward slashes in the archive member patterns: 7zz on non-Windows does not treat
          '\' as a separator, so a backslash pattern matches nothing and 7-Zip still exits 0. -->
@@ -62,6 +62,8 @@
     <Copy SourceFiles="$(WatersAssembliesDir)\vendor_api\Waters\$(WatersNativeLibArchiveDir)\$(WatersNativeLib);$(WatersAssembliesDir)\vendor_api\Waters\license.key"
           DestinationFolder="$(WatersAssembliesDir)"
           SkipUnchangedFiles="true" />
+    <!-- Outputs is this stamp, not the extracted files: see $(SevenZaExe) in Directory.Build.props. -->
+    <Touch Files="$(WatersAssembliesDir)/.ExtractWatersAssemblies-$(WatersNativeLibArchiveDir).stamp" AlwaysCreate="true" />
   </Target>
 
   <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">

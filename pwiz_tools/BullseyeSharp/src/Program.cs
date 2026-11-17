@@ -208,11 +208,6 @@ namespace Pwiz.Tools.BullseyeSharp
             return st;
         }
 
-        // Sentinel for "extension not recognized as an acceptable output format". cpp's
-        // MSDataFile.Format.Format_Text served the same role; sharp's WriteFormat.Text is
-        // also unimplemented as an output writer, so we use it as the rejection signal.
-        private const WriteFormat UnrecognizedFormat = WriteFormat.Text;
-
         // Build the vendor-aware ReaderList used for reading sDataFile. Mirrors MsConvert's
         // configuration (the only difference is that BullseyeSharp doesn't need to plumb
         // --combineIonMobilitySpectra etc. through to the readers — it operates on standard
@@ -255,12 +250,12 @@ namespace Pwiz.Tools.BullseyeSharp
             int[] ch = new int[10];
 
             //Check file formats for output. Make sure the user specifies the appropriate format
-            if (wcPos.Format == UnrecognizedFormat)
+            if (wcPos == null)
             {
                 Console.WriteLine("Output file format (pos set) not acceptable. Choose a different format.");
                 return;
             }
-            if (wcNeg.Format == UnrecognizedFormat)
+            if (wcNeg == null)
             {
                 Console.WriteLine("Output file format (neg set) not acceptable. Choose a different format.");
                 return;
@@ -535,11 +530,11 @@ namespace Pwiz.Tools.BullseyeSharp
         // Build the writer config from the output filename's extension. cpp BullseyeSharp also
         // sets compression = Zlib + indexed + gzipped flags here; the sharp WriteConfig exposes
         // these via EncoderConfig + Indexed + Gzip. We only set them on formats that honor them.
+        // Returns null when the extension is not an acceptable output format.
         static WriteConfig getFileFormat(string s)
         {
             WriteConfig wc = new WriteConfig
             {
-                Format = UnrecognizedFormat,
                 Indexed = true,
                 Gzip = false,
             };
@@ -568,10 +563,10 @@ namespace Pwiz.Tools.BullseyeSharp
                         wc.Gzip = true;
                         continue;
                     default:
-                        return wc;
+                        return null;
                 }
             }
-            return wc;
+            return null;
         }
 
         static sScanInfo processScanHeader(ref Spectrum s)

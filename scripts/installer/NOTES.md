@@ -156,11 +156,15 @@ its URL at the `ShellExec` site instead).
 
 ### Version stamping: 4.0.YYDOY-gitsha
 
-`build.ps1` computes the version at compile time from:
+`build.ps1` (and `build-linux.sh`) compute the version from:
 
 - **`4.0`** - major version. The pwiz-sharp lineage is on 4.x; cpp pwiz stays
   on its existing 3.x series.
-- **`YYDOY`** - 2-digit year + 3-digit day-of-year (e.g. `26140` = 2026-05-20).
+- **`YYDOY`** - 2-digit year + 3-digit day-of-year (e.g. `26140` = 2026-05-20)
+  of `HEAD`'s committer date, the same date `build/PwizVersion.targets` uses
+  for the assembly versions; today's UTC date only when git gives none. A
+  rebuild of a commit, on any day, gets the same version, so a past commit can
+  be rebuilt for the monthly release archive with its original version.
   Sortable, year-boundary-safe (the YY increments before DOY resets), and
   zero-padded so lexical sort matches chronological sort.
 - **`gitsha`** - 7-char prefix of `HEAD`. Identifies the source commit at a

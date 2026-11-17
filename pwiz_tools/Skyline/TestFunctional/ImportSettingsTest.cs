@@ -89,7 +89,7 @@ namespace pwiz.SkylineTestFunctional
                 TestAdminChangesAreMergedIn(other);
                 TestImportAndUninstallTakesOverTheOtherInstallation(other);
                 TestInstallingSkylineIsImportedSilently(other);
-                TestOlderInstallationsAreOfferedOnce(other);
+                TestOlderInstallationsAreOfferedOnce(other, stale);
             }
             finally
             {
@@ -148,11 +148,13 @@ namespace pwiz.SkylineTestFunctional
 
         /// <summary>
         /// The first start with no handoff offers the older installations found, in the Import
-        /// Settings dialog. A later start offers nothing, even when the user chose nothing.
+        /// Settings dialog, with the older installation uninstalled by default, since this one
+        /// replaces it. A later start offers nothing, even when the user chose nothing.
         /// </summary>
-        private void TestOlderInstallationsAreOfferedOnce(SkylineInstallation other)
+        private void TestOlderInstallationsAreOfferedOnce(SkylineInstallation other, SkylineInstallation stale)
         {
             int searches = 0;
+            var uninstallsRun = new List<string>();
             var firstLaunchImport = new FirstLaunchImport
             {
                 HandoffKeyPath = HandoffKeyPath,
@@ -160,9 +162,9 @@ namespace pwiz.SkylineTestFunctional
                 FindInstallations = () =>
                 {
                     searches++;
-                    return new[] { other };
+                    return new[] { other, stale };
                 },
-                RunUninstall = command => throw new AssertFailedException(@"Nothing was to be uninstalled")
+                RunUninstall = uninstallsRun.Add
             };
             RunUI(() =>
             {
@@ -172,9 +174,18 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<ImportSettingsDlg>(() => firstLaunchImport.Run(SkylineWindow), importDlg =>
             {
                 Assert.AreSame(other, importDlg.SelectedInstallation);
+                Assert.IsTrue(importDlg.UninstallSelected);
+
+                // Passing over an installation that cannot be uninstalled keeps the default
+                importDlg.SelectedInstallation = stale;
+                Assert.IsFalse(importDlg.UninstallSelected);
+                importDlg.SelectedInstallation = other;
+                Assert.IsTrue(importDlg.UninstallSelected);
+
                 importDlg.OkDialog();
             });
             Assert.AreEqual(ReadAnnotationColor(other.UserConfigFile), Settings.Default.AnnotationColor);
+            CollectionAssert.AreEqual(new[] { UNINSTALL_COMMAND }, uninstallsRun);
             Assert.IsTrue(Settings.Default.CheckedForSettingsToImport);
 
             RunUI(() => firstLaunchImport.Run(SkylineWindow));
@@ -193,6 +204,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(2, importDlg.Installations.Count);
                 Assert.AreSame(other, importDlg.SelectedInstallation);
                 Assert.IsTrue(importDlg.UninstallEnabled);
+                Assert.IsFalse(importDlg.UninstallSelected);
 
                 // Nothing to uninstall for an installation Programs and Features no longer lists
                 importDlg.SelectedInstallation = stale;

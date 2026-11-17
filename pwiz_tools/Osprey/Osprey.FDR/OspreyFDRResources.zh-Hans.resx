@@ -133,24 +133,12 @@
     <value>正在查找每个母离子在 1 个文件中的最佳峰</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PercolatorEngine_DispatchSvm_Running__0__Percolator_on__1__precursor_candidate_peaks___" xml:space="preserve">
-    <value>正在对 {1:N0} 个母离子候选峰运行 {0} Percolator…</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PercolatorEngine_PassDisplayName_First_pass" xml:space="preserve">
     <value>第一轮</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PercolatorEngine_RunPercolatorFdr_Running__0__Percolator_on__1__precursor_candidate_peaks___" xml:space="preserve">
     <value>正在对 {1:N0} 个母离子候选峰运行 {0} Percolator…</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PercolatorEngine_RunPercolatorFdr__0__Percolator_results___1__targets___2__decoys_pass__3__FDR" xml:space="preserve">
-    <value>{0} Percolator 结果：{1:N0} 个目标、{2:N0} 个诱饵通过 {3:P1} FDR</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PercolatorEngine_RunPercolatorStreaming__0___scoring_all__1__precursor_candidate_peaks_with_the_saved_first_pass_model__no_" xml:space="preserve">
-    <value>{0}：使用已保存的第一轮模型对全部 {1:N0} 个母离子候选峰评分（不重新训练），然后通过目标-诱饵竞争计算 q 值和 PEP。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PercolatorEngine_RunStreamingIntoProjection_Loading_Percolator_training_features_from_1_file" xml:space="preserve">

@@ -324,7 +324,17 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                     editIonMobilityLibraryDlg.GetIonMobilitiesFromResults();
 
                 });
-                PauseForScreenShot<EditIonMobilityLibraryDlg>("Edit ion mobility library form");
+                if (IsPauseForScreenShots)
+                {
+                    // Show a typical user path rather than the test folder, which differs between checkouts.
+                    const string databasePathScreenShot = @"C:\Users\Brendan\Documents\IMS\BSA.imsdb";
+                    using (new ScopedAction(
+                               () => RunUI(() => editIonMobilityLibraryDlg.DatabasePath = databasePathScreenShot),
+                               () => RunUI(() => editIonMobilityLibraryDlg.DatabasePath = databasePath)))
+                    {
+                        PauseForScreenShot<EditIonMobilityLibraryDlg>("Edit ion mobility library form");
+                    }
+                }
 
                 // Check that a new value was calculated for all precursors
                 RunUI(() => Assert.AreEqual(SkylineWindow.Document.MoleculeTransitionGroupCount, editIonMobilityLibraryDlg.LibraryMobilitiesFlatCount));

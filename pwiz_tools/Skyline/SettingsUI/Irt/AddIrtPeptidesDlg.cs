@@ -82,9 +82,19 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 {
                     regressionName = IrtResources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted;
                 }
+                string filename;
+                try
+                {
+                    filename = Path.GetFileName(data.RetentionTimeProvider.Name);
+                }
+                catch (Exception)
+                {
+                    filename = data.RetentionTimeProvider.Name;
+                }
+
                 var graphData = new RegressionGraphData
                 {
-                    Title = data.RetentionTimeProvider.Name,
+                    Title = filename,
                     LabelX = IrtResources.AddIrtsResultsDlg_dataGridView_CellContentClick_Measured,
                     LabelY = IrtResources.AddIrtPeptidesDlg_dataGridView_CellContentClick_iRT,
                     XValues = data.Peptides.Select(peptide => peptide.RetentionTime.GetValueOrDefault()).ToArray(),
@@ -100,15 +110,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     MinPoints = data.MinPoints
                 };
 
-                string filename;
-                try
-                {
-                    filename = Path.GetFileName(data.RetentionTimeProvider.Name);
-                }
-                catch (Exception)
-                {
-                    filename = data.RetentionTimeProvider.Name;
-                }
                 dataGridView.Rows.Add(
                     filename,
                     graphData.RegularPoints.Count,

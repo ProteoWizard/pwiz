@@ -249,6 +249,79 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Osprey reads the environment in exactly one place, <see cref="EnvVar.Value"/>, so every
+        /// variable it reads is an <see cref="EnvVar"/> declaration - with the group and the
+        /// description its constructor requires - and so is in the catalog <c>--help-env</c>
+        /// prints and the startup check refuses other names against. This is the one property of
+        /// that design the type system cannot express: nothing stops a file from calling
+        /// <see cref="Environment.GetEnvironmentVariable(string)"/> directly, and a variable read
+        /// that way would be undocumented, unchecked and refused at startup the moment someone set
+        /// it. There is no exemption tag: a new reader declares an <see cref="EnvVar"/>.
+        ///
+        /// <para>Also checked here, against the catalog itself: every whole <c>"OSPREY_X"</c>
+        /// literal in production code (a name passed to a message) is catalogued, so a message
+        /// cannot keep naming a retired variable; every entry has a description; and the
+        /// catalog holds the variables the pipeline reads in every assembly, not just the
+        /// executable's.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestEnvironmentReadThroughEnvVar()
+        {
+            string sourceRoot = FindOspreySourceRoot();
+            const string accessorFile = "Osprey.Core/EnvVar.cs";
+            var rawAccess = new Regex(@"\b((Get|Set)EnvironmentVariables?|ExpandEnvironmentVariables)\s*\(");
+            var nameLiteral = new Regex("@?\"(OSPREY_[A-Z0-9_]+)\"");
+            var catalog = EnvVarUsage.Catalog;
+            var catalogued = new HashSet<string>(catalog.Select(e => e.Name), StringComparer.OrdinalIgnoreCase);
+            var violations = new List<string>();
+            var uncatalogued = new List<string>();
+            foreach (var file in EnumerateProductionCsFiles(sourceRoot))
+            {
+                string rel = RelativePath(sourceRoot, file).Replace('\\', '/');
+                string[] lines;
+                try { lines = File.ReadAllLines(file); }
+                catch (IOException) { continue; }
+
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    string line = lines[i];
+                    int commentIdx = IndexOfLineComment(line);
+                    string codePart = commentIdx >= 0 ? line.Substring(0, commentIdx) : line;
+                    if (rawAccess.IsMatch(codePart) && !string.Equals(rel, accessorFile, StringComparison.OrdinalIgnoreCase))
+                        violations.Add(string.Format("{0}:{1}: {2}", rel, i + 1, line.Trim()));
+                    foreach (Match match in nameLiteral.Matches(codePart))
+                    {
+                        if (!catalogued.Contains(match.Groups[1].Value))
+                            uncatalogued.Add(string.Format("{0}:{1}: {2}", rel, i + 1, match.Groups[1].Value));
+                    }
+                }
+            }
+
+            Assert.AreEqual(0, violations.Count,
+                "Environment read or written outside EnvVar. Declare the variable as a static EnvVar beside " +
+                "the code that reads it - new EnvVar(@\"OSPREY_X\", EnvVarGroup.<kind>, @\"<description>\") - " +
+                "and read its Value, so the environment help lists it and startup accepts it.\n" +
+                string.Join("\n", violations));
+            Assert.AreEqual(0, uncatalogued.Count,
+                "OSPREY_* name in production code that no EnvVar declares: a message naming a variable " +
+                "this build does not read, which startup would refuse. Declare it, or stop naming it.\n" +
+                string.Join("\n", uncatalogued));
+            foreach (var entry in catalog)
+                Assert.IsFalse(string.IsNullOrWhiteSpace(entry.Description), entry.Name);
+            // One declaration from each assembly that reads the environment, so the reflection walk
+            // over referenced assemblies cannot silently stop at the executable.
+            foreach (string name in new[] { @"OSPREY_LOG_MEMORY", @"OSPREY_DUMP_STAGE7_WINNERS",
+                         @"OSPREY_DIAG_XCORR_SCAN", @"OSPREY_PARQUET_WRITE_THREADS", @"OSPREY_DUMP_CAL_SAMPLE" })
+            {
+                Assert.IsTrue(catalogued.Contains(name), name);
+            }
+            // --help-env lists every entry whole, on one line.
+            string usage = EnvVarUsage.BuildUsage(@"ascii", 78);
+            foreach (var entry in catalog)
+                StringAssert.Contains(usage, entry.Usage);
+        }
+
+        /// <summary>
         /// Developer words that must not reach a user through a resource: the first table of
         /// docs/21-user-facing-text.md. The English .resx VALUES are scanned (translations follow
         /// the English), so a banned word cannot come back through a reworded message. Keys may
@@ -429,7 +502,7 @@ namespace pwiz.Osprey.Test
             // Flags (long or short) and file extensions, the tokens a user types or matches. A
             // hyphen after a format hole is a compound word ("{0}-fold"), not a flag.
             var resxToken = new Regex(@"(?<![\w}-])--?[a-z][a-z0-9-]*|(?<![\w{}])\.(?:[\w-]+\.)*" +
-                                      @"(?:blib|elib|tsv|csv|parquet|bin|json|task|mzML|sky|libcache|html|sln)\b");
+                                      @"(?:blib|elib|tsv|csv|parquet|bin|json|task|mzML|sky|html|sln)\b");
             foreach (var file in EnumerateEnglishResxFiles(sourceRoot))
             {
                 var resxRoot = XDocument.Load(file).Root;
@@ -503,7 +576,10 @@ namespace pwiz.Osprey.Test
             ".py", ".jam"
         };
 
-        private static readonly string[] BOM_SKIPPED_DIRECTORIES = { "bin", "obj", "TestResults", ".vs" };
+        // Build output, not source. dist is package.ps1's output, which a TeamCity agent keeps
+        // between builds; a package with the vendor readers stages vendor .config files that carry
+        // a BOM, and this test would fail on them and rewrite them.
+        private static readonly string[] BOM_SKIPPED_DIRECTORIES = { "bin", "obj", "TestResults", ".vs", "dist" };
 
         /// <summary>
         /// Strips a leading UTF-8 BOM from <paramref name="path"/>, preserving its timestamps, and
