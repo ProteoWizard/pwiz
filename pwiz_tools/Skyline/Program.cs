@@ -210,6 +210,8 @@ namespace pwiz.Skyline
         [STAThread]
         public static int Main(string[] args = null)
         {
+            // Before anything can load a shell extension that brings its own older msvcp140.
+            Pwiz.Util.Misc.AppLocalCrt.Pin();
             SetDefaultFont();
 
             if (String.IsNullOrEmpty(Settings.Default.InstallationId)) // Each instance to have GUID

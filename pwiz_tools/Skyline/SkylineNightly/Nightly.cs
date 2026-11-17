@@ -1057,6 +1057,7 @@ namespace SkylineNightly
 
             // Extract failures.
             ParseFailures(log);
+            ParseCrashedTests(log);
 
             // Extract leaks.
             ParseLeaks(log);
@@ -1311,6 +1312,26 @@ namespace SkylineNightly
                 failure["test"] = testId;
                 failure["language"] = language;
                 failure.Set(Environment.NewLine + failureDescription + Environment.NewLine);
+            }
+        }
+
+        /// <summary>
+        /// A test that kills TestRunner writes no "!!! name FAILED" block, so it is reported here
+        /// as a failure of the test that was running, or of the last test when TestRunner died
+        /// after it finished. See <see cref="CrashedTestLog"/>.
+        /// </summary>
+        private void ParseCrashedTests(string log)
+        {
+            foreach (var crashed in CrashedTestLog.Find(log))
+            {
+                var failure = _failures.Append("failure");
+                failure["name"] = crashed.Name;
+                failure["timestamp"] = crashed.Timestamp;
+                failure["pass"] = crashed.Pass;
+                failure["test"] = crashed.TestNumber;
+                failure["language"] = crashed.Language;
+                failure.Set(Environment.NewLine + crashed.Summary +
+                            Environment.NewLine + crashed.Details + Environment.NewLine);
             }
         }
 

@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="..\SkylineNightly\MachineState.cs" Link="SkylineNightly\MachineState.cs" />
     <Compile Include="..\SkylineNightly\RunInterruption.cs" Link="SkylineNightly\RunInterruption.cs" />
+    <Compile Include="..\SkylineNightly\CrashedTestLog.cs" Link="SkylineNightly\CrashedTestLog.cs" />
   </ItemGroup>
 
   <!-- protoc-generated code lives under ProtocolBuffers\GeneratedCode\ and is

@@ -31,6 +31,11 @@
     <PackageReference Include="NetMQ" Version="4.0.1.8" />
   </ItemGroup>
 
+  <!-- The report command finds tests that killed TestRunner the same way SkylineNightly does. -->
+  <ItemGroup>
+    <Compile Include="..\SkylineNightly\CrashedTestLog.cs" Link="SkylineNightly\CrashedTestLog.cs" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />
     <PackageReference Include="PROdotnetzip" Version="1.20.0" />

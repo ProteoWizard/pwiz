@@ -316,6 +316,10 @@ namespace TestRunner
         [STAThread, MethodImpl(MethodImplOptions.NoOptimization)]
         static int Main(string[] args)
         {
+            // As shipping Skyline does, and earlier than its Main could here: hundreds of tests run
+            // in this process first, and any that opens a real file dialog can load a shell
+            // extension's older msvcp140, which every native library loaded afterwards would bind to.
+            Pwiz.Util.Misc.AppLocalCrt.Pin();
             Console.OutputEncoding = Encoding.UTF8;
 
             // Pin the WinForms default font exactly as shipping Skyline does, before any control
@@ -3139,7 +3143,9 @@ namespace TestRunner
         // Generate a summary report of errors and memory leaks from a log file.
         private static void Report(string logFile)
         {
-            var logLines = File.ReadAllLines(logFile);
+            // Read once: SkylineTester can still be appending to the log.
+            var logText = File.ReadAllText(logFile);
+            var logLines = logText.Split('\n').Select(line => line.TrimEnd('\r')).ToArray();
 
             var errorList = new List<string>();
             var leakList = new List<LeakingTest>();
@@ -3192,6 +3198,16 @@ namespace TestRunner
 
                     error = "# " + test + " FAILED:\n";
                 }
+            }
+
+            // A test that killed TestRunner writes no "!!! name FAILED" block.
+            foreach (var crashed in SkylineNightly.CrashedTestLog.Find(logText))
+            {
+                var crash = "# " + crashed.Name + " FAILED:\n" +
+                            "# " + crashed.Summary + "\n";
+                foreach (var detailLine in crashed.Details.Split('\n'))
+                    crash += "# " + detailLine.TrimEnd('\r') + "\n";
+                errorList.Add(crash);
             }
 
             // Print list of errors sorted in descending order of frequency.
