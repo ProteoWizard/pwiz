@@ -105,7 +105,7 @@ namespace SkylineNightly
             }
         }
 
-        private int HangThreshold => _runSpec.IsPerf ? 90 : 60;
+        private int HangThreshold => SkylineTester.TimeLimitLog.GetHangThresholdMinutes(_runSpec.IsPerf);
         private string RunModeName => _runSpec.ToString();
 
         public bool IsHang

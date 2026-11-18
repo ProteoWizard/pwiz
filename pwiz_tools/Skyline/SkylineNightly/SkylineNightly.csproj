@@ -35,6 +35,12 @@
     <EmbeddedResource Include="SkylineNightly.skytr" />
   </ItemGroup>
 
+  <!-- The hang threshold LogFileMonitor alerts at, shared with SkylineTester, which uses it to
+       decide whether a test cut off by the time limit was hung. One definition, so the two agree. -->
+  <ItemGroup>
+    <Compile Include="..\SkylineTester\TimeLimitLog.cs" Link="SkylineTester\TimeLimitLog.cs" />
+  </ItemGroup>
+
   <!-- net8: managed NuGet equivalents of the legacy on-disk DLLs + the WCF client. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <PackageReference Include="PROdotnetzip" Version="1.20.0" />

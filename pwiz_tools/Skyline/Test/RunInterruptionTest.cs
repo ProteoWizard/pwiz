@@ -215,31 +215,47 @@ namespace pwiz.SkylineTest
             // The server's own pattern for the last test line (TestResultsController, MacCossLabModules)
             var serverTestLine = new Regex(@"\[(\d\d):(\d\d)]\s+(\d+)\.\d+\s+([A-Za-z]\w*)\s+\(([A-Za-z]+)\)");
 
-            // Cut off while still writing output: the server must now see the finished test as the last
+            var standardHang = TimeSpan.FromMinutes(TimeLimitLog.GetHangThresholdMinutes(false));
+            var perfHang = TimeSpan.FromMinutes(TimeLimitLog.GetHangThresholdMinutes(true));
+            var justUnder = standardHang - TimeSpan.FromMinutes(1);
+
+            // Cut off short of the hang threshold: the server must now see the finished test as the last
             var log = JoinLines(finishedLine, startOfCutOff + testOutput, stopped);
-            var rewritten = TimeLimitLog.DropUnfinishedTest(log);
+            var rewritten = TimeLimitLog.RewriteForTimeLimit(log, justUnder, false);
             var lastTestLine = rewritten.Split('\n').Last(line => serverTestLine.IsMatch(line));
             AssertEx.Contains(lastTestLine, @"TestPeakAreaRelativeAbundanceGraph");
             AssertEx.Contains(rewritten, TimeLimitLog.TIME_LIMIT_COMMENT + @"TestPeakPerf (en), pass 0 test 13, started at 05:42.",
                 testOutput, stopped, finishedLine);
 
             // Cut off with nothing after the start of its line
-            rewritten = TimeLimitLog.DropUnfinishedTest(JoinLines(finishedLine, startOfCutOff, stopped));
+            rewritten = TimeLimitLog.RewriteForTimeLimit(JoinLines(finishedLine, startOfCutOff, stopped), justUnder, false);
+            var comment = rewritten.Substring(rewritten.IndexOf(TimeLimitLog.TIME_LIMIT_COMMENT, StringComparison.Ordinal));
+            AssertEx.Contains(comment, TimeLimitLog.TIME_LIMIT_COMMENT + @"TestPeakPerf (en)");
+            AssertEx.IsFalse(serverTestLine.IsMatch(comment));
+
+            // At the hang threshold the test is left for the server to report, with a note on why
+            rewritten = TimeLimitLog.RewriteForTimeLimit(log, standardHang, false);
+            AssertEx.IsTrue(rewritten.StartsWith(log, StringComparison.Ordinal));
+            AssertEx.Contains(rewritten, TimeLimitLog.TIME_LIMIT_HANG_NOTE, @"TestPeakPerf");
+            lastTestLine = rewritten.Split('\n').Last(line => serverTestLine.IsMatch(line));
+            AssertEx.Contains(lastTestLine, @"TestPeakPerf");
+
+            // A perf run allows longer: the same silence is not yet a hang
+            rewritten = TimeLimitLog.RewriteForTimeLimit(log, standardHang, true);
             AssertEx.Contains(rewritten, TimeLimitLog.TIME_LIMIT_COMMENT + @"TestPeakPerf (en)");
-            Assert.IsFalse(serverTestLine.IsMatch(rewritten.Substring(rewritten.IndexOf(TimeLimitLog.TIME_LIMIT_COMMENT, StringComparison.Ordinal))));
+            rewritten = TimeLimitLog.RewriteForTimeLimit(log, perfHang, true);
+            AssertEx.Contains(rewritten, TimeLimitLog.TIME_LIMIT_HANG_NOTE);
 
             // A last test that finished, even with output between the start of its line and its
-            // result, is left as it is
+            // result, is left as it is however long the silence
             var finishedWithOutput = JoinLines(finishedLine,
                 startOfCutOff + testOutput, @"   0 failures, 113.15/84.31/314.0 MB, 202/1629 handles, 3600 sec.", stopped);
-            Assert.AreSame(finishedWithOutput, TimeLimitLog.DropUnfinishedTest(finishedWithOutput));
+            AssertEx.AreEqual(finishedWithOutput, TimeLimitLog.RewriteForTimeLimit(finishedWithOutput, justUnder, false));
+            AssertEx.AreEqual(finishedWithOutput, TimeLimitLog.RewriteForTimeLimit(finishedWithOutput, perfHang, false));
 
             // No tests at all, as when the time limit falls during the build
             var buildOnly = JoinLines(@"# Nightly started Tuesday, November 17, 2026 7:25 PM", stopped);
-            Assert.AreSame(buildOnly, TimeLimitLog.DropUnfinishedTest(buildOnly));
-
-            // Perf runs get longer before silence counts as a hang, as in SkylineNightly's alert
-            Assert.IsTrue(TimeLimitLog.GetHangThresholdMinutes(true) > TimeLimitLog.GetHangThresholdMinutes(false));
+            AssertEx.AreEqual(buildOnly, TimeLimitLog.RewriteForTimeLimit(buildOnly, justUnder, false));
         }
 
         private static string JoinLines(params string[] lines)

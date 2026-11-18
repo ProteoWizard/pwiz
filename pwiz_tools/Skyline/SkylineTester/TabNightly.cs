@@ -49,7 +49,6 @@ namespace SkylineTester
         private NightlyListener _nightlyListener;
         private Timer _updateTimer;
         private Timer _stopTimer;
-        private TimeSpan? _silenceAtTimeLimit;  // Set when the time limit stops the run
         private string _revision;
         private SkylineTesterWindow.BuildDirs _saveSelectedBuild; 
         private readonly List<string> _labels = new List<string>();
@@ -255,47 +254,42 @@ namespace SkylineTester
         }
 
         /// <summary>
-        /// When the time limit stopped the run in the middle of a test that was still making
-        /// progress, rewrites that test's log line so the results server does not report it as a
-        /// hang. See <see cref="TimeLimitLog"/>. Runs after the log is complete, so the rewrite
-        /// cannot be followed by more output from the run.
+        /// When the time limit stopped the run in the middle of a test that was not yet past the
+        /// hang threshold, rewrites that test's log line so the results server does not report it
+        /// as a hang. See <see cref="TimeLimitLog"/>. Runs after the log is complete, so the
+        /// rewrite cannot be followed by more output from the run.
         /// </summary>
         private void DropTestCutOffByTimeLimit()
         {
-            var silence = _silenceAtTimeLimit;
-            _silenceAtTimeLimit = null;
-            if (!silence.HasValue)
+            var silence = MainWindow.SilenceAtTimeLimit;
+            MainWindow.SilenceAtTimeLimit = null;
+            var logFile = MainWindow.CommandShell.LogFile;
+            if (!silence.HasValue || string.IsNullOrEmpty(logFile))
                 return;
 
-            var commandShell = MainWindow.CommandShell;
             var isPerf = Equals(MainWindow.NightlyRunType.SelectedItem as string, RUN_TYPE_PERF);
-            var hangMinutes = TimeLimitLog.GetHangThresholdMinutes(isPerf);
-            if (silence.Value.TotalMinutes >= hangMinutes)
-            {
-                commandShell.Log(string.Format("# Time limit reached after {0:F0} minutes without output. Leaving the last test to be reported as a hang.",
-                    silence.Value.TotalMinutes));
-                commandShell.UpdateLog();
-                return;
-            }
-
-            var logFile = commandShell.LogFile;
-            if (string.IsNullOrEmpty(logFile))
-                return;
+            var tempFile = logFile + ".timelimit";
             try
             {
-                lock (commandShell.LogLock)
+                lock (MainWindow.CommandShell.LogLock)
                 {
                     var log = File.ReadAllText(logFile);
-                    var rewritten = TimeLimitLog.DropUnfinishedTest(log);
-                    if (!ReferenceEquals(rewritten, log))
-                        File.WriteAllText(logFile, rewritten);
+                    var rewritten = TimeLimitLog.RewriteForTimeLimit(log, silence.Value, isPerf);
+                    if (rewritten != log)
+                    {
+                        // Into a new file first, so a failed write cannot cost the run its log
+                        File.WriteAllText(tempFile, rewritten);
+                        File.Replace(tempFile, logFile, null);
+                    }
                 }
             }
             catch (Exception e)
             {
-                // Worst case the server reports a hang, as it did before this existed
-                commandShell.Log("# Could not mark the test cut off by the time limit: " + e.Message);
-                commandShell.UpdateLog();
+                // Nothing more can be written to a log that just failed to read or replace, and an
+                // exception here would keep the run from finishing. Worst case the server reports
+                // the hang, as it did before this existed.
+                Trace.TraceWarning("Could not mark the test cut off by the time limit: " + e.Message);
+                Try.Multi<Exception>(() => File.Delete(tempFile), 1, false);
             }
         }
 
@@ -414,8 +408,6 @@ namespace SkylineTester
                     _stopTimer.Stop();
                     _stopTimer = null;
                 }
-                // Measured before the stop, which ends the output it measures
-                _silenceAtTimeLimit = MainWindow.CommandShell.ElapsedTimeSinceLastOutput;
                 MainWindow.StopByTimer();
             });
 

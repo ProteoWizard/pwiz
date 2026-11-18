@@ -214,8 +214,16 @@ namespace SkylineTester
             _runStartTime = DateTime.UtcNow; // Use UtcNow to avoid hiccups with tests running during DST changeover
         }
 
+        /// <summary>
+        /// How long the run had gone without a line of output when its time limit stopped it, or
+        /// null if it was not stopped that way. Read once by the Nightly tab when the run is done.
+        /// </summary>
+        public TimeSpan? SilenceAtTimeLimit { get; set; }
+
         public void StopByTimer()
         {
+            // Measured before the stop, which ends the output it measures
+            SilenceAtTimeLimit = commandShell.ElapsedTimeSinceLastOutput;
             // Make sure the stop happens on the UI thread
             RunUI(Stop);
         }
