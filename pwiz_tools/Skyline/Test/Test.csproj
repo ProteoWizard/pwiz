@@ -56,6 +56,12 @@
     <Compile Include="..\SkylineNightly\RunInterruption.cs" Link="SkylineNightly\RunInterruption.cs" />
   </ItemGroup>
 
+  <!-- SkylineTester's handling of a test cut off by the nightly time limit, linked in for the same
+       reason: SkylineTester is a WinExe, and this file depends on nothing but the BCL. -->
+  <ItemGroup>
+    <Compile Include="..\SkylineTester\TimeLimitLog.cs" Link="SkylineTester\TimeLimitLog.cs" />
+  </ItemGroup>
+
   <!-- protoc-generated code lives under ProtocolBuffers\GeneratedCode\ and is
        git-ignored, so a clean checkout has none. Regenerate it from the .proto
        via generatecode.bat and inject the result into @(Compile) here rather

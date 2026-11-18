@@ -20,16 +20,18 @@
 
 using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.SkylineTestUtil;
 using SkylineNightly;
+using SkylineTester;
 
 namespace pwiz.SkylineTest
 {
     /// <summary>
     /// Tests the classification SkylineNightly uses to explain a run that ended without finishing,
     /// from synthetic Windows event records shaped like the real ones (insertion strings, not
-    /// formatted messages).
+    /// formatted messages), and how SkylineTester records a test the nightly time limit cut off.
     /// </summary>
     [TestClass]
     public class RunInterruptionTest : AbstractUnitTest
@@ -57,6 +59,7 @@ namespace pwiz.SkylineTest
             TestRuntimeChangeOnly();
             TestParseRuntimes();
             TestReadMachineState();
+            TestTimeLimitCutOff();
         }
 
         private static void TestWindowsUpdateRestart()
@@ -197,6 +200,52 @@ namespace pwiz.SkylineTest
             // Any machine that builds these tests has the .NET SDK, which installs a shared runtime
             AssertEx.Contains(MachineState.DescribeInstalledRuntimes(), @"Microsoft.NETCore.App ");
             MachineState.IsRestartPending();
+        }
+
+        /// <summary>
+        /// A test still running when the time limit stops the run must not reach the results server
+        /// as the run's last test, or the server reports it as a hang.
+        /// </summary>
+        private static void TestTimeLimitCutOff()
+        {
+            const string finishedLine = @"[05:41]   0.12  TestPeakAreaRelativeAbundanceGraph (en)   0 failures, 112.95/84.31/316.1 MB, 201/1619 handles, 41 sec.";
+            const string startOfCutOff = @"[05:42]   0.13  TestPeakPerf                                   (en) ";
+            const string testOutput = @"Importing 12 of 40 files";
+            const string stopped = @"# Stopped Wednesday, November 18, 2026 7:25 AM";
+            // The server's own pattern for the last test line (TestResultsController, MacCossLabModules)
+            var serverTestLine = new Regex(@"\[(\d\d):(\d\d)]\s+(\d+)\.\d+\s+([A-Za-z]\w*)\s+\(([A-Za-z]+)\)");
+
+            // Cut off while still writing output: the server must now see the finished test as the last
+            var log = JoinLines(finishedLine, startOfCutOff + testOutput, stopped);
+            var rewritten = TimeLimitLog.DropUnfinishedTest(log);
+            var lastTestLine = rewritten.Split('\n').Last(line => serverTestLine.IsMatch(line));
+            AssertEx.Contains(lastTestLine, @"TestPeakAreaRelativeAbundanceGraph");
+            AssertEx.Contains(rewritten, TimeLimitLog.TIME_LIMIT_COMMENT + @"TestPeakPerf (en), pass 0 test 13, started at 05:42.",
+                testOutput, stopped, finishedLine);
+
+            // Cut off with nothing after the start of its line
+            rewritten = TimeLimitLog.DropUnfinishedTest(JoinLines(finishedLine, startOfCutOff, stopped));
+            AssertEx.Contains(rewritten, TimeLimitLog.TIME_LIMIT_COMMENT + @"TestPeakPerf (en)");
+            Assert.IsFalse(serverTestLine.IsMatch(rewritten.Substring(rewritten.IndexOf(TimeLimitLog.TIME_LIMIT_COMMENT, StringComparison.Ordinal))));
+
+            // A last test that finished, even with output between the start of its line and its
+            // result, is left as it is
+            var finishedWithOutput = JoinLines(finishedLine,
+                startOfCutOff + testOutput, @"   0 failures, 113.15/84.31/314.0 MB, 202/1629 handles, 3600 sec.", stopped);
+            Assert.AreSame(finishedWithOutput, TimeLimitLog.DropUnfinishedTest(finishedWithOutput));
+
+            // No tests at all, as when the time limit falls during the build
+            var buildOnly = JoinLines(@"# Nightly started Tuesday, November 17, 2026 7:25 PM", stopped);
+            Assert.AreSame(buildOnly, TimeLimitLog.DropUnfinishedTest(buildOnly));
+
+            // Perf runs get longer before silence counts as a hang, as in SkylineNightly's alert
+            Assert.IsTrue(TimeLimitLog.GetHangThresholdMinutes(true) > TimeLimitLog.GetHangThresholdMinutes(false));
+        }
+
+        private static string JoinLines(params string[] lines)
+        {
+            // SkylineTester writes its log with Windows line endings
+            return string.Join(Environment.NewLine, lines) + Environment.NewLine;
         }
 
         private static SystemEventRecord Update(DateTime time, string title)

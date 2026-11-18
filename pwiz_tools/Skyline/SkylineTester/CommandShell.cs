@@ -415,7 +415,7 @@ namespace SkylineTester
 
         private void ResetLastOutputTime() { _lastOutputTime = DateTime.UtcNow; }   // Use UtcNow to avoid hiccups with tests running during DST changeover
  
-        private TimeSpan ElapsedTimeSinceLastOutput
+        public TimeSpan ElapsedTimeSinceLastOutput
         {
             get { return DateTime.UtcNow - _lastOutputTime; }  // Use UtcNow to avoid hiccups with tests running during DST changeover
         }
