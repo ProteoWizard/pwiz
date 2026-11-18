@@ -491,7 +491,10 @@ namespace MSConvertGUI
             }
             catch
             {
-                return Status.Cancel;
+                // A progress update the window failed to show is not a request to stop: Cancel
+                // makes the writer abort and the partial output is deleted. Only the user's
+                // cancel stops the conversion.
+                return _canceled ? Status.Cancel : Status.Ok;
             }
         }
 

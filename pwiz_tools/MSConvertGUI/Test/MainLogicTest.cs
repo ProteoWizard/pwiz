@@ -150,6 +150,21 @@ public class MainLogicTest
                 Program.CurrentJob.Value = null;
             }
             CollectionAssert.AreEqual(new object[] { job }, senders.Distinct().ToArray(), "every piece names the writing job");
+
+            // Lines from threads writing at once each arrive whole, the line end with its text.
+            var pieces = new System.Collections.Concurrent.ConcurrentBag<string>();
+            EventHandler<string> pieceHandler = (_, text) => pieces.Add(text);
+            Program.StderrCaptured += pieceHandler;
+            try
+            {
+                System.Threading.Tasks.Parallel.For(0, 200, i => Console.Error.WriteLine($"line {i}"));
+            }
+            finally
+            {
+                Program.StderrCaptured -= pieceHandler;
+            }
+            CollectionAssert.AreEquivalent(Enumerable.Range(0, 200).Select(i => $"line {i}" + Environment.NewLine).ToArray(),
+                pieces.ToArray(), "a line was split across pieces");
         }
         finally
         {
@@ -194,6 +209,23 @@ public class MainLogicTest
             var config = logic.ParseCommandLine(_tempDir, args);
             Assert.AreEqual(expected, config.WriteConfig.EncoderConfig.Compression, args);
         }
+    }
+
+    /// <summary>The writers stop when a progress update returns Cancel, and the GUI then deletes the
+    /// partial output. A progress window that fails to show an update must not be read as the user
+    /// cancelling, or the conversion is lost; only a real cancel stops it.</summary>
+    [TestMethod]
+    public void Update_CancelsOnlyWhenTheUserCancels()
+    {
+        var logic = new MainLogic(new ProgressForm.JobInfo(), new Map<string, int>(), calculateSHA1Mutex: new object())
+        {
+            PercentageUpdate = (_, _, _) => throw new InvalidOperationException("window handle not created"),
+        };
+        var message = new IterationListener.UpdateMessage { iterationIndex = 5, iterationCount = 20, message = string.Empty };
+        Assert.AreEqual(IterationListener.Status.Ok, logic.update(message), "a failed progress update cancelled the conversion");
+
+        logic.ForceExit();
+        Assert.AreEqual(IterationListener.Status.Cancel, logic.update(message), "a real cancel must still stop the write");
     }
 
     /// <summary>mz5 (read-only) and the pwiz text format have no writer. A <c>--mz5</c> or

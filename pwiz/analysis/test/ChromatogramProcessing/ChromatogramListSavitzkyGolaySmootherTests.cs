@@ -42,6 +42,12 @@ public class ChromatogramListSavitzkyGolaySmootherTests
         // Edges (first 4, last 4) pass through unchanged.
         for (int j = 0; j < 4; j++) Assert.AreEqual(0.0, I[j], 1e-9, $"edge at {j}");
         for (int j = 13; j < 17; j++) Assert.AreEqual(0.0, I[j], 1e-9, $"edge at {j}");
+
+        // The inner list's own chromatogram is left as it was, so reading it again (as a
+        // --continueOnError rewrite does) smooths the raw data once more, not the smoothed data.
+        Assert.AreEqual(231.0, inten.Data[8], 1e-9, "inner intensity array was modified");
+        var again = new ChromatogramListSavitzkyGolaySmoother(inner).GetChromatogram(0, getBinaryData: true);
+        Assert.AreEqual(59.0, again.GetIntensityArray()!.Data[8], 1e-9, "second read smoothed twice");
     }
 
     [TestMethod]

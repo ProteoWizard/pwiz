@@ -55,7 +55,13 @@ namespace MSConvertGUI
         /// has no console, so without this they are lost. The cpp/CLI build did the same through
         /// pwiz_bindings_cli.dll's SetCerrCallback().
         /// </summary>
-        internal static void CaptureStderr() => Console.SetError(TextWriter.Synchronized(new StderrForwarder()));
+        /// <remarks>
+        /// The forwarder is not wrapped in <see cref="TextWriter.Synchronized"/>. It keeps no state,
+        /// and the progress window locks its own line buffers. A synchronized writer would hold its
+        /// lock while the progress window waits for the UI thread, so a write to stderr from the UI
+        /// thread at that moment would deadlock.
+        /// </remarks>
+        internal static void CaptureStderr() => Console.SetError(new StderrForwarder());
 
         /// <summary>
         /// The main entry point for the application.
@@ -121,6 +127,10 @@ namespace MSConvertGUI
             }
 
             public override void Write(char[] buffer, int index, int count) => Write(new string(buffer, index, count));
+
+            // The base class writes the text and the line end separately, and another thread's
+            // text could land between them.
+            public override void WriteLine(string value) => Write(value + NewLine);
         }
     }
 }
