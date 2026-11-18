@@ -273,7 +273,7 @@ namespace pwiz.SkylineTestTutorial
                     // Size on Windows 11 = 1920 x 1032 (same borders with a taller task bar)
                     // A laptop at 1920 x 1200 would allow 120 pixels more in width
 
-                    SkylineWindow.Size = new Size(1920, 1032);
+                    SkylineWindow.Size = ScaledSize(SkylineWindow, 1920, 1032);
                     SkylineWindow.Location = new Point(0, 0);
                 });
 

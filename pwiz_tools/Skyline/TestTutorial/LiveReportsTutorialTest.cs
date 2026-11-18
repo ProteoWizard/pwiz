@@ -403,8 +403,7 @@ namespace pwiz.SkylineTestTutorial
                     using var g = Graphics.FromImage(bmp);
                     g.SmoothingMode = SmoothingMode.AntiAlias;
 
-                    double rows = LocalizationHelper.CurrentCulture.TwoLetterISOLanguageName.Equals("en") ? 10.6 : 11;
-                    g.DrawBoxOnColumn(documentGrid, 5, rows);
+                    g.DrawBoxOnColumnToBottom(documentGrid, 5);
 
                     return bmp;
                 });

@@ -511,8 +511,15 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(alignmentForm, alignmentForm.Close);
             PauseForScreenShot("Status bar clipped from main window - 4/50 pep 4/51 prec 10/153 tran", null, bmp =>
             {
+                // Box the peptide count from its label's bounds; its position in the status bar does not
+                // scale in proportion at high DPI
+                var shotScreen = ScreenshotManager.GetWindowRectangle(SkylineWindow, scale: false);
+                int clipLeftScreen = shotScreen.X + bmp.Width - SkylineWindow.StatusSelectionWidth;
+                var peptidesScreen = SkylineWindow.StatusPeptidesScreenBounds;
                 bmp = ClipSelectionStatus(bmp);
-                return bmp.DrawAnnotationRectOnBitmap(new RectangleF(0.23F, 0, 0.23F, 1), 2).Inflate(1.5F);
+                var peptidesRect = new RectangleF((float) (peptidesScreen.X - clipLeftScreen) / bmp.Width, 0,
+                    (float) peptidesScreen.Width / bmp.Width, 1);
+                return bmp.DrawAnnotationRectOnBitmap(peptidesRect, 2).Inflate(1.5F);
             });
 
             string TIP_NAME = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[TIP3].Name;

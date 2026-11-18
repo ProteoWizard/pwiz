@@ -291,7 +291,8 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     pasteProteinsDlg.SelectCell(17, 0);
-                    pasteProteinsDlg.SetColumnWidths(-1, 220, 500, 0, 0, 0, 0);
+                    pasteProteinsDlg.SetColumnWidths(-1, ScaledContentWidth(pasteProteinsDlg, 220),
+                        ScaledContentWidth(pasteProteinsDlg, 500), 0, 0, 0, 0);
                 });
                 PauseForScreenShot<PasteDlg.ProteinListTab>("Insert Protein List - For Screenshot, select last (empty) item in list"); // Not L10N
                 OkDialog(pasteProteinsDlg, pasteProteinsDlg.OkDialog);
@@ -375,7 +376,7 @@ namespace pwiz.SkylineTestTutorial
                         Assert.AreEqual(1, uniquePeptidesDlg.GetDataGridView().RowCount);
                         Assert.AreEqual(7, uniquePeptidesDlg.GetDataGridView().ColumnCount);
 
-                        uniquePeptidesDlg.SplitHeight = 58;
+                        uniquePeptidesDlg.SplitHeight = ScaledContentHeight(uniquePeptidesDlg, 58);
                         uniquePeptidesDlg.Height = ScaledHeight(uniquePeptidesDlg, 292);
                     });
                 PauseForScreenShot<UniquePeptidesDlg>("Unique Peptides form"); // Not L10N
@@ -593,9 +594,9 @@ namespace pwiz.SkylineTestTutorial
                         var skylineRect = ScreenshotManager.GetFramedWindowBounds(SkylineWindow);
                         bmp = bmp.CleanupBorder(skylineRect, ScreenshotBorder.CornerForm, completeRect);
 
-                        int top = completeRect.Top - aboveAutoComplete;
+                        int top = completeRect.Top - ScaledContentHeight(SkylineWindow, aboveAutoComplete);
                         int bottom = Math.Max(skylineRect.Bottom, completeRect.Bottom);
-                        var cropRect = new Rectangle(skylineRect.Left, top, 735,  bottom - top);
+                        var cropRect = new Rectangle(skylineRect.Left, top, ScaledContentWidth(SkylineWindow, 735),  bottom - top);
                         if (skylineRect.Bottom < bottom)
                         {
                             var bmpClipped = ClipRegionAndEraseBackground(bmp,

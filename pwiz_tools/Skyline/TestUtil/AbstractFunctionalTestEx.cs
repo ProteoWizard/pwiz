@@ -686,12 +686,17 @@ namespace pwiz.SkylineTestUtil
             graphControl.Refresh();
         }
 
+        /// <summary>
+        /// Resizes the floating window holding a form, to a width and height written for 100% display scale.
+        /// </summary>
         protected static void ResizeFloatingFrame(DockableForm dockableForm, int? width, int? height)
         {
             Assert.AreEqual(DockState.Floating, dockableForm.DockState);
             var parentForm = dockableForm.ParentForm;
             Assert.IsNotNull(parentForm);
-            ResizeFormOnScreen(parentForm, width, height);
+            ResizeFormOnScreen(parentForm,
+                width.HasValue ? ScaledWidth(parentForm, width.Value) : (int?) null,
+                height.HasValue ? ScaledHeight(parentForm, height.Value) : (int?) null);
         }
 
         protected static void ResizeFormOnScreen(Form parentForm, int? width, int? height)

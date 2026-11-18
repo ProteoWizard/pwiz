@@ -134,10 +134,10 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 RunUI(col4Dlg.radioMolecule.PerformClick);
                 RunUIForScreenShot(() =>
                 {
-                    col4Dlg.SetColumnWidth(0, 120); // To show "Molecule List Name" fully
-                    col4Dlg.SetColumnWidth(1, 125); // To show the precursor names fully
-                    col4Dlg.SetColumnWidth(2, 120); // To show "Molecule Formula" fully
-                    col4Dlg.SetColumnWidth(5, 135); // To reduce wrapping to just 2 rows
+                    col4Dlg.SetColumnWidth(0, ScaledContentWidth(col4Dlg, 120)); // To show "Molecule List Name" fully
+                    col4Dlg.SetColumnWidth(1, ScaledContentWidth(col4Dlg, 125)); // To show the precursor names fully
+                    col4Dlg.SetColumnWidth(2, ScaledContentWidth(col4Dlg, 120)); // To show "Molecule Formula" fully
+                    col4Dlg.SetColumnWidth(5, ScaledContentWidth(col4Dlg, 135)); // To reduce wrapping to just 2 rows
                 });
                 PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column picker");
 

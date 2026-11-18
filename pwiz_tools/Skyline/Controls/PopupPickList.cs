@@ -400,10 +400,27 @@ namespace pwiz.Skyline.Controls
             }
             else
             {
+                PlaceSearchOverCheckAllLabel();
                 textSearch.Visible = true;
                 textSearch.Focus();
                 ShowChoices();
             }
+        }
+
+        /// <summary>
+        /// The find box covers the label of the check-all box, leaving its check box showing. Font
+        /// autoscaling moves both controls, but the check box glyph grows only with the DPI, so at high
+        /// DPI the designer position left part of the label showing. Place the box from the glyph's size.
+        /// </summary>
+        private void PlaceSearchOverCheckAllLabel()
+        {
+            Size glyphSize;
+            using (var g = cbItems.CreateGraphics())
+            {
+                glyphSize = CheckBoxRenderer.GetGlyphSize(g, CheckBoxState.UncheckedNormal);
+            }
+            int left = cbItems.Left + glyphSize.Width + DpiUtil.Scale(this, 6);
+            textSearch.SetBounds(left, textSearch.Top, textSearch.Right - left, textSearch.Height);
         }
 
         private PickListChoice GetVisibleChoice(int i)

@@ -68,7 +68,6 @@ using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using TestRunnerLib;
-using TestRunnerLib.PInvoke;
 using ZedGraph;
 using SampleType = pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.SampleType;
 
@@ -227,6 +226,29 @@ namespace pwiz.SkylineTestUtil
                 return height;
             return ScaleWindowLength(height, window.Height - window.ClientSize.Height, DpiScale.Factor(window),
                 GetLayoutScale(window).Height);
+        }
+
+        /// <summary>
+        /// Scales a width inside a window written for 100% display scale, like a grid column width,
+        /// by the window's font-based layout scale, so that it fits the same text it fit at 100%.
+        /// Unchanged at 100%.
+        /// </summary>
+        public static int ScaledContentWidth(Control window, int width)
+        {
+            if (!DpiScale.IsScaled(window))
+                return width;
+            return (int) Math.Round(width * GetLayoutScale(window).Width);
+        }
+
+        /// <summary>
+        /// Scales a height inside a window written for 100% display scale, like a splitter distance,
+        /// as <see cref="ScaledContentWidth"/> scales a width.
+        /// </summary>
+        public static int ScaledContentHeight(Control window, int height)
+        {
+            if (!DpiScale.IsScaled(window))
+                return height;
+            return (int) Math.Round(height * GetLayoutScale(window).Height);
         }
 
         /// <summary>
@@ -1747,17 +1769,13 @@ namespace pwiz.SkylineTestUtil
         protected Bitmap ClipTargets(Bitmap targetsBmp, int? countTargets = null, bool fromBottom = false, bool includeNewItem = false)
         {
             var sequenceTree = SkylineWindow.SequenceTree;
-            var sequenceTreeRect = sequenceTree.Bounds;
-
-            sequenceTreeRect.Inflate(-1, -1);   // Borders outside parent rect
-            sequenceTreeRect.X += 1;
-            sequenceTreeRect.Y += 1;
-
-            int style = User32Test.GetWindowLong(sequenceTree.Handle, User32Test.GWL_STYLE);
-            if ((style & User32Test.WS_VSCROLL) != 0)
-                sequenceTreeRect.Width -= SystemInformation.VerticalScrollBarWidth;
-            if ((style & User32Test.WS_HSCROLL) != 0)
-                sequenceTreeRect.Height -= SystemInformation.HorizontalScrollBarHeight;
+            // The visible part of the tree, in tree coordinates: its client area (no border or scroll bars)
+            // within its parent panel, which hides the border by placing the tree at a negative offset. At
+            // 150% that offset scales and the 1-pixel border does not, so the client area starts a pixel
+            // left of the panel.
+            var parent = sequenceTree.Parent;
+            var parentInTree = sequenceTree.RectangleToClient(parent.RectangleToScreen(parent.ClientRectangle));
+            var sequenceTreeRect = Rectangle.Intersect(sequenceTree.ClientRectangle, parentInTree);
 
             if (countTargets != null)
             {

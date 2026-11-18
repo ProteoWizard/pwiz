@@ -4178,6 +4178,8 @@ namespace pwiz.Skyline
             }
         }
 
+        public Rectangle StatusPeptidesScreenBounds => statusStrip.RectangleToScreen(statusPeptides.Bounds);
+
         #endregion
 
         private void SkylineWindow_Move(object sender, EventArgs e)
