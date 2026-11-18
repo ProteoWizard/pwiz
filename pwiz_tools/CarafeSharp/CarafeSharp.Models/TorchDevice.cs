@@ -113,8 +113,8 @@ namespace pwiz.CarafeSharp.Models
         /// <summary>
         /// Turns TF32 off for CUDA matrix multiplications and cuDNN convolutions and LSTMs, so the GPU predicts in
         /// float32 as the CPU does: the equivalent of <c>torch.backends.cuda.matmul.allow_tf32 = False</c> and
-        /// <c>torch.backends.cudnn.allow_tf32 = False</c>. Fine-tuning allows cuDNN TF32 again
-        /// (<see cref="AllowTf32ForTraining"/>).
+        /// <c>torch.backends.cudnn.allow_tf32 = False</c>. Fine-tuning is in float32 too, with deterministic cuDNN
+        /// (<see cref="DeterministicCuDnn"/>).
         /// </summary>
         /// <remarks>
         /// libtorch uses TF32, a 10-bit mantissa, for cuDNN convolutions and LSTMs on Ampere and later GPUs by default.
@@ -133,31 +133,47 @@ namespace pwiz.CarafeSharp.Models
         }
 
         /// <summary>
-        /// Allows cuDNN TF32, libtorch's default, while fine-tuning on <paramref name="device"/>, and turns it off again
-        /// when disposed; null on the CPU, which has no TF32.
+        /// Makes cuDNN use deterministic convolution algorithms (<c>torch.backends.cudnn.deterministic = True</c>) while
+        /// fine-tuning on <paramref name="device"/>, and restores the previous setting when disposed; null on the CPU, and
+        /// null with a warning to <paramref name="log"/> when this libtorch lacks the setting.
         /// </summary>
         /// <remarks>
-        /// With cuDNN TF32 off, two GPU fine-tunes of the same data gave different RT models on an RTX 4000 Ada
-        /// (RegressionTest.TestRegressionSubsetRepeatsOnGpu failed 4 of 4 times; with TF32 on it passed 3 of 3), most likely
-        /// because in float32 cuDNN picks a gradient algorithm whose order of additions changes from run to run. libtorch's
-        /// <c>cudnn.deterministic</c> would rule those out, but TorchSharp 0.106 has no setter for it, and its
-        /// <c>use_deterministic_algorithms</c> is marked not implemented. Training therefore keeps the TF32 it had,
-        /// which repeats byte for byte, including the predictions it makes for its calibration and metrics; prediction
-        /// outside fine-tuning is in float32. <c>NVIDIA_TF32_OVERRIDE=0</c> would turn this TF32 off as well.
+        /// With TF32 off, cuDNN picks among float32 algorithms, and the one it chose for a convolution's gradient added in
+        /// another order on every run: two GPU fine-tunes of the same data gave different RT models
+        /// (RegressionTest.TestRegressionSubsetRepeatsOnGpu failed 4 of 4 times on an RTX 4000 Ada). The deterministic
+        /// setting leaves those algorithms out, so training is in float32, as prediction is, and repeats byte for byte.
+        /// TorchSharp 0.106 has no setter for it, so it is set in libtorch's own context (<see cref="LibTorchContext"/>).
         /// </remarks>
-        public static IDisposable AllowTf32ForTraining(Device device)
+        public static IDisposable DeterministicCuDnn(Device device, Action<string> log)
         {
             if (device.type != DeviceType.CUDA)
                 return null;
-            backends.cudnn.allow_tf32 = true;
-            return new Tf32Off();
+            // Resolve turned TF32 off already; a CUDA device made elsewhere would otherwise train with libtorch's TF32.
+            DisableTf32();
+            var context = LibTorchContext.TryOpen(out string problem);
+            if (context == null)
+            {
+                log?.Invoke(@"Warning: cuDNN cannot be made deterministic, so GPU fine-tuning may not repeat: " + problem);
+                return null;
+            }
+            return new DeterministicCuDnnScope(context);
         }
 
-        private sealed class Tf32Off : IDisposable
+        private sealed class DeterministicCuDnnScope : IDisposable
         {
+            private readonly LibTorchContext _context;
+            private readonly bool _previous;
+
+            public DeterministicCuDnnScope(LibTorchContext context)
+            {
+                _context = context;
+                _previous = context.DeterministicCuDnn;
+                context.DeterministicCuDnn = true;
+            }
+
             public void Dispose()
             {
-                DisableTf32();
+                _context.DeterministicCuDnn = _previous;
             }
         }
 

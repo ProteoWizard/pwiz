@@ -199,6 +199,9 @@
   <data name="_shared_peptides" xml:space="preserve">
     <value>How a peptide shared by several protein groups counts in protein inference: {0} (the default; toward every group it maps to), razor (toward only the group with the most unique peptides), or unique (toward none).</value>
   </data>
+  <data name="_strip_entrapment" xml:space="preserve">
+    <value>Leave the entrapment peptides and the protein groups made only of them out of the result (the {0} and the reports); the {1} report still measures them. Default: they are reported like targets.</value>
+  </data>
   <data name="_task" xml:space="preserve">
     <value>HPC: run exactly one task (one node = one task). Omit for the full pipeline. {0} stages the {1} caches; {4} writes the {5} parquets, and on a COMPLETED run only the missing ones; {2} regenerates only the {3} report for a COMPLETED run, writing no other output. With {6}, {7}, {8} and {9} run the library build one phase at a time, and the four search stages search the library it predicts, or with {10} the tuning runs.</value>
   </data>
@@ -249,6 +252,9 @@
   </data>
   <data name="_entrapment_fasta" xml:space="preserve">
     <value>With {0}: draw the entrapment peptides, matched in mass, from this foreign-species protein FASTA instead of shuffling the targets.</value>
+  </data>
+  <data name="_entrapment_in_targets" xml:space="preserve">
+    <value>With {0}: also add, for this fraction of the targets (up to 1), an entrapment peptide placed on a random target protein, so the protein evidence a protein-aware step gives false targets reaches entrapment too; only the pairing manifest's peptide_type marks these as entrapment. Added to the entrapment of {0} ({0} 0.1 {1} 0.1 is 20% entrapment); together at most 1 and at least {2}.</value>
   </data>
   <data name="_training_input" xml:space="preserve">
     <value>With {0}: tune the models on these runs before the library is predicted. The runs are searched with a library predicted as it is without this option, their training exports tune the MS2 and RT models, and the library the output is searched with is predicted with the tuned models. A run need not be one of {1}: one that is not is searched for the tuning only and is absent from the output. The tuned model is saved beside the output as {2}, which {3} takes next time. The options of the Library Tuning section apply.</value>
@@ -327,6 +333,9 @@
   </data>
   <data name="_shared_peptides_property" xml:space="preserve">
     <value>Shared peptides</value>
+  </data>
+  <data name="_strip_entrapment_property" xml:space="preserve">
+    <value>Leave entrapment out of the result</value>
   </data>
   <data name="_threads_property" xml:space="preserve">
     <value>Threads</value>

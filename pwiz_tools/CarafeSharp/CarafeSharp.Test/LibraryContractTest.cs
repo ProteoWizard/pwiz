@@ -87,6 +87,16 @@ namespace pwiz.CarafeSharp.Test
             AssertViolation(LibraryContractViolationClass.EntrapmentUnmarked, @"SAMPLERK: sp|P1|A", manifest,
                 Replace(clean, 4, Row(@"SAMPLERK", @"SAMPLERK", 2, @"sp|P1_p_target|A_p_target;sp|P1|A")),
                 LibraryContractViolationClass.ProteinsDisagreeWithManifest);
+            // An entrapment peptide placed on a target protein carries no marker: its kind is the
+            // manifest's, and only its proteins can disagree with the manifest.
+            AssertViolation(LibraryContractViolationClass.ProteinsDisagreeWithManifest, @"SAMPLERK: sp|P2|B (manifest sp|P1_p_target|A_p_target)", manifest,
+                Replace(clean, 4, Row(@"SAMPLERK", @"SAMPLERK", 2, @"sp|P2|B")));
+            var onTargetManifest = new List<PairingManifestRow>(manifest);
+            onTargetManifest[2] = ManifestRow(@"SAMPLERK", PairingManifest.KIND_P_TARGET, @"sp|P2|B", 1);
+            onTargetManifest[3] = ManifestRow(@"LPMSAERK", PairingManifest.KIND_P_DECOY, @"decoy_sp|P2|B", 1);
+            var onTarget = Replace(Replace(clean, 4, Row(@"SAMPLERK", @"SAMPLERK", 2, @"sp|P2|B")), 5, Row(@"LPMSAERK", @"LPMSAERK", 2, @"decoy_sp|P2|B"));
+            report = LibraryContract.Validate(onTarget, onTargetManifest, PREFIXES);
+            Assert.IsTrue(report.IsValid, report.Describe());
             AssertViolation(LibraryContractViolationClass.NotInManifest, @"UNKNOWNPEPTIDEK", manifest,
                 clean.Concat(new[] { Row(@"UNKNOWNPEPTIDEK", @"UNKNOWNPEPTIDEK", 2, @"sp|P9|Z") }).ToList());
             // The merged-decoy defect: a decoy row whose sequence the manifest calls a target.

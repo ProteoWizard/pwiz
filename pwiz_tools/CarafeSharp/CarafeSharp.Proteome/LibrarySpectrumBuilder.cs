@@ -126,8 +126,11 @@ namespace pwiz.CarafeSharp.Proteome
             var fragments = SelectFragments(precursor, intensities, stride);
             if (fragments == null)
                 return null;
+            // A precursor table's proteins, when its column names them (Skyline's Build Library)
+            if (_peptideToProteins == null || !_peptideToProteins.TryGetValue(precursor.Peptide.Sequence, out string proteins))
+                proteins = LibrarySpectrum.NO_PROTEIN;
             var spectrum = new LibrarySpectrum(precursor, AlphabaseFragmentMz.CalculatePrecursorMz(precursor), retentionTime,
-                LibrarySpectrum.NO_PROTEIN, 0, fragments, collisionalCrossSection);
+                proteins, 0, fragments, collisionalCrossSection);
             if (_outputs.WritesBlib)
             {
                 spectrum.SkylineModifiedSequence = ModifiedPeptideNotation.FormatSkyline(precursor.Peptide, out var modifications);
