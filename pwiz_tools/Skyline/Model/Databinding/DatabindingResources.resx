@@ -164,6 +164,9 @@
   <data name="SkylineViewContext_WriteDataWithStatus_Property" xml:space="preserve">
     <value>Property</value>
   </data>
+  <data name="ParquetReportExporter_A_value_in_the_column___0___is_too_large_to_export_to_Parquet_" xml:space="preserve">
+    <value>A value in the column '{0}' is too large to export to Parquet.</value>
+  </data>
   <data name="RowFactories_ExportReport_Built_in_reports_cannot_be_exported_here" xml:space="preserve">
 	  <value>Built in reports cannot be exported here</value>
   </data>
