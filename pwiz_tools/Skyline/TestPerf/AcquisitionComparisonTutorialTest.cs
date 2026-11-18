@@ -171,7 +171,7 @@ namespace TestPerf
             
             RunUI(() => SkylineWindow.ImportFastaFile(GetTestPath(Path.Combine(PRM_DATA_DIR, "PROCAL.FASTA"))));
             
-            RunUIForScreenShot(() => SkylineWindow.Size = new Size(940, 635));
+            RunUIForScreenShot(() => SkylineWindow.Size = ScaledSize(SkylineWindow, 940, 635));
             RestoreViewOnScreen(4);
             PauseForScreenShot("Main window with PROCAL targets and Library Match");
             
@@ -355,7 +355,7 @@ namespace TestPerf
             
             RunUI(() =>
             {
-                SkylineWindow.Size = new Size(1470, 905);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 1470, 905);
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 SkylineWindow.ShowRTReplicateGraph();
                 SkylineWindow.ArrangeGraphsTiled();
@@ -644,7 +644,7 @@ namespace TestPerf
 
             RunUI(() =>
             {
-                chromControl.ContextMenuStrip.Show(graphChrom.PointToScreen(new Point(60, 20)));
+                chromControl.ContextMenuStrip.Show(graphChrom.PointToScreen(new Point(Scaled(60), Scaled(20))));
                 var peptideIdTimesMenuItem = chromControl.ContextMenuStrip.Items.OfType<ToolStripMenuItem>()
                     .First(i => Equals(i.Name, @"peptideIDTimesContextMenuItem"));
                 peptideIdTimesMenuItem.ShowDropDown();

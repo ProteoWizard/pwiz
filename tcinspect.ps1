@@ -22,8 +22,10 @@
     that are a superset of these.
 
     Warnings and findings turn the status red and leave the build green: this script ALWAYS exits
-    0 and raises no TeamCity buildProblem, either of which would fail the build. Exiting 0 on a
-    genuine failure would be dishonest, so a pre-build or inspection that failed or left no output
+    0 and raises no TeamCity buildProblem, either of which would fail the build. So that they can
+    be read without opening the build log, each build warning is also reported as a TeamCity
+    inspection, which lists it on the build's Code Inspection tab beside the ReSharper findings
+    without failing anything. Exiting 0 on a genuine failure would be dishonest, so a pre-build or inspection that failed or left no output
     reports state 'error' rather than quietly passing. The only outcome that reports 'success' is
     a completed pre-build with no warnings and a completed inspection with no findings.
 
@@ -105,6 +107,16 @@ function Send-GitHubStatus([string] $state, [string] $description) {
                          -CommitSha $CommitSha -TargetUrl $TargetUrl -Repository $Repository
 }
 
+# Prints and publishes the build warnings log, lists each warning on the Code Inspection tab, and
+# returns the warning count ($null when there is no log).
+function Report-BuildWarnings {
+    $count = Write-BuildWarnings -LogPath $BuildWarningsPath -ArtifactDir '.teamcity/pwiz-sharp-inspect'
+    if ($count -gt 0) {
+        Publish-BuildWarningInspections -LogPath $BuildWarningsPath -RepoRoot $PSScriptRoot
+    }
+    return $count
+}
+
 # The single exit point. Every path lands here, and every path exits 0.
 function Complete-Inspection([string] $state, [string] $summary) {
     # GitHub truncates a commit status description at 140 characters; a tool's exception text
@@ -149,7 +161,7 @@ try {
         # were never emitted, and inspectcode would report their unresolved types as findings;
         # build.bat reports the errors themselves.
         if ($preBuildExit -ne 0) {
-            Write-BuildWarnings -LogPath $BuildWarningsPath -ArtifactDir '.teamcity/pwiz-sharp-inspect' | Out-Null
+            Report-BuildWarnings | Out-Null
             Complete-Inspection 'error' "Pre-build of $target failed with code $preBuildExit; build warnings not fully checked, inspection not run"
         }
 
@@ -243,7 +255,7 @@ try {
         }
     }
 
-    $warningCount = Write-BuildWarnings -LogPath $BuildWarningsPath -ArtifactDir '.teamcity/pwiz-sharp-inspect'
+    $warningCount = Report-BuildWarnings
 
     $verdict = @()
     # No log after a pre-build means no evidence the build is warning-free, so it cannot pass.

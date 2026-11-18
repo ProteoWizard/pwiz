@@ -435,6 +435,8 @@ internal static class ArgParser
             c => c.IgnoreMissingZeroSamples = true),
         Flag("ignoreUnknownInstrumentError", "if true, if an instrument cannot be determined from a vendor file, it will not be an error",
             c => c.IgnoreUnknownInstrumentError = true),
+        Flag("noCvUpdate", "do not download a newer controlled vocabulary when an input file uses a term the built-in one does not define (the term is then unknown)",
+            c => c.NoCvUpdate = true),
         Flag("stripLocationFromSourceFiles", "if true, sourceFile elements will be stripped of location information, so the same file converted from different locations will produce the same mzML",
             c => c.StripLocationFromSourceFiles = true),
         Flag("stripVersionFromSoftware", "if true, software elements will be stripped of version information, so the same file converted with different versions will produce the same mzML",

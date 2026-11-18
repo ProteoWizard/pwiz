@@ -1,5 +1,5 @@
-<meta-runner name="Upload artifact metadata to SourceForge">
-  <description>Upload artifact metadata for the current build configuration.</description>
+<meta-runner name="Upload artifact metadata">
+  <description>Upload artifact metadata for the current build configuration to the download page's S3 release metadata.</description>
   <settings>
     <parameters>
       <param name="GitHubAuthToken" value="zxx05ef5a299ed0b0f46b4c7898ed776994a1ef0772e2a810cd95ed0b7dca611361dfec53604fd8827c775d03cbe80d301b" spec="password display='hidden' label='GitHubAuthToken'" />
@@ -52,21 +52,6 @@ metadataFile.close()]]></param>
           <param name="teamcity.step.mode" value="default" />
           <param name="virtualenvEnvName" value=".venv" />
           <param name="virtualenvFile" value="requirements.txt" />
-        </parameters>
-      </runner>
-      <runner name="Upload artifact metadata to SourceForge" type="ssh-deploy-runner">
-        <conditions>
-          <equals name="teamcity.build.branch.is_default" value="true" />
-          <does-not-equal name="env.BUILD_IS_PERSONAL" value="true" />
-        </conditions>
-        <parameters>
-          <param name="jetbrains.buildServer.deployer.sourcePath" value="artifact_xml/*.xml" />
-          <param name="jetbrains.buildServer.deployer.ssh.transport" value="jetbrains.buildServer.deployer.ssh.transport.sftp" />
-          <param name="jetbrains.buildServer.deployer.targetUrl" value="web.sf.net:/home/project-web/proteowizard/htdocs/releases" />
-          <param name="jetbrains.buildServer.deployer.username" value="chambm" />
-          <param name="jetbrains.buildServer.sshexec.authMethod" value="UPLOADED_KEY" />
-          <param name="teamcity.step.mode" value="default" />
-          <param name="teamcitySshKey" value="chambm@sourceforge.net-ed25519" />
         </parameters>
       </runner>
       <runner name="" type="ProteoWizard_UploadReleaseMetadataToS3">

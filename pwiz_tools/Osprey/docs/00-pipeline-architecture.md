@@ -248,11 +248,14 @@ does not:
   ([22-training-export](22-training-export.md)), and means exactly what `--training-export`
   without `--task` means. The export is a declared output of `PerFileRescoring`, not a stage,
   so the selector selects the whole pipeline with the export on and sets no stop boundary.
-  On a finished analysis every other output is current: `PerFileScoring`, `FirstPassFDR` and
-  `SecondPassFDR` report `skipping (outputs valid)`, and `PerFileRescoring` takes its
-  export-only arm (`OnlyTrainingExportsOutstanding`), which writes each missing export from the
-  run's own artifacts and re-scores nothing. On an unfinished analysis the analysis runs, and
-  each run's export is written while its spectra are in hand. `--task ModelDiagnostics` never
+  On an analysis that ran without the export, `PerFileScoring` and `PerFileRescoring` run
+  again, because the reference XIC the export reads is written into their parquets only when
+  the export is requested (#5023, the exception to P17 rule 2), and `FirstPassFDR` and
+  `SecondPassFDR` report `skipping (outputs valid)`. On one that ran with it and is missing only
+  exports, `PerFileRescoring` takes its export-only arm (`OnlyTrainingExportsOutstanding`),
+  which writes each missing export from the run's own artifacts and re-scores nothing. On an
+  unfinished analysis the analysis runs, and each run's export is written while its spectra
+  are in hand. `--task ModelDiagnostics` never
   writes one: a diagnostics-only render writes nothing but its report.
 
   Like `ModelDiagnostics`, it is admitted to the per-run survivor loader (`HydratesPerRun`), so
@@ -789,6 +792,16 @@ The rule, stated so the next optional product lands in the right place:
 2. **Declare the product as that task's output only when it is asked for.** The flag then
    moves no other key: adding it to a finished analysis leaves every other output valid, and
    the forward scan (P15) finds only the product outstanding.
+
+   **One deliberate exception: the training export's reference XIC.** The export reads each
+   row's reference XIC from the reconciled parquet, and nothing else does. Carried on every
+   run, it was ~9% of a SEA-AD scoring parquet, written in Stage 4, read back and rewritten in
+   Stage 6, for an opt-in product few runs ask for. So both scores parquets carry it only when
+   the export is requested, and the flag moves the `PerFileScoring` and `PerFileRescoring` keys
+   (`ParquetScoreCache.ReferenceXicValidityKeySuffix`): adding the export to an analysis that
+   ran without it re-scores Stages 4 and 6, and the FDR tasks still skip (#5023). The trade is
+   a re-score on the rare late request against bytes saved on every run. The next optional
+   product should not take the exception by precedent: it needs the same measurement.
 3. **Give that task an arm for "only my optional product is outstanding".** The arm writes the
    product from the task's own durable artifacts and redoes none of the task's work:
    `FirstPassFdrTask.FoldDiagnosticsOnly`, `SecondPassFdrTask.FoldPass2DiagnosticsOnly`, and
@@ -812,8 +825,9 @@ The export is built so that it has no such source. Written in flight, it still r
 reconciled parquet and the q-value sidecar back from disk. The spectra and calibration it uses
 are the contents of that run's `.spectra.bin` and `.calibration.json`. So the export-only arm,
 writing later from those artifacts, writes the same file. P16's two-part test applies
-unchanged: the pay-later leg must re-score nothing, and its parquet must be byte-identical to
-the one written with the flag up front.
+unchanged for the export-only arm: it must re-score nothing, and its parquet must be
+byte-identical to the one written with the flag up front. The flag added to an analysis that
+ran without it re-scores (rule 2's exception) and still writes the same bytes.
 
 **P18. A cache is rebuilt from its source, never upgraded or imported in place; a renamed
 cache format removes its predecessor.** A cache (`.spectra.bin`, the derived

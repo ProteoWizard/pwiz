@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -38,6 +39,7 @@ using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.BiblioSpec.IO;
 using pwiz.Common.Collections;
+using pwiz.Common.Controls;
 using pwiz.Common.DataBinding;
 using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
@@ -67,7 +69,6 @@ using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using TestRunnerLib;
-using TestRunnerLib.PInvoke;
 using ZedGraph;
 using SampleType = pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.SampleType;
 
@@ -187,6 +188,100 @@ namespace pwiz.SkylineTestUtil
         }
 
         public static SkylineWindow SkylineWindow { get { return Program.MainWindow; } }
+
+        /// <summary>
+        /// Scales a window size written for 100% display scale, as tests set sizes for tutorial
+        /// screenshots, to the display scale the test runs at, the way the window's own contents
+        /// scale: the client area by the font-based layout ratio (WinForms AutoScaleMode.Font, about
+        /// 1.67 x 1.54 at 150%) and the title bar and borders as Windows draws them at the current
+        /// DPI. A window the test sizes then keeps the proportions of one sized by its designer.
+        /// Unchanged at 100%.
+        /// </summary>
+        public static Size ScaledSize(Control window, int width, int height)
+        {
+            if (!DpiScale.IsScaled(window))
+                return new Size(width, height);
+            var ratio = GetLayoutScale(window);
+            float dpiFactor = DpiScale.Factor(window);
+            return new Size(ScaleWindowLength(width, window.Width - window.ClientSize.Width, dpiFactor, ratio.Width),
+                ScaleWindowLength(height, window.Height - window.ClientSize.Height, dpiFactor, ratio.Height));
+        }
+
+        /// <summary>
+        /// Scales a window width written for 100% display scale, as <see cref="ScaledSize"/> does.
+        /// </summary>
+        public static int ScaledWidth(Control window, int width)
+        {
+            if (!DpiScale.IsScaled(window))
+                return width;
+            return ScaleWindowLength(width, window.Width - window.ClientSize.Width, DpiScale.Factor(window),
+                GetLayoutScale(window).Width);
+        }
+
+        /// <summary>
+        /// Scales a window height written for 100% display scale, as <see cref="ScaledSize"/> does.
+        /// </summary>
+        public static int ScaledHeight(Control window, int height)
+        {
+            if (!DpiScale.IsScaled(window))
+                return height;
+            return ScaleWindowLength(height, window.Height - window.ClientSize.Height, DpiScale.Factor(window),
+                GetLayoutScale(window).Height);
+        }
+
+        /// <summary>
+        /// Scales a width inside a window written for 100% display scale, like a grid column width,
+        /// by the window's font-based layout scale, so that it fits the same text it fit at 100%.
+        /// Unchanged at 100%.
+        /// </summary>
+        public static int ScaledContentWidth(Control window, int width)
+        {
+            if (!DpiScale.IsScaled(window))
+                return width;
+            return (int) Math.Round(width * GetLayoutScale(window).Width);
+        }
+
+        /// <summary>
+        /// Scales a height inside a window written for 100% display scale, like a splitter distance,
+        /// as <see cref="ScaledContentWidth"/> scales a width.
+        /// </summary>
+        public static int ScaledContentHeight(Control window, int height)
+        {
+            if (!DpiScale.IsScaled(window))
+                return height;
+            return (int) Math.Round(height * GetLayoutScale(window).Height);
+        }
+
+        /// <summary>
+        /// Scales a distance in pixels written for 100% display scale, like a gap between windows,
+        /// by the display scale.
+        /// </summary>
+        public static int Scaled(int pixels)
+        {
+            return DpiScale.Scale(SkylineWindow, pixels);
+        }
+
+        // Skyline forms are laid out at 96 DPI with this AutoScaleDimensions. WinForms replaces a form's
+        // AutoScaleDimensions with the current dimensions once it has scaled, so a live form cannot say.
+        private static readonly SizeF DESIGN_AUTOSCALE_DIMENSIONS = new SizeF(6, 13);
+
+        private static SizeF GetLayoutScale(Control window)
+        {
+            // A window that does not scale by font, like a floating docking window, holds forms that do
+            var form = window as ContainerControl;
+            if (form == null || form.AutoScaleMode != AutoScaleMode.Font)
+                form = SkylineWindow;
+            var current = form.CurrentAutoScaleDimensions;
+            return new SizeF(current.Width / DESIGN_AUTOSCALE_DIMENSIONS.Width,
+                current.Height / DESIGN_AUTOSCALE_DIMENSIONS.Height);
+        }
+
+        private static int ScaleWindowLength(int length, int nonClient, float dpiFactor, float layoutScale)
+        {
+            // The client part of the 100% length, without the 100% title bar or border
+            double client = length - nonClient / dpiFactor;
+            return (int) Math.Round(client * layoutScale) + nonClient;
+        }
 
         private bool _forceMzml;
 
@@ -829,7 +924,7 @@ namespace pwiz.SkylineTestUtil
         {
             var waitMultiplier = 1; // Various conditions may require longer timeouts
 
-            if (System.Diagnostics.Debugger.IsAttached)
+            if (Debugger.IsAttached)
             {
                 // When debugger is attached, some vendor readers are S-L-O-W!
                 waitMultiplier = 10;
@@ -1245,8 +1340,8 @@ namespace pwiz.SkylineTestUtil
                 // Assistance in chasing down intermittent timeout problems
                 if (i == waitCycles - 1 && LaunchDebuggerOnWaitForConditionTimeout)
                 {
-                    System.Diagnostics.Debugger.Launch(); // Try again, under the debugger
-                    System.Diagnostics.Debugger.Break();
+                    Debugger.Launch(); // Try again, under the debugger
+                    Debugger.Break();
                     i = 0; // For debugging ease - stay in loop
                 }
             }
@@ -1275,6 +1370,28 @@ namespace pwiz.SkylineTestUtil
         public static bool WaitForConditionUI(Func<bool> func, Func<string> timeoutMessage)
         {
             return WaitForConditionUI(WAIT_TIME, func, timeoutMessage);
+        }
+
+        /// <summary>
+        /// Waits for a property sheet to show the expected values, since some are filled in only after
+        /// asynchronous loading completes. On timeout, fails listing the differing properties and all of
+        /// the actual values, in the dictionary form the tests declare their expected values in. Values
+        /// shown there are formatted for the current culture, so culture-dependent expected values still
+        /// need their ToString(CultureInfo.CurrentCulture) or resource form when pasted into a test.
+        /// </summary>
+        public static T WaitForPropertySheet<T>(Func<object> getSelectedObject, T expectedProperties) where T : GlobalizedObject
+        {
+            GlobalizedObject currentProperties = null;
+            WaitForConditionUI(() =>
+                {
+                    currentProperties = getSelectedObject() as GlobalizedObject;
+                    return expectedProperties.IsSameAs(currentProperties);
+                },
+                () => TextUtil.LineSeparate(new[] { @"Property sheet differs from expected values:" }
+                    .Concat(expectedProperties.GetDifference(currentProperties))
+                    .Append(@"Actual values:")
+                    .Append(currentProperties?.Serialize())));
+            return (T)currentProperties;
         }
 
         public static bool TryWaitForConditionUI(Func<bool> func)
@@ -1310,8 +1427,8 @@ namespace pwiz.SkylineTestUtil
                 // Assistance in chasing down intermittent timeout problems
                 if (i==waitCycles-1 && LaunchDebuggerOnWaitForConditionTimeout)
                 {
-                    System.Diagnostics.Debugger.Launch(); // Try again, under the debugger
-                    System.Diagnostics.Debugger.Break();
+                    Debugger.Launch(); // Try again, under the debugger
+                    Debugger.Break();
                     i = 0; // For debugging ease - stay in loop
                 }
             }
@@ -1559,7 +1676,9 @@ namespace pwiz.SkylineTestUtil
             RunUI(() =>
             {
                 var rect = SkylineWindow.Bounds;
-                var ptDest = new Point((int)(rect.X + rect.Width * xProportion), (int)(rect.Y + rect.Height * yProportion));
+                // The dock indicators scale with the display (DigitalRune.Windows.Docking,
+                // issue #4599), so a proportional point reaches the same indicator at any scale.
+                var ptDest = new Point((int) (rect.X + rect.Width * xProportion), (int) (rect.Y + rect.Height * yProportion));
                 SkylineWindow.DockPanel.BeginDragDisplay(FindFloatingWindow(dockableForm), ptDest);
             });
         }
@@ -1585,7 +1704,7 @@ namespace pwiz.SkylineTestUtil
                 var formLocation = new Point(SkylineWindow.DesktopBounds.Left + 200, SkylineWindow.DesktopBounds.Top + 200);
                 documentGridForm.NavBar.ReportsButton.HideDropDown();
                 var originalSize = documentGridForm.Size;
-                rectForm = new Rectangle(formLocation, new Size(documentGridForm.Width, ddHeight + 75));
+                rectForm = new Rectangle(formLocation, new Size(documentGridForm.Width, ddHeight + Scaled(75)));
                 // Make sure the dropdown fits into the window with some margin.
                 documentGridForm.FloatingPane.FloatAt(rectForm);
                 documentGridForm.NavBar.ReportsButton.ShowDropDown(); // TODO: Should deny closing until the screenshot is complete
@@ -1673,17 +1792,13 @@ namespace pwiz.SkylineTestUtil
         protected Bitmap ClipTargets(Bitmap targetsBmp, int? countTargets = null, bool fromBottom = false, bool includeNewItem = false)
         {
             var sequenceTree = SkylineWindow.SequenceTree;
-            var sequenceTreeRect = sequenceTree.Bounds;
-
-            sequenceTreeRect.Inflate(-1, -1);   // Borders outside parent rect
-            sequenceTreeRect.X += 1;
-            sequenceTreeRect.Y += 1;
-
-            int style = User32Test.GetWindowLong(sequenceTree.Handle, User32Test.GWL_STYLE);
-            if ((style & User32Test.WS_VSCROLL) != 0)
-                sequenceTreeRect.Width -= SystemInformation.VerticalScrollBarWidth;
-            if ((style & User32Test.WS_HSCROLL) != 0)
-                sequenceTreeRect.Height -= SystemInformation.HorizontalScrollBarHeight;
+            // The visible part of the tree, in tree coordinates: its client area (no border or scroll bars)
+            // within its parent panel, which hides the border by placing the tree at a negative offset. At
+            // 150% that offset scales and the 1-pixel border does not, so the client area starts a pixel
+            // left of the panel.
+            var parent = sequenceTree.Parent;
+            var parentInTree = sequenceTree.RectangleToClient(parent.RectangleToScreen(parent.ClientRectangle));
+            var sequenceTreeRect = Rectangle.Intersect(sequenceTree.ClientRectangle, parentInTree);
 
             if (countTargets != null)
             {
@@ -1762,6 +1877,20 @@ namespace pwiz.SkylineTestUtil
                 scaledRect, GraphicsUnit.Pixel);
 
             return croppedShot;
+        }
+
+        /// <summary>
+        /// Clips a screen shot to a floating docking window's screen bounds, with room above
+        /// it for the docking indicators.
+        /// </summary>
+        protected static Bitmap ClipDockingRect(Bitmap bmp, Rectangle rectFrame)
+        {
+            int hBorder = Scaled(20);
+            int topBorder = Scaled(100);
+            int bottomBorder = Scaled(10);
+            var rectClip = new Rectangle(rectFrame.X - hBorder, rectFrame.Y - topBorder, rectFrame.Width + hBorder * 2,
+                rectFrame.Height + topBorder + bottomBorder);
+            return ClipBitmap(bmp, rectClip);
         }
 
         /// <summary>
@@ -2136,7 +2265,9 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(Program.PauseSeconds * 1000);
             else if ((IsPauseForScreenShots || IsAutoScreenShotMode) && Math.Max(PauseStartingScreenshot, Program.PauseStartingScreenshot) <= ScreenshotCounter)
             {
+                var graphsStopwatch = Stopwatch.StartNew();
                 WaitForGraphs();    // Screenshots always need graphs to be fully updated
+                long graphsMillis = graphsStopwatch.ElapsedMilliseconds;
                 screenshotForm = ResolveScreenShotForm(screenshotForm, formType, fullScreen);
 
                 var formSeen = new FormSeen();
@@ -2145,7 +2276,7 @@ namespace pwiz.SkylineTestUtil
                 if (IsAutoScreenShotMode)
                 {
                     CaptureScreenShot(screenshotForm, fullScreen,
-                        _shotManager.ScreenshotDestFile(ScreenshotCounter), processShot);
+                        _shotManager.ScreenshotDestFile(ScreenshotCounter), processShot, graphsMillis);
                 }
                 else
                 {
@@ -2204,11 +2335,26 @@ namespace pwiz.SkylineTestUtil
         }
 
         private void CaptureScreenShot(Control screenshotForm, bool fullScreen,
-            string filePath, Func<Bitmap, Bitmap> processShot)
+            string filePath, Func<Bitmap, Bitmap> processShot, long graphsMillis = 0)
         {
-            Thread.Sleep(1500); // Wait for UI to settle down
+            var stopwatch = Stopwatch.StartNew();
+            Thread.Sleep(ScreenshotWaits.SettleMillis); // Wait for UI to settle down
+            if (ScreenshotWaits.PaintFlush)
+                ScreenshotManager.WaitForPaint(screenshotForm);
+            long settleMillis = stopwatch.ElapsedMilliseconds;
             _shotManager.ActivateScreenshotForm(screenshotForm);
+            stopwatch.Restart();
+            if (ScreenshotWaits.PaintFlush)
+            {
+                // Activating and painting can start more graph work, like a new label layout
+                WaitForGraphs();
+                ScreenshotManager.WaitForPaint(screenshotForm);
+            }
             _shotManager.TakeShot(screenshotForm, fullScreen, filePath, processShot);
+            ScreenshotWaits.CopyShot(TestContext.TestName, CultureInfo.CurrentCulture.Name, filePath);
+            ScreenshotWaits.LogTiming(TestContext.TestName, CultureInfo.CurrentCulture.Name, ScreenshotCounter,
+                graphsMillis, settleMillis, _shotManager.LastActivateMillis, _shotManager.LastRepaintMillis,
+                stopwatch.ElapsedMilliseconds, _shotManager.LastCaptureRetries);
         }
 
         /// <summary>

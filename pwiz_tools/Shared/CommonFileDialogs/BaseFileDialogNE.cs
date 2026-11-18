@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using System.IO;
 using System.Security.Authentication;
 using pwiz.Common.Collections;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.CommonMsData.RemoteApi;
@@ -95,6 +96,10 @@ namespace pwiz.CommonFileDialogs
             imageList.Images.AddRange(lookInImageList.Images.Cast<Image>().ToArray());
             listView.SmallImageList = imageList;
             listView.LargeImageList = imageList;
+            // Both lists are 96-DPI designs: the copy above feeds the file list, lookInImageList
+            // the places-bar buttons on the left (issue #4599).
+            ImageListScaler.ScaleToDpi(this, imageList);
+            ImageListScaler.ScaleToDpi(this, lookInImageList);
 
             TreeView tv = new TreeView { Indent = 8 };
             _remoteIndex = lookInComboBox.Items.Count;

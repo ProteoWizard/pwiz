@@ -292,17 +292,30 @@ binary blob columns, boundary columns, and a footer of key-value metadata. Writt
 
 ### Schema
 
-`BuildWriteSchema` (`ParquetScoreCache.cs:142`) writes 19 fixed columns followed by the 21 PIN
-feature columns. Column types are deliberately aligned with Rust: `entry_id` and `scan_number`
+`WriteFields` (`ParquetScoreCache.cs`) writes 15 fixed columns followed by the 21 PIN
+feature columns (14 in `.scores-reconciled.parquet`, plus its `score_index`; 2 more in each
+with `--training-export`; see below). Column types are deliberately aligned with Rust: `entry_id` and `scan_number`
 are `UInt32`, `charge` is `UInt8`, so a C#-written parquet loads under Rust's strict downcasts
-and vice versa (`ParquetScoreCache.cs:90`). Pre-2026-04-19 C#-written parquets used `Int32` and
+and vice versa (`ParquetScoreCache.cs:90`). The column SET is no longer the same: C# leaves out
+Rust's `fragment_mzs` / `fragment_intensities`, the reconciled `cwt_candidates`, and without
+`--training-export` the reference XIC (#5023). No gate feeds a C#-written parquet to Rust; the
+cross-implementation comparison runs each implementation end to end. Pre-2026-04-19 C#-written parquets used `Int32` and
 must be regenerated.
 
 - **Identity (8)**: `entry_id`, `is_decoy`, `sequence`, `modified_sequence`, `charge`,
   `precursor_mz`, `protein_ids` (nullable, `;`-joined), `file_name`.
 - **Boundary (6)**: `scan_number`, `apex_rt`, `start_rt`, `end_rt`, `bounds_area`, `bounds_snr`.
-- **Binary (5)**: `cwt_candidates`, `fragment_mzs`, `fragment_intensities`,
-  `reference_xic_rts`, `reference_xic_intensities`.
+- **Binary (1-3)**: `cwt_candidates` (`.scores.parquet` only), and `reference_xic_rts`,
+  `reference_xic_intensities` (with `--training-export` only).
+
+Rust also writes `fragment_mzs` and `fragment_intensities`, a verbatim copy of each row's
+library spectrum. C# stopped writing them (#5023): nothing read them back, and they were about
+10% of a SEA-AD scoring parquet. `cwt_candidates` is read only from `.scores.parquet`, by
+Stage 6 reconciliation planning, so `.scores-reconciled.parquet` does not carry it either.
+`reference_xic_*` is read only by the training export, so both files carry it only when
+`--training-export` is given (`ParquetScoreCache.WritesReferenceXic`).
+Every read is by column name, so an older file holding these columns still reads; they are
+ignored.
 - **Features (21)**: the names in `PIN_FEATURE_NAMES` (`ParquetScoreCache.cs:51`), all Float64,
   in the exact Rust `get_pin_feature_names()` order.
 
@@ -311,17 +324,15 @@ Rows are written in canonical sorted order `(entry_id, charge, scan_number)`
 regardless of which implementation wrote them. Compression is ZSTD
 (`writer.CompressionMethod = CompressionMethod.Zstd`, `ParquetScoreCache.cs:270`, `:462`).
 
-**Binary blob encoding.** The `FdrEntry` write overload (`ParquetScoreCache.cs:299`) encodes the
-blobs exactly as Rust: `fragment_mzs` / `reference_xic_*` as little-endian f64 with no length
-prefix (`EncodeF64Blob`, `ParquetScoreCache.cs:635`); `fragment_intensities` as little-endian
-f32 (`EncodeF32Blob`, `ParquetScoreCache.cs:660`); `cwt_candidates` via `CwtCandidateCodec`
+**Binary blob encoding.** The `FdrEntry` write overload (`BuildFdrEntryColumns`) encodes the
+blobs exactly as Rust: `reference_xic_*` as little-endian f64 with no length
+prefix (`EncodeF64Blob`); `cwt_candidates` via `CwtCandidateCodec`
 with a mandatory 4-byte count prefix so an empty candidate list is a zero-length blob, never a
 null cell (`ParquetScoreCache.cs:399`–`:422`). Length is recovered on read as `bytes /
 sizeof(element)`.
 
-> **Note:** the older `CoelutionScoredEntry` write overload (`ParquetScoreCache.cs:182`) still
-> writes the five binary columns as null placeholders (`ParquetScoreCache.cs:114`); populating
-> them there is marked a future sprint. The pipeline's actual per-file writes go through the
+> **Note:** the older `CoelutionScoredEntry` write overload, used only by tests, still
+> writes the binary columns as null placeholders. The pipeline's actual per-file writes go through the
 > `FdrEntry` overload, which populates them.
 
 ### Selective loaders
@@ -334,7 +345,7 @@ Mirroring Rust's specialized loaders, the C# side never loads the full parquet u
 | `ReadFdrStubScalars` (`:788`) | 5 scalar columns, zero-alloc callback | Streams stub scalars for the first-pass FDR projection without materializing `FdrEntry`s |
 | `LoadCwtCandidatesFromParquet` (`:835`) | `cwt_candidates` only | Stage 6 reconciliation planning |
 | `LoadPinFeaturesFromParquet` (`:981`) | 21 feature columns | SVM re-scoring |
-| `LoadFullFdrEntries` (`:897`) | all scalar + feature + blob columns | Full rehydration for Stage 6 reconciled write-back |
+| `LoadFullFdrEntries` | all scalar + feature + blob columns | Full rehydration (tests); the Stage 6 reconciled write-back streams the same columns but the CWT candidates |
 
 `ParquetIndex` bookkeeping is essential: both write overloads and every loader assign
 `ParquetIndex` to the post-sort row so Stage 5's per-file CWT lookup indexes each entry's own

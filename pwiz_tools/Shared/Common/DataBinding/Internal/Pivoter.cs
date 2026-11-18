@@ -72,7 +72,45 @@ namespace pwiz.Common.DataBinding.Internal
             }
             SublistColumns = ImmutableList.ValueOf(sublistColumns);
             PivotColumns = ImmutableList.ValueOf(pivotColumns);
+            _sublistFilters = SublistColumns.Select(col => new List<FilterInfo>()).ToArray();
+            var rootFilters = new List<FilterInfo>();
+            var otherFilters = new List<FilterInfo>();
+            foreach (var filter in ViewInfo.Filters)
+            {
+                var filterPath = filter.CollectionColumn?.PropertyPath;
+                if (filterPath != null && filterPath.IsRoot)
+                {
+                    rootFilters.Add(filter);
+                    continue;
+                }
+                int sublistIndex = SublistColumns.Select(col => col.PropertyPath).ToList().IndexOf(filterPath);
+                if (filterPath != null && sublistIndex >= 0)
+                {
+                    _sublistFilters[sublistIndex].Add(filter);
+                }
+                else
+                {
+                    otherFilters.Add(filter);
+                }
+            }
+            _rootFilters = rootFilters.ToArray();
+            _otherFilters = otherFilters.ToArray();
         }
+
+        /// <summary>
+        /// Filters which depend only on columns that are not under any collection column.
+        /// These are applied before a row is expanded.
+        /// </summary>
+        private readonly FilterInfo[] _rootFilters;
+        /// <summary>
+        /// For each of the SublistColumns, the filters whose nearest collection ancestor is that
+        /// column. These are applied to each child row as it gets created during expansion.
+        /// </summary>
+        private readonly List<FilterInfo>[] _sublistFilters;
+        /// <summary>
+        /// Filters which depend on a pivot column, applied after the row has been pivoted.
+        /// </summary>
+        private readonly FilterInfo[] _otherFilters;
 
         public CancellationToken CancellationToken { get; }
         /// <summary>
@@ -119,18 +157,40 @@ namespace pwiz.Common.DataBinding.Internal
             {
                 keys = sublistColumn.CollectionInfo.GetKeys(parentValue).Cast<object>().ToList();
             }
+            var sublistFilters = _sublistFilters[sublistColumnIndex];
             return Enumerable.Range(0, items.Count).SelectMany(index =>
             {
                 CancellationToken.ThrowIfCancellationRequested();
                 object key = keys == null ? index : keys[index];
-                var child = rowItem.SetRowKey(rowItem.RowKey.AppendValue(sublistColumn.PropertyPath, key));
+                var child = ApplyFilters(sublistFilters,
+                    rowItem.SetRowKey(rowItem.RowKey.AppendValue(sublistColumn.PropertyPath, key)));
+                if (child == null)
+                {
+                    return Array.Empty<RowItem>();
+                }
                 return Expand(child, sublistColumnIndex + 1);
             });
         }
 
+        /// <summary>
+        /// Expands the row into one row for each combination of items in the SublistColumns.
+        /// Filters which do not depend on any pivot column are applied as soon as the
+        /// collection they depend on has been expanded, so that rows which they reject
+        /// do not get expanded any further.
+        /// </summary>
+        private IEnumerable<RowItem> Expand(RowItem rowItem)
+        {
+            rowItem = ApplyFilters(_rootFilters, rowItem);
+            if (rowItem == null)
+            {
+                return Array.Empty<RowItem>();
+            }
+            return Expand(rowItem, 0);
+        }
+
         public IEnumerable<RowItem> ExpandAndFilter(RowItem rowItem)
         {
-            foreach (var child in Expand(rowItem, 0).Select(Filter))
+            foreach (var child in Expand(rowItem).Select(Filter))
             {
                 if (child != null)
                 {
@@ -191,16 +251,33 @@ namespace pwiz.Common.DataBinding.Internal
             return rowItems.Select(Filter).Where(rowItem=>null != rowItem);
         }
 
+        /// <summary>
+        /// Applies the filters which were not already applied to the row during expansion.
+        /// </summary>
         public RowItem Filter(RowItem rowItem)
         {
             CancellationToken.ThrowIfCancellationRequested();
-            foreach (var filter in ViewInfo.Filters)
+            for (int i = 0; i < SublistColumns.Count && rowItem != null; i++)
             {
-                rowItem = filter.ApplyFilter(rowItem);
+                // If the row did not get expanded at this level, these filters have not been applied yet
+                if (!rowItem.RowKey.Contains(SublistColumns[i].PropertyPath))
+                {
+                    rowItem = ApplyFilters(_sublistFilters[i], rowItem);
+                }
+            }
+
+            return ApplyFilters(_otherFilters, rowItem);
+        }
+
+        private RowItem ApplyFilters(IEnumerable<FilterInfo> filters, RowItem rowItem)
+        {
+            foreach (var filter in filters)
+            {
                 if (rowItem == null)
                 {
                     break;
                 }
+                rowItem = filter.ApplyFilter(rowItem);
             }
 
             return rowItem;
@@ -211,7 +288,7 @@ namespace pwiz.Common.DataBinding.Internal
             var bigLists = new BigList<RowItem>[rowItems.Count];
             ParallelEx.For(0, rowItems.Count, i =>
             {
-                bigLists[i] = Filter(Expand(rowItems[i], 0).Select(Pivot)).ToBigList();
+                bigLists[i] = Filter(Expand(rowItems[i]).Select(Pivot)).ToBigList();
             }, threadName: nameof(ExpandAndPivot));
             var rows = bigLists.Length == 1 ? bigLists[0] : bigLists.SelectMany(list => list).ToBigList();
             var result = new ReportResults(rows, GetItemProperties(rows));
