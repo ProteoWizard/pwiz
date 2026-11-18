@@ -161,7 +161,7 @@ namespace pwiz.SkylineTestTutorial
             using (new CheckDocumentState(24, 44, 88, 296))
             {
                 var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                RunUI(() => importDialog.Size = new Size(600, 300));
+                RunUI(() => importDialog.Size = ScaledSize(importDialog, 600, 300));
                 PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List form");
                 var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
                 string text1 = GetExcelFileText(filePath, "Fixed", 3, false); // Not L10N
@@ -178,7 +178,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0];
-                SkylineWindow.Size = new Size(1035, 511);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 1035, 511);
             });
             FocusDocument();
             PauseForScreenShot("Main window with transitions added");
@@ -355,7 +355,7 @@ namespace pwiz.SkylineTestTutorial
                         Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
                     messageDlg.ErrorList[0].ErrorMessage,
                     2);
-                RunUI(() => messageDlg.Size = new Size(838, 192));
+                RunUI(() => messageDlg.Size = ScaledSize(messageDlg, 838, 192));
                 PauseForScreenShot<ImportTransitionListErrorDlg>("Error message form (expected)");
                 OkDialog(messageDlg, messageDlg.CancelButton.PerformClick); // Acknowledge the error but decline to proceed with import
                 OkDialog(transitionSelectdgl, transitionSelectdgl.CancelDialog); // Cancel the import
@@ -451,7 +451,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 SkylineWindow.ShowGraphRetentionTime(true);
-                SkylineWindow.Size = new Size(1029, 659);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 1029, 659);
             });
 
             if (!IsPauseForScreenShots && !IsFullData)
@@ -530,7 +530,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 SkylineWindow.ShowGraphPeakArea(false);
                 SkylineWindow.ActivateReplicate("E_03");
-                SkylineWindow.Size = new Size(757, 655);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 757, 655);
             });
             PauseForChromGraphScreenShot("Chromatogram graph metafile with interference", "E_03");
 
@@ -555,7 +555,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 // Parent is a DocPane and Parent.Parent is the floating window
-                documentGrid.Parent.Parent.Size = new Size(585, 325);
+                var gridFloatingWindow = documentGrid.Parent.Parent;
+                gridFloatingWindow.Size = ScaledSize(gridFloatingWindow, 585, 325);
                 var documentGridView = documentGrid.DataGridView;
                 var colConcentration = documentGrid.FindColumn(pathConcentration);
                 var colStandardType = documentGrid.FindColumn(pathSampleType);
@@ -618,7 +619,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.ShowGraphPeakArea(false);
-                SkylineWindow.Width = 970;
+                SkylineWindow.Width = ScaledWidth(SkylineWindow, 970);
                 SkylineWindow.ShowRTReplicateGraph();
             });
             // JiggleSelection();
@@ -626,7 +627,11 @@ namespace pwiz.SkylineTestTutorial
 
             FindNode("INDISHTQSVSAK");
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
-            RunUIForScreenShot(() => SkylineWindow.GraphPeakArea.Parent.Parent.Width = 720);
+            RunUIForScreenShot(() =>
+            {
+                var peakAreaFloatingWindow = SkylineWindow.GraphPeakArea.Parent.Parent;
+                peakAreaFloatingWindow.Width = ScaledWidth(peakAreaFloatingWindow, 720);
+            });
             JiggleSelection();
             PauseForPeakAreaGraphScreenShot("Peak Areas normalized to heave graph metafile");
 
