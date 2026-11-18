@@ -73,10 +73,10 @@ namespace pwiz.Osprey.FDR
         // protein-best column appended, scored, and the rest of the file's run-scope work done.
         // Five, not fewer: the 7 lanes finish their first loads together and then spend ~35 s
         // a file in the steps after the load, so counting those as one step left a 31 s gap.
-        private const long PASS1_ROW_COUNTS = 5;
+        private const int PASS1_ROW_COUNTS = 5;
 
         // How many times the protein-best column step counts each row: read, loaded, scored.
-        private const long PROTEIN_BEST_ROW_COUNTS = 3;
+        private const int PROTEIN_BEST_ROW_COUNTS = 3;
         private const int ORDER1_COMPETITION = 0;
         private const int PASS1_ORDER_BUCKETS = 1;
         // The --model-diagnostics row walk, the one caller left that needs every row's
@@ -1516,9 +1516,9 @@ namespace pwiz.Osprey.FDR
             // counts a row - not in file order once a file is applied: a file is about two minutes
             // of lane time at SEA-AD scale, and in-order reports also held back every file that
             // finished behind a slow one, so this step was silent for up to 136 s at a time.
-            ProgressReporter.Run(string.Format(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Scoring__0__precursor_candidate_peaks, n), PASS1_ROW_COUNTS * n, scoreProgress =>
+            ProgressReporter.Run(string.Format(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Scoring__0__precursor_candidate_peaks, n), n, scoreProgress =>
             {
-                var rowProgress = new RowProgress(scoreProgress);
+                var rowProgress = new RowProgress(scoreProgress, PASS1_ROW_COUNTS);
                 // On a lane: everything about one file that no other file can see.
                 Pass1File ScoreFile(int f)
                 {
@@ -1542,8 +1542,9 @@ namespace pwiz.Osprey.FDR
                     if (!scoredHere)
                     {
                         file.Sums = tryLoadFeatureSums?.Invoke(fileName);
-                        // Its scores came off the sidecar: no load, column or score to count.
-                        rowProgress.Add(3 * (long)count);
+                        // Its scores came off the sidecar: every count but the read and the
+                        // closing one below is work this file skips.
+                        rowProgress.Add((PASS1_ROW_COUNTS - 2) * (long)count);
                     }
                     t = lane1.Stop(LANE1_SIDECAR, t);
                     if (scoredHere)
@@ -2058,9 +2059,9 @@ namespace pwiz.Osprey.FDR
             ProgressReporter.Run(CountText.Format(files.Count,
                     OspreyFDRResources.PercolatorEngine_AppendProteinBestToRows_Computing_the_protein_best_column_from_1_file,
                     OspreyFDRResources.PercolatorEngine_AppendProteinBestToRows_Computing_the_protein_best_column_from__0__files),
-                PROTEIN_BEST_ROW_COUNTS * totalRows, progress =>
+                totalRows, progress =>
             {
-                var rowProgress = new RowProgress(progress);
+                var rowProgress = new RowProgress(progress, PROTEIN_BEST_ROW_COUNTS);
                 OrderedFileLanes.For(files.Count, fileLanes, i =>
                 {
                     string fileName = files[i].Key;

@@ -55,29 +55,37 @@ namespace pwiz.Osprey.Core
             _current.Value?.Add(rows);
         }
 
-        /// <summary>True inside a <see cref="Counting{T}"/> scope, so a per-row reader can skip its count.</summary>
-        public static bool IsCounting => _current.Value != null;
-
         private readonly ProgressReporter _reporter;
-        private long _rows;
+        private readonly int _countsPerRow;
+        private readonly object _lock = new object();
+        private long _counts;
 
         /// <summary>
-        /// A counter feeding <paramref name="reporter"/>, whose total must be the number of
-        /// row-units the step's lanes will add: the rows times the number of times each is
-        /// counted (read, loaded, scored).
+        /// A counter feeding <paramref name="reporter"/>, whose total is the step's row count.
+        /// A step that passes over each row more than once - read, loaded, scored - counts it
+        /// <paramref name="countsPerRow"/> times, and the counter reports rows, so the
+        /// reporter's heartbeat line shows a row count that matches the step's heading.
         /// </summary>
-        public RowProgress(ProgressReporter reporter)
+        public RowProgress(ProgressReporter reporter, int countsPerRow = 1)
         {
             _reporter = reporter ?? throw new ArgumentNullException(nameof(reporter));
+            if (countsPerRow < 1)
+                throw new ArgumentOutOfRangeException(nameof(countsPerRow));
+            _countsPerRow = countsPerRow;
         }
 
         /// <summary>
         /// Adds <paramref name="rows"/> directly, for work that is not a read - scoring a file's
-        /// rows once they are loaded. Safe from any lane.
+        /// rows once they are loaded. Safe from any lane: the add and the report happen under
+        /// one lock, so the reporter never sees the count go backwards.
         /// </summary>
         public void Add(long rows)
         {
-            _reporter.Report(Interlocked.Add(ref _rows, rows));
+            lock (_lock)
+            {
+                _counts += rows;
+                _reporter.Report(_counts / _countsPerRow);
+            }
         }
 
         /// <summary>
