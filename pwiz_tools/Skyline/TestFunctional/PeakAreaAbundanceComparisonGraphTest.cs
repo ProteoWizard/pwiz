@@ -35,77 +35,14 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class PeakAreaAbundanceComparisonGraphTest : AbstractFunctionalTestEx
     {
-        private Action _test;
-
         [TestMethod]
         public void TestPeakAreaAbundanceComparisonGraph()
         {
-            RunAbundanceComparisonTest(TestGraph);
-        }
-
-        [TestMethod]
-        public void TestPeakAreaAbundanceComparisonSinglePeptide()
-        {
-            RunAbundanceComparisonTest(TestSinglePeptide);
-        }
-
-        protected override void DoTest()
-        {
-            _test();
-        }
-
-        private void RunAbundanceComparisonTest(Action test)
-        {
             TestFilesZip = @"TestFunctional\PeakAreaRelativeAbundanceGraphTest.zip";
-            _test = test;
             RunFunctionalTest();
         }
 
-        /// <summary>
-        /// One peptide gives each replicate a single value, which has no quartiles of its own:
-        /// each box must collapse onto that value.
-        /// </summary>
-        private void TestSinglePeptide()
-        {
-            OpenDocument(TestFilesDir.GetTestPath("Rat_plasma.sky"));
-            RunUI(() =>
-            {
-                SkylineWindow.ModifyDocument(@"Keep one peptide", doc =>
-                {
-                    var protein = (PeptideGroupDocNode)doc.Children[0];
-                    protein = (PeptideGroupDocNode)protein.ChangeChildren(protein.Children.Take(1).ToArray());
-                    return (SrmDocument)doc.ChangeChildren(new[] { protein });
-                });
-                SkylineWindow.SelectedPath =
-                    SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
-                SkylineWindow.ShowPeakAreaAbundanceComparisonGraph();
-            });
-            WaitForGraphs();
-
-            RunUI(() =>
-            {
-                var curve = FindBoxPlotPane().CurveList.OfType<BoxPlotBarItem>().Single();
-                int boxCount = 0;
-                for (int i = 0; i < curve.Points.Count; i++)
-                {
-                    if (curve.Points[i].IsMissing)
-                        continue;
-
-                    var tag = curve.Points[i].Tag as BoxPlotTag;
-                    Assert.IsNotNull(tag);
-                    AssertEx.AreEqual(tag.Min, tag.Max);
-                    AssertEx.AreEqual(tag.Median, tag.Q1);
-                    AssertEx.AreEqual(tag.Median, tag.Q3);
-                    // The quartiles round-trip through log10, the whiskers are the raw value
-                    AssertEx.AreEqual(tag.Min, tag.Median, tag.Min * 1e-9);
-                    AssertEx.AreEqual(0, tag.Outliers.Length);
-                    boxCount++;
-                }
-                AssertEx.AreNotEqual(0, boxCount, "Should have at least one box");
-            });
-        }
-
-        private void TestGraph()
+        protected override void DoTest()
         {
             OpenDocument(TestFilesDir.GetTestPath("Rat_plasma.sky"));
 
@@ -124,6 +61,7 @@ namespace pwiz.SkylineTestFunctional
             VerifyOrderBy();
             VerifyGroupBy();
             VerifyCopyData();
+            VerifySinglePeptide();
         }
 
         private void VerifyBasicGraphDisplay()
@@ -445,6 +383,48 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.IsTrue(q1.Value <= median.Value, "Copy Data: Q1 <= Median");
                 AssertEx.IsTrue(median.Value <= q3.Value, "Copy Data: Median <= Q3");
                 AssertEx.IsTrue(q3.Value <= max.Value, "Copy Data: Q3 <= Max");
+            });
+        }
+
+        /// <summary>
+        /// One peptide gives each replicate a single value, which has no quartiles of its own:
+        /// each box must collapse onto that value.
+        /// </summary>
+        private void VerifySinglePeptide()
+        {
+            RunUI(() =>
+            {
+                SkylineWindow.ModifyDocument(@"Keep one peptide", doc =>
+                {
+                    var protein = (PeptideGroupDocNode)doc.Children[0];
+                    protein = (PeptideGroupDocNode)protein.ChangeChildren(protein.Children.Take(1).ToArray());
+                    return (SrmDocument)doc.ChangeChildren(new[] { protein });
+                });
+                SkylineWindow.SelectedPath =
+                    SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
+            });
+            WaitForGraphs();
+
+            RunUI(() =>
+            {
+                var curve = FindBoxPlotPane().CurveList.OfType<BoxPlotBarItem>().Single();
+                int boxCount = 0;
+                for (int i = 0; i < curve.Points.Count; i++)
+                {
+                    if (curve.Points[i].IsMissing)
+                        continue;
+
+                    var tag = curve.Points[i].Tag as BoxPlotTag;
+                    Assert.IsNotNull(tag);
+                    AssertEx.AreEqual(tag.Min, tag.Max);
+                    AssertEx.AreEqual(tag.Median, tag.Q1);
+                    AssertEx.AreEqual(tag.Median, tag.Q3);
+                    // The quartiles round-trip through log10, the whiskers are the raw value
+                    AssertEx.AreEqual(tag.Min, tag.Median, tag.Min * 1e-9);
+                    AssertEx.AreEqual(0, tag.Outliers.Length);
+                    boxCount++;
+                }
+                AssertEx.AreNotEqual(0, boxCount, "Should have at least one box");
             });
         }
 
