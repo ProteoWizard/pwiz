@@ -54,6 +54,7 @@ namespace pwiz.Skyline.FileUI
             treeViewFolders.ImageList.Images.Add(Resources.ArdiaIcon);  // 32bpp
             treeViewFolders.ImageList.Images.Add(Resources.Folder);     // 32bpp
             treeViewFolders.ImageList.Images.Add(Resources.Blank);      // 32bpp
+            ImageListScaler.ScaleToDpi(this, treeViewFolders.ImageList);   // 16x16 icons are a 96-DPI design (issue #4599)
         }
 
         /// <summary>

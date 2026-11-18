@@ -693,7 +693,7 @@ namespace TestPerf
             {
                 var cols = importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Columns;
                 cols[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-                cols[0].Width = 175;    // just "interact.pep.xml"
+                cols[0].Width = Scaled(175);    // just "interact.pep.xml"
                 cols[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill; // To show the full PeptideProphet confidence
             });
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page");
@@ -736,7 +736,7 @@ namespace TestPerf
                 }
 
                 Assert.AreEqual(Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success, row.Cells[4].Value);
-                addIrtPeptidesDlg.Width = 650;
+                addIrtPeptidesDlg.Width = ScaledWidth(addIrtPeptidesDlg, 650);
             });
             PauseForScreenShot<AddIrtPeptidesDlg>("Add iRT peptides form");
 
@@ -1020,7 +1020,8 @@ namespace TestPerf
             RunUI(() =>
             {
                 documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates);
-                FormEx.GetParentForm(documentGrid).Size = new Size(591, 283);
+                var gridForm = FormEx.GetParentForm(documentGrid);
+                gridForm.Size = ScaledSize(gridForm, 591, 283);
             });
             WaitForConditionUI(() => documentGrid.IsComplete); // Let it initialize
 
@@ -1069,7 +1070,7 @@ namespace TestPerf
                 Rectangle rectFrame = Rectangle.Empty;
                 RunUI(() =>
                 {
-                    SkylineWindow.Size = new Size(900, 900);
+                    SkylineWindow.Size = ScaledSize(SkylineWindow, 900, 900);
                     SkylineWindow.ForceOnScreen();  // Avoid this shifting the window under the floating window later
                 });
                 Thread.Sleep(200);  // Give layout time to adjust
@@ -1080,7 +1081,7 @@ namespace TestPerf
                     var rtGraphFrame = FindFloatingWindow(SkylineWindow.GraphRetentionTime);
                     var chromTopLeft = chromPane1.PointToScreen(new Point(0, 0));
                     var chromTopRight = chromPane2.PointToScreen(new Point(chromPane2.Width, 0));
-                    rtGraphFrame.Location = chromPane1.PointToScreen(new Point(((chromTopRight.X - chromTopLeft.X) - rtGraphFrame.Width) / 2, 50));
+                    rtGraphFrame.Location = chromPane1.PointToScreen(new Point(((chromTopRight.X - chromTopLeft.X) - rtGraphFrame.Width) / 2, Scaled(50)));
                     rectFrame = rtGraphFrame.Bounds;
                     rtGraphFrame.Activate();    // TODO: Want the graph activated but a screenshot of screen
                 });
@@ -1104,7 +1105,7 @@ namespace TestPerf
 
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 SkylineWindow.ShowRTReplicateGraph();
-                SkylineWindow.Size = new Size(1226, 900);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 1226, 900);
             });
             RestoreViewOnScreenNoSelChange(18);
             WaitForGraphs();
@@ -1404,8 +1405,8 @@ namespace TestPerf
                     RunUI(() =>
                     {
                         var fcFloatingWindow = fcGrid.Parent.Parent;
-                        fcFloatingWindow.Left = SkylineWindow.Left + 8;
-                        fcFloatingWindow.Top = SkylineWindow.Bottom - fcFloatingWindow.Height - 8;
+                        fcFloatingWindow.Left = SkylineWindow.Left + Scaled(8);
+                        fcFloatingWindow.Top = SkylineWindow.Bottom - fcFloatingWindow.Height - Scaled(8);
                     });
 
                     if (!IsPasef)
@@ -1428,17 +1429,6 @@ namespace TestPerf
             {
                 _testInfo.SaveExpectedValues();
             }
-        }
-
-        private static Bitmap ClipDockingRect(Bitmap bmp, Rectangle rectFrame)
-        {
-            const int hBorder = 20;
-            const int topBorder = 100;
-            const int bottomBorder = 10;
-            var rectClip = new Rectangle(rectFrame.X - hBorder, rectFrame.Y - topBorder, rectFrame.Width + hBorder * 2,
-                rectFrame.Height + topBorder + bottomBorder);
-            bmp = ClipBitmap(bmp, rectClip);
-            return bmp;
         }
 
         private void RunQValueSummaryTest()

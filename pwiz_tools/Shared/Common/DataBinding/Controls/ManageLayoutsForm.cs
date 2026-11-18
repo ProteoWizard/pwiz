@@ -19,6 +19,7 @@
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.Properties;
@@ -42,10 +43,17 @@ namespace pwiz.Common.DataBinding.Controls
         public ManageLayoutsForm()
         {
             InitializeComponent();
-            imageList1.Images.Add(Resources.PlainLayout);
-            imageList1.Images.Add(Resources.Filter);
-            imageList1.Images.Add(Resources.Pivot);
-            imageList1.Images.Add(Resources.PivotAndFilter);
+            // One icon per LayoutType value, rendered for the display DPI (issue #4599)
+            ImageListScaler.PrepareForDpi(this, imageList1);
+            AddImage(nameof(Resources.PlainLayout), Resources.PlainLayout);
+            AddImage(nameof(Resources.Filter), Resources.Filter);
+            AddImage(nameof(Resources.Pivot), Resources.Pivot);
+            AddImage(nameof(Resources.PivotAndFilter), Resources.PivotAndFilter);
+        }
+
+        private void AddImage(string name, Image image)
+        {
+            imageList1.Images.Add(DpiIcons.GetIcon(typeof(Resources), this, name, image, Color.Magenta));
         }
 
         public ViewLayoutList ViewLayoutList

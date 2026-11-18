@@ -92,7 +92,7 @@ namespace pwiz.SkylineTestTutorial
                 var doc = SkylineWindow.Document;
                 
                 var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                RunUIForScreenShot(() => ResizeFormOnScreen(importDialog, 600, 300));
+                RunUIForScreenShot(() => ResizeFormOnScreen(importDialog, ScaledWidth(importDialog, 600), ScaledHeight(importDialog, 300)));
                 PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List form");
 
                 var text = "DrugX,Drug,light,283.04,1,129.96,1,26,16,2.7\r\nDrugX,Drug,heavy,286.04,1,133.00,1,26,16,2.7\r\n";
@@ -129,7 +129,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
-                    SkylineWindow.Size = new Size(957, 654);
+                    SkylineWindow.Size = ScaledSize(SkylineWindow, 957, 654);
                 });
                 SelectNode(SrmDocument.Level.Transitions, 0);
                 SelectNode(SrmDocument.Level.Transitions, 1);
@@ -229,9 +229,9 @@ namespace pwiz.SkylineTestTutorial
                 SelectNode(SrmDocument.Level.Transitions, 1);
                 SelectNode(SrmDocument.Level.Molecules, 0);
                 // TODO: Removed this once Nick has fixed what is causing x-axis labels in the Peak Areas plot to end up horizontal
-                RunUIForScreenShot(() => SkylineWindow.Height += 200);
+                RunUIForScreenShot(() => SkylineWindow.Height += Scaled(200));
                 JiggleSelection();
-                RunUIForScreenShot(() => SkylineWindow.Height -= 200);
+                RunUIForScreenShot(() => SkylineWindow.Height -= Scaled(200));
                 JiggleSelection();
                 FocusDocument();
                 PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout");
@@ -398,8 +398,8 @@ namespace pwiz.SkylineTestTutorial
                     RunUI(() =>
                     {
                         var frame = calCurveForm.Parent.Parent;
-                        frame.Location = new Point(SkylineWindow.Right - frame.Width - 10,
-                            SkylineWindow.Bottom - frame.Height - 10);
+                        frame.Location = new Point(SkylineWindow.Right - frame.Width - Scaled(10),
+                            SkylineWindow.Bottom - frame.Height - Scaled(10));
                     });
                     RunUI(SkylineWindow.FocusDocument);
                     TakeCoverShot();
@@ -457,7 +457,7 @@ namespace pwiz.SkylineTestTutorial
                 });
                 RunUIForScreenShot(() =>
                 {
-                    openDataSourceDialog1.Size = new Size(800, 430);
+                    openDataSourceDialog1.Size = ScaledSize(openDataSourceDialog1, 800, 430);
                     int lastIndex = openDataSourceDialog1.ListItemNames.Count() - 1;
                     openDataSourceDialog1.EnsureListViewItemVisible(lastIndex);
                     openDataSourceDialog1.EnsureListViewItemVisible(lastIndex - 46);

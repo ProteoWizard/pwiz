@@ -16,7 +16,9 @@
     warnings-only log.
 
     Warnings turn the status red and leave the build green: this script ALWAYS exits 0 and raises
-    no TeamCity buildProblem, either of which would fail the build. Exiting 0 on a genuine failure
+    no TeamCity buildProblem, either of which would fail the build. So that they can be read
+    without opening the build log, each warning is also reported as a TeamCity inspection, which
+    lists it on the build's Code Inspection tab without failing anything. Exiting 0 on a genuine failure
     would be dishonest, so a pre-build that failed or left no log reports state 'error' rather than
     quietly passing. The only outcome that reports 'success' is a completed pre-build with no
     warnings.
@@ -99,6 +101,9 @@ try {
     Write-Host "##teamcity[blockClosed name='pre-build $target']"
 
     $warningCount = Write-BuildWarnings -LogPath $BuildWarningsPath -ArtifactDir '.teamcity/pwiz-sharp-inspect'
+    if ($warningCount -gt 0) {
+        Publish-BuildWarningInspections -LogPath $BuildWarningsPath -RepoRoot $PSScriptRoot
+    }
 
     # A failed compile stops the projects that depend on the failed one, so their warnings were
     # never emitted; build.bat reports the errors themselves.
