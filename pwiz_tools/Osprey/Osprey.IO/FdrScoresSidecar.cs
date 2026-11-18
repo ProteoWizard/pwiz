@@ -879,6 +879,9 @@ namespace pwiz.Osprey.IO
                     e.ExperimentPeptideQvalue   = exp.ExperimentPeptideQvalue;
                     e.ExperimentAggregateScore  = exp.ExperimentAggregateScore;
                     e.Pep                       = exp.Pep;
+                    // The peptide PEP rides with the peptide q it comes from: the same
+                    // experiment-wide peptide competition gives both.
+                    e.ExperimentPeptidePep      = exp.PeptidePep;
                 }
                 return true;
             });

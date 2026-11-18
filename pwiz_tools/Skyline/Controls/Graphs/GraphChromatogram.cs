@@ -3826,6 +3826,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public string TestFullScanSelection(double x, double y, PaneKey? paneKey)
         {
             var graphPane = GetGraphPane(paneKey);
+            if (graphPane.CurveList.Count <= FULLSCAN_SELECTED_INDEX || graphPane.CurveList[FULLSCAN_SELECTED_INDEX].Points.Count == 0)
+                return @"selection dot does not exist";
             var selectionDot = graphPane.CurveList[FULLSCAN_SELECTED_INDEX];
             var mouse = TransformCoordinates(x, y, paneKey);
             var dot = TransformCoordinates(selectionDot[0].X, selectionDot[0].Y, paneKey);

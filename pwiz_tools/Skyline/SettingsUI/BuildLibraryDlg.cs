@@ -157,6 +157,9 @@ namespace pwiz.Skyline.SettingsUI
             EntrapmentFromFasta = false;
             helpTip.SetToolTip(cbAddDecoys, SettingsUIResources.BuildLibraryDlg_BuildLibraryDlg_A_reverse_sequence_decoy_of_every_peptide__paired_with_its_target_in_the_library);
             helpTip.SetToolTip(cbAddEntrapment, SettingsUIResources.BuildLibraryDlg_BuildLibraryDlg_Peptides_not_expected_in_the_sample__flagged_as_entrapment_in_the_library_to_measure_the_false_discovery_rate);
+            EntrapmentPercentControls.Layout(labelEntrapmentPercent, textEntrapmentPercent, labelEntrapmentInTargetsPercent, textEntrapmentInTargetsPercent);
+            EntrapmentPercentControls.SetToolTips(helpTip, textEntrapmentPercent, textEntrapmentInTargetsPercent);
+            EntrapmentPercentControls.LoadSettings(textEntrapmentPercent, textEntrapmentInTargetsPercent);
 
             ceCombo.Items.AddRange(
                 Enumerable.Range(KoinaConstants.MIN_NCE, KoinaConstants.MAX_NCE - KoinaConstants.MIN_NCE + 1).Select(c => (object)c)
@@ -360,7 +363,8 @@ namespace pwiz.Skyline.SettingsUI
                 UseGpu = UseGpu,
                 TuningConfig = IsTuning ? GetTuningConfig() : null,
                 DecoyMethod = DecoyMethod,
-                EntrapmentTargets = _entrapmentTargets
+                EntrapmentTargets = _entrapmentTargets,
+                EntrapmentProteinIds = _entrapmentProteinIds
             };
             // Asked here, while this form is still up, so that Cancel returns to it rather than to
             // Peptide Settings with everything chosen here gone
@@ -418,6 +422,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             var doc = _documentUiContainer.DocumentUI;
             _entrapmentTargets = null;
+            _entrapmentProteinIds = null;
             // A digest for prediction keeps every peptide the filter allows, with every precursor the
             // transition filter allows: the library-match pick would keep only peptides with spectra
             // already, and auto-select off would digest the proteins into no peptides, or the peptides
@@ -499,24 +504,37 @@ namespace pwiz.Skyline.SettingsUI
 
         /// <summary>
         /// Entrapment peptides generated in process by CarafeSharp from <paramref name="fastaPath"/>'s
-        /// proteins (<see cref="EntrapmentFastaBuilder"/>: the FASTA's peptides shuffled, one per
-        /// target, the entrapment Osprey's own FASTA route adds), under a cancellable wait, then added
-        /// to <paramref name="doc"/> as a peptide list, since they are peptides, not proteins to digest.
-        /// Null, after reporting it, when cancelled, failed or empty.
+        /// proteins (<see cref="EntrapmentFastaBuilder"/>: the FASTA's peptides shuffled, for the
+        /// fraction of targets the page's percentages ask for, the entrapment Osprey's own FASTA
+        /// route adds), under a cancellable wait, then added to <paramref name="doc"/> as a peptide
+        /// list, since they are peptides, not proteins to digest; the protein label CarafeSharp
+        /// gave each (<see cref="EntrapmentFastaBuilder.ProteinLabel"/>: its own <c>_p_target</c>
+        /// protein, or the target protein it was placed in) is kept for the library's Proteins
+        /// table (<see cref="_entrapmentProteinIds"/>). Null, after reporting it, when cancelled,
+        /// failed or empty.
         /// </summary>
         private SrmDocument ImportEntrapmentPeptides(SrmDocument doc, string fastaPath, out List<PeptideGroupDocNode> groupsNew)
         {
             var peptides = new List<string>();
+            var proteinIds = new Dictionary<string, string>();
+            var settings = GetEntrapmentSettings(fastaPath);
             using (var longWaitDlg = new LongWaitDlg())
             {
                 longWaitDlg.Text = SettingsUIResources.BuildLibraryDlg_GetDocumentToPredict_Digesting_FASTA;
                 longWaitDlg.Message = string.Format(SettingsUIResources.BuildLibraryDlg_GetDocumentToPredict_Digesting__0__with_the_document_settings, fastaPath);
                 var status = longWaitDlg.PerformWork(this, 800, (IProgressMonitor monitor) =>
                 {
-                    var settings = new EntrapmentFastaSettings { InputFasta = fastaPath, AddEntrapment = true, AddDecoys = false };
-                    var quartets = new EntrapmentFastaBuilder(settings).Build(new EntrapmentFastaResult(), out _);
-                    peptides.AddRange(quartets.Where(q => q.EntrapmentSelected && !string.IsNullOrEmpty(q.PTarget)).Select(q => q.PTarget).Distinct());
+                    var builder = new EntrapmentFastaBuilder(settings);
+                    var quartets = builder.Build(new EntrapmentFastaResult(), out _);
+                    foreach (var quartet in quartets.Where(q => q.EntrapmentSelected && !string.IsNullOrEmpty(q.PTarget)))
+                    {
+                        if (proteinIds.ContainsKey(quartet.PTarget))
+                            continue;
+                        peptides.Add(quartet.PTarget);
+                        proteinIds.Add(quartet.PTarget, builder.ProteinLabel(quartet, true, false));
+                    }
                 });
+                _entrapmentProteinIds = proteinIds;
                 groupsNew = new List<PeptideGroupDocNode>();
                 if (status.IsCanceled)
                     return null;
@@ -543,11 +561,32 @@ namespace pwiz.Skyline.SettingsUI
             return docList;
         }
 
+        /// <summary>
+        /// What CarafeSharp builds the entrapment peptides of <paramref name="fastaPath"/> from: the
+        /// page's percentages as ratios of the targets, the standard entrapment and the entrapment
+        /// placed in target proteins (<see cref="EntrapmentFastaSettings.EntrapmentInTargetsRatio"/>),
+        /// no decoys, since Skyline adds its own.
+        /// </summary>
+        public EntrapmentFastaSettings GetEntrapmentSettings(string fastaPath)
+        {
+            return new EntrapmentFastaSettings
+            {
+                InputFasta = fastaPath,
+                AddEntrapment = true,
+                AddDecoys = false,
+                EntrapmentRatio = EntrapmentPercentControls.ToRatio(EntrapmentPercent),
+                EntrapmentInTargetsRatio = EntrapmentPercentControls.ToRatio(EntrapmentInTargetsPercent)
+            };
+        }
+
         /// <summary>The name of the peptide list the generated entrapment peptides form.</summary>
         private const string ENTRAPMENT_LIST_NAME = @"Entrapment";
 
         /// <summary>The entrapment FASTA's peptides in the document last made to predict for, for the library's DecoyPairs table.</summary>
         private List<Target> _entrapmentTargets;
+
+        /// <summary>The protein label of each generated entrapment peptide (sequence to label), for the library's Proteins table; null when none were generated.</summary>
+        private Dictionary<string, string> _entrapmentProteinIds;
 
         /// <summary>
         /// Decoys and entrapment peptides are the FASTA route's choices: the Predict For page's
@@ -626,6 +665,27 @@ namespace pwiz.Skyline.SettingsUI
             set => comboEntrapmentMethod.SelectedIndex = value ? 1 : 0;
         }
 
+        /// <summary>
+        /// The percentage of the targets that get a shuffled entrapment peptide on an entrapment
+        /// protein of its own, for measuring the true FDR of a search; 10 to begin with.
+        /// </summary>
+        public double EntrapmentPercent
+        {
+            get => EntrapmentPercentControls.GetPercent(textEntrapmentPercent);
+            set => EntrapmentPercentControls.SetPercent(textEntrapmentPercent, value);
+        }
+
+        /// <summary>
+        /// The percentage of the targets that get a shuffled entrapment peptide placed in a real
+        /// target protein, whose label it carries in the library, so a protein-aware scoring step
+        /// is audited too; 10 to begin with. With <see cref="EntrapmentPercent"/> the total entrapment added.
+        /// </summary>
+        public double EntrapmentInTargetsPercent
+        {
+            get => EntrapmentPercentControls.GetPercent(textEntrapmentInTargetsPercent);
+            set => EntrapmentPercentControls.SetPercent(textEntrapmentInTargetsPercent, value);
+        }
+
         private void cbAddEntrapment_CheckedChanged(object sender, EventArgs e)
         {
             UpdatePredictForControls();
@@ -636,10 +696,16 @@ namespace pwiz.Skyline.SettingsUI
             UpdatePredictForControls();
         }
 
-        /// <summary>The entrapment method shows once entrapment is asked for, and its FASTA box once a FASTA is the method.</summary>
+        /// <summary>
+        /// The entrapment method shows once entrapment is asked for; the percentages once shuffled
+        /// sequences are the method (a FASTA file adds every peptide it has), and the FASTA box
+        /// once a FASTA is the method.
+        /// </summary>
         private void UpdatePredictForControls()
         {
             labelEntrapmentMethod.Visible = comboEntrapmentMethod.Visible = AddEntrapment;
+            labelEntrapmentPercent.Visible = textEntrapmentPercent.Visible =
+                labelEntrapmentInTargetsPercent.Visible = textEntrapmentInTargetsPercent.Visible = AddEntrapment && !EntrapmentFromFasta;
             textEntrapmentFasta.Visible = btnBrowseEntrapment.Visible = AddEntrapment && EntrapmentFromFasta;
         }
 
@@ -659,14 +725,21 @@ namespace pwiz.Skyline.SettingsUI
 
         /// <summary>
         /// Next or Finish from the Predict For page: the FASTA must exist, and the entrapment
-        /// FASTA too when it is the entrapment method.
+        /// FASTA too when it is the entrapment method, or the entrapment percentages must be
+        /// ones CarafeSharp builds when shuffled sequences are; validated ones are kept as the
+        /// user's last.
         /// </summary>
         private bool ValidatePredictForPage()
         {
             if (!ValidateFastaPath(textFastaPath, SettingsUIResources.BuildLibraryDlg_ValidatePage_Choose_the_protein_FASTA_file_to_predict_the_library_for_))
                 return false;
-            if (AddEntrapment && EntrapmentFromFasta)
+            if (!AddEntrapment)
+                return true;
+            if (EntrapmentFromFasta)
                 return ValidateFastaPath(textEntrapmentFasta, SettingsUIResources.BuildLibraryDlg_ValidatePage_Choose_the_FASTA_file_of_the_entrapment_peptides_);
+            if (!EntrapmentPercentControls.Validate(this, textEntrapmentPercent, textEntrapmentInTargetsPercent, out double percent, out double inTargetsPercent))
+                return false;
+            EntrapmentPercentControls.SaveSettings(percent, inTargetsPercent);
             return true;
         }
 
@@ -864,7 +937,8 @@ namespace pwiz.Skyline.SettingsUI
                     peptidesPerPrecursor, precursors, nce)
                 {
                     DecoyMethod = DecoyMethod,
-                    EntrapmentTargets = _entrapmentTargets
+                    EntrapmentTargets = _entrapmentTargets,
+                    EntrapmentProteinIds = _entrapmentProteinIds
                 };
             }
             catch (Exception ex)

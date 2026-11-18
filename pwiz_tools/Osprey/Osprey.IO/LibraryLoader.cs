@@ -242,7 +242,10 @@ namespace pwiz.Osprey.IO
                     // it is read whenever the library has one, whichever way the decoys come.
                     var decoyPairs = BlibDecoyPairs.Read(path);
                     if (decoyPairs != null)
+                    {
                         blibPairs = BlibDecoyPairs.ByEntry(entries, blibLoader.RefSpectraIds, decoyPairs);
+                        BlibDecoyPairs.MarkEntrapment(blibPairs);
+                    }
                     // A blib searched with its own decoys must say which they are and which
                     // target each was made from: the table CarafeSharp writes. Without it the
                     // search uses generated decoys or nothing.
@@ -347,7 +350,7 @@ namespace pwiz.Osprey.IO
             // bring its pairing (the table or the manifest), or the paired FDP and the FDRBench
             // output it was built for would be wrong with nothing in the run to show for it.
             if (manifest == null && blibPairs == null &&
-                entries.Exists(e => EntrapmentLibraryClassifier.IsEntrapment(e.ProteinIds)))
+                entries.Exists(EntrapmentLibraryClassifier.IsEntrapment))
             {
                 error = string.Format(
                     OspreyIOResources.LibraryLoader_Load_The_library__0__has_entrapment_peptides_but_nothing_pairs_them_with_their_targets__Give_the_pairing_manifest_with__1__or_search_a__blib_that_carries_a_DecoyPairs_table_,

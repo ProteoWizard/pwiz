@@ -646,7 +646,11 @@ namespace pwiz.SkylineTestUtil
                 Assert.IsTrue(matchTime.Success);
                 Assert.AreEqual(titleTime.Value, double.Parse(matchTime.Groups[1].Value));
             }
-            Assert.AreEqual(string.Empty, graphChromatogram.TestFullScanSelection(x, y, paneKey));
+            // Check on the UI thread, and wait, since the chromatogram graph can still be redrawing
+            // its selection dot after the full-scan graph reports that it has loaded
+            string selectionError = null;
+            WaitForConditionUI(() => string.IsNullOrEmpty(selectionError = graphChromatogram.TestFullScanSelection(x, y, paneKey)),
+                () => selectionError);
         }
 
         private static GraphChromatogram GetGraphChrom(string graphName)

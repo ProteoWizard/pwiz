@@ -149,7 +149,7 @@ namespace pwiz.Osprey.IO
         {
             // Generated decoys are not in the loaded library the export writes, so a decoy here
             // is a supplied one.
-            if (!entries.Any(e => e.IsDecoy || EntrapmentLibraryClassifier.IsEntrapment(e.ProteinIds)))
+            if (!entries.Any(e => e.IsDecoy || EntrapmentLibraryClassifier.IsEntrapment(e)))
                 return;
             var targetIndexById = new Dictionary<uint, int>();
             for (int i = 0; i < entries.Count; i++)
@@ -163,7 +163,7 @@ namespace pwiz.Osprey.IO
                 long? targetRefId = entry.IsDecoy && (entry.Id & LibraryEntry.DECOY_ID_BIT) != 0 &&
                                     targetIndexById.TryGetValue(entry.Id & ~LibraryEntry.DECOY_ID_BIT, out int targetIndex)
                     ? refIds[targetIndex] : null;
-                writer.AddDecoyPair(refIds[i], entry.IsDecoy, EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds),
+                writer.AddDecoyPair(refIds[i], entry.IsDecoy, EntrapmentLibraryClassifier.IsEntrapment(entry),
                     (int)entry.PairingId, targetRefId);
             }
         }

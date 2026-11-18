@@ -57,6 +57,16 @@ namespace pwiz.Skyline.Model.ElementLocators
             return ((NodeRef)ChangeParent(parentRef)).EnumerateSiblingNodeRefs(document).Skip(index).FirstOrDefault();
         }
 
+        /// <summary>
+        /// Returns references to the children of <paramref name="parentNode"/>, which must be the node that this
+        /// reference's parent refers to. Gives the same references as <see cref="ElementRef.ListChildrenOfParent"/>
+        /// without looking up the parent node in the document.
+        /// </summary>
+        public IEnumerable<NodeRef> ListChildrenOfParentNode(DocNodeParent parentNode)
+        {
+            return EnumerateSiblingNodeRefs(parentNode);
+        }
+
         public static IEnumerable<IdentityPath> GetIdentityPaths(SrmDocument document, IEnumerable<NodeRef> nodeRefs)
         {
             Dictionary<NodeRef, NodeRefParentData> parentDatas = new Dictionary<NodeRef, NodeRefParentData>();
