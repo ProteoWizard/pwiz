@@ -69,12 +69,15 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     internal sealed class PerFileScoringTask : OspreyTask
     {
-        // Equal-weight progress segments one input file's work is divided into for
-        // the --parallel-files "[i] p%" aggregate line: read spectra, calibrate RT/
-        // mass, score, write the scores parquet. ProcessFile advances them through
+        // Progress segments one input file's work is divided into for the
+        // --parallel-files "[i] p%" aggregate line: read spectra, calibrate RT/mass,
+        // score, write the scores parquet. ProcessFile advances them through
         // MultiProgressReporter.BeginSegment at each phase boundary; off the parallel
-        // path those calls are no-ops.
-        private const int PROCESS_FILE_SEGMENTS = 4;
+        // path those calls are no-ops. Weighted by time: coelution scoring is ~80% of a
+        // SEA-AD file and ~95% of a CHS file, calibration ~15% and ~3%. With equal
+        // quarters one visible percent of scoring took 4% of its windows, and 27 CHS
+        // files sat at 50% together for 287 s.
+        private static readonly int[] PROCESS_FILE_SEGMENT_WEIGHTS = { 2, 10, 80, 8 };
 
         /// <summary>
         /// This task's name, as a constant so the CLI selector, the validity stamp another
@@ -380,13 +383,13 @@ namespace pwiz.Osprey.Tasks
                 // "[i] p%" aggregate line, and buffer each file's narrative so its
                 // block flushes contiguously on completion rather than interleaving
                 // with the other files' lines. Each file is one BeginFile scope; the
-                // PROCESS_FILE_SEGMENTS phases inside ProcessFile drive its percent.
+                // PROCESS_FILE_SEGMENT_WEIGHTS phases inside ProcessFile drive its percent.
                 var multi = new MultiProgressReporter();
                 OrderedFileLanes.For(config.InputFiles.Count, effectiveParallelism, fileIdx =>
                 {
                     string inputFile = config.InputFiles[fileIdx];
                     string fileName = Path.GetFileNameWithoutExtension(inputFile);
-                    using (multi.BeginFile(fileIdx, PROCESS_FILE_SEGMENTS))
+                    using (multi.BeginFile(fileIdx, PROCESS_FILE_SEGMENT_WEIGHTS))
                     {
                         var fileResult = ScoreOrLoadForFile(
                             inputFile, fileName, fileIdx, config.InputFiles.Count,
@@ -1834,8 +1837,8 @@ namespace pwiz.Osprey.Tasks
 
             // Resolve the per-file calibration (load a cached/Rust JSON or
             // compute via Calibrator) and persist the calibration JSON.
-            // Segment 2/4 (calibrate): no inner reporter today, so this slice
-            // carries the file forward as a step when scoring begins.
+            // Segment 2/4 (calibrate): the calibration scoring passes report into it
+            // (Calibrator, one sub-range per pass).
             MultiProgressReporter.Current?.BeginSegment();
             RTCalibration rtCalibration = ResolveCalibration(
                 inputFile, fileName, fullLibrary, windowIndex, ms1Spectra, isolationWindows,

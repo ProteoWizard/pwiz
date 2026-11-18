@@ -60,6 +60,9 @@ namespace pwiz.Osprey.Tasks
         // Calibration entries of a window whose candidate spectra are found scan-major at once,
         // bounding the candidate lists alive per concurrently scored window.
         private const int CAL_PREFILTER_BLOCK_SIZE = 512;
+
+        // The share of a file's calibration progress given to scoring pass 1; pass 2 has the rest.
+        private const int CAL_PASS1_PROGRESS_PERCENT = 70;
         private const double CAL_FDR_THRESHOLD = 0.01;
         // Hard floor for LOESS refit in the two-pass calibration
         // refinement. Matches Rust's ABSOLUTE_MIN_CALIBRATION_POINTS
@@ -1554,6 +1557,13 @@ namespace pwiz.Osprey.Tasks
             // across an 82-file run.
             int windowsDone = 0;
             bool serialReads = OspreyEnvironment.SerialWindowReads;
+            // Pass 1 takes ~70% of calibration's scoring time and pass 2 the rest. Without
+            // a sub-range each, pass 1 filled the file's calibration segment and pass 2 ran
+            // with no visible progress. A retried pass-1 attempt still shows none: the line
+            // never moves back.
+            using var passProgress = MultiProgressReporter.Current?.BeginSubrange(
+                passNumber == 1 ? 0 : CAL_PASS1_PROGRESS_PERCENT,
+                passNumber == 1 ? CAL_PASS1_PROGRESS_PERCENT : 100);
             ProgressReporter.Run(OspreyTasksResources.Calibrator_private_Scoring_calibration_windows, entriesByWindow.Count, progress =>
             {
                 Parallel.ForEach(entriesByWindow, new ParallelOptions
