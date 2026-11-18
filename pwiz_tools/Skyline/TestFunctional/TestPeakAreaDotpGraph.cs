@@ -11,6 +11,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
@@ -167,6 +168,50 @@ namespace pwiz.SkylineTestFunctional
                 AssertCutoffLine(true, 2, 1);
             });
 
+            // The bar tooltip shows each ion's area with 3 decimals and thousands separators,
+            // and its share of the replicate total. The first replicate once showed only shares.
+            RunUI(() =>
+            {
+                Settings.Default.UsePowerOfTen = false;
+                SkylineWindow.AreaNormalizeOption = NormalizeOption.DEFAULT;
+            });
+            WaitForGraphs();
+            WaitForPaneShowingSelection(0);
+            RunUI(() => VerifyAreaTooltip(0));
+
+            // TIC normalization keeps area units, so it is formatted the same way, not as a percentage
+            RunUI(() =>
+            {
+                Assert.IsTrue(SkylineWindow.Document.Settings.HasTicArea, "Test setup: the document has no TIC areas.");
+                SkylineWindow.AreaNormalizeOption = NormalizeOption.FromNormalizationMethod(NormalizationMethod.TIC);
+            });
+            WaitForGraphs();
+            WaitForPaneShowingSelection(0);
+            RunUI(() => VerifyAreaTooltip(1));
+        }
+
+        private void VerifyAreaTooltip(int replicateIndex)
+        {
+            var pane = (AreaReplicateGraphPane) SkylineWindow.GraphPeakArea.GraphControl.MasterPane[0];
+            var bars = pane.CurveList.OfType<BarItem>().ToList();
+            Assert.IsTrue(bars.Count > 1, "Test setup: the peak area graph should show several ions.");
+            pane.PopulateTooltip(replicateIndex, bars[0]);
+            var total = bars.Sum(bar => bar.Points[replicateIndex].Y);
+            var expectedLines = new List<string>
+            {
+                TipLine(GraphsResources.AreaReplicateGraphPane_Tooltip_Replicate, pane.XAxis.Scale.TextLabels[replicateIndex])
+            };
+            expectedLines.AddRange(bars.Select(bar => TipLine(bar.Label.Text,
+                bar.Points[replicateIndex].Y.ToString(@"#,0.000", CultureInfo.CurrentCulture),
+                (bar.Points[replicateIndex].Y / total).ToString(@"0.0%", CultureInfo.CurrentCulture))));
+            expectedLines.Add(TipLine(GraphsResources.AreaReplicateGraphPane_Tooltip_Total,
+                total.ToString(@"#,0.000", CultureInfo.CurrentCulture)));
+            CollectionAssert.AreEqual(expectedLines, pane.ToolTip.TipLines);
+        }
+
+        private static string TipLine(params string[] cells)
+        {
+            return string.Join(TextUtil.SEPARATOR_TSV_STR, cells);
         }
 
         // Adds a replicate annotation of the given type with an explicit value per replicate
