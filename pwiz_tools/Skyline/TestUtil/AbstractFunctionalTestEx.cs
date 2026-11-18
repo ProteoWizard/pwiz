@@ -699,8 +699,8 @@ namespace pwiz.SkylineTestUtil
             var parentForm = dockableForm.ParentForm;
             Assert.IsNotNull(parentForm);
             ResizeFormOnScreen(parentForm,
-                width.HasValue ? ScaledWidth(parentForm, width.Value) : (int?) null,
-                height.HasValue ? ScaledHeight(parentForm, height.Value) : (int?) null);
+                width.HasValue ? ScaledWidth(parentForm, width.Value) : null,
+                height.HasValue ? ScaledHeight(parentForm, height.Value) : null);
         }
 
         protected static void ResizeFormOnScreen(Form parentForm, int? width, int? height)
