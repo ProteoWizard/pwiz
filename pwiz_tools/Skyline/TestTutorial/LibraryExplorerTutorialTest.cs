@@ -107,7 +107,7 @@ namespace pwiz.SkylineTestTutorial
             ViewLibraryDlg viewLibraryDlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             var matchedPepsDlg = WaitForOpenForm<AddModificationsDlg>();
             OkDialog(matchedPepsDlg, matchedPepsDlg.CancelDialog);
-            RunUIForScreenShot(() => viewLibraryDlg.Size = new Size(775, 463));
+            RunUIForScreenShot(() => viewLibraryDlg.Size = ScaledSize(viewLibraryDlg, 775, 463));
             PauseForScreenShot<ViewLibraryDlg>("Library Explorer");
 
             // Types text in Peptide textbox in the Spectral Library Explorer Window
@@ -239,7 +239,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.ExpandPeptides();
-                SkylineWindow.Size = new Size(918, 553);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 918, 553);
             });
             RestoreViewOnScreen(12);
             Point locationSaved = Point.Empty;
@@ -247,7 +247,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 // Move the library explorer out of the way for the screenshot
                 locationSaved = viewLibraryDlg.Location;
-                viewLibraryDlg.Location = new Point(SkylineWindow.Right + 20, SkylineWindow.Top);
+                viewLibraryDlg.Location = new Point(SkylineWindow.Right + Scaled(20), SkylineWindow.Top);
             });
             PauseForScreenShot("Main window");
             RunUIForScreenShot(() => viewLibraryDlg.Location = locationSaved);
@@ -341,7 +341,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(2, viewLibraryDlg1.PeptideDisplayCount);
                 Assert.AreEqual(countLabels1, viewLibraryDlg1.GraphItem.IonLabels.Count());
             });
-            RunUIForScreenShot(() => viewLibraryDlg1.Width -= 185);
+            RunUIForScreenShot(() => viewLibraryDlg1.Width -= Scaled(185));
             LimitXAxis(viewLibraryDlg1);
             PauseForGraphScreenShot("Spectrum graph metafile", viewLibraryDlg1.GraphExtensionControl);   // p. 16, figure 1a
             RunUI(() =>

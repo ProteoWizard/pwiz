@@ -627,6 +627,8 @@ namespace pwiz.SkylineTestUtil
         {
             AssertEx.IsTrue(graphChromatogram.IsOverFullScanPoint(x, y, paneKey),
                 string.Format("No full-scan point near ({0}, {1})", x, y));
+            AssertEx.IsFalse(graphChromatogram.IsOverLabel(x, y, paneKey),
+                string.Format("({0}, {1}) is on a label, which hides the full-scan point", x, y));
             graphChromatogram.TestMouseMove(x, y, paneKey);
         }
 
@@ -688,12 +690,17 @@ namespace pwiz.SkylineTestUtil
             graphControl.Refresh();
         }
 
+        /// <summary>
+        /// Resizes the floating window holding a form, to a width and height written for 100% display scale.
+        /// </summary>
         protected static void ResizeFloatingFrame(DockableForm dockableForm, int? width, int? height)
         {
             Assert.AreEqual(DockState.Floating, dockableForm.DockState);
             var parentForm = dockableForm.ParentForm;
             Assert.IsNotNull(parentForm);
-            ResizeFormOnScreen(parentForm, width, height);
+            ResizeFormOnScreen(parentForm,
+                width.HasValue ? ScaledWidth(parentForm, width.Value) : null,
+                height.HasValue ? ScaledHeight(parentForm, height.Value) : null);
         }
 
         protected static void ResizeFormOnScreen(Form parentForm, int? width, int? height)
@@ -756,7 +763,7 @@ namespace pwiz.SkylineTestUtil
 
             if (pause)
             {
-                RunUI(() => annotationDefDlg.Height = 442);  // Shorter for screenshots
+                RunUI(() => annotationDefDlg.Height = ScaledHeight(annotationDefDlg, 442));  // Shorter for screenshots
                 PauseForScreenShot<DefineAnnotationDlg>("Define Annotation form - " + annotationName);
             }
 

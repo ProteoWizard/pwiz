@@ -267,6 +267,34 @@ namespace pwiz.SkylineTestUtil
             g.DrawRectangle(new Pen(color ?? ANNOTATION_COLOR, lineWidth), rect);
         }
 
+        /// <summary>
+        /// Draws a box around a column from its top data cell to the bottom of the grid's data area, just
+        /// above the horizontal scroll bar if there is one. Unlike a count of rows, this reaches the scroll
+        /// bar at any display scale, where the row height and the grid height do not scale alike.
+        /// </summary>
+        public static void DrawBoxOnColumnToBottom(this Graphics g, DocumentGridForm documentGridForm, int column, Color? color = null, int lineWidth = 3)
+        {
+            var dataGridView = documentGridForm.DataGridView;
+            var rect = GetBitmapCellRectangle(documentGridForm, 0, column); // column's top data cell
+            int dataBottom = dataGridView.ClientSize.Height;
+            if (HasVisibleHorizontalScrollBar(dataGridView))
+                dataBottom -= SystemInformation.HorizontalScrollBarHeight;
+            int topInGrid = dataGridView.GetCellDisplayRectangle(column, 0, true).Top;
+            // The pen is centered on the rectangle, so keep its lower half off the scroll bar
+            rect.Height = dataBottom - topInGrid - (lineWidth + 1) / 2;
+            g.DrawRectangle(new Pen(color ?? ANNOTATION_COLOR, lineWidth), rect);
+        }
+
+        private static bool HasVisibleHorizontalScrollBar(DataGridView dataGridView)
+        {
+            foreach (Control control in dataGridView.Controls)
+            {
+                if (control is HScrollBar && control.Visible)
+                    return true;
+            }
+            return false;
+        }
+
         public static void DrawEllipseOnCell(this Graphics g, DocumentGridForm documentGridForm, int row, int column, Color? color = null, int lineWidth = 3)
         {
             var dataGridView = documentGridForm.DataGridView;

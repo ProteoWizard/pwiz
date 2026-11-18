@@ -946,6 +946,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (status.ProgressList[0].PercentComplete >= _freezeProgressPercent)
                 {
                     _isProgressFrozen = true;
+                    graphChromatograms.OnProgressFrozen();
                     return true;
                 }
 
@@ -975,7 +976,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!graphChromatograms.HasGraphData)
                     return false;
 
-                return true;
+                // Graph must have drawn its data
+                return graphChromatograms.IsRenderComplete;
             }
         }
 
