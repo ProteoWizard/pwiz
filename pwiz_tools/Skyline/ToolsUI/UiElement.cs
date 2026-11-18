@@ -1828,13 +1828,16 @@ namespace pwiz.Skyline.ToolsUI
             {
                 case null:
                     return new object[0];
+                // A JSON array, or a bare name given without brackets, taken as a path of that one name.
                 case string json:
-                    return JArray.Parse(json).Select(ToTreePathSegment).ToArray();
+                    return json.TrimStart().StartsWith(@"[")
+                        ? JArray.Parse(json).Select(ToTreePathSegment).ToArray()
+                        : new object[] { json };
                 case System.Collections.IEnumerable items:
                     return items.Cast<object>().Select(ToTreePathSegment).ToArray();
                 default:
                     throw new ArgumentException(new LlmInstruction(
-                        @"A tree path must be an array of child names (strings) and/or indexes (integers)."));
+                        @"A path must be an array of child names (strings) and/or indexes (integers)."));
             }
         }
 
@@ -1853,16 +1856,19 @@ namespace pwiz.Skyline.ToolsUI
 
     /// <summary>A property sheet (a <see cref="PropertyGrid"/>), such as the Spectrum Properties pane of the
     /// Full-Scan graph. An item is expanded or collapsed (expand/collapse) by a path of item names as the sheet
-    /// shows them, or of indexes, in the same form as a TreeView path. Categories are transparent to the path,
-    /// so ["Other Metadata"] names that item whether the sheet is sorted by category (where it sits under
-    /// Acquisition) or alphabetically. Expanding also expands every item and category above the target, so
-    /// the result is in view. The sheet's items are not elements, and its internal controls are not walked
-    /// into.</summary>
+    /// shows them, or of indexes, in the same form as a TreeView path. A category heading can be named itself,
+    /// and its items can also be named without it, so ["Other Metadata"] names that item whether the sheet is
+    /// sorted by category (where it sits under Acquisition) or alphabetically. Expanding also expands every
+    /// item and category above the target, so the result is in view. The sheet's items are not elements; its
+    /// toolbar (sort buttons, and any button a host adds, such as the Full-Scan pane's Close) is its only
+    /// child.</summary>
     internal sealed class PropertyGridElement : ControlElement<PropertyGrid>, IExpandCollapseElement
     {
         public PropertyGridElement(PropertyGrid control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
 
-        public override IEnumerable<UiElement> EnumerateChildren() => Enumerable.Empty<UiElement>();
+        public override IEnumerable<UiElement> EnumerateChildren() =>
+            Control.Controls.OfType<ToolStrip>().Where(toolStrip => toolStrip.Visible)
+                .Select(toolStrip => FormElement.ElementFor(toolStrip)).Where(element => element != null);
 
         public void ExpandNow(object path)
         {
@@ -1903,8 +1909,16 @@ namespace pwiz.Skyline.ToolsUI
             var current = RootItem();
             for (int i = 0; i < path.Length; i++)
             {
-                if (i > 0 && current.Expandable && !current.Expanded)
-                    current.Expanded = true;
+                if (i > 0)
+                {
+                    if (!current.Expandable)
+                    {
+                        throw new ArgumentException(LlmInstruction.Format(
+                            @"'{0}' has no items below it, so the path cannot continue past it.", current.Label));
+                    }
+                    if (!current.Expanded)
+                        current.Expanded = true;
+                }
                 current = FindChildItem(current, path[i]);
             }
             return current;
@@ -1939,29 +1953,26 @@ namespace pwiz.Skyline.ToolsUI
                 return items[index];
             }
             var text = segment as string;
-            var match = items.FirstOrDefault(item => TextMatches(item.Label, text, true))
-                        ?? items.FirstOrDefault(item => TextMatches(item.Label, text, false));
-            if (match == null)
+            int match = ListItems.BestMatch(items.Count, i => items[i].Label, text);
+            if (match < 0)
             {
                 throw new ArgumentException(LlmInstruction.Format(@"No property matches '{0}'. The properties here are: {1}",
                     text, string.Join(@", ", items.Select(item => item.Label))));
             }
-            return match;
+            return items[match];
         }
 
-        // The items under an item as a path sees them: a category is transparent, so its items stand in its place.
+        // The items under an item as a path sees them: a category heading, followed by its own items, so either
+        // the heading or one of its items can be named at that level.
         private static IEnumerable<GridItem> PathChildren(GridItem parent)
         {
             foreach (GridItem item in parent.GridItems)
             {
+                yield return item;
                 if (item.GridItemType == GridItemType.Category)
                 {
                     foreach (GridItem inCategory in item.GridItems)
                         yield return inCategory;
-                }
-                else
-                {
-                    yield return item;
                 }
             }
         }

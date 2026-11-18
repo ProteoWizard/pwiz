@@ -173,9 +173,15 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(node.Expanded, @"Other Metadata node collapsed after navigating to the next scan");
             });
 
-            McpConnector.PerformAction(propertySheet, @"collapse", new object[] { nodeLabel });
+            // A bare name, given without the array brackets, is a path of that one name.
+            McpConnector.PerformAction(propertySheet, @"collapse", nodeLabel);
             RunUI(() => Assert.IsFalse(FindParametersNode(graphFullScan).Expanded,
                 @"collapse did not collapse the Other Metadata node addressed by its label"));
+
+            // The sheet's own toolbar (its sort buttons and the pane's Close button) stays reachable through it.
+            var sheetChildren = (ControlInfo[]) McpConnector.PerformAction(propertySheet, @"get_children", null);
+            Assert.IsTrue(sheetChildren.Any(child => true == child.Path.Type?.Contains(nameof(ToolStrip))),
+                @"the property sheet's toolbar is not listed among its children");
         }
 
         private static GridItem FindParametersNode(GraphFullScan graphFullScan)
