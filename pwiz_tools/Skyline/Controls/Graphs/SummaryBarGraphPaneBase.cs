@@ -98,6 +98,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 _table.AddDetailRow(description, data, RenderTools, StringAlignment.Far);
             }
 
+            public void AddLine(string description, string data, string percent)
+            {
+                AddLine(description, data);
+                _table[_table.Count - 1].Add(new CellDesc(percent, RenderTools) { Align = StringAlignment.Far });
+            }
+
             public void ClearData()
             {
                 _table?.Clear();
