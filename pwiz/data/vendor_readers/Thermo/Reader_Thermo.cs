@@ -154,6 +154,7 @@ public sealed class Reader_Thermo : IReader
         {
             // If we're here mid-init, raw was never handed off. Release the native SDK
             // handle so the file lock drops. Skyline's error-path tests rely on this.
+            // ReSharper disable once ConstantConditionalAccessQualifier
             raw?.Dispose();
             throw;
         }

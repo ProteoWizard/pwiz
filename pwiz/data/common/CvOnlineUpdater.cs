@@ -393,6 +393,7 @@ internal static class CvOnlineUpdater
             Accession = accession;
         }
 
+        // ReSharper disable once MemberHidesStaticFromOuterClass
         public CvOnlineUpdateMode Mode { get; }
         public string Accession { get; }
         public bool Retryable { get; set; }
@@ -595,6 +596,7 @@ internal static class CvOnlineUpdater
 
         try
         {
+            // ReSharper disable once UsingStatementResourceInitialization
             using var client = new HttpClient(HandlerFactory(), disposeHandler: true)
             {
                 Timeout = DownloadTimeout,
