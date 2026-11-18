@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
 using pwiz.PanoramaClient.Properties;
@@ -65,6 +66,7 @@ namespace pwiz.PanoramaClient
         protected PanoramaFolderBrowser(List<PanoramaServer> servers, string state, string selectedPath = null)
         {
             InitializeComponent();
+            ImageListScaler.ScaleToDpi(this, imageList1);   // 16x16 icons are a 96-DPI design (issue #4599)
             ServerList = servers;
             TreeState = state;
             InitialPath = selectedPath?.TrimEnd('/');

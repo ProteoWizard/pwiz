@@ -157,19 +157,19 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.AuditLogForm.Close();
-                SkylineWindow.Width = 1010;
+                SkylineWindow.Width = ScaledWidth(SkylineWindow, 1010);
             });
 
             RunUIForScreenShot(() => SkylineWindow.ShowUndo());
             PauseForScreenShot("Undo list expanded.", null, bmp => 
-                ClipBitmap(bmp.CleanupBorder(), new Rectangle(0, 0, 713, 131)));
+                ClipBitmap(bmp.CleanupBorder(), new Rectangle(Point.Empty, ScaledSize(SkylineWindow, 713, 131))));
             RunUIForScreenShot(() => SkylineWindow.ShowUndo(false));
 
             RunUI(SkylineWindow.Undo);
 
             RunUIForScreenShot(() => SkylineWindow.ShowRedo());
             PauseForScreenShot("Redo list expanded.", null, bmp =>
-                ClipBitmap(bmp.CleanupBorder(), new Rectangle(0, 0, 743, 127)));
+                ClipBitmap(bmp.CleanupBorder(), new Rectangle(Point.Empty, ScaledSize(SkylineWindow, 743, 127))));
             RunUIForScreenShot(() => SkylineWindow.ShowRedo(false));
 
             RunUI(SkylineWindow.Redo);
@@ -182,7 +182,7 @@ namespace pwiz.SkylineTestTutorial
                 var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
                 RunUI(() => SetClipboardText("IEAIPQIDK\tGST-tag"));
                 RunUI(pasteDlg.PastePeptides);
-                RunUIForScreenShot(() => pasteDlg.Size = new Size(700, 210));
+                RunUIForScreenShot(() => pasteDlg.Size = ScaledSize(pasteDlg, 700, 210));
                 PauseForScreenShot<PasteDlg.PeptideListTab>("Insert Peptide List");
 
                 using (new WaitDocumentChange())
@@ -197,7 +197,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 SkylineWindow.ShowFilesTreeForm(false); // Hide files tab
                 SkylineWindow.ExpandPrecursors();
-                SkylineWindow.Height = 390;
+                SkylineWindow.Height = ScaledHeight(SkylineWindow, 390);
             });
 
             PauseForScreenShot<SequenceTreeForm>("Targets view");
@@ -298,8 +298,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 var gridFloatingWindow = documentGridForm.Parent.Parent;
-                gridFloatingWindow.Size = new Size(370, 315);
-                gridFloatingWindow.Top = SkylineWindow.Bottom + 20;
+                gridFloatingWindow.Size = ScaledSize(gridFloatingWindow, 370, 315);
+                gridFloatingWindow.Top = SkylineWindow.Bottom + Scaled(20);
             });
             PauseForScreenShot<DocumentGridForm>("Document grid with concentrations filled in");
             RunUI(documentGridForm.Close);
@@ -318,7 +318,7 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(13);
             ActivateReplicate(unknownReplicate);
             SelectNode(SrmDocument.Level.TransitionGroups, 1);
-            RunUI(() => SkylineWindow.Size = new Size(936, 527));
+            RunUI(() => SkylineWindow.Size = ScaledSize(SkylineWindow, 936, 527));
             WaitForGraphs();
 
             PauseForScreenShot("Heavy precursor chromatogram");
@@ -424,10 +424,10 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot<AuditLogForm>("Audit Log with excluded standard records");
 
-            RunUIForScreenShot(() => SkylineWindow.AuditLogForm.Parent.Parent.Width += 100);    // Wider to remove the horizontal scrollbar
+            RunUIForScreenShot(() => SkylineWindow.AuditLogForm.Parent.Parent.Width += Scaled(100));    // Wider to remove the horizontal scrollbar
             ShowReportsDropdown(AuditLogStrings.AuditLogForm_AuditLogForm_All_Info);
             PauseForScreenShot<AuditLogForm>("Audit Log Reports menu", null, bmp =>
-                ClipBitmap(bmp.CleanupBorder(true), new Rectangle(0, 0, 503, bmp.Height)));
+                ClipBitmap(bmp.CleanupBorder(true), new Rectangle(0, 0, ScaledWidth(SkylineWindow, 503), bmp.Height)));
             HideReportsDropdown();
 
             // TODO(nicksh): Audit log reason field does not currently support fill down
@@ -470,8 +470,8 @@ namespace pwiz.SkylineTestTutorial
             RunUIForScreenShot(() =>
             {
                 var floatingWindow = SkylineWindow.AuditLogForm.Parent.Parent;
-                floatingWindow.Height = 334;
-                floatingWindow.Width -= 15;
+                floatingWindow.Height = ScaledHeight(floatingWindow, 334);
+                floatingWindow.Width -= Scaled(15);
             });
             PauseForScreenShot<AuditLogForm>("Audit Log with UndoRedo view.");
             if (IsCoverShotMode)
@@ -489,11 +489,11 @@ namespace pwiz.SkylineTestTutorial
                 var floatingCalWindow = calibrationCoverForm.Parent.Parent;
                 RunUI(() =>
                 {
-                    floatingLogWindow.Top = SkylineWindow.Bottom - floatingLogWindow.Height - 8;
+                    floatingLogWindow.Top = SkylineWindow.Bottom - floatingLogWindow.Height - Scaled(8);
                     floatingLogWindow.Left =
                         (SkylineWindow.Left + SkylineWindow.Right) / 2 - floatingLogWindow.Width / 2;
-                    floatingCalWindow.Top = SkylineWindow.Top + 8;
-                    floatingCalWindow.Left = SkylineWindow.Right - floatingCalWindow.Width - 8;
+                    floatingCalWindow.Top = SkylineWindow.Top + Scaled(8);
+                    floatingCalWindow.Left = SkylineWindow.Right - floatingCalWindow.Width - Scaled(8);
                     SkylineWindow.AuditLogForm.DataGridView.AutoResizeColumn(reasonIndex);
                     SkylineWindow.AuditLogForm.DataGridView.AutoResizeColumn(reasonIndex - 1);
                 });
@@ -516,7 +516,7 @@ namespace pwiz.SkylineTestTutorial
                     customizeDialog.ChooseColumnsTab.AddSelectedColumn();
                 }
 
-                customizeDialog.Height = 370;
+                customizeDialog.Height = ScaledHeight(customizeDialog, 370);
             });
             PauseForScreenShot<ViewEditor.ChooseColumnsView>("Custom Columns report template");
             OkDialog(customizeDialog, customizeDialog.OkDialog);
@@ -524,8 +524,8 @@ namespace pwiz.SkylineTestTutorial
             RunUIForScreenShot(() =>
             {
                 var floatingForm = SkylineWindow.AuditLogForm.Parent.Parent;
-                floatingForm.Width = 1140; // Wider for Skyline Version and User columns
-                floatingForm.Height += 10; // Extra for 2-line headers
+                floatingForm.Width = ScaledWidth(floatingForm, 1140); // Wider for Skyline Version and User columns
+                floatingForm.Height += Scaled(10); // Extra for 2-line headers
             }); 
             PauseForScreenShot<AuditLogForm>("Audit Log with custom view.");
 
@@ -625,7 +625,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 var floatingWindow = auditLogForm.Parent.Parent;
-                floatingWindow.Size = new Size(formWidth, height ?? 354);
+                floatingWindow.Size = ScaledSize(floatingWindow, formWidth, height ?? 354);
                 auditLogForm.DataGridView.Columns[0].Width += timeExtra;
                 if (messageExtra > 0)
                 {
@@ -675,7 +675,7 @@ namespace pwiz.SkylineTestTutorial
         {
             RunUI(() =>
             {
-                int totalWidth = form.DataGridView.RowHeadersWidth + 35;    // Avoid horizontal scrollbar
+                int totalWidth = form.DataGridView.RowHeadersWidth + Scaled(35);    // Avoid horizontal scrollbar
                 foreach (DataGridViewColumn col in form.DataGridView.Columns)
                     totalWidth += col.Width;
                 form.FloatingPane.Parent.Width = totalWidth;

@@ -18,7 +18,6 @@
  */
 
 using System.Collections.Generic;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -71,7 +70,7 @@ namespace pwiz.SkylineTestTutorial
             var pepSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunUI(() =>
             {
-                SkylineWindow.Size = new Size(1600, 800);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 1600, 800);
                 pepSettings.SelectedTab = PeptideSettingsUI.TABS.Digest;
                 pepSettings.ComboEnzymeSelected = "Trypsin [KR | P]";
                 pepSettings.MaxMissedCleavages = 0;

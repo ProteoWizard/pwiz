@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -99,7 +98,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
                 SkylineWindow.AutoZoomBestPeak();
                 SkylineWindow.GraphSpectrumSettings.ShowBIons = true;
-                SkylineWindow.Size = new Size(1266, 736);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 1266, 736);
 
                 Assert.AreEqual(SkylineWindow.SequenceTree.SelectedNode.Text, "YLGAYLLATLGGNASPSAQDVLK"); // Not L10N
             });
@@ -358,7 +357,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.AutoZoomNone();
 
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Transitions, 5);
-                SkylineWindow.Size = new Size(722, 449);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 722, 449);
             });
 
             RunUI(SkylineWindow.AutoZoomBestPeak);
@@ -486,7 +485,7 @@ namespace pwiz.SkylineTestTutorial
             });
             FindNode("FWEVISDEHGIQPDGTFK");
 
-            RunUI(() => SkylineWindow.Size = new Size(1060, 550));
+            RunUI(() => SkylineWindow.Size = ScaledSize(SkylineWindow, 1060, 550));
             RestoreViewOnScreen(21);
             FocusDocument();
             PauseForScreenShot("Main window"); // Not L10N
@@ -580,7 +579,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 SkylineWindow.CollapsePeptides();
                 SkylineWindow.ShowChromatogramLegends(false);
-                SkylineWindow.Size = new Size(1024, 768);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 1024, 768);
             });
             RestoreViewOnScreen(26);
             WaitForGraphs();
