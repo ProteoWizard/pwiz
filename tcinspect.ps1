@@ -16,10 +16,10 @@
     project re-emits none - and the pre-build logs every restore and build warning to a
     warnings-only log.
 
-    inspectcode then inspects Pwiz.sln under Pwiz.sln.DotSettings, which keeps Skyline's rules
-    for code that may be wrong and hides the style and redundancy ones. The projects Pwiz.sln
-    shares with Skyline.sln are excluded: Skyline's inspection already checks them under rules
-    that are a superset of these.
+    After the pre-build, the script runs ReSharper's inspectcode over Pwiz.sln with the rules in
+    Pwiz.sln.DotSettings. Those are Skyline's rules minus the style and redundancy inspections,
+    so the inspection reports only code that may be wrong. It skips the projects Pwiz.sln shares
+    with Skyline.sln, because Skyline's inspection already checks them under stricter rules.
 
     Warnings and findings turn the status red and leave the build green: this script ALWAYS exits
     0 and raises no TeamCity buildProblem, either of which would fail the build. So that they can
