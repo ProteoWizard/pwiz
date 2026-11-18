@@ -98,7 +98,7 @@ namespace pwiz.Osprey.Tasks
             // OSPREY_PASS2_QVALUE selects how this 2nd pass assigns reported q-values.
             // Log the active mode once so a run's provenance is in the log. An unrecognized
             // token never reaches here: Program aborts at startup.
-            if (OspreyEnvironment.Pass2TransferQ)
+            if (config.Pass2TransferQ)
             {
                 // The pass-1 model scores the moved peaks and each file maps score to run q with
                 // its own first-pass table; experiment q stays anchored on the best peak.
@@ -107,7 +107,7 @@ namespace pwiz.Osprey.Tasks
                     @"cross-run reconciliation get a new run-level q-value.",
                     OspreyEnvironment.PASS2_QVALUE_TRANSFER));
             }
-            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_PASS2_QVALUE, OspreyEnvironment.Pass2QValue));
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_PASS2_QVALUE, config.Pass2QValue));
 
             EnsureFrozenFirstPassPublished(ctx);
 
@@ -115,7 +115,7 @@ namespace pwiz.Osprey.Tasks
                 return;
 
             var pass2Writer = new Pass2SidecarWriter(config, taskName, taskValidityKey);
-            RequireWorkerAnswers(rescored.FileNames, pass2Writer);
+            RequireWorkerAnswers(rescored.FileNames, pass2Writer, config);
 
             // LogInfo, not LogVerbose: this is the heading for the longest stretch of work left
             // in Stage 7, and a --verbose-only heading is invisible on the runs that actually take
@@ -127,7 +127,7 @@ namespace pwiz.Osprey.Tasks
             // protein-compact or transfer and nothing else. Both read the same per-run answers;
             // they differ only in how a record becomes an experiment-scope value - re-competed
             // over the stratum, or carried from the first pass.
-            if (OspreyEnvironment.Pass2ProteinCompact)
+            if (config.Pass2ProteinCompact)
                 ComputePass2FrozenCompetition(ctx, rescored, perFileParquetPaths, config, pass2Writer);
             else
                 ComputePass2TransferFold(ctx, rescored, config, pass2Writer);
@@ -159,13 +159,14 @@ namespace pwiz.Osprey.Tasks
         /// a time partway through a fold that has already spent minutes per run. A key with no
         /// matching input file is in the list too: its answer has nowhere to be.</para>
         /// </summary>
-        private static void RequireWorkerAnswers(IReadOnlyList<string> fileNames, Pass2SidecarWriter writer)
+        private static void RequireWorkerAnswers(IReadOnlyList<string> fileNames, Pass2SidecarWriter writer,
+            OspreyConfig config)
         {
             var missing = new List<string>();
             foreach (string fileName in fileNames)
             {
                 string inputFile = writer.InputFor(fileName);
-                if (inputFile == null || !HasWorkerStamp(inputFile))
+                if (inputFile == null || !HasWorkerStamp(inputFile, config))
                     missing.Add(fileName);
             }
             if (missing.Count == 0)
@@ -201,17 +202,14 @@ namespace pwiz.Osprey.Tasks
             var reloaded = FirstPassModelIO.LoadForAnalysis(ctx.Config);
             if (reloaded == null)
                 return;
-            // ExperimentAgg is what the TRAINING process ran under (null on a sidecar
-            // written before the field existed). This node's own OSPREY_EXPERIMENT_AGG
-            // says nothing about it, so carry the recorded value rather than re-reading.
             ctx.Publish(new FirstPassPercolatorModel
-                { Results = reloaded.Model, ExperimentAgg = reloaded.ExperimentAgg, Stamp = reloaded.Stamp });
+                { Results = reloaded.Model, Stamp = reloaded.Stamp });
             ctx.LogInfo(OspreyTasksResources.Pass2FdrSidecar_EnsureFrozenFirstPassPublished_Reusing_the_saved_first_pass_model_);
             ctx.LogVerbose(string.Format(
                 OspreyTasksResources.Pass2FdrSidecar_EnsureFrozenFirstPassPublished_Reloaded_the_saved_first_pass_model_for_second_pass_FDR__first_pass_experiment_,
                 reloaded.ExperimentAgg ?? @"not recorded"));
 
-            if (OspreyEnvironment.Pass2ProteinCompact && reloaded.StratumBaseIds != null &&
+            if (ctx.Config.Pass2ProteinCompact && reloaded.StratumBaseIds != null &&
                 !ctx.TryGet<ProteinCompactStratum>(out _))
             {
                 ctx.Publish(new ProteinCompactStratum(reloaded.StratumBaseIds));
@@ -483,7 +481,7 @@ namespace pwiz.Osprey.Tasks
         /// SecondPassFDR reads the run's gap-fill entry ids from it. A plan left by an earlier
         /// run, or a kill between the plan and the parquet, leaves a run that is not done.</para>
         /// </summary>
-        internal static bool HasWorkerStamp(string inputFile)
+        internal static bool HasWorkerStamp(string inputFile, OspreyConfig config)
         {
             var reconciled = ParquetScoreCache.ReadStamp(ParquetScoreCache.GetReconciledScoresPath(inputFile));
             if (reconciled == null ||
@@ -496,7 +494,7 @@ namespace pwiz.Osprey.Tasks
                 return false;
             if (!IsSameStamp(ArtifactStamp.TryReadJsonHead(ReconciliationFile.PathForInput(inputFile)), reconciled))
                 return false;
-            return !OspreyEnvironment.Pass2ProteinCompact ||
+            return !config.Pass2ProteinCompact ||
                    IsSameStamp(Pass2CompetitionDecoys.ReadStamp(Pass2CompetitionDecoys.PathFor(inputFile)), reconciled);
         }
 
@@ -1118,7 +1116,7 @@ namespace pwiz.Osprey.Tasks
             HashSet<uint> stratum = null;
             bool haveInputs =
                 ctx.TryGet<FirstPassPercolatorModel>(out var frozen) && frozen?.Results != null;
-            if (haveInputs && OspreyEnvironment.Pass2ProteinCompact)
+            if (haveInputs && config.Pass2ProteinCompact)
             {
                 // An empty stratum is an input (no protein had 2 or more detected peptides);
                 // only a missing one is not. If nothing passes, the .blib write says so.
@@ -1129,7 +1127,7 @@ namespace pwiz.Osprey.Tasks
             }
             if (haveInputs && ComputePass2TransferCompeteFull(
                     ctx, rescored, perFileParquetPaths, config, frozen.Results,
-                    frozen.ExperimentAgg, frozen.Stamp, writer, stratum))
+                    frozen.Stamp, writer, stratum))
             {
                 return;
             }
@@ -1178,7 +1176,6 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
             PercolatorResults frozenModel,
-            string pass1ExperimentAgg,
             ArtifactStamp frozenModelStamp,
             Pass2SidecarWriter writer,
             HashSet<uint> stratumBaseIds)
@@ -1189,7 +1186,7 @@ namespace pwiz.Osprey.Tasks
             // to keep its 1st-pass q, which left the decoys the stratum excluded counting against
             // no one (issue #4581). The full-population form this method also served was
             // transfer-compete, removed because its competition ran over a target-conditioned
-            // subset - see the OspreyEnvironment.Pass2QValue remarks and issue #4581.
+            // subset - see the OspreyEnvironment.Pass2QValueOverride remarks and issue #4581.
             if (stratumBaseIds == null)
             {
                 throw new ArgumentNullException(nameof(stratumBaseIds),
@@ -1342,57 +1339,6 @@ namespace pwiz.Osprey.Tasks
                 OspreyTasksResources.Pass2FdrSidecar_ComputePass2TransferCompeteFull_Scoring_up_to__0__re_scored_peaks_with_the_first_pass_model__one_file_at_a_time_,
                 survivorObservations));
 
-            // This competition reduces per base_id by MAX, and BOTH modes that reach it then
-            // overwrite the reported experiment q from that reduction. Neither is compatible with
-            // a mean(best-N) 1st pass, in two different ways:
-            //
-            //   protein-compact assembles the reported column from TWO competitions - the
-            //   stratum's, max-aggregated here, and the complement's, on the 1st-pass aggregate
-            //   (mean(best-N) under that arm). One column, two aggregations, and no way for a
-            //   consumer to tell which row used which.
-            //
-            //   transfer-compete rewrites EVERY survivor, so its column is at least internally
-            //   consistent - but it is consistently MAX, silently discarding the mean(best-N)
-            //   statistic the operator asked for and reporting a reproducibility-weighted run as
-            //   an ordinary one. Uniformly wrong is not better than mixed here, because the run
-            //   is indistinguishable from a max run in its own output.
-            //
-            // Refuse both rather than emit either: a number a user would reasonably trust and
-            // cannot audit is worse than an error. Making the streamed competition itself
-            // aggregate-aware is the real fix and is deliberately NOT folded in - it depends on
-            // the gap-fill run-count exclusion, which is its own design (issue #4511).
-            //
-            // Gated on the arm the FIRST PASS recorded, not on this process's environment: a
-            // --task SecondPassFDR node reloads the frozen model from disk and never
-            // trained pass 1, so its own OSPREY_EXPERIMENT_AGG is unrelated to the q-values it is
-            // about to rewrite. Reading the live process was wrong in both directions - unset on
-            // SecondPassFDR emitted a mixed column with no refusal, and a stale exported
-            // variable aborted a consistent run.
-            // A sidecar written before the arm was recorded reports null. Null means UNKNOWN, not
-            // "max", so fall back to this process's variable and SAY SO - an inferred answer the
-            // operator can see beats a silent one, and it is exactly the pre-provenance behavior
-            // for exactly the artifacts that predate provenance.
-            bool armRecorded = pass1ExperimentAgg != null;
-            string pass1Arm = armRecorded ? pass1ExperimentAgg : OspreyEnvironment.ExperimentAgg;
-            if (OspreyEnvironment.IsMeanBestArm(pass1Arm))
-            {
-                throw new InvalidOperationException(string.Format(
-                    @"OSPREY_PASS2_QVALUE={0} cannot be combined with a 1st pass run under " +
-                    @"OSPREY_EXPERIMENT_AGG={1}{2}. This mode recomputes the reported experiment q " +
-                    @"from a MAX-aggregated competition, which {3}. Use OSPREY_PASS2_QVALUE={4}, " +
-                    @"which carries the 1st-pass mean(best-N) q through unchanged, for a " +
-                    @"mean(best-N) arm.",
-                    OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT,
-                    pass1Arm,
-                    armRecorded
-                        ? @" (recorded in the 1st-pass model sidecar)"
-                        : @" (INFERRED from this process's environment - the 1st-pass model sidecar " +
-                          @"predates arm recording and does not say which arm trained it)",
-                    @"would rank on-stratum precursors on a max aggregate and off-stratum " +
-                    @"precursors on their 1st-pass mean(best-N) aggregate - one column, two statistics",
-                    OspreyEnvironment.PASS2_QVALUE_TRANSFER));
-            }
-
             // 3. Streamed full-population competition + run/experiment precursor q + PEP. One
             //    file's ENTRIES, features, scalars and run q are resident at a time; the
             //    cross-file state is bounded by the number of distinct precursors and distinct
@@ -1496,7 +1442,7 @@ namespace pwiz.Osprey.Tasks
                     // above puts the refusal.
                     ReadOneFilePass2Inputs(
                         sidecarByKey[fileKey], effectiveParquetPath, currentEntries,
-                        scorer, nFeatures, LoadProteinBestForRun(scorer, sidecarByKey[fileKey], fileKey, frozenModelStamp),
+                        scorer, nFeatures, PinFeatureMask.For(ctx.Config), LoadProteinBestForRun(scorer, sidecarByKey[fileKey], fileKey, frozenModelStamp),
                         seeder, ctx.LogWarning,
                         survivorIds, pass1Records,
                         out uint[] eids, out double[] scs, out var fileScores);
@@ -2062,8 +2008,8 @@ namespace pwiz.Osprey.Tasks
 
         internal static void ReadOneFilePass2Inputs(
             string pass1SidecarPath, string effectiveParquetPath, List<FdrEntry> survivors,
-            FrozenModelScorer scorer, int nFeatures, ProteinBestRunValues proteinBest, Pass1ScalarSeeder seeder,
-            Action<string> logWarning,
+            FrozenModelScorer scorer, int nFeatures, PinFeatureSelection features, ProteinBestRunValues proteinBest,
+            Pass1ScalarSeeder seeder, Action<string> logWarning,
             HashSet<uint> survivorIds, List<FdrScoreRecord> pass1Records,
             out uint[] entryIds, out double[] scores, out Dictionary<uint, double> survivorScores)
         {
@@ -2080,7 +2026,7 @@ namespace pwiz.Osprey.Tasks
             Dictionary<uint, double[]> featByScoreIndex;
             try
             {
-                featByScoreIndex = LoadReconciledFeaturesByScoreIndex(effectiveParquetPath);
+                featByScoreIndex = LoadReconciledFeaturesByScoreIndex(effectiveParquetPath, features);
             }
             catch (Exception ex)
             {
@@ -2215,7 +2161,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// One run's protein-best column (<c>--protein-best</c>), read from beside its
+        /// One run's protein-best column (<c>--protein-boost best</c>), read from beside its
         /// first-pass FDR scores file, for a frozen model that scores with it; null for a model
         /// that does not, which is every run with the column off.
         ///
@@ -2247,10 +2193,10 @@ namespace pwiz.Osprey.Tasks
         }
 
         internal static Dictionary<uint, double[]> LoadReconciledFeaturesByScoreIndex(
-            string reconciledPath)
+            string reconciledPath, PinFeatureSelection features)
         {
             var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(reconciledPath);
-            var featRows = ParquetScoreCache.LoadPinFeaturesFromParquet(reconciledPath);
+            var featRows = ParquetScoreCache.LoadPinFeaturesFromParquet(reconciledPath, features);
             int n = Math.Min(stubs.Count, featRows.Count);
             var map = new Dictionary<uint, double[]>(n);
             for (int i = 0; i < n; i++)

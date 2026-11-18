@@ -71,9 +71,9 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="ParquetScoreCache.LoadPinFeaturesFromParquet"/> lays out each vector -
         /// so the model, its diagnostics and the feature report name the columns it trained on.
         /// </summary>
-        internal static OspreyFeatureInfo[] FdrFeatureInfos()
+        internal static OspreyFeatureInfo[] FdrFeatureInfos(OspreyConfig config)
         {
-            return PinFeatureMask.SelectFdrFeatures(
+            return PinFeatureMask.For(config).SelectFdrFeatures(
                 OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES));
         }
 
@@ -81,7 +81,7 @@ namespace pwiz.Osprey.Tasks
         /// Build the <see cref="ScoringPipeline"/> the tasks score through, wired
         /// to the run's log sink and (optional) diagnostics seam, and computing only
         /// the core features and the families of the PIN features the scores parquet records
-        /// (<see cref="PinFeatureMask.IsComputed"/>); the writer drops the rest of each family.
+        /// (<see cref="PinFeatureSelection.IsComputed"/>); the writer drops the rest of each family.
         /// Cheap: the pipeline only carries those references, so constructing one per
         /// scoring call matches the former per-call construction inside the base
         /// class forwarders exactly.
@@ -89,7 +89,7 @@ namespace pwiz.Osprey.Tasks
         internal static ScoringPipeline Pipeline(PipelineContext ctx)
         {
             return new ScoringPipeline(ctx, ctx.Diagnostics as IScoringDiagnostics,
-                PinFeatureMask.ComputedFeatureFlags());
+                PinFeatureMask.For(ctx.Config).ComputedFeatureFlags());
         }
 
         /// <summary>

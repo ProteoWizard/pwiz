@@ -137,7 +137,7 @@ namespace pwiz.Osprey.Tasks
                 // The decoy side of that file's competition - the null this stage folds. Also an
                 // input, for the same reason and from the same producer, where there is a
                 // competition: the transfer competes nothing.
-                if (OspreyEnvironment.Pass2ProteinCompact)
+                if (ctx.Config.Pass2ProteinCompact)
                     yield return Pass2CompetitionDecoys.PathFor(input);
                 // The run's plan, which the worker writes beside its answer under the same stamp:
                 // the gap-fill entry ids are read from it, and a run whose plan is missing is
@@ -159,7 +159,7 @@ namespace pwiz.Osprey.Tasks
             // re-competes each run's records inside the stratum and refuses to run without both
             // (ComputePass2FrozenCompetition). The transfer carries pass-1 values forward and
             // needs neither: it reloads a model it finds, and nothing on its path reads it.
-            if (OspreyEnvironment.Pass2ProteinCompact)
+            if (ctx.Config.Pass2ProteinCompact)
             {
                 string modelPath = FirstPassModelIO.PathFor(ctx.Config);
                 if (!string.IsNullOrEmpty(modelPath))
@@ -273,14 +273,8 @@ namespace pwiz.Osprey.Tasks
 
         public override string ValidityKey(PipelineContext ctx)
         {
-            // The experiment-wide aggregation reaches this task's outputs (the .blib and the
-            // 2nd-pass FDR sidecars) through the experiment q it changes upstream, so it has to
-            // invalidate them too. Without it, flipping the arm re-ran Stage 5 - FirstPassFdrTask
-            // did carry the suffix - while THIS task's .blib and sidecars were reused from the
-            // other arm, leaving one output directory holding two arms' results.
             // The 2nd-pass mode decides the q this task writes into the .blib and the 2nd-pass
-            // sidecars, so it invalidates them by exactly the argument the aggregation suffix
-            // makes above - one arm's .blib must never be reused as another's.
+            // sidecars, so it invalidates them: one arm's .blib must never be reused as another's.
             // And the sidecar format version, for the same reason FirstPassFdrTask carries it:
             // this task writes the 2nd-pass sidecars, so a record-layout change invalidates them.
             // And the MEANING of the 2nd-pass sidecar's protein column, which issue #4559
@@ -306,14 +300,13 @@ namespace pwiz.Osprey.Tasks
                 // a resume keeps a blib the current build would not write.
                 + @";blibout=" + BlibSpectrum.FORMAT_VERSION
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
-                + OspreyEnvironment.ExperimentAggValidityKeySuffix()
-                + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                + OspreyEnvironment.Pass2QValueValidityKeySuffix(ctx.Config)
                 + OspreyEnvironment.TransferReconciliationValidityKeySuffix(ctx.Config)
                 // The fold now gives the stratum's complement its own experiment q.
-                + OspreyEnvironment.Pass2StrataValidityKeySuffix()
+                + OspreyEnvironment.Pass2StrataValidityKeySuffix(ctx.Config)
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
-                + PinFeatureMask.ValidityKeySuffix()
-                + PinFeatureMask.RescoreValidityKeySuffix()
+                + PinFeatureMask.For(ctx.Config).ValidityKeySuffix()
+                + PinFeatureMask.For(ctx.Config).RescoreValidityKeySuffix()
                 + OspreyEnvironment.FdrExperimentValidityKeySuffix()
                 // OSPREY_RECON_REFIT=off plans reconciliation on the first-pass calibrations; empty when unset.
                 + OspreyEnvironment.ReconRefitValidityKeySuffix()
@@ -639,7 +632,7 @@ namespace pwiz.Osprey.Tasks
             if (config.ModelDiagnostics)
             {
                 HashSet<uint> stratumBaseIds = null;
-                if (OspreyEnvironment.Pass2ProteinCompact &&
+                if (ctx.Config.Pass2ProteinCompact &&
                     ctx.TryGet<ProteinCompactStratum>(out var pcStratum))
                     stratumBaseIds = pcStratum.BaseIds;
                 // Folds the run-by-run reductions the pass-2 cards are made of instead of
@@ -828,7 +821,7 @@ namespace pwiz.Osprey.Tasks
             // different - complete, plausible, wrong - co-assignment panel.
             Pass2FdrSidecar.EnsureFrozenFirstPassPublished(ctx);
             HashSet<uint> stratumBaseIds = null;
-            if (OspreyEnvironment.Pass2ProteinCompact &&
+            if (ctx.Config.Pass2ProteinCompact &&
                 ctx.TryGet<ProteinCompactStratum>(out var pcStratum))
             {
                 stratumBaseIds = pcStratum.BaseIds;

@@ -255,8 +255,7 @@ public static class OspreyFdrSidecarComparer
         //
         // So the two sides agree on the winner's row and disagree everywhere else BY DESIGN, and
         // C# cannot reproduce Rust's view: doing so needs the winning RUN, which is exactly what
-        // was removed and which mean-best-N cannot express at all (there the aggregate is a mean
-        // of N runs, so no single run originates it). Compared through the join below rather
+        // was removed. Compared through the join below rather
         // Compared only where Rust carries a value: see IgnoreExpectedOne at the compare loop.
         // Brendan signed this off explicitly - "I am expecting Rust PEP 1.0 values to be ignored
         // in this comparison based on our decisions" - rather than it being narrowed quietly.

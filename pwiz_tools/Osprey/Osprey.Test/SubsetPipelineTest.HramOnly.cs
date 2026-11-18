@@ -41,7 +41,7 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// With OSPREY_FEATURE_MASK=none, the scores parquets hold the HRAM-only families at HRAM and not at unit
-        /// resolution, where <c>Program</c> hands the resolved mode to <see cref="PinFeatureMask.ApplySearchSettings"/>.
+        /// resolution, where the configuration carries the resolved mode to <see cref="PinFeatureMask.For(OspreyConfig)"/>.
         /// OspreyEnvironment reads the mask once per process, so these run Osprey.exe rather than in-process
         /// like the other legs. The unit run also asks for <c>--feature-set core</c>, which the mask overrides:
         /// it records every column the resolution can use, <c>tc_clean_sum6</c> among them, which no set but

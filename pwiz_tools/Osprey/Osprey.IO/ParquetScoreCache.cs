@@ -286,7 +286,8 @@ namespace pwiz.Osprey.IO
             /// <param name="reconciled">True for the reconciled write: adds <c>score_index</c>.</param>
             /// <param name="referenceXic">Whether to write <c>reference_xic_*</c>; see
             /// <see cref="WritesReferenceXic"/>.</param>
-            public WriteFields(bool reconciled, bool referenceXic)
+            /// <param name="features">The search's features: a column for each recorded one.</param>
+            public WriteFields(bool reconciled, bool referenceXic, PinFeatureSelection features)
             {
                 EntryId = new DataField<uint>(COLUMN_ENTRY_ID);
                 IsDecoy = new DataField<bool>(COLUMN_IS_DECOY);
@@ -314,7 +315,7 @@ namespace pwiz.Osprey.IO
                 Features = new DataField[NUM_PIN_FEATURES];
                 for (int i = 0; i < NUM_PIN_FEATURES; i++)
                 {
-                    if (PinFeatureMask.IsRecorded(i))
+                    if (features.IsRecorded(i))
                         Features[i] = new DataField<double>(PIN_FEATURE_NAMES[i]);
                 }
 
@@ -359,7 +360,7 @@ namespace pwiz.Osprey.IO
             public DataField ReferenceXicIntensities { get; }
             /// <summary>Null unless the write is a reconciled one; see <see cref="COLUMN_SCORE_INDEX"/>.</summary>
             public DataField ScoreIndex { get; }
-            /// <summary>Per PIN feature, its field, or null for a feature that is not recorded (<see cref="PinFeatureMask.IsRecorded"/>).</summary>
+            /// <summary>Per PIN feature, its field, or null for a feature that is not recorded (<see cref="PinFeatureSelection.IsRecorded"/>).</summary>
             public DataField[] Features { get; }
         }
 
@@ -620,7 +621,7 @@ namespace pwiz.Osprey.IO
         /// Metadata key-value pairs are written to the Parquet footer.
         /// </summary>
         public static void WriteScoresParquet(string path, List<CoelutionScoredEntry> entries,
-            Dictionary<string, string> metadata)
+            Dictionary<string, string> metadata, PinFeatureSelection features)
         {
             if (path == null)
                 throw new ArgumentNullException(nameof(path));
@@ -628,7 +629,7 @@ namespace pwiz.Osprey.IO
                 return;
 
             int n = entries.Count;
-            var fields = new WriteFields(reconciled: false, referenceXic: true);
+            var fields = new WriteFields(reconciled: false, referenceXic: true, features);
 
             // Iterate in canonical sorted order (entry_id, charge, scan_number)
             // so per-side parquets have identical physical row order across the
@@ -709,7 +710,7 @@ namespace pwiz.Osprey.IO
         public static void WriteScoresParquet(string path, List<FdrEntry> entries,
             Dictionary<string, string> metadata,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
-            string fileName, bool writeReferenceXic)
+            string fileName, bool writeReferenceXic, PinFeatureSelection features)
         {
             if (path == null)
                 throw new ArgumentNullException(nameof(path));
@@ -717,7 +718,7 @@ namespace pwiz.Osprey.IO
                 return;
 
             int n = entries.Count;
-            var fields = new WriteFields(reconciled: false, referenceXic: writeReferenceXic);
+            var fields = new WriteFields(reconciled: false, referenceXic: writeReferenceXic, features);
 
             // Iterate in canonical sorted order (entry_id, charge, scan_number)
             // so per-side parquets have identical physical row order across
@@ -756,7 +757,7 @@ namespace pwiz.Osprey.IO
         /// entry's <see cref="FdrEntry.ParquetIndex"/> is (re)assigned to its global
         /// row position <paramref name="startIndex"/> + j, matching
         /// <see cref="LoadFdrStubsFromParquet(string)"/>'s read-side "ParquetIndex = row"
-        /// convention. Shared by the chunked <see cref="WriteScoresParquet(string,List{FdrEntry},Dictionary{string,string},IReadOnlyDictionary{uint,LibraryEntry},string,bool)"/>
+        /// convention. Shared by the chunked <see cref="WriteScoresParquet(string,List{FdrEntry},Dictionary{string,string},IReadOnlyDictionary{uint,LibraryEntry},string,bool,PinFeatureSelection)"/>
         /// write and the Stage-6 streaming reconciled transfer
         /// (<see cref="StreamReconciledScoresParquet"/>) so both emit byte-identical
         /// row groups.
@@ -888,7 +889,7 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Assemble one row group's columns in the exact physical order
-        /// both <see cref="WriteScoresParquet(string,List{CoelutionScoredEntry},Dictionary{string,string})"/>
+        /// both <see cref="WriteScoresParquet(string,List{CoelutionScoredEntry},Dictionary{string,string},PinFeatureSelection)"/>
         /// overloads write -- the fixed columns followed by the 21 PIN feature columns. The 14
         /// scalars are always written; the reference XIC pair is null for a run without the
         /// training export, and a null array's column is left out.
@@ -1825,6 +1826,7 @@ namespace pwiz.Osprey.IO
         /// fields. An older file's <c>cwt_candidates</c> column is not read.
         /// </summary>
         /// <param name="path">The <c>.scores.parquet</c> / <c>.scores-reconciled.parquet</c> to read.</param>
+        /// <param name="features">The search's features: the recorded columns are read.</param>
         /// <param name="scalarsOnly">Skip the 21 PIN feature columns and the binary blob
         /// columns (<c>reference_xic_*</c>), leaving <see cref="FdrEntry.Features"/> and the two
         /// reference XIC arrays null. Every SCALAR field is set exactly as the full read sets it.
@@ -1833,7 +1835,7 @@ namespace pwiz.Osprey.IO
         /// immediately drop the heavy payload again: decoding ~25 columns per row to null them
         /// a few lines later is the dominant cost of the Stage 6 rebuild, and it buys
         /// nothing.</para></param>
-        public static List<FdrEntry> LoadFullFdrEntries(string path, bool scalarsOnly = false)
+        public static List<FdrEntry> LoadFullFdrEntries(string path, PinFeatureSelection features, bool scalarsOnly = false)
         {
             var entries = new List<FdrEntry>();
 
@@ -1843,7 +1845,7 @@ namespace pwiz.Osprey.IO
                 var fieldsByName = BuildFieldLookup(reader);
                 var columns = scalarsOnly ? FdrRowColumns.ScalarsOnly : FdrRowColumns.Full;
                 for (int g = 0; g < reader.RowGroupCount; g++)
-                    entries.AddRange(ReadFdrEntryGroup(reader, g, fieldsByName, entries.Count, path, columns, out _));
+                    entries.AddRange(ReadFdrEntryGroup(reader, g, fieldsByName, entries.Count, path, columns, features, out _));
             }
 
             return entries;
@@ -1855,7 +1857,7 @@ namespace pwiz.Osprey.IO
         /// field that is read is set exactly as <see cref="LoadFullFdrEntries"/> sets it,
         /// <see cref="FdrEntry.ParquetIndex"/> included.
         /// </summary>
-        public static List<FdrEntry> LoadTrainingExportRows(string path)
+        public static List<FdrEntry> LoadTrainingExportRows(string path, PinFeatureSelection features)
         {
             var entries = new List<FdrEntry>();
 
@@ -1877,7 +1879,7 @@ namespace pwiz.Osprey.IO
                 for (int g = 0; g < reader.RowGroupCount; g++)
                 {
                     entries.AddRange(ReadFdrEntryGroup(reader, g, fieldsByName, rowsRead, path,
-                        FdrRowColumns.TrainingExport, out int groupRows));
+                        FdrRowColumns.TrainingExport, features, out int groupRows));
                     rowsRead += groupRows;
                 }
             }
@@ -1895,7 +1897,7 @@ namespace pwiz.Osprey.IO
         /// residency is one original row group being read + one output group being filled +
         /// the small resident overlay map / gap-fill list -- it never materializes the whole
         /// file's <see cref="FdrEntry"/> list the way LoadFullFdrEntries +
-        /// <see cref="WriteScoresParquet(string,List{FdrEntry},Dictionary{string,string},IReadOnlyDictionary{uint,LibraryEntry},string,bool)"/>
+        /// <see cref="WriteScoresParquet(string,List{FdrEntry},Dictionary{string,string},IReadOnlyDictionary{uint,LibraryEntry},string,bool,PinFeatureSelection)"/>
         /// did (the ~4.4 GB reload this replaces).
         ///
         /// The reconciled physical row order must equal the former load-all + re-sort write:
@@ -1944,7 +1946,7 @@ namespace pwiz.Osprey.IO
             Dictionary<string, string> metadata,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById, string fileName,
             ISet<(uint, byte, uint)> keepIdentities, string taskName, string progressIndent,
-            Action<string> logWarning, bool writeReferenceXic)
+            Action<string> logWarning, bool writeReferenceXic, PinFeatureSelection features)
         {
             if (originalPath == null)
                 throw new ArgumentNullException(nameof(originalPath));
@@ -1963,7 +1965,7 @@ namespace pwiz.Osprey.IO
                 .ToList();
             int gapFillCount = sortedGapFill.Count;
 
-            var fields = new WriteFields(reconciled: true, referenceXic: writeReferenceXic);
+            var fields = new WriteFields(reconciled: true, referenceXic: writeReferenceXic, features);
             int rowsPerGroup = Math.Max(1, RowGroupRowCapForTest ?? MAX_ROWS_PER_ROW_GROUP);
 
             int nReplaced = 0;
@@ -2077,7 +2079,7 @@ namespace pwiz.Osprey.IO
                     {
                         // Everything the reconciled file carries.
                         var groupEntries = ReadFdrEntryGroup(reader, g, fieldsByName, origRead, originalPath,
-                            FdrRowColumns.Full, out _);
+                            FdrRowColumns.Full, features, out _);
                         for (int j = 0; j < groupEntries.Count; j++)
                         {
                             var row = groupEntries[j];
@@ -2194,7 +2196,7 @@ namespace pwiz.Osprey.IO
         /// </summary>
         private static List<FdrEntry> ReadFdrEntryGroup(SyncParquetReader reader, int g,
             IReadOnlyDictionary<string, DataField> fieldsByName, int startParquetIndex,
-            string path, FdrRowColumns columns, out int groupRowCount)
+            string path, FdrRowColumns columns, PinFeatureSelection selection, out int groupRowCount)
         {
             bool scalarsOnly = columns == FdrRowColumns.ScalarsOnly;
             bool targetsOnly = columns == FdrRowColumns.TrainingExport;
@@ -2238,7 +2240,7 @@ namespace pwiz.Osprey.IO
                 {
                     for (int f = 0; f < NUM_PIN_FEATURES; f++)
                     {
-                        if (PinFeatureMask.IsRecorded(f))
+                        if (selection.IsRecorded(f))
                             featureCols[f] = RequireFeatureColumn(groupReader, fieldsByName, f, path);
                     }
                 }
@@ -2288,14 +2290,14 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Load the FDR classifier's feature vectors from a Parquet cache, one double[] per row.
         /// Each holds only the features <see cref="PinFeatureMask"/> leaves unmasked, in PIN order
-        /// (<see cref="PinFeatureMask.FdrFeatureNames"/> names its positions): this is where the
+        /// (<see cref="PinFeatureSelection.FdrFeatureNames"/> names its positions): this is where the
         /// mask is applied. A masked column is not read at all, and a file lacking an unmasked one
-        /// (scored under a narrower recorded set, <see cref="PinFeatureMask.IsRecorded"/>) is refused.
+        /// (scored under a narrower recorded set, <see cref="PinFeatureSelection.IsRecorded"/>) is refused.
         /// </summary>
-        public static List<double[]> LoadPinFeaturesFromParquet(string path)
+        public static List<double[]> LoadPinFeaturesFromParquet(string path, PinFeatureSelection selection)
         {
             var allFeatures = new List<double[]>();
-            int[] featureIndices = PinFeatureMask.FdrFeatureIndices;
+            int[] featureIndices = selection.FdrFeatureIndices;
             int nFeatures = featureIndices.Length;
 
             using (var stream = BlockReadStream.OpenRead(path))
@@ -2342,7 +2344,7 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Read PIN feature <paramref name="featureIndex"/>'s column, which the caller needs, from a
         /// file that holds features. A missing column means the run that scored the file did not
-        /// record that feature (<see cref="PinFeatureMask.IsRecorded"/>), so reading it as zeros
+        /// record that feature (<see cref="PinFeatureSelection.IsRecorded"/>), so reading it as zeros
         /// would hand the classifier or a rewrite values nothing computed: refused, naming the switch
         /// that records it.
         /// </summary>

@@ -242,7 +242,7 @@ namespace pwiz.Osprey.Tasks
                 yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
                 yield return FdrScoresSidecar.Pass1Path(input);
                 // The column the pass-2 worker scores the run's rescored rows with, under
-                // --protein-best: the frozen model was trained with it.
+                // --protein-boost best: the frozen model was trained with it.
                 if (config.ProteinBest)
                     yield return ProteinBestSidecar.PathFor(input);
             }
@@ -257,7 +257,7 @@ namespace pwiz.Osprey.Tasks
             string modelPath = FirstPassModelIO.PathFor(config);
             if (!string.IsNullOrEmpty(modelPath))
                 yield return modelPath;
-            if (OspreyEnvironment.Pass2ProteinCompact)
+            if (config.Pass2ProteinCompact)
             {
                 string stratumPath = FirstPassModelIO.StratumPathFor(config);
                 if (!string.IsNullOrEmpty(stratumPath))
@@ -329,19 +329,15 @@ namespace pwiz.Osprey.Tasks
                 // found the pool image but not this file would fold an empty null. Two declared
                 // outputs make that state fail the task rather than be discovered downstream.
                 // Only where there IS a competition: the transfer competes nothing.
-                if (OspreyEnvironment.Pass2ProteinCompact)
+                if (ctx.Config.Pass2ProteinCompact)
                     yield return Pass2CompetitionDecoys.PathFor(input);
             }
         }
 
         public override string ValidityKey(PipelineContext ctx)
         {
-            // Stage 6 rescore + reconciliation gate on the experiment precursor q-value, which
-            // the experiment-wide aggregation changes, so the reconciled parquets this task
-            // writes differ across arms and must be invalidated alongside FirstPassFdrTask's Stage-5
-            // outputs. Same shared suffix, so the two cannot disagree.
-            // Same shared suffix for the 2nd-pass mode, for the same reason: this task writes the
-            // per-file 2nd-pass sidecar, whose q-values ARE the mode's output.
+            // The 2nd-pass mode, by the same shared suffix FirstPassFdrTask uses: this task writes
+            // the per-file 2nd-pass sidecar, whose q-values ARE the mode's output.
             // The sidecar format version belongs here too, not only in FirstPassFdrTask: this
             // task WRITES the 2nd-pass sidecar, so a record-layout change (v3 -> v4) invalidates
             // its output exactly as it invalidates the 1st-pass one. Without it, FirstPassFDR
@@ -355,17 +351,16 @@ namespace pwiz.Osprey.Tasks
                 // version. A term here would invalidate this task for a format that did not move,
                 // and invalidating FirstPassFDR costs a 5-hour Stage 5 re-run at 446 files.
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
-                + OspreyEnvironment.ExperimentAggValidityKeySuffix()
-                + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                + OspreyEnvironment.Pass2QValueValidityKeySuffix(ctx.Config)
                 + OspreyEnvironment.TransferReconciliationValidityKeySuffix(ctx.Config)
                 // The worker's competition now gives the stratum's complement its own run q.
-                + OspreyEnvironment.Pass2StrataValidityKeySuffix()
+                + OspreyEnvironment.Pass2StrataValidityKeySuffix(ctx.Config)
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
-                + PinFeatureMask.ValidityKeySuffix()
-                + PinFeatureMask.RescoreValidityKeySuffix()
+                + PinFeatureMask.For(ctx.Config).ValidityKeySuffix()
+                + PinFeatureMask.For(ctx.Config).RescoreValidityKeySuffix()
                 // The reconciled parquet copies the scores parquet's recorded feature columns and
                 // writes the rescored rows' features beside them, so it records what scoring did.
-                + PinFeatureMask.RecordedFeaturesValidityKeySuffix()
+                + PinFeatureMask.For(ctx.Config).RecordedFeaturesValidityKeySuffix()
                 + OspreyEnvironment.FdrExperimentValidityKeySuffix()
                 // OSPREY_RECON_REFIT=off plans reconciliation on the first-pass calibrations; empty when unset.
                 + OspreyEnvironment.ReconRefitValidityKeySuffix()
@@ -373,12 +368,10 @@ namespace pwiz.Osprey.Tasks
                 // model, so the classifier that trained it keys this task too (empty for the SVM).
                 + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config)
                 // The reconciled parquet carries the reference XIC only for the training export.
-                + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config)
-                // Planning recomputes Stage 4's CWT peak candidates (#5024). The settings that
-                // change them are in the base key already (search hash, pick, ftolmin, fcorr,
-                // refxic, rtlocal, xic); the loaded calibration is the one added here, as in
-                // PerFileScoring's key.
-                + OspreyEnvironment.LoadCalibrationValidityKeySuffix();
+                + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config);
+                // Planning recomputes Stage 4's CWT peak candidates (#5024); the settings that
+                // change them are in the base key already (search hash, pick, fcorr, refxic,
+                // rtlocal, xic).
         }
 
         /// <summary>
@@ -806,7 +799,7 @@ namespace pwiz.Osprey.Tasks
                     // sidecar left by a build before the v3 -> v4 record change satisfied this
                     // gate and made the WHOLE Stage 6 rescore a no-op - the run then finished
                     // green carrying 1st-pass q-values into the picked-protein FDR and the .blib.
-                    if (IsFileRescored(inputFile, ParquetScoreCache.GetReconciledScoresPath(inputFile), pass2Key))
+                    if (IsFileRescored(inputFile, ParquetScoreCache.GetReconciledScoresPath(inputFile), pass2Key, ctx.Config))
                         pass2Present++;
                 }
             }
@@ -1342,12 +1335,12 @@ namespace pwiz.Osprey.Tasks
                 FdrScoresSidecar.Write(FdrScoresSidecar.Pass2Path(inputFile), records,
                     FdrScoresSidecar.Pass.SecondPass, stamp);
             }
-            // --protein-best: a model with the column scores only with each run's column,
+            // --protein-boost best: a model with the column scores only with each run's column,
             // and one without cannot use it. The validity key already keeps the two arms apart, so
             // a disagreement here is a model from another arm, which no run may score with.
             if (scorer.ScoresProteinBest != config.ProteinBest)
-                throw new InvalidOperationException(ProteinBestMismatchMessage(scorer.ScoresProteinBest, config.ProteinBest));
-            bool transfer = !OspreyEnvironment.Pass2ProteinCompact;
+                throw new InvalidOperationException(ProteinBestMismatchMessage(scorer.ScoresProteinBest, config.ProteinBoost));
+            bool transfer = !config.Pass2ProteinCompact;
             // The competition is constrained to the stratum, and competing without one would be
             // the full-population form that was removed (#4581), not a smaller version of this.
             // An EMPTY stratum is not a missing one: no protein had 2 or more detected peptides.
@@ -1365,6 +1358,7 @@ namespace pwiz.Osprey.Tasks
                 Pass2FdrSidecar.RequireTransferExperimentSidecar(config);
             return new Pass2PerFileWorker(
                 scorer,
+                PinFeatureMask.For(config),
                 transfer,
                 transfer ? null : sidecar.StratumBaseIds,
                 Pass2FdrSidecar.LoadPass1ExperimentRecords(config),
@@ -1375,19 +1369,19 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Why second-pass FDR refuses a first-pass model trained with the other
-        /// <c>--protein-best</c> setting: names both settings and the task to re-run.
+        /// <c>--protein-boost</c> setting: names both settings and the task to re-run. A model records only
+        /// whether it has the protein-best column, so one without it names the two boosts that train none.
         /// </summary>
-        internal static string ProteinBestMismatchMessage(bool modelScoresProteinBest, bool configProteinBest)
+        internal static string ProteinBestMismatchMessage(bool modelScoresProteinBest, ProteinBoost configBoost)
         {
+            string modelBoost = modelScoresProteinBest
+                ? ProteinBoost.best.ToString()
+                : ProteinBoost.compact + @"|" + ProteinBoost.off;
             return string.Format(
                 OspreyTasksResources.PerFileRescoreTask_CreatePass2Worker_Second_pass_FDR_cannot_run__the_saved_first_pass_model_was_trained_with__0___but_this_run_has__1___Run__2__again_with__1__,
-                ProteinBestArgText(modelScoresProteinBest), ProteinBestArgText(configProteinBest),
+                OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, modelBoost),
+                OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, configBoost.ToString()),
                 OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME));
-        }
-
-        private static string ProteinBestArgText(bool on)
-        {
-            return OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST, on ? OspreyArgNames.VALUE_ON : OspreyArgNames.VALUE_OFF);
         }
 
         /// <summary>
@@ -1677,7 +1671,7 @@ namespace pwiz.Osprey.Tasks
             var context = new ScoringContext(fileConfig, fileName);
             context.BoundaryOverrides = boundaryOverrides;
             context.BoundaryResolver = resolver;
-            context.OverrideRunnerUpCandidates = PinFeatureMask.UsesRunnerUpFeatures();
+            context.OverrideRunnerUpCandidates = PinFeatureMask.For(fileConfig).UsesRunnerUpFeatures();
             context.OriginalRtMad = rtMadFromCalJson;
 
             // Isolation windows come straight from the streaming index, the same list
@@ -1977,10 +1971,10 @@ namespace pwiz.Osprey.Tasks
         /// subject, and a kill between the parquet and the answer reads as not done for every
         /// run alike.</para>
         /// </summary>
-        private bool IsFileRescored(string inputFile, string reconciledPath, string validityKey)
+        private bool IsFileRescored(string inputFile, string reconciledPath, string validityKey, OspreyConfig config)
         {
             return PerFileResumeDriver.IsCurrent(reconciledPath, Name, validityKey) &&
-                   Pass2FdrSidecar.HasWorkerStamp(inputFile);
+                   Pass2FdrSidecar.HasWorkerStamp(inputFile, config);
         }
 
         /// <summary>
@@ -2027,7 +2021,7 @@ namespace pwiz.Osprey.Tasks
                         inputs.FileNameToIdx.TryGetValue(fileName, out int inputIdx) &&
                         inputs.Config.InputFiles != null &&
                         inputIdx < inputs.Config.InputFiles.Count &&
-                        IsFileRescored(inputs.Config.InputFiles[inputIdx], reconciledPath, inputs.TaskValidityKey);
+                        IsFileRescored(inputs.Config.InputFiles[inputIdx], reconciledPath, inputs.TaskValidityKey, inputs.Config);
             if (done)
             {
                 ctx.LogInfo(string.Format(
@@ -2095,7 +2089,7 @@ namespace pwiz.Osprey.Tasks
             // pure waste.
             var consensusTargets = MultiChargeConsensus.SelectRescoreTargets(
                 run.Survivors, inputs.Config.RunFdr);
-            if (OspreyEnvironment.Pass2TransferQ)
+            if (inputs.Config.Pass2TransferQ)
                 consensusTargets = MultiChargeConsensus.ReportedOnly(consensusTargets, run.Survivors,
                     inputs.Config.FdrLevel, inputs.Config.ExperimentFdr);
             var reconTargets = ReconTargetsForRun(run);
@@ -3229,7 +3223,7 @@ namespace pwiz.Osprey.Tasks
 
                 var forcedContext = new ScoringContext(fileConfig, fileName);
                 forcedContext.BoundaryOverrides = forcedOverrides;
-                forcedContext.OverrideRunnerUpCandidates = PinFeatureMask.UsesRunnerUpFeatures();
+                forcedContext.OverrideRunnerUpCandidates = PinFeatureMask.For(fileConfig).UsesRunnerUpFeatures();
                 forcedContext.OriginalRtMad = rtMadFromCalJson;
 
                 var swForced = Stopwatch.StartNew();

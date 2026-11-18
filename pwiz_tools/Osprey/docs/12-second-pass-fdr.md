@@ -50,10 +50,21 @@ report q-values the caller never asked for. This is checked in `Program` before
 the pipeline starts, so a script still passing the removed `percolator` token
 fails in seconds rather than after Stage 1-5.
 
+The mode is not a user setting. A user chooses how detections are boosted by their protein's
+other detections, `--protein-boost best|compact|off`, and the mode follows from it
+(`OspreyConfig.Pass2QValue`): `best` trains the first pass with the protein-best column and
+carries its q-values through with `transfer`; `compact` is the `protein-compact` mode; `off`
+is `transfer` with no column. `best` is the HRAM default and `compact` the unit-resolution one,
+until Stellar is measured on a larger cohort against DIA-NN: on the 3 Stellar regression files
+`best` reported 4.7% fewer precursors at q 1%, and `off` 11% fewer at 1.18% true FDP. `compact`
+is to go after that. `OSPREY_PASS2_QVALUE` remains a developer override; with `best` it
+refuses `protein-compact`, which would credit the protein evidence twice
+(`ValidatePass2WithProteinBest`).
+
 | Mode | Retrain? | Null population | Level |
 |------|----------|-----------------|-------|
-| `protein-compact` (default) | no (frozen model) | stratified: the protein stratum and its complement, each against its own decoys | precursor; the stratum's experiment peptide q from a peptide-level competition over the same bests |
-| `transfer` | no | none: pass-1 experiment q kept; moved and gap-filled peaks mapped through the pass-1 score-to-q table (first-pass calibration) | precursor + peptide |
+| `protein-compact` (`--protein-boost compact`) | no (frozen model) | stratified: the protein stratum and its complement, each against its own decoys | precursor; the stratum's experiment peptide q from a peptide-level competition over the same bests |
+| `transfer` (`--protein-boost best` or `off`) | no | none: pass-1 experiment q kept; moved and gap-filled peaks mapped through the pass-1 score-to-q table (first-pass calibration) | precursor + peptide |
 
 The **experiment peptide q-value and peptide PEP** of an on-stratum survivor come from a
 peptide-level competition over the same per-entry bests
@@ -95,12 +106,6 @@ competition, with the pass-1 aggregate score and PEP the complement ranked on
 `transfer-compete` is that `protein-compact` also brings genuinely new protein-level evidence
 to the ranking, where `transfer-compete` brought none. See also issue #4484 (closed)
 for the default decision, and #4363 (closed) for the depleted-null finding.
-
-**Interaction with `OSPREY_EXPERIMENT_AGG`**: after a first pass run under the
-experimental `mean-best-<N>` aggregation, `protein-compact` is **refused** - it would
-rewrite the reported experiment q from a MAX-aggregated competition. `transfer` is the
-compatible mode. See
-[Experiment-wide aggregation](07-fdr-control.md#experiment-wide-aggregation-osprey_experiment_agg).
 
 ### `transfer` - first-pass calibration
 
@@ -221,7 +226,7 @@ SVM, or the tree ensemble under `OSPREY_FDR_MODEL=gbdt` - IS the model for pass 
 runs on a subset - which is why a pass-2 feature-contribution view needs the frozen
 coefficients plus per-feature target/decoy means, and nothing that has to be retrained.
 
-### The protein-best column (`--protein-best on`, off by default)
+### The protein-best column (`--protein-boost best`, the HRAM default)
 
 A first pass trained with the protein-best column (see [07](07-fdr-control.md)) has a frozen model one
 feature wider than the reconciled feature vectors. The column of a row is what the OTHER peptides on its
@@ -243,7 +248,7 @@ disk. Three experiment-wide artifacts carry it:
 
 | Artifact | Carries |
 |---|---|
-| `<blib-stem>.1st-pass.model.json` | the frozen Percolator model (standardizer + per-fold weights and biases, or per-fold tree ensembles under `OSPREY_FDR_MODEL=gbdt`) and the first pass's `OSPREY_EXPERIMENT_AGG` provenance |
+| `<blib-stem>.1st-pass.model.json` | the frozen Percolator model (standardizer + per-fold weights and biases, or per-fold tree ensembles under `OSPREY_FDR_MODEL=gbdt`) |
 | `<blib-stem>.1st-pass.stratum.json` | the protein stratum, under `protein-compact`. Split out of the model file in #4633, because first-pass protein FDR computes it and training does not |
 | `<blib-stem>.1st-pass.fdr_experiment.bin` | the first pass's experiment-scope q-values |
 
@@ -266,8 +271,8 @@ than reporting looser FDR than a cold run under the same flag.
 There is no longer anything to degrade TO - the retrain that used to be the fallback is
 gone - so the abort is the only outcome, not the stricter of two.
 
-Because `protein-compact` is now the DEFAULT, this fail-fast reaches ordinary
-runs, not just explicitly flagged ones. A distributed `--task SecondPassFDR` node
+Because `protein-compact` was the default until 2026-11, this fail-fast reached ordinary
+runs, not just explicitly flagged ones; it now reaches the runs with `--protein-boost compact`, unit-resolution searches by default. A distributed `--task SecondPassFDR` node
 never trained pass 1 and cannot rebuild the stratum (that needs the full library
 plus the first-pass detected peptides), so both the model and the stratum are
 reloaded from disk.
@@ -284,19 +289,11 @@ stamps, so a consumer still sees one sidecar. **Both must ride
 the HPC relay**: an orchestrator that copies the model between phase directories
 and not the stratum reaches this fail-fast under the default mode.
 
-**Interaction with `mean-best-<N>`, worth knowing before a sweep**: a first pass
-run under `OSPREY_EXPERIMENT_AGG=mean-best-<N>` is REFUSED by the default mode,
-because the reported column would carry two statistics — on-stratum precursors
-max-aggregated, off-stratum precursors on their first-pass mean(best-N) q. Set
-`OSPREY_PASS2_QVALUE=transfer` for those arms. The failure is deliberate: an
-effective default that silently depended on the first pass's aggregation arm
-would be harder to reason about than an explicit variable.
-
 ## Flags and switches
 
 | Flag / env var | Default | Effect |
 |---|---|---|
-| `OSPREY_PASS2_QVALUE` | `protein-compact` | Selects the second-pass q-value mode: `transfer` \| `protein-compact`. Unrecognized → startup error. |
+| `OSPREY_PASS2_QVALUE` | unset (follows `--protein-boost`: `protein-compact` under `compact`, else `transfer`) | Developer override of the second-pass q-value mode: `transfer` \| `protein-compact`. Unrecognized → startup error. |
 | `OSPREY_FDR_MODEL` | unset (linear SVM) | **Experimental** when `gbdt`. Selects the classifier the first pass trains, which is also the frozen model pass 2 scores with; `svm` names the default. Unrecognized -> startup error. See [07](07-fdr-control.md). |
 
 ## Divergences from the Rust documentation

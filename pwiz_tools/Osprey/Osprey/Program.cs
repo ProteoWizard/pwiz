@@ -541,7 +541,6 @@ namespace pwiz.Osprey
                     resolutionDetection = ResolutionDetector.Detect(config);
                     config.ApplyResolutionMode(resolutionDetection?.Mode ?? ResolutionMode.HRAM);
                 }
-                PinFeatureMask.ApplySearchSettings(config.ResolutionMode, config.FeatureSet);
 
                 // Log startup info
                 LogInfo(string.Format(OspreyResources.Program_Run_Osprey_v_0_, OspreyVersion.DisplayVersion));
@@ -606,6 +605,7 @@ namespace pwiz.Osprey
                         ? LibraryBuildWorkflow.PhaseOutput(config)
                         : config.SelectedTask?.DescribeOutput(config) ?? config.OutputBlib));
                 LogResolution(config, resolutionDetected, resolutionDetection);
+                LogInfo(OspreyEnvironment.DescribeSearchSettings(config));
                 LogInfo(string.Format(OspreyResources.Program_Run_Fragment_tolerance___0___1_,
                     config.FragmentTolerance.Tolerance,
                     config.FragmentTolerance.Unit.GetLocalizedString()));
@@ -624,27 +624,9 @@ namespace pwiz.Osprey
                 string scanMajorSwitches = OspreyEnvironment.DescribeScanMajorSwitches();
                 if (scanMajorSwitches != null)
                     LogInfo(scanMajorSwitches);
-                // Always print which experiment-wide aggregation is in force, active or not.
-                // Reported HERE and not from Stage 5 because FirstPassFdrTask.Run is skipped on
-                // --task SecondPassFDR, on a Rehydrate, and on any warm resume - exactly the runs
-                // whose q-values an operator is most likely to attribute to the wrong arm.
-                LogInfo(OspreyEnvironment.DescribeExperimentAgg());
                 // Always printed, on or off: the default changed, so a log that did not name it could
                 // not tell which first pass trained, and a warm resume skips the stage that would.
                 LogInfo(OspreyEnvironment.DescribeProteinBest(config));
-                // Abort, do not fall back: the default arm's q-values filed under the name of the
-                // arm the caller asked for, as for OSPREY_PASS2_QVALUE below. It used to warn and run
-                // max, which a mistyped sweep cell could not be told apart from.
-                if (OspreyEnvironment.ExperimentAggUnrecognized)
-                {
-                    LogError(string.Format(
-                        @"OSPREY_EXPERIMENT_AGG is set to an unrecognized value. Use '{0}', or '{1}<N>' " +
-                        @"with N in [2, {2}] (e.g. '{1}2'), or unset it for the default ('{0}').",
-                        OspreyEnvironment.EXPERIMENT_AGG_MAX,
-                        OspreyEnvironment.EXPERIMENT_AGG_MEAN_BEST_PREFIX,
-                        OspreyEnvironment.MEAN_BEST_N_MAX));
-                    return EXIT_CODE_FAILURE_TO_START;
-                }
                 // OSPREY_FDR_MODEL: abort on an unrecognized value, do not fall back. A run that
                 // asked for trees and trained the linear SVM is the #4491 defect, and its output
                 // reads exactly like a tree result. The classifier is named only when it is the
@@ -666,7 +648,7 @@ namespace pwiz.Osprey
                 if (OspreyEnvironment.Pass2QValueUnrecognized)
                 {
                     // Why 'percolator' and 'transfer-compete' were removed, with the entrapment
-                    // numbers, is in docs/12-second-pass-fdr.md and on OspreyEnvironment.Pass2QValue.
+                    // numbers, is in docs/12-second-pass-fdr.md and on OspreyEnvironment.Pass2QValueOverride.
                     LogError(string.Format(
                         @"OSPREY_PASS2_QVALUE='{2}' is not recognized. Use '{0}' or '{1}', or unset it " +
                         @"for the default ('{1}'). The 'percolator' and 'transfer-compete' modes were removed.",
@@ -713,7 +695,7 @@ namespace pwiz.Osprey
                         @"and cannot be set together with OSPREY_GBT_PREFILTER_Q.", OspreyEnvironment.GbtPrefilterLocalFdrSetting));
                     return EXIT_CODE_FAILURE_TO_START;
                 }
-                // Abort for the same reason: without a size (or --protein-best on's default one) there is no round 2, so the switches
+                // Abort for the same reason: without a size (or --protein-boost best's default one) there is no round 2, so the switches
                 // would do nothing while the run kept the one-round baseline's key.
                 if (OspreyEnvironment.PrefilterSwitchesWithoutSize(OspreyEnvironment.GbtPrefilterQSetting,
                         OspreyEnvironment.GbtPrefilterLocalFdrSetting, OspreyEnvironment.GbtPrefilterSample,
@@ -721,7 +703,7 @@ namespace pwiz.Osprey
                 {
                     LogError(string.Format(@"OSPREY_GBT_PREFILTER_Q, OSPREY_GBT_PREFILTER_LFDR and OSPREY_GBT_PREFILTER_SAMPLE shape round 2 " +
                              @"of the two-round training and need it on: {0}, or OSPREY_GBT_PREFILTER_SIZE (the row cap) above 0.",
-                             OspreyArgNames.Text(OspreyArgNames.PROTEIN_BEST, OspreyArgNames.VALUE_ON)));
+                             OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.best.ToString())));
                     return EXIT_CODE_FAILURE_TO_START;
                 }
                 // Abort for the same reason: the mask is resolved when the FDR stage first loads
@@ -744,16 +726,24 @@ namespace pwiz.Osprey
                 }
                 // Always printed: the default set depends on the resolution, and a warm resume skips
                 // the FDR stage that would show which features trained.
-                LogInfo(PinFeatureMask.DescribeFeatures());
+                var featureSelection = PinFeatureMask.For(config);
+                LogInfo(featureSelection.DescribeFeatures());
                 // A masked feature is absent from the classifier's vectors, so a mask with nothing
                 // left would hand it vectors of no features at all.
-                if (PinFeatureMask.FdrFeatureIndices.Length == 0)
+                if (featureSelection.FdrFeatureIndices.Length == 0)
                 {
                     LogError(@"OSPREY_FEATURE_MASK masks every PIN feature, which leaves the FDR classifier nothing to train on.");
                     return EXIT_CODE_FAILURE_TO_START;
                 }
+                // Refused once the resolution is known, because HRAM data defaults to --protein-boost best.
+                string pass2Err = OspreyEnvironment.ValidatePass2WithProteinBest(config);
+                if (pass2Err != null)
+                {
+                    LogError(pass2Err);
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
                 // Not an error: OSPREY_FEATURE_MASK=none is the same request on any data, but say what it did not get.
-                if (PinFeatureMask.LeavesUnavailableFeaturesUnmasked())
+                if (featureSelection.LeavesUnavailableFeaturesUnmasked())
                 {
                     LogInfo(@"OSPREY_FEATURE_MASK leaves HRAM-only features unmasked; at unit resolution they are not computed or used: " +
                             string.Join(@", ", PinFeatureMask.HRAM_ONLY_FAMILIES));
@@ -809,10 +799,8 @@ namespace pwiz.Osprey
                     LogInfo(setVariables);
                 LogInfo(string.Format(OspreyResources.Program_Run_Protein_FDR___0_, config.EffectiveProteinFdr));
                 LogInfo(string.Format(OspreyResources.Program_Run_Threads___0_, config.NThreads));
-                // Machine twins of the banner: the liveness anchor a route assertion needs
-                // before it can trust an absence, and the aggregation arm, which the prose
-                // above states for a person.
-                LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_EXPERIMENT_AGG, OspreyEnvironment.ExperimentAgg));
+                // Machine twin of the banner: the liveness anchor a route assertion needs before
+                // it can trust an absence.
                 LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_STARTUP, @"threads={0}", config.NThreads));
                 LogInfo(string.Empty);
 
@@ -1150,14 +1138,6 @@ namespace pwiz.Osprey
 
             bool hasInputFiles = config.HasInputFiles;
 
-            // OSPREY_EXPERIMENT_AGG family, before any I/O. Checked here rather than at the
-            // Stage-5 consuming site so a bad combination costs a second instead of the hours a
-            // large run spends reaching FirstPassFDR, and so a warm resume - which skips
-            // FirstPassFdrTask.Run entirely - is still checked.
-            string aggErr = OspreyEnvironment.ValidateExperimentAggSettings(
-                ExperimentAggFileCount(config, hasInputFiles));
-            if (aggErr != null)
-                return aggErr;
             string proteinBestErr = OspreyEnvironment.ValidateProteinBestSettings(config);
             if (proteinBestErr != null)
                 return proteinBestErr;
@@ -1533,21 +1513,6 @@ namespace pwiz.Osprey
             foreach (var kv in collisions)
                 sb.Append('\n').AppendFormat(@"  '{0}': {1}", kv.Key, string.Join(@", ", kv.Value));
             return sb.ToString();
-        }
-
-        /// <summary>
-        /// How many runs this invocation will aggregate across for the experiment-wide
-        /// competition, or 0 when that is not a property of this invocation. The per-file HPC
-        /// workers (SpectraCache / PerFileScoring / PerFileRescoring) each see ONE input and
-        /// never compute an experiment-wide score, so reporting their input count would refuse
-        /// every worker of a legitimate distributed mean(best-N) run. Which tasks those are
-        /// is the task's own fact (<see cref="ISelectableTask.IsPerFileWorker"/>).
-        /// </summary>
-        private static int ExperimentAggFileCount(OspreyConfig config, bool hasInputFiles)
-        {
-            if (config.SelectedTask?.IsPerFileWorker == true)
-                return 0;
-            return hasInputFiles ? config.InputFiles.Count : 0;
         }
 
         /// <summary>

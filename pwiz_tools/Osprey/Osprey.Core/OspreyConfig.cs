@@ -228,20 +228,47 @@ namespace pwiz.Osprey.Core
         public bool FdrClassifierGiven { get; set; }
 
         /// <summary>
-        /// The protein-best training column (<c>--protein-best</c>, issue #4580), off by default. On, round 2
-        /// of the two-round first-pass training and every score pass after it read, for each candidate,
-        /// the best round-1 score among the other peptides of its protein in that run (a paired decoy
-        /// reads its target's value; the floor is the run's decoy median). It needs the two-round
-        /// training, so with it on and <c>OSPREY_GBT_PREFILTER_SIZE</c> unset the first pass trains two
-        /// rounds at <see cref="OspreyEnvironment.PROTEIN_BEST_PREFILTER_SIZE"/> rows. Off is the
-        /// one-round first pass that preceded it, bit for bit. Keyed in every FDR validity key when on.
-        /// Unless the command line gives it, <see cref="ApplyResolutionMode"/> sets it from the
-        /// resolution's <see cref="ResolutionDefaults"/>.
+        /// How a precursor's detection is boosted by the other detections of its protein
+        /// (<c>--protein-boost</c>). Unless the command line gives it, <see cref="ApplyResolutionMode"/>
+        /// sets it from the resolution's <see cref="ResolutionDefaults"/>; a configuration that never
+        /// learns its resolution keeps <see cref="ProteinBoost.compact"/>, the boost that preceded the
+        /// choice.
         /// </summary>
-        public bool ProteinBest { get; set; }
+        public ProteinBoost ProteinBoost { get; set; } = ProteinBoost.compact;
 
-        /// <summary>True when the command line gave <c>--protein-best</c>, which the resolution's default does not replace.</summary>
-        public bool ProteinBestGiven { get; set; }
+        /// <summary>
+        /// True under <see cref="ProteinBoost.best"/>: the first pass trains with the protein-best column
+        /// (issue #4580). Round 2 of the two-round first-pass training and every score pass after it read,
+        /// for each candidate, the best round-1 score among the other peptides of its protein in that run
+        /// (a paired decoy reads its target's value; the floor is the run's decoy median). It needs the
+        /// two-round training, so with <c>OSPREY_GBT_PREFILTER_SIZE</c> unset the first pass trains two
+        /// rounds at <see cref="OspreyEnvironment.PROTEIN_BEST_PREFILTER_SIZE"/> rows. Without it the first
+        /// pass is the one-round training that preceded it, bit for bit. Keyed in every FDR validity key
+        /// when true.
+        /// </summary>
+        public bool ProteinBest => ProteinBoost == ProteinBoost.best;
+
+        /// <summary>True when the command line gave <c>--protein-boost</c>, which the resolution's default does not replace.</summary>
+        public bool ProteinBoostGiven { get; set; }
+
+        /// <summary>
+        /// How the second pass assigns reported q-values: <see cref="OspreyEnvironment.PASS2_QVALUE_TRANSFER"/>
+        /// or <see cref="OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT"/>. Not a choice of its own: it follows
+        /// <see cref="ProteinBoost"/>, protein-compact under <see cref="ProteinBoost.compact"/> and the transfer
+        /// otherwise. The developer variable OSPREY_PASS2_QVALUE overrides it.
+        /// </summary>
+        public string Pass2QValue => OspreyEnvironment.Pass2QValueOverride ??
+                                     (ProteinBoost == ProteinBoost.compact
+                                         ? OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT
+                                         : OspreyEnvironment.PASS2_QVALUE_TRANSFER);
+
+        /// <summary>True when <see cref="Pass2QValue"/> is the frozen-model confidence transfer.</summary>
+        public bool Pass2TransferQ =>
+            string.Equals(Pass2QValue, OspreyEnvironment.PASS2_QVALUE_TRANSFER, StringComparison.Ordinal);
+
+        /// <summary>True when <see cref="Pass2QValue"/> is the protein-anchored constrained competition.</summary>
+        public bool Pass2ProteinCompact =>
+            string.Equals(Pass2QValue, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT, StringComparison.Ordinal);
 
         /// <summary>
         /// The scoring settings that default by resolution and have no command-line option: the XIC
@@ -598,7 +625,7 @@ namespace pwiz.Osprey.Core
         /// Sets the resolution mode and the settings it implies. The one route by which both an
         /// explicit <c>--resolution</c> and a detected one reach the configuration, so the two
         /// produce the same search settings and the same <see cref="SearchIdentity"/>. The
-        /// classifier and <c>--protein-best</c> take the resolution's <see cref="ResolutionDefaults"/>
+        /// classifier and <c>--protein-boost</c> take the resolution's <see cref="ResolutionDefaults"/>
         /// unless OSPREY_FDR_MODEL or the command line chose them, and <see cref="Scoring"/> takes
         /// its defaults under the developer variables that set any of them. Unit
         /// resolution matches fragments within 0.5 m/z unless <c>--fragment-unit</c> or
@@ -612,9 +639,11 @@ namespace pwiz.Osprey.Core
             var defaults = ResolutionDefaults.For(mode);
             if (!FdrClassifierGiven)
                 FdrClassifier = defaults.FdrClassifier;
-            if (!ProteinBestGiven)
-                ProteinBest = defaults.ProteinBest;
+            if (!ProteinBoostGiven)
+                ProteinBoost = defaults.ProteinBoost;
             Scoring = OspreyEnvironment.OverrideScoringSettings(defaults.Scoring);
+            RtCalibration.MinRtTolerance = OspreyEnvironment.MinRtTolerance ?? defaults.MinRtTolerance;
+            RtCalibration.LoessBandwidth = OspreyEnvironment.LoessBandwidth ?? defaults.LoessBandwidth;
             if (mode != ResolutionMode.UnitResolution)
                 return;
             if (!FragmentUnitGiven)
@@ -749,6 +778,21 @@ namespace pwiz.Osprey.Core
     {
         UnitResolution,
         HRAM
+    }
+
+    /// <summary>
+    /// How a precursor's detection is boosted by the other detections of its protein
+    /// (<c>--protein-boost</c>). The member names are the command-line values.
+    /// </summary>
+    public enum ProteinBoost
+    {
+        /// <summary>The protein-best training column in the first pass, with the transfer second pass. The HRAM default.</summary>
+        best,
+        /// <summary>The protein-compact second pass, which competes the proteins the first pass detected apart from the rest.
+        /// The unit-resolution default until Stellar data is measured on a larger cohort; to be removed.</summary>
+        compact,
+        /// <summary>No protein boost: the transfer second pass alone.</summary>
+        off
     }
 
     /// <summary>

@@ -552,20 +552,20 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Train the first pass with a protein-aware column: for each candidate, the best first-round score among the other peptides of its protein in the same run. It needs the two-round first-pass training, which it turns on (default: {0}).
+        ///   Looks up a localized string similar to How a detection is boosted by the other detections of its protein: {0} trains the first pass with a protein-aware column (for each candidate, the best first-round score among the other peptides of its protein in the same run, which turns on the two-round first-pass training); {1} competes the precursors of the proteins the first pass detected apart from the rest in the second pass, and will be removed; {2} boosts nothing. The default is {0} for {3} data and {1} at {4} resolution.
         /// </summary>
-        public static string _protein_best {
+        public static string _protein_boost {
             get {
-                return ResourceManager.GetString("_protein_best", resourceCulture);
+                return ResourceManager.GetString("_protein_boost", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Protein-best training column.
+        ///   Looks up a localized string similar to Protein boost.
         /// </summary>
-        public static string _protein_best_property {
+        public static string _protein_boost_property {
             get {
-                return ResourceManager.GetString("_protein_best_property", resourceCulture);
+                return ResourceManager.GetString("_protein_boost_property", resourceCulture);
             }
         }
         

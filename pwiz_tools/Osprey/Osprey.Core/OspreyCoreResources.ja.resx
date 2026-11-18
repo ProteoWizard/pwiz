@@ -159,10 +159,6 @@
     <value>一意のライブラリ文字列：{0:N0} / 合計{1:N0}（{2:F1}%削減）</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="OspreyEnvironment_DescribeExperimentAgg_Experiment_aggregation___0___default___best_observation_per_unit_" xml:space="preserve">
-    <value>実験集約：{0}（デフォルト - 単位ごとの最良の観測）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="ResolutionModeExtension_LOCALIZED_VALUES_HRAM" xml:space="preserve">
     <value>HRAM</value>
   </data>

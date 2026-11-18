@@ -2933,35 +2933,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Loaded MS1 calibration: mean={0:F4} {1}, SD={2:F4}.
-        /// </summary>
-        public static string PerFileScoringTask_ResolveCalibration_Loaded_MS1_calibration__mean__0___1___SD__2_ {
-            get {
-                return ResourceManager.GetString("PerFileScoringTask_ResolveCalibration_Loaded_MS1_calibration__mean__0___1___SD__2" +
-                        "_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Loaded MS2 calibration: mean={0:F4} {1}, SD={2:F4}.
-        /// </summary>
-        public static string PerFileScoringTask_ResolveCalibration_Loaded_MS2_calibration__mean__0___1___SD__2_ {
-            get {
-                return ResourceManager.GetString("PerFileScoringTask_ResolveCalibration_Loaded_MS2_calibration__mean__0___1___SD__2" +
-                        "_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Loaded RT calibration: {0} points, R2={1:F4}.
-        /// </summary>
-        public static string PerFileScoringTask_ResolveCalibration_Loaded_RT_calibration___0__points__R2__1_ {
-            get {
-                return ResourceManager.GetString("PerFileScoringTask_ResolveCalibration_Loaded_RT_calibration___0__points__R2__1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Saved calibration to {0}.
         /// </summary>
         public static string PerFileScoringTask_ResolveCalibration_Saved_calibration_to__0_ {

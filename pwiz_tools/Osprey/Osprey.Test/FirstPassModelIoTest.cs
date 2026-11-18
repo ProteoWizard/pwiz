@@ -173,19 +173,18 @@ namespace pwiz.Osprey.Test
                 @"osprey_stratum_roundtrip_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
-                Assert.IsTrue(FirstPassModelIO.Save(path, model, @"mean-best-3", TestStamps.Any),
+                Assert.IsTrue(FirstPassModelIO.Save(path, model, TestStamps.Any),
                     @"SVM model should persist");
                 Assert.IsTrue(File.Exists(path), @"sidecar should exist after Save");
 
-                var sidecar = FirstPassModelIO.Load(path);
+                var sidecar = FirstPassModelIO.Load(path, PinFeatureMask.Hram);
                 Assert.IsNotNull(sidecar, @"reloaded sidecar should not be null");
                 var reloaded = sidecar.Model;
                 Assert.IsNotNull(reloaded, @"reloaded model should not be null");
 
-                // Pass-1 provenance survives the round trip. This is what lets a --task
-                // SecondPassFDR node - which never trained pass 1 - gate on the arm that
-                // actually produced the q-values instead of on its own environment.
-                Assert.AreEqual(@"mean-best-3", sidecar.ExperimentAgg, @"recorded pass-1 aggregation arm");
+                // The file still records the experiment-wide aggregation, as it did when
+                // OSPREY_EXPERIMENT_AGG could choose another, so its bytes are unchanged.
+                Assert.AreEqual(@"max", sidecar.ExperimentAgg, @"recorded pass-1 aggregation");
 
                 // The stratum is a SEPARATE artifact, written when protein FDR ends rather than
                 // when training does, so the model file carries none of it. Deliberately
@@ -283,10 +282,10 @@ namespace pwiz.Osprey.Test
                 @"osprey_model_linear_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
-                Assert.IsTrue(FirstPassModelIO.Save(path, model, @"max", TestStamps.Any), @"tree model should persist");
-                var sidecar = FirstPassModelIO.Load(path);
+                Assert.IsTrue(FirstPassModelIO.Save(path, model, TestStamps.Any), @"tree model should persist");
+                var sidecar = FirstPassModelIO.Load(path, PinFeatureMask.Hram);
                 Assert.IsNotNull(sidecar, @"reloaded tree sidecar should not be null");
-                Assert.AreEqual(@"max", sidecar.ExperimentAgg, @"recorded pass-1 aggregation arm");
+                Assert.AreEqual(@"max", sidecar.ExperimentAgg, @"recorded pass-1 aggregation");
                 var reloaded = sidecar.Model;
                 Assert.IsNotNull(reloaded.FoldGbtModels, @"a tree model must reload as trees");
                 Assert.AreEqual(model.FoldGbtModels.Count, reloaded.FoldGbtModels.Count, @"fold count");
@@ -340,7 +339,7 @@ namespace pwiz.Osprey.Test
                     FoldGbtModels = new List<GradientBoostedTrees> { model.FoldGbtModels[0], null }
                 }, @"a fold with no ensemble");
 
-                Assert.IsTrue(FirstPassModelIO.Save(linearPath, MakeSvmModel(), @"max", TestStamps.Any), @"SVM model should persist");
+                Assert.IsTrue(FirstPassModelIO.Save(linearPath, MakeSvmModel(), TestStamps.Any), @"SVM model should persist");
                 Assert.IsNull(JObject.Parse(File.ReadAllText(linearPath))[@"FoldGbtModels"],
                     @"a linear model's file must not gain a tree property");
             }
@@ -367,10 +366,10 @@ namespace pwiz.Osprey.Test
                 {
                     Standardizer = FeatureStandardizer.FromMeansStds(new[] { 0.0, 1.0 }, new[] { 1.0, 1.0 }),
                 };
-                Assert.IsFalse(FirstPassModelIO.Save(path, noWeights, @"max", TestStamps.Any),
+                Assert.IsFalse(FirstPassModelIO.Save(path, noWeights, TestStamps.Any),
                     @"model without weights or trees should not persist");
                 Assert.IsFalse(File.Exists(path), @"no sidecar should be written when Save declines");
-                Assert.IsFalse(FirstPassModelIO.Save(path, null, @"max", TestStamps.Any), @"null model should not persist");
+                Assert.IsFalse(FirstPassModelIO.Save(path, null, TestStamps.Any), @"null model should not persist");
             }
             finally
             {
@@ -529,7 +528,7 @@ namespace pwiz.Osprey.Test
         private static void AssertLoadForAnalysisPairsByStamp(OspreyConfig config)
         {
             Assert.IsNull(FirstPassModelIO.LoadForAnalysis(config), @"no model file: nothing to load");
-            Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(config), MakeSvmModel(), @"max", TestStamps.Any));
+            Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(config), MakeSvmModel(), TestStamps.Any));
 
             var modelOnly = FirstPassModelIO.LoadForAnalysis(config);
             Assert.IsNotNull(modelOnly);
@@ -561,7 +560,7 @@ namespace pwiz.Osprey.Test
 
             // A first run persists the linear model it trained - once, and not beside any run.
             task.PublishFirstPassModel(MakeSvmModel(), null, null, key, NewContext(config));
-            var onDisk = FirstPassModelIO.Load(modelPath);
+            var onDisk = FirstPassModelIO.Load(modelPath, PinFeatureMask.Hram);
             Assert.IsNotNull(onDisk, @"the trained model should be persisted");
             Assert.IsNotNull(onDisk.Model, @"the persisted file should carry the model");
             Assert.IsFalse(onDisk.Model.IsGradientBoostedTrees, @"the persisted model should be the linear one");
@@ -570,14 +569,14 @@ namespace pwiz.Osprey.Test
             // A re-run finds that model current but trains its own, as it does whenever no file
             // is resumable. Its model must replace the file.
             task.PublishFirstPassModel(MakeTreeModel(), onDisk, null, key, NewContext(config));
-            Assert.IsTrue(FirstPassModelIO.Load(modelPath)?.Model?.IsGradientBoostedTrees ?? false,
+            Assert.IsTrue(FirstPassModelIO.Load(modelPath, PinFeatureMask.Hram)?.Model?.IsGradientBoostedTrees ?? false,
                 @"a retrained model must replace the persisted one");
             Assert.IsTrue(PerFileResumeDriver.IsCurrent(modelPath, FirstPassFdrTask.TASK_NAME, key),
                 @"the replacement must be stamped current");
 
             // A model the run ADOPTED is the file already on disk, attested by its marker, so it
             // is not written again.
-            var adopted = FirstPassModelIO.Load(modelPath);
+            var adopted = FirstPassModelIO.Load(modelPath, PinFeatureMask.Hram);
             Assert.IsNotNull(adopted);
             File.Delete(modelPath);
             task.PublishFirstPassModel(adopted.Model, adopted, adopted.Model, key, NewContext(config));
@@ -611,7 +610,7 @@ namespace pwiz.Osprey.Test
 
         private static void SaveModelAndStratum(OspreyConfig config, ArtifactStamp stamp)
         {
-            Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(config), MakeSvmModel(), @"max", stamp));
+            Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(config), MakeSvmModel(), stamp));
             Assert.IsTrue(FirstPassModelIO.SaveStratum(FirstPassModelIO.StratumPathFor(config),
                 new HashSet<uint> { 1, 2, 3 }, stamp));
         }
@@ -635,7 +634,7 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// A masked PIN feature is ABSENT from the FDR classifier's matrix, not a column of zeros:
-        /// the vectors the FDR stage loads hold only <see cref="PinFeatureMask.FdrFeatureNames"/>,
+        /// the vectors the FDR stage loads hold only <see cref="PinFeatureSelection.FdrFeatureNames"/>,
         /// the trained model is exactly that wide, and its feature names - in memory and in the
         /// saved model - line up with the vectors' positions. Zero columns cost the classifier as
         /// much as real ones (97 columns trained where 21 carried information), and a model whose
@@ -645,21 +644,21 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestMaskedFeaturesAbsentFromTrainingMatrix()
         {
-            int[] fdrIndices = PinFeatureMask.FdrFeatureIndices;
-            string[] fdrNames = PinFeatureMask.FdrFeatureNames;
+            int[] fdrIndices = PinFeatureMask.Hram.FdrFeatureIndices;
+            string[] fdrNames = PinFeatureMask.Hram.FdrFeatureNames;
             Assert.IsTrue(fdrIndices.Length > 0 && fdrIndices.Length < ParquetScoreCache.NUM_PIN_FEATURES,
                 @"the default mask must hide some features and leave some");
-            Assert.AreEqual(ParquetScoreCache.NUM_PIN_FEATURES - Enumerable.Range(0, ParquetScoreCache.NUM_PIN_FEATURES).Count(PinFeatureMask.IsMasked),
+            Assert.AreEqual(ParquetScoreCache.NUM_PIN_FEATURES - Enumerable.Range(0, ParquetScoreCache.NUM_PIN_FEATURES).Count(PinFeatureMask.Hram.IsMasked),
                 fdrIndices.Length, @"every masked feature must leave the vector");
-            CollectionAssert.AreEqual(PinFeatureMask.FeatureSetIndices(PinFeatureMask.FeatureSet), fdrIndices,
+            CollectionAssert.AreEqual(PinFeatureMask.FeatureSetIndices(PinFeatureMask.Hram.FeatureSet), fdrIndices,
                 @"the vector holds the process's feature set");
             for (int i = 0; i < fdrIndices.Length; i++)
             {
                 Assert.AreEqual(ParquetScoreCache.PIN_FEATURE_NAMES[fdrIndices[i]], fdrNames[i], @"name of FDR feature " + i);
-                Assert.IsFalse(PinFeatureMask.IsMasked(fdrIndices[i]), fdrNames[i]);
+                Assert.IsFalse(PinFeatureMask.Hram.IsMasked(fdrIndices[i]), fdrNames[i]);
                 Assert.IsTrue(i == 0 || fdrIndices[i] > fdrIndices[i - 1], @"FDR features must stay in PIN order");
             }
-            CollectionAssert.AreEqual(fdrNames, ScoringTaskShared.FdrFeatureInfos().Select(info => info.Name).ToArray(),
+            CollectionAssert.AreEqual(fdrNames, ScoringTaskShared.FdrFeatureInfos(new OspreyConfig()).Select(info => info.Name).ToArray(),
                 @"the classifier's feature metadata must name the vector's positions");
 
             string parquetPath = Path.Combine(Path.GetTempPath(),
@@ -669,8 +668,8 @@ namespace pwiz.Osprey.Test
             try
             {
                 var entries = MakeAllFeatureEntries();
-                ParquetScoreCache.WriteScoresParquet(parquetPath, entries, null, null, @"f.mzML", false);
-                var vectors = ParquetScoreCache.LoadPinFeaturesFromParquet(parquetPath);
+                ParquetScoreCache.WriteScoresParquet(parquetPath, entries, null, null, @"f.mzML", false, PinFeatureMask.Hram);
+                var vectors = ParquetScoreCache.LoadPinFeaturesFromParquet(parquetPath, PinFeatureMask.Hram);
                 Assert.AreEqual(entries.Count, vectors.Count);
                 for (int row = 0; row < vectors.Count; row++)
                 {
@@ -696,22 +695,22 @@ namespace pwiz.Osprey.Test
                 {
                     MaxIterations = 3,
                     TrainOnly = true,
-                    FeatureInfos = ScoringTaskShared.FdrFeatureInfos(),
+                    FeatureInfos = ScoringTaskShared.FdrFeatureInfos(new OspreyConfig()),
                 });
                 Assert.AreEqual(fdrIndices.Length, model.Standardizer.NumFeatures, @"training matrix width");
                 Assert.AreEqual(fdrIndices.Length, model.FoldWeights[0].Length, @"trained weight count");
                 CollectionAssert.AreEqual(fdrNames, model.FeatureNames, @"the model must name the features it trained on");
 
-                Assert.IsTrue(FirstPassModelIO.Save(modelPath, model, null, TestStamps.Any), @"model should persist");
-                var reloaded = FirstPassModelIO.Load(modelPath);
+                Assert.IsTrue(FirstPassModelIO.Save(modelPath, model, TestStamps.Any), @"model should persist");
+                var reloaded = FirstPassModelIO.Load(modelPath, PinFeatureMask.Hram);
                 Assert.IsNotNull(reloaded, @"a model trained on the FDR features should reload");
                 CollectionAssert.AreEqual(fdrNames, reloaded.Model.FeatureNames, @"the names must travel with the saved model");
 
                 // A model whose names are not this run's FDR features (another mask's, say) would
                 // weigh each column as some other feature, so it does not load.
                 model.FeatureNames = fdrNames.Reverse().ToArray();
-                Assert.IsTrue(FirstPassModelIO.Save(modelPath, model, null, TestStamps.Any));
-                Assert.IsNull(FirstPassModelIO.Load(modelPath), @"a model laid out another way must not load");
+                Assert.IsTrue(FirstPassModelIO.Save(modelPath, model, TestStamps.Any));
+                Assert.IsNull(FirstPassModelIO.Load(modelPath, PinFeatureMask.Hram), @"a model laid out another way must not load");
             }
             finally
             {
@@ -729,7 +728,7 @@ namespace pwiz.Osprey.Test
             // Absent sidecar -> null (the caller then fails fast exactly as before persistence).
             string missing = Path.Combine(Path.GetTempPath(),
                 @"osprey_model_missing_" + Guid.NewGuid().ToString(@"N") + @".json");
-            Assert.IsNull(FirstPassModelIO.Load(missing), @"missing sidecar should load as null");
+            Assert.IsNull(FirstPassModelIO.Load(missing, PinFeatureMask.Hram), @"missing sidecar should load as null");
         }
 
         [TestMethod]
@@ -759,7 +758,7 @@ namespace pwiz.Osprey.Test
             // A sidecar written BEFORE the arm was recorded must still load - the field was added
             // without bumping SchemaVersion precisely so pre-existing sidecars stay readable, and
             // a SecondPassFDR node that could not read one would hard fail-fast instead of degrading.
-            // The arm then reports null, which the caller must treat as UNKNOWN, not as "max".
+            // The arm then reports null.
             AssertLoadsWithArm(
                 @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
                 @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0] }", null, @"pre-provenance sidecar");
@@ -795,7 +794,7 @@ namespace pwiz.Osprey.Test
                 @"osprey_model_pinned_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
-                Assert.IsTrue(FirstPassModelIO.Save(path, model, @"max", TestStamps.Any), @"pinned SVM model should persist");
+                Assert.IsTrue(FirstPassModelIO.Save(path, model, TestStamps.Any), @"pinned SVM model should persist");
                 Assert.AreEqual(PinnedLinearModelFile(TestStamps.Any), File.ReadAllText(path));
             }
             finally
@@ -811,7 +810,7 @@ namespace pwiz.Osprey.Test
                 @"osprey_model_declined_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
-                Assert.IsFalse(FirstPassModelIO.Save(path, model, @"max", TestStamps.Any), what + @" should not persist");
+                Assert.IsFalse(FirstPassModelIO.Save(path, model, TestStamps.Any), what + @" should not persist");
                 Assert.IsFalse(File.Exists(path), what + @" should leave no file behind");
             }
             finally
@@ -828,7 +827,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 File.WriteAllText(path, json);
-                Assert.IsNull(FirstPassModelIO.Load(path), what + @" should load as null");
+                Assert.IsNull(FirstPassModelIO.Load(path, PinFeatureMask.Hram), what + @" should load as null");
             }
             finally
             {
@@ -863,7 +862,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 File.WriteAllText(path, json);
-                var sidecar = FirstPassModelIO.Load(path);
+                var sidecar = FirstPassModelIO.Load(path, PinFeatureMask.Hram);
                 Assert.IsNotNull(sidecar, what + @" should load");
                 Assert.AreEqual(expectedArm, sidecar.ExperimentAgg, what + @" arm");
             }
@@ -881,7 +880,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 File.WriteAllText(path, json);
-                var sidecar = FirstPassModelIO.Load(path);
+                var sidecar = FirstPassModelIO.Load(path, PinFeatureMask.Hram);
                 Assert.IsNotNull(sidecar, what + @" should load");
                 Assert.IsNull(sidecar.StratumBaseIds, what + @" should carry no stratum");
             }
@@ -908,7 +907,7 @@ namespace pwiz.Osprey.Test
                     var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
                     for (int f = 0; f < features.Length; f++)
                     {
-                        features[f] = PinFeatureMask.IsMasked(f)
+                        features[f] = PinFeatureMask.Hram.IsMasked(f)
                             ? 1e6 + f
                             : rng.NextDouble() + (isDecoy ? 0.0 : 0.5);
                     }

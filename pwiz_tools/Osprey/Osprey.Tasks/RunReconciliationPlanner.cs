@@ -86,7 +86,7 @@ namespace pwiz.Osprey.Tasks
             _refitBandwidth = config.RtCalibration.LoessBandwidth;
             _ctx = ctx;
             _state = new Lazy<State>(() => BuildState(loadConsensus(), perFileCalibrations,
-                perFileIsolationMz, fullLibrary), LazyThreadSafetyMode.ExecutionAndPublication);
+                perFileIsolationMz, fullLibrary, config.Pass2TransferQ), LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
         /// <summary>
@@ -184,7 +184,7 @@ namespace pwiz.Osprey.Tasks
         private static State BuildState(Stage6Consensus consensus,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
             IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
-            IReadOnlyList<LibraryEntry> fullLibrary)
+            IReadOnlyList<LibraryEntry> fullLibrary, bool pass2Transfer)
         {
             var state = new State
             {
@@ -206,7 +206,7 @@ namespace pwiz.Osprey.Tasks
             // them moved with their targets.
             state.Planner = new ReconciliationPlanner.FilePlanner(
                 state.Consensus.Consensus, state.Consensus.PassingBaseIds, noRefitLookup, perFileCalibrations,
-                reconcileDecoys: !OspreyEnvironment.Pass2TransferQ);
+                reconcileDecoys: !pass2Transfer);
             state.GapFiller = new GapFillTargetIdentifier.FileIdentifier(
                 state.Consensus.Consensus, state.Consensus.PassingPrecursors, noRefitLookup, perFileCalibrations,
                 libLookup, libPrecursorMz, perFileIsolationMz);

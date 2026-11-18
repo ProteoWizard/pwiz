@@ -129,7 +129,11 @@ namespace pwiz.Osprey.Test
 
         private string _testDir;
         private string _dataDir;
-        private FeatureSetScope _featureSettings;
+
+        // The legs search the Stellar subset at unit resolution, and the test reads the parquets and
+        // models they write: it must read them with the features those runs used, the unit-resolution
+        // default set.
+        private static PinFeatureSelection UnitFeatures => PinFeatureMask.For(ResolutionMode.UnitResolution, null);
 
         [TestInitialize]
         public void ExtractData()
@@ -137,16 +141,11 @@ namespace pwiz.Osprey.Test
             _testDir = Path.Combine(Path.GetTempPath(), @"osprey-subset-" + Guid.NewGuid().ToString(@"N"));
             _dataDir = Path.Combine(_testDir, @"data");
             ZipFile.ExtractToDirectory(Path.Combine(AppContext.BaseDirectory, @"TestData", DATA_ZIP), _dataDir);
-            // The legs search the Stellar subset at unit resolution, and the test reads the parquets
-            // they write in this process: it must resolve the features those runs recorded, the
-            // unit-resolution default set, not the HRAM default the test process starts with.
-            _featureSettings = new FeatureSetScope(ResolutionMode.UnitResolution, null);
         }
 
         [TestCleanup]
         public void DeleteTestDir()
         {
-            _featureSettings?.Dispose();
             if (Directory.Exists(_testDir))
                 Directory.Delete(_testDir, true);
         }
@@ -907,7 +906,7 @@ namespace pwiz.Osprey.Test
 
             // The gradient-boosted trees in place of the linear SVM (OSPREY_FDR_MODEL=gbdt). The
             // variable is read once at class load, so an override cannot reach it; set the value it
-            // parses to, as the pass-2 leg below does for OSPREY_EXPERIMENT_AGG.
+            // parses to.
             string gbdtDir = CreateDir(@"fdr-model-gbdt");
             var savedFdrModel = OspreyEnvironment.FdrModel;
             try
@@ -928,30 +927,17 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_FDRBENCH_PER_RUN.ArgumentText);
             AssertHasRows(bench);
 
-            // The non-default second-pass arms the regression's mode 10 runs: first-pass q-values
-            // transferred, and the experiment score as the mean of each precursor's best two runs.
+            // The non-default second-pass arm: first-pass q-values transferred.
             string transferDir = CreateDir(@"pass2-transfer");
-            int savedMeanBestN = OspreyEnvironment.MeanBestN;
-            try
+            string transferLog = RunAnalysis(transferDir, DataInputs(), new Dictionary<string, string>
             {
-                // OSPREY_EXPERIMENT_AGG is parsed once at class load, so an override cannot reach
-                // it; set the value it parses to, as MeanBestNAggregationTest does.
-                OspreyEnvironment.MeanBestN = 2;
-                string transferLog = RunAnalysis(transferDir, DataInputs(), new Dictionary<string, string>
-                {
-                    { @"OSPREY_PASS2_VERIFY_WORKER", string.Empty },
-                    { @"OSPREY_PASS2_QVALUE", @"transfer" }
-                });
-                AssertHasLine(transferLog, PathLine(LogKey.ROUTE_PASS2_QVALUE, @"transfer"));
-                AssertHasLine(transferLog, PathLine(LogKey.ROUTE_EXPERIMENT_AGG, OspreyEnvironment.ExperimentAgg));
-                // Transfer's per-file half runs in the rescore worker like every other mode
-                // (#4665), so Stage 7 folds run by run instead of holding every run's survivors.
-                AssertHasLine(transferLog, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
-            }
-            finally
-            {
-                OspreyEnvironment.MeanBestN = savedMeanBestN;
-            }
+                { @"OSPREY_PASS2_VERIFY_WORKER", string.Empty },
+                { @"OSPREY_PASS2_QVALUE", @"transfer" }
+            });
+            AssertHasLine(transferLog, PathLine(LogKey.ROUTE_PASS2_QVALUE, @"transfer"));
+            // Transfer's per-file half runs in the rescore worker like every other mode
+            // (#4665), so Stage 7 folds run by run instead of holding every run's survivors.
+            AssertHasLine(transferLog, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
             Assert.IsTrue(BlibComparer.CountRows(Path.Combine(transferDir, BLIB_FILE), @"RefSpectra") > 0,
                 @"the transfer arm reported no precursors");
             // And it leaves the files the default leaves: transfer once completed without writing
@@ -1163,9 +1149,10 @@ namespace pwiz.Osprey.Test
                 return fields;
             });
             string singleHitsDir = CreateDir(@"one-protein-per-peptide");
+            // The protein stratum exists only for the protein-compact competition.
             string singleHitsLog = RunOspreyExpecting(SearchArgs(singleHitsDir, singleHits,
                     OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, @"0"),
-                Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);
+                WithVariable(Verifier(false), PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT), Program.EXIT_CODE_FAILURE_TO_START);
             // The detected-peptide count varies with the search, so the line is matched on either
             // side of it (a string argument ignores the N0 format).
             var stratumLine = string.Format(
@@ -1456,7 +1443,7 @@ namespace pwiz.Osprey.Test
                 Assert.IsNotNull(reconciledName);
                 string reconciled = Path.Combine(workDir, reconciledName);
                 Assert.IsTrue(File.Exists(reconciled), reconciled);
-                var rows = ParquetScoreCache.LoadFullFdrEntries(reconciled);
+                var rows = ParquetScoreCache.LoadFullFdrEntries(reconciled, UnitFeatures);
                 var zeroApex = rows.Where(e => e.Features[apex] == 0 && e.Features[area] > 0)
                     .Select(e => string.Format(@"{0}{1} (entry {2})", e.ModifiedSequence, e.IsDecoy ? @" decoy" : string.Empty, e.EntryId))
                     .ToList();
@@ -1468,7 +1455,9 @@ namespace pwiz.Osprey.Test
         {
             AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
             AssertHasLine(log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
-            AssertHasLine(log, PathLine(LogKey.ROUTE_SECOND_PASS_FOLD, @"verify=on"));
+            // Unit resolution runs without the protein-best column, so its default second pass is
+            // protein-compact; the HPC chain legs check its fold (AssertCompetitionFoldSplit).
+            AssertHasLine(log, PathLine(LogKey.ROUTE_PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
             // The library-fragment release ran at both of its points (issue #4532).
             foreach (string scope in new[] { LogKey.SCOPE_RESCORE_GAP_FILL, LogKey.SCOPE_RETAINED_SUMMARY })
             {
@@ -1640,7 +1629,7 @@ namespace pwiz.Osprey.Test
                 // per-run 1st-pass file.
                 ShipFiles(phase3, phase4Dir, PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, FdrScoresSidecar.EXT));
                 // The decoy side of a competition; the transfer competes nothing and writes none.
-                if (data.Pass2Mode == null)
+                if (data.EffectivePass2Mode == OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT)
                     ShipFiles(phase3, phase4Dir, PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, Pass2CompetitionDecoys.EXT));
             }
             ShipFiles(dirPrefix + @"phase2", phase4Dir, OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT),
@@ -1653,7 +1642,7 @@ namespace pwiz.Osprey.Test
             // Every run's per-file worker answer was folded - SecondPassFDR refuses to start
             // otherwise, so the fold line is the evidence it ran. It and the verifier belong to
             // the competition; the transfer fold has neither.
-            if (data.Pass2Mode == null)
+            if (data.EffectivePass2Mode == OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT)
                 AssertCompetitionFoldSplit(data, straightLog, phase4Log);
 
             AssertBlibsEqual(straightBlib, Path.Combine(phase4Dir, BLIB_FILE));
@@ -1955,6 +1944,9 @@ namespace pwiz.Osprey.Test
             foreach (string product in products)
             {
                 string path = Path.Combine(workDir, product);
+                // The competition decoys exist only under protein-compact; the transfer writes none.
+                if (product.EndsWith(Pass2CompetitionDecoys.EXT, StringComparison.Ordinal) && !File.Exists(path))
+                    continue;
                 Assert.IsTrue(File.Exists(path), @"no rescore product to cut: " + path);
                 File.Delete(path);
             }
@@ -1976,7 +1968,7 @@ namespace pwiz.Osprey.Test
             // As the run wrote it: no training export, so no reference XIC in either file.
             ParquetScoreCache.StreamReconciledScoresParquet(Path.Combine(workDir, run + ParquetScoreCache.EXT_SCORES),
                 reconciled, null, null, metadata, null, run + MZML_EXTENSION, null,
-                PerFileRescoreTask.TASK_NAME, null, null, false);
+                PerFileRescoreTask.TASK_NAME, null, null, false, UnitFeatures);
             Assert.IsFalse(ParquetScoreCache.IsCurrentReconciledSurvivorSubset(reconciled));
         }
 
@@ -2616,6 +2608,26 @@ namespace pwiz.Osprey.Test
 
             /// <summary>The OSPREY_PASS2_QVALUE every phase runs under, or null for the default.</summary>
             public string Pass2Mode { get; }
+
+            /// <summary>
+            /// The second pass every phase runs: <see cref="Pass2Mode"/>, else the default, which follows
+            /// <c>--protein-boost</c> (<see cref="OspreyConfig.Pass2QValue"/>) and so, unless an argument
+            /// sets it, the resolution: best for HRAM data, compact at unit resolution and for detection
+            /// here, whose subsets measure as unit resolution.
+            /// </summary>
+            public string EffectivePass2Mode
+            {
+                get
+                {
+                    if (Pass2Mode != null)
+                        return Pass2Mode;
+                    int i = Array.IndexOf(MoreArgs, OspreyCommandArgs.ARG_PROTEIN_BOOST.ArgumentText);
+                    bool compact = i >= 0
+                        ? MoreArgs[i + 1] == ProteinBoost.compact.ToString()
+                        : Resolution != OspreyCommandArgs.RESOLUTION_HRAM;
+                    return compact ? OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT : OspreyEnvironment.PASS2_QVALUE_TRANSFER;
+                }
+            }
 
             /// <summary>Further variables every phase runs under (an experimental arm), or null.</summary>
             public IReadOnlyDictionary<string, string> MoreVariables { get; }

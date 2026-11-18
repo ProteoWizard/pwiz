@@ -149,7 +149,7 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// Scoring computes only the families of the recorded features (<see cref="PinFeatureMask.IsComputed"/>),
+        /// Scoring computes only the families of the recorded features (<see cref="PinFeatureSelection.IsComputed"/>),
         /// which is safe only if skipping a family changes no other feature. Scored once computing
         /// everything, then with the core features alone (the core set) and with each family alone:
         /// every computed feature is bit for bit the full scoring's, and every skipped one is 0.

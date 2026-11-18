@@ -97,8 +97,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// The fragment tolerance the main search extracts with for a run calibrated as
         /// <paramref name="ms2Cal"/>, mirroring <c>ScoringPipeline.RunCoelutionScoring</c>: the
-        /// calibrated tolerance (3 SD) when the run calibrated, floored by
-        /// OSPREY_MIN_FRAGMENT_TOLERANCE in ppm, and the configured tolerance otherwise.
+        /// calibrated tolerance (3 SD) when the run calibrated, and the configured tolerance otherwise.
         /// </summary>
         public static FragmentToleranceConfig SearchTolerance(MzCalibrationResult ms2Cal, FragmentToleranceConfig configured)
         {
@@ -106,8 +105,6 @@ namespace pwiz.Osprey.Tasks
                 return configured;
             MzCalibration.CalibratedTolerance(ms2Cal, configured.Tolerance, configured.Unit,
                 out double tolerance, out ToleranceUnit unit);
-            if (unit == ToleranceUnit.Ppm && OspreyEnvironment.MinFragmentTolerancePpm.HasValue)
-                tolerance = Math.Max(tolerance, OspreyEnvironment.MinFragmentTolerancePpm.Value);
             return new FragmentToleranceConfig { Tolerance = tolerance, Unit = unit };
         }
 

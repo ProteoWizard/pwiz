@@ -221,7 +221,7 @@ namespace pwiz.Osprey.Tasks
             foreach (var input in ctx.Config.InputFiles)
             {
                 yield return FdrScoresSidecar.Pass1Path(input);
-                // --protein-best: the column each run was scored with, which the second
+                // --protein-boost best: the column each run was scored with, which the second
                 // pass scores that run's rescored rows with and cannot recompute.
                 if (ctx.Config.ProteinBest)
                     yield return ProteinBestSidecar.PathFor(input);
@@ -414,7 +414,7 @@ namespace pwiz.Osprey.Tasks
                     : FdrScoresSidecar.ReadFeatureSums(FdrScoresSidecar.Pass1Path(sidecarBase));
             });
             // A model trained with the protein-best column reports it as its last feature.
-            var featureInfos = ScoringTaskShared.FdrFeatureInfos();
+            var featureInfos = ScoringTaskShared.FdrFeatureInfos(config);
             if (ProteinBestFeature.IsAppendedTo(saved.Model.FeatureNames))
                 featureInfos = ProteinBestFeature.WithColumnInfo(featureInfos);
             var contributions = PercolatorEngine.FirstPassContributionsFromShares(saved.Model, shares,
@@ -507,20 +507,6 @@ namespace pwiz.Osprey.Tasks
 
         public override string ValidityKey(PipelineContext ctx)
         {
-            // OSPREY_EXPERIMENT_AGG changes this task's OWN output (the experiment-wide precursor
-            // and peptide q maps), so it has to invalidate the cache. Without it, re-running an A/B
-            // arm in an output directory that already holds the other arm's results makes
-            // the outputs' embedded stamps read as current, the driver skips Run entirely - taking the
-            // unrecognized-value warning with it, since that lives inside Run - and the previous
-            // mode's q is silently reused and recorded as the new arm's measurement. The flag is
-            // read from a process-wide static rather than the config, which is why it is not
-            // already covered by SearchIdentity; promoting it to a real command argument would
-            // subsume this line.
-            // The aggregation suffix (empty unless engaged) is built by the ONE shared helper the
-            // downstream tasks also use, so the three keys cannot drift apart. The floor toggles
-            // are part of it: they feed the aggregate written into this task's own Pass1Path
-            // output, so a floor sweep in one directory would otherwise reuse the previous arm's
-            // q as the new arm's measurement.
             // The 2nd-pass mode belongs here even though pass 2 runs later: protein-compact is
             // the only mode that needs the >=2-peptide stratum, and this task is where the
             // stratum is computed and written into the 1st-pass model sidecar. A sidecar written
@@ -541,12 +527,11 @@ namespace pwiz.Osprey.Tasks
                 // written rather than stored beside them, so the record keeps its columns and its
                 // version. A term here would invalidate this task for a format that did not move,
                 // and invalidating FirstPassFDR costs a 5-hour Stage 5 re-run at 446 files.
-                + OspreyEnvironment.ExperimentAggValidityKeySuffix()
-                + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                + OspreyEnvironment.Pass2QValueValidityKeySuffix(ctx.Config)
                 // The Stage 6 consensus this task writes holds the reconciliation set.
                 + OspreyEnvironment.TransferReconciliationValidityKeySuffix(ctx.Config)
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
-                + PinFeatureMask.ValidityKeySuffix()
+                + PinFeatureMask.For(ctx.Config).ValidityKeySuffix()
                 + OspreyEnvironment.FdrExperimentValidityKeySuffix()
                 // The classifier this task trains, and its tree settings. Empty for the linear
                 // SVM, so no percolator directory is invalidated.
@@ -570,29 +555,6 @@ namespace pwiz.Osprey.Tasks
             var perFileCalibrations = ctx.Get<PerFileCalibrations>().Value;
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
             var fullLibrary = ctx.Get<FullLibrary>().Value;
-
-            // OSPREY_EXPERIMENT_AGG family, re-checked at the CONSUMING site against FirstPassFDR's
-            // real file count. Program.ValidateArgs runs the same helper at startup from the
-            // command line, which is where an operator wants the message.
-            //
-            // The two counts are NOT the same number and are not meant to be: startup counts the
-            // files named on the command line, while this counts the files that actually produced
-            // scored entries (PerFileScoringTask adds a file only on success). A run can therefore
-            // pass at startup and be refused here - which is the point of checking twice, not a
-            // drift to be eliminated.
-            //
-            // This MUST stay above every writer below. When a marker deletion stood there, an
-            // argument error destroyed the Stage-5 validity records of a run that had computed no
-            // FDR at all, so the operator fixed the variable and paid for a full recompute - hours at 82
-            // files. The damage concentrated exactly on the sweep workflow, because the arm is part
-            // of ValidityKey, so a warm re-run into a directory holding a different arm always
-            // takes this path. Nothing above this point writes or removes any output.
-            //
-            // Every check inside is gated on the aggregation being engaged, so a default run
-            // that merely inherited a stale sweep variable is untouched.
-            string aggError = OspreyEnvironment.ValidateExperimentAggSettings(perFileEntries.Count);
-            if (aggError != null)
-                throw new InvalidOperationException(aggError);
 
             // NOT a blanket wipe of every declared output's marker on entry. That was written
             // against a partially-written output, and there is no such state: every one of these
@@ -669,7 +631,7 @@ namespace pwiz.Osprey.Tasks
             Func<string, IReadOnlyList<double[]>> loadFileFeatures = fileName =>
             {
                 if (perFileParquetPaths.TryGetValue(fileName, out string scoresPath))
-                    return ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath);
+                    return ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath, PinFeatureMask.For(ctx.Config));
                 return Array.Empty<double[]>();
             };
 
@@ -1707,7 +1669,7 @@ namespace pwiz.Osprey.Tasks
                     kv.Key, perFileParquetPaths, config);
                 if (string.IsNullOrEmpty(resumeBase))
                     continue;
-                // Under --protein-best a file is resumable only beside a current column: the
+                // Under --protein-boost best a file is resumable only beside a current column: the
                 // score pass writes the column only for the files it scores.
                 if (PerFileResumeDriver.IsCurrent(
                         FdrScoresSidecar.Pass1Path(resumeBase), Name, sidecarValidityKey) &&
@@ -1823,7 +1785,6 @@ namespace pwiz.Osprey.Tasks
                 ctx.Publish(new FirstPassPercolatorModel
                 {
                     Results = resumeSidecar.Model,
-                    ExperimentAgg = resumeSidecar.ExperimentAgg,
                     Stamp = resumeSidecar.Stamp
                 });
                 // Gated on the MODE, matching the canEnterAtGate clause above. The stratum file
@@ -1831,7 +1792,7 @@ namespace pwiz.Osprey.Tasks
                 // run uses a different pass-2 arm - and the compaction gate applies whatever it
                 // is handed, so an ungated adoption would silently widen the survivor set of an
                 // arm that never computes a stratum at all.
-                if (OspreyEnvironment.Pass2ProteinCompact && resumeSidecar.StratumBaseIds != null)
+                if (config.Pass2ProteinCompact && resumeSidecar.StratumBaseIds != null)
                 {
                     _proteinCompactStratum = resumeSidecar.StratumBaseIds;
                     ctx.Publish(new ProteinCompactStratum(_proteinCompactStratum));
@@ -1903,7 +1864,7 @@ namespace pwiz.Osprey.Tasks
                     throw new IOException(string.Format(
                         OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Could_not_write_the_first_pass_intermediate_file_for___0____and_the_analysis_cannot_, fileName));
                 };
-            // --protein-best: each scored run's column, beside its first-pass scores and
+            // --protein-boost best: each scored run's column, beside its first-pass scores and
             // under the same stamp. Fatal on failure, for the reason the scores write is.
             void PersistProteinBest(string fileName, ProteinBestRunValues column)
             {
@@ -1916,7 +1877,7 @@ namespace pwiz.Osprey.Tasks
                 ProteinBestSidecar.Write(ProteinBestSidecar.PathFor(sidecarBase), column.EntryIds, column.Values,
                     column.Floor, sidecarStamp);
             }
-            var featureInfos = ScoringTaskShared.FdrFeatureInfos();
+            var featureInfos = ScoringTaskShared.FdrFeatureInfos(config);
             var swFdr = Stopwatch.StartNew();
             bool aborted;
             // Stage B (issue #4355 struct-shrink S3): the lean 1st pass holds NO resident
@@ -2074,7 +2035,7 @@ namespace pwiz.Osprey.Tasks
                 // Build + publish the protein-compact stratum on the PROJECTION (production)
                 // path too -- the compaction gate below (ComputeFirstPassBaseIds) reads it to
                 // admit present-protein peptides that did not pass 1st-pass FDR.
-                if (OspreyEnvironment.Pass2ProteinCompact)
+                if (config.Pass2ProteinCompact)
                 {
                     BuildAndPublishProteinCompactStratum(
                         proteinResult, fullLibrary, sidecarValidityKey, ctx);
@@ -2127,7 +2088,7 @@ namespace pwiz.Osprey.Tasks
                 return null;
             ulong? shuffleSeed = OspreyEnvironment.ProteinBestShuffle ? OspreyEnvironment.FdrSeed ?? 42UL : null;
             return new ProteinBestRequest(ProteinBestMembership.FromLibrary(library, shuffleSeed),
-                OspreyEnvironment.PROTEIN_BEST_TOP_N, OspreyEnvironment.ProteinBestDecoyOwn, persistRun);
+                OspreyEnvironment.PROTEIN_BEST_TOP_N, persistRun);
         }
 
         /// <summary>
@@ -2189,7 +2150,7 @@ namespace pwiz.Osprey.Tasks
                         PercolatorResults.ClassifierName(modelSidecar.Model.IsGradientBoostedTrees),
                         PercolatorResults.ClassifierName(runUsesTrees)));
                 }
-                if (OspreyEnvironment.Pass2ProteinCompact && modelSidecar.StratumBaseIds == null)
+                if (config.Pass2ProteinCompact && modelSidecar.StratumBaseIds == null)
                 {
                     refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides_was_found_at__0_,
                         FirstPassModelIO.StratumPathFor(config)));
@@ -2215,7 +2176,7 @@ namespace pwiz.Osprey.Tasks
             string path = FirstPassModelIO.PathFor(config);
             if (path == null || !PerFileResumeDriver.IsCurrent(path, Name, validityKey))
                 return null;
-            var sidecar = FirstPassModelIO.Load(path);
+            var sidecar = FirstPassModelIO.Load(path, PinFeatureMask.For(config));
             return sidecar?.Model != null ? sidecar : null;
         }
 
@@ -2244,20 +2205,12 @@ namespace pwiz.Osprey.Tasks
             string validityKey, PipelineContext ctx)
         {
             bool adopted = adoptedModel != null && ReferenceEquals(results, adoptedModel);
-            if ((OspreyEnvironment.Pass2TransferQ || OspreyEnvironment.Pass2ProteinCompact) &&
+            if ((ctx.Config.Pass2TransferQ || ctx.Config.Pass2ProteinCompact) &&
                 !ctx.TryGet<FirstPassPercolatorModel>(out _))
             {
-                // Stamp the arm the TRAINING process ran under; the 2nd pass may be another process.
                 ctx.Publish(new FirstPassPercolatorModel
                 {
                     Results = results,
-                    // For an adopted model that is the arm recorded beside it, not this one's: the
-                    // recorded arm is what the pass-2 mean-best-N refusal is evaluated against, so
-                    // re-reading the environment would judge a reused model by the wrong arm. A
-                    // model trained here was trained under this process's arm.
-                    ExperimentAgg = adopted
-                        ? reloadedModel?.ExperimentAgg ?? OspreyEnvironment.ExperimentAgg
-                        : OspreyEnvironment.ExperimentAgg,
                     // The stamp this pass writes the model and the protein-best columns with, or
                     // for an adopted model the one recorded beside it.
                     Stamp = adopted ? reloadedModel?.Stamp : OspreyVersion.Stamp(Name, validityKey)
@@ -2290,8 +2243,7 @@ namespace pwiz.Osprey.Tasks
             string modelJson;
             try
             {
-                modelJson = FirstPassModelIO.Serialize(results, OspreyEnvironment.ExperimentAgg,
-                    OspreyVersion.Stamp(Name, validityKey));
+                modelJson = FirstPassModelIO.Serialize(results, OspreyVersion.Stamp(Name, validityKey));
             }
             catch (Exception ex)
             {
