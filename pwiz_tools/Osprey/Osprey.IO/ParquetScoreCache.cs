@@ -1639,6 +1639,8 @@ namespace pwiz.Osprey.IO
                                     entry.ModifiedSequence ?? string.Empty,
                                     apexRt != null ? apexRt[row] : double.NaN);
                             }
+                            // One count per row group, as below: see RowProgress.
+                            RowProgress.Report(entryIdCol.Length);
                             continue;
                         }
                         var isDecoyCol = ReadColumnByName<bool>(groupReader, fieldsByName, COLUMN_IS_DECOY);
@@ -1677,6 +1679,7 @@ namespace pwiz.Osprey.IO
                                 // co-elution rather than as missing data.
                                 apexRtCol != null ? apexRtCol[row] : double.NaN);
                         }
+                        RowProgress.Report(rowCount);
                     }
                 }
                 // Only after a walk that reached the end: a file that threw was not checked.
@@ -2334,6 +2337,9 @@ namespace pwiz.Osprey.IO
                             }
                             allFeatures.Add(features);
                         }
+                        // One count per row group, so a multi-file step reading on lanes can
+                        // show this file's progress while the file is still loading.
+                        RowProgress.Report(rowCount);
                     }
                 }
             }

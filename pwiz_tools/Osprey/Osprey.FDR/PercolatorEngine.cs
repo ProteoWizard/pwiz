@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
@@ -67,6 +68,15 @@ namespace pwiz.Osprey.FDR
         private const int LANE1_FLUSH = 7;
         private const int LANE1_SINK = 8;
         private const int PASS1_LANE_BUCKETS = 9;
+
+        // How many times the score pass's progress counts each row: read, features loaded,
+        // protein-best column appended, scored, and the rest of the file's run-scope work done.
+        // Five, not fewer: the 7 lanes finish their first loads together and then spend ~35 s
+        // a file in the steps after the load, so counting those as one step left a 31 s gap.
+        private const long PASS1_ROW_COUNTS = 5;
+
+        // How many times the protein-best column step counts each row: read, loaded, scored.
+        private const long PROTEIN_BEST_ROW_COUNTS = 3;
         private const int ORDER1_COMPETITION = 0;
         private const int PASS1_ORDER_BUCKETS = 1;
         // The --model-diagnostics row walk, the one caller left that needs every row's
@@ -1335,21 +1345,25 @@ namespace pwiz.Osprey.FDR
                 // lanes read a copy of the list reference, because the method drops its own below.
                 var subsetFiles = new List<KeyValuePair<string, List<int>>>(subsetByFile);
                 var laneEntries = loadEntries;
-                int subsetFilesLoaded = 0;
+                // Counted in rows as each file loads, not once per file: a file's load is most
+                // of a minute on a lane at SEA-AD scale, so per-file reports left this step
+                // silent for 30-72 s at a time.
+                var rowCountByFile = RowCountsByFile(fileNames, rowCounts);
+                long loadRows = subsetFiles.Sum(kvp => (long)rowCountByFile[kvp.Key]);
                 ProgressReporter.Run(CountText.Format(subsetFiles.Count,
                            OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Loading_Percolator_training_features_from_1_file,
-                           OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Loading_Percolator_training_features_from__0__files), subsetFiles.Count, loadProgress =>
+                           OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Loading_Percolator_training_features_from__0__files), loadRows, loadProgress =>
                 {
+                    var rowProgress = new RowProgress(loadProgress);
                     OrderedFileLanes.For(subsetFiles.Count, fileLanes, i =>
                     {
-                        IReadOnlyList<double[]> rows = loadFileFeatures(subsetFiles[i].Key);
+                        IReadOnlyList<double[]> rows = rowProgress.Counting(() => loadFileFeatures(subsetFiles[i].Key));
                         foreach (int k in subsetFiles[i].Value)
                         {
                             var entry = laneEntries[k];
                             entry.Features = (double[])PercolatorScorer.ResolveFeatureRow(
                                 rows, entry.ParquetIndex, entry.CoelutionSum, nFeatures).Clone();
                         }
-                        loadProgress.Report(Interlocked.Increment(ref subsetFilesLoaded));
                     });
                 });
             }
@@ -1498,8 +1512,13 @@ namespace pwiz.Osprey.FDR
             // Fill the previously-silent multi-minute streaming score pass with throttled percent,
             // mirroring the resident PercolatorScorer.ScoreProjectionAndComputeFdrInPlace "Scoring N entries" line.
             // Progress is log-only (CommandOutput.Out), so the FDR output stays byte-identical.
-            ProgressReporter.Run(string.Format(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Scoring__0__precursor_candidate_peaks, n), n, scoreProgress =>
+            // Counted from the lanes as each file is read, loaded and scored - PASS1_ROW_COUNTS
+            // counts a row - not in file order once a file is applied: a file is about two minutes
+            // of lane time at SEA-AD scale, and in-order reports also held back every file that
+            // finished behind a slow one, so this step was silent for up to 136 s at a time.
+            ProgressReporter.Run(string.Format(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Scoring__0__precursor_candidate_peaks, n), PASS1_ROW_COUNTS * n, scoreProgress =>
             {
+                var rowProgress = new RowProgress(scoreProgress);
                 // On a lane: everything about one file that no other file can see.
                 Pass1File ScoreFile(int f)
                 {
@@ -1507,7 +1526,8 @@ namespace pwiz.Osprey.FDR
                     long t = Stopwatch.GetTimestamp();
                     // The ONE walk that needs apex RT: this pass hands the file's finished run-scope
                     // output to flushFileRunScope, which writes the v7 sidecar.
-                    RowBuffer rows = ReadFileRows(streamFileRows, fileName, StubColumns.ApexRt, rowCounts[f]);
+                    RowBuffer rows = rowProgress.Counting(() =>
+                        ReadFileRows(streamFileRows, fileName, StubColumns.ApexRt, rowCounts[f]));
                     t = lane1.Stop(LANE1_WALK, t);
                     int count = rows.Count;
                     // Discards the stored q-values deliberately. This pass is the WRITER, and for
@@ -1520,18 +1540,24 @@ namespace pwiz.Osprey.FDR
                     var file = new Pass1File { Rows = rows, Scores = scores };
                     bool scoredHere = scores == null;
                     if (!scoredHere)
+                    {
                         file.Sums = tryLoadFeatureSums?.Invoke(fileName);
+                        // Its scores came off the sidecar: no load, column or score to count.
+                        rowProgress.Add(3 * (long)count);
+                    }
                     t = lane1.Stop(LANE1_SIDECAR, t);
                     if (scoredHere)
                     {
-                        IReadOnlyList<double[]> featureRows = loadFileFeatures(fileName);
+                        IReadOnlyList<double[]> featureRows = rowProgress.Counting(() => loadFileFeatures(fileName));
                         // Persisted for the second pass only where the file is scored: a resumed
                         // file's run-scope sidecar is current only beside a current column.
                         if (proteinBestColumn != null)
                             featureRows = proteinBestColumn.PersistAndAppend(fileName, rows, featureRows);
+                        rowProgress.Add(count);
                         t = lane1.Stop(LANE1_FEATURES, t);
                         scores = ScoreRows(file, featureRows, gbtModels, avgWeights, avgBias, standardizer, scoreFeatures,
                             percConfig.NThreads, HeldOutFoldsOf(heldOutFolds, fileName));
+                        rowProgress.Add(count);
                         t = lane1.Stop(LANE1_SCORE, t);
                     }
                     // The competition's share of this file, reduced here - every reduction is a
@@ -1589,6 +1615,7 @@ namespace pwiz.Osprey.FDR
                     file.RunScope = sink.PrepareRunScope(f, new FdrRunScopeRows(entryIds, labels,
                         rows.Charges, peptides, file.Scores, runPrecFile, runPeptFile, apexRts));
                     lane1.Stop(LANE1_SINK, t);
+                    rowProgress.Add(count);
                     return file;
                 }
 
@@ -1615,7 +1642,6 @@ namespace pwiz.Osprey.FDR
                             streamingQ.Add(g1, file.Scores[r], rows.EntryIds[r], rows.IsDecoys[r], rows.Peptides[r]);
                         g1++;
                     }
-                    scoreProgress.Report(g1);
                     if (file.Sums != null)
                         contribAcc.Add(file.Sums);
                     else
@@ -2022,23 +2048,26 @@ namespace pwiz.Osprey.FDR
         {
             var byFile = PercolatorSampling.GroupIndicesByFileName(round2Rows);
             var files = new List<KeyValuePair<string, List<int>>>(byFile);
-            var rowCountByFile = new Dictionary<string, int>(fileNames.Count, StringComparer.Ordinal);
-            for (int f = 0; f < fileNames.Count; f++)
-                rowCountByFile[fileNames[f]] = rowCounts[f];
+            var rowCountByFile = RowCountsByFile(fileNames, rowCounts);
             var wall = Stopwatch.StartNew();
-            // Each file scores all of its rows with round 1's models (~15 s a file on SEA-AD), so
-            // without progress the step is silent for minutes at cohort scale.
-            int filesDone = 0;
+            // Each file reads, loads and scores all of its rows with round 1's models, about a
+            // minute of lane time a file on SEA-AD. Counted in rows as that happens - each row
+            // PROTEIN_BEST_ROW_COUNTS times - because a report per finished file left the step
+            // silent for 30-79 s at a time.
+            long totalRows = files.Sum(kvp => (long)rowCountByFile[kvp.Key]);
             ProgressReporter.Run(CountText.Format(files.Count,
                     OspreyFDRResources.PercolatorEngine_AppendProteinBestToRows_Computing_the_protein_best_column_from_1_file,
                     OspreyFDRResources.PercolatorEngine_AppendProteinBestToRows_Computing_the_protein_best_column_from__0__files),
-                files.Count, progress =>
+                PROTEIN_BEST_ROW_COUNTS * totalRows, progress =>
             {
+                var rowProgress = new RowProgress(progress);
                 OrderedFileLanes.For(files.Count, fileLanes, i =>
                 {
                     string fileName = files[i].Key;
-                    RowBuffer rows = ReadFileRows(streamFileRows, fileName, StubColumns.Core, rowCountByFile[fileName]);
-                    double[] values = column.ValuesFor(rows, loadFileFeatures(fileName));
+                    RowBuffer rows = rowProgress.Counting(() =>
+                        ReadFileRows(streamFileRows, fileName, StubColumns.Core, rowCountByFile[fileName]));
+                    double[] values = column.ValuesFor(rows, rowProgress.Counting(() => loadFileFeatures(fileName)));
+                    rowProgress.Add(rows.Count);
                     foreach (int k in files[i].Value)
                     {
                         var entry = round2Rows[k];
@@ -2047,11 +2076,19 @@ namespace pwiz.Osprey.FDR
                         extended[entry.Features.Length] = values[entry.ParquetIndex];
                         entry.Features = extended;
                     }
-                    progress.Report(Interlocked.Increment(ref filesDone));
                 });
             });
             log.LogInfo(LogTag.PATH, @"{0} protein-best column for {1} round-2 rows from {2} file(s): {3:F1}s",
                 passLabel, round2Rows.Count, files.Count, wall.Elapsed.TotalSeconds);
+        }
+
+        /// <summary>Each file's row count from pass 0, by file name.</summary>
+        private static Dictionary<string, int> RowCountsByFile(IReadOnlyList<string> fileNames, int[] rowCounts)
+        {
+            var rowCountByFile = new Dictionary<string, int>(fileNames.Count, StringComparer.Ordinal);
+            for (int f = 0; f < fileNames.Count; f++)
+                rowCountByFile[fileNames[f]] = rowCounts[f];
+            return rowCountByFile;
         }
 
         /// <summary>
