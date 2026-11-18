@@ -65,8 +65,8 @@ namespace TestPerf
                 if (!Program.SkylineOffscreen)
                 {
                     var screenBounds = Screen.GetWorkingArea(SkylineWindow);
-                    var width = Math.Min(screenBounds.Width, 1680);
-                    var height = Math.Min(screenBounds.Height, 1050);
+                    var width = Math.Min(screenBounds.Width, ScaledWidth(SkylineWindow, 1680));
+                    var height = Math.Min(screenBounds.Height, ScaledHeight(SkylineWindow, 1050));
                     SkylineWindow.Bounds = new Rectangle(screenBounds.Left + (screenBounds.Width - width) / 2,
                         screenBounds.Top + (screenBounds.Height - height) / 2, width, height);
                 }
@@ -104,7 +104,7 @@ namespace TestPerf
             Assert.AreSame(floatingWindow, ScreenshotManager.FindParent<FloatingWindow>(foldChangeVolcanoPlot));
             RunUI(()=>
             {
-                floatingWindow.Width = 1024;
+                floatingWindow.Width = ScaledWidth(floatingWindow, 1024);
             });
             PauseForScreenShot(floatingWindow, "Group comparison with volcano plot");
             RunUI(()=>foldChangeGrid.ShowChangeSettings());
@@ -208,7 +208,7 @@ namespace TestPerf
                     // above the Targets and Files tabs.
                     var volcanoFrame = volcanoPlot.Parent.Parent;
                     volcanoFrame.Location = SkylineWindow.SequenceTree.PointToScreen(
-                        new Point(10, SkylineWindow.SequenceTree.Height - 4 - volcanoFrame.Height));
+                        new Point(Scaled(10), SkylineWindow.SequenceTree.Height - Scaled(4) - volcanoFrame.Height));
                     SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.SelectedNode.Parent.PrevNode;
                     SkylineWindow.SequenceTree.SetScrollPos(Orientation.Horizontal, 0);
                 });

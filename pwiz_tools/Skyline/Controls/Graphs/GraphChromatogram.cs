@@ -3344,7 +3344,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var graphPane = GraphPaneFromPoint(pt) as MSGraphPane;
             if (graphPane == null)
                 return null;
-            graphPane.FindClosestCurve(GetCurves(graphPane), pt, 20, out var closestCurve, out var closestPoint);
+            graphPane.FindClosestCurve(GetCurves(graphPane), pt, DpiUtil.Scale(this, 20), out var closestCurve, out var closestPoint);
             if (closestCurve == null)
                 return null;
             graphPane.ReverseTransform(closestPoint, out var displayTime, out var intensity);
@@ -3811,6 +3811,16 @@ namespace pwiz.Skyline.Controls.Graphs
             return FindFullScanPoint(mouse) != null;
         }
 
+        /// <summary>
+        /// True if the point is on a label, where a press does not select a full scan.
+        /// </summary>
+        public bool IsOverLabel(double x, double y, PaneKey? paneKey)
+        {
+            var mouse = TransformCoordinates(x, y, paneKey);
+            using var g = CreateGraphics();
+            return FindNearestObject(mouse, g, out _, out var nearest) && nearest is TextObj;
+        }
+
         public void TestMouseDown(double x, double y, PaneKey? paneKey)
         {
             var mouse = TransformCoordinates(x, y, paneKey);
@@ -3833,7 +3843,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var dot = TransformCoordinates(selectionDot[0].X, selectionDot[0].Y, paneKey);
             if (!selectionDot.IsVisible)
                 return @"selection dot is not visible";
-            const int pixelTolerance = 10;
+            int pixelTolerance = DpiUtil.Scale(this, 10);
             if (Math.Abs(mouse.X - dot.X) > pixelTolerance || Math.Abs(mouse.Y - dot.Y) > pixelTolerance)
                 return $@"mouse coordinates ({x}->{mouse.X}, {y}->{mouse.Y}) and selection dot coordinates ({selectionDot[0].X}->{dot.X}, {selectionDot[0].Y}->{dot.Y}) are too far apart";
             return string.Empty;

@@ -26,6 +26,7 @@ using System.Drawing;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.CommonResources;
 using pwiz.Common.SystemUtil;
 
@@ -37,7 +38,9 @@ namespace pwiz.Common.GUI
     /// </summary>
     public partial class CommonAlertDlg : CommonFormEx
     {
+        // 96-DPI design values, scaled through Scale() (issue #4599)
         private const int MAX_HEIGHT = 500;
+        private const int MIN_LABEL_WIDTH = 100;
         private const int LABEL_LEFT_PADDING = 24;  // Left margin to match original designer position
         private const int LABEL_RIGHT_PADDING = 18; // Right margin original 18
         private readonly int _originalFormHeight;
@@ -87,7 +90,7 @@ namespace pwiz.Common.GUI
         private void UpdateLabelMessageSize()
         {
             labelMessage.MaximumSize =
-                new Size(Math.Max(100, messageScrollPanel.Width - labelMessage.Left - LABEL_RIGHT_PADDING), 0);
+                new Size(Math.Max(Scale(MIN_LABEL_WIDTH), messageScrollPanel.Width - labelMessage.Left - Scale(LABEL_RIGHT_PADDING)), 0);
         }
 
         private void UpdateFormHeight()
@@ -95,8 +98,13 @@ namespace pwiz.Common.GUI
             UpdateLabelMessageSize();
             int formGrowth = Math.Max(labelMessage.Height - _originalMessageHeight * 3, 0);
             formGrowth = Math.Max(formGrowth, 0);
-            formGrowth = Math.Min(formGrowth, MAX_HEIGHT);
+            formGrowth = Math.Min(formGrowth, Scale(MAX_HEIGHT));
             Height = _originalFormHeight + formGrowth;
+        }
+
+        private int Scale(int pixels)
+        {
+            return DpiScale.Scale(this, pixels);
         }
 
         public string DetailMessage
@@ -254,7 +262,7 @@ namespace pwiz.Common.GUI
                 else
                 {
                     iconAndMessageSplitContainer.Panel1Collapsed = true;
-                    labelMessage.Location = new Point(LABEL_LEFT_PADDING, labelMessage.Location.Y);
+                    labelMessage.Location = new Point(Scale(LABEL_LEFT_PADDING), labelMessage.Location.Y);
                 }
 
                 UpdateFormHeight();
@@ -294,6 +302,9 @@ namespace pwiz.Common.GUI
                 DialogResult = dialogResult,
                 Margin = btnMoreInfo.Margin,
                 Height = btnMoreInfo.Height,
+                // A runtime-created Button keeps the unscaled 75-pixel default width; take the
+                // designer button's scaled width, wider if the text needs it
+                Width = Math.Max(btnMoreInfo.Width, TextRenderer.MeasureText(text, btnMoreInfo.Font).Width + btnMoreInfo.Height),
             };
             buttonPanel.Controls.Add(button);
             var visibleButtons = VisibleButtons.ToArray();

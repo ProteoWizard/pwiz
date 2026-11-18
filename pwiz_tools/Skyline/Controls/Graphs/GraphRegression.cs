@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
@@ -68,6 +69,14 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public ICollection<RegressionGraphData> RegressionGraphDatas { get; private set; }
+
+        /// <summary>
+        /// Sizes the form to 800 x 600 at 100% display scale, scaled for the current DPI.
+        /// </summary>
+        public void SetDialogSize()
+        {
+            Size = DpiScale.ScaleSize(this, new Size(800, 600));
+        }
 
         private void btnClose_Click(object sender, EventArgs e)
         {
