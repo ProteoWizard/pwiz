@@ -390,8 +390,9 @@ namespace SkylineTool
         public bool Completed { get; set; }
         /// <summary>
         /// When <see cref="Completed"/> is false, a human-readable note on why -- e.g. the text of the modal
-        /// dialog the action raised and left open, which the caller should now drive. Null when there is nothing
-        /// to report.
+        /// dialog the action raised and left open, which the caller should now drive. When it is true, a verb may
+        /// describe the result here -- what it now shows, or that it was issued and is still finishing, to poll
+        /// for. Null when there is nothing to report.
         /// </summary>
         public string Message { get; set; }
         /// <summary>

@@ -338,23 +338,23 @@ namespace pwiz.Skyline.Controls.Graphs
         public event EventHandler<ClickedChromatogramEventArgs> ClickedChromatogram;
 
         /// <summary>
-        /// User clicked on a chromatogram.
+        /// User clicked on a chromatogram. Returns false when the point cannot show a spectrum.
         /// </summary>
-        private void FireClickedChromatogram(FullScanPoint fullScanPoint)
+        private bool FireClickedChromatogram(FullScanPoint fullScanPoint)
         {
             if (ClickedChromatogram == null)
-                return;
+                return false;
 
             var graphPane = fullScanPoint.GraphPane;
             var clickedCurve = fullScanPoint.Curve;
             var clickedItem = (ChromGraphItem) clickedCurve.Tag;
             if (clickedItem.TransitionNode == null)
-                return;
+                return false;
             var chromatogramInfo = clickedItem.Chromatogram;
 
             var retentionTime = clickedItem.GetValidPeakBoundaryTime(fullScanPoint.DisplayTime);
             if (retentionTime.IsZero)
-                return;
+                return false;
             IList<CurveItem> curveList;
             if (_nodeGroups.Length == 1)
             {
@@ -384,7 +384,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!transitionIndex.HasValue)
             {
                 // Curve that they clicked on is no longer in CurveList
-                return;
+                return false;
             }
 
             if (clickedItem.OptimizationStep.HasValue)
@@ -402,6 +402,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 MsDataFileScanHelper.FindScanIndex(chromatogramInfo, retentionTime.MeasuredTime),
                 clickedItem.OptimizationStep);
             ClickedChromatogram?.Invoke(this, e);
+            return true;
         }
 
         private IEnumerable<TransitionFullScanInfo> GetOtherOptimizationTransitions(CurveItem clickedCurve)
@@ -3367,22 +3368,25 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (var curve in GetCurves(graphPane))
                 {
                     var graphItem = (ChromGraphItem) curve.Tag;
-                    if (graphItem.TransitionNode == null || curve.NPts == 0)
+                    if (graphItem.TransitionNode == null)
                         continue;
                     if (transitionId != null && !ReferenceEquals(graphItem.TransitionNode.Id, transitionId))
                         continue;
-                    double displayTime = graphItem.MeasuredTimeToDisplayTime(retentionTime);
-                    if (displayTime < curve.Points[0].X || displayTime > curve.Points[curve.NPts - 1].X)
+                    // The item's own points, one per measured time: the curve's are binned to the screen width
+                    var points = graphItem.Points;
+                    if (points.Count == 0)
                         continue;
-                    var point = curve.Points[graphItem.GetNearestMeasuredIndex(retentionTime)];
+                    double displayTime = graphItem.MeasuredTimeToDisplayTime(retentionTime);
+                    if (displayTime < points[0].X || displayTime > points[points.Count - 1].X)
+                        continue;
+                    var point = points[graphItem.GetNearestMeasuredIndex(retentionTime)];
                     if (mostIntense == null || point.Y > mostIntense.Intensity)
                         mostIntense = new FullScanPoint(graphPane, curve, point.X, point.Y);
                 }
             }
             if (mostIntense == null)
                 return false;
-            FireClickedChromatogram(mostIntense);
-            return true;
+            return FireClickedChromatogram(mostIntense);
         }
 
         /// <summary>

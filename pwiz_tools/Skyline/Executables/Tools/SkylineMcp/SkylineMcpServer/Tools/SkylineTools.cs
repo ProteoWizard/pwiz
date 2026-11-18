@@ -960,22 +960,27 @@ public static class SkylineTools
         "the selected precursor's chromatogram at that time would, and mark that scan with the selection circle " +
         "on the chromatogram. Needs full-scan chromatograms (DDA, DIA, PRM or MS1 filtering) and a precursor " +
         "or peptide selected (skyline_set_selection), unless a transition is given. Given a transition, it is " +
-        "selected, the circle is on its chromatogram and the Full-Scan graph zooms to its m/z. Without one, the " +
-        "circle is on the transition most intense at that time and the graph shows the whole spectrum, though " +
-        "its zoom (magnifier) button then zooms to that transition. Read the result with skyline_get_open_forms " +
-        "and skyline_get_graph_data or skyline_get_graph_image on the 'GraphFullScan' form.")]
+        "selected and the circle is on its chromatogram; without one, the selection is left alone and the circle " +
+        "is on the transition most intense at that time. Either way the Full-Scan graph zooms to the m/z of the " +
+        "transition the circle is on. Waits up to 10 seconds for the spectrum to load, then reports the scan " +
+        "type and time, the transition and the m/z range shown; a slower load returns saying it is still " +
+        "loading, to check again shortly. See the graph with skyline_get_graph_image on the 'GraphFullScan' " +
+        "form (skyline_get_form_image adds its toolbar), and read its points with skyline_get_graph_data.")]
     [RequiresJsonToolServiceMethod(nameof(IJsonToolService.ShowFullScan))]
     public static string ShowFullScan(
         [Description("Measured retention time in minutes, e.g. from a report's RetentionTime column")] double retentionTime,
         [Description("Replicate to show; omit for the active replicate")] string replicateName = null,
         [Description("ElementLocator of a transition (e.g. from a report's TransitionLocator column) to zoom to; " +
-            "omit to use the most intense transition, unzoomed")] string transitionLocator = null)
+            "omit to use the transition most intense at that time")] string transitionLocator = null)
     {
         return Invoke(connection =>
         {
             var result = connection.ShowFullScan(retentionTime,
                 string.IsNullOrEmpty(replicateName) ? null : replicateName,
                 string.IsNullOrEmpty(transitionLocator) ? null : transitionLocator);
+            // A completed call says what the graph shows, or that it is still loading (to poll for)
+            if (result.Completed && !string.IsNullOrEmpty(result.Message))
+                return result.Message;
             return DescribeAction(result, $"Showing the full scan at {Coordinate(retentionTime)} minutes.");
         });
     }

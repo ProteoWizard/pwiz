@@ -401,10 +401,10 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>
         /// Shows the Full-Scan graph at <paramref name="retentionTime"/> in the active replicate, as clicking its
-        /// chromatogram there would, which marks the scan with the selection circle on the chromatogram. Given a
-        /// transition, the circle is on its chromatogram and the graph zooms to it; without one, the circle is on
-        /// the transition most intense at that time and the graph is not zoomed, but its zoom button zooms to that
-        /// transition. Call on the UI thread, after <see cref="PrepareFullScan"/> and a wait for the graphs.
+        /// chromatogram there would, which marks the scan with the selection circle on the chromatogram. The circle
+        /// is on the chromatogram of the given transition, or of the transition most intense at that time, and the
+        /// graph zooms to that transition. Call on the UI thread, after <see cref="PrepareFullScan"/> and a wait
+        /// for the graphs.
         /// </summary>
         public static void ShowFullScan(SkylineWindow skylineWindow, double retentionTime, string transitionLocator)
         {
@@ -420,12 +420,28 @@ namespace pwiz.Skyline.ToolsUI
             if (graphChrom == null || !graphChrom.ShowFullScan(retentionTime, transitionId))
             {
                 throw new ArgumentException(LlmInstruction.Format(
-                    @"No chromatogram in replicate '{0}' can show a full scan at retention time {1}{2}. The time may be outside the chromatogram, the transition may not be displayed, or the replicate may have no full-scan chromatograms (PRM, DDA, DIA or MS1 filtering). Select a precursor with skyline_set_selection and read its chromatogram with skyline_get_graph_data.",
+                    @"No chromatogram in replicate '{0}' can show a full scan at retention time {1}{2}. The time may be outside the chromatogram, the transition may not be displayed, a protein or several peptides may be selected, or the replicate may have no full-scan chromatograms (PRM, DDA, DIA or MS1 filtering). Select one precursor or peptide with skyline_set_selection and read its chromatogram with skyline_get_graph_data.",
                     replicateName, retentionTime, transitionLocator != null ? @" for " + transitionLocator : string.Empty));
             }
-            // A click leaves the zoom as the user last set it, but this sets it: zoomed to the transition when one
-            // was asked for, and otherwise not zoomed, with the zoom button ready to zoom to the most intense one.
-            skylineWindow.GraphFullScan?.SetZoom(transitionId != null);
+            // Zoomed to the transition the circle is on, the given one or the most intense, so the graph always
+            // shows the m/z the circle marks. A click leaves the zoom as the user last set it.
+            skylineWindow.GraphFullScan?.SetZoom(true);
+        }
+
+        /// <summary>
+        /// What the Full-Scan graph shows once its scan has loaded, so the caller knows without an image: the scan's
+        /// type and time, the transition the selection circle is on, and the m/z range the graph is zoomed to.
+        /// Call on the UI thread.
+        /// </summary>
+        public static string DescribeFullScan(SkylineWindow skylineWindow)
+        {
+            var graphFullScan = skylineWindow.GraphFullScan;
+            var scanHelper = graphFullScan.MsDataFileScanHelper;
+            var xScale = graphFullScan.ZedGraphControl.GraphPane.XAxis.Scale;
+            return LlmInstruction.Format(
+                @"Showing the {0} scan at {1:0.00} minutes from {2}, with the selection circle on the {3} chromatogram; the graph is zoomed to m/z {4:0.0}-{5:0.0}. See it with skyline_get_form_image or skyline_get_graph_image on 'GraphFullScan:Full Scan'.",
+                scanHelper.NameFromSource(scanHelper.Source), skylineWindow.SelectedScanRetentionTime,
+                scanHelper.FileName, scanHelper.CurrentTransition?.Name, xScale.Min, xScale.Max);
         }
 
         private static TransitionRef ParseTransitionRef(string transitionLocator)

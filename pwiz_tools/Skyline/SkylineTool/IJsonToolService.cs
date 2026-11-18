@@ -571,9 +571,9 @@ namespace SkylineTool
         /// <summary>
         /// Shows the Full-Scan graph for the scan at a retention time, as clicking the selected precursor's
         /// chromatogram at that time would, and marks the scan with the selection circle on the chromatogram.
-        /// Given a transition, the circle is on its chromatogram and the Full-Scan graph zooms to it; without
-        /// one, the circle is on the transition most intense at that time and the graph is not zoomed, though
-        /// its zoom button zooms to that transition.
+        /// The circle is on the chromatogram of the given transition, or of the transition most intense at that
+        /// time, and the Full-Scan graph zooms to that transition. Waits a few seconds for the spectrum to load;
+        /// the result's Message then describes what is shown, or says it is still loading, for the caller to poll.
         /// </summary>
         /// <param name="retentionTime">Measured retention time, in minutes.</param>
         /// <param name="replicateName">Replicate to show; null for the active replicate.</param>
