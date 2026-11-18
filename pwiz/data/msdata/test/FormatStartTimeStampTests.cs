@@ -34,6 +34,11 @@ public class FormatStartTimeStampTests
         var acquiredInWinter = new DateTime(2025, 1, 15, 15, 47, 11, DateTimeKind.Utc);
         AssertStartTimeStamp("2025-01-15T23:47:11Z", acquiredInWinter, pacific);
 
+        // 3 hours after DST started on 2025-03-09. As a Pacific clock time this is PDT (UTC-7). Read as a UTC time,
+        // as its Kind=Utc label says, it would be 21:00 PST the night before (UTC-8) and come out an hour late.
+        var acquiredAfterSpringChange = new DateTime(2025, 3, 9, 5, 0, 0, DateTimeKind.Utc);
+        AssertStartTimeStamp("2025-03-09T12:00:00Z", acquiredAfterSpringChange, pacific);
+
         Assert.AreEqual("2025-05-19T15:47:11Z",
             ReaderConfig.FormatStartTimeStamp(acquiredInSummer, false, pacific),
             "startTimeStamp with the adjustment off must be the stored value");

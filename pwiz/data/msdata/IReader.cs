@@ -299,12 +299,13 @@ public sealed class ReaderConfig
     /// cpp did not were the reason msconvert-sharp's timestamps drifted from msconvert's.
     /// </param>
     /// <remarks>
-    /// Mirrors cpp <c>ShimadzuReader.cpp:365-388</c> / <c>WiffFile.cpp::getSampleAcquisitionTime</c>:
-    /// take the SDK's <see cref="DateTime"/> as a naive wall clock and - if the flag is set - add
-    /// the host's offset from UTC, tagging the result with a <c>Z</c> suffix. cpp adds the offset
-    /// at the time of reading. This adds the offset on the acquisition date, so the result is the
-    /// same on either side of a DST change, and differs from cpp's only for a file read on the other
-    /// side of a DST change from its acquisition. Note the conversion to UTC is NOT done
+    /// Follows cpp <c>ShimadzuReader.cpp:365-388</c> / <c>WiffFile.cpp::getSampleAcquisitionTime</c>,
+    /// except for the date of the offset: take the SDK's <see cref="DateTime"/> as a naive wall clock
+    /// and - if the flag is set - add <c>universal_time - local_time</c> on the acquisition date,
+    /// producing the UTC time of that clock time in the host's zone, tagged with a <c>Z</c> suffix.
+    /// cpp takes the difference on the date of reading, so for a file read on the other side of a
+    /// DST change from its acquisition, cpp msconvert's result is an hour off from this one.
+    /// Note the conversion to UTC is NOT done
     /// here: <c>ShimadzuReader.cpp:370</c> is the only cpp vendor reader that calls
     /// <c>ToUniversalTime</c>, and it does so before this point, so only Shimadzu's caller does.
     /// </remarks>
