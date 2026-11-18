@@ -248,7 +248,8 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// UniMod's monoisotopic element masses (the umod:elements list of unimod.xml), by Skyline
+        /// UniMod's monoisotopic element masses (the umod:elements list of the retired unimod.xml,
+        /// still readable with git show dd1ea43e89:pwiz/data/common/unimod.xml), by Skyline
         /// symbol (H' for 2H, C' for 13C, N' for 15N, O' for 18O).
         /// </summary>
         private static readonly Dictionary<string, double> UNIMOD_ELEMENT_MASSES = new Dictionary<string, double>

@@ -81,6 +81,7 @@ namespace Pwiz.SeeMS
 
             ResumeLayout( false );
 
+            // ReSharper disable once VirtualMemberCallInConstructor
             ContextMenuStrip = new ContextMenuStrip();
 
             listView1.LargeImageList = new ImageList();
@@ -313,6 +314,7 @@ namespace Pwiz.SeeMS
         public ProcessingListViewItem(string label)
             : base(label)
         {
+            // ReSharper disable once VirtualMemberCallInConstructor
             base.ImageIndex = ImageIndex;
             enabled = true;
             optionsPanel = new FlowLayoutPanel();
@@ -375,6 +377,7 @@ namespace Pwiz.SeeMS
 
         public override DataProcessing DataProcessing => dataProcessing;
 
+        // ReSharper disable once OptionalParameterHierarchyMismatch
         public override Spectrum GetSpectrum( int index, bool getBinaryData )
         {
             Spectrum s = base.GetSpectrum(index, getBinaryData: true);

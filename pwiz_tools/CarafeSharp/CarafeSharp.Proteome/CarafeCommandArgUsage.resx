@@ -157,6 +157,9 @@
   <data name="_entrapment_ratio" xml:space="preserve">
     <value>Entrapment peptides per target, 0.1 to 1.0 (default 1.0).</value>
   </data>
+  <data name="_entrapment_in_targets" xml:space="preserve">
+    <value>With --entrapment: also add, for this fraction of the targets (up to 1.0), an entrapment peptide placed on a random target protein, so the protein evidence a protein-aware step gives false targets reaches entrapment too; only the manifest's peptide_type marks these as entrapment. Added to the entrapment of --entrapment-ratio (0.1 and 0.1 is 20% entrapment); together at most 1.0 and at least 0.1.</value>
+  </data>
   <data name="_no_similarity_gate" xml:space="preserve">
     <value>Keep the entrapment peptides that are near-copies of their own targets. For audit comparison only: the resulting library should not be searched.</value>
   </data>

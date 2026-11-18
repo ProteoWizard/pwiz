@@ -234,7 +234,9 @@ namespace System.Collections.Generic
                 return Count.CompareTo( other.Count );
 
             int compare = 0;
+            // ReSharper disable once GenericEnumeratorNotDisposed
             IEnumerator<T> lhsItr = GetEnumerator(); lhsItr.MoveNext();
+            // ReSharper disable once GenericEnumeratorNotDisposed
             IEnumerator<T> rhsItr = other.GetEnumerator(); rhsItr.MoveNext();
             for( int i = 0; i < Count && compare == 0; ++i, lhsItr.MoveNext(), rhsItr.MoveNext() )
             {

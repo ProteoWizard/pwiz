@@ -26,6 +26,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina.Models;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -115,10 +116,21 @@ namespace pwiz.SkylineTest
             }
 
             var generatedOutput = TextUtil.LineSeparate(generatedResult);
-            var expectedOutput = TextUtil.LineSeparate(expectedLines);
+            var expectedOutput = TextUtil.LineSeparate(WithProteinIds(expectedLines));
 
             AssertEx.NoDiff(expectedOutput, generatedOutput);
             CheckBuilderFiles(builder, false);
+        }
+
+        /// <summary>
+        /// The table's protein_id column after the charge (<see cref="LibraryPeptideProteins"/>):
+        /// every peptide of these documents is in a peptide list or an iRT standard, so each row
+        /// carries no protein.
+        /// </summary>
+        private static IEnumerable<string> WithProteinIds(IEnumerable<string> lines)
+        {
+            return lines.Select((line, i) =>
+                line + TextUtil.SEPARATOR_TSV + (i == 0 ? CarafeLibraryBuilder.PROTEIN_ID : LibraryPeptideProteins.NO_PROTEIN));
         }
 
         private void CheckBuilderFiles(CarafeLibraryBuilder builder, bool libraryBuilt)

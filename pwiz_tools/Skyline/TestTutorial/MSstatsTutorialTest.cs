@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -178,6 +179,10 @@ namespace pwiz.SkylineTestTutorial
             WaitForCondition(() => Application.OpenForms.Count == formCount + 1);
             Form argsCollector = Application.OpenForms[formName];
             Assert.IsNotNull(argsCollector);
+            // The tool opens its dialog outside the Skyline window; move it inside so the
+            // Skyline window screenshot shows the whole dialog
+            RunUI(() => argsCollector.Location = new Point(SkylineWindow.Left + (SkylineWindow.Width - argsCollector.Width) / 2,
+                SkylineWindow.Top + (SkylineWindow.Height - argsCollector.Height) / 2));
             PauseForScreenShot(screenshotDescription);
 
             Action actCancel = () => argsCollector.CancelButton.PerformClick();

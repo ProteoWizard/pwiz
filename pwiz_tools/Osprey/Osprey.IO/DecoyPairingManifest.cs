@@ -2,6 +2,7 @@
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
+ *                Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -207,11 +208,17 @@ namespace pwiz.Osprey.IO
                 var entry = library[idx];
                 if (entry == null)
                     continue;
+                if (!_seqToInfo.TryGetValue(entry.Sequence, out var info))
+                    continue;
+                // The manifest's kind is authoritative for the entrapment class too, and the
+                // only record of it for entrapment placed on a real target protein, whose
+                // accessions carry no marker. Flagged before the pairing skips below, which
+                // leave an already-paired entry's kind as it was.
+                if (PeptideKinds.IsEntrapment(info.Kind))
+                    entry.IsEntrapment = true;
                 if (entry.IsDecoy && state.PairedDecoys.Contains(idx))
                     continue;
                 if (!entry.IsDecoy && state.ClaimedTargets.Contains(idx))
-                    continue;
-                if (!_seqToInfo.TryGetValue(entry.Sequence, out var info))
                     continue;
                 bool isTargetSide = IsTargetSideOf(info.Kind);
                 // A decoy is never a pairing target, even where the manifest calls its

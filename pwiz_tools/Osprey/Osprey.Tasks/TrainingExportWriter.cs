@@ -47,13 +47,15 @@ namespace pwiz.Osprey.Tasks
     /// calibration and spectra cache - when the flag is added to a finished run, so the two give
     /// the same file.
     ///
-    /// <para>The q-values it selects on are the run's own, from one of two sidecars (see
-    /// <see cref="ReadRunQ"/>): the second-pass run q the per-run second pass wrote in
-    /// PerFileRescoring, or, for a run it did not write one for, the first-pass run q - which
-    /// is the final answer when nothing in the analysis was re-scored, as for a single run.
-    /// Experiment-level values exist only after SecondPassFDR and per-run files are write-once,
-    /// so the export carries none; a consumer joins <c>&lt;blib&gt;.2nd-pass.fdr_experiment.bin</c>
-    /// by entry_id.</para>
+    /// <para>The q-values it selects on are the run's own FIRST-pass run q-values (see
+    /// <see cref="ReadRunQ"/>): the competition of every target in the run against every decoy,
+    /// the undepleted, calibrated null a fine-tune should learn from. The second pass's run q is
+    /// not used: under protein-compact it comes from the stratum and its complement competing
+    /// separately, each with its own conservative count, so on a small run (the Stellar subset's
+    /// ~190 targets) a half accepts nothing at 1% and the export would carry no rows at all,
+    /// while a pass-1 competition of the same run accepts over a hundred. Experiment-level values
+    /// exist only after SecondPassFDR and per-run files are write-once, so the export carries
+    /// none; a consumer joins <c>&lt;blib&gt;.2nd-pass.fdr_experiment.bin</c> by entry_id.</para>
     /// </summary>
     internal static class TrainingExportWriter
     {
@@ -191,12 +193,6 @@ namespace pwiz.Osprey.Tasks
                 ctx.LogWarning(string.Format(
                     OspreyTasksResources.TrainingExportWriter_ExportRun__0____1_N0__of__2_N0__fitted_precursors_did_not_reproduce_the_scored_median_polish_cosine_,
                     stem, nFitted - nFittedParity, nFitted));
-            }
-            if (runQPass == FdrScoresSidecar.Pass.FirstPass)
-            {
-                ctx.LogWarning(string.Format(
-                    OspreyTasksResources.TrainingExportWriter_ExportRun__0___selected_by_the_first_pass_run_q_values__this_run_s_second_pass__if_the_analysis_computes_one__comes_from__1__,
-                    stem, SecondPassFdrTask.TASK_NAME));
             }
             if (nNoRunQ > 0)
             {
@@ -413,24 +409,19 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// The q-value sidecar a run's export selects on, and which pass it is. The second-pass
-        /// sidecar when the per-run second pass in PerFileRescoring wrote it, which it does for
-        /// every run, the one with no Stage 6 work included (#4665); otherwise the first-pass
-        /// sidecar - a run whose complete answer is not on disk. Deciding by who wrote the file,
-        /// which never changes once it is written, makes an export written while re-scoring and
-        /// one written later from disk agree.
-        ///
-        /// <para>Who wrote it is the test SecondPassFDR folds by,
-        /// <see cref="Pass2FdrSidecar.HasWorkerStamp"/>: the sidecar, the run's plan and, under
-        /// protein-compact, the worker's decoys file all carry the stamp of the reconciled
-        /// parquet beside them. A sidecar an earlier run left beside a parquet since rewritten
-        /// under another key or build carries a different stamp, so it is not selected.</para>
+        /// The q-value sidecar a run's export selects on, and which pass it is: the first-pass
+        /// sidecar, always. The first pass competes the whole run in one pool against every decoy,
+        /// the calibrated null the fine-tune should learn from; the second pass's run q, stratified
+        /// under protein-compact into halves that each carry their own conservative count, is a
+        /// different statistic and, on a small run, an empty one (see the class summary). The
+        /// first-pass sidecar is written once, before any re-scoring, so an export written while
+        /// re-scoring and one written later from disk agree; the pass is kept in the signature
+        /// for the footer and the validity key, which record it.
         /// </summary>
         internal static string RunQPath(string input, out FdrScoresSidecar.Pass pass)
         {
-            bool workerOwned = Pass2FdrSidecar.HasWorkerStamp(input);
-            pass = workerOwned ? FdrScoresSidecar.Pass.SecondPass : FdrScoresSidecar.Pass.FirstPass;
-            return workerOwned ? FdrScoresSidecar.Pass2Path(input) : FdrScoresSidecar.Pass1Path(input);
+            pass = FdrScoresSidecar.Pass.FirstPass;
+            return FdrScoresSidecar.Pass1Path(input);
         }
 
         /// <summary>
@@ -473,7 +464,7 @@ namespace pwiz.Osprey.Tasks
         private static void Complete(TrainingRecord record, LibraryEntry entry, string stem)
         {
             record.FileName = stem;
-            var kind = EntrapmentLibraryClassifier.Classify(entry.ProteinIds);
+            var kind = EntrapmentLibraryClassifier.Classify(entry);
             record.IsEntrapment = PeptideKinds.IsEntrapment(kind);
             record.PeptideKind = PeptideKinds.Name(kind);
         }
