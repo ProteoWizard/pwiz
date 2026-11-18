@@ -1145,6 +1145,43 @@ namespace pwiz.Skyline.ToolsUI
                 UiActions.ClickGraph.InvokeNow(form.FindGraph(), bounds));
         }
 
+        public ActionResult ShowFullScan(double retentionTime, string replicateName = null, string transitionLocator = null)
+        {
+            JsonUiService.PrepareFullScan(replicateName, transitionLocator);
+            WaitForGraphs();
+            var result = InvokeOnMainWindow(mainWindow =>
+                JsonUiService.ShowFullScan(mainWindow.SkylineWindow, retentionTime, transitionLocator));
+            if (!result.Completed)
+                return result;
+            result.Message = WaitForFullScan()
+                ? JsonUiService.InvokeOnUiThread(() => JsonUiService.DescribeFullScan(Program.MainWindow))
+                : LlmInstruction.Format(
+                    @"The Full-Scan graph was sent to the scan at {0} minutes and is still loading it after {1} seconds. Skyline finishes on its own, so carry on: read the graph with skyline_get_form_image or skyline_get_graph_image on 'GraphFullScan:Full Scan' in a few seconds, and again if it still shows 'Loading...'.",
+                    retentionTime, FULL_SCAN_WAIT_MAX_MILLIS / 1000);
+            return result;
+        }
+
+        // Short, and well inside the MCP call timeout: an LLM blocked on the UI cannot tell its user what is going on,
+        // so a slow load returns "issued, still loading" for the LLM to poll rather than holding the call.
+        private const int FULL_SCAN_WAIT_MAX_MILLIS = 10000;
+
+        // The click loads the spectrum in the background (seconds for ion mobility data), and only then does the
+        // chromatogram draw the selection circle, so a graph read at once shows "Loading..." and no circle. Waits
+        // for both, as a test's CheckFullScanSelection does, and returns false when the spectrum has not loaded in time.
+        private static bool WaitForFullScan()
+        {
+            var mainWindow = Program.MainWindow;
+            if (mainWindow == null)
+                return false;
+            bool IsLoaded() => mainWindow.Invoke((Func<bool>) (() => mainWindow.GraphFullScan?.IsLoaded ?? false));
+            for (int waited = 0; waited < FULL_SCAN_WAIT_MAX_MILLIS && !IsLoaded(); waited += GRAPH_POLL_MILLIS)
+                Thread.Sleep(GRAPH_POLL_MILLIS);
+            if (!IsLoaded())
+                return false;
+            WaitForGraphs();
+            return true;
+        }
+
         // Both find the control the way set_value does (by the label/type GetControls reports). InvokeNow gates
         // it - a missing, blocked or disabled control throws - before anything is sent, and runs the gesture
         // on the form's UI thread.
