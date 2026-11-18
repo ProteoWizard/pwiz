@@ -920,13 +920,15 @@ namespace pwiz.Osprey.Tasks
             Action<string> log)
         {
             var request = config.GetFileParallelism(stage, out string argName);
-            int envCap = stage == FileStage.Caching ? 0 : OspreyEnvironment.MaxParallelFiles;
+            bool caching = stage == FileStage.Caching;
+            int envCap = caching ? 0 : OspreyEnvironment.MaxParallelFiles;
             return FileParallelismResolver.Resolve(
                 request, nFiles, envCap,
-                Environment.ProcessorCount,
+                caching ? Environment.ProcessorCount : config.NThreads,
                 SystemMemory.AvailablePhysicalBytes,
                 () => EstimateInputBytes(config.InputFiles),
-                log, argName);
+                log, argName,
+                caching ? 1 : FileParallelismResolver.MIN_THREADS_PER_FILE);
         }
 
         /// <summary>
