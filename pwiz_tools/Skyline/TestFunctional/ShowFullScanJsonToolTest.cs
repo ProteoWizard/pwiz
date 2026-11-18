@@ -90,9 +90,9 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(transitionLocator, server.GetSelection().Locators.Single());
 
             // Errors: a time outside the chromatogram, a locator that is not a transition, an unknown replicate
-            AssertEx.ThrowsException<ArgumentException>(() => server.ShowFullScan(1000, null, null));
+            AssertEx.ThrowsException<ArgumentException>(() => server.ShowFullScan(1000));
             AssertEx.ThrowsException<ArgumentException>(() => server.ShowFullScan(APEX_TIME, null, precursorLocator));
-            AssertEx.ThrowsException<ArgumentException>(() => server.ShowFullScan(APEX_TIME, @"NoSuchReplicate", null));
+            AssertEx.ThrowsException<ArgumentException>(() => server.ShowFullScan(APEX_TIME, @"NoSuchReplicate"));
         }
 
         private void ShowFullScan(JsonToolServer server, double retentionTime, string transitionLocator)

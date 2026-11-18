@@ -1155,7 +1155,7 @@ namespace pwiz.Skyline.ToolsUI
                 return result;
             result.Message = WaitForFullScan()
                 ? JsonUiService.InvokeOnUiThread(() => JsonUiService.DescribeFullScan(Program.MainWindow))
-                : (string) LlmInstruction.Format(
+                : LlmInstruction.Format(
                     @"The Full-Scan graph was sent to the scan at {0} minutes and is still loading it after {1} seconds. Skyline finishes on its own, so carry on: read the graph with skyline_get_form_image or skyline_get_graph_image on 'GraphFullScan:Full Scan' in a few seconds, and again if it still shows 'Loading...'.",
                     retentionTime, FULL_SCAN_WAIT_MAX_MILLIS / 1000);
             return result;
