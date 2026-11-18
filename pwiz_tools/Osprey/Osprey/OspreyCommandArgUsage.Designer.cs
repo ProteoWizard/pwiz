@@ -166,7 +166,16 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("_entrapment_fasta", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to With {0}: also add, for this fraction of the targets (up to 1), an entrapment peptide placed on a random target protein, so the protein evidence a protein-aware step gives false targets reaches entrapment too; only the pairing manifest&apos;s peptide_type marks these as entrapment. Added to the entrapment of {0} ({0} 0.1 {1} 0.1 is 20% entrapment); together at most 1 and at least {2}..
+        /// </summary>
+        public static string _entrapment_in_targets {
+            get {
+                return ResourceManager.GetString("_entrapment_in_targets", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Experiment-level FDR threshold (default: 0.01).
         /// </summary>
@@ -319,7 +328,16 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("_help", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show the developer switches Osprey reads from environment variables, grouped by what they change.
+        /// </summary>
+        public static string _help_env {
+            get {
+                return ResourceManager.GetString("_help_env", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Input mzML files.
         /// </summary>
@@ -604,7 +622,25 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("_shared_peptides_property", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Leave the entrapment peptides and the protein groups made only of them out of the result (the {0} and the reports); the {1} report still measures them. Default: they are reported like targets..
+        /// </summary>
+        public static string _strip_entrapment {
+            get {
+                return ResourceManager.GetString("_strip_entrapment", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Leave entrapment out of the result.
+        /// </summary>
+        public static string _strip_entrapment_property {
+            get {
+                return ResourceManager.GetString("_strip_entrapment_property", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline. {0} stages the {1} caches; {4} writes the {5} parquets, and on a COMPLETED run only the missing ones; {2} regenerates only the {3} report for a COMPLETED run, writing no other output..
         /// </summary>

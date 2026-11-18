@@ -120,24 +120,27 @@ namespace pwiz.Osprey.IO
             // tests load). The reader's buffer is what must be large - at the BCL default of 1 KB
             // this issues a ProgressStream.Read, and therefore a locking Report, once per KB:
             // ~13.6M calls on the 13 GB entrapment library to print about a dozen lines.
+            var precursorMap = new Dictionary<string, PrecursorData>();
+            var errors = new LibraryLineErrors();
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read,
                 FileShare.Read, 1))
             {
-                // This reporter measures the READ, which finishes partway through ParseReader, so
-                // ParseReader completes it when the stream is exhausted rather than at the end of
-                // this scope - after phase 2 and the interning summary, a completion line for a
-                // phase that ended minutes earlier.
-                using (var readProgress = new ProgressReporter(
-                    string.Format(OspreyIOResources.DiannTsvLoader_Load_Parsing__0_, Path.GetFileName(path)), stream.Length,
-                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
-                using (var progressStream = new ProgressStream(stream, readProgress))
-                // leaveOpen so ownership of progressStream is explicit rather than resting on
-                // ProgressStream declining to override Dispose (it does not own the inner stream).
-                using (var reader = new StreamReader(progressStream, Encoding.UTF8, true, 1 << 20, true))
+                // This reporter measures the READ alone, so it completes when the rows have been
+                // read rather than after phase 2 and the interning summary - a completion line
+                // for a phase that ended minutes earlier.
+                ProgressReporter.Run(
+                    string.Format(OspreyIOResources.DiannTsvLoader_Load_Parsing__0_, Path.GetFileName(path)), stream.Length, readProgress =>
                 {
-                    return ParseReader(reader, logInfo, readProgress);
-                }
+                    using (var progressStream = new ProgressStream(stream, readProgress))
+                    // leaveOpen so ownership of progressStream is explicit rather than resting on
+                    // ProgressStream declining to override Dispose (it does not own the inner stream).
+                    using (var reader = new StreamReader(progressStream, Encoding.UTF8, true, 1 << 20, true))
+                    {
+                        ReadRows(reader, precursorMap, errors);
+                    }
+                }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             }
+            return ValidateAndBuildEntries(precursorMap, errors, logInfo);
         }
 
         /// <summary>
@@ -145,16 +148,19 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public List<LibraryEntry> ParseReader(TextReader reader, Action<string> logInfo = null)
         {
-            return ParseReader(reader, logInfo, null);
+            var precursorMap = new Dictionary<string, PrecursorData>();
+            var errors = new LibraryLineErrors();
+            ReadRows(reader, precursorMap, errors);
+            return ValidateAndBuildEntries(precursorMap, errors, logInfo);
         }
 
         /// <summary>
-        /// As <see cref="ParseReader(TextReader,Action{string})"/>, but completes
-        /// <paramref name="readProgress"/> when the READ finishes rather than when the caller's
-        /// scope ends - the row loop below is only the first half of this method.
+        /// Phase 1 of a parse: read the header and every row into <paramref name="precursorMap"/>,
+        /// collecting the invalid lines in <paramref name="errors"/>. This is the whole of the
+        /// READ, which the byte progress of <see cref="Load"/> measures.
         /// </summary>
-        private List<LibraryEntry> ParseReader(TextReader reader, Action<string> logInfo,
-            ProgressReporter readProgress)
+        private void ReadRows(TextReader reader, Dictionary<string, PrecursorData> precursorMap,
+            LibraryLineErrors errors)
         {
             string headerLine = reader.ReadLine();
             if (headerLine == null)
@@ -162,9 +168,6 @@ namespace pwiz.Osprey.IO
 
             string[] headers = headerLine.Split(TextUtil.SEPARATOR_TSV);
             var cols = ColumnIndices.FromHeaders(headers);
-
-            var precursorMap = new Dictionary<string, PrecursorData>();
-            var errors = new LibraryLineErrors();
 
             // 1-based line numbers of the file, the header being line 1, so the first data line
             // a message names is line 2 - the number a text editor or a spreadsheet shows.
@@ -180,15 +183,33 @@ namespace pwiz.Osprey.IO
                 string[] fields = line.Split(TextUtil.SEPARATOR_TSV);
                 ParseRow(fields, cols, lineNum, precursorMap, errors);
             }
-            // Stream exhausted: the byte progress is complete and must say so HERE.
-            readProgress?.Complete();
+        }
 
+        /// <summary>
+        /// Phase 2 of a parse: refuse a library with any invalid line, then materialize the
+        /// precursors read by <see cref="ReadRows"/> as library entries.
+        /// </summary>
+        private List<LibraryEntry> ValidateAndBuildEntries(Dictionary<string, PrecursorData> precursorMap,
+            LibraryLineErrors errors, Action<string> logInfo)
+        {
             // A library with any invalid line is refused whole, after every line has been read, so
             // one run names every line to fix. Searching with a value guessed for a bad cell
             // would produce results that look valid and are not.
             if (errors.Any)
                 throw errors.ToException();
 
+            return BuildEntries(precursorMap, logInfo);
+        }
+
+        /// <summary>
+        /// The library entries of <paramref name="precursorMap"/>, each precursor's fragment rows
+        /// as <see cref="AddFragmentRow"/> grouped them: the min-fragment rule, the peptide length
+        /// check, the modified sequence's text, one peak per m/z in m/z order, the typing check
+        /// and the interning. Shared by the .tsv parse and <see cref="DiannParquetLoader"/>, so
+        /// a DIA-NN library is the same object in either format.
+        /// </summary>
+        internal List<LibraryEntry> BuildEntries(Dictionary<string, PrecursorData> precursorMap, Action<string> logInfo)
+        {
             // Convert to LibraryEntry list. Intern the repeated strings
             // (sequences, modification names, protein / gene accessions) as the
             // interned arrays are filled, so no member is mutated after
@@ -201,8 +222,7 @@ namespace pwiz.Osprey.IO
 
             // Phase 2. The byte progress above ends when the stream is exhausted, so without this
             // the console sat at 100% through the whole materialization pass.
-            using (var progress = new ProgressReporter(OspreyIOResources.DiannTsvLoader_ParseReader_Building_library_precursors, precursorMap.Count,
-                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(OspreyIOResources.DiannTsvLoader_ParseReader_Building_library_precursors, precursorMap.Count, progress =>
             {
                 long nBuilt = 0;
 
@@ -243,9 +263,7 @@ namespace pwiz.Osprey.IO
                     entries.Add(entry);
                     id++;
                 }
-
-                progress.Complete();
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             interner.LogSummary(logInfo);
             return entries;
         }
@@ -358,13 +376,6 @@ namespace pwiz.Osprey.IO
             if (!fieldReader.IsValid)
                 return;
 
-            string modifiedSequence = StripFlankingChars(modifiedPeptide);
-
-            // Stripped sequence
-            string strippedSequence = GetFieldOrNull(fields, cols.StrippedPeptide);
-            if (string.IsNullOrEmpty(strippedSequence))
-                strippedSequence = StripModifications(modifiedSequence);
-
             var annotation = new FragmentAnnotation
             {
                 IonType = ionType,
@@ -374,32 +385,61 @@ namespace pwiz.Osprey.IO
                 CustomLossMass = lossMass
             };
 
-            // Protein and gene info
-            List<string> proteinIds = new List<string>();
-            string proteinStr = GetFieldOrNull(fields, cols.ProteinId);
-            if (!string.IsNullOrEmpty(proteinStr))
-                proteinIds = SplitList(proteinStr);
-
-            List<string> geneNames = new List<string>();
-            string geneStr = GetFieldOrNull(fields, cols.GeneName);
-            if (!string.IsNullOrEmpty(geneStr))
-                geneNames = SplitList(geneStr);
-
-            // Group by precursor key
-            string key = modifiedSequence + @"_" + charge;
-
-            PrecursorData precursor;
-            if (!precursorMap.TryGetValue(key, out precursor))
+            var unrecognized = AddFragmentRow(precursorMap, modifiedPeptide, GetFieldOrNull(fields, cols.StrippedPeptide),
+                charge, precursorMz, retentionTime, fragmentMz, relativeIntensity, annotation, isDecoyRow,
+                GetFieldOrNull(fields, cols.ProteinId), GetFieldOrNull(fields, cols.GeneName));
+            if (unrecognized != null)
             {
-                // Modifications are read once per precursor, on its first line, so a modification
-                // whose mass cannot be known is reported once rather than on every fragment line.
-                var unrecognized = new List<string>();
-                var modifications = ParseModifications(modifiedSequence, unrecognized);
                 foreach (string modStr in unrecognized)
                 {
                     errors.Add(lineNum, InvalidValueMessage(lineNum, cols.ModifiedPeptide,
                         @"ModifiedPeptide", modStr));
                 }
+            }
+        }
+
+        /// <summary>
+        /// Adds one fragment row, its values already read, to the precursor it belongs to in
+        /// <paramref name="precursorMap"/> - keyed by modified sequence and charge, created on
+        /// the precursor's first row, which also gives its modifications, sequence, m/z, retention
+        /// time and proteins. Shared by the .tsv parse and <see cref="DiannParquetLoader"/>.
+        /// Returns the modifications of a new precursor whose mass cannot be known, for the caller
+        /// to report as invalid at its row, else null.
+        /// </summary>
+        internal static List<string> AddFragmentRow(Dictionary<string, PrecursorData> precursorMap,
+            string modifiedPeptide, string strippedPeptide, byte charge, double precursorMz, double retentionTime,
+            double fragmentMz, float relativeIntensity, FragmentAnnotation annotation, bool isDecoyRow,
+            string proteinStr, string geneStr)
+        {
+            string modifiedSequence = StripFlankingChars(modifiedPeptide);
+
+            // Group by precursor key
+            string key = modifiedSequence + @"_" + charge;
+
+            List<string> unrecognizedResult = null;
+            PrecursorData precursor;
+            if (!precursorMap.TryGetValue(key, out precursor))
+            {
+                // The precursor's own values come from its first row, so they are read only there.
+                string strippedSequence = strippedPeptide;
+                if (string.IsNullOrEmpty(strippedSequence))
+                    strippedSequence = StripModifications(modifiedSequence);
+
+                // Protein and gene info
+                List<string> proteinIds = new List<string>();
+                if (!string.IsNullOrEmpty(proteinStr))
+                    proteinIds = SplitList(proteinStr);
+
+                List<string> geneNames = new List<string>();
+                if (!string.IsNullOrEmpty(geneStr))
+                    geneNames = SplitList(geneStr);
+
+                // Modifications are read once per precursor, on its first line, so a modification
+                // whose mass cannot be known is reported once rather than on every fragment line.
+                var unrecognized = new List<string>();
+                var modifications = ParseModifications(modifiedSequence, unrecognized);
+                if (unrecognized.Count > 0)
+                    unrecognizedResult = unrecognized;
                 precursor = new PrecursorData
                 {
                     Sequence = strippedSequence,
@@ -427,6 +467,7 @@ namespace pwiz.Osprey.IO
                 RelativeIntensity = relativeIntensity,
                 Annotation = annotation
             });
+            return unrecognizedResult;
         }
 
         /// <summary>
@@ -855,7 +896,7 @@ namespace pwiz.Osprey.IO
         /// <see cref="MAX_LISTED"/> errors and counts the rest, because a column that is wrong
         /// throughout a library would otherwise list every line of it.
         /// </summary>
-        private class LibraryLineErrors
+        internal class LibraryLineErrors
         {
             private const int MAX_LISTED = 100;
 
@@ -880,9 +921,16 @@ namespace pwiz.Osprey.IO
 
             public InvalidDataException ToException()
             {
-                var sb = new StringBuilder(string.Format(
-                    OspreyIOResources.DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_load_it_again_,
-                    _lineCount));
+                return ToException(OspreyIOResources.DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_load_it_again_);
+            }
+
+            /// <summary>
+            /// As <see cref="ToException()"/>, headed by <paramref name="headerFormat"/> with the
+            /// count of lines (or a .parquet's rows) in error.
+            /// </summary>
+            public InvalidDataException ToException(string headerFormat)
+            {
+                var sb = new StringBuilder(string.Format(headerFormat, _lineCount));
                 foreach (string message in _listed)
                     sb.AppendLine().Append(@"  ").Append(message);
                 if (_errorCount > _listed.Count)
@@ -973,7 +1021,7 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Intermediate data for grouping fragments by precursor.
         /// </summary>
-        private class PrecursorData
+        internal class PrecursorData
         {
             public string Sequence;
             public List<Modification> Modifications;

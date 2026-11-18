@@ -50,8 +50,7 @@ namespace pwiz.Osprey.IO
 
             // Silent between the parse and "Loaded N library entries" - a full group-by over
             // every entry (6.3M on the entrapment library).
-            using (var progress = new ProgressReporter(OspreyIOResources.LibraryDeduplicator_DeduplicateLibrary_Merging_duplicate_library_precursors, entries.Count,
-                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            return ProgressReporter.Run(OspreyIOResources.LibraryDeduplicator_DeduplicateLibrary_Merging_duplicate_library_precursors, entries.Count, progress =>
             {
                 long nGrouped = 0;
 
@@ -147,9 +146,8 @@ namespace pwiz.Osprey.IO
                 for (int i = 0; i < deduped.Count; i++)
                     deduped[i].Id = (uint)i;
 
-                progress.Complete();
                 return deduped;
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
         }
     }
 }

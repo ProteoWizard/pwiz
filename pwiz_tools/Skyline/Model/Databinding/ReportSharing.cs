@@ -41,7 +41,20 @@ namespace pwiz.Skyline.Model.Databinding
         /// </summary>
         public static List<ReportOrViewSpec> DeserializeReportList(Stream stream)
         {
-            XmlReader xmlReader = new XmlTextReader(stream);
+            return DeserializeReportList(new XmlTextReader(stream));
+        }
+
+        /// <summary>
+        /// Reads reports from text, as <see cref="DeserializeReportList(Stream)"/> does. The text is already decoded,
+        /// so the encoding named in its XML declaration is ignored.
+        /// </summary>
+        public static List<ReportOrViewSpec> DeserializeReportList(TextReader textReader)
+        {
+            return DeserializeReportList(new XmlTextReader(textReader));
+        }
+
+        private static List<ReportOrViewSpec> DeserializeReportList(XmlReader xmlReader)
+        {
             xmlReader.Read();
             if (xmlReader.IsStartElement(@"views"))
             {

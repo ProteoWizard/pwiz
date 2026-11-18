@@ -48,7 +48,7 @@ namespace pwiz.Osprey.Test
                 @"peptideSeq, prevAA, nextAA, copies, numPeaks, scoreType FROM RefSpectra"),
             // The search global columns, apart because a library export does not have them.
             new Projection(@"RefSpectraQValues", 2,
-                @"SELECT peptideModSeq, precursorCharge, PrecursorQValue, PrecursorPep, PeptideQValue FROM RefSpectra"),
+                @"SELECT peptideModSeq, precursorCharge, PrecursorQValue, PrecursorPep, PeptideQValue, PeptidePep FROM RefSpectra"),
             new Projection(@"RetentionTimes", 3,
                 @"SELECT r.peptideModSeq, r.precursorCharge, s.fileName, t.retentionTime, t.startTime, t.endTime, " +
                 @"t.score, t.bestSpectrum FROM RetentionTimes t JOIN RefSpectra r ON t.RefSpectraID = r.id " +

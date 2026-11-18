@@ -38,14 +38,17 @@ namespace pwiz.Osprey.Test
     /// The training export (<c>--training-export</c>, docs/22-training-export.md) through the
     /// whole pipeline on the committed subsets: every route that writes
     /// <c>&lt;stem&gt;.training.parquet</c> - in flight, the export-only arm on a finished
-    /// analysis, <c>--task TrainingExport</c>, the export-only arm while the second pass is still
-    /// outstanding, and a <c>--task PerFileRescoring</c> node - must write the same bytes, and adding
-    /// the flag later must re-score nothing.
+    /// analysis, <c>--task TrainingExport</c>, the flag added while the second pass is still
+    /// outstanding, and a <c>--task PerFileRescoring</c> node - must write the same bytes.
+    ///
+    /// <para>Adding the flag to a finished analysis re-scores Stages 4 and 6 (#5023): the scores
+    /// parquets carry the reference XIC the export reads only when the export is requested, which
+    /// saves ~9% of every scoring parquet on every run that does not export. The export-only arm
+    /// remains for a run whose exports alone are outstanding.</para>
     /// </summary>
     public partial class SubsetPipelineTest
     {
         private const string RUN_Q_PASS_FIRST = @"1";
-        private const string RUN_Q_PASS_SECOND = @"2";
         private const double EXPORT_MAX_Q = 0.01;
 
         /// <summary>
@@ -61,17 +64,22 @@ namespace pwiz.Osprey.Test
             string upFrontDir = CreateDir(@"export-up-front");
             string log = RunAnalysis(upFrontDir, DataInputs(), Verifier(false), ExportArgs());
             AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
-            var upFront = AssertExports(upFrontDir, RUN_NAMES, RUN_Q_PASS_SECOND);
+            var upFront = AssertExports(upFrontDir, RUN_NAMES, RUN_Q_PASS_FIRST);
 
-            // Without the flag no export exists and the library is the same; with it added, every
-            // other task skips, nothing is re-scored, and each export is the up-front one byte for byte.
+            AssertReferenceXicWritten(upFrontDir, RUN_NAMES, true);
+
+            // Without the flag no export exists, the scores parquets carry no reference XIC, and the
+            // library is the same; with it added, the two scoring tasks run again to write the
+            // reference XIC, the FDR tasks skip, and each export is the up-front one byte for byte.
             string payLaterDir = CreateDir(@"export-pay-later");
             RunAnalysis(payLaterDir, DataInputs(), Verifier(false));
             Assert.AreEqual(0, Directory.GetFiles(payLaterDir, @"*" + TrainingExportParquet.EXT, SearchOption.AllDirectories).Length,
                 @"an export was written without the flag");
+            AssertReferenceXicWritten(payLaterDir, RUN_NAMES, false);
             AssertBlibsEqual(Path.Combine(upFrontDir, BLIB_FILE), Path.Combine(payLaterDir, BLIB_FILE));
             log = RunAnalysis(payLaterDir, DataInputs(), Verifier(false), ExportArgs());
-            AssertExportOnlyArm(log, RUN_NAMES);
+            AssertExportAddedLater(log, RUN_NAMES);
+            AssertReferenceXicWritten(payLaterDir, RUN_NAMES, true);
             AssertExportsEqual(upFront, payLaterDir);
 
             // The same command again writes nothing.
@@ -84,18 +92,17 @@ namespace pwiz.Osprey.Test
             RunAnalysis(selectorDir, DataInputs(), Verifier(false));
             log = RunAnalysis(selectorDir, DataInputs(), Verifier(false),
                 OspreyCommandArgs.ARG_TASK.ArgumentText, TrainingExportTask.TASK_NAME);
-            AssertExportOnlyArm(log, RUN_NAMES);
+            AssertExportAddedLater(log, RUN_NAMES);
             AssertExportsEqual(upFront, selectorDir);
 
-            // Added while the second pass is outstanding: the exports come from the export-only arm,
-            // re-scoring nothing, and the second pass then writes the same library.
+            // Added while the second pass is outstanding: the scoring tasks run again for the
+            // reference XIC, and the second pass then writes the same library.
             string outstandingDir = CreateDir(@"export-second-pass-outstanding");
             RunAnalysis(outstandingDir, DataInputs(), Verifier(false));
             DeleteSecondPassOutputs(Path.Combine(outstandingDir, BLIB_FILE));
             log = RunAnalysis(outstandingDir, DataInputs(), Verifier(false), ExportArgs());
-            AssertTasks(log, new[] { PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME },
-                new[] { PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME });
-            AssertNoRecompute(log);
+            AssertTasks(log, new[] { FirstPassFdrTask.TASK_NAME },
+                new[] { PerFileScoringTask.TASK_NAME, PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME });
             AssertExportsEqual(upFront, outstandingDir);
             AssertBlibsEqual(Path.Combine(upFrontDir, BLIB_FILE), Path.Combine(outstandingDir, BLIB_FILE));
 
@@ -115,7 +122,7 @@ namespace pwiz.Osprey.Test
             string upFrontDir = CreateDir(@"astral-export-up-front");
             string log = RunOsprey(AstralExportArgs(dataDir, upFrontDir, ExportArgs()), Verifier(false));
             AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
-            var upFront = AssertExports(upFrontDir, ASTRAL_RUN_NAMES, RUN_Q_PASS_SECOND);
+            var upFront = AssertExports(upFrontDir, ASTRAL_RUN_NAMES, RUN_Q_PASS_FIRST);
             foreach (string run in ASTRAL_RUN_NAMES)
             {
                 TrainingExportParquet.Read(ExportPath(upFrontDir, run), out var footer);
@@ -125,7 +132,7 @@ namespace pwiz.Osprey.Test
             string payLaterDir = CreateDir(@"astral-export-pay-later");
             RunOsprey(AstralExportArgs(dataDir, payLaterDir), Verifier(false));
             log = RunOsprey(AstralExportArgs(dataDir, payLaterDir, ExportArgs()), Verifier(false));
-            AssertExportOnlyArm(log, ASTRAL_RUN_NAMES);
+            AssertExportAddedLater(log, ASTRAL_RUN_NAMES);
             AssertExportsEqual(upFront, payLaterDir);
         }
 
@@ -140,7 +147,7 @@ namespace pwiz.Osprey.Test
             const string straightName = @"export-straight";
             string straightDir = CreateDir(straightName);
             RunAnalysis(straightDir, DataInputs(), Verifier(false), ExportArgs());
-            var straight = AssertExports(straightDir, RUN_NAMES, RUN_Q_PASS_SECOND);
+            var straight = AssertExports(straightDir, RUN_NAMES, RUN_Q_PASS_FIRST);
 
             string run = RUN_NAMES[0];
             foreach (bool withDataFile in new[] { true, false })
@@ -187,7 +194,7 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, Path.Combine(_dataDir, LIBDECOY_PAIRING_FILE),
                 OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText,
                 OspreyCommandArgs.ARG_TRAINING_EXPORT_MAX_Q.ArgumentText, @"1");
-            AssertExports(workDir, RUN_NAMES, RUN_Q_PASS_SECOND, 1.0);
+            AssertExports(workDir, RUN_NAMES, RUN_Q_PASS_FIRST, 1.0);
             var records = RUN_NAMES.SelectMany(run => TrainingExportParquet.Read(ExportPath(workDir, run), out _)).ToList();
             Assert.IsTrue(records.Any(r => r.IsEntrapment), @"no entrapment precursor was exported");
             Assert.IsTrue(records.Any(r => !r.IsEntrapment), @"no target precursor was exported");
@@ -207,9 +214,9 @@ namespace pwiz.Osprey.Test
         /// worker answered only the runs it re-scored, and Stage 7 published nothing when nothing
         /// was re-scored anywhere. Now the worker answers every run, so the run's second pass
         /// comes from PerFileRescoring like any other: the analysis finishes, the run's
-        /// .2nd-pass.fdr_scores.bin names PerFileRescoring as its producer, and the export
-        /// selects on the second-pass run q. Two more invocations of the same command skip every
-        /// task and leave the export as it is.</para>
+        /// .2nd-pass.fdr_scores.bin names PerFileRescoring as its producer, and the export, which
+        /// selects on the first-pass run q, is written beside it. Two more invocations of the same
+        /// command skip every task and leave the export as it is.</para>
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetTrainingExportSingleRun()
@@ -232,7 +239,7 @@ namespace pwiz.Osprey.Test
                     mode + @": the run's second-pass sidecar was not written by re-scoring");
                 Assert.IsTrue(BlibComparer.CountRows(Path.Combine(workDir, BLIB_FILE), @"RefSpectra") > 0,
                     mode + @": the one-run analysis reported no precursors");
-                var hashes = AssertExports(workDir, new[] { run }, RUN_Q_PASS_SECOND);
+                var hashes = AssertExports(workDir, new[] { run }, RUN_Q_PASS_FIRST);
 
                 for (int invocation = 2; invocation <= 3; invocation++)
                 {
@@ -283,7 +290,8 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// One run's export path held by a directory: the run fails with that run named and exit
         /// code 1, no other export and not the library is rewritten, and the same command with the
-        /// path clear writes that export alone, byte-identical to the up-front one.
+        /// path clear writes that export alone through the export-only arm, re-scoring nothing,
+        /// byte-identical to the up-front one.
         /// </summary>
         private void AssertFailedExportIsRetriedAlone(string workDir, Dictionary<string, byte[]> expected)
         {
@@ -313,13 +321,42 @@ namespace pwiz.Osprey.Test
 
             Directory.Delete(export);
             string log = RunAnalysis(workDir, DataInputs(), Verifier(false), ExportArgs());
-            AssertExportLines(log, new[] { run });
+            AssertExportOnlyArm(log, new[] { run });
             AssertExportsEqual(expected, workDir);
         }
 
         /// <summary>
-        /// The flag added to a finished analysis: the three other tasks skip, PerFileRescoring
-        /// runs and re-scores nothing, and every run is exported.
+        /// The flag added to a finished analysis that ran without it: the scoring tasks run again,
+        /// because its scores parquets carry no reference XIC, the FDR tasks skip, and every run is
+        /// exported.
+        /// </summary>
+        private static void AssertExportAddedLater(string log, IReadOnlyCollection<string> runs)
+        {
+            AssertTasks(log, new[] { FirstPassFdrTask.TASK_NAME, SecondPassFdrTask.TASK_NAME },
+                new[] { PerFileScoringTask.TASK_NAME, PerFileRescoreTask.TASK_NAME });
+            AssertExportLines(log, runs);
+        }
+
+        /// <summary>
+        /// Whether each run's scores and reconciled parquets carry the reference XIC: only when
+        /// the export was requested.
+        /// </summary>
+        private static void AssertReferenceXicWritten(string workDir, IEnumerable<string> runs, bool expected)
+        {
+            foreach (string run in runs)
+            {
+                foreach (string ext in new[] { ParquetScoreCache.EXT_SCORES, ParquetScoreCache.EXT_SCORES_RECONCILED })
+                {
+                    string path = Path.Combine(workDir, run + ext);
+                    Assert.AreEqual(expected, ParquetScoreCache.HasColumn(path, @"reference_xic_rts"),
+                        path + (expected ? @" has no reference XIC" : @" has a reference XIC"));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Only the exports outstanding: the three other tasks skip, PerFileRescoring runs its
+        /// export-only arm and re-scores nothing, and exactly <paramref name="runs"/> are exported.
         /// </summary>
         private static void AssertExportOnlyArm(string log, IReadOnlyCollection<string> runs)
         {

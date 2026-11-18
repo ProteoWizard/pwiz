@@ -2,6 +2,7 @@
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ *                Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -60,6 +61,16 @@ namespace pwiz.Osprey.Core
         public IReadOnlyList<string> ProteinIds { get; set; }
         public IReadOnlyList<string> GeneNames { get; set; }
         public bool IsDecoy { get; set; }
+
+        /// <summary>
+        /// True for an entrapment peptide (p_target) or the decoy of one (p_decoy), as the
+        /// library's pairing says: the manifest's <c>peptide_type</c> or the blib's
+        /// <c>DecoyPairs.IsEntrapment</c>. An entrapment peptide placed on a real target protein
+        /// (to audit protein-aware scoring) carries that protein's clean accession, so this flag,
+        /// not the <c>_p_target</c> accession marker, is what says it is entrapment; the marker
+        /// alone still identifies the entrapment on its own entrapment proteins.
+        /// </summary>
+        public bool IsEntrapment { get; set; }
 
         /// <summary>
         /// The pairing this entry belongs to: the FDRBench manifest's <c>peptide_pair_index</c>
@@ -200,14 +211,13 @@ namespace pwiz.Osprey.Core
             // singleton stands in for every released spectrum - deliberately, since a
             // per-entry sentinel would reintroduce the per-entry allocation the release
             // exists to remove. The stack trace names the READER, which is the half that
-            // matters: rerun with OSPREY_RELEASE_LIBRARY_FRAGMENTS=0 to get the entry.
+            // matters.
             private static InvalidOperationException Released()
             {
                 return new InvalidOperationException(
                     @"These library fragments were released after Stage 5 because the entry is " +
                     @"neither a compaction survivor nor a gap-fill candidate, so nothing should " +
-                    @"score or write it. Reaching them means the retained set is wrong. Set " +
-                    @"OSPREY_RELEASE_LIBRARY_FRAGMENTS=0 to keep the whole library resident.");
+                    @"score or write it. Reaching them means the retained set is wrong.");
             }
         }
     }

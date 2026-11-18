@@ -25,14 +25,11 @@ namespace pwiz.Osprey.Tasks
     internal static class BlockReadLog
     {
         /// <summary>
-        /// Logs the experimental block-read totals (OSPREY_BLOCK_READ_MB) at a phase boundary;
-        /// silent when block reads are off.
+        /// Logs the block-read totals (OSPREY_BLOCK_READ_MB) at a phase boundary.
         /// </summary>
         public static void LogBlockReads(this PipelineContext ctx, string phase)
         {
-            string text = BlockReadStats.Text();
-            if (text != null)
-                ctx.LogInfo(LogTag.PATH, @"{0}: {1}", phase, text);
+            ctx.LogInfo(LogTag.PATH, @"{0}: {1}", phase, BlockReadStats.Text());
         }
     }
 }
