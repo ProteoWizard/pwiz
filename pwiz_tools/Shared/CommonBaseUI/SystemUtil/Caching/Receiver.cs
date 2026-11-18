@@ -94,10 +94,7 @@ namespace pwiz.Common.SystemUtil.Caching
                     }
                     catch (Exception exception)
                     {
-                        // Running on the UI thread, so report it the way WinForms reports an
-                        // exception from a window procedure instead of leaving the customer's
-                        // display silently stale.
-                        Application.OnThreadException(exception);
+                        Messages.WriteAsyncDebugMessage(@"Receiver.BeginInvoke unhandled exception {0}", exception);
                     }
                 }, null);
             }
