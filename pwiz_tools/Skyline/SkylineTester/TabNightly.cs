@@ -268,28 +268,19 @@ namespace SkylineTester
                 return;
 
             var isPerf = Equals(MainWindow.NightlyRunType.SelectedItem as string, RUN_TYPE_PERF);
-            var tempFile = logFile + ".timelimit";
             try
             {
                 lock (MainWindow.CommandShell.LogLock)
                 {
-                    var log = File.ReadAllText(logFile);
-                    var rewritten = TimeLimitLog.RewriteForTimeLimit(log, silence.Value, isPerf);
-                    if (rewritten != log)
-                    {
-                        // Into a new file first, so a failed write cannot cost the run its log
-                        File.WriteAllText(tempFile, rewritten);
-                        File.Replace(tempFile, logFile, null);
-                    }
+                    TimeLimitLog.RewriteFileForTimeLimit(logFile, silence.Value, isPerf);
                 }
             }
             catch (Exception e)
             {
-                // Nothing more can be written to a log that just failed to read or replace, and an
+                // Nothing more can be written to a log that just failed to read or write, and an
                 // exception here would keep the run from finishing. Worst case the server reports
                 // the hang, as it did before this existed.
                 Trace.TraceWarning("Could not mark the test cut off by the time limit: " + e.Message);
-                Try.Multi<Exception>(() => File.Delete(tempFile), 1, false);
             }
         }
 

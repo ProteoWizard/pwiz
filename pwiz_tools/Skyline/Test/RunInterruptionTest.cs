@@ -19,7 +19,9 @@
  */
 
 using System;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.SkylineTestUtil;
@@ -256,6 +258,32 @@ namespace pwiz.SkylineTest
             // No tests at all, as when the time limit falls during the build
             var buildOnly = JoinLines(@"# Nightly started Tuesday, November 17, 2026 7:25 PM", stopped);
             AssertEx.AreEqual(buildOnly, TimeLimitLog.RewriteForTimeLimit(buildOnly, justUnder, false));
+
+            // The file itself, while held open the way SkylineNightly's LogFileMonitor holds it for
+            // the whole run, with multi-byte text before the cut so the byte offset matters
+            var japaneseLine = @"[05:40]   0.11  TestJapaneseOutput (ja)   0 failures, 1.0/1.0 MB, 1/1 handles, 1 sec. " +
+                               new string(new[] { (char) 0x30C6, (char) 0x30B9, (char) 0x30C8 });
+            var fileLog = JoinLines(japaneseLine, finishedLine, startOfCutOff + testOutput, stopped);
+            var expected = TimeLimitLog.RewriteForTimeLimit(fileLog, justUnder, false);
+            foreach (var withBom in new[] { false, true })
+            {
+                var logPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + @".log");
+                try
+                {
+                    File.WriteAllText(logPath, fileLog, new UTF8Encoding(withBom));
+                    using (new FileStream(logPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    {
+                        AssertEx.IsTrue(TimeLimitLog.RewriteFileForTimeLimit(logPath, justUnder, false));
+                    }
+                    AssertEx.AreEqual(expected, File.ReadAllText(logPath));
+                    // Nothing left to rewrite the second time
+                    AssertEx.IsFalse(TimeLimitLog.RewriteFileForTimeLimit(logPath, justUnder, false));
+                }
+                finally
+                {
+                    File.Delete(logPath);
+                }
+            }
         }
 
         private static string JoinLines(params string[] lines)

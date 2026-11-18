@@ -19,6 +19,8 @@
  */
 
 using System;
+using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace SkylineTester
@@ -60,6 +62,42 @@ namespace SkylineTester
             RegexOptions.RightToLeft);
         // As in " 0 failures, 94.99/66.86/252.6 MB, 202/1525 handles, 0 sec."
         private static readonly Regex END_TEST = new Regex(@" \d+ failures, [^\r\n]* sec\.");
+
+        /// <summary>
+        /// Applies <see cref="RewriteForTimeLimit"/> to the log file at <paramref name="logPath"/>.
+        /// Returns true if the file was changed.
+        /// <para>Rewrites the file in place, from the first character that changes. It cannot be
+        /// replaced with a new file: during a nightly, SkylineNightly's LogFileMonitor holds the log
+        /// open without delete sharing until SkylineTester exits, and replacing a file needs delete
+        /// access. Writing only the tail also means a failed write can cost no more than the lines
+        /// after the cut-off test, never the rest of the run's log.</para>
+        /// </summary>
+        public static bool RewriteFileForTimeLimit(string logPath, TimeSpan silence, bool isPerf)
+        {
+            var bytes = File.ReadAllBytes(logPath);
+            var preamble = Encoding.UTF8.GetPreamble();
+            var start = HasPrefix(bytes, preamble) ? preamble.Length : 0;
+            var log = Encoding.UTF8.GetString(bytes, start, bytes.Length - start);
+
+            var rewritten = RewriteForTimeLimit(log, silence, isPerf);
+            if (rewritten == log)
+                return false;
+
+            var firstChange = 0;
+            var commonLength = Math.Min(log.Length, rewritten.Length);
+            while (firstChange < commonLength && log[firstChange] == rewritten[firstChange])
+                firstChange++;
+            var tail = Encoding.UTF8.GetBytes(rewritten.Substring(firstChange));
+
+            // Write sharing, because the monitor's handle is open for reading; it shares write
+            using (var stream = new FileStream(logPath, FileMode.Open, FileAccess.Write, FileShare.ReadWrite))
+            {
+                stream.Seek(start + Encoding.UTF8.GetByteCount(log.Substring(0, firstChange)), SeekOrigin.Begin);
+                stream.Write(tail, 0, tail.Length);
+                stream.SetLength(stream.Position);
+            }
+            return true;
+        }
 
         /// <summary>
         /// Returns the log of a run the time limit stopped, as it should be posted: with an
@@ -109,6 +147,18 @@ namespace SkylineTester
                 return null;
 
             return startMatch;
+        }
+
+        private static bool HasPrefix(byte[] bytes, byte[] prefix)
+        {
+            if (prefix.Length == 0 || bytes.Length < prefix.Length)
+                return false;
+            for (var i = 0; i < prefix.Length; i++)
+            {
+                if (bytes[i] != prefix[i])
+                    return false;
+            }
+            return true;
         }
     }
 }
