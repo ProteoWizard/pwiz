@@ -847,7 +847,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public static bool IsEmptySpectrum(MsDataSpectrum spectrum)
         {
-            if (spectrum.Mzs != null && spectrum.Mzs.Length != 0)
+            if (spectrum.PeakCount != 0)
                 return false;
             return spectrum.Metadata?.ScanWindowLowerLimit == null &&
                    spectrum.Metadata?.ScanWindowUpperLimit == null;
@@ -1119,7 +1119,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 // If the spectrum contains an IMS array, then it needs to be ordered
                 // Once the sorter thread is created, all spectra must go through it
-                if (nextInfo.DataSpectrum?.IonMobilities != null)
+                if (nextInfo.DataSpectrum?.HasIonMobilities == true)
                 {
                     // If not running async just sort on the current thread
                     if (!_runningAsync)
@@ -1146,7 +1146,9 @@ namespace pwiz.Skyline.Model.Results
             private void SortSpectrum(SpectrumInfo spectrumInfo, int i)
             {
                 var spectrum = spectrumInfo.DataSpectrum;
-                ArrayUtil.Sort(spectrum.Mzs, spectrum.Intensities, spectrum.IonMobilities);
+                // The buffers, not the Mzs/Intensities/IonMobilities properties, which would trim
+                // them to length with a copy of each
+                ArrayUtil.Sort(spectrum.MzBuffer, spectrum.PeakCount, spectrum.IntensityBuffer, spectrum.IonMobilityBuffer);
                 spectrumInfo.SortEvent.Set();
             }
 
@@ -1299,11 +1301,11 @@ namespace pwiz.Skyline.Model.Results
                     if (allSpectra != null)
                     {
                         DataSpectrum = allSpectra[0];
-                        arrayLen = allSpectra.Sum(s => s.Intensities.Length);
+                        arrayLen = allSpectra.Sum(s => s.PeakCount);
                         arrayCount = 2;
                     }
 
-                    if (DataSpectrum != null && DataSpectrum.IonMobilities != null)
+                    if (DataSpectrum != null && DataSpectrum.HasIonMobilities)
                     {
                         SortEvent = new ManualResetEvent(false);
                         arrayCount++;
