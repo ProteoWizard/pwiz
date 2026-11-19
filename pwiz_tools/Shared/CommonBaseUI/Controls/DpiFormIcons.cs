@@ -58,7 +58,7 @@ namespace pwiz.Common.Controls
 
         /// <summary>
         /// Gives a form an icon with the display's small and large sizes, see
-        /// <see cref="GetIcon"/>. A form that sets no icon reads back WinForms' shared
+        /// <see cref="GetIcon(Control, Icon)"/>. A form that sets no icon reads back WinForms' shared
         /// default, which it never shows, so it gets <see cref="ApplicationIcon"/> instead.
         /// </summary>
         public static void PrepareFormIcon(Form form)
