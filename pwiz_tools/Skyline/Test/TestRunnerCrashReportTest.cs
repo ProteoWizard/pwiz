@@ -143,8 +143,8 @@ namespace pwiz.SkylineTest
             Assert.IsNull(Failure(Out(), ACCESS_VIOLATION), @"Reported a test when none had run.");
         }
 
-        private static IEnumerable<(string Line, bool IsError)> Out(params string[] lines) => lines.Select(line => (line, false));
-        private static IEnumerable<(string Line, bool IsError)> Err(params string[] lines) => lines.Select(line => (line, true));
+        private static (string Line, bool IsError)[] Out(params string[] lines) => lines.Select(line => (line, false)).ToArray();
+        private static (string Line, bool IsError)[] Err(params string[] lines) => lines.Select(line => (line, true)).ToArray();
 
         private static IList<string> Failure(IEnumerable<(string Line, bool IsError)> received, int exitCode)
         {
