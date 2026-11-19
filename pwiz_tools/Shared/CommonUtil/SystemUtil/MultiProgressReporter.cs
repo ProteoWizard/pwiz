@@ -62,7 +62,7 @@ namespace pwiz.Common.SystemUtil
     /// (this class). Equal weight is the simple ProgressStatus default; weighted
     /// segment ends can come later if one phase dominates wall-clock.
     ///
-    /// A file is entered with <see cref="BeginFile"/>, which redirects that async
+    /// A file is entered with <see cref="BeginFile(int,int[])"/>, which redirects that async
     /// flow's narrative into the file's own buffer and makes the file the ambient
     /// <see cref="Current"/> scope (flowing into an inner <c>Parallel.For</c> via
     /// ExecutionContext). The phase code advances segments through
