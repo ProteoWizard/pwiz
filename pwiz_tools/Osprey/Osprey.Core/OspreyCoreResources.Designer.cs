@@ -181,7 +181,7 @@ namespace pwiz.Osprey.Core {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to File parallelism: {0} (auto {7}: {1:F1} GB free x {2:P0} / ~{3:F1} GB est per file -&gt; {4} by RAM, capped to {5} cores / {6} files).
+        ///   Looks up a localized string similar to File parallelism: {0} (auto {7}: {1:F1} GB free x {2:P0} / ~{3:F1} GB est per file -&gt; {4} by RAM, capped to {5} by {8} threads at {9}+ per file, {6} files).
         /// </summary>
         public static string FileParallelismResolver_ResolveAuto_File_parallelism___0___auto___1__GB_free_x__2______3__GB_est_per_file_____4__by_RAM__ {
             get {
@@ -191,7 +191,7 @@ namespace pwiz.Osprey.Core {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to File parallelism: {0} (auto {3}, CPU-bound: {1} cores, {2} files; memory estimate unavailable).
+        ///   Looks up a localized string similar to File parallelism: {0} (auto {3}, CPU-bound: {1} threads at {4}+ per file, {2} files; memory estimate unavailable).
         /// </summary>
         public static string FileParallelismResolver_ResolveAuto_File_parallelism___0___auto__CPU_bound___1__cores___2__files__memory_estimate_unavailable_ {
             get {

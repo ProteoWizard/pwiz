@@ -98,7 +98,7 @@ namespace pwiz.Osprey.Scoring
             var config = context.Config;
             var allEntries = new List<FdrEntry>();
             var scorer = context.Resolution.CreateScorer();
-            int windowsProcessed = 0;
+            long candidatesProcessed = 0;
 
             // Pre-size the pool once per scoring run. Matters most for HRAM
             // where each scratch set carries four 100K-bin LOH arrays; Unit
@@ -166,12 +166,18 @@ namespace pwiz.Osprey.Scoring
             // parallel work, and Astral's busiest windows carry about twice the mean
             // candidate count, so in m/z order the last few large windows ran alone
             // while the other threads idled. Results still land by window index.
-            var scoringOrder = LargestWindowsFirst(windowsToScore, fullLibrary);
+            var scoringOrder = LargestWindowsFirst(windowsToScore, fullLibrary, out int[] windowWeights);
             var swScoring = Stopwatch.StartNew();
 
+            // Progress counts library precursors, not windows: windows run largest first, so
+            // a window count advanced slowest at the start - on CHS at 2 threads per file the
+            // first 4% of windows took ~215 s.
+            long totalWeight = 0;
+            foreach (int weight in windowWeights)
+                totalWeight += weight;
             ProgressReporter.Run(
                 passLabel ?? OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Scoring_isolation_windows,
-                windowsToScore.Count, progress =>
+                totalWeight, progress =>
             {
                 Parallel.ForEach(Partitioner.Create(scoringOrder, EnumerablePartitionerOptions.NoBuffering), new ParallelOptions
                 {
@@ -210,8 +216,8 @@ namespace pwiz.Osprey.Scoring
 
                     lock (lockObj)
                     {
-                        windowsProcessed++;
-                        progress.Report(windowsProcessed);
+                        candidatesProcessed += windowWeights[wIdx];
+                        progress.Report(candidatesProcessed);
                     }
                 });
             }, passLabel == null ? string.Empty : @"  ", 2.0);
@@ -686,8 +692,11 @@ namespace pwiz.Osprey.Scoring
         /// Window indices ordered by candidate count, largest first, ties by index. The count is
         /// the one <see cref="CoelutionScorer.ScoreWindow"/> scores: entries with fragments whose
         /// precursor m/z the window contains. A stable sort keeps the order the same run to run.
+        /// <paramref name="windowWeights"/> receives each window's count plus one, the progress
+        /// weight, so a window with no candidates still counts and the total is never 0.
         /// </summary>
-        private static int[] LargestWindowsFirst(List<IsolationWindow> windows, List<LibraryEntry> library)
+        private static int[] LargestWindowsFirst(List<IsolationWindow> windows, List<LibraryEntry> library,
+            out int[] windowWeights)
         {
             var precursorMzs = new List<double>(library.Count);
             foreach (var entry in library)
@@ -700,6 +709,7 @@ namespace pwiz.Osprey.Scoring
             var counts = new int[windows.Count];
             for (int i = 0; i < windows.Count; i++)
                 counts[i] = FirstAtOrAbove(precursorMzs, windows[i].UpperBound) - FirstAtOrAbove(precursorMzs, windows[i].LowerBound);
+            windowWeights = counts.Select(count => count + 1).ToArray();
             return Enumerable.Range(0, windows.Count).OrderByDescending(i => counts[i]).ToArray();
         }
 
