@@ -86,14 +86,15 @@ namespace pwiz.Skyline.Model.Results.Spectra
         public const int MAX_FILES_SCANNED = 8;
 
         /// <summary>
-        /// CV accessions already learned by reading, keyed by <see cref="FileSignature"/>. Held across
-        /// documents on the premise behind the signature itself: the same writer yields the same terms, so
-        /// a file read for one document answers for another. Never invalidated - re-converting a file with
-        /// different settings, under an unchanged instrument configuration, would go unnoticed until
-        /// restart. The cost of being wrong is a mark on a term the file no longer carries.
+        /// CV terms already learned by reading, as the values seen for each accession, keyed by
+        /// <see cref="FileSignature"/>. Held across documents on the premise behind the signature itself:
+        /// the same writer yields the same terms, so a file read for one document answers for another.
+        /// Never invalidated - re-converting a file with different settings, under an unchanged instrument
+        /// configuration, would go unnoticed until restart. The cost of being wrong is a mark on a term the
+        /// file no longer carries, or a suggested value it no longer has.
         /// </summary>
-        private static readonly Dictionary<string, HashSet<string>> ACCESSIONS_BY_SIGNATURE =
-            new Dictionary<string, HashSet<string>>();
+        private static readonly Dictionary<string, ValuesByAccession> TERMS_BY_SIGNATURE =
+            new Dictionary<string, ValuesByAccession>();
 
         /// <summary>
         /// What a scan established about a document's columns. The editor marks a column as unanswerable,
@@ -118,14 +119,24 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public class Availability
         {
-            public static readonly Availability UNKNOWN = new Availability(new HashSet<PropertyPath>(), false, false);
+            public static readonly Availability UNKNOWN =
+                new Availability(new HashSet<PropertyPath>(), false, false, new ValuesByAccession());
 
-            public Availability(HashSet<PropertyPath> answerable, bool interpretedDetermined, bool cvDetermined)
+            public Availability(HashSet<PropertyPath> answerable, bool interpretedDetermined, bool cvDetermined,
+                ValuesByAccession cvValues)
             {
                 Answerable = answerable;
                 InterpretedDetermined = interpretedDetermined;
                 CvDetermined = cvDetermined;
+                CvValues = cvValues;
             }
+
+            /// <summary>
+            /// The values seen for each CV accession in the spectra examined, for the filter editor to
+            /// suggest. Only a sample - the head of one file per signature, plus what the cache stored - so
+            /// a suggestion, never a complete list.
+            /// </summary>
+            public ValuesByAccession CvValues { get; }
 
             private HashSet<PropertyPath> Answerable { get; }
             private bool InterpretedDetermined { get; }
@@ -164,9 +175,9 @@ namespace pwiz.Skyline.Model.Results.Spectra
         /// </summary>
         public static void ResetCacheForTest()
         {
-            lock (ACCESSIONS_BY_SIGNATURE)
+            lock (TERMS_BY_SIGNATURE)
             {
-                ACCESSIONS_BY_SIGNATURE.Clear();
+                TERMS_BY_SIGNATURE.Clear();
             }
         }
 
@@ -183,7 +194,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
 
             var sampledSpectra = SampledSpectra;
-            var accessions = GetObservedAccessions(FilesToScan, sampledSpectra, broker, out bool cvDetermined);
+            var cvValues = GetObservedTerms(FilesToScan, sampledSpectra, broker, out bool cvDetermined);
 
             // The interpreted properties read typed fields that import always records, so having sampled
             // any spectrum at all settles them; having sampled none settles nothing.
@@ -194,14 +205,14 @@ namespace pwiz.Skyline.Model.Results.Spectra
             {
                 var accession = SpectrumClassColumn.GetCvAccession(column);
                 bool isAnswerable = accession != null
-                    ? accessions.Contains(accession)
+                    ? cvValues.ContainsKey(accession)
                     : sampledSpectra.Any(spectrum => HasValue(column.GetValue(spectrum)));
                 if (isAnswerable)
                 {
                     answerable.Add(column.PropertyPath);
                 }
             }
-            return new Availability(answerable, interpretedDetermined, cvDetermined);
+            return new Availability(answerable, interpretedDetermined, cvDetermined, cvValues);
         }
 
         /// <summary>
@@ -249,24 +260,24 @@ namespace pwiz.Skyline.Model.Results.Spectra
         }
 
         /// <summary>
-        /// The CV accessions this document's data carries: those already stored from a previous import,
-        /// plus those found by reading files whose terms were never stored.
+        /// The CV terms this document's data carries, with the values seen for each: those already stored
+        /// from a previous import, plus those found by reading files whose terms were never stored.
         ///
         /// The "determined" result says whether the CV terms were actually established. Terms already
         /// captured in the cache settle it; otherwise at least one file has to be read, and if none could
         /// be - a document shared without its raw data, or a cancelled scan - then nothing is known about
         /// which terms the data carries, which is different from knowing it carries none.
         /// </summary>
-        private HashSet<string> GetObservedAccessions(IList<ChromFileInfo> representatives,
+        private ValuesByAccession GetObservedTerms(IList<ChromFileInfo> representatives,
             IEnumerable<SpectrumMetadata> sampledSpectra, ILongWaitBroker broker, out bool determined)
         {
-            var accessions = new HashSet<string>();
+            var observed = new ValuesByAccession();
             bool anyCaptured = false;
             foreach (var spectrum in sampledSpectra)
             {
                 foreach (var term in spectrum.OtherParams)
                 {
-                    accessions.Add(term.Accession);
+                    observed.Add(term);
                     anyCaptured = true;
                 }
             }
@@ -282,14 +293,14 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     }
                     broker.ProgressValue = i * 100 / representatives.Count;
                 }
-                if (ReadAccessionsCached(representatives[i], broker, out var fileAccessions))
+                if (ReadTermsCached(representatives[i], broker, out var fileTerms))
                 {
                     anyFileRead = true;
-                    accessions.UnionWith(fileAccessions);
+                    observed.UnionWith(fileTerms);
                 }
             }
             determined = anyCaptured || anyFileRead;
-            return accessions;
+            return observed;
         }
 
         /// <summary>
@@ -333,42 +344,42 @@ namespace pwiz.Skyline.Model.Results.Spectra
         /// Reads one file's terms, or reports that it could not. False means nothing was learned from this
         /// file, which the caller needs to tell apart from learning that it carries no terms.
         /// </summary>
-        private bool ReadAccessionsCached(ChromFileInfo fileInfo, ILongWaitBroker broker,
-            out HashSet<string> accessions)
+        private bool ReadTermsCached(ChromFileInfo fileInfo, ILongWaitBroker broker,
+            out ValuesByAccession terms)
         {
             var signature = FileSignature(fileInfo);
-            lock (ACCESSIONS_BY_SIGNATURE)
+            lock (TERMS_BY_SIGNATURE)
             {
-                if (ACCESSIONS_BY_SIGNATURE.TryGetValue(signature, out var cached))
+                if (TERMS_BY_SIGNATURE.TryGetValue(signature, out var cached))
                 {
-                    accessions = cached;
+                    terms = cached;
                     return true;
                 }
             }
 
-            accessions = ReadAccessions(fileInfo.FilePath,
+            terms = ReadTerms(fileInfo.FilePath,
                 broker?.CancellationToken ?? CancellationToken.None);
-            if (accessions == null)
+            if (terms == null)
             {
                 // Unreadable or canceled. Not cached, so a file that is merely offline right now gets
                 // another chance the next time the editor is opened.
-                accessions = new HashSet<string>();
+                terms = new ValuesByAccession();
                 return false;
             }
-            lock (ACCESSIONS_BY_SIGNATURE)
+            lock (TERMS_BY_SIGNATURE)
             {
-                ACCESSIONS_BY_SIGNATURE[signature] = accessions;
+                TERMS_BY_SIGNATURE[signature] = terms;
             }
             return true;
         }
 
         /// <summary>
-        /// The accessions in the head of one file, or null if it could not be read. Missing or unreadable
+        /// The terms in the head of one file, with their values, or null if it could not be read. Missing or unreadable
         /// files are ordinary here - documents get shared without their raw data - so this reports the
         /// failure as "nothing learned" rather than raising it at the user, who did not ask for a file to
         /// be opened and cannot act on the news that one is gone.
         /// </summary>
-        private HashSet<string> ReadAccessions(MsDataFileUri filePath, CancellationToken cancellationToken)
+        private ValuesByAccession ReadTerms(MsDataFileUri filePath, CancellationToken cancellationToken)
         {
             try
             {
@@ -377,13 +388,49 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     DownloadPath = Path.GetDirectoryName(_documentFilePath) ?? Directory.GetCurrentDirectory()
                 };
                 using var dataFile = filePath.OpenMsDataFile(openParams);
-                return dataFile.GetDistinctOtherParams(MAX_SPECTRA_PER_FILE, cancellationToken)
-                    .Select(term => term.Accession)
-                    .ToHashSet();
+                var terms = new ValuesByAccession();
+                foreach (var term in dataFile.GetDistinctOtherParams(MAX_SPECTRA_PER_FILE, cancellationToken))
+                {
+                    terms.Add(term);
+                }
+                return terms;
             }
             catch (Exception)
             {
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// The distinct values seen for each CV accession. A term with no value (a flag) is still recorded,
+        /// with an empty set, since its presence alone is what makes its column answerable.
+        /// </summary>
+        public class ValuesByAccession : Dictionary<string, HashSet<string>>
+        {
+            public void Add(SpectrumMetadataTerm term)
+            {
+                if (!TryGetValue(term.Accession, out var values))
+                {
+                    values = new HashSet<string>();
+                    Add(term.Accession, values);
+                }
+                if (!string.IsNullOrEmpty(term.Value))
+                {
+                    values.Add(term.Value);
+                }
+            }
+
+            public void UnionWith(ValuesByAccession other)
+            {
+                foreach (var entry in other)
+                {
+                    if (!TryGetValue(entry.Key, out var values))
+                    {
+                        values = new HashSet<string>();
+                        Add(entry.Key, values);
+                    }
+                    values.UnionWith(entry.Value);
+                }
             }
         }
     }

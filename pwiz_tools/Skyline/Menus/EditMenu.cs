@@ -1861,6 +1861,7 @@ namespace pwiz.Skyline.Menus
             var columnAvailability = GetColumnAvailability(document, cvColumns);
             using var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages, cvColumns);
             dlg.ColumnAvailability = columnAvailability;
+            autoComplete.SetScannedCvValues(columnAvailability.CvValues);
             dlg.AutoComplete = autoComplete;
             if (filterPagesSet.Count != 1)
             {

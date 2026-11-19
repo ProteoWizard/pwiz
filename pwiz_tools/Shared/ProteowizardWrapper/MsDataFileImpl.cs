@@ -854,14 +854,15 @@ namespace pwiz.ProteowizardWrapper
 
         /// <summary>
         /// The distinct uninterpreted CV/user parameters carried by the first <paramref name="maxSpectra"/>
-        /// spectra, one entry per accession (first value seen wins). This reports which terms a file
-        /// carries without importing it, so a caller can tell the user which of the ontology's terms are
-        /// worth filtering on. <see cref="CaptureOtherParams"/> serves the import path instead, where the
+        /// spectra, one entry per distinct accession and value, in the order first seen. This reports which
+        /// terms a file carries, and the values they take, without importing it, so a caller can tell the
+        /// user which of the ontology's terms are worth filtering on and suggest values for them. <see cref="CaptureOtherParams"/> serves the import path instead, where the
         /// terms are captured onto every spectrum and persisted; here nothing is retained per spectrum.
         /// </summary>
         public IList<SpectrumMetadataTerm> GetDistinctOtherParams(int maxSpectra, CancellationToken cancellationToken)
         {
-            var termsByAccession = new Dictionary<string, SpectrumMetadataTerm>();
+            var seen = new HashSet<Tuple<string, string>>();
+            var terms = new List<SpectrumMetadataTerm>();
             int spectrumCount = Math.Min(maxSpectra, SpectrumCount);
             for (int i = 0; i < spectrumCount; i++)
             {
@@ -869,13 +870,13 @@ namespace pwiz.ProteowizardWrapper
                 using var spectrum = SpectrumList.spectrum(i, DetailLevel.FullMetadata);
                 foreach (var term in GetOtherParams(spectrum))
                 {
-                    if (!termsByAccession.ContainsKey(term.Accession))
+                    if (seen.Add(Tuple.Create(term.Accession, term.Value)))
                     {
-                        termsByAccession.Add(term.Accession, term);
+                        terms.Add(term);
                     }
                 }
             }
-            return termsByAccession.Values.ToList();
+            return terms;
         }
 
         public double? GetMaxIonMobility()

@@ -20,6 +20,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
@@ -129,6 +130,7 @@ namespace pwiz.SkylineTestFunctional
             VerifyEditorAcceptsStringOperatorOnNumericCvColumn();
             VerifyCvFilterReconstructsFriendlyName();
             VerifyScannerReadsCvTermsFromFile();
+            VerifyAutoCompleteOffersStoredCvValues();
             VerifyScannerReadsCvTermsWithoutCapture();
             VerifyStylingHelpOpens();
         }
@@ -146,6 +148,38 @@ namespace pwiz.SkylineTestFunctional
             var helpDlg = ShowDialog<SpectrumFilterStylingHelpDlg>(editDlg.ShowStylingHelp);
             OkDialog(helpDlg, helpDlg.Close);
             OkDialog(editDlg, editDlg.Close);
+        }
+
+        /// <summary>
+        /// This document was imported while it filtered on CV terms, so their values are stored, and the
+        /// filter editor's autocomplete offers them for the CV columns as it does for the interpreted ones.
+        /// Built without the file scan, so the values can only have come from the cache.
+        /// </summary>
+        private void VerifyAutoCompleteOffersStoredCvValues()
+        {
+            var filterStringPath = FilterStringColumn().PropertyPath;
+            using var autoComplete = new SpectrumFilterAutoComplete(SkylineWindow);
+            WaitForCondition(() => autoComplete.GetAutoCompleteValues(filterStringPath) != null);
+            AssertOffersBothCompensationVoltages(autoComplete.GetAutoCompleteValues(filterStringPath));
+        }
+
+        private static SpectrumClassColumn FilterStringColumn()
+        {
+            return SpectrumClassColumn.CvParam(@"MS:1000512", @"filter string", false);
+        }
+
+        /// <summary>
+        /// The filter strings in this data differ by FAIMS compensation voltage, so the values offered for
+        /// the filter string column have to include one of each.
+        /// </summary>
+        private static void AssertOffersBothCompensationVoltages(AutoCompleteStringCollection values)
+        {
+            Assert.IsNotNull(values, @"no values offered for the filter string column");
+            var offered = values.Cast<string>().ToList();
+            Assert.IsTrue(offered.Any(value => value.Contains(@"cv=-50")),
+                @"no filter string with cv=-50 offered among: " + string.Join(@"; ", offered));
+            Assert.IsTrue(offered.Any(value => value.Contains(@"cv=-70")),
+                @"no filter string with cv=-70 offered among: " + string.Join(@"; ", offered));
         }
 
         /// <summary>
@@ -188,6 +222,16 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(SpectrumColumnScanner.Standing.answerable,
                 availability.GetStanding(SpectrumClassColumn.MsLevel.PropertyPath, false),
                 @"MS level is answered from the per-file metadata, with no file read needed");
+
+            // The read also learns the values the terms take, which is all the editor has to suggest for a
+            // CV column here, since nothing was stored. Opened through the menu, so this also covers the
+            // scan's values reaching the editor's autocomplete.
+            RunUI(() => SkylineWindow.SelectedPath =
+                SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.TransitionGroups, 0));
+            var editDlg = ShowDialog<EditSpectrumFilterDlg>(SkylineWindow.EditMenu.EditSpectrumFilter);
+            RunUI(() => AssertOffersBothCompensationVoltages(
+                editDlg.AutoComplete.GetAutoCompleteValues(FilterStringColumn().PropertyPath)));
+            OkDialog(editDlg, editDlg.Close);
         }
 
         /// <summary>
