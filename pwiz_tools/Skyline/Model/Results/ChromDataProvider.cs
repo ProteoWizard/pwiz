@@ -95,6 +95,11 @@ namespace pwiz.Skyline.Model.Results
 
         public abstract eIonMobilityUnits IonMobilityUnits { get; }
 
+        // Provides the data file's IM to CCS conversion, used to compute per-point observed CCS
+        // as chromatograms are read. Null when no data file is open (e.g. SRM-style providers,
+        // or chromatograms read back from the cache, which already carry their CCS).
+        public virtual IIonMobilityFunctionsProvider IonMobilityFunctionsProvider => null;
+
         public abstract bool IsProcessedScans { get; }
 
         public abstract bool IsSingleMzMatch { get; }

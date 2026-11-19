@@ -86,9 +86,18 @@ namespace pwiz.Skyline.Controls.Graphs
             if (e.Location == _lastPos)
                 return; // Ignore spurious MouseMove events from layout changes
             _lastPos = e.Location;
+            ShowAt(e.Location, _getTooltipTable(e.Location), false);
+        }
+
+        /// <summary>
+        /// Shows the tip with the given table anchored at <paramref name="anchor"/> (parent
+        /// client coordinates). Used both by live mouse tracking and, with
+        /// <paramref name="keepVisible"/> = true, to stage the tip for a screenshot without the
+        /// auto-hide timer firing. A null table hides the tip.
+        /// </summary>
+        public void ShowAt(Point anchor, TableDesc table, bool keepVisible)
+        {
             _autoHideTimer.Stop();
-            _autoHideTimer.Start();
-            var table = _getTooltipTable(e.Location);
             if (table == null)
             {
                 _panel.Visible = false;
@@ -103,17 +112,19 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             _panel.Invalidate();
             // Position the tooltip to avoid clipping at the parent's edges.
-            // Default is lower-right of the cursor; flip to opposite quadrant as needed.
-            var parentControl = (Control)sender;
-            int x = e.X + CURSOR_OFFSET_X;
-            int y = e.Y + CURSOR_OFFSET_Y;
-            if (x + _panel.Width > parentControl.ClientSize.Width)
-                x = e.X - CURSOR_OFFSET_X - _panel.Width;
-            if (y + _panel.Height > parentControl.ClientSize.Height)
-                y = e.Y - CURSOR_OFFSET_Y - _panel.Height;
+            // Default is lower-right of the anchor; flip to opposite quadrant as needed.
+            var parentControl = _panel.Parent;
+            int x = anchor.X + CURSOR_OFFSET_X;
+            int y = anchor.Y + CURSOR_OFFSET_Y;
+            if (parentControl != null && x + _panel.Width > parentControl.ClientSize.Width)
+                x = anchor.X - CURSOR_OFFSET_X - _panel.Width;
+            if (parentControl != null && y + _panel.Height > parentControl.ClientSize.Height)
+                y = anchor.Y - CURSOR_OFFSET_Y - _panel.Height;
             _panel.Location = new Point(Math.Max(0, x), Math.Max(0, y));
             _panel.Visible = true;
             _panel.BringToFront();
+            if (!keepVisible)
+                _autoHideTimer.Start();
         }
 
         private void PanelPaint(object sender, PaintEventArgs e)

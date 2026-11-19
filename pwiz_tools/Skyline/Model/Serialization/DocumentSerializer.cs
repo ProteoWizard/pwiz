@@ -134,8 +134,10 @@ namespace pwiz.Skyline.Model.Serialization
             public const string ion_mobility_fragment = "ion_mobility_fragment"; 
             public const string ion_mobility = "ion_mobility"; 
             public const string ion_mobility_type = "ion_mobility_type"; 
-            public const string ion_mobility_window = "ion_mobility_window"; 
+            public const string ion_mobility_window = "ion_mobility_window";
             public const string ccs = "ccs";
+            public const string observed_ion_mobility = "observed_ion_mobility";
+            public const string observed_ccs = "observed_ccs";
             public const string avg_measured_retention_time = "avg_measured_retention_time";
             public const string isotope_label = "isotope_label";
             public const string fragment_type = "fragment_type";

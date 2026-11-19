@@ -36,6 +36,7 @@ using pwiz.SkylineTestUtil;
 using System.Collections.Generic;
 using System.Globalization;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.SettingsUI;
 
 namespace pwiz.SkylineTestFunctional
@@ -68,7 +69,10 @@ namespace pwiz.SkylineTestFunctional
                 {"ReplicateName","ID12692_01_UCA168_3727_040714"},
                 {"RetentionTime",33.05.ToString(CultureInfo.CurrentCulture)},
                 {"IonMobility",3.477.ToString(CultureInfo.CurrentCulture) + " msec"},
+                {"ObservedIonMobility", string.Format(GraphsResources.GraphFullScan_ToolTip_ObservedValueWithErrorFormat,
+                    (3.383).ToString(CultureInfo.CurrentCulture), (-2.7).ToString(CultureInfo.CurrentCulture)) + " msec"},
                 {"IsolationWindow","50:2000 (-975:+975)"},
+                {"PeakRetentionTime",32.95.ToString(CultureInfo.CurrentCulture)},
                 {"IonMobilityRange",TextUtil.AppendColon(0.069.ToString(CultureInfo.CurrentCulture)) + 13.8.ToString(CultureInfo.CurrentCulture)},
                 {"IonMobilityFilterRange",TextUtil.AppendColon(3.152.ToString(CultureInfo.CurrentCulture)) + 3.651.ToString(CultureInfo.CurrentCulture)},
                 {"ScanId","1.0.309201 - 1.0.309400"},
@@ -89,7 +93,10 @@ namespace pwiz.SkylineTestFunctional
                 {"ReplicateName","ID12692_01_UCA168_3727_040714"},
                 {"RetentionTime", (33.1).ToString(CultureInfo.CurrentCulture)},
                 {"IonMobility", (3.326).ToString(CultureInfo.CurrentCulture) + " msec"},
+                {"ObservedIonMobility", string.Format(GraphsResources.GraphFullScan_ToolTip_ObservedValueWithErrorFormat,
+                    (3.37).ToString(CultureInfo.CurrentCulture), (1.33).ToString(CultureInfo.CurrentCulture)) + " msec"},
                 {"IsolationWindow","50:2000 (-975:+975)"},
+                {"PeakRetentionTime",33.03.ToString(CultureInfo.CurrentCulture)},
                 {"IonMobilityRange", TextUtil.AppendColon(0.069.ToString(CultureInfo.CurrentCulture)) + 13.8.ToString(CultureInfo.CurrentCulture)},
                 {"IonMobilityFilterRange",TextUtil.AppendColon(3.152.ToString(CultureInfo.CurrentCulture)) + 3.651.ToString(CultureInfo.CurrentCulture)},
                 {"ScanId","2.0.309601 - 2.0.309800"},
@@ -112,7 +119,10 @@ namespace pwiz.SkylineTestFunctional
                 { "ReplicateName", "ID12692_01_UCA168_3727_040714" },
                 { "RetentionTime", (32.96).ToString(CultureInfo.CurrentCulture) },
                 { "IonMobility", (5.716).ToString(CultureInfo.CurrentCulture) + " msec" },
+                { "ObservedIonMobility", string.Format(GraphsResources.GraphFullScan_ToolTip_ObservedValueWithErrorFormat,
+                    (5.811).ToString(CultureInfo.CurrentCulture), (1.65).ToString(CultureInfo.CurrentCulture)) + " msec" },
                 { "IsolationWindow", "50:2000 (-975:+975)" },
+                { "PeakRetentionTime", 33.03.ToString(CultureInfo.CurrentCulture) },
                 {
                     "IonMobilityRange",
                     TextUtil.AppendColon((0.069).ToString(CultureInfo.CurrentCulture)) + (13.8).ToString(CultureInfo.CurrentCulture)
@@ -358,6 +368,7 @@ namespace pwiz.SkylineTestFunctional
             //annotations are not shown in the offscreen mode
             TestSpecialIonsAnnotations();
             TestIonMatchToleranceUnitSetting();
+            TestFormatWithPercentError();
 
             // we need to increase the ion match tolerance to have sufficient number of peaks for dotp calculation.
             var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
@@ -592,6 +603,33 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(double.TryParse(table[1][1].Text, out var intensity));
             Assert.IsTrue(intensity > 0,
                 string.Format("Expected non-zero summed intensity near IM={0}", imValue));
+        }
+
+        // The observed-line tooltip and properties pane share this formatter. A percent error
+        // too small to show must read as zero (not "-0"), a small but real error must stay
+        // visible, and a zero target (no ground truth) renders the value alone.
+        private static void TestFormatWithPercentError()
+        {
+            var culture = CultureInfo.CurrentCulture;
+            string zeroPct = (0.0).ToString(Formats.PercentError, culture);
+
+            const double tinyObservedIm = 1.0, tinyTargetIm = 1.00004; // ~ -0.004%
+            Assert.AreEqual(string.Format(GraphsResources.GraphFullScan_ToolTip_ObservedValueWithErrorFormat,
+                    tinyObservedIm.ToString(Formats.IonMobility, culture), zeroPct),
+                GraphFullScan.FormatWithPercentError(tinyObservedIm, tinyTargetIm, Formats.IonMobility));
+
+            const double observedIm = 33.79, targetIm = 33.805; // ~ -0.044%
+            double imPct = 100.0 * (observedIm - targetIm) / targetIm;
+            AssertEx.Contains(GraphFullScan.FormatWithPercentError(observedIm, targetIm, Formats.IonMobility),
+                imPct.ToString(Formats.PercentError, culture));
+
+            const double observedCcs = 260.88, targetCcs = 261;
+            double ccsPct = 100.0 * (observedCcs - targetCcs) / targetCcs;
+            AssertEx.Contains(GraphFullScan.FormatWithPercentError(observedCcs, targetCcs, Formats.CCS),
+                ccsPct.ToString(Formats.PercentError, culture));
+
+            Assert.AreEqual(observedIm.ToString(Formats.IonMobility, culture),
+                GraphFullScan.FormatWithPercentError(observedIm, 0, Formats.IonMobility));
         }
 
         private void TestSpecialIonsAnnotations()

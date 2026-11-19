@@ -163,11 +163,29 @@
   <data name="Description_CCS" xml:space="preserve">
     <value>Collisional cross section (CCS) of the ion isolated to acquire the spectrum</value>
   </data>
+  <data name="ObservedCCS" xml:space="preserve">
+    <value>Observed CCS</value>
+  </data>
+  <data name="Description_ObservedCCS" xml:space="preserve">
+    <value>Per-peak collisional cross section observed for the current target in the active replicate, with percent error vs the target CCS</value>
+  </data>
   <data name="IonMobility" xml:space="preserve">
     <value>Ion Mobility</value>
   </data>
   <data name="Description_IonMobility" xml:space="preserve">
     <value>Raw ion mobility value of the ion isolated to acquire the spectrum (e.g. msec, Vs/cm^2, V)</value>
+  </data>
+  <data name="ObservedIonMobility" xml:space="preserve">
+    <value>Observed Ion Mobility</value>
+  </data>
+  <data name="Description_ObservedIonMobility" xml:space="preserve">
+    <value>Per-peak ion mobility observed for the current target in the active replicate, with percent error vs the target ion mobility</value>
+  </data>
+  <data name="PeakRetentionTime" xml:space="preserve">
+    <value>Peak Retention Time</value>
+  </data>
+  <data name="Description_PeakRetentionTime" xml:space="preserve">
+    <value>Apex retention time of the current target's peak in the active replicate</value>
   </data>
   <data name="IonMobilityRange" xml:space="preserve">
     <value>Ion Mobility Range</value>

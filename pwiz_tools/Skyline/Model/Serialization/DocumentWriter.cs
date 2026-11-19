@@ -915,6 +915,11 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteAttributeNullable(ATTR.ccs, chromInfo.IonMobility.CollisionalCrossSectionSqA);
                 writer.WriteAttributeNullable(ATTR.ion_mobility, chromInfo.IonMobility.IonMobility.Mobility);
                 writer.WriteAttributeNullable(ATTR.ion_mobility_window, chromInfo.IonMobility.IonMobilityExtractionWindowWidth);
+                if (DocumentFormat >= DocumentFormat.OBSERVED_ION_MOBILITY)
+                {
+                    writer.WriteAttributeNullable(ATTR.observed_ion_mobility, chromInfo.ObservedIonMobility);
+                    writer.WriteAttributeNullable(ATTR.observed_ccs, chromInfo.ObservedCcs);
+                }
                 writer.WriteAttribute(ATTR.area, chromInfo.Area);
                 writer.WriteAttribute(ATTR.background, chromInfo.BackgroundArea);
                 writer.WriteAttribute(ATTR.height, chromInfo.Height);

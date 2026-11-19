@@ -507,6 +507,8 @@ namespace pwiz.Skyline.Model.Serialization
                 double? ionMobilityWindow = reader.GetNullableDoubleAttribute(ATTR.drift_time_window) ??
                                             reader.GetNullableDoubleAttribute(ATTR.ion_mobility_window);
                 double? ccs = reader.GetNullableDoubleAttribute(ATTR.ccs);
+                float? observedIonMobility = reader.GetNullableFloatAttribute(ATTR.observed_ion_mobility);
+                float? observedCcs = reader.GetNullableFloatAttribute(ATTR.observed_ccs);
                 var annotations = Annotations.EMPTY;
                 bool forcedIntegration = reader.GetBoolAttribute(ATTR.forced_integration, false);
                 if (!reader.IsEmptyElement)
@@ -545,7 +547,7 @@ namespace pwiz.Skyline.Model.Serialization
                     annotations,
                     userSet,
                     forcedIntegration,
-                    peakShapeValues);
+                    peakShapeValues).ChangeObservedIonMobility(observedIonMobility, observedCcs);
             }
         }
 
