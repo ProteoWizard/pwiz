@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Runtime.InteropServices;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Spectra;
@@ -522,29 +523,24 @@ internal sealed class TdfData : IBrukerData
             AddFrameMsMsInfoPrecursor(spec, frame, scanInvK0);
 
         // pwiz C++ leaves MS_lowest/highest_observed_m_z commented-out for TDF.
-        double[] meanMobility = Array.Empty<double>();
-        var (mz, intensity) = tag.Combined
-            ? ReadCombinedScanRangePeaks(frame, tag.ScanBegin, tag.ScanEnd, sortAndJitter, out meanMobility)
-            : ReadScanRangePeaks(frame, tag.ScanBegin, tag.ScanEnd);
+        if (tag.Combined)
+        {
+            // Non-centroid combine ref uses MS:1002816 ("mean ion mobility array");
+            // centroid combine ref uses MS:1003006 ("mean inverse reduced ion mobility
+            // array"). Same payload (per-peak 1/K0), different accession depending on the
+            // emission path - pwiz C++'s centroid path goes through the newer CV term.
+            CVID combinedMobilityCv = preferCentroid
+                ? CVID.MS_mean_inverse_reduced_ion_mobility_array
+                : CVID.MS_mean_ion_mobility_array;
+            FillCombinedScanRangePeaks(spec, frame, tag.ScanBegin, tag.ScanEnd, getBinaryData, combinedMobilityCv);
+            if (sortAndJitter && getBinaryData)
+                SortAndJitterByMz(spec);
+            return;
+        }
+        var (mz, intensity) = ReadScanRangePeaks(frame, tag.ScanBegin, tag.ScanEnd);
         spec.DefaultArrayLength = mz.Length;
         if (getBinaryData)
-        {
             spec.SetMZIntensityArrays(mz, intensity, CVID.MS_number_of_detector_counts);
-            if (tag.Combined && meanMobility.Length == mz.Length)
-            {
-                var mobArr = new BinaryDataArray();
-                // Non-centroid combine ref uses MS:1002816 ("mean ion mobility array");
-                // centroid combine ref uses MS:1003006 ("mean inverse reduced ion mobility
-                // array"). Same payload (per-peak 1/K0), different accession depending on the
-                // emission path — pwiz C++'s centroid path goes through the newer CV term.
-                CVID mobCv = preferCentroid
-                    ? CVID.MS_mean_inverse_reduced_ion_mobility_array
-                    : CVID.MS_mean_ion_mobility_array;
-                mobArr.Set(mobCv, "", CVID.MS_volt_second_per_square_centimeter);
-                mobArr.Data.AddRange(meanMobility);
-                spec.BinaryDataArrays.Add(mobArr);
-            }
-        }
     }
 
     private static void AddDiaPrecursor(Spectrum spec, DiaFrameWindow window, bool omitMsLevelUserParam = false)
@@ -690,24 +686,31 @@ internal sealed class TdfData : IBrukerData
     }
 
     /// <summary>
-    /// Combined-mode peak reader: concatenates each scan's peaks (m/z, intensity, 1/K0)
-    /// in scan order WITHOUT merging. Mirrors pwiz C++ TimsSpectrum::getCombinedSpectrumData
-    /// (TimsData.cpp:1022+) which preserves per-scan peaks one-to-one so the
-    /// MS_mean_inverse_reduced_ion_mobility_array carries the actual scan-level 1/K0 of
-    /// each emitted peak. Output arrays are aligned: <c>mz[i] / intensity[i] / mobility[i]</c>.
+    /// Combined-mode emission: the peaks of scans <c>[scanBegin, scanEnd]</c> in scan order,
+    /// concatenated WITHOUT merging, written straight into the spectrum's m/z, intensity and
+    /// mean-mobility arrays. Mirrors pwiz C++ TimsSpectrum::getCombinedSpectrumData
+    /// (TimsData.cpp:1022+), which keeps per-scan peaks one-to-one so each peak carries its
+    /// scan's 1/K0. The peak count is known before reading, so the arrays are sized exactly and
+    /// filled in place rather than built separately and copied - a combined frame can hold a
+    /// million or more peaks. Without binary data the frame is still decoded for its per-scan
+    /// peak counts, but no arrays are allocated or filled.
     /// </summary>
-    private (double[] Mz, double[] Intensity) ReadCombinedScanRangePeaks(
-        TdfFrame frame, int scanBegin, int scanEnd, bool sortAndJitter, out double[] meanMobility)
+    private void FillCombinedScanRangePeaks(Spectrum spec, TdfFrame frame, int scanBegin, int scanEnd,
+        bool getBinaryData, CVID mobilityCv)
     {
         var proxy = GetFrame(frame.FrameId, frame.NumScans);
 
         int total = 0;
         for (int s = scanBegin; s <= scanEnd; s++) total += proxy.NumPeaks(s);
+        spec.DefaultArrayLength = total;
+        if (!getBinaryData)
+            return;
+
+        var mzOut = AddBinaryDataArray(spec, CVID.MS_m_z_array, CVID.MS_m_z, total);
+        var intOut = AddBinaryDataArray(spec, CVID.MS_intensity_array, CVID.MS_number_of_detector_counts, total);
+        var mobOut = AddBinaryDataArray(spec, mobilityCv, CVID.MS_volt_second_per_square_centimeter, total);
         if (total == 0)
-        {
-            meanMobility = Array.Empty<double>();
-            return (Array.Empty<double>(), Array.Empty<double>());
-        }
+            return;
 
         // Pre-compute 1/K0 for each scan in the range (single batched native call).
         int rangeLen = scanEnd - scanBegin + 1;
@@ -715,9 +718,6 @@ internal sealed class TdfData : IBrukerData
         for (int i = 0; i < rangeLen; i++) scanArgs[i] = scanBegin + i;
         var invK0PerScan = _tims.ScanNumberToOneOverK0(frame.FrameId, scanArgs);
 
-        var mzArr = new double[total];
-        var intArr = new double[total];
-        var mobArr = new double[total];
         int write = 0;
         for (int s = scanBegin; s <= scanEnd; s++)
         {
@@ -726,56 +726,70 @@ internal sealed class TdfData : IBrukerData
             var ints = proxy.GetScanIntensities(s);
             for (int i = 0; i < mzs.Length; i++)
             {
-                mzArr[write] = mzs[i];
-                intArr[write] = ints[i];
-                mobArr[write] = k0;
+                mzOut[write] = mzs[i];
+                intOut[write] = ints[i];
+                mobOut[write] = k0;
                 write++;
             }
         }
-        if (!sortAndJitter)
+    }
+
+    /// <summary>
+    /// Adds a binary data array of <paramref name="count"/> zeros to <paramref name="spec"/>,
+    /// tagged the way <see cref="Spectrum.SetMZIntensityArrays"/> tags its arrays, and returns
+    /// its storage for filling in place. The span stays valid because nothing resizes the list.
+    /// </summary>
+    private static Span<double> AddBinaryDataArray(Spectrum spec, CVID arrayType, CVID units, int count)
+    {
+        var array = new BinaryDataArray();
+        array.Set(arrayType, "", units);
+        CollectionsMarshal.SetCount(array.Data, count);
+        spec.BinaryDataArrays.Add(array);
+        return CollectionsMarshal.AsSpan(array.Data);
+    }
+
+    /// <summary>
+    /// Reference-parity mode for the combined and whole-frame paths: co-sorts every binary data
+    /// array of <paramref name="spec"/> by m/z, then jitters duplicate m/z values by 1e-8 per
+    /// consecutive entry (pwiz C++ TimsSpectrum::getCombinedSpectrumData at TimsData.cpp:1112-1147
+    /// with sortAndJitter=true). Production output skips this: mzML doesn't mandate m/z ordering,
+    /// and scan order is cheaper to produce and keeps the m/z values exact.
+    /// </summary>
+    /// <remarks>
+    /// The sort is stable, so duplicates keep scan order. C++ uses std::sort, which is unstable, so
+    /// its tie-break order is implementation-defined; on the test fixtures libstdc++ tends to keep
+    /// the smaller-scan peak first. The jitter locks the tie-break in the m/z values, but if the
+    /// tie-break order differs from the reference, the per-position intensity and mobility values
+    /// can still mismatch at a few duplicate positions.
+    /// </remarks>
+    private static void SortAndJitterByMz(Spectrum spec)
+    {
+        var mzArray = spec.GetMZArray();
+        if (mzArray is null || mzArray.Data.Count == 0)
+            return;
+        var mzData = mzArray.Data;
+        int total = mzData.Count;
+        var order = Enumerable.Range(0, total).OrderBy(i => mzData[i]).ToArray();
+
+        var scratch = new double[total];
+        foreach (var array in spec.BinaryDataArrays)
         {
-            // Production mode: keep peaks in scan-by-scan order. mzML doesn't mandate m/z
-            // ordering and downstream tools handle either layout — skipping the sort + jitter
-            // means our output is cheaper to produce and the m/z values are exact (no 1e-8
-            // perturbation on duplicates).
-            meanMobility = mobArr;
-            return (mzArr, intArr);
+            var data = CollectionsMarshal.AsSpan(array.Data);
+            for (int i = 0; i < total; i++)
+                scratch[i] = data[order[i]];
+            scratch.CopyTo(data);
         }
 
-        // Test/reference-parity mode: sort by m/z across all merged scans, then jitter
-        // duplicate m/z values by 1e-8 per row (matches pwiz C++ TimsSpectrum::
-        // getCombinedSpectrumData at TimsData.cpp:1112-1147 with sortAndJitter=true).
-        // Stable sort by m/z preserves scan order on duplicates. cpp uses std::sort which
-        // is unstable, so its tie-break order is implementation-defined; on this fixture's
-        // data libstdc++ tends to keep the smaller-scan peak first. The jitter perturbs
-        // the m/z to lock the tie-break — but if our tie-break ordering differs from the
-        // ref the per-position (intensity, mobility) values will still mismatch on a few
-        // duplicate positions.
-        var idx = Enumerable.Range(0, total).OrderBy(i => mzArr[i]).ToArray();
-        var mzSorted = new double[total];
-        var intSorted = new double[total];
-        var mobSorted = new double[total];
-        for (int i = 0; i < total; i++)
-        {
-            int src = idx[i];
-            mzSorted[i] = mzArr[src];
-            intSorted[i] = intArr[src];
-            mobSorted[i] = mobArr[src];
-        }
-        // Jitter duplicate m/z values by 1e-8 per consecutive entry so std::sort-style
-        // ordering of same-m/z peaks becomes irrelevant — matches pwiz C++ jitter at
-        // TimsData.cpp:1141-1147.
+        var mz = CollectionsMarshal.AsSpan(mzData);
         for (int i = 1; i < total; i++)
         {
-            if (mzSorted[i - 1] == mzSorted[i])
+            if (mz[i - 1] == mz[i])
             {
                 int startI = i - 1;
-                for (; i < total && mzSorted[startI] == mzSorted[i]; i++)
-                    mzSorted[i] += 1e-8 * (i - startI);
+                for (; i < total && mz[startI] == mz[i]; i++)
+                    mz[i] += 1e-8 * (i - startI);
             }
         }
-        meanMobility = mobSorted;
-        return (mzSorted, intSorted);
     }
 
     // ---------- diaPASEF whole-frame (passEntire) ----------
@@ -818,34 +832,9 @@ internal sealed class TdfData : IBrukerData
 
         AddWholeFramePrecursor(spec, wgi);
 
-        var (mz, intensity) = ReadWholeFrameActiveScans(frame, wgi, includeIsolationArrays, sortAndJitter,
-            out var meanMobility, out var isoLowArr, out var isoHighArr);
-        spec.DefaultArrayLength = mz.Length;
-        if (getBinaryData)
-        {
-            spec.SetMZIntensityArrays(mz, intensity, CVID.MS_number_of_detector_counts);
-            if (meanMobility.Length == mz.Length)
-            {
-                // Whole-frame is centroid, so use the inverse-reduced accession (pwiz C++
-                // SpectrumList_Bruker.cpp:438). This is also the accession Skyline recognizes.
-                var mobArr = new BinaryDataArray();
-                mobArr.Set(CVID.MS_mean_inverse_reduced_ion_mobility_array, "", CVID.MS_volt_second_per_square_centimeter);
-                mobArr.Data.AddRange(meanMobility);
-                spec.BinaryDataArrays.Add(mobArr);
-            }
-            if (includeIsolationArrays && isoLowArr.Length == mz.Length)
-            {
-                // Per-peak scanning-quadrupole isolation bounds (pwiz C++ SpectrumList_Bruker.cpp:445-457).
-                var lowArr = new BinaryDataArray();
-                lowArr.Set(CVID.MS_scanning_quadrupole_position_lower_bound_m_z_array, "", CVID.MS_m_z);
-                lowArr.Data.AddRange(isoLowArr);
-                spec.BinaryDataArrays.Add(lowArr);
-                var highArr = new BinaryDataArray();
-                highArr.Set(CVID.MS_scanning_quadrupole_position_upper_bound_m_z_array, "", CVID.MS_m_z);
-                highArr.Data.AddRange(isoHighArr);
-                spec.BinaryDataArrays.Add(highArr);
-            }
-        }
+        FillWholeFrameActiveScans(spec, frame, wgi, getBinaryData, includeIsolationArrays);
+        if (sortAndJitter && getBinaryData)
+            SortAndJitterByMz(spec);
     }
 
     private static void AddWholeFramePrecursor(Spectrum spec, WgIso wgi)
@@ -869,40 +858,50 @@ internal sealed class TdfData : IBrukerData
     }
 
     /// <summary>
-    /// Whole-frame combined peak reader: concatenates the peaks of every active scan of the frame's
-    /// window group (m/z, intensity, per-peak 1/K0, and optionally per-peak isolation low/high),
-    /// mirroring pwiz C++ TimsSpectrum::getCombinedSpectrumData activeScansOnly path
-    /// (TimsData.cpp:1036-1116). Output arrays are aligned: <c>mz[i] / intensity[i] / mobility[i] /
-    /// isoLow[i] / isoHigh[i]</c>.
+    /// Whole-frame emission: the peaks of every active scan of the frame's window group in scan
+    /// order, written straight into the spectrum's arrays (m/z, intensity, mean 1/K0 and, when
+    /// requested, per-peak isolation low/high), sized exactly from the peak count. Mirrors the
+    /// pwiz C++ TimsSpectrum::getCombinedSpectrumData activeScansOnly path (TimsData.cpp:1036-1116).
+    /// Without binary data the frame is still decoded for its per-scan peak counts, but no arrays
+    /// are allocated or filled.
     /// </summary>
-    private (double[] Mz, double[] Intensity) ReadWholeFrameActiveScans(
-        TdfFrame frame, WgIso wgi, bool includeIsolationArrays, bool sortAndJitter,
-        out double[] meanMobility, out double[] isoLow, out double[] isoHigh)
+    private void FillWholeFrameActiveScans(Spectrum spec, TdfFrame frame, WgIso wgi, bool getBinaryData,
+        bool includeIsolationArrays)
     {
         var proxy = GetFrame(frame.FrameId, frame.NumScans);
         var activeScans = wgi.ActiveScans;
 
         int total = 0;
         foreach (var s in activeScans)
-            if (s < frame.NumScans) total += proxy.NumPeaks(s);
-        if (total == 0)
         {
-            meanMobility = Array.Empty<double>();
-            isoLow = Array.Empty<double>();
-            isoHigh = Array.Empty<double>();
-            return (Array.Empty<double>(), Array.Empty<double>());
+            if (s < frame.NumScans)
+                total += proxy.NumPeaks(s);
         }
+        spec.DefaultArrayLength = total;
+        if (!getBinaryData)
+            return;
+
+        var mzOut = AddBinaryDataArray(spec, CVID.MS_m_z_array, CVID.MS_m_z, total);
+        var intOut = AddBinaryDataArray(spec, CVID.MS_intensity_array, CVID.MS_number_of_detector_counts, total);
+        // Whole-frame is centroid, so use the inverse-reduced accession (pwiz C++
+        // SpectrumList_Bruker.cpp:438). This is also the accession Skyline recognizes.
+        var mobOut = AddBinaryDataArray(spec, CVID.MS_mean_inverse_reduced_ion_mobility_array,
+            CVID.MS_volt_second_per_square_centimeter, total);
+        // Per-peak scanning-quadrupole isolation bounds (pwiz C++ SpectrumList_Bruker.cpp:445-457).
+        var isoLowOut = includeIsolationArrays
+            ? AddBinaryDataArray(spec, CVID.MS_scanning_quadrupole_position_lower_bound_m_z_array, CVID.MS_m_z, total)
+            : Span<double>.Empty;
+        var isoHighOut = includeIsolationArrays
+            ? AddBinaryDataArray(spec, CVID.MS_scanning_quadrupole_position_upper_bound_m_z_array, CVID.MS_m_z, total)
+            : Span<double>.Empty;
+        if (total == 0)
+            return;
 
         // 1/K0 for each active scan (single batched native call).
         var scanArgs = new double[activeScans.Length];
         for (int i = 0; i < activeScans.Length; i++) scanArgs[i] = activeScans[i];
         var invK0PerScan = _tims.ScanNumberToOneOverK0(frame.FrameId, scanArgs);
 
-        var mzArr = new double[total];
-        var intArr = new double[total];
-        var mobArr = new double[total];
-        var isoLowArr = includeIsolationArrays ? new double[total] : Array.Empty<double>();
-        var isoHighArr = includeIsolationArrays ? new double[total] : Array.Empty<double>();
         int write = 0;
         for (int k = 0; k < activeScans.Length; k++)
         {
@@ -915,61 +914,17 @@ internal sealed class TdfData : IBrukerData
             var ints = proxy.GetScanIntensities(s);
             for (int i = 0; i < mzs.Length; i++)
             {
-                mzArr[write] = mzs[i];
-                intArr[write] = ints[i];
-                mobArr[write] = k0;
+                mzOut[write] = mzs[i];
+                intOut[write] = ints[i];
+                mobOut[write] = k0;
                 if (includeIsolationArrays)
                 {
-                    isoLowArr[write] = sLow;
-                    isoHighArr[write] = sHigh;
+                    isoLowOut[write] = sLow;
+                    isoHighOut[write] = sHigh;
                 }
                 write++;
             }
         }
-
-        if (!sortAndJitter)
-        {
-            // Production mode: keep peaks in scan-by-scan order (no merge / sort / jitter),
-            // matching ReadCombinedScanRangePeaks.
-            meanMobility = mobArr;
-            isoLow = isoLowArr;
-            isoHigh = isoHighArr;
-            return (mzArr, intArr);
-        }
-
-        // Reference-parity mode: co-sort every array by m/z then jitter duplicate m/z by 1e-8 per
-        // consecutive entry (pwiz C++ getCombinedSpectrumData at TimsData.cpp:1112-1147).
-        var idx = Enumerable.Range(0, total).OrderBy(i => mzArr[i]).ToArray();
-        var mzSorted = new double[total];
-        var intSorted = new double[total];
-        var mobSorted = new double[total];
-        var isoLowSorted = includeIsolationArrays ? new double[total] : Array.Empty<double>();
-        var isoHighSorted = includeIsolationArrays ? new double[total] : Array.Empty<double>();
-        for (int i = 0; i < total; i++)
-        {
-            int src = idx[i];
-            mzSorted[i] = mzArr[src];
-            intSorted[i] = intArr[src];
-            mobSorted[i] = mobArr[src];
-            if (includeIsolationArrays)
-            {
-                isoLowSorted[i] = isoLowArr[src];
-                isoHighSorted[i] = isoHighArr[src];
-            }
-        }
-        for (int i = 1; i < total; i++)
-        {
-            if (mzSorted[i - 1] == mzSorted[i])
-            {
-                int startI = i - 1;
-                for (; i < total && mzSorted[startI] == mzSorted[i]; i++)
-                    mzSorted[i] += 1e-8 * (i - startI);
-            }
-        }
-        meanMobility = mobSorted;
-        isoLow = isoLowSorted;
-        isoHigh = isoHighSorted;
-        return (mzSorted, intSorted);
     }
 
     /// <summary>
