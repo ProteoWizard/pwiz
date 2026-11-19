@@ -468,7 +468,7 @@ namespace pwiz.SkylineTestData
             var path = TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Thermo, "090701-LTQVelos-unittest-01.raw");
             using var msDataFile = new MsDataFileImpl(path);
             var runStartTime = msDataFile.RunStartTime;
-            AssertEx.AreEqual<DateTime?>(new DateTime(2009, 7, 2, 10, 36, 38), runStartTime,
+            AssertEx.AreEqual(new DateTime(2009, 7, 2, 10, 36, 38), runStartTime,
                 @"RunStartTime must be the clock time the file stores");
             AssertEx.AreEqual(DateTimeKind.Unspecified, runStartTime.Value.Kind,
                 @"RunStartTime must have no time zone, so the .skyd stores the clock time on any computer");
