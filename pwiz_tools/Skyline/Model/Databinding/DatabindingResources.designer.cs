@@ -178,6 +178,15 @@ namespace pwiz.Skyline.Model.Databinding {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A value in the column &apos;{0}&apos; is too large to export to Parquet..
+        /// </summary>
+        public static string ParquetReportExporter_A_value_in_the_column___0___is_too_large_to_export_to_Parquet_ {
+            get {
+                return ResourceManager.GetString("ParquetReportExporter_A_value_in_the_column___0___is_too_large_to_export_to_Parquet_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Built in reports cannot be exported here.
         /// </summary>
         public static string RowFactories_ExportReport_Built_in_reports_cannot_be_exported_here {

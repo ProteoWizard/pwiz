@@ -102,7 +102,7 @@ namespace pwiz.SkylineTestTutorial
                 var doc = SkylineWindow.Document;
                 
                 var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                RunUI(() => importDialog3.Size = new Size(600, 300));
+                RunUI(() => importDialog3.Size = ScaledSize(importDialog3, 600, 300));
                 string impliedLabeled = GetCsvFileText(GetTestPath("SMTutorial_TransitionList.csv"));
                 if (_inferredLabels)
                 {
@@ -132,7 +132,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
-                    SkylineWindow.Size = new Size(957, 654);
+                    SkylineWindow.Size = ScaledSize(SkylineWindow, 957, 654);
                 });
                 RestoreViewOnScreen(5);
                 PauseForScreenShot<SkylineWindow>("Skyline with small molecule targets");
@@ -216,8 +216,8 @@ namespace pwiz.SkylineTestTutorial
                     var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = impliedLabeled2);
                     RunUI(() =>
                     {
-                        colDlg.Height -= 55;
-                        colDlg.Location = new Point(SkylineWindow.Left + 10, SkylineWindow.Bottom - colDlg.Height - 10);
+                        colDlg.Height -= Scaled(55);
+                        colDlg.Location = new Point(SkylineWindow.Left + Scaled(10), SkylineWindow.Bottom - colDlg.Height - Scaled(10));
                     });
 
                     TakeCoverShot(colDlg);

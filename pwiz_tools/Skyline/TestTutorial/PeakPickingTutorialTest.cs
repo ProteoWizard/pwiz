@@ -238,7 +238,7 @@ namespace pwiz.SkylineTestTutorial
             int oldSkylineWindowHeight = SkylineWindow.Height;
             RunUIForScreenShot(() =>
             {
-                SkylineWindow.Height = 715;
+                SkylineWindow.Height = ScaledHeight(SkylineWindow, 715);
                 findResultsForm.ActivateItem(0);
                 findResultsForm.Focus();
             });
@@ -280,8 +280,8 @@ namespace pwiz.SkylineTestTutorial
                 var editModelCover = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlgCover.AddPeakScoringModel);
                 RunUI(() =>
                 {
-                    editModelCover.Top = SkylineWindow.Top + 8;
-                    editModelCover.Left = SkylineWindow.Right - editModelCover.Width - 8;
+                    editModelCover.Top = SkylineWindow.Top + Scaled(8);
+                    editModelCover.Left = SkylineWindow.Right - editModelCover.Width - Scaled(8);
                     editModelCover.PeakScoringModelName = "SRMCourse";
                     editModelCover.TrainModelClick();
                 });
@@ -385,7 +385,7 @@ namespace pwiz.SkylineTestTutorial
             RunUIForScreenShot(() =>
             {
                 SkylineWindow.GetGraphChrom(screenshotReplicate).ZoomTo(17.5, 18.4, 2E+5);
-                SkylineWindow.Width = 863;
+                SkylineWindow.Width = ScaledWidth(SkylineWindow, 863);
             });
             PauseForScreenShot("Main window with interference on transition");
 

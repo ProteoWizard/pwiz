@@ -101,7 +101,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 transitionSettingsUI.SmallMoleculePrecursorAdducts = "[M-H], [M+HCOO], [M+CH3COO]";
                 transitionSettingsUI.SmallMoleculeFragmentAdducts = "[M-]";
                 transitionSettingsUI.SmallMoleculeFragmentTypes = "f, p";
-                transitionSettingsUI.Left = SkylineWindow.Right + 20;
+                transitionSettingsUI.Left = SkylineWindow.Right + Scaled(20);
             });
             //   • The Transition Settings form should now look like this:
             PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings: Filter");
@@ -166,7 +166,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             RunUI(() =>
             {
                 peptideSettingsUI.PickedLibraries = new[] {drosophilaLipids};
-                peptideSettingsUI.Left = SkylineWindow.Right + 20;
+                peptideSettingsUI.Left = SkylineWindow.Right + Scaled(20);
             });
             //   The Molecule Settings form should now look like:
             PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Molecule Settings - Library");
@@ -179,10 +179,10 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             var viewLibUI = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             RunUIForScreenShot(() =>
             {
-                viewLibUI.Left = SkylineWindow.Right + 20;
+                viewLibUI.Left = SkylineWindow.Right + Scaled(20);
                 viewLibUI.Top = SkylineWindow.Top;
-                viewLibUI.Width = 775;
-                viewLibUI.Height = 463;
+                viewLibUI.Width = ScaledWidth(viewLibUI, 775);
+                viewLibUI.Height = ScaledHeight(viewLibUI, 463);
             });
 
             //   The library explorer should now resemble the image below:
@@ -202,7 +202,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             OkDialog(viewLibUI, viewLibUI.CancelDialog);
 
             //   Your Skyline window should now resemble:
-            RunUI(() => SkylineWindow.Size = new Size(951, 607));
+            RunUI(() => SkylineWindow.Size = ScaledSize(SkylineWindow, 951, 607));
             FocusDocument();
             PauseForScreenShot("Populated Skyline window");
 
@@ -223,7 +223,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 RunUI(() =>
                 {
                     importResultsDlg1.Top = SkylineWindow.Top;
-                    importResultsDlg1.Left = SkylineWindow.Right + 20;
+                    importResultsDlg1.Left = SkylineWindow.Right + Scaled(20);
                 });
                 PauseForScreenShot<ImportResultsDlg>("Import Results");
                 var openDataSourceDialog1 = ShowDialog<OpenDataSourceDialog>(() => importResultsDlg1.NamedPathSets =
@@ -237,7 +237,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                     openDataSourceDialog1.SetCurrentDirectory(new MsDataFilePath(path));
                     openDataSourceDialog1.SelectAllFileType(ExtAgilentRaw);
                     openDataSourceDialog1.Left = importResultsDlg1.Left;
-                    openDataSourceDialog1.Top = importResultsDlg1.Bottom + 10;
+                    openDataSourceDialog1.Top = importResultsDlg1.Bottom + Scaled(10);
                 });
                 PauseForScreenShot<OpenDataSourceDialog>("Import Results Files selection form");
                 OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
@@ -251,7 +251,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 RunUI(() =>
                 {
                     allChromatograms.Top = SkylineWindow.Top;
-                    allChromatograms.Left = SkylineWindow.Right + 20;
+                    allChromatograms.Left = SkylineWindow.Right + Scaled(20);
                 });
                 if (!PauseForAllChromatogramsGraphScreenShot("Importing Results form", 33, "00:00:35", 22f, 2.5e6f,
                     new Dictionary<string, int>
@@ -280,7 +280,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 //   • Right-click in a chromatogram graph, choose Transitions and click Split Graph (leave if already checked).
                 SkylineWindow.ShowSplitChromatogramGraph(true);
                 SkylineWindow.AutoZoomBestPeak();
-                SkylineWindow.Size = new Size(1487, 786);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 1487, 786);
             });
             RunDlg<ChromChartPropertyDlg>(SkylineWindow.ShowChromatogramProperties, propDlg =>
             {
@@ -315,7 +315,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             //    You should end up with a similar layout to that below:
             RunUI(() =>
             {
-                SkylineWindow.Size = new Size(1310, 786);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 1310, 786);
             });
             if (IsPauseForScreenShots)
             {
@@ -399,7 +399,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             //    • On the File menu, click Save As...
             //    • Save the file with a different name than your original Skyline document, such as “Drosophila_Lipids_Neg_IMS_Filtered”, in the tutorial folder you created.
             RunUI(() => SkylineWindow.SaveDocument(TestFilesDirs[0].GetTestPath(@"Drosophila_Lipids_Neg_IMS_Filtered.sky")));
-            RunUI(() => SkylineWindow.Width -= 300);
+            RunUI(() => SkylineWindow.Width -= Scaled(300));
 
             //   • From the Settings menu, click Transition Settings.
             //   • Click the Ion Mobility tab.
@@ -416,7 +416,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 transitionSettingsUI.IonMobilityControl.IonMobilityFilterResolvingPower = 50;
                 transitionSettingsUI.IonMobilityControl.WindowWidthType =
                     IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power;
-                transitionSettingsUI.Left = SkylineWindow.Right + 20;
+                transitionSettingsUI.Left = SkylineWindow.Right + Scaled(20);
             });
             //   • The Transition Settings form should now look like this:
             PauseForScreenShot<TransitionSettingsUI.IonMobilityTab>("Transition Settings: IonMobility");            //The Transition Settings should now look like:
@@ -465,7 +465,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 RunUI(() =>
                 {
                     var frame = fullScanForm.Parent.Parent;
-                    frame.Location = new Point(SkylineWindow.Left + 10, SkylineWindow.Bottom - frame.Height - 10);
+                    frame.Location = new Point(SkylineWindow.Left + Scaled(10), SkylineWindow.Bottom - frame.Height - Scaled(10));
                 });
                 TakeCoverShot(fullScanForm);
                 return;
@@ -488,7 +488,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 RunUI(() =>
                 {
                     SkylineWindow.GraphFullScan.Close();
-                    SkylineWindow.Width -= 300;
+                    SkylineWindow.Width -= Scaled(300);
                 });
                 var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
                 //   • Select LipidCreator.
@@ -496,7 +496,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 RunUI(() =>
                 {
                     pick.SelectTool("LipidCreator");
-                    pick.Left = SkylineWindow.Right + 20;
+                    pick.Left = SkylineWindow.Right + Scaled(20);
                 });
                 PauseForScreenShot<ToolStoreDlg>("LipidCreator in tool store");
                 OkDialog(pick, pick.CancelDialog);

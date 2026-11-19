@@ -111,8 +111,8 @@ This is the section a maintainer should read first. It lists the **single PORT-E
 #### U6. Six per-row blob columns written null/zero in the reconciled parquet — RESOLVED
 - **Doc:** [11-boundary-overrides.md](11-boundary-overrides.md)
 - **Rust says:** The reconciled cache carries fragment/XIC/bounds blob columns.
-- **C# does:** All six (`fragment_mzs`, `fragment_intensities`, `reference_xic_rts`, `reference_xic_intensities`, `bounds_area`, `bounds_snr`) are populated on the reconciled write path since PR #4188 (`40340dada3`, 2026-05): `PerFileRescoreTask` -> `ReconciledParquetWriter` -> `ParquetScoreCache.StreamReconciledScoresParquet` -> `BuildFdrEntryColumns`.
-- **C# evidence:** `Osprey.IO/ParquetScoreCache.cs` (`BuildFdrEntryColumns`, the `boundsAreas[j]` / `fragmentMzs[j] = EncodeF64Blob(...)` assignments); `IOTest.TestStreamReconciledTransferMatchesLoadAllOverlay` asserts them.
+- **C# does:** `reference_xic_rts`, `reference_xic_intensities`, `bounds_area` and `bounds_snr` are populated on the reconciled write path since PR #4188 (`40340dada3`, 2026-05): `PerFileRescoreTask` -> `ReconciledParquetWriter` -> `ParquetScoreCache.StreamReconciledScoresParquet` -> `BuildFdrEntryColumns`. `fragment_mzs` and `fragment_intensities` are no longer written to either scores parquet, and `cwt_candidates` not to the reconciled one (#5023): nothing reads them there.
+- **C# evidence:** `Osprey.IO/ParquetScoreCache.cs` (`WriteFields`, `BuildFdrEntryColumns`); `IOTest.TestStreamReconciledTransferMatchesLoadAllOverlay` asserts them.
 - **Recommended action:** None. The item stood on a class summary in the since-removed `Osprey/RescoreWorker.cs` that predated #4188 and was never updated; it is kept here so the U-numbering stays stable.
 
 #### U7. Python calibration report tooling (`evaluate_calibration.py`) has no verified C# equivalent — info

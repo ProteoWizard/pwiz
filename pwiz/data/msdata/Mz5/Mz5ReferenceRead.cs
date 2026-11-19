@@ -60,13 +60,15 @@ public sealed class Mz5ReferenceRead
                 var cvs = conn.ReadFull<ContVocabMZ5>(Mz5Datasets.ControlledVocabulary, t);
                 foreach (var c in cvs)
                 {
-                    _msd.CVs.Add(new CV
+                    var cv = new CV
                     {
                         Uri = Mz5StringMarshal.FromVlen(c.Uri),
                         FullName = Mz5StringMarshal.FromVlen(c.FullName),
                         Id = Mz5StringMarshal.FromVlen(c.Id),
                         Version = Mz5StringMarshal.FromVlen(c.Version),
-                    });
+                    };
+                    _msd.CVs.Add(cv);
+                    CvLookup.RegisterSource(cv);
                 }
                 conn.VlenReclaim(cvs, t);
             }

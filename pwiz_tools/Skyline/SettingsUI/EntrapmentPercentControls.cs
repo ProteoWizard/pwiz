@@ -23,6 +23,7 @@ using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -47,9 +48,9 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public static void Layout(Label labelPercent, TextBox textPercent, Label labelInTargets, TextBox textInTargets)
         {
-            textPercent.Left = labelPercent.Right + 4;
-            labelInTargets.Left = textPercent.Right + 12;
-            textInTargets.Left = labelInTargets.Right + 4;
+            textPercent.Left = labelPercent.Right + DpiUtil.Scale(labelPercent, 4);
+            labelInTargets.Left = textPercent.Right + DpiUtil.Scale(labelPercent, 12);
+            textInTargets.Left = labelInTargets.Right + DpiUtil.Scale(labelPercent, 4);
         }
 
         /// <summary>The captions name the choice; the tooltips say what each percentage does.</summary>

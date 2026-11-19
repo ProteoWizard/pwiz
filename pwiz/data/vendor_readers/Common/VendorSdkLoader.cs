@@ -415,6 +415,7 @@ public static class VendorSdkLoader
         // Synchronous download — vendor SDK loads happen on the worker thread that's
         // about to read the file anyway. HttpClient with no timeout fits ~100 MB archives
         // (the larger vendor SDKs); user-perceived latency is the price of "lazy fetch".
+        // ReSharper disable once UsingStatementResourceInitialization
         using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(20) };
         HttpResponseMessage? response = null;
         try

@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -229,7 +228,7 @@ namespace pwiz.SkylineTestTutorial
             FindNode(decorator + "IHGFDLAAINLQR");
             RestoreViewOnScreen(8);
             RunUI(SkylineWindow.FocusDocument);
-            RunUI(() => SkylineWindow.Size = new Size(984, 553));
+            RunUI(() => SkylineWindow.Size = ScaledSize(SkylineWindow, 984, 553));
             PauseForScreenShot("Main Skyline window");
 
             if (IsCoverShotMode)

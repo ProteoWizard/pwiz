@@ -377,10 +377,16 @@ public sealed class TdfMetadata : IDisposable
         return QueryScalar<long>($"SELECT COUNT(*) FROM {tableName}") > 0;
     }
 
+    /// <summary>
+    /// True if <paramref name="tableName"/> exists as a table or a view. TDF schema v5 replaced
+    /// the per-mode MS/MS tables (<c>PasefFrameMsMsInfo</c>, <c>DiaFrameMsMsInfo</c>,
+    /// <c>DiaFrameMsMsWindows</c>, <c>PrmFrameMsMsInfo</c>, <c>Precursors</c>, ...) with
+    /// backward-compatible views over the new <c>Fragmentation*</c> tables.
+    /// </summary>
     private bool TableExists(string tableName)
     {
         using var cmd = _conn.CreateCommand();
-        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name=$name";
+        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type IN ('table', 'view') AND name=$name";
         cmd.Parameters.AddWithValue("$name", tableName);
         return cmd.ExecuteScalar() is not null;
     }
