@@ -146,6 +146,7 @@ namespace Pwiz.SeeMS
 
     public class PeptideFragmentationAnnotation : AnnotationBase
     {
+        [Flags]
         public enum IonSeries
         {
             Off = 0,
@@ -442,6 +443,7 @@ namespace Pwiz.SeeMS
             return "Peptide Fragmentation (" + sequence + ")";
         }
 
+        // ReSharper disable once ParameterHidesMember
         private int findPointWithTolerance(pwiz.MSGraph.MSPointList points, double mz, MZTolerance tolerance, bool scaled = false)
         {
             double lowestMatchMz = mz - tolerance;
@@ -581,6 +583,7 @@ namespace Pwiz.SeeMS
         private void addFragmentationSummary (GraphObjList list, pwiz.MSGraph.MSPointList points, Peptide peptide, Fragmentation fragmentation, string topSeries, string bottomSeries)
         {
             int ionSeriesChargeState = min;
+            // ReSharper disable once LocalVariableHidesMember
             string sequence = peptide.Sequence;
             ModificationMap modifications = peptide.Modifications;
 
@@ -709,6 +712,7 @@ namespace Pwiz.SeeMS
         private void addIonSeries (GraphObjList list, pwiz.MSGraph.MSPointList points, Peptide peptide, Fragmentation fragmentation, string topSeries, string bottomSeries)
         {
             int ionSeriesChargeState = min;
+            // ReSharper disable once LocalVariableHidesMember
             string sequence = peptide.Sequence;
             ModificationMap modifications = peptide.Modifications;
 
