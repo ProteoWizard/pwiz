@@ -31,6 +31,7 @@ public class FillInCommonMetadataTests
             Assert.AreEqual("metadata-helper", msd.Id);
             Assert.AreEqual("metadata-helper", msd.Run.Id);
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         finally { try { File.Delete(tmp); } catch { } }
     }
 
@@ -53,6 +54,7 @@ public class FillInCommonMetadataTests
             MSDataFile.FillInCommonMetadata(tmp, msd);
             Assert.AreEqual(1, msd.Software.Count, "pwiz software entry should not duplicate");
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         finally { try { File.Delete(tmp); } catch { } }
     }
 
@@ -71,6 +73,7 @@ public class FillInCommonMetadataTests
             Assert.AreSame(msd.Software[0], dp.ProcessingMethods[0].Software);
             Assert.IsTrue(msd.DataProcessings.Contains(dp));
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         finally { try { File.Delete(tmp); } catch { } }
     }
 
@@ -96,6 +99,7 @@ public class FillInCommonMetadataTests
             var dp2 = MSDataFile.FillInCommonMetadata(tmp, msd2);
             Assert.IsNotNull(dp2);
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         finally { try { File.Delete(tmp); } catch { } }
     }
 
@@ -132,6 +136,7 @@ public class FillInCommonMetadataTests
             Assert.IsTrue(rt.DataProcessings.Any(d => d.Id == "pwiz_Reader_conversion"),
                 "pwiz_Reader_conversion DataProcessing should be added");
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         finally { try { File.Delete(tmp); } catch { } }
     }
 }

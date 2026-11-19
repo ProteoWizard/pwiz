@@ -114,10 +114,14 @@ public sealed class Digestion
 
     /// <summary>Constructs a digestion driven by multiple cleavage agents acting in concert.</summary>
     public Digestion(Peptide polypeptide, IEnumerable<CVID> cleavageAgents, DigestionConfig? config = null)
+        : this(polypeptide, cleavageAgents.ToArray(), config)
+    { }
+
+    private Digestion(Peptide polypeptide, CVID[] cleavageAgents, DigestionConfig? config)
         : this(polypeptide,
                cleavageAgents.Select(GetCleavageAgentRegex).Where(r => r.Length > 0),
                config,
-               cleavageAgents.Count() == 1 ? cleavageAgents.First() : CVID.CVID_Unknown)
+               cleavageAgents.Length == 1 ? cleavageAgents[0] : CVID.CVID_Unknown)
     { }
 
     /// <summary>Constructs a digestion driven by a user-supplied regex (zero-width

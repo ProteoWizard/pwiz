@@ -1805,6 +1805,18 @@
             <c>true</c> to suspend the layout logic of child windows; otherwise, 
             <c>false</c>.</param>
         </member>
+        <member name="M:DigitalRune.Windows.Docking.DockPanel.SuspendLayoutScope">
+            <summary>
+            Suspends the layout logic of the panel and its child windows until the returned
+            <see cref="T:DigitalRune.Windows.Docking.DockPanel.LayoutSuspension"/> is disposed.
+            </summary>
+        </member>
+        <member name="T:DigitalRune.Windows.Docking.DockPanel.LayoutSuspension">
+            <summary>
+            The suspended layout of a <see cref="T:DigitalRune.Windows.Docking.DockPanel"/> and its child windows, resumed with
+            pending layout requests performed when disposed.
+            </summary>
+        </member>
         <member name="M:DigitalRune.Windows.Docking.DockPanel.OnParentChanged(System.EventArgs)">
             <summary>
             Raises the <see cref="E:System.Windows.Forms.Control.ParentChanged"></see> event.

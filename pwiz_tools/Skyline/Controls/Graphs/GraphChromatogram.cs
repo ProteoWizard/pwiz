@@ -338,23 +338,23 @@ namespace pwiz.Skyline.Controls.Graphs
         public event EventHandler<ClickedChromatogramEventArgs> ClickedChromatogram;
 
         /// <summary>
-        /// User clicked on a chromatogram.
+        /// User clicked on a chromatogram. Returns false when the point cannot show a spectrum.
         /// </summary>
-        private void FireClickedChromatogram(FullScanPoint fullScanPoint)
+        private bool FireClickedChromatogram(FullScanPoint fullScanPoint)
         {
             if (ClickedChromatogram == null)
-                return;
+                return false;
 
             var graphPane = fullScanPoint.GraphPane;
             var clickedCurve = fullScanPoint.Curve;
             var clickedItem = (ChromGraphItem) clickedCurve.Tag;
             if (clickedItem.TransitionNode == null)
-                return;
+                return false;
             var chromatogramInfo = clickedItem.Chromatogram;
 
             var retentionTime = clickedItem.GetValidPeakBoundaryTime(fullScanPoint.DisplayTime);
             if (retentionTime.IsZero)
-                return;
+                return false;
             IList<CurveItem> curveList;
             if (_nodeGroups.Length == 1)
             {
@@ -384,7 +384,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!transitionIndex.HasValue)
             {
                 // Curve that they clicked on is no longer in CurveList
-                return;
+                return false;
             }
 
             if (clickedItem.OptimizationStep.HasValue)
@@ -402,6 +402,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 MsDataFileScanHelper.FindScanIndex(chromatogramInfo, retentionTime.MeasuredTime),
                 clickedItem.OptimizationStep);
             ClickedChromatogram?.Invoke(this, e);
+            return true;
         }
 
         private IEnumerable<TransitionFullScanInfo> GetOtherOptimizationTransitions(CurveItem clickedCurve)
@@ -3349,6 +3350,43 @@ namespace pwiz.Skyline.Controls.Graphs
                 return null;
             graphPane.ReverseTransform(closestPoint, out var displayTime, out var intensity);
             return new FullScanPoint(graphPane, closestCurve, displayTime, intensity);
+        }
+
+        /// <summary>
+        /// Shows the spectrum at <paramref name="retentionTime"/> (a measured time), as clicking that point would.
+        /// The point is on the chromatogram of <paramref name="transitionId"/>, or, when that is null, of the
+        /// transition most intense at that time. Returns false when no displayed transition chromatogram spans
+        /// the time and can show a spectrum.
+        /// </summary>
+        public bool ShowFullScan(double retentionTime, Identity transitionId)
+        {
+            if (!_enableTrackingDot || _showPeptideTotals)
+                return false;
+            FullScanPoint mostIntense = null;
+            foreach (var graphPane in GraphPanes)
+            {
+                foreach (var curve in GetCurves(graphPane))
+                {
+                    var graphItem = (ChromGraphItem) curve.Tag;
+                    if (graphItem.TransitionNode == null)
+                        continue;
+                    if (transitionId != null && !ReferenceEquals(graphItem.TransitionNode.Id, transitionId))
+                        continue;
+                    // The item's own points, one per measured time: the curve's are binned to the screen width
+                    var points = graphItem.Points;
+                    if (points.Count == 0)
+                        continue;
+                    double displayTime = graphItem.MeasuredTimeToDisplayTime(retentionTime);
+                    if (displayTime < points[0].X || displayTime > points[points.Count - 1].X)
+                        continue;
+                    var point = points[graphItem.GetNearestMeasuredIndex(retentionTime)];
+                    if (mostIntense == null || point.Y > mostIntense.Intensity)
+                        mostIntense = new FullScanPoint(graphPane, curve, point.X, point.Y);
+                }
+            }
+            if (mostIntense == null)
+                return false;
+            return FireClickedChromatogram(mostIntense);
         }
 
         /// <summary>
