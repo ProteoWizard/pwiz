@@ -245,22 +245,24 @@ namespace IconBuilder
                 Path.GetFullPath(Path.Combine(projectDir, outputDir)));
         }
 
+        /// <summary>
+        /// Renders Name.xaml at each size, except where a size-specific Name.Size.xaml exists:
+        /// pixel art made of 1-pixel lines cannot be scaled by 0.625 or 0.75 without blurring
+        /// them, so such an icon can carry a drawing hinted for that size, on a canvas of that
+        /// many units.
+        /// </summary>
         private static int RenderVector(string xamlPath, IconEntry entry, string outDir)
         {
             if (!File.Exists(xamlPath))
                 throw new FileNotFoundException("Vector source not found", xamlPath);
 
-            FrameworkElement root;
-            using (var stream = File.OpenRead(xamlPath))
-            {
-                root = (FrameworkElement)XamlReader.Load(stream);
-            }
-
+            var root = LoadXaml(xamlPath);
             foreach (var size in entry.Sizes)
             {
+                var sizedPath = Path.Combine(Path.GetDirectoryName(xamlPath)!, $"{entry.Name}.{size}.xaml");
                 var viewbox = new Viewbox
                 {
-                    Child = root,
+                    Child = File.Exists(sizedPath) ? LoadXaml(sizedPath) : root,
                     Width = size,
                     Height = size,
                     Stretch = Stretch.Uniform
@@ -282,6 +284,14 @@ namespace IconBuilder
                 }
             }
             return entry.Sizes.Length;
+        }
+
+        private static FrameworkElement LoadXaml(string path)
+        {
+            using (var stream = File.OpenRead(path))
+            {
+                return (FrameworkElement)XamlReader.Load(stream);
+            }
         }
 
         private static string FindRaster(string rasterDir, string name)

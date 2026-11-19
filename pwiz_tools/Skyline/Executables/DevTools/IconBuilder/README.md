@@ -33,7 +33,7 @@ original in both cases; this tool emits only the larger sizes.
 # Name                     kind    sizes
 Save                       raster  20,24,32
 Folder                     vector  20,24,32
-FragmentS                  vector  18,21,28
+AllIonsStatusButton        vector  18,21,28
 ```
 
 Change an icon's source kind by editing its line; nothing else references the kind.
@@ -69,6 +69,11 @@ builds just that one. Icon names given on the command line must be in one of the
 
 **Vector**: edit the XAML. One-unit strokes sit on .5 coordinates and two-unit strokes on
 whole coordinates so both land on whole pixels at 2x. Re-run the tool.
+
+At 20 and 24 px the drawing is scaled by 0.625 and 0.75, which blurs pixel art built from
+1-pixel lines across two columns. Such an icon can add `Icons/Vector/<Name>.<Size>.xaml`, a
+drawing hinted for that one size on a canvas of that many units (one unit per pixel), which
+the tool uses for that size in place of `<Name>.xaml`. `MassSpecFile` has 20 and 24 px ones.
 
 **Raster**: when a 16 px original changes, regenerate its hq2x image with
 `Tools/hq2x_icons.py`. It needs the `hqx` package, which in turn needs Pillow older than

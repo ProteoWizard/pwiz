@@ -39,8 +39,6 @@ Fragment                   vector  20,24,32
 FragmentDecoy              vector  20,24,32
 FragmentLib                vector  20,24,32
 FragmentLibDecoy           vector  20,24,32
-FragmentLibS               vector  18,21,28
-FragmentS                  vector  18,21,28
 GenerateDecoys             vector  20,24,32
 GreenCheck                 vector  20,24,32
 HomeIcon1                  vector  20,24,32
@@ -58,6 +56,8 @@ IrtCalculator              vector  20,24,32
 Keep                       vector  20,24,32
 LabKey                     vector  18,21,28
 Locked                     vector  20,24,32
+# File dialog list icon, looked up by its image list key (no Resources.resx entry)
+MassSpecFile               vector  20,24,32
 MethodFile                 vector  20,24,32
 Molecule                   vector  20,24,32
 MoleculeIrt                vector  20,24,32
@@ -107,7 +107,9 @@ RedXTransparentBackground  vector  18,21,28
 Replicate                  vector  20,24,32
 ReplicateMissing           vector  20,24,32
 Save                       raster  20,24,32
-Skyline_FilesTree          vector  20,24,32
+# Raster from Resources/Skyline_Release.ico's 32 px frame, not hq2x, so the Files view
+# root matches the title bar icon (which the native is that file's 16 px frame of)
+Skyline_FilesTree          raster  20,24,32
 ToolUpdateAvailable        vector  20,24,32
 TransitionGroup            vector  20,24,32
 TransitionGroupDecoy       vector  20,24,32

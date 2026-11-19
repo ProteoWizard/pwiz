@@ -4,304 +4,131 @@
         <name>DigitalRune.Windows.Docking</name>
     </assembly>
     <members>
-        <member name="T:DigitalRune.Windows.Docking.DragForm">
+        <member name="T:DigitalRune.Windows.Docking.AutoHidePane">
             <summary>
-            Overlay window that is used to display infos (e.g. drag indicators) on top
-            of other windows.
+            Represent a <see cref="P:DigitalRune.Windows.Docking.AutoHidePane.DockPane"/> displayed in the auto-hide tab strip area of <see cref="T:DigitalRune.Windows.Docking.DockPanel"/>.
             </summary>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DragForm.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:DigitalRune.Windows.Docking.DragForm"/> class.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.DragForm.CreateParams">
-            <summary>
-            Gets the required creation parameters when the window handle is created.
-            </summary>
-            <value>The creation parameters.</value>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DragForm.WndProc(System.Windows.Forms.Message@)">
-            <summary>
-            Processes window messages.
-            </summary>
-            <param name="m">The m.</param>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DragForm.Show(System.Boolean)">
-            <summary>
-            Shows the form.
-            </summary>
-            <param name="bActivate">
-            If set to <c>true</c> then the <see cref="T:DigitalRune.Windows.Docking.DragForm"/> steals the focus
-            of other windows; otherwise the <see cref="T:DigitalRune.Windows.Docking.DragForm"/> does not take the
-            focus.</param>
-        </member>
-        <member name="T:DigitalRune.Windows.Docking.MdiClientController">
-            <summary>
-            Controls MDI client forms.
-            </summary>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.MdiClientController.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:DigitalRune.Windows.Docking.MdiClientController"/> class.
-            </summary>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.MdiClientController.Dispose">
-            <summary>
-            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-            </summary>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.MdiClientController.Dispose(System.Boolean)">
-            <summary>
-            Releases unmanaged and - optionally - managed resources
-            </summary>
-            <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.MdiClientController.AutoScroll">
-            <summary>
-            Gets or sets a value indicating whether auto scrolling is enabled.
-            </summary>
-            <value>
-            <c>true</c> if auto scrolling is enabled; otherwise, <c>false</c>.
-            </value>
             <remarks>
-            <para>
-            Auto scrolling means that scrollbars are drawn as soon as any of the 
-            client windows moves outside of the visible area.
-            </para>
-            <para>
-            By default auto scrolling is enabled.
-            </para>
+            When customizing the auto-hide tab strip area of the <see cref="T:DigitalRune.Windows.Docking.DockPanel"/>, you can derive a class from <see cref="T:DigitalRune.Windows.Docking.AutoHideStripBase"/>
+            class, and then plug it into the <see cref="T:DigitalRune.Windows.Docking.DockPanel"/> through the <see cref="P:DigitalRune.Windows.Docking.DockPanelExtender.AutoHideStripFactory"/> property of <see cref="P:DigitalRune.Windows.Docking.DockPanel.Extender"/>. If you want to
+            associate data with auto-hide <see cref="P:DigitalRune.Windows.Docking.AutoHidePane.DockPane"/>, you can derived a class from <see cref="T:DigitalRune.Windows.Docking.AutoHidePane"/> class,
+            then plug it into the <see cref="T:DigitalRune.Windows.Docking.DockPanel"/> through <see cref="P:DigitalRune.Windows.Docking.DockPanelExtender.AutoHideStripFactory"/> property of <see cref="P:DigitalRune.Windows.Docking.DockPanel.Extender"/>. The docking framework
+            will create the class instances and you can reference them through 
+            <see cref="P:DigitalRune.Windows.Docking.AutoHideStripBase.PanesTop"/>, <see cref="P:DigitalRune.Windows.Docking.AutoHideStripBase.PanesBottom"/>,
+            <see cref="P:DigitalRune.Windows.Docking.AutoHideStripBase.PanesLeft"/>, <see cref="P:DigitalRune.Windows.Docking.AutoHideStripBase.PanesRight"/> properties
+            of class <see cref="T:DigitalRune.Windows.Docking.AutoHideStripBase"/>.
             </remarks>
         </member>
-        <member name="P:DigitalRune.Windows.Docking.MdiClientController.BorderStyle">
+        <member name="M:DigitalRune.Windows.Docking.AutoHidePane.#ctor(DigitalRune.Windows.Docking.DockPane)">
             <summary>
-            Sets the border style.
+            Creates a instance of <see cref="T:DigitalRune.Windows.Docking.AutoHidePane"/> class.
             </summary>
-            <value>The border style.</value>
+            <param name="dockPane">The <see cref="P:DigitalRune.Windows.Docking.AutoHidePane.DockPane"/> object to associate with.</param>
+            <remarks>
+            Instance of <see cref="T:DigitalRune.Windows.Docking.AutoHidePane"/> or derived class should only be created by the docking framework.
+            The constructor should only be called within the implementation of <see cref="T:DigitalRune.Windows.Docking.DockPanelExtender.IAutoHideStripFactory"/> interface or derived class's constructor.
+            </remarks>
         </member>
-        <member name="P:DigitalRune.Windows.Docking.MdiClientController.MdiClient">
+        <member name="M:DigitalRune.Windows.Docking.AutoHidePane.Finalize">
+            <exclude/>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.AutoHidePane.DockPane">
             <summary>
-            Gets the MDI client associated with this controller.
+            Gets the associated <see cref="P:DigitalRune.Windows.Docking.AutoHidePane.DockPane"/> object.
             </summary>
-            <value>The MDI client.</value>
+            <value>A <see cref="P:DigitalRune.Windows.Docking.AutoHidePane.DockPane" /> object which associates with this <see cref="T:DigitalRune.Windows.Docking.AutoHidePane"/> object.</value>
         </member>
-        <member name="P:DigitalRune.Windows.Docking.MdiClientController.ParentForm">
+        <member name="P:DigitalRune.Windows.Docking.AutoHidePane.AutoHideTabs">
             <summary>
-            Gets or sets the parent form.
+            Gets the collection of tabs contained within the auto-hide pane.
             </summary>
-            <value>The parent form.</value>
+            <value>A <see cref="T:DigitalRune.Windows.Docking.AutoHideTabCollection" /> representing the collection of tabs contained within the auto-hide pane.</value>
         </member>
-        <member name="P:DigitalRune.Windows.Docking.MdiClientController.Site">
+        <member name="M:DigitalRune.Windows.Docking.AutoHidePane.Dispose">
             <summary>
-            Gets or sets the <see cref="T:System.ComponentModel.ISite"></see> 
-            associated with the <see cref="T:System.ComponentModel.IComponent"></see>.
+            Releases all the resources used by the <see cref="T:DigitalRune.Windows.Docking.AutoHidePane"/> object.
             </summary>
-            <value></value>
-            <returns>
-            The <see cref="T:System.ComponentModel.ISite"></see> object associated 
-            with the component; or null, if the component does not have a site.
-            </returns>
+            <overloads>
+              <summary>
+                Releases the resources used by the <see cref="T:DigitalRune.Windows.Docking.AutoHidePane"/> object.
+              </summary>
+            </overloads>
         </member>
-        <member name="M:DigitalRune.Windows.Docking.MdiClientController.RenewMdiClient">
+        <member name="M:DigitalRune.Windows.Docking.AutoHidePane.Dispose(System.Boolean)">
             <summary>
-            Renews the MDI client.
+            Releases the unmanaged resources used by the <see cref="T:DigitalRune.Windows.Docking.AutoHidePane"/> object and optionally releases the managed resources.
             </summary>
+            <param name='disposing'>
+              <B>true</B> to release both managed and unmanaged resources;
+              <B>false</B> to release only unmanaged resources.
+            </param>
         </member>
-        <member name="E:DigitalRune.Windows.Docking.MdiClientController.Disposed">
+        <member name="T:DigitalRune.Windows.Docking.AutoHidePaneCollection">
             <summary>
-            Occurs when this object is being disposed.
-            </summary>
-        </member>
-        <member name="E:DigitalRune.Windows.Docking.MdiClientController.HandleAssigned">
-            <summary>
-            Occurs when a handle is assigned to this <see cref="T:DigitalRune.Windows.Docking.MdiClientController"/>.
-            </summary>
-        </member>
-        <member name="E:DigitalRune.Windows.Docking.MdiClientController.MdiChildActivate">
-            <summary>
-            Occurs when an MDI child is activated
-            </summary>
-        </member>
-        <member name="E:DigitalRune.Windows.Docking.MdiClientController.Layout">
-            <summary>
-            Occurs when layout is calculated.
+            Provides methods to manage a collection of <see cref="T:DigitalRune.Windows.Docking.AutoHidePane" /> objects.
             </summary>
         </member>
-        <member name="M:DigitalRune.Windows.Docking.MdiClientController.OnHandleAssigned(System.EventArgs)">
+        <member name="P:DigitalRune.Windows.Docking.AutoHidePaneCollection.Count">
             <summary>
-            Raises the <see cref="E:DigitalRune.Windows.Docking.MdiClientController.HandleAssigned"/> event.
+            Gets the number of elements contained in the <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection"/> instance.
             </summary>
-            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+            <value>The number of elements contained in the <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection"/> instance.</value>
         </member>
-        <member name="M:DigitalRune.Windows.Docking.MdiClientController.OnMdiChildActivate(System.EventArgs)">
+        <member name="P:DigitalRune.Windows.Docking.AutoHidePaneCollection.Item(System.Int32)">
             <summary>
-            Raises the <see cref="E:DigitalRune.Windows.Docking.MdiClientController.MdiChildActivate"/> event.
-            </summary>
-            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.MdiClientController.OnLayout(System.Windows.Forms.LayoutEventArgs)">
-            <summary>
-            Raises the <see cref="E:DigitalRune.Windows.Docking.MdiClientController.Layout"/> event.
-            </summary>
-            <param name="e">The <see cref="T:System.Windows.Forms.LayoutEventArgs"/> instance containing the event data.</param>
-        </member>
-        <member name="E:DigitalRune.Windows.Docking.MdiClientController.Paint">
-            <summary>
-            Occurs when control is painted.
+              <para>Gets a <see cref="T:DigitalRune.Windows.Docking.AutoHidePane" /> at the specified index.</para>
+              <para>In C#, this property is the indexer for the <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection" /> class.</para>
             </summary>
         </member>
-        <member name="M:DigitalRune.Windows.Docking.MdiClientController.OnPaint(System.Windows.Forms.PaintEventArgs)">
+        <member name="M:DigitalRune.Windows.Docking.AutoHidePaneCollection.Contains(DigitalRune.Windows.Docking.AutoHidePane)">
+            <overloads>
+              <summary>
+                Determines whether an element is in the <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection" />.
+              </summary>
+            </overloads>
             <summary>
-            Raises the <see cref="E:DigitalRune.Windows.Docking.MdiClientController.Paint"/> event.
+            Determines whether a <see cref="T:DigitalRune.Windows.Docking.AutoHidePane" /> is in the <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection" />.
             </summary>
-            <param name="e">The <see cref="T:System.Windows.Forms.PaintEventArgs"/> instance containing the event data.</param>
+            <param name="pane">The <see cref="T:DigitalRune.Windows.Docking.AutoHidePane" /> to locate in <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection" />.</param>
+            <returns><b>true</b> if <paramref name="pane" /> is found in the <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection" />; otherwise, <b>false</b>.</returns>
         </member>
-        <member name="M:DigitalRune.Windows.Docking.MdiClientController.WndProc(System.Windows.Forms.Message@)">
+        <member name="M:DigitalRune.Windows.Docking.AutoHidePaneCollection.IndexOf(DigitalRune.Windows.Docking.AutoHidePane)">
             <summary>
-            Invokes the default window procedure associated with this window.
+            Searches for the specified <see cref="T:DigitalRune.Windows.Docking.AutoHidePane" /> and returns the zero-based index within the entire <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection" />.
             </summary>
-            <param name="m">A <see cref="T:System.Windows.Forms.Message"></see> that is associated with the current Windows message.</param>
+            <param name="pane">The <see cref="T:DigitalRune.Windows.Docking.AutoHidePane" /> to locate in the <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection" />.</param>
+            <returns>The zero-based index of <paramref name="pane" /> within the entire <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection" />, if found; otherwise, -1.</returns>
+            <overloads>
+              <summary>
+                Searches for the specified element and returns the zero based index within the entire <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection" />.
+              </summary>
+            </overloads>
         </member>
-        <member name="T:DigitalRune.Windows.Docking.DockPanelButtonState">
+        <member name="T:DigitalRune.Windows.Docking.AutoHideStrip">
             <summary>
-            Represents the state of an DockPanel button.
-            </summary>
-        </member>
-        <member name="F:DigitalRune.Windows.Docking.DockPanelButtonState.Disabled">
-            <summary>The button is disabled.</summary>
-        </member>
-        <member name="F:DigitalRune.Windows.Docking.DockPanelButtonState.Hot">
-            <summary>The button is hot (mouse hovers on button).</summary>
-        </member>
-        <member name="F:DigitalRune.Windows.Docking.DockPanelButtonState.Normal">
-            <summary>The button is displayed normally.</summary>
-        </member>
-        <member name="F:DigitalRune.Windows.Docking.DockPanelButtonState.Pressed">
-            <summary>The button is pressed.</summary>
-        </member>
-        <member name="T:DigitalRune.Windows.Docking.InertButtonImage">
-            <summary>
-            The currently active image of the <see cref="T:DigitalRune.Windows.Docking.InertButton"/>.
+            Auto-hide tab strip of <see cref="T:DigitalRune.Windows.Docking.DockPanel"/>.
             </summary>
         </member>
-        <member name="F:DigitalRune.Windows.Docking.InertButtonImage.Image0">
+        <member name="M:DigitalRune.Windows.Docking.AutoHideStrip.#ctor(DigitalRune.Windows.Docking.DockPanel)">
             <summary>
-            The first image.
+            Initializes a instance of <see cref="T:DigitalRune.Windows.Docking.AutoHideStrip"/> class.
             </summary>
+            <param name="panel">The associated <see cref="T:DigitalRune.Windows.Docking.DockPanel"/>.</param>
         </member>
-        <member name="F:DigitalRune.Windows.Docking.InertButtonImage.Image1">
-            <summary>
-            The second Image.
-            </summary>
+        <member name="M:DigitalRune.Windows.Docking.AutoHideStrip.OnPaint(System.Windows.Forms.PaintEventArgs)">
+            <exclude/>
         </member>
-        <member name="T:DigitalRune.Windows.Docking.InertButton">
-            <summary>
-            Two-state image button.
-            </summary>
+        <member name="M:DigitalRune.Windows.Docking.AutoHideStrip.OnLayout(System.Windows.Forms.LayoutEventArgs)">
+            <exclude/>
         </member>
-        <member name="M:DigitalRune.Windows.Docking.InertButton.#ctor(System.Drawing.Bitmap,System.Drawing.Bitmap)">
-            <summary>
-            Initializes a new instance of the <see cref="T:DigitalRune.Windows.Docking.InertButton"/> class.
-            </summary>
+        <member name="M:DigitalRune.Windows.Docking.AutoHideStrip.HitTest(System.Drawing.Point)">
+            <exclude />
         </member>
-        <member name="P:DigitalRune.Windows.Docking.InertButton.Image0">
-            <summary>
-            Gets or sets the first image.
-            </summary>
-            <value>The first image.</value>
+        <member name="M:DigitalRune.Windows.Docking.AutoHideStrip.MeasureHeight">
+            <exclude/>
         </member>
-        <member name="P:DigitalRune.Windows.Docking.InertButton.Image1">
-            <summary>
-            Gets or sets the second image.
-            </summary>
-            <value>The second image.</value>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.InertButton.Image">
-            <summary>
-            Gets the visible image.
-            </summary>
-            <value>The visible image.</value>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.InertButton.ImageCategory">
-            <summary>
-            Gets or selects the visible image of the button.
-            </summary>
-            <value>The image category (visible image).</value>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.InertButton.IsMouseOver">
-            <summary>
-            Gets or sets a value indicating whether the mouse cursor is over the button.
-            </summary>
-            <value>
-            	<c>true</c> if the mouse is over the button; otherwise, <c>false</c>.
-            </value>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.InertButton.IsMouseDown">
-            <summary>
-            Gets or sets a value indicating whether the mouse button is pressed.
-            </summary>
-            <value>
-            	<c>true</c> if the mouse is pressed; otherwise, <c>false</c>.
-            </value>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.InertButton.DefaultSize">
-            <summary>
-            Gets the size of the default.
-            </summary>
-            <value>The size of the default.</value>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.InertButton.State">
-            <summary>
-            Gets the state of the button.
-            </summary>
-            <value>The state of the button.</value>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.InertButton.OnMouseMove(System.Windows.Forms.MouseEventArgs)">
-            <summary>
-            Raises the <see cref="E:System.Windows.Forms.Control.MouseMove"/> event.
-            </summary>
-            <param name="e">The <see cref="T:System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.InertButton.OnMouseEnter(System.EventArgs)">
-            <summary>
-            Raises the <see cref="E:System.Windows.Forms.Control.MouseEnter"/> event.
-            </summary>
-            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.InertButton.OnMouseLeave(System.EventArgs)">
-            <summary>
-            Raises the <see cref="E:System.Windows.Forms.Control.MouseLeave"/> event.
-            </summary>
-            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.InertButton.OnMouseDown(System.Windows.Forms.MouseEventArgs)">
-            <summary>
-            Raises the <see cref="E:System.Windows.Forms.Control.MouseDown"/> event.
-            </summary>
-            <param name="e">The <see cref="T:System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.InertButton.OnMouseUp(System.Windows.Forms.MouseEventArgs)">
-            <summary>
-            Raises the <see cref="E:System.Windows.Forms.Control.MouseUp"/> event.
-            </summary>
-            <param name="e">The <see cref="T:System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.InertButton.OnPaint(System.Windows.Forms.PaintEventArgs)">
-            <summary>
-            Raises the <see cref="E:System.Windows.Forms.Control.Paint"/> event.
-            </summary>
-            <param name="e">The <see cref="T:System.Windows.Forms.PaintEventArgs"/> instance containing the event data.</param>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.InertButton.RefreshChanges">
-            <summary>
-            Refreshes the control.
-            </summary>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.InertButton.OnRefreshChanges">
-            <summary>
-            Called when the control needs to be refreshed.
-            </summary>
+        <member name="M:DigitalRune.Windows.Docking.AutoHideStrip.OnRefreshChanges">
+            <exclude/>
         </member>
         <member name="T:DigitalRune.Windows.Docking.AutoHideStripBase">
             <summary>
@@ -382,32 +209,6 @@
             </summary>
             <param name="point">The specified point.</param>
             <returns>The <see cref="T:DigitalRune.Windows.Docking.IDockableForm"/> tab of the specified point, null for nothing.</returns>
-        </member>
-        <member name="T:DigitalRune.Windows.Docking.AutoHideStrip">
-            <summary>
-            Auto-hide tab strip of <see cref="T:DigitalRune.Windows.Docking.DockPanel"/>.
-            </summary>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.AutoHideStrip.#ctor(DigitalRune.Windows.Docking.DockPanel)">
-            <summary>
-            Initializes a instance of <see cref="T:DigitalRune.Windows.Docking.AutoHideStrip"/> class.
-            </summary>
-            <param name="panel">The associated <see cref="T:DigitalRune.Windows.Docking.DockPanel"/>.</param>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.AutoHideStrip.OnPaint(System.Windows.Forms.PaintEventArgs)">
-            <exclude/>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.AutoHideStrip.OnLayout(System.Windows.Forms.LayoutEventArgs)">
-            <exclude/>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.AutoHideStrip.HitTest(System.Drawing.Point)">
-            <exclude />
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.AutoHideStrip.MeasureHeight">
-            <exclude/>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.AutoHideStrip.OnRefreshChanges">
-            <exclude/>
         </member>
         <member name="T:DigitalRune.Windows.Docking.AutoHideWindowState">
             <summary>
@@ -686,6 +487,23 @@
             The index of the <see cref="T:DigitalRune.Windows.Docking.IDockableForm"/>;<c>-1</c> if the
             collection does not contain the object.
             </returns>
+        </member>
+        <member name="T:DigitalRune.Windows.Docking.DockingEventArgs">
+            <summary>Provides data for <see cref="E:DigitalRune.Windows.Docking.DockPanel.ContentAdded"/> and 
+            <see cref="E:DigitalRune.Windows.Docking.DockPanel.ContentRemoved"/> events.</summary>
+        </member>
+        <member name="F:DigitalRune.Windows.Docking.DockingEventArgs.Empty">
+            <summary>
+            Empty <see cref="T:DigitalRune.Windows.Docking.DockingEventArgs"/>.
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockingEventArgs.#ctor(DigitalRune.Windows.Docking.IDockableForm)">
+            <summary>Initializes a new instance of <see cref="T:DigitalRune.Windows.Docking.DockingEventArgs"/> class.</summary>
+            <param name="content">The <see cref="T:DigitalRune.Windows.Docking.IDockableForm"/> object.</param>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.DockingEventArgs.Content">
+            <summary>Gets the <see cref="T:DigitalRune.Windows.Docking.IDockableForm"/> object.</summary>
+            <value>The <see cref="T:DigitalRune.Windows.Docking.IDockableForm"/> object.</value>
         </member>
         <member name="T:DigitalRune.Windows.Docking.DeserializeDockableForm">
             <summary>
@@ -1199,132 +1017,6 @@
             </summary>
             <param name="e"><see cref="T:System.EventArgs" /> object that provides the arguments for the event.</param>
         </member>
-        <member name="T:DigitalRune.Windows.Docking.NestedPaneCollection">
-            <summary>
-            Manages a collection of nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.NestedPaneCollection.Container">
-            <summary>
-            Gets the container (<see cref="T:DigitalRune.Windows.Docking.DockZone"/> or <see cref="T:DigitalRune.Windows.Docking.FloatingWindow"/>)
-            that hosts the nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s.
-            </summary>
-            <value>
-            The container (<see cref="T:DigitalRune.Windows.Docking.DockZone"/> or <see cref="T:DigitalRune.Windows.Docking.FloatingWindow"/>)
-            that hosts the nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s.</value>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.NestedPaneCollection.VisibleNestedPanes">
-            <summary>
-            Gets the visible nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s.
-            </summary>
-            <value>The visible nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s.</value>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.NestedPaneCollection.DockState">
-            <summary>
-            Gets the docking state of the collection.
-            </summary>
-            <value>The docking state of the collection.</value>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.NestedPaneCollection.IsFloating">
-            <summary>
-            Gets a value indicating whether this collection of <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s 
-            is floating.
-            </summary>
-            <value>
-            <c>true</c> if this collection is floating; otherwise, <c>false</c>.
-            </value>
-        </member>
-        <member name="T:DigitalRune.Windows.Docking.VisibleNestedPaneCollection">
-            <summary>
-            Manages a collection of visible, nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.VisibleNestedPaneCollection.NestedPanes">
-            <summary>
-            Gets the nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s.
-            </summary>
-            <value>The nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s.</value>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.VisibleNestedPaneCollection.Container">
-            <summary>
-            Gets the container (<see cref="T:DigitalRune.Windows.Docking.DockZone"/> or <see cref="T:DigitalRune.Windows.Docking.FloatingWindow"/>)
-            that hosts the nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s.
-            </summary>
-            <value>
-            The container (<see cref="T:DigitalRune.Windows.Docking.DockZone"/> or <see cref="T:DigitalRune.Windows.Docking.FloatingWindow"/>)
-            that hosts the nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s.</value>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.VisibleNestedPaneCollection.DockState">
-            <summary>
-            Gets the docking state of the collection.
-            </summary>
-            <value>The docking state of the collection.</value>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.VisibleNestedPaneCollection.IsFloating">
-            <summary>
-            Gets a value indicating whether this collection of <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s 
-            is floating.
-            </summary>
-            <value>
-            <c>true</c> if this collection is floating; otherwise, <c>false</c>.
-            </value>
-        </member>
-        <member name="T:DigitalRune.Windows.Docking.DockHelper">
-            <summary>
-            Provides useful function used during docking.
-            </summary>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DockHelper.IsDockStateAutoHide(DigitalRune.Windows.Docking.DockState)">
-            <summary>
-            Determines whether a window is docked as an auto-hide window.
-            </summary>
-            <param name="dockState">Docking state of the window.</param>
-            <returns>
-            	<c>true</c> window is docked as an auto-hide window; otherwise, <c>false</c>.
-            </returns>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DockHelper.IsDockStateValid(DigitalRune.Windows.Docking.DockState,DigitalRune.Windows.Docking.DockAreas)">
-            <summary>
-            Determines whether a given docking state is valid for a window.
-            </summary>
-            <param name="dockState">The docking state of the window.</param>
-            <param name="dockableAreas">The dockable areas of the window.</param>
-            <returns>
-            	<c>true</c> the given docking state is valid; otherwise, <c>false</c>.
-            </returns>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DockHelper.IsInDockZone(DigitalRune.Windows.Docking.DockState)">
-            <summary>
-            Determines whether window is docked.
-            </summary>
-            <param name="state">The docking state of the window.</param>
-            <returns>
-            	<c>true</c> if window is docked; <c>false</c> if window is floating or auto-hide.
-            </returns>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DockHelper.ToggleAutoHideState(DigitalRune.Windows.Docking.DockState)">
-            <summary>
-            Toggles a state between auto-hide and docking.
-            </summary>
-            <param name="state">The docking state.</param>
-            <returns>The state where auto-hide/docking state is switched.</returns>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DockHelper.PaneAtPoint(System.Drawing.Point,DigitalRune.Windows.Docking.DockPanel)">
-            <summary>
-            Returns the <see cref="T:DigitalRune.Windows.Docking.DockPane"/> at a certain point.
-            </summary>
-            <param name="point">The point.</param>
-            <param name="dockPanel">The owning <see cref="T:DigitalRune.Windows.Docking.DockPanel"/> control.</param>
-            <returns>The <see cref="T:DigitalRune.Windows.Docking.DockPane"/> at the given point (or null).</returns>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DockHelper.FloatWindowAtPoint(System.Drawing.Point,DigitalRune.Windows.Docking.DockPanel)">
-            <summary>
-            Returns the <see cref="T:DigitalRune.Windows.Docking.FloatingWindow"/> that is floating at a certain point.
-            </summary>
-            <param name="point">The point.</param>
-            <param name="dockPanel">The owning <see cref="T:DigitalRune.Windows.Docking.DockPanel"/> control.</param>
-            <returns>The <see cref="T:DigitalRune.Windows.Docking.FloatingWindow"/> that at the given point (or null).</returns>
-        </member>
         <member name="T:DigitalRune.Windows.Docking.DockPane">
             <summary>
             The container window for a collection of <see cref="T:DigitalRune.Windows.Docking.IDockableForm" /> forms
@@ -1782,6 +1474,28 @@
             <param name="panel">The target <see cref="P:DigitalRune.Windows.Docking.DockPane.DockPanel"/>.</param>
             <param name="dockStyle">The docking style.</param>
         </member>
+        <member name="T:DigitalRune.Windows.Docking.DockPaneCaption">
+            <summary>
+            The caption of a <see cref="T:DigitalRune.Windows.Docking.DockPane"/>, which contains title, close button,
+            auto-hide button, and options button.
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockPaneCaption.#ctor(DigitalRune.Windows.Docking.DockPane)">
+            <summary>Initializes a instance of the <see cref="T:DigitalRune.Windows.Docking.DockPaneCaption"/> class.</summary>
+            <param name="pane">The associated <see cref="T:DigitalRune.Windows.Docking.DockPane"/>.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockPaneCaption.Dispose(System.Boolean)">
+            <exclude/>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockPaneCaption.MeasureHeight">
+            <exclude/>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockPaneCaption.OnPaint(System.Windows.Forms.PaintEventArgs)">
+            <exclude/>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockPaneCaption.OnRefreshChanges">
+            <exclude/>
+        </member>
         <member name="T:DigitalRune.Windows.Docking.DockPaneCaptionBase">
             <summary>Implements the basic functionality common to the caption of <see cref="P:DigitalRune.Windows.Docking.DockPaneCaptionBase.DockPane"/>.</summary>
         </member>
@@ -1806,28 +1520,6 @@
         </member>
         <member name="M:DigitalRune.Windows.Docking.DockPaneCaptionBase.MeasureHeight">
             <summary>Measures the height of the caption.</summary>
-        </member>
-        <member name="T:DigitalRune.Windows.Docking.DockPaneCaption">
-            <summary>
-            The caption of a <see cref="T:DigitalRune.Windows.Docking.DockPane"/>, which contains title, close button,
-            auto-hide button, and options button.
-            </summary>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DockPaneCaption.#ctor(DigitalRune.Windows.Docking.DockPane)">
-            <summary>Initializes a instance of the <see cref="T:DigitalRune.Windows.Docking.DockPaneCaption"/> class.</summary>
-            <param name="pane">The associated <see cref="T:DigitalRune.Windows.Docking.DockPane"/>.</param>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DockPaneCaption.Dispose(System.Boolean)">
-            <exclude/>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DockPaneCaption.MeasureHeight">
-            <exclude/>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DockPaneCaption.OnPaint(System.Windows.Forms.PaintEventArgs)">
-            <exclude/>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DockPaneCaption.OnRefreshChanges">
-            <exclude/>
         </member>
         <member name="T:DigitalRune.Windows.Docking.DockPaneCollection">
             <summary>Provides methods to manage a collection of <see cref="T:DigitalRune.Windows.Docking.DockPane" /> objects.</summary>
@@ -2579,6 +2271,39 @@
             <see cref="T:DigitalRune.Windows.Docking.AutoHideStripBase"/> into the <see cref="P:DigitalRune.Windows.Docking.DockPanelExtender.DockPanel"/>.
             </remarks>
         </member>
+        <member name="T:DigitalRune.Windows.Docking.DockPaneStrip">
+            <summary>
+            Tab strip of a <see cref="T:DigitalRune.Windows.Docking.DockPane"/> that contains multiple docked forms.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.DockPaneStrip.Components">
+            <exclude/>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockPaneStrip.#ctor(DigitalRune.Windows.Docking.DockPane)">
+            <summary>Initializes a instance of <see cref="T:DigitalRune.Windows.Docking.DockPaneStrip"/> class.</summary>
+            <param name="pane">The associated <see cref="T:DigitalRune.Windows.Docking.DockPane"/>.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockPaneStrip.Dispose(System.Boolean)">
+            <exclude/>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockPaneStrip.MeasureHeight">
+            <exclude />
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockPaneStrip.OnPaint(System.Windows.Forms.PaintEventArgs)">
+            <exclude />
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockPaneStrip.OnRefreshChanges">
+            <exclude />
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockPaneStrip.OnLayout(System.Windows.Forms.LayoutEventArgs)">
+            <exclude/>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockPaneStrip.HitTest(System.Drawing.Point)">
+            <exclude/>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockPaneStrip.OnMouseMove(System.Windows.Forms.MouseEventArgs)">
+            <exclude/>
+        </member>
         <member name="T:DigitalRune.Windows.Docking.DockPaneStripBase">
             <summary>Implements the basic functionality common to the tab strip of a <see cref="P:DigitalRune.Windows.Docking.DockPaneStripBase.DockPane"/>.</summary>
         </member>
@@ -2623,39 +2348,6 @@
             <summary>Gets the <see cref="T:System.Drawing.Drawing2D.GraphicsPath" /> that will be combined with the whole tab strip area by XOR to draw the drag and drop outline.</summary>
             <param name="index">The zero based index of the content tab.</param>
             <returns>The <see cref="T:System.Drawing.Drawing2D.GraphicsPath" /> that will be combined with the whole tab strip area by XOR to draw the drag and drop outline.</returns>
-        </member>
-        <member name="T:DigitalRune.Windows.Docking.DockPaneStrip">
-            <summary>
-            Tab strip of a <see cref="T:DigitalRune.Windows.Docking.DockPane"/> that contains multiple docked forms.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.DockPaneStrip.Components">
-            <exclude/>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DockPaneStrip.#ctor(DigitalRune.Windows.Docking.DockPane)">
-            <summary>Initializes a instance of <see cref="T:DigitalRune.Windows.Docking.DockPaneStrip"/> class.</summary>
-            <param name="pane">The associated <see cref="T:DigitalRune.Windows.Docking.DockPane"/>.</param>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DockPaneStrip.Dispose(System.Boolean)">
-            <exclude/>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DockPaneStrip.MeasureHeight">
-            <exclude />
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DockPaneStrip.OnPaint(System.Windows.Forms.PaintEventArgs)">
-            <exclude />
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DockPaneStrip.OnRefreshChanges">
-            <exclude />
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DockPaneStrip.OnLayout(System.Windows.Forms.LayoutEventArgs)">
-            <exclude/>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DockPaneStrip.HitTest(System.Drawing.Point)">
-            <exclude/>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DockPaneStrip.OnMouseMove(System.Windows.Forms.MouseEventArgs)">
-            <exclude/>
         </member>
         <member name="T:DigitalRune.Windows.Docking.DockZone">
             <summary>
@@ -2892,23 +2584,6 @@
         <member name="F:DigitalRune.Windows.Docking.DockPaneAppearance.Document">
             <summary>Document style <see cref="T:DigitalRune.Windows.Docking.DockPane"/>.</summary>
         </member>
-        <member name="T:DigitalRune.Windows.Docking.DockingEventArgs">
-            <summary>Provides data for <see cref="E:DigitalRune.Windows.Docking.DockPanel.ContentAdded"/> and 
-            <see cref="E:DigitalRune.Windows.Docking.DockPanel.ContentRemoved"/> events.</summary>
-        </member>
-        <member name="F:DigitalRune.Windows.Docking.DockingEventArgs.Empty">
-            <summary>
-            Empty <see cref="T:DigitalRune.Windows.Docking.DockingEventArgs"/>.
-            </summary>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DockingEventArgs.#ctor(DigitalRune.Windows.Docking.IDockableForm)">
-            <summary>Initializes a new instance of <see cref="T:DigitalRune.Windows.Docking.DockingEventArgs"/> class.</summary>
-            <param name="content">The <see cref="T:DigitalRune.Windows.Docking.IDockableForm"/> object.</param>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.DockingEventArgs.Content">
-            <summary>Gets the <see cref="T:DigitalRune.Windows.Docking.IDockableForm"/> object.</summary>
-            <value>The <see cref="T:DigitalRune.Windows.Docking.IDockableForm"/> object.</value>
-        </member>
         <member name="T:DigitalRune.Windows.Docking.FloatingWindow">
             <summary>
             Represents the floating window to contain nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/> objects.
@@ -3062,6 +2737,645 @@
             Provides methods to manage a collection of <see cref="T:DigitalRune.Windows.Docking.FloatingWindow" /> objects.
             </summary>
         </member>
+        <member name="T:DigitalRune.Windows.Docking.DockHelper">
+            <summary>
+            Provides useful function used during docking.
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockHelper.IsDockStateAutoHide(DigitalRune.Windows.Docking.DockState)">
+            <summary>
+            Determines whether a window is docked as an auto-hide window.
+            </summary>
+            <param name="dockState">Docking state of the window.</param>
+            <returns>
+            	<c>true</c> window is docked as an auto-hide window; otherwise, <c>false</c>.
+            </returns>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockHelper.IsDockStateValid(DigitalRune.Windows.Docking.DockState,DigitalRune.Windows.Docking.DockAreas)">
+            <summary>
+            Determines whether a given docking state is valid for a window.
+            </summary>
+            <param name="dockState">The docking state of the window.</param>
+            <param name="dockableAreas">The dockable areas of the window.</param>
+            <returns>
+            	<c>true</c> the given docking state is valid; otherwise, <c>false</c>.
+            </returns>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockHelper.IsInDockZone(DigitalRune.Windows.Docking.DockState)">
+            <summary>
+            Determines whether window is docked.
+            </summary>
+            <param name="state">The docking state of the window.</param>
+            <returns>
+            	<c>true</c> if window is docked; <c>false</c> if window is floating or auto-hide.
+            </returns>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockHelper.ToggleAutoHideState(DigitalRune.Windows.Docking.DockState)">
+            <summary>
+            Toggles a state between auto-hide and docking.
+            </summary>
+            <param name="state">The docking state.</param>
+            <returns>The state where auto-hide/docking state is switched.</returns>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockHelper.PaneAtPoint(System.Drawing.Point,DigitalRune.Windows.Docking.DockPanel)">
+            <summary>
+            Returns the <see cref="T:DigitalRune.Windows.Docking.DockPane"/> at a certain point.
+            </summary>
+            <param name="point">The point.</param>
+            <param name="dockPanel">The owning <see cref="T:DigitalRune.Windows.Docking.DockPanel"/> control.</param>
+            <returns>The <see cref="T:DigitalRune.Windows.Docking.DockPane"/> at the given point (or null).</returns>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockHelper.FloatWindowAtPoint(System.Drawing.Point,DigitalRune.Windows.Docking.DockPanel)">
+            <summary>
+            Returns the <see cref="T:DigitalRune.Windows.Docking.FloatingWindow"/> that is floating at a certain point.
+            </summary>
+            <param name="point">The point.</param>
+            <param name="dockPanel">The owning <see cref="T:DigitalRune.Windows.Docking.DockPanel"/> control.</param>
+            <returns>The <see cref="T:DigitalRune.Windows.Docking.FloatingWindow"/> that at the given point (or null).</returns>
+        </member>
+        <member name="T:DigitalRune.Windows.Docking.DpiHelper">
+            <summary>
+            Scales 96-DPI pixel values and bitmaps to the display DPI of a system-DPI-aware
+            process. In such a process the system DPI is fixed for its lifetime, so the factor is
+            read from the screen once and cached. At 100% scaling every member is a no-op.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.DpiHelper.Factor">
+            <summary>
+            Gets the ratio of the display DPI to 96 (1.0 at 100% scaling, 1.5 at 150%).
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.DpiHelper.IsScaled">
+            <summary>
+            Gets a value indicating whether the display is scaled above 100%.
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DpiHelper.Scale(System.Int32)">
+            <summary>
+            Scales a 96-DPI pixel value to the display DPI.
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DpiHelper.ToLogical(System.Drawing.Point)">
+            <summary>
+            Converts a display-DPI point back to 96-DPI pixels, for lookups into bitmaps that
+            were not scaled, such as hit-test masks.
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DpiHelper.Scale(System.Drawing.Bitmap)">
+            <summary>
+            Scales a 96-DPI bitmap to the display DPI with bicubic resampling. The original is
+            returned untouched at 100%. The result is 32-bit ARGB tagged as 96 DPI, so
+            consumers that honor DPI metadata draw it at its pixel size.
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DpiHelper.ScaleCrisp(System.Drawing.Bitmap)">
+            <summary>
+            Scales a bitmap whose exact colors matter after scaling, such as the monochrome
+            button glyphs the renderer remaps by color, with nearest-neighbor sampling so no
+            intermediate colors appear.
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DpiHelper.SelectFrame(System.Drawing.Icon,System.Int32)">
+            <summary>
+            Selects the frame of a multi-size icon for a square of the given pixel size: the
+            exact size when the icon has it, otherwise the smallest larger frame, which
+            downscales cleanly, and only when there is none the largest smaller frame. The
+            framework's own lookup (<see cref="M:System.Drawing.Icon.#ctor(System.Drawing.Icon,System.Int32,System.Int32)"/>) falls back to the next
+            smaller frame, which at 150% stretches a 16-pixel frame to 24 although a 32-pixel
+            one exists. The caller owns the returned icon.
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DpiHelper.DrawIcon(System.Drawing.Graphics,System.Drawing.Icon,System.Drawing.Rectangle)">
+            <summary>
+            Draws an icon into a rectangle with the frame that fits it best, resampled
+            bicubically when no frame matches exactly. <see cref="M:System.Drawing.Graphics.DrawIcon(System.Drawing.Icon,System.Drawing.Rectangle)"/>
+            would stretch the frame the icon instance was created with (normally 32x32, even
+            into a 16-pixel tab) with nearest-neighbor sampling. At 100% that stock drawing is
+            kept: the 16-pixel frames of shared icons (like the .sky file icon) are different
+            artwork from what applications have always shown in their tabs.
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DpiHelper.DrawImage(System.Drawing.Graphics,System.Drawing.Image,System.Drawing.Rectangle)">
+            <summary>
+            Draws a bitmap into a rectangle with bicubic resampling, restoring the graphics
+            state afterwards. At 100% it draws with the graphics settings as they are, as the
+            renderer always has.
+            </summary>
+        </member>
+        <member name="T:DigitalRune.Windows.Docking.DragForm">
+            <summary>
+            Overlay window that is used to display infos (e.g. drag indicators) on top
+            of other windows.
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DragForm.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:DigitalRune.Windows.Docking.DragForm"/> class.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.DragForm.CreateParams">
+            <summary>
+            Gets the required creation parameters when the window handle is created.
+            </summary>
+            <value>The creation parameters.</value>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DragForm.WndProc(System.Windows.Forms.Message@)">
+            <summary>
+            Processes window messages.
+            </summary>
+            <param name="m">The m.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DragForm.Show(System.Boolean)">
+            <summary>
+            Shows the form.
+            </summary>
+            <param name="bActivate">
+            If set to <c>true</c> then the <see cref="T:DigitalRune.Windows.Docking.DragForm"/> steals the focus
+            of other windows; otherwise the <see cref="T:DigitalRune.Windows.Docking.DragForm"/> does not take the
+            focus.</param>
+        </member>
+        <member name="T:DigitalRune.Windows.Docking.DrawHelper">
+            <summary>
+            Provides useful functions for drawing.
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DrawHelper.SetWindowRegion(System.Windows.Forms.Control,System.Drawing.Region)">
+            <summary>
+            Clips <paramref name="control"/> to <paramref name="region"/>, taking ownership of the
+            region, or removes the clipping when <paramref name="region"/> is <see langword="null"/>.
+            </summary>
+            <remarks>
+            <para>
+            Use this instead of assigning <see cref="P:System.Windows.Forms.Control.Region"/> directly. On .NET Core /
+            .NET 5+ that setter leaks about 976 bytes of GDI+ heap for every non-null assignment, and
+            nothing reclaims it - not clearing the region afterwards, not disposing it, not destroying
+            the window handle. The cost is charged when the region is assigned, so there is no later
+            point at which it can be released. Docking assigns one region per docked form, which cost
+            roughly 43 KB of GDI+ heap per layout load before this.
+            </para>
+            <para>
+            <c>SetWindowRgn</c> is what <see cref="P:System.Windows.Forms.Control.Region"/> ends up calling anyway, and it
+            takes a plain GDI region, so no GDI+ object exists to leak. The window takes ownership of a
+            region it accepts and frees it when it is destroyed. Measured across empty, rectangular and
+            path-derived regions: 0 GDI+ bytes and 0 GDI objects.
+            </para>
+            <para>
+            .NET Framework keeps the original code path. It has no leak to fix - it releases the region
+            in <see cref="M:System.Windows.Forms.Control.Dispose(System.Boolean)"/>, measured at 0 bytes per form - and the SetWindowRgn
+            path is not behaviour-neutral there: it hung TestFilesTreeForm, which passes both with the
+            original code and with this fix on .NET 10. Since there is nothing to gain on .NET
+            Framework, it is not worth the risk of finding out why.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DrawHelper.SetEmptyWindowRegion(System.Windows.Forms.Control)">
+            <summary>
+            Clips <paramref name="control"/> to nothing, hiding it without touching its visibility.
+            </summary>
+            <remarks>
+            The empty case of <see cref="M:DigitalRune.Windows.Docking.DrawHelper.SetWindowRegion(System.Windows.Forms.Control,System.Drawing.Region)"/>. On .NET Core / .NET 5+ the region is built
+            directly as a GDI region so that no GDI+ <see cref="T:System.Drawing.Region"/> is created at all.
+            </remarks>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DrawHelper.ClearWindowRegion(System.Windows.Forms.Control)">
+            <summary>Removes any clipping from <paramref name="control"/>.</summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DrawHelper.GetRoundedCornerTab(System.Drawing.Drawing2D.GraphicsPath,System.Drawing.Rectangle,System.Boolean)">
+            <summary>
+            Calculates the graphics path for tab with rounded corners.
+            </summary>
+            <param name="graphicsPath">The graphics path.</param>
+            <param name="rect">The rectangle are of the tab.</param>
+            <param name="upCorner">If <c>true</c> the corner is on the upper side (normal direction).</param>
+            <returns>The graphics path for tab with rounded corners.</returns>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DrawHelper.CalculateGraphicsPathFromBitmap(System.Drawing.Bitmap)">
+            <summary>
+            Calculates the graphics path from a given bitmap.
+            </summary>
+            <param name="bitmap">The bitmap.</param>
+            <returns>The graphics path of the bitmap.</returns>
+            <remarks>
+            The path contains all opaque pixels.
+            The color of the pixel at (0, 0) determines the transparency color.
+            </remarks>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DrawHelper.CalculateGraphicsPathFromBitmap(System.Drawing.Bitmap,System.Drawing.Color)">
+            <summary>
+            Calculates the graphics path from a given bitmap.
+            </summary>
+            <param name="bitmap">The bitmap.</param>
+            <param name="colorTransparent">
+            The transparent color. (If <see cref="F:System.Drawing.Color.Empty"/>  is set, than the
+            pixel at (0, 0) determines the transparency color.)
+            </param>
+            <returns>The graphics path of the bitmap.</returns>
+            <remarks>
+            The path contains all opaque pixels.
+            </remarks>
+        </member>
+        <member name="T:DigitalRune.Windows.Docking.MdiClientController">
+            <summary>
+            Controls MDI client forms.
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.MdiClientController.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:DigitalRune.Windows.Docking.MdiClientController"/> class.
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.MdiClientController.Dispose">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.MdiClientController.Dispose(System.Boolean)">
+            <summary>
+            Releases unmanaged and - optionally - managed resources
+            </summary>
+            <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.MdiClientController.AutoScroll">
+            <summary>
+            Gets or sets a value indicating whether auto scrolling is enabled.
+            </summary>
+            <value>
+            <c>true</c> if auto scrolling is enabled; otherwise, <c>false</c>.
+            </value>
+            <remarks>
+            <para>
+            Auto scrolling means that scrollbars are drawn as soon as any of the 
+            client windows moves outside of the visible area.
+            </para>
+            <para>
+            By default auto scrolling is enabled.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.MdiClientController.BorderStyle">
+            <summary>
+            Sets the border style.
+            </summary>
+            <value>The border style.</value>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.MdiClientController.MdiClient">
+            <summary>
+            Gets the MDI client associated with this controller.
+            </summary>
+            <value>The MDI client.</value>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.MdiClientController.ParentForm">
+            <summary>
+            Gets or sets the parent form.
+            </summary>
+            <value>The parent form.</value>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.MdiClientController.Site">
+            <summary>
+            Gets or sets the <see cref="T:System.ComponentModel.ISite"></see> 
+            associated with the <see cref="T:System.ComponentModel.IComponent"></see>.
+            </summary>
+            <value></value>
+            <returns>
+            The <see cref="T:System.ComponentModel.ISite"></see> object associated 
+            with the component; or null, if the component does not have a site.
+            </returns>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.MdiClientController.RenewMdiClient">
+            <summary>
+            Renews the MDI client.
+            </summary>
+        </member>
+        <member name="E:DigitalRune.Windows.Docking.MdiClientController.Disposed">
+            <summary>
+            Occurs when this object is being disposed.
+            </summary>
+        </member>
+        <member name="E:DigitalRune.Windows.Docking.MdiClientController.HandleAssigned">
+            <summary>
+            Occurs when a handle is assigned to this <see cref="T:DigitalRune.Windows.Docking.MdiClientController"/>.
+            </summary>
+        </member>
+        <member name="E:DigitalRune.Windows.Docking.MdiClientController.MdiChildActivate">
+            <summary>
+            Occurs when an MDI child is activated
+            </summary>
+        </member>
+        <member name="E:DigitalRune.Windows.Docking.MdiClientController.Layout">
+            <summary>
+            Occurs when layout is calculated.
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.MdiClientController.OnHandleAssigned(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:DigitalRune.Windows.Docking.MdiClientController.HandleAssigned"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.MdiClientController.OnMdiChildActivate(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:DigitalRune.Windows.Docking.MdiClientController.MdiChildActivate"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.MdiClientController.OnLayout(System.Windows.Forms.LayoutEventArgs)">
+            <summary>
+            Raises the <see cref="E:DigitalRune.Windows.Docking.MdiClientController.Layout"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.Windows.Forms.LayoutEventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="E:DigitalRune.Windows.Docking.MdiClientController.Paint">
+            <summary>
+            Occurs when control is painted.
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.MdiClientController.OnPaint(System.Windows.Forms.PaintEventArgs)">
+            <summary>
+            Raises the <see cref="E:DigitalRune.Windows.Docking.MdiClientController.Paint"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.Windows.Forms.PaintEventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.MdiClientController.WndProc(System.Windows.Forms.Message@)">
+            <summary>
+            Invokes the default window procedure associated with this window.
+            </summary>
+            <param name="m">A <see cref="T:System.Windows.Forms.Message"></see> that is associated with the current Windows message.</param>
+        </member>
+        <member name="T:DigitalRune.Windows.Docking.IDockableForm">
+            <summary>
+            Represents a dockable form.
+            </summary>
+            <remarks>
+            <para>
+            A Windows form needs to implement this interface to be dockable in 
+            <see cref="T:DigitalRune.Windows.Docking.DockPanel"/>. Docking is handled through the 
+            <see cref="P:DigitalRune.Windows.Docking.IDockableForm.DockingHandler"/>.
+            </para>
+            <para>
+            There are two ways to make your forms dockable:
+            <list type="bullet">
+            <item>
+            <description>
+            <strong>The Fast Way:</strong> Let your forms inherit from <see cref="T:DigitalRune.Windows.Docking.DockableForm"/> instead of inheriting
+            <see cref="T:System.Windows.Forms.Form"/>. For example, when you have a form
+            <c>MyForm</c>:
+            <code>
+            using System.Windows.Forms;
+            
+            namespace Sample
+            {
+              public partial class MyForm : Form
+              {
+                ...
+              }
+            }
+            </code>
+            Just changes the lines to:
+            <code>
+            using System.Windows.Forms;
+            using DigitalRune.Windows.Docking;
+            
+            namespace Sample
+            {
+              public partial class MyForm : DockableForm
+              {
+                ...
+              }
+            }
+            </code>
+            This will add docking capabilities to your form. When you open the modified
+            form in Visual Studio (design-mode), you will be able to see new properties 
+            in the <strong>Properties</strong> dialog. The docking properties can be found 
+            in the category named 'Docking'.
+            </description>
+            </item>
+            <item>
+            <description>
+            <strong>The Slow Way:</strong> Implement the interface <see cref="T:DigitalRune.Windows.Docking.IDockableForm"/> 
+            in your own forms. This takes more code to write, but gives you full control
+            over the docking in your form.
+            </description>
+            </item>
+            </list>
+            </para>
+            </remarks>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.IDockableForm.DockingHandler">
+            <summary>
+            Gets the <see cref="P:DigitalRune.Windows.Docking.IDockableForm.DockingHandler"/> object to handle the docking behaviors.
+            </summary>
+            <value>
+            The <see cref="P:DigitalRune.Windows.Docking.IDockableForm.DockingHandler"/> object to handle the docking behaviors.
+            </value>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.IDockableForm.OnActivated(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Form.Activated"/> event.
+            </summary>
+            <param name="eventArgs">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.IDockableForm.OnDeactivate(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Form.Deactivate"/> event.
+            </summary>
+            <param name="eventArgs">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="T:DigitalRune.Windows.Docking.DockPanelButtonState">
+            <summary>
+            Represents the state of an DockPanel button.
+            </summary>
+        </member>
+        <member name="F:DigitalRune.Windows.Docking.DockPanelButtonState.Disabled">
+            <summary>The button is disabled.</summary>
+        </member>
+        <member name="F:DigitalRune.Windows.Docking.DockPanelButtonState.Hot">
+            <summary>The button is hot (mouse hovers on button).</summary>
+        </member>
+        <member name="F:DigitalRune.Windows.Docking.DockPanelButtonState.Normal">
+            <summary>The button is displayed normally.</summary>
+        </member>
+        <member name="F:DigitalRune.Windows.Docking.DockPanelButtonState.Pressed">
+            <summary>The button is pressed.</summary>
+        </member>
+        <member name="T:DigitalRune.Windows.Docking.InertButtonImage">
+            <summary>
+            The currently active image of the <see cref="T:DigitalRune.Windows.Docking.InertButton"/>.
+            </summary>
+        </member>
+        <member name="F:DigitalRune.Windows.Docking.InertButtonImage.Image0">
+            <summary>
+            The first image.
+            </summary>
+        </member>
+        <member name="F:DigitalRune.Windows.Docking.InertButtonImage.Image1">
+            <summary>
+            The second Image.
+            </summary>
+        </member>
+        <member name="T:DigitalRune.Windows.Docking.InertButton">
+            <summary>
+            Two-state image button.
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.InertButton.#ctor(System.Drawing.Bitmap,System.Drawing.Bitmap)">
+            <summary>
+            Initializes a new instance of the <see cref="T:DigitalRune.Windows.Docking.InertButton"/> class.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.InertButton.Image0">
+            <summary>
+            Gets or sets the first image.
+            </summary>
+            <value>The first image.</value>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.InertButton.Image1">
+            <summary>
+            Gets or sets the second image.
+            </summary>
+            <value>The second image.</value>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.InertButton.Image">
+            <summary>
+            Gets the visible image.
+            </summary>
+            <value>The visible image.</value>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.InertButton.ImageCategory">
+            <summary>
+            Gets or selects the visible image of the button.
+            </summary>
+            <value>The image category (visible image).</value>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.InertButton.IsMouseOver">
+            <summary>
+            Gets or sets a value indicating whether the mouse cursor is over the button.
+            </summary>
+            <value>
+            	<c>true</c> if the mouse is over the button; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.InertButton.IsMouseDown">
+            <summary>
+            Gets or sets a value indicating whether the mouse button is pressed.
+            </summary>
+            <value>
+            	<c>true</c> if the mouse is pressed; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.InertButton.DefaultSize">
+            <summary>
+            Gets the size of the default.
+            </summary>
+            <value>The size of the default.</value>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.InertButton.State">
+            <summary>
+            Gets the state of the button.
+            </summary>
+            <value>The state of the button.</value>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.InertButton.OnMouseMove(System.Windows.Forms.MouseEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.MouseMove"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.InertButton.OnMouseEnter(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.MouseEnter"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.InertButton.OnMouseLeave(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.MouseLeave"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.InertButton.OnMouseDown(System.Windows.Forms.MouseEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.MouseDown"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.InertButton.OnMouseUp(System.Windows.Forms.MouseEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.MouseUp"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.InertButton.OnPaint(System.Windows.Forms.PaintEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.Paint"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.Windows.Forms.PaintEventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.InertButton.RefreshChanges">
+            <summary>
+            Refreshes the control.
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.InertButton.OnRefreshChanges">
+            <summary>
+            Called when the control needs to be refreshed.
+            </summary>
+        </member>
+        <member name="T:DigitalRune.Windows.Docking.INestedPanesContainer">
+            <summary>
+            Container for nested docking <see cref='T:DigitalRune.Windows.Docking.DockPane' /> objects.
+            </summary>
+            <remarks>
+            <para>
+            <see cref="T:DigitalRune.Windows.Docking.INestedPanesContainer"/> contains a list of <see cref="T:DigitalRune.Windows.Docking.DockPane"/> 
+            objects for nested docking. It maintains two lists: <see cref='T:DigitalRune.Windows.Docking.NestedPaneCollection' />
+            and <see cref='T:DigitalRune.Windows.Docking.VisibleNestedPaneCollection' />. The <see cref="T:DigitalRune.Windows.Docking.NestedPaneCollection"/>
+            contains all <see cref="T:DigitalRune.Windows.Docking.DockPane"/> objects, no matter whether it is visible 
+            or not; <see cref="T:DigitalRune.Windows.Docking.VisibleNestedPaneCollection"/> contains only visible 
+            <see cref="T:DigitalRune.Windows.Docking.DockPane"/> objects for this container.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.INestedPanesContainer.DockState">
+            <summary>
+            Gets the docking state of this container.
+            </summary>
+            <value>
+            One of the <see cref="T:DigitalRune.Windows.Docking.DockState" /> values.
+            </value>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.INestedPanesContainer.DisplayingRectangle">
+            <summary>
+            Gets the rectangle that represents the displaying area for nested docking 
+            <see cref="T:DigitalRune.Windows.Docking.DockPane"/> objects.
+            </summary>
+            <value>
+            A <see cref="T:System.Drawing.Rectangle" /> that represents the displaying area 
+            for nested docking <see cref="T:DigitalRune.Windows.Docking.DockPane"/> objects.</value>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.INestedPanesContainer.NestedPanes">
+            <summary>
+            Gets the <see cref="T:DigitalRune.Windows.Docking.NestedPaneCollection" /> which contains a list of nested 
+            docking <see cref="T:DigitalRune.Windows.Docking.DockPane" /> objects.
+            </summary>
+            <value>
+            The <see cref="T:DigitalRune.Windows.Docking.NestedPaneCollection" /> which contains a list of nested 
+            docking <see cref="T:DigitalRune.Windows.Docking.DockPane" /> objects.
+            </value>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.INestedPanesContainer.VisibleNestedPanes">
+            <summary>
+            Gets the <see cref="T:DigitalRune.Windows.Docking.VisibleNestedPaneCollection" /> which contains a list 
+            of visible nested docking <see cref="T:DigitalRune.Windows.Docking.DockPane" /> objects.
+            </summary>
+            <value>
+            The <see cref="T:DigitalRune.Windows.Docking.VisibleNestedPaneCollection" /> which contains a list of 
+            visible nested docking <see cref="T:DigitalRune.Windows.Docking.DockPane" /> objects.
+            </value>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.INestedPanesContainer.IsFloating">
+            <summary>Determines whether this container window is floating.</summary>
+            <value><c>true</c> if is floating; otherwise, <c>false</c>.</value>
+        </member>
         <member name="T:DigitalRune.Windows.Docking.NestedDockingStatus">
             <summary>
             Provides nested docking information for a <see cref="P:DigitalRune.Windows.Docking.NestedDockingStatus.DockPane"/>.
@@ -3157,6 +3471,41 @@
             size of the <see cref="P:DigitalRune.Windows.Docking.NestedDockingStatus.DockPane"/> splitter.
             </value>
         </member>
+        <member name="T:DigitalRune.Windows.Docking.NestedPaneCollection">
+            <summary>
+            Manages a collection of nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.NestedPaneCollection.Container">
+            <summary>
+            Gets the container (<see cref="T:DigitalRune.Windows.Docking.DockZone"/> or <see cref="T:DigitalRune.Windows.Docking.FloatingWindow"/>)
+            that hosts the nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s.
+            </summary>
+            <value>
+            The container (<see cref="T:DigitalRune.Windows.Docking.DockZone"/> or <see cref="T:DigitalRune.Windows.Docking.FloatingWindow"/>)
+            that hosts the nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s.</value>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.NestedPaneCollection.VisibleNestedPanes">
+            <summary>
+            Gets the visible nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s.
+            </summary>
+            <value>The visible nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s.</value>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.NestedPaneCollection.DockState">
+            <summary>
+            Gets the docking state of the collection.
+            </summary>
+            <value>The docking state of the collection.</value>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.NestedPaneCollection.IsFloating">
+            <summary>
+            Gets a value indicating whether this collection of <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s 
+            is floating.
+            </summary>
+            <value>
+            <c>true</c> if this collection is floating; otherwise, <c>false</c>.
+            </value>
+        </member>
         <member name="T:DigitalRune.Windows.Docking.DockPanelManager">
             <summary>
             A static class that manages the appearance of the <see cref="T:DigitalRune.Windows.Docking.DockPanel"/> control.
@@ -3216,65 +3565,6 @@
             </summary>
             <param name="sender">The sender.</param>
             <param name="eventArgs"><see cref="T:System.EventArgs"/> object that provides the arguments for the event.</param>
-        </member>
-        <member name="T:DigitalRune.Windows.Docking.DrawHelper">
-            <summary>
-            Provides useful functions for drawing.
-            </summary>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DrawHelper.GetRoundedCornerTab(System.Drawing.Drawing2D.GraphicsPath,System.Drawing.Rectangle,System.Boolean)">
-            <summary>
-            Calculates the graphics path for tab with rounded corners.
-            </summary>
-            <param name="graphicsPath">The graphics path.</param>
-            <param name="rect">The rectangle are of the tab.</param>
-            <param name="upCorner">If <c>true</c> the corner is on the upper side (normal direction).</param>
-            <returns>The graphics path for tab with rounded corners.</returns>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DrawHelper.CalculateGraphicsPathFromBitmap(System.Drawing.Bitmap)">
-            <summary>
-            Calculates the graphics path from a given bitmap.
-            </summary>
-            <param name="bitmap">The bitmap.</param>
-            <returns>The graphics path of the bitmap.</returns>
-            <remarks>
-            The path contains all opaque pixels.
-            The color of the pixel at (0, 0) determines the transparency color.
-            </remarks>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.DrawHelper.CalculateGraphicsPathFromBitmap(System.Drawing.Bitmap,System.Drawing.Color)">
-            <summary>
-            Calculates the graphics path from a given bitmap.
-            </summary>
-            <param name="bitmap">The bitmap.</param>
-            <param name="colorTransparent">
-            The transparent color. (If <see cref="F:System.Drawing.Color.Empty"/>  is set, than the
-            pixel at (0, 0) determines the transparency color.)
-            </param>
-            <returns>The graphics path of the bitmap.</returns>
-            <remarks>
-            The path contains all opaque pixels.
-            </remarks>
-        </member>
-        <member name="T:DigitalRune.Windows.Docking.Win32Helper">
-            <summary>
-            Some useful Win32 functions.
-            </summary>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.Win32Helper.ControlAtPoint(System.Drawing.Point)">
-            <summary>
-            Returns the control that contains a point.
-            </summary>
-            <param name="point">The point on the control.</param>
-            <returns>The control that contains the <paramref name="point"/>.</returns>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.Win32Helper.MakeLong(System.Int32,System.Int32)">
-            <summary>
-            Returns a DWORD value from two WORD values.
-            </summary>
-            <param name="low">The lower 16-bit word (LOW WORD).</param>
-            <param name="high">The upper 16-bit word (HIGH WORD).</param>
-            <returns>An unsigned 32-bit value (DWORD).</returns>
         </member>
         <member name="T:DigitalRune.Windows.Docking.DockPanelRenderer">
             <summary>
@@ -3818,302 +4108,6 @@
             Draws the <see cref="T:DigitalRune.Windows.Docking.DockPanel"/> using a user-defined renderer.
             </summary>
         </member>
-        <member name="T:DigitalRune.Windows.Docking.Resources">
-            <summary>
-              A strongly-typed resource class, for looking up localized strings, etc.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.ResourceManager">
-            <summary>
-              Returns the cached ResourceManager instance used by this class.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.Culture">
-            <summary>
-              Overrides the current thread's CurrentUICulture property for all
-              resource lookups using this strongly typed resource class.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PaneDiamond">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PaneDiamond_Bottom">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PaneDiamond_Fill">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PaneDiamond_HotSpot">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PaneDiamond_HotSpotIndex">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PaneDiamond_Left">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PaneDiamond_Right">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PaneDiamond_Top">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PanelBottom">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PanelBottom_Active">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PanelFill">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PanelFill_Active">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PanelLeft">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PanelLeft_Active">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PanelRight">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PanelRight_Active">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PanelTop">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PanelTop_Active">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockPane_AutoHide">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockPane_Close">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockPane_Dock">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockPane_Option">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockPane_OptionOverflow">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockPaneStrip_ScrollLeftDisabled">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockPaneStrip_ScrollLeftEnabled">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockPaneStrip_ScrollRightDisabled">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DockPaneStrip_ScrollRightEnabled">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DocumentClose">
-            <summary>
-              Looks up a localized string similar to Close.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DocumentScrollLeft">
-            <summary>
-              Looks up a localized string similar to Scroll Left.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DocumentScrollRight">
-            <summary>
-              Looks up a localized string similar to Scroll Right.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.DocumentWindowList">
-            <summary>
-              Looks up a localized string similar to Window List.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.larrow_cur">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.ToolWindowAutoHide">
-            <summary>
-              Looks up a localized string similar to Auto-Hide.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.ToolWindowClose">
-            <summary>
-              Looks up a localized string similar to Close.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.Resources.ToolWindowOptions">
-            <summary>
-              Looks up a localized string similar to Options.
-            </summary>
-        </member>
-        <member name="T:DigitalRune.Windows.Docking.DockPanelVisualStylesColorTable">
-            <summary>
-            Defines the color palette for the "Visual Style" dock panel theme.
-            </summary>
-        </member>
-        <member name="T:DigitalRune.Windows.Docking.AutoHidePane">
-            <summary>
-            Represent a <see cref="P:DigitalRune.Windows.Docking.AutoHidePane.DockPane"/> displayed in the auto-hide tab strip area of <see cref="T:DigitalRune.Windows.Docking.DockPanel"/>.
-            </summary>
-            <remarks>
-            When customizing the auto-hide tab strip area of the <see cref="T:DigitalRune.Windows.Docking.DockPanel"/>, you can derive a class from <see cref="T:DigitalRune.Windows.Docking.AutoHideStripBase"/>
-            class, and then plug it into the <see cref="T:DigitalRune.Windows.Docking.DockPanel"/> through the <see cref="P:DigitalRune.Windows.Docking.DockPanelExtender.AutoHideStripFactory"/> property of <see cref="P:DigitalRune.Windows.Docking.DockPanel.Extender"/>. If you want to
-            associate data with auto-hide <see cref="P:DigitalRune.Windows.Docking.AutoHidePane.DockPane"/>, you can derived a class from <see cref="T:DigitalRune.Windows.Docking.AutoHidePane"/> class,
-            then plug it into the <see cref="T:DigitalRune.Windows.Docking.DockPanel"/> through <see cref="P:DigitalRune.Windows.Docking.DockPanelExtender.AutoHideStripFactory"/> property of <see cref="P:DigitalRune.Windows.Docking.DockPanel.Extender"/>. The docking framework
-            will create the class instances and you can reference them through 
-            <see cref="P:DigitalRune.Windows.Docking.AutoHideStripBase.PanesTop"/>, <see cref="P:DigitalRune.Windows.Docking.AutoHideStripBase.PanesBottom"/>,
-            <see cref="P:DigitalRune.Windows.Docking.AutoHideStripBase.PanesLeft"/>, <see cref="P:DigitalRune.Windows.Docking.AutoHideStripBase.PanesRight"/> properties
-            of class <see cref="T:DigitalRune.Windows.Docking.AutoHideStripBase"/>.
-            </remarks>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.AutoHidePane.#ctor(DigitalRune.Windows.Docking.DockPane)">
-            <summary>
-            Creates a instance of <see cref="T:DigitalRune.Windows.Docking.AutoHidePane"/> class.
-            </summary>
-            <param name="dockPane">The <see cref="P:DigitalRune.Windows.Docking.AutoHidePane.DockPane"/> object to associate with.</param>
-            <remarks>
-            Instance of <see cref="T:DigitalRune.Windows.Docking.AutoHidePane"/> or derived class should only be created by the docking framework.
-            The constructor should only be called within the implementation of <see cref="T:DigitalRune.Windows.Docking.DockPanelExtender.IAutoHideStripFactory"/> interface or derived class's constructor.
-            </remarks>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.AutoHidePane.Finalize">
-            <exclude/>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.AutoHidePane.DockPane">
-            <summary>
-            Gets the associated <see cref="P:DigitalRune.Windows.Docking.AutoHidePane.DockPane"/> object.
-            </summary>
-            <value>A <see cref="P:DigitalRune.Windows.Docking.AutoHidePane.DockPane" /> object which associates with this <see cref="T:DigitalRune.Windows.Docking.AutoHidePane"/> object.</value>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.AutoHidePane.AutoHideTabs">
-            <summary>
-            Gets the collection of tabs contained within the auto-hide pane.
-            </summary>
-            <value>A <see cref="T:DigitalRune.Windows.Docking.AutoHideTabCollection" /> representing the collection of tabs contained within the auto-hide pane.</value>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.AutoHidePane.Dispose">
-            <summary>
-            Releases all the resources used by the <see cref="T:DigitalRune.Windows.Docking.AutoHidePane"/> object.
-            </summary>
-            <overloads>
-              <summary>
-                Releases the resources used by the <see cref="T:DigitalRune.Windows.Docking.AutoHidePane"/> object.
-              </summary>
-            </overloads>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.AutoHidePane.Dispose(System.Boolean)">
-            <summary>
-            Releases the unmanaged resources used by the <see cref="T:DigitalRune.Windows.Docking.AutoHidePane"/> object and optionally releases the managed resources.
-            </summary>
-            <param name='disposing'>
-              <B>true</B> to release both managed and unmanaged resources;
-              <B>false</B> to release only unmanaged resources.
-            </param>
-        </member>
-        <member name="T:DigitalRune.Windows.Docking.AutoHidePaneCollection">
-            <summary>
-            Provides methods to manage a collection of <see cref="T:DigitalRune.Windows.Docking.AutoHidePane" /> objects.
-            </summary>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.AutoHidePaneCollection.Count">
-            <summary>
-            Gets the number of elements contained in the <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection"/> instance.
-            </summary>
-            <value>The number of elements contained in the <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection"/> instance.</value>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.AutoHidePaneCollection.Item(System.Int32)">
-            <summary>
-              <para>Gets a <see cref="T:DigitalRune.Windows.Docking.AutoHidePane" /> at the specified index.</para>
-              <para>In C#, this property is the indexer for the <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection" /> class.</para>
-            </summary>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.AutoHidePaneCollection.Contains(DigitalRune.Windows.Docking.AutoHidePane)">
-            <overloads>
-              <summary>
-                Determines whether an element is in the <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection" />.
-              </summary>
-            </overloads>
-            <summary>
-            Determines whether a <see cref="T:DigitalRune.Windows.Docking.AutoHidePane" /> is in the <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection" />.
-            </summary>
-            <param name="pane">The <see cref="T:DigitalRune.Windows.Docking.AutoHidePane" /> to locate in <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection" />.</param>
-            <returns><b>true</b> if <paramref name="pane" /> is found in the <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection" />; otherwise, <b>false</b>.</returns>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.AutoHidePaneCollection.IndexOf(DigitalRune.Windows.Docking.AutoHidePane)">
-            <summary>
-            Searches for the specified <see cref="T:DigitalRune.Windows.Docking.AutoHidePane" /> and returns the zero-based index within the entire <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection" />.
-            </summary>
-            <param name="pane">The <see cref="T:DigitalRune.Windows.Docking.AutoHidePane" /> to locate in the <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection" />.</param>
-            <returns>The zero-based index of <paramref name="pane" /> within the entire <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection" />, if found; otherwise, -1.</returns>
-            <overloads>
-              <summary>
-                Searches for the specified element and returns the zero based index within the entire <see cref="T:DigitalRune.Windows.Docking.AutoHidePaneCollection" />.
-              </summary>
-            </overloads>
-        </member>
         <member name="T:DigitalRune.Windows.Docking.DockPanelStrings">
             <summary>
             String table that contains all localizable strings (such as button texts, tooltips, etc.).
@@ -4185,9 +4179,9 @@
             </summary>
             <param name="eventArgs"><see cref="T:System.ComponentModel.PropertyChangedEventArgs" /> object that provides the arguments for the event.</param>
         </member>
-        <member name="T:DigitalRune.Windows.Docking.DockPanelOffice2007BlackColorTable">
+        <member name="T:DigitalRune.Windows.Docking.DockPanelOffice2003ColorTable">
             <summary>
-            Provides colors for a <see cref="P:DigitalRune.Windows.Docking.DockPanelOffice2007BlackColorTable.DockPanel"/> for a theme similar to Office 2007 "Black".
+            Defines the colors for the "Office 2003" dock panel theme.
             </summary>
         </member>
         <member name="T:DigitalRune.Windows.Docking.DockPanelOffice2003Renderer">
@@ -4228,6 +4222,11 @@
             <param name="graphics">The graphics.</param>
             <param name="rectangle">The rectangle.</param>
             <param name="isActivated">if set to <c>true</c> [is activated].</param>
+        </member>
+        <member name="T:DigitalRune.Windows.Docking.DockPanelOffice2007BlackColorTable">
+            <summary>
+            Provides colors for a <see cref="P:DigitalRune.Windows.Docking.DockPanelOffice2007BlackColorTable.DockPanel"/> for a theme similar to Office 2007 "Black".
+            </summary>
         </member>
         <member name="T:DigitalRune.Windows.Docking.DockPanelOffice2007BlueColorTable">
             <summary>
@@ -4299,10 +4298,92 @@
             <param name="image">The image.</param>
             <param name="foreColor">Color of the foreground.</param>
         </member>
+        <member name="T:DigitalRune.Windows.Docking.Office2007Theme">
+            <summary>
+            The color themes of Office 2007.
+            </summary>
+        </member>
+        <member name="F:DigitalRune.Windows.Docking.Office2007Theme.Black">
+            <summary>
+            The Office 2007 "Black" color scheme.
+            </summary>
+        </member>
+        <member name="F:DigitalRune.Windows.Docking.Office2007Theme.Blue">
+            <summary>
+            The Office 2007 "Blue" color scheme.
+            </summary>
+        </member>
+        <member name="F:DigitalRune.Windows.Docking.Office2007Theme.Silver">
+            <summary>
+            The Office 2007 "Silver" color scheme.
+            </summary>
+        </member>
         <member name="T:DigitalRune.Windows.Docking.DockPanelOffice2007SilverColorTable">
             <summary>
             Provides colors for a <see cref="P:DigitalRune.Windows.Docking.DockPanelOffice2007SilverColorTable.DockPanel"/> for a theme similar to Office 2007 "Blue".
             </summary>
+        </member>
+        <member name="T:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer">
+            <summary>
+            Handles the painting functionality for <see cref="T:System.Windows.Forms.ToolStrip"/> objects, 
+            applying a style similar to Office 2007 "Black".
+            </summary>
+        </member>
+        <member name="T:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer.Office2007BlackColorTable">
+            <summary>
+            Provides colors for a <see cref="T:System.Windows.Forms.ToolStrip"/> for a theme similar to Office 2007 "Black".
+            </summary>
+        </member>
+        <member name="T:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer.Office2007BlueColorTable">
+            <summary>
+            Provides colors for a <see cref="T:System.Windows.Forms.ToolStrip"/> for a theme similar to Office 2007 "Black".
+            </summary>
+        </member>
+        <member name="T:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer.Office2007ColorTable">
+            <summary>
+            Provides <see cref="T:System.Windows.Forms.ToolStrip"/> colors for a theme similar to Office 2007.
+            </summary>
+        </member>
+        <member name="T:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer.Office2007SilverColorTable">
+            <summary>
+            Provides colors for a <see cref="T:System.Windows.Forms.ToolStrip"/> for a theme similar to Office 2007 "Black".
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer.#ctor(DigitalRune.Windows.Docking.Office2007Theme)">
+            <summary>
+            Initializes a new instance of the <see cref="T:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer"/> class.
+            </summary>
+            <param name="theme">The Office 2007 theme.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer.OnRenderArrow(System.Windows.Forms.ToolStripArrowRenderEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.ToolStripRenderer.RenderArrow"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.Windows.Forms.ToolStripArrowRenderEventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer.OnRenderToolStripPanelBackground(System.Windows.Forms.ToolStripPanelRenderEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.ToolStripRenderer.RenderToolStripPanelBackground"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.Windows.Forms.ToolStripPanelRenderEventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer.OnRenderToolStripBackground(System.Windows.Forms.ToolStripRenderEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.ToolStripRenderer.RenderToolStripBackground"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.Windows.Forms.ToolStripRenderEventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer.OnRenderToolStripBorder(System.Windows.Forms.ToolStripRenderEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.ToolStripRenderer.RenderToolStripBorder"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.Windows.Forms.ToolStripRenderEventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer.OnRenderItemText(System.Windows.Forms.ToolStripItemTextRenderEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.ToolStripRenderer.RenderItemText"/> event.
+            </summary>
+            <param name="e">The <see cref="T:System.Windows.Forms.ToolStripItemTextRenderEventArgs"/> instance containing the event data.</param>
         </member>
         <member name="T:DigitalRune.Windows.Docking.DockPanelProfessionalColorTable">
             <summary>
@@ -5213,6 +5294,28 @@
             <param name="image">The image.</param>
             <param name="foreColor">Color of the foreground.</param>
         </member>
+        <member name="M:DigitalRune.Windows.Docking.DockPanelProfessionalRenderer.DrawCloseGlyph(System.Drawing.Graphics,System.Drawing.Rectangle,System.Drawing.Color)">
+            <summary>
+            Draws the "close" X the way the Windows title bar does: two anti-aliased diagonals
+            spanning 10 pixels at 96 DPI, centered in the button and scaled with the display DPI,
+            with a stroke of the DPI factor but at least 1.6 pixels.
+            </summary>
+            <param name="graphics">The graphics context.</param>
+            <param name="rectangle">The button rectangle.</param>
+            <param name="foreColor">Color of the glyph.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockPanelProfessionalRenderer.DrawPinGlyph(System.Drawing.Graphics,System.Drawing.Rectangle,System.Drawing.Color,System.Boolean)">
+            <summary>
+            Draws the "auto-hide" push pin as filled rectangles on whole pixels, following the
+            DockPane_Dock (pinned, pointing down) and DockPane_AutoHide (unpinned, pointing left)
+            bitmaps. Every 1-pixel stroke of the bitmap gets the same scaled width, so the outline
+            stays even, which nearest-neighbor scaling cannot guarantee at 150%.
+            </summary>
+            <param name="graphics">The graphics context.</param>
+            <param name="rectangle">The button rectangle.</param>
+            <param name="foreColor">Color of the glyph.</param>
+            <param name="unpinned"><c>true</c> for the unpinned (horizontal) pin.</param>
+        </member>
         <member name="M:DigitalRune.Windows.Docking.DockPanelProfessionalRenderer.DrawCaption(System.Drawing.Graphics,System.Drawing.Rectangle,System.Drawing.Rectangle,System.String,System.Boolean)">
             <summary>
             Draws the caption of a <see cref="T:DigitalRune.Windows.Docking.DockPane"/>.
@@ -5321,6 +5424,11 @@
             <param name="rectangle">The boundary of the tool tab strip.</param>
             <param name="isActive"><c>true</c> if the tool tab is active.</param>
         </member>
+        <member name="T:DigitalRune.Windows.Docking.DockPanelSystemColorTable">
+            <summary>
+            Defines the color palette for the "System" dock panel theme.
+            </summary>
+        </member>
         <member name="T:DigitalRune.Windows.Docking.DockPanelSystemRenderer">
             <summary>
             A renderer that draws elements using the "Windows Classic Style".
@@ -5393,6 +5501,11 @@
             <param name="isActive">if set to <c>true</c> [is active].</param>
             <param name="isActivePane">if set to <c>true</c> [is active pane].</param>
         </member>
+        <member name="T:DigitalRune.Windows.Docking.DockPanelVisualStylesColorTable">
+            <summary>
+            Defines the color palette for the "Visual Style" dock panel theme.
+            </summary>
+        </member>
         <member name="T:DigitalRune.Windows.Docking.DockPanelVisualStylesRenderer">
             <summary>
             A renderer that draws elements using the visual styles of Windows.
@@ -5463,86 +5576,203 @@
             <param name="rectangle">The boundary of the tool tab strip.</param>
             <param name="isActive"><c>true</c> if the tool tab is active.</param>
         </member>
-        <member name="T:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer">
+        <member name="T:DigitalRune.Windows.Docking.Resources">
             <summary>
-            Handles the painting functionality for <see cref="T:System.Windows.Forms.ToolStrip"/> objects, 
-            applying a style similar to Office 2007 "Black".
+              A strongly-typed resource class, for looking up localized strings, etc.
             </summary>
         </member>
-        <member name="T:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer.Office2007BlackColorTable">
+        <member name="P:DigitalRune.Windows.Docking.Resources.ResourceManager">
             <summary>
-            Provides colors for a <see cref="T:System.Windows.Forms.ToolStrip"/> for a theme similar to Office 2007 "Black".
+              Returns the cached ResourceManager instance used by this class.
             </summary>
         </member>
-        <member name="T:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer.Office2007BlueColorTable">
+        <member name="P:DigitalRune.Windows.Docking.Resources.Culture">
             <summary>
-            Provides colors for a <see cref="T:System.Windows.Forms.ToolStrip"/> for a theme similar to Office 2007 "Black".
+              Overrides the current thread's CurrentUICulture property for all
+              resource lookups using this strongly typed resource class.
             </summary>
         </member>
-        <member name="T:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer.Office2007ColorTable">
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PaneDiamond">
             <summary>
-            Provides <see cref="T:System.Windows.Forms.ToolStrip"/> colors for a theme similar to Office 2007.
+              Looks up a localized resource of type System.Drawing.Bitmap.
             </summary>
         </member>
-        <member name="T:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer.Office2007SilverColorTable">
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PaneDiamond_Bottom">
             <summary>
-            Provides colors for a <see cref="T:System.Windows.Forms.ToolStrip"/> for a theme similar to Office 2007 "Black".
+              Looks up a localized resource of type System.Drawing.Bitmap.
             </summary>
         </member>
-        <member name="M:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer.#ctor(DigitalRune.Windows.Docking.Office2007Theme)">
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PaneDiamond_Fill">
             <summary>
-            Initializes a new instance of the <see cref="T:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer"/> class.
-            </summary>
-            <param name="theme">The Office 2007 theme.</param>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer.OnRenderArrow(System.Windows.Forms.ToolStripArrowRenderEventArgs)">
-            <summary>
-            Raises the <see cref="E:System.Windows.Forms.ToolStripRenderer.RenderArrow"/> event.
-            </summary>
-            <param name="e">The <see cref="T:System.Windows.Forms.ToolStripArrowRenderEventArgs"/> instance containing the event data.</param>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer.OnRenderToolStripPanelBackground(System.Windows.Forms.ToolStripPanelRenderEventArgs)">
-            <summary>
-            Raises the <see cref="E:System.Windows.Forms.ToolStripRenderer.RenderToolStripPanelBackground"/> event.
-            </summary>
-            <param name="e">The <see cref="T:System.Windows.Forms.ToolStripPanelRenderEventArgs"/> instance containing the event data.</param>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer.OnRenderToolStripBackground(System.Windows.Forms.ToolStripRenderEventArgs)">
-            <summary>
-            Raises the <see cref="E:System.Windows.Forms.ToolStripRenderer.RenderToolStripBackground"/> event.
-            </summary>
-            <param name="e">The <see cref="T:System.Windows.Forms.ToolStripRenderEventArgs"/> instance containing the event data.</param>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer.OnRenderToolStripBorder(System.Windows.Forms.ToolStripRenderEventArgs)">
-            <summary>
-            Raises the <see cref="E:System.Windows.Forms.ToolStripRenderer.RenderToolStripBorder"/> event.
-            </summary>
-            <param name="e">The <see cref="T:System.Windows.Forms.ToolStripRenderEventArgs"/> instance containing the event data.</param>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.ToolStripOffice2007Renderer.OnRenderItemText(System.Windows.Forms.ToolStripItemTextRenderEventArgs)">
-            <summary>
-            Raises the <see cref="E:System.Windows.Forms.ToolStripRenderer.RenderItemText"/> event.
-            </summary>
-            <param name="e">The <see cref="T:System.Windows.Forms.ToolStripItemTextRenderEventArgs"/> instance containing the event data.</param>
-        </member>
-        <member name="T:DigitalRune.Windows.Docking.Office2007Theme">
-            <summary>
-            The color themes of Office 2007.
+              Looks up a localized resource of type System.Drawing.Bitmap.
             </summary>
         </member>
-        <member name="F:DigitalRune.Windows.Docking.Office2007Theme.Black">
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PaneDiamond_HotSpot">
             <summary>
-            The Office 2007 "Black" color scheme.
+              Looks up a localized resource of type System.Drawing.Bitmap.
             </summary>
         </member>
-        <member name="F:DigitalRune.Windows.Docking.Office2007Theme.Blue">
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PaneDiamond_HotSpotIndex">
             <summary>
-            The Office 2007 "Blue" color scheme.
+              Looks up a localized resource of type System.Drawing.Bitmap.
             </summary>
         </member>
-        <member name="F:DigitalRune.Windows.Docking.Office2007Theme.Silver">
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PaneDiamond_Left">
             <summary>
-            The Office 2007 "Silver" color scheme.
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PaneDiamond_Right">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PaneDiamond_Top">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PanelBottom">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PanelBottom_Active">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PanelFill">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PanelFill_Active">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PanelLeft">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PanelLeft_Active">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PanelRight">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PanelRight_Active">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PanelTop">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockIndicator_PanelTop_Active">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockPane_AutoHide">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockPane_Close">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockPane_Dock">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockPane_Option">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockPane_OptionOverflow">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockPaneStrip_ScrollLeftDisabled">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockPaneStrip_ScrollLeftEnabled">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockPaneStrip_ScrollRightDisabled">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DockPaneStrip_ScrollRightEnabled">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DocumentClose">
+            <summary>
+              Looks up a localized string similar to Close.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DocumentScrollLeft">
+            <summary>
+              Looks up a localized string similar to Scroll Left.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DocumentScrollRight">
+            <summary>
+              Looks up a localized string similar to Scroll Right.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.DocumentWindowList">
+            <summary>
+              Looks up a localized string similar to Window List.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.larrow_cur">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.ToolWindowAutoHide">
+            <summary>
+              Looks up a localized string similar to Auto-Hide.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.ToolWindowClose">
+            <summary>
+              Looks up a localized string similar to Close.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.ToolWindowOptions">
+            <summary>
+              Looks up a localized string similar to Options.
+            </summary>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.SplitterBase.ScaleControl(System.Drawing.SizeF,System.Windows.Forms.BoundsSpecified)">
+            <summary>
+            Keeps the splitter at <see cref="P:DigitalRune.Windows.Docking.SplitterBase.SplitterSize"/>, which is already scaled for the display
+            DPI. Font autoscaling of the host form would otherwise scale it again (to 10 pixels at
+            150%), while the dock zone still reserves <see cref="P:DigitalRune.Windows.Docking.SplitterBase.SplitterSize"/> for it, so the
+            splitter would cover the inner edge and border of the docked pane.
             </summary>
         </member>
         <member name="T:DigitalRune.Windows.Docking.Tab">
@@ -5630,150 +5860,60 @@
             <param name="content">The <see cref="T:DigitalRune.Windows.Docking.IDockableForm" /> to locate in the <see cref="T:DigitalRune.Windows.Docking.DockPaneTabCollection" />.</param>
             <returns>The zero-based index of <paramref name="content" /> within the entire <see cref="T:DigitalRune.Windows.Docking.DockPaneTabCollection" />, if found; otherwise, -1.</returns>
         </member>
-        <member name="T:DigitalRune.Windows.Docking.IDockableForm">
+        <member name="T:DigitalRune.Windows.Docking.VisibleNestedPaneCollection">
             <summary>
-            Represents a dockable form.
+            Manages a collection of visible, nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s.
             </summary>
-            <remarks>
-            <para>
-            A Windows form needs to implement this interface to be dockable in 
-            <see cref="T:DigitalRune.Windows.Docking.DockPanel"/>. Docking is handled through the 
-            <see cref="P:DigitalRune.Windows.Docking.IDockableForm.DockingHandler"/>.
-            </para>
-            <para>
-            There are two ways to make your forms dockable:
-            <list type="bullet">
-            <item>
-            <description>
-            <strong>The Fast Way:</strong> Let your forms inherit from <see cref="T:DigitalRune.Windows.Docking.DockableForm"/> instead of inheriting
-            <see cref="T:System.Windows.Forms.Form"/>. For example, when you have a form
-            <c>MyForm</c>:
-            <code>
-            using System.Windows.Forms;
-            
-            namespace Sample
-            {
-              public partial class MyForm : Form
-              {
-                ...
-              }
-            }
-            </code>
-            Just changes the lines to:
-            <code>
-            using System.Windows.Forms;
-            using DigitalRune.Windows.Docking;
-            
-            namespace Sample
-            {
-              public partial class MyForm : DockableForm
-              {
-                ...
-              }
-            }
-            </code>
-            This will add docking capabilities to your form. When you open the modified
-            form in Visual Studio (design-mode), you will be able to see new properties 
-            in the <strong>Properties</strong> dialog. The docking properties can be found 
-            in the category named 'Docking'.
-            </description>
-            </item>
-            <item>
-            <description>
-            <strong>The Slow Way:</strong> Implement the interface <see cref="T:DigitalRune.Windows.Docking.IDockableForm"/> 
-            in your own forms. This takes more code to write, but gives you full control
-            over the docking in your form.
-            </description>
-            </item>
-            </list>
-            </para>
-            </remarks>
         </member>
-        <member name="P:DigitalRune.Windows.Docking.IDockableForm.DockingHandler">
+        <member name="P:DigitalRune.Windows.Docking.VisibleNestedPaneCollection.NestedPanes">
             <summary>
-            Gets the <see cref="P:DigitalRune.Windows.Docking.IDockableForm.DockingHandler"/> object to handle the docking behaviors.
+            Gets the nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s.
+            </summary>
+            <value>The nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s.</value>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.VisibleNestedPaneCollection.Container">
+            <summary>
+            Gets the container (<see cref="T:DigitalRune.Windows.Docking.DockZone"/> or <see cref="T:DigitalRune.Windows.Docking.FloatingWindow"/>)
+            that hosts the nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s.
             </summary>
             <value>
-            The <see cref="P:DigitalRune.Windows.Docking.IDockableForm.DockingHandler"/> object to handle the docking behaviors.
+            The container (<see cref="T:DigitalRune.Windows.Docking.DockZone"/> or <see cref="T:DigitalRune.Windows.Docking.FloatingWindow"/>)
+            that hosts the nested <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s.</value>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.VisibleNestedPaneCollection.DockState">
+            <summary>
+            Gets the docking state of the collection.
+            </summary>
+            <value>The docking state of the collection.</value>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.VisibleNestedPaneCollection.IsFloating">
+            <summary>
+            Gets a value indicating whether this collection of <see cref="T:DigitalRune.Windows.Docking.DockPane"/>s 
+            is floating.
+            </summary>
+            <value>
+            <c>true</c> if this collection is floating; otherwise, <c>false</c>.
             </value>
         </member>
-        <member name="M:DigitalRune.Windows.Docking.IDockableForm.OnActivated(System.EventArgs)">
+        <member name="T:DigitalRune.Windows.Docking.Win32Helper">
             <summary>
-            Raises the <see cref="E:System.Windows.Forms.Form.Activated"/> event.
-            </summary>
-            <param name="eventArgs">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
-        </member>
-        <member name="M:DigitalRune.Windows.Docking.IDockableForm.OnDeactivate(System.EventArgs)">
-            <summary>
-            Raises the <see cref="E:System.Windows.Forms.Form.Deactivate"/> event.
-            </summary>
-            <param name="eventArgs">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
-        </member>
-        <member name="T:DigitalRune.Windows.Docking.INestedPanesContainer">
-            <summary>
-            Container for nested docking <see cref='T:DigitalRune.Windows.Docking.DockPane' /> objects.
-            </summary>
-            <remarks>
-            <para>
-            <see cref="T:DigitalRune.Windows.Docking.INestedPanesContainer"/> contains a list of <see cref="T:DigitalRune.Windows.Docking.DockPane"/> 
-            objects for nested docking. It maintains two lists: <see cref='T:DigitalRune.Windows.Docking.NestedPaneCollection' />
-            and <see cref='T:DigitalRune.Windows.Docking.VisibleNestedPaneCollection' />. The <see cref="T:DigitalRune.Windows.Docking.NestedPaneCollection"/>
-            contains all <see cref="T:DigitalRune.Windows.Docking.DockPane"/> objects, no matter whether it is visible 
-            or not; <see cref="T:DigitalRune.Windows.Docking.VisibleNestedPaneCollection"/> contains only visible 
-            <see cref="T:DigitalRune.Windows.Docking.DockPane"/> objects for this container.
-            </para>
-            </remarks>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.INestedPanesContainer.DockState">
-            <summary>
-            Gets the docking state of this container.
-            </summary>
-            <value>
-            One of the <see cref="T:DigitalRune.Windows.Docking.DockState" /> values.
-            </value>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.INestedPanesContainer.DisplayingRectangle">
-            <summary>
-            Gets the rectangle that represents the displaying area for nested docking 
-            <see cref="T:DigitalRune.Windows.Docking.DockPane"/> objects.
-            </summary>
-            <value>
-            A <see cref="T:System.Drawing.Rectangle" /> that represents the displaying area 
-            for nested docking <see cref="T:DigitalRune.Windows.Docking.DockPane"/> objects.</value>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.INestedPanesContainer.NestedPanes">
-            <summary>
-            Gets the <see cref="T:DigitalRune.Windows.Docking.NestedPaneCollection" /> which contains a list of nested 
-            docking <see cref="T:DigitalRune.Windows.Docking.DockPane" /> objects.
-            </summary>
-            <value>
-            The <see cref="T:DigitalRune.Windows.Docking.NestedPaneCollection" /> which contains a list of nested 
-            docking <see cref="T:DigitalRune.Windows.Docking.DockPane" /> objects.
-            </value>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.INestedPanesContainer.VisibleNestedPanes">
-            <summary>
-            Gets the <see cref="T:DigitalRune.Windows.Docking.VisibleNestedPaneCollection" /> which contains a list 
-            of visible nested docking <see cref="T:DigitalRune.Windows.Docking.DockPane" /> objects.
-            </summary>
-            <value>
-            The <see cref="T:DigitalRune.Windows.Docking.VisibleNestedPaneCollection" /> which contains a list of 
-            visible nested docking <see cref="T:DigitalRune.Windows.Docking.DockPane" /> objects.
-            </value>
-        </member>
-        <member name="P:DigitalRune.Windows.Docking.INestedPanesContainer.IsFloating">
-            <summary>Determines whether this container window is floating.</summary>
-            <value><c>true</c> if is floating; otherwise, <c>false</c>.</value>
-        </member>
-        <member name="T:DigitalRune.Windows.Docking.DockPanelOffice2003ColorTable">
-            <summary>
-            Defines the colors for the "Office 2003" dock panel theme.
+            Some useful Win32 functions.
             </summary>
         </member>
-        <member name="T:DigitalRune.Windows.Docking.DockPanelSystemColorTable">
+        <member name="M:DigitalRune.Windows.Docking.Win32Helper.ControlAtPoint(System.Drawing.Point)">
             <summary>
-            Defines the color palette for the "System" dock panel theme.
+            Returns the control that contains a point.
             </summary>
+            <param name="point">The point on the control.</param>
+            <returns>The control that contains the <paramref name="point"/>.</returns>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.Win32Helper.MakeLong(System.Int32,System.Int32)">
+            <summary>
+            Returns a DWORD value from two WORD values.
+            </summary>
+            <param name="low">The lower 16-bit word (LOW WORD).</param>
+            <param name="high">The upper 16-bit word (HIGH WORD).</param>
+            <returns>An unsigned 32-bit value (DWORD).</returns>
         </member>
     </members>
 </doc>

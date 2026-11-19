@@ -38,6 +38,7 @@ using Parquet;
 using pwiz.Common;
 using pwiz.ProteowizardWrapper;
 using pwiz.Common.Collections;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Startup;
@@ -219,6 +220,9 @@ namespace pwiz.Skyline
             if (!UnitTest && !FunctionalTest)
                 Application.SetHighDpiMode(HighDpiMode.SystemAware);
             SetDefaultFont();
+            // Forms that set no icon show the executable's; give them the same icon with
+            // frames at the scaled title bar sizes.
+            DpiFormIcons.ApplicationIcon = Resources.Skyline;
 
             if (String.IsNullOrEmpty(Settings.Default.InstallationId)) // Each instance to have GUID
                 Settings.Default.InstallationId = Guid.NewGuid().ToString();

@@ -113,6 +113,18 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// A form icon with frames at the display's title bar and tab sizes taken from the
+        /// embedded drawing of a 16 px Skyline icon; see <see cref="DpiFormIcons.GetIcon(Control, Icon, string, System.Func{int, Image})"/>.
+        /// For a docked form whose icon is a 16 px copy of that Resources bitmap. Pass
+        /// <c>nameof(Resources.X)</c> as the name.
+        /// </summary>
+        public static Icon GetFormIcon(Control control, string name, Icon icon)
+        {
+            return DpiFormIcons.GetIcon(control, icon, name,
+                size => DpiIcons.LoadIcon(typeof(Resources), name, 16, size));
+        }
+
+        /// <summary>
         /// The pre-rendered pixel sizes IconBuilder emits for a native icon size; see
         /// <see cref="DpiIcons.GetIconSizes"/>.
         /// </summary>
