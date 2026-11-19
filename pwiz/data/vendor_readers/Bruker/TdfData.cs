@@ -31,6 +31,9 @@ internal sealed class TdfData : IBrukerData
         AnalysisDirectory = analysisDirectory;
         _meta = new TdfMetadata(analysisDirectory);
         _tims = new TimsBinaryData(analysisDirectory, useRecalibratedState);
+        // timsdata decompresses a frame on a single thread unless told otherwise; cpp asks for 4
+        // (TimsData.cpp:135). Frame decoding is most of the cost of reading a TIMS file.
+        TimsBinaryData.SetNumThreads(4);
     }
 
     public BrukerFormat Format => BrukerFormat.Tdf;

@@ -21,6 +21,9 @@ internal sealed class TsfData : IBrukerData
         AnalysisDirectory = analysisDirectory;
         _meta = new TsfMetadata(analysisDirectory);
         _tsf = new TsfBinaryData(analysisDirectory, useRecalibratedState);
+        // As for TDF, tsfdata decodes on a single thread unless told otherwise; cpp asks for 4
+        // (TsfData.cpp:117).
+        TsfBinaryData.SetNumThreads(4);
         _preferProfile = _meta.HasProfileSpectra;
     }
 
