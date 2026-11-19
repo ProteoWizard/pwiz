@@ -49,6 +49,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
 
 
 namespace pwiz.SkylineTestTutorial
@@ -156,7 +157,7 @@ namespace pwiz.SkylineTestTutorial
 
             // p. 3 Select first peptide
             RunUI(() => SkylineWindow.SelectedPath = document.GetPathTo((int) SrmDocument.Level.Molecules, 0));
-            RunUI(() => SkylineWindow.Size = new Size(820, 554));
+            RunUI(() => SkylineWindow.Size = ScaledSize(SkylineWindow, 820, 554));
             RestoreViewOnScreen(3);
             PauseForScreenShot("Main window");
 
@@ -260,7 +261,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 var messageDlg = ShowDialog<MessageDlg>(
                     () => exportMethodDlg.OkDialog(GetTestPath(@"Low Res\TargetedMSMS_BSA_Protea.meth")));
-                RunUI(() => messageDlg.Height = 210);
+                RunUI(() => messageDlg.Height = ScaledHeight(messageDlg, 210));
                 PauseForScreenShot<MessageDlg>("Error message (expected)");
 
                 OkDialog(messageDlg, messageDlg.OkDialog);
@@ -310,8 +311,8 @@ namespace pwiz.SkylineTestTutorial
                     var precursorMzCol = previewReportDlg.DataGridView.Columns[precursorIndex];
                     Assert.IsNotNull(precursorMzCol);
                     previewReportDlg.DataGridView.Sort(precursorMzCol, ListSortDirection.Ascending);
-                    previewReportDlg.Size = new Size(460, 330);
-                    previewReportDlg.Left = SkylineWindow.Right + 20;
+                    previewReportDlg.Size = ScaledSize(previewReportDlg, 460, 330);
+                    previewReportDlg.Left = SkylineWindow.Right + Scaled(20);
                 });
                 PauseForScreenShot<DocumentGridForm>("Preview New Report window");
 
@@ -466,7 +467,7 @@ namespace pwiz.SkylineTestTutorial
             // Add FASTA also skipped because filter for document peptides was chosen.
 
             WaitForClosedForm(importPeptideSearchDlg);
-            RunUI(() => allChromGraph.Left = SkylineWindow.Right + 20);
+            RunUI(() => allChromGraph.Left = SkylineWindow.Right + Scaled(20));
 
             if (!PauseForAllChromatogramsGraphScreenShot("Loading chromatograms window", 32, "00:00:01", 50f, 2.14e7f,
                 new Dictionary<string, int>
@@ -511,8 +512,8 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
             RunUI(() =>
             {
-                SkylineWindow.Width = 1050;
-                SkylineWindow.Height += 15; // Account for Targets and Files tabs
+                SkylineWindow.Width = ScaledWidth(SkylineWindow, 1050);
+                SkylineWindow.Height += Scaled(15); // Account for Targets and Files tabs
             });
             RestoreViewOnScreen(20);
             PauseForScreenShot("Main window with data imported");
@@ -520,7 +521,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 TestPropertySheet();
             }
-            RunUI(() => SkylineWindow.Height -= 15);    // Subsequent screenshots are graphs only
+            RunUI(() => SkylineWindow.Height -= Scaled(15));    // Subsequent screenshots are graphs only
 
             ValidatePeakRanks(1, 176, true);
             WaitForGraphs();
@@ -664,7 +665,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() =>
             {
-                SkylineWindow.Size = new Size(970, 740);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 970, 740);
                 Settings.Default.ChromatogramFontSize = 14;
                 SkylineWindow.ShowGraphPeakArea(false);
             });
@@ -906,10 +907,10 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 // Resize and center window on screen
-                SkylineWindow.Size = windowSize;
+                SkylineWindow.Size = ScaledSize(SkylineWindow, windowSize.Width, windowSize.Height);
                 var screenRect = Screen.FromControl(SkylineWindow).WorkingArea;
-                SkylineWindow.Location = new Point(screenRect.X + screenRect.Width/2 - windowSize.Width/2,
-                    screenRect.Y + screenRect.Height/2 - windowSize.Height/2);
+                SkylineWindow.Location = new Point(screenRect.X + screenRect.Width/2 - SkylineWindow.Width/2,
+                    screenRect.Y + screenRect.Height/2 - SkylineWindow.Height/2);
             });
             RestoreViewOnScreen(31);
             RunUI(() =>
@@ -1004,7 +1005,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowSplitChromatogramGraph(false);
                 SkylineWindow.ArrangeGraphsTabbed();
                 SkylineWindow.ActivateReplicate("6-BSA-500fmol");
-                SkylineWindow.Size = new Size(855, 545);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 855, 545);
                 SkylineWindow.ShowGraphPeakArea(false);
             });
             PauseForChromGraphScreenShot("Chromatogram graph metafile for 500 fmol", "6-BSA-500fmol");
@@ -1028,7 +1029,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 SkylineWindow.ActivateReplicate("6-BSA-500fmol");
                 SkylineWindow.ShowGraphPeakArea(false);
-                SkylineWindow.Size = windowSize;
+                SkylineWindow.Size = ScaledSize(SkylineWindow, windowSize.Width, windowSize.Height);
                 SkylineWindow.FocusDocument();
             });
             PauseForScreenShot("Main window");
@@ -1367,7 +1368,9 @@ namespace pwiz.SkylineTestTutorial
         {
             // Initializing localized expected values
             var asSmallMolecules = AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none;
-            var mzObserved = (951.6229f).ToString(Formats.Mz, CultureInfo.CurrentCulture);
+            const float mzPeak = 951.6229f;
+            const float intensityPeak = 3814516;
+            var mzObserved = mzPeak.ToString(Formats.Mz, CultureInfo.CurrentCulture);
             var mzMatched = (951.4782f).ToString(Formats.Mz, CultureInfo.CurrentCulture);
             var massError = -152.1f;
             var massErrorString = string.Format(CultureInfo.CurrentCulture, Resources.GraphSpectrum_MassErrorFormat_ppm, (massError > 0 ? @"+" : string.Empty), massError);
@@ -1377,11 +1380,34 @@ namespace pwiz.SkylineTestTutorial
                              $"{GraphsResources.GraphSpectrum_ToolTip_Rank}\t1\n"+
                              $"{GraphsResources.GraphSpectrum_ToolTip_MatchedIons}\t{GraphsResources.ToolTipImplementation_RenderTip_Calculated_Mass}\n"+
                              $"{fragName}\t{mzMatched}  {massErrorString}";
+            // Hover points come from the y8 peak's data coordinates, since pixel positions change with DPI
+            Point labelPoint = Point.Empty, stickPoint = Point.Empty, abovePoint = Point.Empty;
+            RunUI(() =>
+            {
+                var pane = SkylineWindow.GraphSpectrum.ZedGraphControl.GraphPane;
+                var label = pane.GraphObjList.OfType<TextObj>().FirstOrDefault(t => Math.Abs(t.Location.X - mzPeak) < 0.001);
+                Assert.IsNotNull(label);
+                using (var g = SkylineWindow.GraphSpectrum.ZedGraphControl.CreateGraphics())
+                {
+                    var labelRect = pane.GetRectScreen(label, g);
+                    labelPoint = Point.Round(new PointF(labelRect.X + labelRect.Width / 2, labelRect.Y + labelRect.Height / 2));
+                }
+                // Above every neighboring stick, which can be less than a pixel away, so that only the
+                // y8 stick reaches the mouse whichever way its pixel position rounds
+                var neighborMax = pane.CurveList.OfType<StickItem>()
+                    .SelectMany(stick => Enumerable.Range(0, stick.NPts).Select(i => stick.Points[i]))
+                    .Where(pt => Math.Abs(pt.X - mzPeak) > 0.001 && Math.Abs(pt.X - mzPeak) < 10)
+                    .Select(pt => pt.Y).DefaultIfEmpty(0).Max();
+                Assert.IsTrue(neighborMax < intensityPeak);
+                stickPoint = Point.Round(pane.GeneralTransform(new PointF(mzPeak, (float) (intensityPeak + neighborMax) / 2), CoordType.AxisXYScale));
+                // Above the chart rectangle, where there are no peaks or labels
+                abovePoint = new Point(stickPoint.X, (int)(pane.Rect.Top + pane.Chart.Rect.Top) / 2);
+            });
             var testData = new Dictionary<Point, string>()
             {
-                {new Point(191, 95), testString},
-                {new Point(169, 175), testString},
-                {new Point(190, 5), null}, // No peak here
+                {labelPoint, testString},
+                {stickPoint, testString},
+                {abovePoint, null}, // No peak here
             };
 
             foreach (var testPoint in testData)

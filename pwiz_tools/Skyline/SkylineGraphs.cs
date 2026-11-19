@@ -554,7 +554,9 @@ namespace pwiz.Skyline
             foreach (var graphChrom in _listGraphChrom.ToArray())
                 DestroyGraphChrom(graphChrom);
             DestroyGraphFullScan();
-            dockPanel.LoadFromXml(layoutStream, DeserializeForm);
+            // Floating-window sizes are persisted in 96-DPI logical units (files from
+            // DPI-unaware builds are logical by definition); scale to the display DPI.
+            dockPanel.LoadFromXml(DpiUtil.DenormalizeDockLayoutStream(this, layoutStream), DeserializeForm);
 
             InsertFilesViewIntoLegacyLayout();
 
@@ -927,7 +929,8 @@ namespace pwiz.Skyline
                     throw new InvalidOperationException(
                         SkylineResources.SkylineWindow_IsGraphUpdatePending_Must_be_called_from_event_thread);
                 }
-                return _timerGraphs.Enabled || (_graphSpectrum != null && _graphSpectrum.IsGraphUpdatePending) || ProductionFacility.DEFAULT.IsWaiting();
+                return _timerGraphs.Enabled || (_graphSpectrum != null && _graphSpectrum.IsGraphUpdatePending) || ProductionFacility.DEFAULT.IsWaiting() ||
+                       LabelLayoutRunner.AnyPending;
             }
         }
 
@@ -960,6 +963,8 @@ namespace pwiz.Skyline
                     pending.Add(@"spectrum graph still updating");
                 if (ProductionFacility.DEFAULT.IsWaiting())
                     pending.Add(@"production facility still waiting");
+                if (LabelLayoutRunner.AnyPending)
+                    pending.Add(@"label layout still running");
                 return pending.Count == 0 ? @"nothing pending" : string.Join(@", ", pending);
             }
         }
@@ -3907,7 +3912,7 @@ namespace pwiz.Skyline
                 {
                     var rectFloat = GetFloatingRectangleForNewWindow();
                     // Ensure the audit log window is wide enough to show the "Enable audit logging" checkbox
-                    rectFloat.Width = Math.Max(800, rectFloat.Width);
+                    rectFloat.Width = Math.Max(DpiUtil.Scale(this, 800), rectFloat.Width);
 
                     _auditLogForm.Show(dockPanel, rectFloat);
                 }

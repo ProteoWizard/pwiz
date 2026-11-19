@@ -127,7 +127,7 @@ namespace pwiz.SkylineTestTutorial
                 viewEditor.ChooseColumnsTab.ExpandPropertyPath(PropertyPath.Parse("Proteins!*.Peptides!*"), true);
                 viewEditor.ChooseColumnsTab.ExpandPropertyPath(PropertyPath.Parse("Replicates!*"), true);
                 // Make the view editor bigger so that these expanded nodes can be seen in the next screenshot
-                viewEditor.Height = Math.Max(viewEditor.Height, 600);
+                viewEditor.Height = Math.Max(viewEditor.Height, ScaledHeight(viewEditor, 600));
                 Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Parse("Proteins!*.Peptides!*.Sequence"))); // Not L10N
                 viewEditor.ChooseColumnsTab.AddSelectedColumn();
                 viewEditor.ChooseColumnsTab.ScrollTreeToTop();
@@ -276,7 +276,7 @@ namespace pwiz.SkylineTestTutorial
                 }
                 var pivotWidget = viewEditor.ViewEditorWidgets.OfType<PivotReplicateAndIsotopeLabelWidget>().First();
                 pivotWidget.SetPivotReplicate(false);
-                viewEditor.Height = 627;
+                viewEditor.Height = ScaledHeight(viewEditor, 627);
             });
             PauseForScreenShot<ViewEditor.ChooseColumnsView>("Edit Report form expanded to show selected columns");
 
@@ -390,8 +390,8 @@ namespace pwiz.SkylineTestTutorial
                 var viewEditorCover = ShowDialog<ViewEditor>(documentGridFormCover.NavBar.CustomizeView);
                 RunUI(() =>
                 {
-                    viewEditorCover.Top = SkylineWindow.Top + 10;
-                    viewEditorCover.Width -= 40;
+                    viewEditorCover.Top = SkylineWindow.Top + Scaled(10);
+                    viewEditorCover.Width -= Scaled(40);
                     viewEditorCover.Left = SkylineWindow.Right - viewEditorCover.Width;
                     var columnsExpand = new[]
                     {
@@ -455,12 +455,12 @@ namespace pwiz.SkylineTestTutorial
             {
                 // position two floating windows relative to Skyline's bottom-right corner
                 var backgroundWindow = FindFloatingWindow(SkylineWindow.GraphPeakArea);
-                backgroundWindow.Top = SkylineWindow.Bottom - backgroundWindow.Height - 53;
-                backgroundWindow.Left = SkylineWindow.Right - backgroundWindow.Width - 128;
+                backgroundWindow.Top = SkylineWindow.Bottom - backgroundWindow.Height - Scaled(53);
+                backgroundWindow.Left = SkylineWindow.Right - backgroundWindow.Width - Scaled(128);
 
                 var foregroundWindow = FindFloatingWindow(FindOpenForm<LiveResultsGrid>());
-                foregroundWindow.Top = SkylineWindow.Bottom - foregroundWindow.Height - 26;
-                foregroundWindow.Left = SkylineWindow.Right - foregroundWindow.Width - 34;
+                foregroundWindow.Top = SkylineWindow.Bottom - foregroundWindow.Height - Scaled(26);
+                foregroundWindow.Left = SkylineWindow.Right - foregroundWindow.Width - Scaled(34);
             });
 
             PauseForScreenShot(SkylineWindow, "Main window under floating windows");
@@ -569,22 +569,22 @@ namespace pwiz.SkylineTestTutorial
             var floatingWindow = FindFloatingWindow(documentGridForm);
 
             // explicitly size floating window to accommodate one set of column widths for EN, ZH, JP
-            floatingWindow.Size = new Size(750, 340);
+            floatingWindow.Size = ScaledSize(floatingWindow, 750, 340);
 
-            dataGridView.Columns[0].Width = 70; // wider for ZH/JP than EN
-            dataGridView.Columns[1].Width = 95;
-            dataGridView.Columns[2].Width = 80;
-            dataGridView.Columns[3].Width = 79; // wider for ZH
-            dataGridView.Columns[4].Width = 80;
-            dataGridView.Columns[5].Width = 92; // wider for ZH than EN
-            dataGridView.Columns[6].Width = 102;
-            dataGridView.Columns[7].Width = 105;
+            dataGridView.Columns[0].Width = Scaled(70); // wider for ZH/JP than EN
+            dataGridView.Columns[1].Width = Scaled(95);
+            dataGridView.Columns[2].Width = Scaled(80);
+            dataGridView.Columns[3].Width = Scaled(79); // wider for ZH
+            dataGridView.Columns[4].Width = Scaled(80);
+            dataGridView.Columns[5].Width = Scaled(92); // wider for ZH than EN
+            dataGridView.Columns[6].Width = Scaled(102);
+            dataGridView.Columns[7].Width = Scaled(105);
 
             // last 3 columns not visible in screenshot but need to 
             // set width to prevent column title from wrapping to 3 lines 
-            dataGridView.Columns[8].Width = 105;
-            dataGridView.Columns[9].Width = 105;
-            dataGridView.Columns[10].Width = 105;
+            dataGridView.Columns[8].Width = Scaled(105);
+            dataGridView.Columns[9].Width = Scaled(105);
+            dataGridView.Columns[10].Width = Scaled(105);
         }
     }
 }
