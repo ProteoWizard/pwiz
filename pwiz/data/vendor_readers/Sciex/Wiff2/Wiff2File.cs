@@ -156,6 +156,7 @@ internal static class Wiff2Sdk
             // SDK reports them) leave handles dangling otherwise.
             foreach (var source in sources)
             {
+                // ReSharper disable once EmptyGeneralCatchClause
                 try { Api.CloseFile(source); } catch { }
             }
         }
@@ -254,6 +255,7 @@ internal sealed class Wiff2File : AbstractWiffFile
                         out var dt))
                     return dt;
             }
+            // ReSharper disable once EmptyGeneralCatchClause
             catch { }
             return default;
         }
@@ -270,6 +272,7 @@ internal sealed class Wiff2File : AbstractWiffFile
                     if (det.DeviceType == 0) return det.DeviceModelName;
                 }
             }
+            // ReSharper disable once EmptyGeneralCatchClause
             catch { }
             return null;
         }
@@ -286,6 +289,7 @@ internal sealed class Wiff2File : AbstractWiffFile
                     if (det.DeviceType == 0) return det.SerialNumber;
                 }
             }
+            // ReSharper disable once EmptyGeneralCatchClause
             catch { }
             return null;
         }
@@ -424,6 +428,7 @@ internal sealed class Wiff2File : AbstractWiffFile
                         value = Convert.ToDouble(raw, System.Globalization.CultureInfo.InvariantCulture);
                         return true;
                     }
+                    // ReSharper disable once EmptyGeneralCatchClause
                     catch { }
                 }
                 if (double.TryParse(raw.ToString(), System.Globalization.NumberStyles.Float,

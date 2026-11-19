@@ -628,6 +628,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
         // already-MS2 — frame acquired with a non-zero collision energy becomes an MSn spectrum
         // with one precursor spanning the whole scan range.
         bool reportMs2ForAllIons = false;
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
         if ((msLevel == 1 || msLevel == 2) && collisionEnergy > 0)
         {
             msLevel = 2;
@@ -781,6 +782,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
                 msLevel = level == 2 ? 2 : 1;
                 int scanTypeInt = (int)(object)details.MsScanType!;
                 specType = TranslateAsSpectrumType((AgScanType)scanTypeInt);
+                // ReSharper disable once EmptyGeneralCatchClause
                 try { collisionEnergy = details.FragmentationEnergyRange?.Max ?? 0; } catch { }
             }
         }
@@ -820,6 +822,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
             double rt = frameInfo.AcqTimeRange?.Min ?? 0;
             scan.Set(CVID.MS_scan_start_time, rt, CVID.UO_minute);
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         catch { }
 
         // Drift-time midpoint, in milliseconds. cpp SpectrumList_Agilent.cpp:300.
@@ -832,6 +835,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
                 scan.Set(CVID.MS_ion_mobility_drift_time, mid, CVID.UO_millisecond);
             }
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         catch { }
 
         // Frame-level TIC from the frame info; cpp does the same in :299. Note that for empty
@@ -840,6 +844,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
         // drift bins yield data (handled at end of method).
         double frameTic = double.NaN;
         try { frameTic = frameInfo.Tic; }
+        // ReSharper disable once EmptyGeneralCatchClause
         catch { }
 
         // Scan window from the frame's m/z range. cpp Reader_Agilent_Detail.cpp:175 emits
@@ -850,6 +855,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
             if (mz is not null)
                 scan.ScanWindows.Add(new ScanWindow(mz.Min, mz.Max, CVID.MS_m_z));
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         catch { }
 
         // For all-ions MSn frames cpp emits a synthetic precursor with a broad isolation
@@ -874,6 +880,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
                     precursor.SelectedIons.Add(sentinel);
                 }
             }
+            // ReSharper disable once EmptyGeneralCatchClause
             catch { }
             precursor.Activation.Set(CVID.MS_CID);
             if (collisionEnergy > 0)
@@ -920,6 +927,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
         try
         {
             short[]? bins = null;
+            // ReSharper disable once EmptyGeneralCatchClause
             try { bins = reader.NonEmptyDriftBins(ie.FrameNumber); } catch { }
             if (bins is not null)
             {
@@ -935,6 +943,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
                     int n = Math.Min(x.Length, y.Length);
                     if (n == 0) continue;
                     double driftTime = 0;
+                    // ReSharper disable once EmptyGeneralCatchClause
                     try { driftTime = specData.DriftTimeRanges?[0]?.Min ?? 0; } catch { }
                     for (int i = 0; i < n; i++)
                     {
