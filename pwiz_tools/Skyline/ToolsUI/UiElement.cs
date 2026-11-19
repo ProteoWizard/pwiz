@@ -1194,6 +1194,9 @@ namespace pwiz.Skyline.ToolsUI
                 // SequenceTree before TreeView -- it derives from TreeView, so its case must win.
                 case SequenceTree sequenceTree: return new SequenceTreeElement(sequenceTree, token);
                 case TreeView treeView: return new TreeViewElement(treeView, token);
+                // A property sheet is an element of its own rather than a container walked into for its internal
+                // view and toolbar; a ContainerControl, it would otherwise fall to the default and not be listed.
+                case PropertyGrid propertyGrid: return new PropertyGridElement(propertyGrid, token);
                 case ListView listView when listView.FindForm() is StatementCompletionForm:
                     return new StatementCompletionListElement(listView, token);
                 case ListView listView: return new ListViewElement(listView, token);
@@ -1816,22 +1819,25 @@ namespace pwiz.Skyline.ToolsUI
             throw new ArgumentException(LlmInstruction.Format(@"No child node matches '{0}'.", text));
         }
 
-        // The path segments from the value a tree expand/collapse action carries: an object[] of strings
+        // The path segments from the value an expand/collapse action carries: an object[] of strings
         // and integers (an in-process caller) or a JSON array (over the wire). A JSON integer is a child
-        // index; a JSON string is a child's text.
-        private static object[] ToTreePath(object pathValue)
+        // index; a JSON string is a child's text. Shared with PropertyGridElement, whose paths take the same form.
+        internal static object[] ToTreePath(object pathValue)
         {
             switch (pathValue)
             {
                 case null:
                     return new object[0];
+                // A JSON array, or a bare name given without brackets, taken as a path of that one name.
                 case string json:
-                    return JArray.Parse(json).Select(ToTreePathSegment).ToArray();
+                    return json.TrimStart().StartsWith(@"[")
+                        ? JArray.Parse(json).Select(ToTreePathSegment).ToArray()
+                        : new object[] { json };
                 case System.Collections.IEnumerable items:
                     return items.Cast<object>().Select(ToTreePathSegment).ToArray();
                 default:
                     throw new ArgumentException(new LlmInstruction(
-                        @"A tree path must be an array of child names (strings) and/or indexes (integers)."));
+                        @"A path must be an array of child names (strings) and/or indexes (integers)."));
             }
         }
 
@@ -1844,6 +1850,130 @@ namespace pwiz.Skyline.ToolsUI
                 case JToken token:
                     return token.Type == JTokenType.Integer ? (int) token : token.Value<string>();
                 default: return segment as string;
+            }
+        }
+    }
+
+    /// <summary>A property sheet (a <see cref="PropertyGrid"/>), such as the Spectrum Properties pane of the
+    /// Full-Scan graph. An item is expanded or collapsed (expand/collapse) by a path of item names as the sheet
+    /// shows them, or of indexes, in the same form as a TreeView path. A category heading can be named itself,
+    /// and its items can also be named without it, so ["Other Metadata"] names that item whether the sheet is
+    /// sorted by category (where it sits under Acquisition) or alphabetically. Expanding also expands every
+    /// item and category above the target, so the result is in view. The sheet's items are not elements; its
+    /// toolbar (sort buttons, and any button a host adds, such as the Full-Scan pane's Close) is its only
+    /// child.</summary>
+    internal sealed class PropertyGridElement : ControlElement<PropertyGrid>, IExpandCollapseElement
+    {
+        public PropertyGridElement(PropertyGrid control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
+
+        public override IEnumerable<UiElement> EnumerateChildren() =>
+            Control.Controls.OfType<ToolStrip>().Where(toolStrip => toolStrip.Visible)
+                .Select(toolStrip => FormElement.ElementFor(toolStrip)).Where(element => element != null);
+
+        public void ExpandNow(object path)
+        {
+            var item = ResolveItem(path);
+            VerifyExpandable(item);
+            for (var ancestor = item.Parent; ancestor != null && ancestor.GridItemType != GridItemType.Root; ancestor = ancestor.Parent)
+            {
+                if (ancestor.Expandable && !ancestor.Expanded)
+                    ancestor.Expanded = true;
+            }
+            item.Expanded = true;
+        }
+
+        public void CollapseNow(object path)
+        {
+            var item = ResolveItem(path);
+            VerifyExpandable(item);
+            item.Expanded = false;
+        }
+
+        private static void VerifyExpandable(GridItem item)
+        {
+            if (!item.Expandable)
+                throw new ArgumentException(LlmInstruction.Format(@"'{0}' has no items to expand or collapse.", item.Label));
+        }
+
+        // Resolves a path to its item, one segment per level below the root, with categories skipped over. An
+        // item a later segment descends through is expanded first, as a tree path does, so items the sheet builds
+        // only on expansion are present. Must run on the UI thread.
+        private GridItem ResolveItem(object pathValue)
+        {
+            var path = TreeViewElement.ToTreePath(pathValue);
+            if (path.Length == 0)
+            {
+                throw new ArgumentException(new LlmInstruction(
+                    @"The path is empty -- give an array of property names (strings) and/or indexes (integers)."));
+            }
+            var current = RootItem();
+            for (int i = 0; i < path.Length; i++)
+            {
+                if (i > 0)
+                {
+                    if (!current.Expandable)
+                    {
+                        throw new ArgumentException(LlmInstruction.Format(
+                            @"'{0}' has no items below it, so the path cannot continue past it.", current.Label));
+                    }
+                    if (!current.Expanded)
+                        current.Expanded = true;
+                }
+                current = FindChildItem(current, path[i]);
+            }
+            return current;
+        }
+
+        // The sheet's root item, reached from the selected item, since a PropertyGrid exposes no root directly.
+        private GridItem RootItem()
+        {
+            var item = Control.SelectedGridItem;
+            if (item == null)
+            {
+                throw new InvalidOperationException(new LlmInstruction(
+                    @"The property sheet is empty: it shows no object yet. Show what it describes first (e.g. a spectrum in the Full-Scan graph)."));
+            }
+            while (item.Parent != null)
+                item = item.Parent;
+            return item;
+        }
+
+        // One step of a path: an integer selects the item at that index; a string selects the first item whose
+        // name matches it, a strict match preferred over a loose one.
+        private static GridItem FindChildItem(GridItem parent, object segment)
+        {
+            var items = PathChildren(parent).ToList();
+            if (segment is int index)
+            {
+                if (index < 0 || index >= items.Count)
+                {
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Item index {0} is out of range; '{1}' has {2} items.", index, parent.Label, items.Count));
+                }
+                return items[index];
+            }
+            var text = segment as string;
+            int match = ListItems.BestMatch(items.Count, i => items[i].Label, text);
+            if (match < 0)
+            {
+                throw new ArgumentException(LlmInstruction.Format(@"No property matches '{0}'. The properties here are: {1}",
+                    text, string.Join(@", ", items.Select(item => item.Label))));
+            }
+            return items[match];
+        }
+
+        // The items under an item as a path sees them: a category heading, followed by its own items, so either
+        // the heading or one of its items can be named at that level.
+        private static IEnumerable<GridItem> PathChildren(GridItem parent)
+        {
+            foreach (GridItem item in parent.GridItems)
+            {
+                yield return item;
+                if (item.GridItemType == GridItemType.Category)
+                {
+                    foreach (GridItem inCategory in item.GridItems)
+                        yield return inCategory;
+                }
             }
         }
     }
