@@ -3143,9 +3143,7 @@ namespace TestRunner
         // Generate a summary report of errors and memory leaks from a log file.
         private static void Report(string logFile)
         {
-            // Read once: SkylineTester can still be appending to the log.
-            var logText = File.ReadAllText(logFile);
-            var logLines = logText.Split('\n').Select(line => line.TrimEnd('\r')).ToArray();
+            var logLines = File.ReadAllLines(logFile);
 
             var errorList = new List<string>();
             var leakList = new List<LeakingTest>();
@@ -3198,16 +3196,6 @@ namespace TestRunner
 
                     error = "# " + test + " FAILED:\n";
                 }
-            }
-
-            // A test that killed TestRunner writes no "!!! name FAILED" block.
-            foreach (var crashed in SkylineNightly.CrashedTestLog.Find(logText))
-            {
-                var crash = "# " + crashed.Name + " FAILED:\n" +
-                            "# " + crashed.Summary + "\n";
-                foreach (var detailLine in crashed.Details.Split('\n'))
-                    crash += "# " + detailLine.TrimEnd('\r') + "\n";
-                errorList.Add(crash);
             }
 
             // Print list of errors sorted in descending order of frequency.

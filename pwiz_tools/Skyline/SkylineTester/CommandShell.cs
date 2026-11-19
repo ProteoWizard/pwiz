@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil.PInvoke;
 using TestRunnerLib.PInvoke;
@@ -33,7 +34,8 @@ namespace SkylineTester
     public class CommandShell : RichTextBox
     {
         public const int MAX_PROCESS_SILENCE_MINUTES = 60; // If a process is silent longer than this, assume it's hung
-        public const int MAX_PROCESS_OUTPUT_DELAY = 700; // milliseconds 
+        public const int MAX_PROCESS_OUTPUT_DELAY = 700; // milliseconds
+        private const int MAX_OUTPUT_DRAIN_SECONDS = 10; // For a process's remaining output after it exited unexpectedly
         public const int RETRY_WAIT_SECONDS = 60; // Wait this long between retries
         private enum EXIT_TYPE {error_stop, error_restart, success};
         public string DefaultDirectory { get; set; }
@@ -58,6 +60,8 @@ namespace SkylineTester
         private bool _restartOnProcessFailure;
         private string _processName;
         private bool _processKilled;
+        private TestRunnerCrashReport _crashReport; // Only while TestRunner is the running process
+        private CountdownEvent _outputStreamsOpen;  // Standard output and standard error
         private Timer _outputTimer;
         private DateTime _lastOutputTime;
 
@@ -387,6 +391,13 @@ namespace SkylineTester
             _process.StartInfo.EnvironmentVariables.Add(@"GIT_HTTP_LOW_SPEED_LIMIT", @"1000"); // Fail if transfer rate falls below 1Kbps,
             _process.StartInfo.EnvironmentVariables.Add(@"GIT_HTTP_LOW_SPEED_TIME", @"300");   // and stays that way for 5 minutes
 
+            _processName = Path.GetFileNameWithoutExtension(exe);
+            // Per process, so late output from one process can never reach the next one's.
+            var crashReport = _crashReport = string.Equals(_processName, @"TestRunner", StringComparison.OrdinalIgnoreCase)
+                ? new TestRunnerCrashReport()
+                : null;
+            var outputStreamsOpen = _outputStreamsOpen = new CountdownEvent(2);
+
             if (exe.StartsWith("waitfor", StringComparison.InvariantCultureIgnoreCase))
             {
                 _process.OutputDataReceived += IgnoreOutput;
@@ -395,12 +406,11 @@ namespace SkylineTester
             }
             else
             {
-                _process.OutputDataReceived += HandleOutput;
-                _process.ErrorDataReceived += HandleOutput;
+                _process.OutputDataReceived += (sender, e) => HandleOutput(e, crashReport, outputStreamsOpen);
+                _process.ErrorDataReceived += (sender, e) => HandleOutput(e, crashReport, outputStreamsOpen);
                 _process.Exited += ProcessExit;
             }
 
-            _processName = Path.GetFileNameWithoutExtension(exe);
             var process = _process;
             _process.Start();
             process.BeginOutputReadLine();
@@ -422,9 +432,17 @@ namespace SkylineTester
         /// <summary>
         /// Handle a line of output/error data from the process.
         /// </summary>
-        private void HandleOutput(object sender, DataReceivedEventArgs e)
+        private void HandleOutput(DataReceivedEventArgs e, TestRunnerCrashReport crashReport, CountdownEvent outputStreamsOpen)
         {
+            if (e.Data == null)
+            {
+                // End of one of the two streams
+                if (!outputStreamsOpen.IsSet)
+                    outputStreamsOpen.Signal();
+                return;
+            }
             ResetLastOutputTime();
+            crashReport?.Observe(e.Data);
             Log(e.Data);
         }
 
@@ -514,6 +532,8 @@ namespace SkylineTester
             _process = null;
             bool processKilled = _processKilled;
             _processKilled = false;
+            var crashReport = _crashReport;
+            var outputStreamsOpen = _outputStreamsOpen;
 
             if (ignoreError || exitCode == 0)
             {
@@ -535,7 +555,23 @@ namespace SkylineTester
                 try
                 {
                     if (!processKilled)
+                    {
+                        if (crashReport != null)
+                        {
+                            // The last of a crash's output - its fatal error report, and a test line
+                            // still waiting for its result - can be read after Exited fires. Wait for
+                            // both streams to close before deciding what was running, but not for
+                            // long: a surviving child process can hold them open.
+                            outputStreamsOpen.Wait(TimeSpan.FromSeconds(MAX_OUTPUT_DRAIN_SECONDS));
+                            var failureLines = crashReport.GetFailureLines(exitCode, Kernel32.FormatExitCode(exitCode));
+                            if (failureLines != null)
+                            {
+                                foreach (var line in failureLines)
+                                    Log(line);
+                            }
+                        }
                         Log(Environment.NewLine + "# Process " + (_processName??string.Empty) + " had nonzero exit code " + Kernel32.FormatExitCode(exitCode) + Environment.NewLine);
+                    }
                     RunUI(() => CommandsDone(_restartOnProcessFailure && !processKilled ? EXIT_TYPE.error_restart : EXIT_TYPE.error_stop));
                 }
 // ReSharper disable once EmptyGeneralCatchClause
