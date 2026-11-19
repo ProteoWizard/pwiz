@@ -13,7 +13,7 @@
       <param name="release.latest" value="" spec="checkbox checkedValue='--latest' uncheckedValue='' label='Release the latest build now' description='Release the newest successful build now as a daily release (tagged release-daily-YYYY-MM-DD-sha); it stays a permanent release, and its month still gets its regular release when it ends' display='normal'" />
       <param name="release.month" value="" spec="text label='Release month' description='YYYY-MM whose last build to release; leave empty for the previous month' validationMode='any' display='normal'" />
     </parameters>
-    <build-runners order="pip_upgrade_certifi, Publish_monthly_release, Dry_run_monthly_release, Upload_monthly_release_metadata, Upload_monthly_release_metadata_to_S3">
+    <build-runners order="pip_upgrade_certifi, Publish_monthly_release, Dry_run_monthly_release, Upload_monthly_release_metadata_to_S3">
       <runner id="pip_upgrade_certifi" name="" type="pip_upgrade_certifi">
         <parameters>
           <param name="env.PYTHON_HOME" value="C:\Python38" />
@@ -39,21 +39,6 @@
           <param name="command.executable" value="%python3.executable%" />
           <param name="command.parameters" value="scripts/misc/publish_monthly_release.py --dry-run --output-dir releases_out --month=%release.month% %release.latest%" />
           <param name="teamcity.step.mode" value="default" />
-        </parameters>
-      </runner>
-      <runner id="Upload_monthly_release_metadata" name="Upload monthly release metadata to SourceForge" type="ssh-deploy-runner">
-        <conditions>
-          <equals name="teamcity.build.branch.is_default" value="true" />
-          <does-not-equal name="env.BUILD_IS_PERSONAL" value="true" />
-        </conditions>
-        <parameters>
-          <param name="jetbrains.buildServer.deployer.sourcePath" value="releases_out/*" />
-          <param name="jetbrains.buildServer.deployer.ssh.transport" value="jetbrains.buildServer.deployer.ssh.transport.sftp" />
-          <param name="jetbrains.buildServer.deployer.targetUrl" value="web.sf.net:/home/project-web/proteowizard/htdocs/releases" />
-          <param name="jetbrains.buildServer.deployer.username" value="chambm" />
-          <param name="jetbrains.buildServer.sshexec.authMethod" value="UPLOADED_KEY" />
-          <param name="teamcity.step.mode" value="default" />
-          <param name="teamcitySshKey" value="chambm@sourceforge.net-ed25519" />
         </parameters>
       </runner>
       <runner id="Upload_monthly_release_metadata_to_S3" name="" type="ProteoWizard_UploadReleaseMetadataToS3">

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="05f5f891-6998-4aeb-867d-4e2521ff634c" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
   <name>ProteoWizard</name>
-  <description>http://proteowizard.sourceforge.net/</description>
+  <description>https://www.proteowizard.org/</description>
   <parameters>
     <param name="GitHubAuthToken" value="credentialsJSON:f8fb99a5-f2ce-42ef-9ef4-8809c17e6b32" spec="password label='GitHubAuthToken' display='normal'" />
     <param name="SkylineCurrentRelease" value="skyline_26_1_1" />

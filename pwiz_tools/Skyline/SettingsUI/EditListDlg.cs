@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Drawing;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
@@ -319,8 +320,12 @@ namespace pwiz.Skyline.SettingsUI
                 form.StartPosition = FormStartPosition.CenterParent;
                 form.MaximizeBox = false;
                 form.MinimizeBox = false;
-                form.Width = 350;
-                form.Height = 130;
+                // Laid out in 96-DPI pixels and auto-scaled the way a designer-built form is,
+                // so the literals below need no scaling of their own (issue #4599).
+                form.SuspendLayout();
+                form.AutoScaleDimensions = new SizeF(6F, 13F);
+                form.AutoScaleMode = AutoScaleMode.Font;
+                form.ClientSize = new Size(334, 95);
 
                 var lblName = new Label { Left = 10, Top = 15, Text = SettingsUIResources.EditListDlg_RenameItem_Enter_new_name, AutoSize = true };
                 var textBox = new TextBox { Left = 10, Top = 35, Width = 310, Text = currentName };
@@ -331,6 +336,8 @@ namespace pwiz.Skyline.SettingsUI
                 form.Controls.AddRange(new Control[] { lblName, textBox, okButton, cancelButton });
                 form.AcceptButton = okButton;
                 form.CancelButton = cancelButton;
+                form.ResumeLayout(false);
+                form.PerformLayout();
 
                 if (form.ShowDialog(this) != DialogResult.OK)
                     return;

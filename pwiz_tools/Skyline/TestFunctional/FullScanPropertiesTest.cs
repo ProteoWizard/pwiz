@@ -1,6 +1,7 @@
 /*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2024 University of Washington - Seattle, WA
  *
@@ -29,11 +30,12 @@ using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using SkylineTool;
 
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class FullScanPropertiesTest : AbstractFunctionalTestEx
+    public class FullScanPropertiesTest : McpConnectorTest
     {
         // Unit CV accessions used to build the terms in VerifyUnitFormatting
         private const string MZ = "MS:1000040";
@@ -52,6 +54,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            StartToolService();
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("NeutralLoss.sky")));
             ImportResultsFile(TestFilesDir.GetTestPath("S_3.mzML"));
             RunUI(()=>SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Molecules, 0));
@@ -135,9 +138,13 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// The property sidebar should keep an expandable node (here the Other Metadata "Parameters"
         /// node) expanded when the user steps to an adjacent scan, rather than collapsing it each time.
+        /// The node is expanded and collapsed through the AI Connector, as an MCP client does it: the sheet
+        /// is reached by walking into the graph's MsGraphExtension, and the node is named by the label the
+        /// sheet shows, with the category it sits under left out of the path.
         /// </summary>
         private void VerifyExpansionPersistsAcrossScans(GraphFullScan graphFullScan)
         {
+            string nodeLabel = null;
             RunUI(() =>
             {
                 var node = FindParametersNode(graphFullScan);
@@ -145,8 +152,18 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(FullScanPropertiesRes.Description_OtherMetadata, node.PropertyDescriptor?.Description,
                     @"Other Metadata node is missing its help text");
                 Assert.IsFalse(node.Expanded, @"Other Metadata node was expected to start collapsed");
-                node.Expanded = true;
+                Assert.AreEqual(GridItemType.Category, node.Parent?.GridItemType,
+                    @"Other Metadata node was expected under a category, which the connector path skips");
+                nodeLabel = node.Label;
             });
+            var propertySheet = new UiElementPath(
+                new UiElementPath(
+                    new UiElementPath(null, GetOpenFormId<GraphFullScan>(), null, @"Form"), null, null, nameof(MsGraphExtension)),
+                null, null, nameof(PropertyGrid));
+            McpConnector.PerformAction(propertySheet, @"expand", new object[] { nodeLabel });
+            RunUI(() => Assert.IsTrue(FindParametersNode(graphFullScan).Expanded,
+                @"expand did not expand the Other Metadata node addressed by its label"));
+
             RunUI(() => graphFullScan.ChangeScan(1));
             WaitForGraphs();
             RunUI(() =>
@@ -155,6 +172,16 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsNotNull(node, @"Other Metadata parameters node missing after navigating to the next scan");
                 Assert.IsTrue(node.Expanded, @"Other Metadata node collapsed after navigating to the next scan");
             });
+
+            // A bare name, given without the array brackets, is a path of that one name.
+            McpConnector.PerformAction(propertySheet, @"collapse", nodeLabel);
+            RunUI(() => Assert.IsFalse(FindParametersNode(graphFullScan).Expanded,
+                @"collapse did not collapse the Other Metadata node addressed by its label"));
+
+            // The sheet's own toolbar (its sort buttons and the pane's Close button) stays reachable through it.
+            var sheetChildren = (ControlInfo[]) McpConnector.PerformAction(propertySheet, @"get_children", null);
+            Assert.IsTrue(sheetChildren.Any(child => true == child.Path.Type?.Contains(nameof(ToolStrip))),
+                @"the property sheet's toolbar is not listed among its children");
         }
 
         private static GridItem FindParametersNode(GraphFullScan graphFullScan)

@@ -82,7 +82,31 @@ namespace SharedBatch.Properties {
                 this["SkylineDailyAdminCmdPath"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SkylineInnoCmdPath {
+            get {
+                return ((string)(this["SkylineInnoCmdPath"]));
+            }
+            set {
+                this["SkylineInnoCmdPath"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SkylineDailyInnoCmdPath {
+            get {
+                return ((string)(this["SkylineDailyInnoCmdPath"]));
+            }
+            set {
+                this["SkylineDailyInnoCmdPath"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]

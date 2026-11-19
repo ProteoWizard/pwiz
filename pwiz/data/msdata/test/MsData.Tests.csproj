@@ -25,6 +25,11 @@
     <ProjectReference Include="..\MsData.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The fake CV server and OBO fixtures of the online CV update tests. -->
+    <Compile Include="..\..\common\test\CvOnlineUpdateFixtures.cs" Link="Mzml\CvOnlineUpdateFixtures.cs" />
+  </ItemGroup>
+
   <!-- Tiny cpp-msconvert-generated example fixtures used by the *CppWritten* identify /
        read tests (Mz5IdentifyTests, MzMlbCppFixtureTests). Copied to bin so the tests
        don't have to walk up the source tree or shell out to a live msconvert binary.

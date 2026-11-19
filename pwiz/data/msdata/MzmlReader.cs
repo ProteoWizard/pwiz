@@ -208,13 +208,15 @@ public sealed class MzmlReader
         {
             if (r.LocalName == "cv" && r.NodeType == XmlNodeType.Element)
             {
-                msd.CVs.Add(new CV
+                var cv = new CV
                 {
                     Id = XmlIdEncoding.Decode(r.GetAttribute("id") ?? string.Empty) ?? string.Empty,
                     FullName = r.GetAttribute("fullName") ?? string.Empty,
                     Version = r.GetAttribute("version") ?? string.Empty,
                     Uri = r.GetAttribute("URI") ?? string.Empty,
-                });
+                };
+                msd.CVs.Add(cv);
+                CvLookup.RegisterSource(cv);
                 MzmlXml.SkipElement(r);
             }
             else r.Read();
