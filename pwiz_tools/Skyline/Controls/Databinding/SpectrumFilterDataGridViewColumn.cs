@@ -126,7 +126,8 @@ namespace pwiz.Skyline.Controls.Databinding
             var rootColumn = ColumnDescriptor.RootColumn(dataSchema, typeof(SpectrumClass));
             var filterPages = SpectrumClassFilter.GetFilterPages(precursor.DocNode);
             using (var autoComplete = new SpectrumFilterAutoComplete(dataSchema.SkylineWindow))
-            using (var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages))
+            using (var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages,
+                       SpectrumClassColumn.GetEditorCvColumns(dataSchema.Document)))
             {
                 dlg.AutoComplete = autoComplete;
                 // Grid editing sets this precursor's filter in place; the "create copy"

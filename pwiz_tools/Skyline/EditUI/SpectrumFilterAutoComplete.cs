@@ -32,6 +32,7 @@ namespace pwiz.Skyline.EditUI
     public class SpectrumFilterAutoComplete : IDisposable, IFilterAutoComplete
     {
         private Dictionary<PropertyPath, AutoCompleteStringCollection> _autoCompleteValues;
+        private Dictionary<PropertyPath, AutoCompleteStringCollection> _scannedCvValues;
         private CancellationTokenSource _cancellationTokenSource;
         private IDocumentContainer _documentContainer;
         private bool _disposed;
@@ -63,9 +64,47 @@ namespace pwiz.Skyline.EditUI
             lock (this)
             {
                 AutoCompleteStringCollection result = null;
-                _autoCompleteValues?.TryGetValue(propertyPath, out result);
+                if (_autoCompleteValues?.TryGetValue(propertyPath, out result) != true)
+                {
+                    _scannedCvValues?.TryGetValue(propertyPath, out result);
+                }
                 return result;
             }
+        }
+
+        /// <summary>
+        /// Adds CV term values learned by reading the data files (see <see cref="SpectrumColumnScanner"/>).
+        /// A document imported without a CV filter stored no CV terms, so without these there would be
+        /// nothing to suggest for a CV column in exactly the case of writing a first CV filter. Values
+        /// stored in the cache take precedence, being taken from every spectrum rather than a sample.
+        /// </summary>
+        public void SetScannedCvValues(SpectrumColumnScanner.ValuesByAccession valuesByAccession)
+        {
+            var dictionary = new Dictionary<PropertyPath, AutoCompleteStringCollection>();
+            foreach (var entry in valuesByAccession)
+            {
+                if (entry.Value.Count > 0)
+                {
+                    dictionary[CvPropertyPath(entry.Key)] = MakeCollection(entry.Value);
+                }
+            }
+            lock (this)
+            {
+                _scannedCvValues = dictionary;
+            }
+        }
+
+        private static PropertyPath CvPropertyPath(string accession)
+        {
+            // The path depends only on the accession, so the name and type given here do not matter.
+            return SpectrumClassColumn.CvParam(accession, null, false).PropertyPath;
+        }
+
+        private static AutoCompleteStringCollection MakeCollection(IEnumerable<string> values)
+        {
+            var collection = new AutoCompleteStringCollection();
+            collection.AddRange(values.ToArray());
+            return collection;
         }
 
         private void PopulateUniqueValuesDict(CancellationToken cancellationToken, SrmDocument document)
@@ -97,6 +136,29 @@ namespace pwiz.Skyline.EditUI
                     autoCompleteStringCollection.AddRange(spectrumMetadataList.GetColumnValues(iColumn, spectrumMetadataList.AllRows)
                         .Distinct().Select(v => v?.ToString() ?? string.Empty).ToArray());
                     dictionary.Add(spectrumMetadataList.Columns[iColumn].PropertyPath, autoCompleteStringCollection);
+                }
+
+                // The CV/user parameters stored on import (only when the document already filtered on
+                // one). Read from the terms directly: a CV column's values are text even when the column
+                // is numeric, so they cannot go through the typed column arrays above.
+                var cvValues = new SpectrumColumnScanner.ValuesByAccession();
+                foreach (var spectrum in spectrumMetadataList.AllSpectra)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+                    foreach (var term in spectrum.OtherParams)
+                    {
+                        cvValues.Add(term);
+                    }
+                }
+                foreach (var entry in cvValues)
+                {
+                    if (entry.Value.Count > 0)
+                    {
+                        dictionary[CvPropertyPath(entry.Key)] = MakeCollection(entry.Value);
+                    }
                 }
             }
             lock (this)
