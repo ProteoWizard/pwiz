@@ -392,11 +392,12 @@ namespace SkylineTester
             _process.StartInfo.EnvironmentVariables.Add(@"GIT_HTTP_LOW_SPEED_TIME", @"300");   // and stays that way for 5 minutes
 
             _processName = Path.GetFileNameWithoutExtension(exe);
-            // Per process, so late output from one process can never reach the next one's.
-            var crashReport = _crashReport = string.Equals(_processName, @"TestRunner", StringComparison.OrdinalIgnoreCase)
-                ? new TestRunnerCrashReport()
-                : null;
-            var outputStreamsOpen = _outputStreamsOpen = new CountdownEvent(2);
+            // For TestRunner only, and per process, so late output from one process can never reach
+            // the next one's. The countdown is deliberately not disposed: after a timed-out wait in
+            // ProcessExit, a stream can still close later and signal it.
+            bool isTestRunner = string.Equals(_processName, @"TestRunner", StringComparison.OrdinalIgnoreCase);
+            var crashReport = _crashReport = isTestRunner ? new TestRunnerCrashReport() : null;
+            var outputStreamsOpen = _outputStreamsOpen = isTestRunner ? new CountdownEvent(2) : null;
 
             if (exe.StartsWith("waitfor", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -406,8 +407,8 @@ namespace SkylineTester
             }
             else
             {
-                _process.OutputDataReceived += (sender, e) => HandleOutput(e, crashReport, outputStreamsOpen);
-                _process.ErrorDataReceived += (sender, e) => HandleOutput(e, crashReport, outputStreamsOpen);
+                _process.OutputDataReceived += (sender, e) => HandleOutput(e, false, crashReport, outputStreamsOpen);
+                _process.ErrorDataReceived += (sender, e) => HandleOutput(e, true, crashReport, outputStreamsOpen);
                 _process.Exited += ProcessExit;
             }
 
@@ -432,17 +433,16 @@ namespace SkylineTester
         /// <summary>
         /// Handle a line of output/error data from the process.
         /// </summary>
-        private void HandleOutput(DataReceivedEventArgs e, TestRunnerCrashReport crashReport, CountdownEvent outputStreamsOpen)
+        private void HandleOutput(DataReceivedEventArgs e, bool isError,
+            TestRunnerCrashReport crashReport, CountdownEvent outputStreamsOpen)
         {
             if (e.Data == null)
             {
-                // End of one of the two streams
-                if (!outputStreamsOpen.IsSet)
-                    outputStreamsOpen.Signal();
+                outputStreamsOpen?.Signal(); // End of one of the two streams, reported once each
                 return;
             }
             ResetLastOutputTime();
-            crashReport?.Observe(e.Data);
+            crashReport?.Observe(e.Data, isError);
             Log(e.Data);
         }
 
@@ -558,10 +558,10 @@ namespace SkylineTester
                     {
                         if (crashReport != null)
                         {
-                            // The last of a crash's output - its fatal error report, and a test line
-                            // still waiting for its result - can be read after Exited fires. Wait for
-                            // both streams to close before deciding what was running, but not for
-                            // long: a surviving child process can hold them open.
+                            // The last of a crash's output, its fatal error report among it, can be
+                            // read after Exited fires. Wait for both streams to close so the failure
+                            // includes it, but not for long: a surviving child process can hold them
+                            // open. The running test is known either way.
                             outputStreamsOpen.Wait(TimeSpan.FromSeconds(MAX_OUTPUT_DRAIN_SECONDS));
                             var failureLines = crashReport.GetFailureLines(exitCode, Kernel32.FormatExitCode(exitCode));
                             if (failureLines != null)

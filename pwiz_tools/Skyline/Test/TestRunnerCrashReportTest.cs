@@ -30,8 +30,9 @@ namespace pwiz.SkylineTest
     /// <summary>
     /// A TestRunner crash must reach the log as an ordinary failure of the test that was running.
     /// The first sequence is TestRunner's output as SkylineTester received it when Bruker timsdata
-    /// crashed it in TestTicChromatogram: the fatal error's stack on standard error first, then the
-    /// unfinished test line, flushed only when standard output closed.
+    /// crashed it in TestTicChromatogram: the test's "#@ Running" status line, the fatal error's
+    /// stack on standard error, then the unfinished test line, flushed only when standard output
+    /// closed.
     /// </summary>
     [TestClass]
     public class TestRunnerCrashReportTest : AbstractUnitTest
@@ -40,11 +41,13 @@ namespace pwiz.SkylineTest
         private const string ACCESS_VIOLATION_TEXT = @"-1073741819 (0xC0000005 STATUS_ACCESS_VIOLATION)";
         private const int TESTS_FAILED = 1;
 
-        private const string FINISHED_TEST =
+        private const string RUNNING_PREVIOUS = @"#@ Running TestThreadDumpNamesRunningFrames (zh)...";
+        private const string FINISHED_PREVIOUS =
             @"[04:23]   2.1065 TestThreadDumpNamesRunningFrames               (zh)   0 failures, 113.33/87.15/291.1 MB, 182/1721 handles, 0 sec.";
-        private const string FINISHED_TEST_100_FAILURES =
+        private const string FINISHED_PREVIOUS_100_FAILURES =
             @"[04:23]   2.1065 TestThreadDumpNamesRunningFrames               (zh) 100 failures, 113.33/87.15/291.1 MB, 182/1721 handles, 0 sec.";
-        private const string UNFINISHED_TEST =
+        private const string RUNNING_TIC = @"#@ Running TestTicChromatogram (en)...";
+        private const string UNFINISHED_TIC =
             @"[04:23]   2.1066 TestTicChromatogram                            (en) ";
 
         private static readonly string[] FATAL_ERROR =
@@ -74,17 +77,19 @@ namespace pwiz.SkylineTest
         public void TestCrashReportedAsFailure()
         {
             // A crash during a test, in the order SkylineTester received the output.
-            var output = new[] { FINISHED_TEST }.Concat(FATAL_ERROR).Concat(new[] { UNFINISHED_TEST }).ToArray();
-            var failure = Failure(output, ACCESS_VIOLATION);
+            var received = Out(RUNNING_PREVIOUS, FINISHED_PREVIOUS, RUNNING_TIC).Concat(Err(FATAL_ERROR)).Concat(Out(UNFINISHED_TIC)).ToArray();
+            var failure = Failure(received, ACCESS_VIOLATION);
             Assert.IsNotNull(failure);
             Assert.AreEqual(@"!!! TestTicChromatogram FAILED", failure[1]);
             StringAssert.Contains(failure[2], ACCESS_VIOLATION_TEXT);
             CollectionAssert.IsSubsetOf(FATAL_ERROR, failure.ToList());
-            Assert.IsFalse(failure.Any(line => line.Contains(@"TestThreadDumpNamesRunningFrames")),
-                @"The failure reached back into the previous, finished test.");
+            Assert.IsFalse(failure.Any(line => line.Contains(@"TestThreadDumpNamesRunningFrames") || line.StartsWith(@"#@")),
+                @"The failure repeated lines it should not: " + string.Join(@" | ", failure));
 
-            // As the log parsers read it: one failure, charged to pass 2 test 1066.
-            var log = string.Join(Environment.NewLine, output.Concat(failure)) + Environment.NewLine;
+            // As the log parsers read it, without the status lines SkylineTester filters out: one
+            // failure, charged to pass 2 test 1066.
+            var log = string.Join(Environment.NewLine, received.Select(r => r.Line).Where(line => !line.StartsWith(@"#@"))
+                .Concat(failure)) + Environment.NewLine;
             var start = START_FAILURE.Match(log);
             Assert.IsTrue(start.Success && END_FAILURE.Match(log, start.Index).Success, log);
             Assert.AreEqual(@"TestTicChromatogram", start.Groups[1].Value);
@@ -92,39 +97,60 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(@"2", test.Groups[2].Value);
             Assert.AreEqual(@"1066", test.Groups[3].Value);
 
-            // The previous test failed: its failure block is its own.
-            failure = Failure(new[] { FINISHED_TEST }.Concat(PREVIOUS_FAILURE).Concat(FATAL_ERROR)
-                .Concat(new[] { UNFINISHED_TEST }), ACCESS_VIOLATION);
-            CollectionAssert.IsSubsetOf(FATAL_ERROR, failure.ToList());
-            Assert.IsFalse(failure.Any(line => line.Contains(@"Previous test's own failure message")),
-                @"The failure included the previous test's failure block.");
+            // The unfinished test line never arrived (the wait for the output to close timed out):
+            // the running test is still known.
+            failure = Failure(Out(RUNNING_PREVIOUS, FINISHED_PREVIOUS, RUNNING_TIC).Concat(Err(FATAL_ERROR)), ACCESS_VIOLATION);
+            Assert.AreEqual(@"!!! TestTicChromatogram FAILED", failure[1]);
 
-            // A crash after the last test finished is charged to no test, but still reported.
-            failure = Failure(new[] { FINISHED_TEST, @"Fatal error." }, ACCESS_VIOLATION);
-            Assert.AreEqual(@"!!! " + TestRunnerCrashReport.CRASH_BETWEEN_TESTS + @" FAILED", failure[1]);
-            StringAssert.Contains(failure[2], @"after TestThreadDumpNamesRunningFrames finished");
-            CollectionAssert.Contains(failure.ToList(), @"Fatal error.");
+            // The previous test failed and leaked: its failure block and leak are its own.
+            failure = Failure(Out(RUNNING_PREVIOUS, FINISHED_PREVIOUS).Concat(Out(PREVIOUS_FAILURE))
+                .Concat(Out(@"!!! TestThreadDumpNamesRunningFrames LEAKED 1234 bytes", RUNNING_TIC))
+                .Concat(Err(FATAL_ERROR)).Concat(Out(UNFINISHED_TIC)), ACCESS_VIOLATION);
+            CollectionAssert.IsSubsetOf(FATAL_ERROR, failure.ToList());
+            Assert.IsFalse(failure.Any(line => line.Contains(@"Previous test's own failure message") || line.Contains(@"LEAKED")),
+                @"The failure repeated the previous test's failure or leak: " + string.Join(@" | ", failure));
+
+            // A test that wrote more than the lines kept: the crash's report, which comes last, is kept.
+            var testOutput = Enumerable.Range(0, 300).Select(i => @"Test output " + i).ToArray();
+            failure = Failure(Out(RUNNING_TIC).Concat(Out(testOutput)).Concat(Err(FATAL_ERROR)), ACCESS_VIOLATION);
+            CollectionAssert.IsSubsetOf(FATAL_ERROR, failure.ToList());
+            CollectionAssert.Contains(failure.ToList(), @"Test output 299");
+            CollectionAssert.DoesNotContain(failure.ToList(), @"Test output 0");
+
+            // A crash after the last test finished, even one that had failed, is charged to no test.
+            foreach (var afterLastTest in new[] { Out(), Out(PREVIOUS_FAILURE) })
+            {
+                failure = Failure(Out(RUNNING_PREVIOUS, FINISHED_PREVIOUS).Concat(afterLastTest).Concat(Err(@"Fatal error.")),
+                    ACCESS_VIOLATION);
+                Assert.AreEqual(@"!!! " + TestRunnerCrashReport.CRASH_BETWEEN_TESTS + @" FAILED", failure[1]);
+                StringAssert.Contains(failure[2], @"after TestThreadDumpNamesRunningFrames finished");
+                CollectionAssert.Contains(failure.ToList(), @"Fatal error.");
+                CollectionAssert.DoesNotContain(failure.ToList(), @"Previous test's own failure message");
+            }
 
             // Not crashes: tests failed normally (exit code 1, also with a 3-digit failure count
             // that leaves no space before it, and with a test that wrote its own output before its
             // result), and an exit before any test ran.
             var notCrashes = new[]
             {
-                new[] { FINISHED_TEST },
-                new[] { FINISHED_TEST_100_FAILURES },
-                new[] { UNFINISHED_TEST + @"Warning: test output", @"  0 failures, 10.85/21.67/55.2 MB, 11/493 handles, 1 sec." },
-                new string[0],
+                Out(RUNNING_PREVIOUS, FINISHED_PREVIOUS),
+                Out(RUNNING_PREVIOUS, FINISHED_PREVIOUS_100_FAILURES),
+                Out(RUNNING_TIC, UNFINISHED_TIC + @"Warning: test output", @"  0 failures, 10.85/21.67/55.2 MB, 11/493 handles, 1 sec."),
+                Out(),
             };
             foreach (var lines in notCrashes)
-                Assert.IsNull(Failure(lines, TESTS_FAILED), string.Join(@" | ", lines));
-            Assert.IsNull(Failure(new string[0], ACCESS_VIOLATION), @"Reported a test when none had run.");
+                Assert.IsNull(Failure(lines, TESTS_FAILED), string.Join(@" | ", lines.Select(r => r.Line)));
+            Assert.IsNull(Failure(Out(), ACCESS_VIOLATION), @"Reported a test when none had run.");
         }
 
-        private static IList<string> Failure(IEnumerable<string> output, int exitCode)
+        private static IEnumerable<(string Line, bool IsError)> Out(params string[] lines) => lines.Select(line => (line, false));
+        private static IEnumerable<(string Line, bool IsError)> Err(params string[] lines) => lines.Select(line => (line, true));
+
+        private static IList<string> Failure(IEnumerable<(string Line, bool IsError)> received, int exitCode)
         {
             var report = new TestRunnerCrashReport();
-            foreach (var line in output)
-                report.Observe(line);
+            foreach (var (line, isError) in received)
+                report.Observe(line, isError);
             return report.GetFailureLines(exitCode,
                 exitCode == ACCESS_VIOLATION ? ACCESS_VIOLATION_TEXT : exitCode.ToString());
         }

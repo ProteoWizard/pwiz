@@ -35,59 +35,79 @@ namespace SkylineTester
         /// <summary>The failure name for a crash after the last test had finished.</summary>
         public const string CRASH_BETWEEN_TESTS = @"TestRunnerCrash";
 
-        private const int MAX_DETAIL_LINES = 200;
+        // Only the most recent lines are kept: a crash's own report comes last.
+        private const int MAX_OUTPUT_LINES = 200;
+        private const int MAX_ERROR_LINES = 100;
 
-        // The start of a test line, e.g. "[04:23]   2.1066 TestTicChromatogram   (en) ". Its result,
-        // e.g. "  0 failures, 113.33/87.15/291.1 MB, ...", finishes it, on the same line or on a later
-        // one when the test wrote output of its own. The count is right-aligned in 3 columns, so a
-        // count of 100 or more has no space before it.
-        private static readonly Regex START_TEST = new Regex(@"^\[\d\d:\d\d\] +\d+\.\d+ +(\S+) +\(\w+\)");
-        private static readonly Regex END_TEST = new Regex(@"\b\d+ failures, [\d./]+ MB");
+        // "#@ Running TestTicChromatogram (en)..." - a whole line TestRunner writes as each test
+        // starts (SkylineTester always runs it with status=on), so the running test is known before
+        // anything can go wrong. The test line that follows, "[04:23]   2.1066 TestTicChromatogram
+        // (en) ", gets no newline until its result is appended, so after a crash it is read only
+        // once the output closes, if at all.
+        private static readonly Regex RUNNING_TEST = new Regex(@"^#@ Running (\S+) \(\w+\)\.\.\.$");
+        private static readonly Regex TEST_LINE = new Regex(@"^\[\d\d:\d\d\] +\d+\.\d+ +\S+ +\(\w+\)");
+        // A test's result, e.g. "  0 failures, 113.33/87.15/291.1 MB, ...", on the test line or on a
+        // later one when the test wrote output of its own. The count is right-aligned in 3 columns,
+        // so a count of 100 or more has no space before it.
+        private static readonly Regex RESULT = new Regex(@"\b\d+ failures, [\d./]+ MB");
         private const string FAILURE_BLOCK_END = @"!!!";
 
         private readonly object _lock = new object();
-        private readonly List<string> _linesSinceResult = new List<string>();
+        private readonly Queue<string> _output = new Queue<string>();
+        private readonly Queue<string> _errors = new Queue<string>();
         private string _runningTest;
         private string _lastTest;
 
-        /// <summary>One line of TestRunner's standard output or standard error, in arrival order.</summary>
-        public void Observe(string line)
+        /// <summary>
+        /// One line of TestRunner's output, as it arrives.
+        /// </summary>
+        /// <param name="line">The line.</param>
+        /// <param name="isError">True for standard error, where a fatal error's report (e.g. "Fatal
+        /// error. 0xC0000005" and its stack) is written. The two streams are read on separate threads,
+        /// so they are kept apart: standard error is cleared only when the next test starts, never by
+        /// a result line on standard output, which can be read after a crash's report. A crash within
+        /// moments of its own test's start line can still lose its report that way.</param>
+        public void Observe(string line, bool isError)
         {
             if (line == null)
                 return;
             lock (_lock)
             {
-                var start = START_TEST.Match(line);
-                if (start.Success)
-                    _runningTest = _lastTest = start.Groups[1].Value;
-
-                // A result, or the end of the failure block that follows a failed one: what came
-                // before belongs to that test, not to whatever crashes next.
-                if (END_TEST.IsMatch(line))
+                var running = RUNNING_TEST.Match(line);
+                if (running.Success)
+                {
+                    _runningTest = _lastTest = running.Groups[1].Value;
+                    _output.Clear();
+                    _errors.Clear();
+                    return;
+                }
+                if (RESULT.IsMatch(line))
                 {
                     _runningTest = null;
-                    _linesSinceResult.Clear();
+                    _output.Clear();
                     return;
                 }
                 if (line.Trim() == FAILURE_BLOCK_END)
                 {
-                    _linesSinceResult.Clear();
+                    // The end of a failed test's failure block: its message is that test's.
+                    _output.Clear();
                     return;
                 }
+                // Lines the log parsers read in their own right are not repeated in a failure block.
+                if (TEST_LINE.IsMatch(line) || line.StartsWith(@"!!! ") || line.StartsWith(@"#@ "))
+                    return;
 
-                // A crash's own report (e.g. "Fatal error. 0xC0000005" and its stack) arrives on
-                // standard error, often before the unfinished test's line, which is only flushed
-                // when the output closes.
-                if (!start.Success && _linesSinceResult.Count < MAX_DETAIL_LINES)
-                    _linesSinceResult.Add(line);
+                var lines = isError ? _errors : _output;
+                lines.Enqueue(line);
+                if (lines.Count > (isError ? MAX_ERROR_LINES : MAX_OUTPUT_LINES))
+                    lines.Dequeue();
             }
         }
 
         /// <summary>
         /// The lines to log for a TestRunner that exited with <paramref name="exitCode"/> without
         /// being stopped, or null when nothing failed that its own output did not already report:
-        /// no test was running, and the exit code was not a crash. Call once all of its output
-        /// has been observed.
+        /// no test was running, and the exit code was not a crash.
         /// </summary>
         /// <param name="exitCode">The process exit code.</param>
         /// <param name="exitCodeText">The same, formatted for people (with its hex and name).</param>
@@ -114,7 +134,8 @@ namespace SkylineTester
                 }
 
                 var lines = new List<string> { string.Empty, string.Format(@"!!! {0} FAILED", name), summary };
-                lines.AddRange(_linesSinceResult);
+                lines.AddRange(_errors);
+                lines.AddRange(_output);
                 lines.Add(FAILURE_BLOCK_END);
                 lines.Add(string.Empty);
                 return lines;
