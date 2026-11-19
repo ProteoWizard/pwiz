@@ -370,18 +370,26 @@ internal sealed class TdfData : IBrukerData
 
     // ---------- spectrum fill ----------
 
-    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, bool getBinaryData, bool preferCentroid, bool sortAndJitter = false, bool includeIsolationArrays = false)
+    /// <remarks>
+    /// Below <see cref="DetailLevel.FullMetadata"/> no peaks are read, so DefaultArrayLength stays
+    /// 0: counting them means decoding the frame, which costs as much as reading the spectrum.
+    /// cpp returns before reading peaks at instant and fast metadata (SpectrumList_Bruker.cpp:282,
+    /// :377). The rest of the metadata comes from the frame tables and is reported at every level.
+    /// </remarks>
+    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, DetailLevel detailLevel, bool preferCentroid, bool sortAndJitter = false, bool includeIsolationArrays = false)
     {
         ArgumentNullException.ThrowIfNull(spec);
         ArgumentNullException.ThrowIfNull(entry);
         var tag = (Tag)entry.Tag;
         var frame = tag.Frame;
+        bool getPeaks = detailLevel >= DetailLevel.FullMetadata;
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
 
         // diaPASEF whole-frame (passEntire): dedicated emission path so the existing per-window
         // path below is left unchanged.
         if (tag.WholeFrame)
         {
-            FillWholeFrameSpectrum(spec, tag, getBinaryData, includeIsolationArrays, sortAndJitter);
+            FillWholeFrameSpectrum(spec, tag, getPeaks, getBinaryData, includeIsolationArrays, sortAndJitter);
             return;
         }
 
@@ -521,6 +529,9 @@ internal sealed class TdfData : IBrukerData
                 omitCcs: tag.Combined && !preferCentroid);
         else if (frame.MsMsType != MsMsType.Ms1 && frame.PrecursorMz.HasValue)
             AddFrameMsMsInfoPrecursor(spec, frame, scanInvK0);
+
+        if (!getPeaks)
+            return;
 
         // pwiz C++ leaves MS_lowest/highest_observed_m_z commented-out for TDF.
         if (tag.Combined)
@@ -692,8 +703,8 @@ internal sealed class TdfData : IBrukerData
     /// (TimsData.cpp:1022+), which keeps per-scan peaks one-to-one so each peak carries its
     /// scan's 1/K0. The peak count is known before reading, so the arrays are sized exactly and
     /// filled in place rather than built separately and copied - a combined frame can hold a
-    /// million or more peaks. Without binary data the frame is still decoded for its per-scan
-    /// peak counts, but no arrays are allocated or filled.
+    /// million or more peaks. At full metadata the frame is still decoded for its per-scan peak
+    /// counts, but no arrays are allocated or filled.
     /// </summary>
     private void FillCombinedScanRangePeaks(Spectrum spec, TdfFrame frame, int scanBegin, int scanEnd,
         bool getBinaryData, CVID mobilityCv)
@@ -794,7 +805,7 @@ internal sealed class TdfData : IBrukerData
 
     // ---------- diaPASEF whole-frame (passEntire) ----------
 
-    private void FillWholeFrameSpectrum(Spectrum spec, Tag tag, bool getBinaryData, bool includeIsolationArrays, bool sortAndJitter)
+    private void FillWholeFrameSpectrum(Spectrum spec, Tag tag, bool getPeaks, bool getBinaryData, bool includeIsolationArrays, bool sortAndJitter)
     {
         var frame = tag.Frame;
         var wgi = GetWgIsoCache()[tag.WindowGroup];
@@ -832,6 +843,8 @@ internal sealed class TdfData : IBrukerData
 
         AddWholeFramePrecursor(spec, wgi);
 
+        if (!getPeaks)
+            return;
         FillWholeFrameActiveScans(spec, frame, wgi, getBinaryData, includeIsolationArrays);
         if (sortAndJitter && getBinaryData)
             SortAndJitterByMz(spec);
@@ -862,8 +875,8 @@ internal sealed class TdfData : IBrukerData
     /// order, written straight into the spectrum's arrays (m/z, intensity, mean 1/K0 and, when
     /// requested, per-peak isolation low/high), sized exactly from the peak count. Mirrors the
     /// pwiz C++ TimsSpectrum::getCombinedSpectrumData activeScansOnly path (TimsData.cpp:1036-1116).
-    /// Without binary data the frame is still decoded for its per-scan peak counts, but no arrays
-    /// are allocated or filled.
+    /// At full metadata the frame is still decoded for its per-scan peak counts, but no arrays are
+    /// allocated or filled.
     /// </summary>
     private void FillWholeFrameActiveScans(Spectrum spec, TdfFrame frame, WgIso wgi, bool getBinaryData,
         bool includeIsolationArrays)

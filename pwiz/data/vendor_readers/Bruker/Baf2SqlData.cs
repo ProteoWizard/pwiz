@@ -272,11 +272,12 @@ internal sealed class Baf2SqlData : IBrukerData
     }
 
     /// <inheritdoc/>
-    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, bool getBinaryData,
+    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, DetailLevel detailLevel,
         bool preferCentroid, bool sortAndJitter, bool includeIsolationArrays = false)
     {
         ArgumentNullException.ThrowIfNull(spec);
         ArgumentNullException.ThrowIfNull(entry);
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
         _ = includeIsolationArrays; // BAF has no diaPASEF isolation arrays.
         var row = (BafRow)entry.Tag;
 

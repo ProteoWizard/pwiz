@@ -303,24 +303,41 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
     /// matching cpp setting canCentroid=false for them.
     /// </remarks>
     public Spectrum GetCentroidSpectrum(int index, bool getBinaryData, IntegerSet msLevelsToCentroid)
-        => GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid);
+        => GetSpectrumImpl(index, ToDetailLevel(getBinaryData), msLevelsToCentroid);
+
+    /// <inheritdoc/>
+    public Spectrum GetCentroidSpectrum(int index, DetailLevel detailLevel, IntegerSet msLevelsToCentroid)
+        => GetSpectrumImpl(index, detailLevel, msLevelsToCentroid);
 
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
-        => GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid: null);
+        => GetSpectrumImpl(index, ToDetailLevel(getBinaryData), msLevelsToCentroid: null);
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Overridden, as cpp's is, so a request below <see cref="DetailLevel.FullMetadata"/> does not
+    /// decode an ion mobility frame. Skyline asks for the ms level, retention time and precursors
+    /// of every spectrum it then decides whether to read.
+    /// </remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel)
+        => GetSpectrumImpl(index, detailLevel, msLevelsToCentroid: null);
+
+    private static DetailLevel ToDetailLevel(bool getBinaryData)
+        => getBinaryData ? DetailLevel.FullData : DetailLevel.FullMetadata;
 
     /// <summary>MHDAC only centroids TOF-family devices; cpp SpectrumList_Agilent.cpp:313-315.</summary>
     private bool CanVendorCentroid =>
         _raw.DeviceType != DeviceType.Quadrupole && _raw.DeviceType != DeviceType.TandemQuadrupole;
 
-    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, IntegerSet? msLevelsToCentroid)
+    private Spectrum GetSpectrumImpl(int index, DetailLevel detailLevel, IntegerSet? msLevelsToCentroid)
     {
         if (index < 0 || index >= _index.Count)
             throw new ArgumentOutOfRangeException(nameof(index));
         var ie = _index[index];
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
 
         if (ie.IsNonMs) return BuildNonMsSpectrum(index, ie, getBinaryData);
-        if (ie.IsImsCombined) return BuildImsCombinedSpectrum(index, ie, getBinaryData);
+        if (ie.IsImsCombined) return BuildImsCombinedSpectrum(index, ie, detailLevel);
         if (ie.IsImsDrift) return BuildImsDriftSpectrum(index, ie, getBinaryData);
 
         var rec = _raw.GetScanRecord(ie.RowNumber);
@@ -740,8 +757,9 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
     /// the frame info, and a 3-array binary payload (m/z + intensity + raw ion mobility)
     /// built by walking the frame's non-empty drift bins via MIDAC <c>FrameMs</c>.
     /// </summary>
-    private Spectrum BuildImsCombinedSpectrum(int index, IndexEntry ie, bool getBinaryData)
+    private Spectrum BuildImsCombinedSpectrum(int index, IndexEntry ie, DetailLevel detailLevel)
     {
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
         var spec = new Spectrum
         {
             Index = index,
@@ -886,6 +904,18 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
             if (collisionEnergy > 0)
                 precursor.Activation.Set(CVID.MS_collision_energy, collisionEnergy, CVID.UO_electronvolt);
             spec.Precursors.Add(precursor);
+        }
+
+        // Everything below needs the frame's drift bins decoded, which costs as much as reading
+        // the spectrum. cpp returns before opening the frame for anything short of full metadata
+        // (SpectrumList_Agilent.cpp:289); the frame info above is already in hand, so its TIC is
+        // still reported.
+        if (detailLevel < DetailLevel.FullMetadata)
+        {
+            if (!double.IsNaN(frameTic))
+                spec.Params.Set(CVID.MS_total_ion_current, frameTic, CVID.MS_number_of_detector_counts);
+            spec.Params.Set(CVID.MS_profile_spectrum);
+            return spec;
         }
 
         // Combined spectrum payload. cpp MidacData.cpp:515-576 walks each non-empty drift bin
