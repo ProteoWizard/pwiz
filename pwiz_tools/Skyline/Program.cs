@@ -211,6 +211,9 @@ namespace pwiz.Skyline
         [STAThread]
         public static int Main(string[] args = null)
         {
+            // Before anything can load a shell extension that brings its own older msvcp140.
+            Pwiz.Util.Misc.AppLocalCrt.Pin();
+
             // System-DPI awareness has to be the first thing WinForms hears: on .NET the manifest
             // is not embedded, and WinForms fixes its scaling at first use (SetDefaultFont below
             // is one), after which SetHighDpiMode changes the process but not the auto-scaling.

@@ -44,4 +44,16 @@ internal static class NativeInit
         if (File.Exists(bundled))
             NativeLibrary.TryLoad(bundled, out _);
     }
+
+    /// <summary>
+    /// Called at every entry point that can be the first call into timsdata.dll. timsdata 5.x is
+    /// built with the VS 2022 17.10+ STL, and against an msvcp140 older than 14.40 its first
+    /// <c>std::mutex</c> lock is an access violation. Its own runtime check does not reliably catch
+    /// that, so this pins the runtime and throws while it can still be an exception. Not done in
+    /// <see cref="NativeMethods"/>'s static constructor: a throw there would also disable BAF.
+    /// </summary>
+    internal static void EnsureCompatibleCrt()
+    {
+        Pwiz.Util.Misc.AppLocalCrt.EnsureMsvcp140Compatible("Bruker timsdata.dll");
+    }
 }

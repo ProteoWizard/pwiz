@@ -38,6 +38,7 @@ public sealed class TsfBinaryData : IDisposable
             throw new DirectoryNotFoundException($"Bruker .d directory not found: {analysisDirectory}");
         AnalysisDirectory = Path.GetFullPath(analysisDirectory);
 
+        NativeInit.EnsureCompatibleCrt();
         _handle = NativeMethods.tsf_open(AnalysisDirectory, useRecalibratedState ? 1u : 0u);
         if (_handle == 0) ThrowLastError();
 
@@ -128,7 +129,11 @@ public sealed class TsfBinaryData : IDisposable
     }
 
     /// <summary>Sets the internal OpenMP thread count for the TSF half of the DLL.</summary>
-    public static void SetNumThreads(uint n) => NativeMethods.tsf_set_num_threads(n);
+    public static void SetNumThreads(uint n)
+    {
+        NativeInit.EnsureCompatibleCrt();
+        NativeMethods.tsf_set_num_threads(n);
+    }
 
     private static void ThrowLastError()
     {
