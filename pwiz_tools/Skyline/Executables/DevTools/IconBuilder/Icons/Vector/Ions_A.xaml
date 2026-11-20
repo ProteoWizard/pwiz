@@ -1,0 +1,8 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Bold black capital A, 20 units tall with a 5-unit stroke and a 4-unit crossbar. -->
+  <Path Fill="#000000">
+    <Path.Data>
+      <PathGeometry FillRule="EvenOdd" Figures="M 6,26 L 13,6 L 19,6 L 26,26 L 21,26 L 19.4,20.5 L 12.6,20.5 L 11,26 Z M 16,10.5 L 13.6,16.5 L 18.4,16.5 Z"/>
+    </Path.Data>
+  </Path>
+</Canvas>

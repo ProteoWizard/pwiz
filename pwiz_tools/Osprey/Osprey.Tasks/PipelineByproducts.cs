@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -496,7 +497,7 @@ namespace pwiz.Osprey.Tasks
             // whose consumer threw, did not finish, and its log must not say it did.
             using (var progress = label == null
                        ? null
-                       : new ProgressReporter(CountText.Format(FileCount, OspreyTasksResources.RescoredEntries_StreamFiles__1___1_file_, OspreyTasksResources.RescoredEntries_StreamFiles__1____0__files_, label),
+                       : ProgressReporter.Begin(CountText.Format(FileCount, OspreyTasksResources.RescoredEntries_StreamFiles__1___1_file_, OspreyTasksResources.RescoredEntries_StreamFiles__1____0__files_, label),
                            FileCount, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int done = 0;
@@ -523,7 +524,7 @@ namespace pwiz.Osprey.Tasks
                         kv.Value.TrimExcess();
                         consumed++;
                     }
-                    progress?.Complete();
+                    progress?.MarkComplete();
                 }
                 finally
                 {
@@ -629,18 +630,11 @@ namespace pwiz.Osprey.Tasks
         public PercolatorResults Results { get; set; }
 
         /// <summary>
-        /// The normalized OSPREY_EXPERIMENT_AGG arm that the FIRST pass actually ran under
-        /// (<see cref="OspreyEnvironment.ExperimentAgg"/> as of that process), or null when the
-        /// model came from a sidecar written before this was recorded.
-        ///
-        /// Recorded rather than re-read, because the 2nd pass may not be the same process: a
-        /// distributed <c>--task SecondPassFDR</c> node reloads this model from disk
-        /// (<see cref="FirstPassModelIO"/>) and never trained pass 1, so ITS environment says
-        /// nothing about which aggregation produced the q-values it is about to rewrite.
-        /// Inferring from the live process was wrong in both directions - a SecondPassFDR node with the
-        /// variable unset would emit a mixed q column with no refusal, and a consistent run
-        /// could be aborted by a stale exported variable. Provenance travels with the artifact.
+        /// The stamp of the first pass that produced the model - the one its model file and every
+        /// run's protein-best column carry - or null when it is not known (a model file written
+        /// before the stamp was read back). A second pass that scores with the column refuses a
+        /// run's column stamped by another first pass.
         /// </summary>
-        public string ExperimentAgg { get; set; }
+        public ArtifactStamp Stamp { get; set; }
     }
 }

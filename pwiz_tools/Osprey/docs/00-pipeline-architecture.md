@@ -340,9 +340,9 @@ This is the shape every fan-out task has, and the reason batch size is free. Tak
         load   r.scores.parquet               |
         load   r.1st-pass.fdr_scores.bin      |
         load   r.calibration.json             |  O(entries in r)
-              ---- plan r ----                |
-        write  r.reconciliation.json          |
         load   r.spectra.bin (windowed)       |
+              ---- plan r ----                |  (CWT candidates of the rows it
+        write  r.reconciliation.json          |   would move, from r's windows)
               ---- rescore r ----             |
         write  r.scores-reconciled.parquet    |
         free   everything loaded for r        v
@@ -885,8 +885,10 @@ node running that task needs a copy, whatever batch it was handed.
 | `<blib-stem>.1st-pass.stratum.json` | experiment product, protein-compact only | `FirstPassFDR` (first-pass protein FDR) | as the model, paired with it by stamp | **every node** |
 | `<stem>.scores-reconciled.parquet` | per-run product, written for **every** run | `PerFileRescoring` (Stage 6) | `SecondPassFDR` - the join's only row source, one parquet per run; and `PerFileRescoring` itself on its per-run resume arm and for its training export | with the run |
 | `<stem>.2nd-pass.fdr_decoys.bin` | per-run product, protein-compact only | `PerFileRescoring` (pass-2 worker) | `SecondPassFDR` | with the run |
+| `<stem>.1st-pass.protein_best.bin` | per-run product, `--protein-boost best` only | `FirstPassFDR` (pass 1, beside the run's scores) | `PerFileRescoring` (pass-2 worker); `SecondPassFDR` only under `OSPREY_PASS2_VERIFY_WORKER` | with the run |
 | `<stem>.2nd-pass.fdr_scores.bin` | per-run product, written for **every** run | `PerFileRescoring` (pass-2 worker), in every pass-2 mode | `SecondPassFDR`; `PerFileRescoring`'s training export | with the run |
 | `<stem>.training.parquet` | per-run product (`--training-export`) | `PerFileRescoring` (Stage 6), in flight or on its export-only arm | terminal: the consumer that trains on it (CarafeSharp) | n/a |
+| `<stem>.fragment-mass-errors.json` | per-run product (`--model-diagnostics`) | `PerFileRescoring` (Stage 6), in flight or on its optional-products arm | the report render (`SecondPassFDR`, `--task ModelDiagnostics`), when present and stamped for this analysis | **every node** rendering the report - the JSON alone |
 | `<blib-stem>.2nd-pass.fdr_experiment.bin` | experiment product | `SecondPassFDR` | `SecondPassFDR` on a resume | n/a |
 | `<blib-stem>.2nd-pass.protein-entrapment.json` | experiment product, written for **every** run whose library has entrapment proteins (removed otherwise) | `SecondPassFDR` (after protein FDR) | `--task ModelDiagnostics` and the pay-later report: the pass-2 protein-group entrapment card, the one diagnostics input made from the protein FDR result, which nothing else stores | n/a |
 | `<blib-stem>.1st-pass.model-diagnostics.json` | experiment product (`--model-diagnostics`) | `FirstPassFDR` (pass 1) | `SecondPassFDR`, `--task ModelDiagnostics` | **every node** running `SecondPassFDR` |
@@ -1268,8 +1270,12 @@ Each rescore node needs its own runs' artifacts plus the experiment-wide set:
 Per run, for each run in the node's batch:
 - `<stem>.scores.parquet`
 - `<stem>.1st-pass.fdr_scores.bin`
+- `<stem>.1st-pass.protein_best.bin`, under `--protein-boost best` only
 - `<stem>.calibration.json`
-- `<stem>.spectra.bin`, with no data file beside it
+- `<stem>.spectra.bin`, with no data file beside it - read by planning as well as the
+  rescore: the CWT peak candidates a run's plan re-picks from are not stored in the scores
+  parquet but computed from the run's spectra, with its first-pass calibration, for the rows
+  the plan would move (#5024)
 
 No `<stem>.reconciliation.json`: the node plans each of its runs from the consensus below
 and writes the run's plan itself.
@@ -1289,8 +1295,8 @@ Experiment-wide, to **every** node:
   clothes - 11 minutes and a 41.5 GB peak on the 446-run CHS cohort of issue #4650, for the
   625,620 base_ids already sitting on disk in that run's 2,502,512-byte summary
 - `<blib-stem>.1st-pass.model.json` - **mandatory on an ordinary run**, because
-  the default pass-2 mode is a frozen one (`protein-compact`); an unset
-  `OSPREY_PASS2_QVALUE` is not an opt-out
+  both pass-2 modes are frozen ones (`transfer` and `protein-compact`, each a default);
+  an unset `OSPREY_PASS2_QVALUE` is not an opt-out
 - `<blib-stem>.1st-pass.stratum.json` - the protein-compact stratum, a separate file because
   a different phase produces it (P7)
 
@@ -1321,11 +1327,21 @@ Per run, for **every** run in the cohort:
 Experiment-wide:
 - `<blib-stem>.1st-pass.fdr_experiment.bin`
 - `<blib-stem>.1st-pass.model.json`
-- `<blib-stem>.1st-pass.stratum.json` - the protein-compact stratum. The default
+- `<blib-stem>.1st-pass.stratum.json` - the protein-compact stratum. The protein-compact
   pass-2 mode reloads both this and the model here when neither was published in-process,
   which is every distributed `SecondPassFDR` node
 - `<blib-stem>.1st-pass.model-diagnostics.json`, when `--model-diagnostics` is on - the
   pass-1 half of the report exists nowhere else by this point
+- `<stem>.fragment-mass-errors.json` for every run, when `--model-diagnostics` is on - the
+  report's fragment mass-error view, a few kilobytes per run. The JSON is all a rendering node
+  needs: the render only reads the summaries, and shows one whose stamp says PerFileRescoring
+  wrote it in this summary format for this search, library and run FDR - the terms the
+  configuration alone decides. The rest of its key, the identities of the run's
+  `.calibration.json` and `.spectra.bin`, is checked only where the summary would be measured: a
+  node without those two files (a `--task ModelDiagnostics` node shipped the summaries) never
+  measures and keeps what it was given, and a node with them re-measures a summary whose inputs
+  were rewritten. A node not shipped the summaries renders the page without the view and says so
+  in the view itself
 
 A `SecondPassFDR` node rebuilds each run from these artifacts one at a time and drops it, so
 it needs every run's files present but never holds more than one run's rows. The relay list

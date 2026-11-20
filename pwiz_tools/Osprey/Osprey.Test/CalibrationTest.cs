@@ -551,6 +551,49 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// <see cref="LocalRtTolerance"/> (OSPREY_LOCAL_RT_TOLERANCE) widens the search window
+        /// only where the residuals of the nearest calibration points scatter more than the global
+        /// half-width allows: the global half-width where they are tight, the local
+        /// <c>3 * 1.4826 * median</c> where they are loose, capped at the maximum, interpolated
+        /// between points and held at the end values beyond the calibrated range.
+        /// </summary>
+        [TestMethod]
+        public void TestLocalRtTolerance()
+        {
+            const int n = 100;
+            const int looseStart = 80;
+            double[] libraryRts = new double[n];
+            double[] absResiduals = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                libraryRts[i] = i;
+                absResiduals[i] = i < looseStart ? 0.05 : 0.5;
+            }
+            var cal = RTCalibration.FromModelParams(libraryRts, libraryRts, absResiduals, 0.1);
+            var local = LocalRtTolerance.Create(cal, 11, 1.0, 3.0);
+            Assert.IsNotNull(local);
+            double loose = RTCalibration.SearchWindowRaw(0.5);
+
+            Assert.AreEqual(1.0, local.GlobalHalfWidth, TOLERANCE);
+            Assert.AreEqual(1.0, local.HalfWidth(10), TOLERANCE);
+            Assert.AreEqual(1.0, local.HalfWidth(-5), TOLERANCE);
+            Assert.AreEqual(loose, local.HalfWidth(95), TOLERANCE);
+            Assert.AreEqual(loose, local.HalfWidth(150), TOLERANCE);
+            Assert.AreEqual((1.0 + loose) / 2, local.HalfWidth(looseStart - 0.5), TOLERANCE);
+            Assert.AreEqual(loose, local.MaxHalfWidth, TOLERANCE);
+            // A point is widened once most of its 11 neighbours are loose: from looseStart on.
+            Assert.AreEqual((double)(n - looseStart) / n, local.FractionWidened, TOLERANCE);
+
+            // Capped at the maximum half-width.
+            double[] wideResiduals = new double[n];
+            Array.Fill(wideResiduals, 2.0);
+            var capped = LocalRtTolerance.Create(
+                RTCalibration.FromModelParams(libraryRts, libraryRts, wideResiduals, 2.0), 11, 1.0, 3.0);
+            Assert.IsNotNull(capped);
+            Assert.AreEqual(3.0, capped.HalfWidth(50), TOLERANCE);
+        }
+
+        /// <summary>
         /// <see cref="RTCalibration.SearchWindowRaw"/> is the unclamped
         /// <c>3 * MAD * 1.4826</c> the console summary reports as the computed
         /// tolerance. Verifies the formula and the small / large / in-range MAD

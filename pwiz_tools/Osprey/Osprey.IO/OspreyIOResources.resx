@@ -277,9 +277,6 @@
   <data name="ParquetScoreCache_CheckParquetMetadata__0__was_written_by_an_Osprey_build_this_one_does_not_recognize___1___this_is__2____so_it_" xml:space="preserve">
     <value>{0} was written by an Osprey build this one does not recognize ({1}; this is {2}), so it cannot be reused. Score the file again with this build ({3}).</value>
   </data>
-  <data name="ParquetScoreCache_LoadCwtCandidatesFromParquet__0___the_stored_peak_candidates_in_row_group__1__have_an_unexpected_type___2____The_file_is_damaged_or_was_written_by_a_different_version_of_Osprey_" xml:space="preserve">
-    <value>{0}: the stored peak candidates in row group {1} have an unexpected type ({2}). The file is damaged or was written by a different version of Osprey.</value>
-  </data>
   <data name="ParquetScoreCache_LoadTrainingExportRows__0__has_no_reference_XIC__which_the_training_export_reads__It_was_written_by_a_run_that_did_not_request_the_export__Run_the_analysis_again_with_the_export_requested_" xml:space="preserve">
     <value>{0} has no reference XIC, which the training export reads. It was written by a run that did not request the export. Run the analysis again with the export requested.</value>
   </data>
@@ -289,11 +286,17 @@
   <data name="ParquetScoreCache_RequireCharge__0__is_corrupt__row__1___entry_id__2___has_a_charge_of_0__which_is_not_a_possible_" xml:space="preserve">
     <value>{0} is damaged: row {1} in row group {5} ({3} {2}) has a charge of 0, which is not a possible precursor charge. Delete the file and run {4} again to rewrite it.</value>
   </data>
+  <data name="ParquetScoreCache_RequireFeatureColumn__0__has_no__1__column" xml:space="preserve">
+    <value>{0} has no {1} column: the run that scored it did not record that feature, which this run needs. Score the file again with this run's {2}, or set {3}=1 when scoring to record every feature.</value>
+  </data>
   <data name="ParquetScoreCache_StreamEntryIds_The_scores_file___0___is_damaged__row_group__1__has_no_readable_entry_id_column__so_its_" xml:space="preserve">
     <value>The scores file '{0}' is damaged: row group {1} has no readable {2} column, so its row order cannot be established. Delete it and score the file again.</value>
   </data>
   <data name="ParquetScoreCache_StreamReconciledScoresParquet__0___a_re_scored_precursor_candidate_peak_refers_to_row__1__past_the_end_of_the_scores_file___2__rows___and_was_not_written_" xml:space="preserve">
     <value>{0}: a re-scored precursor candidate peak refers to row {1:N0}, past the end of the scores file ({2:N0} rows), and was not written.</value>
+  </data>
+  <data name="ParquetScoreCache_ValidateScoresParquetGroup__0__was_scored_with__1__XIC_fragments__but_this_run_uses__2____3__" xml:space="preserve">
+    <value>{0} was scored with {1} XIC fragments, but this run uses {2} ({3}). Score the files again with this setting, or set {3} to match them.</value>
   </data>
   <data name="ParquetScoreCache_ValidateScoresParquetGroup_Could_not_read_the_scores_file__0____1_" xml:space="preserve">
     <value>Could not read the scores file {0}: {1}</value>

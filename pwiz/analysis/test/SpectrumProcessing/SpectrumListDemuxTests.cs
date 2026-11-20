@@ -43,7 +43,10 @@ public class SpectrumListDemuxTests
     [TestMethod]
     public void Ms1Spectra_PassThroughUnchanged()
     {
-        var inner = BuildSingleOverlapList(numCycles: 5, scansPerHalf: 25, mzStart: 400, mzEnd: 600);
+        // The inner list reports its spectra as not retained, as a vendor reader that builds a new
+        // spectrum per read does, so any retained mark on the output comes from the demultiplexer.
+        var inner = new NotRetainedSpectrumList(
+            BuildSingleOverlapList(numCycles: 5, scansPerHalf: 25, mzStart: 400, mzEnd: 600));
         var demux = new SpectrumListDemux(inner);
 
         // Find a demux entry that maps to an MS1 (msLevel != 2 → numDemuxIndices = 1, so 1:1 with input).
@@ -56,10 +59,27 @@ public class SpectrumListDemuxTests
             var mz = spec.GetMZArray();
             Assert.IsNotNull(mz, "MS1 spectrum has no m/z array");
             Assert.IsTrue(mz!.Data.Count > 0, "MS1 spectrum has zero peaks");
+            // The pass-through returns the demultiplexer's cached instance, so a caller must not
+            // take its arrays
+            Assert.IsTrue(spec.RetainedByList, "cached MS1 pass-through not marked as retained");
+            Assert.AreSame(spec, demux.GetSpectrum(i, getBinaryData: true));
             foundMs1 = true;
             break;
         }
         Assert.IsTrue(foundMs1, "no MS1 spectrum found in demux output");
+    }
+
+    /// <summary>Passes spectra through with <see cref="Spectrum.RetainedByList"/> cleared.</summary>
+    private sealed class NotRetainedSpectrumList : SpectrumListWrapper
+    {
+        public NotRetainedSpectrumList(ISpectrumList inner) : base(inner) { }
+
+        public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
+        {
+            var spectrum = Inner.GetSpectrum(index, getBinaryData);
+            spectrum.RetainedByList = false;
+            return spectrum;
+        }
     }
 
     [TestMethod]

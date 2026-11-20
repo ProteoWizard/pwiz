@@ -360,6 +360,57 @@ public static class VendorReaderTestHarness
     }
 
     /// <summary>
+    /// Checks that what a reader reports below <see cref="DetailLevel.FullMetadata"/> agrees with
+    /// its full-metadata read: ms level, scan start time and each precursor's isolation target
+    /// and selected ion m/z. A reader may leave a value out at a lower level - Skyline then asks
+    /// again one level up - but a value it does report is taken as final, so it must not differ.
+    /// Readers skip costly work at the lower levels (decoding an ion mobility frame for its peak
+    /// count), and this keeps that shortcut from dropping into a different metadata path.
+    /// </summary>
+    private static void AssertLowerDetailLevelsAgree(ISpectrumList list, string referenceFilename)
+    {
+        foreach (int i in SampleSpectrumIndices(list.Count))
+        {
+            var full = list.GetSpectrum(i, DetailLevel.FullMetadata);
+            foreach (var level in new[] { DetailLevel.InstantMetadata, DetailLevel.FastMetadata })
+            {
+                var low = list.GetSpectrum(i, level);
+                string where = $"[{referenceFilename}] spectrum {i} ('{full.Id}') at {level}";
+                AssertReportedValueAgrees(where, "ms level",
+                    low.Params.CvParam(CVID.MS_ms_level), full.Params.CvParam(CVID.MS_ms_level));
+                if (low.ScanList.Scans.Count > 0 && full.ScanList.Scans.Count > 0)
+                    AssertReportedValueAgrees(where, "scan start time",
+                        low.ScanList.Scans[0].CvParam(CVID.MS_scan_start_time),
+                        full.ScanList.Scans[0].CvParam(CVID.MS_scan_start_time));
+                if (low.Precursors.Count == 0)
+                    continue;
+                if (low.Precursors.Count != full.Precursors.Count)
+                    throw new InvalidOperationException(
+                        $"{where}: {low.Precursors.Count} precursors, {full.Precursors.Count} at FullMetadata");
+                for (int p = 0; p < low.Precursors.Count; p++)
+                {
+                    var lowPrecursor = low.Precursors[p];
+                    var fullPrecursor = full.Precursors[p];
+                    AssertReportedValueAgrees(where, $"precursor {p} isolation target",
+                        lowPrecursor.IsolationWindow.CvParam(CVID.MS_isolation_window_target_m_z),
+                        fullPrecursor.IsolationWindow.CvParam(CVID.MS_isolation_window_target_m_z));
+                    if (lowPrecursor.SelectedIons.Count > 0 && fullPrecursor.SelectedIons.Count > 0)
+                        AssertReportedValueAgrees(where, $"precursor {p} selected ion m/z",
+                            lowPrecursor.SelectedIons[0].CvParam(CVID.MS_selected_ion_m_z),
+                            fullPrecursor.SelectedIons[0].CvParam(CVID.MS_selected_ion_m_z));
+                }
+            }
+        }
+    }
+
+    private static void AssertReportedValueAgrees(string where, string what, CVParam low, CVParam full)
+    {
+        if (!low.IsEmpty && low.Value != full.Value)
+            throw new InvalidOperationException(
+                $"{where}: {what} is {low.Value}, but {(full.IsEmpty ? "absent" : full.Value)} at FullMetadata");
+    }
+
+    /// <summary>
     /// Head and tail of the run. Both ends matter: Waters interleaves its non-MS DAD spectra from
     /// index 0, while Agilent appends them after the whole MS run, so sampling one end would miss
     /// the other vendor's non-MS spectra entirely.
@@ -572,6 +623,10 @@ public static class VendorReaderTestHarness
             // and without this the failure only identifies the .d directory - which config
             // diverged is left to guesswork.
             throw new InvalidOperationException($"[{referenceFilename}] {diff}");
+
+        // 5a. The reference is written at full data; a metadata-only read must not contradict it.
+        if (msd.Run.SpectrumList is { } spectra)
+            AssertLowerDetailLevelsAgree(spectra, referenceFilename);
 
         // 6. mzXML round-trip: write to mzXML, parse it back, verify the spectrum data made the
         // round trip. mzXML loses most metadata (instrument config, multi-scan combineIMS,

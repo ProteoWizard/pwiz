@@ -64,6 +64,8 @@ namespace pwiz.Osprey.IO
                 return Pass2CompetitionDecoys.ReadStamp(path);
             if (EndsWith(path, RetainedBaseIdSidecar.EXT))
                 return RetainedBaseIdSidecar.ReadStamp(path);
+            if (EndsWith(path, ProteinBestSidecar.EXT))
+                return ProteinBestSidecar.ReadStamp(path);
             // The output library is named by -o, verbatim, so it need not end in .blib. Any
             // other SQLite file is read the same way rather than reading as unstamped, which
             // would re-run the whole of SecondPassFDR on every invocation.

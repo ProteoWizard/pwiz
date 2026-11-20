@@ -115,7 +115,7 @@ namespace pwiz.Osprey.Tasks
                 throw new InvalidDataException(footerError);
             // Read back from the file even when the caller has just written it, so an export
             // made while re-scoring and one made later from disk see the same rows.
-            var rows = ParquetScoreCache.LoadTrainingExportRows(reconciledPath);
+            var rows = ParquetScoreCache.LoadTrainingExportRows(reconciledPath, PinFeatureMask.For(config));
             var runQ = ReadRunQ(input, out var runQPass, out string runQPath);
             if (ms2Cal == null)
                 ScoringTaskShared.LoadMassCalibrations(input, OspreyTasksResources.TrainingExportWriter_ExportRun_The_training_export, out ms2Cal, out _, out _);

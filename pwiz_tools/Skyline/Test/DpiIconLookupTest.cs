@@ -54,8 +54,7 @@ namespace pwiz.SkylineTest
 
         private static readonly Dictionary<string, string> COMMON_PIXEL_TWINS = new Dictionary<string, string>
         {
-            { @"PlainLayout", @"DataColumn" },
-            { @"Filter1", @"Filter" }
+            { @"PlainLayout", @"DataColumn" }
         };
 
         [TestMethod]

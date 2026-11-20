@@ -21,6 +21,9 @@ internal sealed class TsfData : IBrukerData
         AnalysisDirectory = analysisDirectory;
         _meta = new TsfMetadata(analysisDirectory);
         _tsf = new TsfBinaryData(analysisDirectory, useRecalibratedState);
+        // As for TDF, tsfdata decodes on a single thread unless told otherwise; cpp asks for 4
+        // (TsfData.cpp:117).
+        TsfBinaryData.SetNumThreads(4);
         _preferProfile = _meta.HasProfileSpectra;
     }
 
@@ -88,10 +91,11 @@ internal sealed class TsfData : IBrukerData
 
     // ---------- spectrum fill ----------
 
-    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, bool getBinaryData, bool preferCentroid, bool sortAndJitter = false, bool includeIsolationArrays = false)
+    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, DetailLevel detailLevel, bool preferCentroid, bool sortAndJitter = false, bool includeIsolationArrays = false)
     {
         ArgumentNullException.ThrowIfNull(spec);
         ArgumentNullException.ThrowIfNull(entry);
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
         _ = includeIsolationArrays; // TSF has no diaPASEF isolation arrays.
         var tag = (Tag)entry.Tag;
         var frame = tag.Frame;
