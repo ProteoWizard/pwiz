@@ -89,6 +89,21 @@ public class MSDataSmokeTest
         Assert.AreEqual(3, pairs.Count);
         Assert.AreEqual(200.0, pairs[1].Mz, 1e-9);
         Assert.AreEqual(2500.0, pairs[1].Intensity, 1e-9);
+
+        // DetachData hands over the list's own buffer, longer than the values when the list has
+        // spare capacity, and leaves the array empty and still usable.
+        var mzArray = spec.GetMZArray()!;
+        mzArray.Data.Capacity = 10;
+        var buffer = mzArray.DetachData(out int count);
+        Assert.AreEqual(3, count);
+        Assert.AreEqual(10, buffer.Length, "the backing array itself, not a trimmed copy");
+        CollectionAssert.AreEqual(new[] { 100.0, 200.0, 300.0 }, buffer.Take(count).ToArray());
+        Assert.AreEqual(0, mzArray.Data.Count);
+        mzArray.Data.Add(1.0);
+        Assert.AreEqual(100.0, buffer[0], "a later write to the array must not reach the detached buffer");
+        mzArray.Data.Clear();
+        Assert.AreEqual(0, mzArray.DetachData(out count).Length);
+        Assert.AreEqual(0, count);
     }
 
     [TestMethod]

@@ -393,6 +393,7 @@ public sealed class MgfSpectrumList : SpectrumListBase
         ArgumentNullException.ThrowIfNull(spec);
         EnsureMzAscending(spec);
         int index = _spectra.Count;
+        spec.RetainedByList = true;
         _spectra.Add(spec);
 
         var title = spec.CvParam(CVID.MS_spectrum_title).Value;

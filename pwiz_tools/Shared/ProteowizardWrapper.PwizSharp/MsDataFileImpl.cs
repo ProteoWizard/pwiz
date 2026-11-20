@@ -123,9 +123,19 @@ namespace pwiz.ProteowizardWrapper
 
         private CVID? _cvidIonMobility;
 
-        private static double[] ToArray(BinaryDataArray binaryDataArray)
+        /// <summary>
+        /// Returns the array's values, of which the first <paramref name="count"/> are used. With
+        /// <paramref name="detach"/> the payload is taken from the spectrum rather than copied, and
+        /// may be longer than <paramref name="count"/> - use it only when nothing will read this
+        /// <see cref="Spectrum"/>'s arrays again. Otherwise it is an exact-length copy.
+        /// </summary>
+        private static double[] TakeData(BinaryDataArray binaryDataArray, bool detach, out int count)
         {
-            return binaryDataArray.Data.ToArray();
+            if (detach)
+                return binaryDataArray.DetachData(out count);
+            var data = binaryDataArray.Data.ToArray();
+            count = data.Length;
+            return data;
         }
 
         public static float[] ToFloatArray(IList<double> list)
@@ -1348,32 +1358,34 @@ namespace pwiz.ProteowizardWrapper
                     if (!_scanCache.TryGetSpectrum(spectrumIndex, out returnSpectrum))
                     {
                         // spectrum not in the cache, pull it from the file
-                        returnSpectrum = GetSpectrum(SpectrumList.GetSpectrum(spectrumIndex, true), spectrumIndex);
+                        returnSpectrum = GetSpectrum(SpectrumList.GetSpectrum(spectrumIndex, true), spectrumIndex, true);
                         // add it to the cache
                         _scanCache.Add(spectrumIndex, returnSpectrum);
                     }
                     return returnSpectrum;
                 }
-                var spectrum = GetCachedSpectrum(spectrumIndex, true);
-                {
-                    // Avoid wrapping the same cached Spectrum twice
-                    if (_lastSpectrumInfo == null)
-                        _lastSpectrumInfo = GetSpectrum(spectrum, spectrumIndex);
+                // Avoid wrapping the same cached Spectrum twice
+                if (_lastSpectrumInfo != null && spectrumIndex == _lastScanIndex)
                     return _lastSpectrumInfo;
-                }
+                var spectrum = GetCachedSpectrum(spectrumIndex, true);
+                _lastSpectrumInfo = GetSpectrum(spectrum, spectrumIndex, true);
+                // The arrays now belong to _lastSpectrumInfo, so a later request for this
+                // spectrum's binary data has to read it again
+                _lastSpectrumArraysDetached = true;
+                return _lastSpectrumInfo;
             }
         }
 
-        private double[] GetIonMobilityArray(Spectrum s)
+        private BinaryDataArray FindIonMobilityArray(Spectrum s)
         {
-            double[] data = null;
+            BinaryDataArray data = null;
             // Remember where the ion mobility value came from and continue getting it from the
             // same place throughout the file. Trying to get an ion mobility value from a CVID
             // where there is none can be slow.
             if (_cvidIonMobility.HasValue)
             {
                 if (_cvidIonMobility.Value != CVID.CVID_Unknown)
-                    data = s.GetArrayByCvid(_cvidIonMobility.Value)?.Data.ToArray();
+                    data = s.GetArrayByCvid(_cvidIonMobility.Value);
             }
             else
             {
@@ -1381,16 +1393,16 @@ namespace pwiz.ProteowizardWrapper
                 {
                     case eIonMobilityUnits.waters_sonar:
                     case eIonMobilityUnits.drift_time_msec:
-                        data = TryGetIonMobilityData(s, CVID.MS_raw_ion_mobility_array, ref _cvidIonMobility);
+                        data = TryGetIonMobilityArray(s, CVID.MS_raw_ion_mobility_array, ref _cvidIonMobility);
                         if (data == null)
                         {
-                            data = TryGetIonMobilityData(s, CVID.MS_scanning_quadrupole_position_lower_bound_m_z_array, ref _cvidIonMobility);
+                            data = TryGetIonMobilityArray(s, CVID.MS_scanning_quadrupole_position_lower_bound_m_z_array, ref _cvidIonMobility);
                             if (data == null)
                             {
-                                data = TryGetIonMobilityData(s, CVID.MS_mean_ion_mobility_drift_time_array, ref _cvidIonMobility);
+                                data = TryGetIonMobilityArray(s, CVID.MS_mean_ion_mobility_drift_time_array, ref _cvidIonMobility);
                                 if (data == null)
                                 {
-                                    data = TryGetIonMobilityData(s, CVID.MS_raw_ion_mobility_drift_time_array, ref _cvidIonMobility);
+                                    data = TryGetIonMobilityArray(s, CVID.MS_raw_ion_mobility_drift_time_array, ref _cvidIonMobility);
                                     if (data == null && HasCombinedIonMobilitySpectra && !s.Id.Contains(MERGED_TAG))
                                     {
                                         _cvidIonMobility = null; // We can't learn anything from a lockmass spectrum that has no IMS
@@ -1401,15 +1413,15 @@ namespace pwiz.ProteowizardWrapper
                         }
                         break;
                     case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
-                        data = TryGetIonMobilityData(s, CVID.MS_mean_inverse_reduced_ion_mobility_array, ref _cvidIonMobility);
+                        data = TryGetIonMobilityArray(s, CVID.MS_mean_inverse_reduced_ion_mobility_array, ref _cvidIonMobility);
                         if (data == null)
                             // pwiz-sharp's combined non-centroid Bruker reader labels the mean 1/K0
                             // array as MS_mean_ion_mobility_array (MS:1002816, unit Vs/cm2), where the
                             // C++ reader always used MS_mean_inverse_reduced_ion_mobility_array. Same
                             // payload (per-peak 1/K0), so accept it here too for the inverse-K0 case.
-                            data = TryGetIonMobilityData(s, CVID.MS_mean_ion_mobility_array, ref _cvidIonMobility);
+                            data = TryGetIonMobilityArray(s, CVID.MS_mean_ion_mobility_array, ref _cvidIonMobility);
                         if (data == null)
-                            data = TryGetIonMobilityData(s, CVID.MS_raw_inverse_reduced_ion_mobility_array, ref _cvidIonMobility);
+                            data = TryGetIonMobilityArray(s, CVID.MS_raw_inverse_reduced_ion_mobility_array, ref _cvidIonMobility);
                         break;
 //                    default:
 //                        throw new InvalidDataException(string.Format(@"mobility type {0} does not support ion mobility arrays", IonMobilityUnits));
@@ -1422,17 +1434,22 @@ namespace pwiz.ProteowizardWrapper
             return data;
         }
 
-        private double[] TryGetIonMobilityData(Spectrum s, CVID cvid, ref CVID? cvidIonMobility)
+        private BinaryDataArray TryGetIonMobilityArray(Spectrum s, CVID cvid, ref CVID? cvidIonMobility)
         {
-            var data = s.GetArrayByCvid(cvid)?.Data;
-            if (data != null)
-                cvidIonMobility = cvid;
-
-            return data?.ToArray();
+            var array = s.GetArrayByCvid(cvid);
+            if (array == null)
+                return null;
+            cvidIonMobility = cvid;
+            return array;
         }
 
-        private MsDataSpectrum GetSpectrum(Spectrum spectrum, int spectrumIndex)
+        // detach: true to take the binary arrays from the spectrum instead of copying them.
+        // The caller must not read the spectrum's arrays again. A spectrum its list keeps for
+        // later reads is always copied.
+        private MsDataSpectrum GetSpectrum(Spectrum spectrum, int spectrumIndex, bool detach = false)
         {
+            if (spectrum != null && spectrum.RetainedByList)
+                detach = false;
             if (spectrum == null)
             {
                 return new MsDataSpectrum();
@@ -1496,18 +1513,32 @@ namespace pwiz.ProteowizardWrapper
             {
                 try
                 {
-                    msDataSpectrum.SetArrays(ToArray(spectrum.GetMZArray()),
-                        ToArray(spectrum.GetIntensityArray()),
-                        GetIonMobilityArray(spectrum));
+                    var mzs = TakeData(spectrum.GetMZArray(), detach, out int mzCount);
+                    var intensities = TakeData(spectrum.GetIntensityArray(), detach, out int intensityCount);
+                    var ionMobilityArray = FindIonMobilityArray(spectrum);
+                    int ionMobilityCount = mzCount;
+                    var ionMobilities = ionMobilityArray == null ? null : TakeData(ionMobilityArray, detach, out ionMobilityCount);
+                    if (intensityCount == mzCount && ionMobilityCount == mzCount)
+                        msDataSpectrum.SetBuffers(mzs, intensities, ionMobilities, mzCount);
+                    else
+                    {
+                        // Arrays of different lengths: keep each one whole, as before buffers
+                        Array.Resize(ref mzs, mzCount);
+                        Array.Resize(ref intensities, intensityCount);
+                        if (ionMobilities != null)
+                            Array.Resize(ref ionMobilities, ionMobilityCount);
+                        msDataSpectrum.SetArrays(mzs, intensities, ionMobilities);
+                    }
 
-                    if (msDataSpectrum.IonMobilities != null)
+                    if (msDataSpectrum.HasIonMobilities)
                     {
                         // One more linear walk should be fine, given how much copying and walking gets done
                         double min = double.MaxValue, max = double.MinValue;
-                        foreach (var ionMobility in msDataSpectrum.IonMobilities)
+                        var ionMobilityBuffer = msDataSpectrum.IonMobilityBuffer;
+                        for (int i = 0; i < msDataSpectrum.PeakCount; i++)
                         {
-                            min = Math.Min(min, ionMobility);
-                            max = Math.Max(max, ionMobility);
+                            min = Math.Min(min, ionMobilityBuffer[i]);
+                            max = Math.Max(max, ionMobilityBuffer[i]);
                         }
                         msDataSpectrum.MinIonMobility = min;
                         msDataSpectrum.MaxIonMobility = max;
@@ -1862,8 +1893,8 @@ namespace pwiz.ProteowizardWrapper
             for (var i = 0; i < IonMobilitySpectrumList.Count; i++)
             {
                 var spectrum = IonMobilitySpectrumList.GetSpectrum(i, true);                {
-                    var ionMobilities = GetIonMobilityArray(spectrum);
-                    var ionMobility = 
+                    var ionMobilities = FindIonMobilityArray(spectrum)?.Data;
+                    var ionMobility =
                         ionMobilities != null ? IonMobilityValue.GetIonMobilityValue(ionMobilities.Max(), IonMobilityUnits) : GetIonMobility(spectrum);
                     if (!ionMobility.HasValue)
                     {
@@ -1901,14 +1932,17 @@ namespace pwiz.ProteowizardWrapper
         private DetailLevel _lastDetailLevel;
         private Spectrum _lastSpectrum;
         private MsDataSpectrum _lastSpectrumInfo;
+        private bool _lastSpectrumArraysDetached;
         private Spectrum GetCachedSpectrum(int scanIndex, DetailLevel detailLevel)
         {
-            if (scanIndex != _lastScanIndex || detailLevel > _lastDetailLevel || _lastSpectrum == null)
+            if (scanIndex != _lastScanIndex || detailLevel > _lastDetailLevel || _lastSpectrum == null ||
+                (_lastSpectrumArraysDetached && detailLevel == DetailLevel.FullData))
             {
                 _lastScanIndex = scanIndex;
                 _lastDetailLevel = detailLevel;
                 _lastSpectrum = SpectrumList.GetSpectrum(_lastScanIndex, _lastDetailLevel);
                 _lastSpectrumInfo = null;
+                _lastSpectrumArraysDetached = false;
             }
             return _lastSpectrum;
         }
@@ -2478,9 +2512,29 @@ namespace pwiz.ProteowizardWrapper
         public void SetArrays(double[] mzs, double[] intensities, double[] ionMobilities = null,
             double[] scanningQuadMzLows = null, double[] scanningQuadMzHighs = null)
         {
-            Mzs = mzs;
-            Intensities = intensities;
-            IonMobilities = ionMobilities;
+            _mzs = mzs;
+            _intensities = intensities;
+            _ionMobilities = ionMobilities;
+            _peakCount = -1;
+        }
+
+        /// <summary>
+        /// Takes arrays of which only the first <paramref name="peakCount"/> elements are peaks,
+        /// so a reader's buffers can be handed over without copying them to their exact length.
+        /// <see cref="PeakCount"/> and the buffer properties expose them as given; <see cref="Mzs"/>,
+        /// <see cref="Intensities"/> and <see cref="IonMobilities"/> trim them on first use.
+        /// </summary>
+        public void SetBuffers(double[] mzs, double[] intensities, double[] ionMobilities, int peakCount)
+        {
+            if (mzs == null || intensities == null)
+                throw new ArgumentNullException(mzs == null ? nameof(mzs) : nameof(intensities));
+            if (peakCount < 0 || peakCount > mzs.Length || peakCount > intensities.Length ||
+                (ionMobilities != null && peakCount > ionMobilities.Length))
+                throw new ArgumentOutOfRangeException(nameof(peakCount));
+            _mzs = mzs;
+            _intensities = intensities;
+            _ionMobilities = ionMobilities;
+            _peakCount = peakCount;
         }
 
         public void SetEmptyArrays()
@@ -2537,9 +2591,68 @@ namespace pwiz.ProteowizardWrapper
 
         public bool Centroided { get; set; }
         public bool NegativeCharge { get; set; } // True if negative ion mode
-        public double[] Mzs { get; set; }
-        public double[] Intensities { get; set; }
-        public double[] IonMobilities { get; set; } // for combined-mode IMS (may be null)
+        // The peak arrays. While _peakCount >= 0 they are buffers holding _peakCount peaks and
+        // possibly unused space after them (SetBuffers); otherwise each array is exactly its
+        // peaks.
+        private double[] _mzs;
+        private double[] _intensities;
+        private double[] _ionMobilities;
+        private int _peakCount = -1;
+
+        /// <summary>Number of peaks: the used length of the buffer properties.</summary>
+        public int PeakCount => _peakCount >= 0 ? _peakCount : _mzs?.Length ?? 0;
+
+        /// <summary>m/z values of the first <see cref="PeakCount"/> elements; may be longer.</summary>
+        public double[] MzBuffer => _mzs;
+
+        /// <summary>Intensities of the first <see cref="PeakCount"/> elements; may be longer.</summary>
+        public double[] IntensityBuffer => _intensities;
+
+        /// <summary>Ion mobilities of the first <see cref="PeakCount"/> elements, or null; may be longer.</summary>
+        public double[] IonMobilityBuffer => _ionMobilities;
+
+        /// <summary>True for a combined-mode IMS spectrum, which carries an ion mobility per peak.</summary>
+        public bool HasIonMobilities => _ionMobilities != null;
+
+        /// <summary>m/z values, exactly <see cref="PeakCount"/> long.</summary>
+        public double[] Mzs
+        {
+            get { TrimBuffers(); return _mzs; }
+            set { TrimBuffers(); _mzs = value; }
+        }
+
+        /// <summary>Intensities, exactly <see cref="PeakCount"/> long.</summary>
+        public double[] Intensities
+        {
+            get { TrimBuffers(); return _intensities; }
+            set { TrimBuffers(); _intensities = value; }
+        }
+
+        /// <summary>
+        /// Turns buffers from <see cref="SetBuffers"/> into exact-length arrays, once, for a caller
+        /// that reads the arrays' lengths. The extraction hot path reads the buffers instead.
+        /// </summary>
+        private void TrimBuffers()
+        {
+            if (_peakCount < 0)
+                return;
+            TrimToLength(ref _mzs, _peakCount);
+            TrimToLength(ref _intensities, _peakCount);
+            TrimToLength(ref _ionMobilities, _peakCount);
+            _peakCount = -1;
+        }
+
+        private static void TrimToLength(ref double[] array, int length)
+        {
+            if (array != null && array.Length != length)
+                Array.Resize(ref array, length);
+        }
+        /// <summary>Ion mobilities, exactly <see cref="PeakCount"/> long, for combined-mode IMS (may be null).</summary>
+        public double[] IonMobilities
+        {
+            get { TrimBuffers(); return _ionMobilities; }
+            set { TrimBuffers(); _ionMobilities = value; }
+        }
         public double? MinIonMobility { get; set; }
         public double? MaxIonMobility { get; set; }
         public int WindowGroup { get; set; } // For Bruker diaPASEF
