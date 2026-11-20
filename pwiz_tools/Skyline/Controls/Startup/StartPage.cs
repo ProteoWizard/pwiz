@@ -74,6 +74,13 @@ namespace pwiz.Skyline.Controls.Startup
             InitializeComponent();
 
             checkBoxShowStartup.Checked = Settings.Default.ShowStartupForm;
+            // directoryicon is a 16x20 bitmap with no per-DPI sizes; above 100% the box grows
+            // around it, so show the vector Folder at the box's scale instead
+            if (DpiUtil.IsScaled(this))
+            {
+                openFileIcon.Image = DpiUtil.GetIcon(this, nameof(Resources.Folder), Resources.Folder);
+                openFileIcon.SizeMode = PictureBoxSizeMode.CenterImage;
+            }
             // Get placement values before changing anything.
 
             // Restore window placement. The persisted size is in 96-DPI logical units
@@ -137,6 +144,8 @@ namespace pwiz.Skyline.Controls.Startup
         {
             base.OnShown(e);
 
+            // Again once load-time layout is done, which can resize the form and the strip
+            PositionButtonsModeUI();
             EnsureUIModeSet();
         }
 
@@ -268,6 +277,9 @@ namespace pwiz.Skyline.Controls.Startup
             var labelFont = new Font(@"Arial", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
             var labelAnchor = AnchorStyles.Left | AnchorStyles.Right;
             var labelWidth = flowLayoutPanelTutorials.ClientRectangle.Width - SystemInformation.VerticalScrollBarWidth;
+            // Created after the form's autoscaling, so the Label default height (23 at 96 DPI)
+            // is scaled here; unscaled it clips the bottom of the DPI-scaled text
+            var labelHeight = DpiUtil.Scale(this, 23);
 
             // Build controls for each section from TutorialCatalog
             var sectionControls = new Dictionary<string, List<Control>>();
@@ -280,7 +292,8 @@ namespace pwiz.Skyline.Controls.Startup
                         Text = TutorialCatalog.GetSectionDisplayName(section),
                         Font = labelFont,
                         Anchor = labelAnchor,
-                        Width = labelWidth
+                        Width = labelWidth,
+                        Height = labelHeight
                     }
                 };
                 foreach (var t in TutorialCatalog.Tutorials.Where(t => t.Section == section))
@@ -422,7 +435,12 @@ namespace pwiz.Skyline.Controls.Startup
         private void PositionButtonsModeUI()
         {
             tooStripModeUI.GripStyle = ToolStripGripStyle.Hidden;
-            tooStripModeUI.Location = new Point(Width - (toolStripButtonModeUI.Width + 2*(Margin.Left+2*Margin.Right)), tabControlMain.Top);
+            // Positioned here alone: the designer's right anchor moved it again on every size
+            // change. ClientSize rather than Width keeps the window frame, which grows with the
+            // DPI, out of it; at 100% this is the same spot Width - (button + 18) gave.
+            tooStripModeUI.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+            tooStripModeUI.Location = new Point(ClientSize.Width - (toolStripButtonModeUI.Width + DpiUtil.Scale(this, 2)),
+                tabControlMain.Top);
             tooStripModeUI.BringToFront();
         }
 

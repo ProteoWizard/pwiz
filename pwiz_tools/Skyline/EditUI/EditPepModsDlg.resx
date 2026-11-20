@@ -237,13 +237,6 @@
   <data name="comboStatic1.Font" type="System.Drawing.Font, System.Drawing">
     <value>Microsoft Sans Serif, 8.25pt</value>
   </data>
-  <data name="comboStatic1.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAAAoAAAAECAYAAAC3OK7NAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        wQAADsEBuJFr7QAAADJJREFUGFdj+P//PwMQgAgwAw2AxcFqQAQOxXBFKArBHIRiFEVgOWQOWACLov//
-        /zMAAFhXSbdGTOUjAAAAAElFTkSuQmCC
-</value>
-  </data>
   <data name="comboStatic1.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleRight</value>
   </data>
@@ -279,13 +272,6 @@
   </data>
   <data name="comboHeavy1_1.Font" type="System.Drawing.Font, System.Drawing">
     <value>Microsoft Sans Serif, 8.25pt</value>
-  </data>
-  <data name="comboHeavy1_1.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAAAoAAAAECAYAAAC3OK7NAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        wQAADsEBuJFr7QAAADJJREFUGFdj+P//PwMQgAgwAw2AxcFqQAQOxXBFKArBHIRiFEVgOWQOWACLov//
-        /zMAAFhXSbdGTOUjAAAAAElFTkSuQmCC
-</value>
   </data>
   <data name="comboHeavy1_1.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleRight</value>

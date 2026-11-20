@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.ML;
 using pwiz.Osprey.Tasks;
 
@@ -200,12 +201,12 @@ namespace pwiz.Osprey.Test
             string path = Path.Combine(Path.GetTempPath(), @"osprey_analysis_roundtrip_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
-                Assert.IsTrue(FirstPassModelIO.Save(path, withAnalysis, null, TestStamps.Any));
-                var reloaded = FirstPassModelIO.Load(path)?.Model;
+                Assert.IsTrue(FirstPassModelIO.Save(path, withAnalysis, TestStamps.Any));
+                var reloaded = FirstPassModelIO.Load(path, PinFeatureMask.Hram)?.Model;
                 Assert.IsNotNull(reloaded);
                 Assert.AreEqual(Serialize(analysis), Serialize(reloaded.TrainingAnalysis));
-                Assert.IsTrue(FirstPassModelIO.Save(path, plain, null, TestStamps.Any));
-                Assert.IsNull(FirstPassModelIO.Load(path)?.Model.TrainingAnalysis);
+                Assert.IsTrue(FirstPassModelIO.Save(path, plain, TestStamps.Any));
+                Assert.IsNull(FirstPassModelIO.Load(path, PinFeatureMask.Hram)?.Model.TrainingAnalysis);
             }
             finally
             {

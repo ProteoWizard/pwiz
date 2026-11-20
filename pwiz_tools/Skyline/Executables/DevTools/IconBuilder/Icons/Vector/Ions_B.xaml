@@ -1,0 +1,8 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Bold black capital B, 20 units tall: 5-unit stem with two rounded bowls, the lower one slightly wider. -->
+  <Path Fill="#000000">
+    <Path.Data>
+      <PathGeometry FillRule="EvenOdd" Figures="M 8,6 L 17,6 Q 22,6 22,11 Q 22,14.5 19.5,15.8 Q 23,17 23,21 Q 23,26 17,26 L 8,26 Z M 13,10 L 16.5,10 Q 18,10 18,12 Q 18,13.8 16.5,13.8 L 13,13.8 Z M 13,18 L 17,18 Q 18.8,18 18.8,20.2 Q 18.8,22.3 17,22.3 L 13,22.3 Z"/>
+    </Path.Data>
+  </Path>
+</Canvas>

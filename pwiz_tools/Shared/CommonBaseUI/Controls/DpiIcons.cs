@@ -25,6 +25,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Resources;
@@ -76,6 +77,65 @@ namespace pwiz.Common.Controls
         }
 
         /// <summary>
+        /// An image list entry at the control's DPI, for a control that shows one entry at a
+        /// time, such as a button whose image is swapped on click: the embedded icon named by
+        /// the entry's key (see <see cref="LoadKeyedIcon"/>), or the entry resampled when
+        /// none is embedded. The icon size is the 96-DPI size the entry is shown at, which
+        /// can differ from the list's: a tool strip draws its items at its image scaling size
+        /// whatever size the list stores them in. The transparent key is the one the entry's
+        /// owner applies, needed before resampling an entry with a keyed background. At 100%
+        /// the entry is returned as it is.
+        /// </summary>
+        public static Image GetListIcon(Control control, ImageList imageList, int index, Size iconSize,
+            Color? transparentKey = null)
+        {
+            var native = imageList.Images[index];
+            if (!DpiScale.IsScaled(control))
+                return native;
+            var target = DpiScale.ScaleSize(control, iconSize);
+            var icon = (iconSize.Width == iconSize.Height
+                           ? LoadKeyedIcon(control, imageList.Images.Keys[index], iconSize.Width, target)
+                           : null) ??
+                       DpiScale.Resample(native, target, transparentKey);
+            native.Dispose();
+            return MarkPrepared(icon);
+        }
+
+        /// <summary>
+        /// The embedded per-DPI icon named by an image list key, which the designer sets to
+        /// the image's file name ("Pindownlight.bmp" names Pindownlight), resampled to the
+        /// target size, or null. Image lists carry no Resources.resx name, and the files are
+        /// looked for in the assembly of the control's type and then of each base type, so a
+        /// dialog derived from a shared base class finds the icons its own assembly embeds.
+        /// The native size is the icon's square 96-DPI size; only 16 and 14 px icons have
+        /// embedded sizes.
+        /// </summary>
+        public static Image LoadKeyedIcon(Control control, string key, int nativeSize, Size target)
+        {
+            if (string.IsNullOrEmpty(key) || (nativeSize != ICON_NATIVE && nativeSize != ICON_NATIVE_SMALL))
+                return null;
+            var name = Path.GetFileNameWithoutExtension(key);
+            for (var type = control.GetType(); type != null && type.Assembly != typeof(Control).Assembly; type = type.BaseType)
+            {
+                var icon = IconSource.ForAssembly(type.Assembly).LoadIcon(name, nativeSize, target);
+                if (icon != null)
+                    return MarkPrepared(icon);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// The embedded per-DPI drawing of a Resources icon at a square pixel size: the
+        /// smallest embedded size at or above it, resampled when they differ, or the largest
+        /// there is; null when none is embedded. The native size (16 or 14) selects the size
+        /// set. The caller owns the result.
+        /// </summary>
+        public static Image LoadIcon(Type resourcesType, string name, int nativeSize, int size)
+        {
+            return IconSource.ForResources(resourcesType).LoadIcon(name, nativeSize, new Size(size, size));
+        }
+
+        /// <summary>
         /// The pre-rendered pixel sizes IconBuilder emits for a native icon size, in
         /// ascending order: 125%, 150% and 200%.
         /// </summary>
@@ -119,13 +179,17 @@ namespace pwiz.Common.Controls
         /// owner's drawing. A button's ImageList is scaled as a whole; an image shared by
         /// several controls is replaced once and shared again. Called when a form loads; a
         /// context menu that is not attached to a control, or a control created later, goes
-        /// through <see cref="PrepareIcons(ToolStrip, Type)"/> or this method itself. No-op at
-        /// 100%, where the natives are right as they are.
+        /// through <see cref="PrepareIcons(ToolStrip, Type)"/> or this method itself. A form's
+        /// own icon gets frames at the title bar and Alt-Tab sizes through
+        /// <see cref="DpiFormIcons.PrepareFormIcon"/>. No-op at 100%, where the natives are right as
+        /// they are.
         /// </summary>
         public static void PrepareIcons(Control root)
         {
             if (!DpiScale.IsScaled(root))
                 return;
+            if (root is Form form)
+                DpiFormIcons.PrepareFormIcon(form);
             var replaced = new Dictionary<Image, Image>();
             var scaledLists = new HashSet<ImageList>();
             var pending = new Stack<Control>();

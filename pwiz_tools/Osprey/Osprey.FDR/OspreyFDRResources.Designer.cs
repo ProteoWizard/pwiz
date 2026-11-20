@@ -145,6 +145,26 @@ namespace pwiz.Osprey.FDR {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Computing the protein-best column from 1 file.
+        /// </summary>
+        public static string PercolatorEngine_AppendProteinBestToRows_Computing_the_protein_best_column_from_1_file {
+            get {
+                return ResourceManager.GetString("PercolatorEngine_AppendProteinBestToRows_Computing_the_protein_best_column_from_1" +
+                        "_file", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Computing the protein-best column from {0:N0} files.
+        /// </summary>
+        public static string PercolatorEngine_AppendProteinBestToRows_Computing_the_protein_best_column_from__0__files {
+            get {
+                return ResourceManager.GetString("PercolatorEngine_AppendProteinBestToRows_Computing_the_protein_best_column_from__" +
+                        "0__files", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to First-pass.
         /// </summary>
         public static string PercolatorEngine_PassDisplayName_First_pass {

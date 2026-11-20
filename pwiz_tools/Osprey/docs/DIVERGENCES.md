@@ -53,6 +53,17 @@ The 6 `major` items are: the sparse-library calibration retry omission (doc 04),
 > SILAC labels and every other id outside its 17 entries. A .blib library's peaks are typed from m/z and its
 > modifications matched at their printed precision in C# only ([13](13-blib-output-schema.md)).
 > Neither reaches the parity datasets, whose DIA-NN libraries use only UniMod:4.
+>
+> **CWT candidates computed, not stored (#5024).** Rust writes every scored row's top-N CWT
+> peak candidates into a `cwt_candidates` column of its scores parquet, and its
+> reconciliation planner reads them back for the precursors whose apex is away from the
+> consensus RT - under 1% of rows. C# writes no such column: PerFileRescoring computes those
+> rows' candidates from the run's spectra when it plans the run, re-running first-pass
+> detection with the run's first-pass calibration (`CwtCandidateRecompute`,
+> [10](10-cross-run-reconciliation.md)). The lists are bit-identical to what C# stored before,
+> so the reconciliation actions and every output are unchanged; the cost moved from Stage 4
+> disk to Stage 6 compute, and a C#-written scores parquet no longer carries a column Rust's
+> planner would read.
 
 ---
 
@@ -111,7 +122,7 @@ This is the section a maintainer should read first. It lists the **single PORT-E
 #### U6. Six per-row blob columns written null/zero in the reconciled parquet — RESOLVED
 - **Doc:** [11-boundary-overrides.md](11-boundary-overrides.md)
 - **Rust says:** The reconciled cache carries fragment/XIC/bounds blob columns.
-- **C# does:** `reference_xic_rts`, `reference_xic_intensities`, `bounds_area` and `bounds_snr` are populated on the reconciled write path since PR #4188 (`40340dada3`, 2026-05): `PerFileRescoreTask` -> `ReconciledParquetWriter` -> `ParquetScoreCache.StreamReconciledScoresParquet` -> `BuildFdrEntryColumns`. `fragment_mzs` and `fragment_intensities` are no longer written to either scores parquet, and `cwt_candidates` not to the reconciled one (#5023): nothing reads them there.
+- **C# does:** `reference_xic_rts`, `reference_xic_intensities`, `bounds_area` and `bounds_snr` are populated on the reconciled write path since PR #4188 (`40340dada3`, 2026-05): `PerFileRescoreTask` -> `ReconciledParquetWriter` -> `ParquetScoreCache.StreamReconciledScoresParquet` -> `BuildFdrEntryColumns`. `fragment_mzs` and `fragment_intensities` are no longer written to either scores parquet (#5023): nothing reads them there. Nor is `cwt_candidates` (#5024): planning computes the few rows it reads.
 - **C# evidence:** `Osprey.IO/ParquetScoreCache.cs` (`WriteFields`, `BuildFdrEntryColumns`); `IOTest.TestStreamReconciledTransferMatchesLoadAllOverlay` asserts them.
 - **Recommended action:** None. The item stood on a class summary in the since-removed `Osprey/RescoreWorker.cs` that predated #4188 and was never updated; it is kept here so the U-numbering stays stable.
 

@@ -369,6 +369,17 @@ namespace pwiz.Osprey.Tasks
                 config.RunFdr.ToString(CultureInfo.InvariantCulture));
             writer.AddMetadata(OspreyBlibWriter.KEY_EXPERIMENT_FDR,
                 config.ExperimentFdr.ToString(CultureInfo.InvariantCulture));
+            // Recorded when on, so the library says which first pass trained without its command
+            // line, or the default that line relied on. Off writes no row, so a library
+            // searched without the column is the one written before the setting existed.
+            if (config.ProteinBest)
+                writer.AddMetadata(OspreyBlibWriter.KEY_PROTEIN_BEST, OspreyArgNames.VALUE_ON);
+            // The same for the feature set, whose default depends on the detected resolution: core,
+            // the set every library had before the others existed, writes no row. A research mask
+            // overrides the set, so it writes none either.
+            var featureSet = PinFeatureMask.For(config).FeatureSet;
+            if (OspreyEnvironment.FeatureMask == null && featureSet != OspreyFeatureSet.core)
+                writer.AddMetadata(OspreyBlibWriter.KEY_FEATURE_SET, featureSet.ToString());
             if (config.CommandLine != null)
                 writer.AddMetadata(OspreyBlibWriter.KEY_COMMAND, config.CommandLine);
             // The runs the library's models were tuned on, which SpectrumSourceFiles does not name

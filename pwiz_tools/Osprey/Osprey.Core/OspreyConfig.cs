@@ -218,10 +218,77 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public string DecoyPairingManifestPath { get; set; }
 
-        /// <summary>The classifier first-pass Percolator trains: the linear SVM (default) or
-        /// gradient-boosted trees. Set from <see cref="OspreyEnvironment.FdrModel"/> when the
-        /// command line is parsed; nothing else reads OSPREY_FDR_MODEL.</summary>
+        /// <summary>The classifier first-pass Percolator trains: the linear SVM or gradient-boosted
+        /// trees. Set from <see cref="OspreyEnvironment.FdrModel"/> when the command line is parsed,
+        /// and otherwise by <see cref="ApplyResolutionMode"/> from the resolution's
+        /// <see cref="ResolutionDefaults"/>; nothing else reads OSPREY_FDR_MODEL.</summary>
         public FdrClassifier FdrClassifier { get; set; } = FdrClassifier.LinearSvm;
+
+        /// <summary>True when OSPREY_FDR_MODEL chose <see cref="FdrClassifier"/>, which the resolution's default does not replace.</summary>
+        public bool FdrClassifierGiven { get; set; }
+
+        /// <summary>
+        /// How a precursor's detection is boosted by the other detections of its protein
+        /// (<c>--protein-boost</c>). Unless the command line gives it, <see cref="ApplyResolutionMode"/>
+        /// sets it from the resolution's <see cref="ResolutionDefaults"/>; a configuration that never
+        /// learns its resolution keeps <see cref="ProteinBoost.compact"/>, the boost that preceded the
+        /// choice.
+        /// </summary>
+        public ProteinBoost ProteinBoost { get; set; } = ProteinBoost.compact;
+
+        /// <summary>
+        /// True under <see cref="ProteinBoost.best"/>: the first pass trains with the protein-best column
+        /// (issue #4580). Round 2 of the two-round first-pass training and every score pass after it read,
+        /// for each candidate, the best round-1 score among the other peptides of its protein in that run
+        /// (a paired decoy reads its target's value; the floor is the run's decoy median). It needs the
+        /// two-round training, so with <c>OSPREY_GBT_PREFILTER_SIZE</c> unset the first pass trains two
+        /// rounds at <see cref="OspreyEnvironment.PROTEIN_BEST_PREFILTER_SIZE"/> rows. Without it the first
+        /// pass is the one-round training that preceded it, bit for bit. Keyed in every FDR validity key
+        /// when true.
+        /// </summary>
+        public bool ProteinBest => ProteinBoost == ProteinBoost.best;
+
+        /// <summary>True when the command line gave <c>--protein-boost</c>, which the resolution's default does not replace.</summary>
+        public bool ProteinBoostGiven { get; set; }
+
+        /// <summary>
+        /// How the second pass assigns reported q-values: <see cref="OspreyEnvironment.PASS2_QVALUE_TRANSFER"/>
+        /// or <see cref="OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT"/>. Not a choice of its own: it follows
+        /// <see cref="ProteinBoost"/>, protein-compact under <see cref="ProteinBoost.compact"/> and the transfer
+        /// otherwise. The developer variable OSPREY_PASS2_QVALUE overrides it.
+        /// </summary>
+        public string Pass2QValue => OspreyEnvironment.Pass2QValueOverride ??
+                                     (ProteinBoost == ProteinBoost.compact
+                                         ? OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT
+                                         : OspreyEnvironment.PASS2_QVALUE_TRANSFER);
+
+        /// <summary>True when <see cref="Pass2QValue"/> is the frozen-model confidence transfer.</summary>
+        public bool Pass2TransferQ =>
+            string.Equals(Pass2QValue, OspreyEnvironment.PASS2_QVALUE_TRANSFER, StringComparison.Ordinal);
+
+        /// <summary>True when <see cref="Pass2QValue"/> is the protein-anchored constrained competition.</summary>
+        public bool Pass2ProteinCompact =>
+            string.Equals(Pass2QValue, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT, StringComparison.Ordinal);
+
+        /// <summary>
+        /// The scoring settings that default by resolution and have no command-line option: the XIC
+        /// count, the correlation re-extraction tolerance, the reference XIC, the local RT tolerance,
+        /// the tc_* window and out-of-fold gbdt scoring. <see cref="ApplyResolutionMode"/> sets them
+        /// from the resolution's <see cref="ResolutionDefaults"/>; until then they are the legacy
+        /// ones. Either way a developer variable that sets one replaces its default
+        /// (<see cref="OspreyEnvironment.OverrideScoringSettings"/>).
+        /// </summary>
+        public ScoringSettings Scoring { get; set; } =
+            OspreyEnvironment.OverrideScoringSettings(ResolutionDefaults.LEGACY.Scoring);
+
+        /// <summary>
+        /// The PIN features the FDR classifier trains on (<c>--feature-set</c>): the 21 core features,
+        /// the chosen default set, or every feature. Null when the command line did not say, and the
+        /// resolution chooses: <see cref="OspreyFeatureSet.@default"/> for HRAM data and
+        /// <see cref="OspreyFeatureSet.core"/> at unit resolution (<c>PinFeatureMask.FeatureSetFor</c>).
+        /// OSPREY_FEATURE_MASK, when set, overrides it.
+        /// </summary>
+        public OspreyFeatureSet? FeatureSet { get; set; }
 
         /// <summary>
         /// Write the protein-group report (<c>&lt;output&gt;.protein_groups.tsv</c>) at the
@@ -334,7 +401,7 @@ namespace pwiz.Osprey.Core
         public LibraryBuildConfig LibraryBuild { get; set; } = new LibraryBuildConfig();
 
         /// <summary>Enable the coelution signal pre-filter.</summary>
-        public bool PrefilterEnabled { get; set; } = true;
+        public bool PrefilterEnabled { get; set; } = !OspreyEnvironment.NoPrefilter;
 
         /// <summary>
         /// Demultiplex overlapping-window DIA into its narrow bins before searching
@@ -555,9 +622,12 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// Sets the resolution mode and the tolerances it implies. The one route by which both an
+        /// Sets the resolution mode and the settings it implies. The one route by which both an
         /// explicit <c>--resolution</c> and a detected one reach the configuration, so the two
-        /// produce the same search settings and the same <see cref="SearchIdentity"/>. Unit
+        /// produce the same search settings and the same <see cref="SearchIdentity"/>. The
+        /// classifier and <c>--protein-boost</c> take the resolution's <see cref="ResolutionDefaults"/>
+        /// unless OSPREY_FDR_MODEL or the command line chose them, and <see cref="Scoring"/> takes
+        /// its defaults under the developer variables that set any of them. Unit
         /// resolution matches fragments within 0.5 m/z unless <c>--fragment-unit</c> or
         /// <c>--fragment-tolerance</c> said otherwise, and precursors within 1.0 m/z. The
         /// tolerances are replaced, never changed in place, because a shallow clone shares them.
@@ -566,6 +636,14 @@ namespace pwiz.Osprey.Core
         {
             ResolutionMode = mode;
             DetectResolution = false;
+            var defaults = ResolutionDefaults.For(mode);
+            if (!FdrClassifierGiven)
+                FdrClassifier = defaults.FdrClassifier;
+            if (!ProteinBoostGiven)
+                ProteinBoost = defaults.ProteinBoost;
+            Scoring = OspreyEnvironment.OverrideScoringSettings(defaults.Scoring);
+            RtCalibration.MinRtTolerance = OspreyEnvironment.MinRtTolerance ?? defaults.MinRtTolerance;
+            RtCalibration.LoessBandwidth = OspreyEnvironment.LoessBandwidth ?? defaults.LoessBandwidth;
             if (mode != ResolutionMode.UnitResolution)
                 return;
             if (!FragmentUnitGiven)
@@ -700,6 +778,39 @@ namespace pwiz.Osprey.Core
     {
         UnitResolution,
         HRAM
+    }
+
+    /// <summary>
+    /// How a precursor's detection is boosted by the other detections of its protein
+    /// (<c>--protein-boost</c>). The member names are the command-line values.
+    /// </summary>
+    public enum ProteinBoost
+    {
+        /// <summary>The protein-best training column in the first pass, with the transfer second pass. The HRAM default.</summary>
+        best,
+        /// <summary>The protein-compact second pass, which competes the proteins the first pass detected apart from the rest.
+        /// The unit-resolution default until Stellar data is measured on a larger cohort; to be removed.</summary>
+        compact,
+        /// <summary>No protein boost: the transfer second pass alone.</summary>
+        off
+    }
+
+    /// <summary>
+    /// The named PIN feature sets the FDR classifier can train on (<c>--feature-set</c>), nested:
+    /// <see cref="core"/> within <see cref="efficient"/> within <see cref="@default"/> within <see cref="all"/>.
+    /// The member names are
+    /// the command-line values. Osprey-only; there is no Rust counterpart.
+    /// </summary>
+    public enum OspreyFeatureSet
+    {
+        /// <summary>The 21 core features, PIN 0 to 20: the features Osprey had before the families.</summary>
+        core,
+        /// <summary>The core features and fewer family features than the default's, for fewer columns at a small detection cost (<c>PinFeatureMask.EFFICIENT_FEATURES</c>).</summary>
+        efficient,
+        /// <summary>The core features and the family features chosen for the default search (<c>PinFeatureMask.DEFAULT_FEATURES</c>).</summary>
+        @default,
+        /// <summary>Every PIN feature the resolution can use.</summary>
+        all
     }
 
     /// <summary>

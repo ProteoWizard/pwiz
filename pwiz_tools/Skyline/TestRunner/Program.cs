@@ -316,6 +316,10 @@ namespace TestRunner
         [STAThread, MethodImpl(MethodImplOptions.NoOptimization)]
         static int Main(string[] args)
         {
+            // As shipping Skyline does, and earlier than its Main could here: hundreds of tests run
+            // in this process first, and any that opens a real file dialog can load a shell
+            // extension's older msvcp140, which every native library loaded afterwards would bind to.
+            Pwiz.Util.Misc.AppLocalCrt.Pin();
             Console.OutputEncoding = Encoding.UTF8;
 
             // dpiaware=on runs the tests system-DPI-aware, like shipping Skyline, so tutorial

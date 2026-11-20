@@ -1,0 +1,42 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Molecule lattice (same atoms and bonds as Molecule.xaml) in magenta with purple bonds,
+       with a small window (blue title bar, white body with gray lines) over the lower right. -->
+  <Canvas.Resources>
+    <RadialGradientBrush x:Key="Atom" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" GradientOrigin="0.3,0.3" Center="0.5,0.5" RadiusX="0.65" RadiusY="0.65">
+      <GradientStop Color="#FB12EA" Offset="0"/>
+      <GradientStop Color="#F21CB9" Offset="0.5"/>
+      <GradientStop Color="#EE17A1" Offset="1"/>
+    </RadialGradientBrush>
+  </Canvas.Resources>
+  <Line X1="14" Y1="4" X2="18" Y2="8" Stroke="#C828C8" StrokeThickness="2"/>
+  <Line X1="6" Y1="8" X2="8" Y2="14" Stroke="#B724B7" StrokeThickness="2"/>
+  <Line X1="18" Y1="8" X2="14" Y2="14" Stroke="#EB0FEB" StrokeThickness="2"/>
+  <Line X1="18" Y1="8" X2="24" Y2="8" Stroke="#F215F2" StrokeThickness="2"/>
+  <Line X1="24" Y1="8" X2="28" Y2="14" Stroke="#F20EF2" StrokeThickness="2"/>
+  <Line X1="8" Y1="14" X2="14" Y2="14" Stroke="#DE17DE" StrokeThickness="2"/>
+  <Line X1="8" Y1="14" X2="6" Y2="20" Stroke="#E517E5" StrokeThickness="2"/>
+  <Line X1="14" Y1="14" X2="18" Y2="20" Stroke="#E40DE4" StrokeThickness="2"/>
+  <Line X1="6" Y1="20" X2="8" Y2="24" Stroke="#DA2BDA" StrokeThickness="2"/>
+  <Line X1="8" Y1="24" X2="14" Y2="24" Stroke="#E917E9" StrokeThickness="2"/>
+  <Line X1="18" Y1="20" X2="14" Y2="24" Stroke="#C32BC3" StrokeThickness="2"/>
+  <Line X1="8" Y1="24" X2="6" Y2="28" Stroke="#E317E3" StrokeThickness="2"/>
+  <Ellipse Canvas.Left="11.5" Canvas.Top="1.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="3.5" Canvas.Top="5.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="15.5" Canvas.Top="5.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="21.5" Canvas.Top="5.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="5.5" Canvas.Top="11.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="11.5" Canvas.Top="11.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="25.5" Canvas.Top="11.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="3.5" Canvas.Top="17.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="15.5" Canvas.Top="17.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="5.5" Canvas.Top="21.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="11.5" Canvas.Top="21.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="3.5" Canvas.Top="25.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <!-- Window -->
+  <Rectangle Canvas.Left="18" Canvas.Top="16" Width="14" Height="4" Fill="#0094FF"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="20" Width="2" Height="12" Fill="#1A001A"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="20" Width="12" Height="12" Fill="#FFFFFF"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="22" Width="10" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="26" Width="10" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="30" Width="10" Height="2" Fill="#808080"/>
+</Canvas>

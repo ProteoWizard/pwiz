@@ -1,0 +1,18 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- iRT calculator traced from the native 1-pixel drawing at twice its size: a 22x28 black
+       frame with sharp corners over a faint dark interior tint (the native's 10% black), a white display inset 2 units from the
+       frame, and nine small dark keys in a three-by-three grid. Every edge sits on an even unit so
+       the 1x render is the native drawing (a Rectangle's stroke is drawn inside its box). -->
+  <Rectangle Canvas.Left="8" Canvas.Top="4" Width="18" Height="24" Fill="#1E1E1E" Opacity="0.1"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="2" Width="22" Height="28" Stroke="#1F1F1F" StrokeThickness="2"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="6" Width="14" Height="6" Fill="#FFFFFF" Stroke="#1F1F1F" StrokeThickness="2"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="14" Width="2" Height="2" Fill="#1F1F1F"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="14" Width="2" Height="2" Fill="#1F1F1F"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="14" Width="2" Height="2" Fill="#1F1F1F"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="18" Width="2" Height="2" Fill="#1F1F1F"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="18" Width="2" Height="2" Fill="#1F1F1F"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="18" Width="2" Height="2" Fill="#1F1F1F"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="22" Width="2" Height="2" Fill="#1F1F1F"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="22" Width="2" Height="2" Fill="#1F1F1F"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="22" Width="2" Height="2" Fill="#1F1F1F"/>
+</Canvas>

@@ -72,6 +72,72 @@ namespace pwiz.Osprey.Test
             TestCoAssignmentRefusesAMisorderedStream();
             TestPeakCoAssignment();
             TestCompletenessStatesTheRightReason();
+            TestFragmentMassErrorHistogram();
+        }
+
+        /// <summary>
+        /// The fragment mass-error summary: a Gaussian core on a uniform floor of unrelated
+        /// peaks, as the wide window measures it. The robust and core statistics recover the
+        /// core rather than the floor, the low-intensity class is the wide one, and an error
+        /// outside the window is dropped.
+        /// </summary>
+        private static void TestFragmentMassErrorHistogram()
+        {
+            const double halfWidth = 25;
+            const int binCount = 200;
+            var random = new Random(17);
+            var errors = new List<double>();
+            var intensities = new List<double>();
+            // Three intensity levels, the weak ions three times as wide as the strong ones.
+            foreach (var (log10Intensity, sd) in new[] { (3.0, 4.5), (4.0, 2.5), (5.0, 1.5) })
+            {
+                for (int i = 0; i < 20000; i++)
+                {
+                    errors.Add(0.4 + sd * Gaussian(random));
+                    intensities.Add(log10Intensity + 0.1 * random.NextDouble());
+                }
+            }
+            // The floor: nearest unrelated peaks anywhere in the window, and a few outside it.
+            for (int i = 0; i < 3000; i++)
+            {
+                errors.Add(-halfWidth + 2 * halfWidth * random.NextDouble());
+                intensities.Add(3 + 2 * random.NextDouble());
+            }
+            errors.Add(halfWidth);
+            intensities.Add(4);
+            ModelDiagnosticsData.FragmentMassErrorRun NewRun(string file) => new ModelDiagnosticsData.FragmentMassErrorRun
+            {
+                File = file, Unit = @"ppm", HalfWidth = halfWidth, BinCount = binCount, ConfiguredTolerance = 10,
+                SearchTolerance = 4.5, MaxQ = 0.01, Precursors = 100,
+            };
+            var run = ModelDiagnosticsData.BuildFragmentMassErrorRun(NewRun(@"a"), errors, intensities);
+
+            Assert.AreEqual(ModelDiagnosticsData.MASS_ERROR_CLASSES.Length, run.Classes.Count);
+            var all = run.Classes.Single(c => c.Name == @"all");
+            Assert.AreEqual(errors.Count - 1, all.Total);
+            Assert.AreEqual(all.Total, run.Classes.Where(c => c.Name != @"all").Sum(c => c.Total));
+            Assert.AreEqual(all.Total, all.Counts.Sum());
+            Assert.AreEqual(0.4, all.Mean, 0.1);
+            Assert.AreEqual(0.4, all.Median, 0.2);
+            var low = run.Classes.Single(c => c.Name == @"low");
+            var high = run.Classes.Single(c => c.Name == @"high");
+            Assert.IsTrue(low.Sd > 2 * high.Sd, @"low SD " + low.Sd + @" vs high SD " + high.Sd);
+            Assert.AreEqual(1.5, high.RobustSd, 0.3);
+            // The core statistics recover each class's own width despite the floor.
+            Assert.AreEqual(4.5, low.Sd, 0.6);
+            Assert.AreEqual(1.5, high.Sd, 0.2);
+
+            Assert.AreEqual(-1, ModelDiagnosticsData.MassErrorBin(halfWidth, halfWidth, binCount));
+            Assert.AreEqual(0, ModelDiagnosticsData.MassErrorBin(-halfWidth, halfWidth, binCount));
+            Assert.AreEqual(binCount / 2, ModelDiagnosticsData.MassErrorBin(0, halfWidth, binCount));
+        }
+
+        /// <summary>A standard normal deviate (Box-Muller).</summary>
+        private static double Gaussian(Random random)
+        {
+            double u1 = 1.0 - random.NextDouble();
+            double u2 = random.NextDouble();
+            return Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Cos(2.0 * Math.PI * u2);
         }
 
         /// <summary>
