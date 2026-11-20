@@ -320,7 +320,7 @@ namespace pwiz.SkylineTestTutorial
             var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
             RunUI(() =>
             {
-                allChromGraph.Left = SkylineWindow.Right + 20;
+                allChromGraph.Left = SkylineWindow.Right + Scaled(20);
                 allChromGraph.Activate();
             });
             if (!PauseForAllChromatogramsGraphScreenShot("Importing Results form", 90, "00:00:02", 70f, 6.05e3f,
@@ -349,7 +349,7 @@ namespace pwiz.SkylineTestTutorial
                     libraryExplorer.GraphSettings.ShowCharge2 = true;
                     libraryExplorer.GraphSettings.ShowPrecursorIon = true;
                 });
-            RunUIForScreenShot(() => libraryExplorer.Height = 475);
+            RunUIForScreenShot(() => libraryExplorer.Height = ScaledHeight(libraryExplorer, 475));
             PauseForScreenShot<ViewLibraryDlg>("Spectral Library Explorer");
             RunUI(() =>
                 {
@@ -400,8 +400,8 @@ namespace pwiz.SkylineTestTutorial
                     // Make window screenshot size
                     if (SkylineWindow.WindowState != FormWindowState.Maximized)
                     {
-                        SkylineWindow.Width = skylineWindowWidth;
-                        SkylineWindow.Height = skylineWindowHeight;
+                        SkylineWindow.Width = ScaledWidth(SkylineWindow, skylineWindowWidth);
+                        SkylineWindow.Height = ScaledHeight(SkylineWindow, skylineWindowHeight);
                     }
                 });
             RestoreViewOnScreen(13);
@@ -421,12 +421,12 @@ namespace pwiz.SkylineTestTutorial
             });
             RunUI(() =>
             {
-                SkylineWindow.Width = 500;
+                SkylineWindow.Width = ScaledWidth(SkylineWindow, 500);
                 var peakAreas = SkylineWindow.GraphPeakArea;
                 var peakAreasFloating = peakAreas.Parent.Parent;
-                peakAreasFloating.Left = SkylineWindow.Right + 20;
+                peakAreasFloating.Left = SkylineWindow.Right + Scaled(20);
                 peakAreasFloating.Top = SkylineWindow.Top;
-                peakAreasFloating.Size = new Size(504, 643);
+                peakAreasFloating.Size = ScaledSize(peakAreasFloating, 504, 643);
             });
 
             if (IsPauseForScreenShots)
@@ -437,7 +437,7 @@ namespace pwiz.SkylineTestTutorial
 
                 RunUI(() =>
                 {
-                    peakAreasControl.ContextMenuStrip.Show(peakAreas.PointToScreen(new Point(peakAreas.Width - 20, 30)));
+                    peakAreasControl.ContextMenuStrip.Show(peakAreas.PointToScreen(new Point(peakAreas.Width - Scaled(20), Scaled(30))));
                     var showDotProductItem = peakAreasControl.ContextMenuStrip.Items.OfType<ToolStripMenuItem>()
                         .First(i => Equals(i.Name, @"showDotProductToolStripMenuItem"));
                     showDotProductItem.ShowDropDown(); 
@@ -472,7 +472,7 @@ namespace pwiz.SkylineTestTutorial
                 });
             }
 
-            RunUI(() => SkylineWindow.Width = skylineWindowWidth);
+            RunUI(() => SkylineWindow.Width = ScaledWidth(SkylineWindow, skylineWindowWidth));
             RestoreViewOnScreen(15);
             RunUI(() =>
             {
@@ -499,11 +499,11 @@ namespace pwiz.SkylineTestTutorial
             const int skylineWindowNarrowWidth = 788;
             RunUI(() =>
                 {
-                SkylineWindow.Width = skylineWindowNarrowWidth;
-                alignmentForm.Width = 660;
-                    alignmentForm.Height = 561;
-                alignmentForm.Left = SkylineWindow.Right + 20;
-                alignmentForm.Splitter.SplitterDistance = 75;
+                SkylineWindow.Width = ScaledWidth(SkylineWindow, skylineWindowNarrowWidth);
+                alignmentForm.Width = ScaledWidth(alignmentForm, 660);
+                    alignmentForm.Height = ScaledHeight(alignmentForm, 561);
+                alignmentForm.Left = SkylineWindow.Right + Scaled(20);
+                alignmentForm.Splitter.SplitterDistance = Scaled(75);
                     alignmentForm.ComboAlignAgainst.SelectedIndex = 0; // to match what's in the tutorial doc
                 });
             PauseForScreenShot<AlignmentForm>("Retention time alignment form");
@@ -511,8 +511,15 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(alignmentForm, alignmentForm.Close);
             PauseForScreenShot("Status bar clipped from main window - 4/50 pep 4/51 prec 10/153 tran", null, bmp =>
             {
+                // Box the peptide count from its label's bounds; its position in the status bar does not
+                // scale in proportion at high DPI
+                var shotScreen = ScreenshotManager.GetWindowRectangle(SkylineWindow, scale: false);
+                int clipLeftScreen = shotScreen.X + bmp.Width - SkylineWindow.StatusSelectionWidth;
+                var peptidesScreen = SkylineWindow.StatusPeptidesScreenBounds;
                 bmp = ClipSelectionStatus(bmp);
-                return bmp.DrawAnnotationRectOnBitmap(new RectangleF(0.23F, 0, 0.23F, 1), 2).Inflate(1.5F);
+                var peptidesRect = new RectangleF((float) (peptidesScreen.X - clipLeftScreen) / bmp.Width, 0,
+                    (float) peptidesScreen.Width / bmp.Width, 1);
+                return bmp.DrawAnnotationRectOnBitmap(peptidesRect, 2).Inflate(1.5F);
             });
 
             string TIP_NAME = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[TIP3].Name;
@@ -556,10 +563,10 @@ namespace pwiz.SkylineTestTutorial
 
             var undoIndex = SkylineWindow.Document.RevisionIndex; // preserve for simulating ctrl-z
 
-            RunUIForScreenShot(() => SkylineWindow.Size = new Size(skylineWindowWidth + 100, skylineWindowHeight + 5));
+            RunUIForScreenShot(() => SkylineWindow.Size = ScaledSize(SkylineWindow, skylineWindowWidth + 100, skylineWindowHeight + 5));
             PickPeakBoth(pepIndex, 40.471035, 40.8134); // select peak for both chromatograms at these respective retention times
             PauseForPeakAreaGraphScreenShot("Peak Areas graph metafile");
-            RunUIForScreenShot(() => SkylineWindow.Size = new Size(skylineWindowWidth, skylineWindowHeight));
+            RunUIForScreenShot(() => SkylineWindow.Size = ScaledSize(SkylineWindow, skylineWindowWidth, skylineWindowHeight));
 
             int[] m1Thru4 = {1,2,3,4,5};
             PickTransitions(pepIndex, m1Thru4, "Transition pick list filtered", "Transition pick list unfiltered"); // turn on chromatograms
@@ -567,7 +574,7 @@ namespace pwiz.SkylineTestTutorial
             ZoomSingle(TIP3, 32.4, 42.2, 520); // set the view for screenshot
             RunUI(() =>
             {
-                SkylineWindow.Height = 550;
+                SkylineWindow.Height = ScaledHeight(SkylineWindow, 550);
                 SkylineWindow.ArrangeGraphsTabbed();
             });
             ActivateReplicate(TIP_NAME);
@@ -606,8 +613,8 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() =>
             {
-                SkylineWindow.Width = skylineWindowNarrowWidth;
-                SkylineWindow.Height = skylineWindowHeight;
+                SkylineWindow.Width = ScaledWidth(SkylineWindow, skylineWindowNarrowWidth);
+                SkylineWindow.Height = ScaledHeight(SkylineWindow, skylineWindowHeight);
                 SkylineWindow.ArrangeGraphs(DisplayGraphsType.Column);
             });
             pepIndex = JumpToPeptide("ASLGSLEGEAEAEASSPKGK"); // Not L10N
@@ -633,7 +640,7 @@ namespace pwiz.SkylineTestTutorial
             int[] m1Thru5 = { 1, 2, 3, 4, 5, 6 };
             PickTransitions(pepIndex, m1Thru5); // turn on M+3 M+4 and M+5
             if (Equals("ja", CultureInfo.CurrentCulture.TwoLetterISOLanguageName))
-                RunUIForScreenShot(() => SkylineWindow.Width += 12);    // Japanese needs to be a bit wider for the next 4 screenshots
+                RunUIForScreenShot(() => SkylineWindow.Width += Scaled(12));    // Japanese needs to be a bit wider for the next 4 screenshots
             PauseForChromGraphScreenShot("upper - Chromatogram graph metafile with M+3, M+4 and M+5 added", TIP_NAME);
             PauseForChromGraphScreenShot("lower - Chromatogram graph metafile with M+3, M+4 and M+5 added", TIB_NAME);
             CheckAnnotations(TIB_L, pepIndex, atest++);
@@ -647,7 +654,11 @@ namespace pwiz.SkylineTestTutorial
             if (IsPauseForScreenShots)
             {
                 RestoreViewOnScreen(34);
-                RunUI(() => FindFloatingWindow(SkylineWindow.GraphPeakArea).Width = 380);
+                RunUI(() =>
+                {
+                    var peakAreaFloatingWindow = FindFloatingWindow(SkylineWindow.GraphPeakArea);
+                    peakAreaFloatingWindow.Width = ScaledWidth(peakAreaFloatingWindow, 380);
+                });
                 JiggleSelection();
                 PauseForPeakAreaGraphScreenShot("upper - Peak Areas graph metafile for peptide YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR");
             }
@@ -670,8 +681,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.ShowChromatogramLegends(false);
-                SkylineWindow.Width = skylineWindowWidth;
-                SkylineWindow.Height = 720;
+                SkylineWindow.Width = ScaledWidth(SkylineWindow, skylineWindowWidth);
+                SkylineWindow.Height = ScaledHeight(SkylineWindow, 720);
             });
             PauseForScreenShot("Chromatogram graphs clipped from main window with synchronized zooming", null, ClipChromatograms);
 
@@ -682,8 +693,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.ShowChromatogramLegends(true);
-                SkylineWindow.Width = skylineWindowNarrowWidth;
-                SkylineWindow.Height = skylineWindowHeight;
+                SkylineWindow.Width = ScaledWidth(SkylineWindow, skylineWindowNarrowWidth);
+                SkylineWindow.Height = ScaledHeight(SkylineWindow, skylineWindowHeight);
             });
             RestoreViewOnScreen(36); // float the Library Match window
             RunUI(() => SkylineWindow.GraphSpectrum.SelectSpectrum(new SpectrumIdentifier(MsDataFileUri.Parse(Tip3Filename), 37.6076f))); // set the Library Match view
@@ -968,8 +979,8 @@ namespace pwiz.SkylineTestTutorial
                 // Make window large enough that ID and Best Value can paint
                 if (SkylineWindow.WindowState != FormWindowState.Maximized)
                 {
-                    SkylineWindow.Width = Math.Max(SkylineWindow.Width,600);
-                    SkylineWindow.Height = Math.Max(SkylineWindow.Height,500);
+                    SkylineWindow.Width = Math.Max(SkylineWindow.Width, ScaledWidth(SkylineWindow, 600));
+                    SkylineWindow.Height = Math.Max(SkylineWindow.Height, ScaledHeight(SkylineWindow, 500));
                 }
             });
 

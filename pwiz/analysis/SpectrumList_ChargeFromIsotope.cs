@@ -149,7 +149,9 @@ public sealed class SpectrumList_ChargeFromIsotope : SpectrumListWrapper
         {
             var cv = selectedIon.CVParams[i];
             if (cv.Cvid != CVID.MS_charge_state && cv.Cvid != CVID.MS_possible_charge_state) continue;
-            if (DefaultOverride || cv.Value == "0")
+#pragma warning disable CS0162 // Unreachable code detected
+            // ReSharper disable HeuristicUnreachableCode
+            if (DefaultOverride || cv.Value == "0") // DefaultOverride is const true - why?
             {
                 selectedIon.UserParams.Add(new UserParam("old charge state", cv.Value));
                 selectedIon.CVParams.RemoveAt(i);
@@ -158,6 +160,8 @@ public sealed class SpectrumList_ChargeFromIsotope : SpectrumListWrapper
                 possibleChargeStates.Add(cv.ValueAs<int>());
             else if (cv.Cvid == CVID.MS_charge_state)
                 return s; // existing charge, not overriding → leave alone
+            // ReSharper restore HeuristicUnreachableCode
+#pragma warning restore CS0162 // Unreachable code detected
         }
 
         double precursorMz = selectedIon.CvParam(CVID.MS_selected_ion_m_z).ValueAs<double>();
@@ -231,6 +235,7 @@ public sealed class SpectrumList_ChargeFromIsotope : SpectrumListWrapper
                     int r = UpperBound(sortedPeakIntensities, 0, sortedPeakIntensities.Length, inten);
                     rankSum += nPeaks - (r - 1);
                 }
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse (nPeaks > MaxNumberPeaks = 40 throws above)
                 int combos = (nPeaks > 40 && chain.IndexList.Count > 2)
                     ? NSamples
                     : System.Math.Min(NSamples, NChoosek(nPeaks, chain.IndexList.Count));
@@ -318,6 +323,7 @@ public sealed class SpectrumList_ChargeFromIsotope : SpectrumListWrapper
 
         if (assignedCharge != 0)
         {
+            // ReSharper disable once HeuristicUnreachableCode (DefaultOverride is const true)
             selectedIon.CVParams.Add(new CVParam(
                 DefaultOverride ? CVID.MS_charge_state : CVID.MS_possible_charge_state,
                 assignedCharge));
@@ -684,6 +690,7 @@ public sealed class SpectrumList_ChargeFromIsotope : SpectrumListWrapper
                 int chainLength = w + MinIsotopePeaks;
                 if (chainLength > nPeaks) break;
 
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse (nPeaks <= MaxNumberPeaks = 40 in this loop)
                 int combinations = (nPeaks > 40 && chainLength > 2) ? NSamples : NChoosek(nPeaks, chainLength);
                 int sampleSize = System.Math.Min(combinations, NSamples);
                 var rankSums = new int[sampleSize];

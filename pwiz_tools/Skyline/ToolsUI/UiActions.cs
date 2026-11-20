@@ -407,11 +407,11 @@ namespace pwiz.Skyline.ToolsUI
 
         public static readonly UiAction Expand = SimpleAction<IExpandCollapseElement, object>(
                 @"Expand", (e, path) => { e.ExpandNow(path); return null; })
-            .Describe(new LlmInstruction(@"Expand a tree node by its path."), new LlmInstruction(@"a path array of child names/indexes, e.g. [""Peptides"", 0]"));
+            .Describe(new LlmInstruction(@"Expand a tree node, or an item of a property sheet (PropertyGrid), by its path. On a property sheet an item can be named without its category heading, and every item above the target is expanded too."), new LlmInstruction(@"a path array of child names/indexes, e.g. [""Peptides"", 0] or [""Other Metadata""]"));
 
         public static readonly UiAction Collapse = SimpleAction<IExpandCollapseElement, object>(
                 @"Collapse", (e, path) => { e.CollapseNow(path); return null; })
-            .Describe(new LlmInstruction(@"Collapse a tree node by its path."), new LlmInstruction(@"a path array of child names/indexes, e.g. [""Peptides"", 0]"));
+            .Describe(new LlmInstruction(@"Collapse a tree node, or an item of a property sheet (PropertyGrid), by its path. On a property sheet an item can be named without its category heading, and a heading can be named itself."), new LlmInstruction(@"a path array of child names/indexes, e.g. [""Peptides"", 0] or [""Other Metadata""]"));
 
         public static readonly UiAction SelectTab = SimpleAction<ISelectTabElement, string>(
                 @"SelectTab", (e, tab) => { e.SelectTabNow(tab); return null; })

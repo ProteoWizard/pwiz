@@ -97,7 +97,9 @@ public sealed class ThermoRawFile : IDisposable
             // manager so the OS file lock drops. Otherwise Skyline's bad-file test-cleanup
             // fails with "process cannot access the file because it is being used by
             // another process".
+            // ReSharper disable once EmptyGeneralCatchClause
             if (_raw is IDisposable rd) try { rd.Dispose(); } catch { }
+            // ReSharper disable once EmptyGeneralCatchClause
             if (_manager is IDisposable md) try { md.Dispose(); } catch { }
             _raw = null;
             _manager = null;
@@ -152,6 +154,7 @@ public sealed class ThermoRawFile : IDisposable
                     if (lbl.Contains(s, StringComparison.OrdinalIgnoreCase)) { keep = true; break; }
                 if (!keep) continue;
                 object? v = null;
+                // ReSharper disable once EmptyGeneralCatchClause
                 try { v = Raw.GetTrailerExtraValue(scanNumber, i); } catch { }
                 sb.AppendLine(ci, $"  trailer[{i}] '{lbl}' = '{v}'");
             }
@@ -345,7 +348,11 @@ public sealed class ThermoRawFile : IDisposable
                 if (!string.IsNullOrEmpty(m)) { sb.Append(m); sb.Append('\n'); }
             }
         }
-        catch { /* Method fetch can fail on some files. */ }
+        catch (Exception ex)
+        {
+            // Method fetch can fail on some files.
+            Console.Error.WriteLine($"[ThermoRawFile] {Path.GetFileName(Filename)}: {MethodTextUnavailable("instrument method")}: {ex.Message}");
+        }
         try
         {
             var statusLog = Raw.GetStatusLogForRetentionTime(0);
@@ -358,11 +365,19 @@ public sealed class ThermoRawFile : IDisposable
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[ThermoRawFile] {Path.GetFileName(Filename)}: {MethodTextUnavailable("status log")}: {ex.Message}");
+        }
 
         ParseInstrumentMethodText(sb.ToString(), _widthBySegmentAndEvent, _defaultWidthBySegmentAndMsLevel,
             out _methodInstrumentModel);
     }
+
+    // The method and status-log text is the only source of the method isolation widths (per
+    // event and per-MS-level defaults alike) and of the method-derived instrument model.
+    private static string MethodTextUnavailable(string part) =>
+        $"{part} unreadable; any method isolation widths or instrument model it holds are unavailable";
 
     // Regex patterns ported from RawFile.cpp:1939-1949. Kept internal + static for cheap init.
     private static readonly System.Text.RegularExpressions.Regex s_segmentRegex =
@@ -526,8 +541,10 @@ public sealed class ThermoRawFile : IDisposable
         // Step 1: explicitly Dispose the SDK objects (in case the SDK closes the file
         // synchronously on Dispose; some Thermo SDK versions do, some don't).
         if (_raw is IDisposable rawDisposable)
+            // ReSharper disable once EmptyGeneralCatchClause
             try { rawDisposable.Dispose(); } catch { }
         if (_manager is IDisposable mgrDisposable)
+            // ReSharper disable once EmptyGeneralCatchClause
             try { mgrDisposable.Dispose(); } catch { }
 
         // Step 2: drop our managed references — this matches cpp's `gcroot::reset()`. After

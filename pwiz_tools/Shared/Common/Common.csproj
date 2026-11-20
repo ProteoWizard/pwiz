@@ -49,6 +49,12 @@
     <EmbeddedResource Include="DataBinding\Documentation\DocumentationGenerator.css" />
   </ItemGroup>
 
+  <!-- Per-DPI icon sizes (Name.Size.png) generated from common.manifest by
+       pwiz_tools/Skyline/Executables/DevTools/IconBuilder; loaded by name and size at run time. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Icons\*.png" />
+  </ItemGroup>
+
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <!-- net8 replacements. NHibernate 5.5+ supports net6+. log4net 2.x is net6+

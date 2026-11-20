@@ -15,7 +15,7 @@
           <param name="isTestReportingEnabled" value="true" />
           <param name="poetryExecutable" value="poetry" />
           <param name="pythonVersion" value="python3" />
-          <param name="scriptContent"><![CDATA[import datetime, glob, hashlib, hmac, os, ssl, time, urllib.error, urllib.parse, urllib.request
+          <param name="scriptContent"><![CDATA[import datetime, glob, hashlib, hmac, os, ssl, sys, time, urllib.error, urllib.parse, urllib.request
 
 # The credentials are the project's artifact storage key for this bucket
 access_key = r'''%release.metadata.aws.access.key.id%'''
@@ -97,11 +97,9 @@ for path in paths:
         failures += 1
         print("Failed to upload " + path + ": " + str(e))
 
-# The download page still reads the SourceForge copy, so a failed S3 upload warns and marks the
-# build status instead of failing the build and skipping the steps after it
+# The download page reads only this copy, so a failed upload fails the build
 if failures:
-    print("##teamcity[message text='Release metadata was not uploaded to S3; see the build log' status='WARNING']")
-    print("##teamcity[buildStatus text='{build.status.text}; release metadata not uploaded to S3']")]]></param>
+    sys.exit("Release metadata was not uploaded to S3; see the errors above")]]></param>
           <param name="teamcity.step.mode" value="default" />
           <param name="virtualenvEnvName" value=".venv" />
           <param name="virtualenvFile" value="requirements.txt" />

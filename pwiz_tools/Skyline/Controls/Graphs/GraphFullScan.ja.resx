@@ -386,11 +386,11 @@ Old Localized:2Dスペクトルを表示</comment>
   <data name="contextMenuStrip1.Size" type="System.Drawing.Size, System.Drawing">
     <value>192, 54</value>
   </data>
-  <data name="propertyBtn.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="propertiesBtn.Size" type="System.Drawing.Size, System.Drawing">
     <value>23, 22</value>
   </data>
-  <data name="propertyBtn.ToolTipText" xml:space="preserve">
-    <value>プロパティシートの表示/非表示</value>
+  <data name="propertiesBtn.ToolTipText" xml:space="preserve">
+    <value>スペクトルプロパティ</value>
   </data>
   <data name="&gt;&gt;contextMenuStrip1.Name" xml:space="preserve">
     <value>contextMenuStrip1</value>

@@ -74,11 +74,19 @@ namespace pwiz.Skyline.Controls.Startup
             InitializeComponent();
 
             checkBoxShowStartup.Checked = Settings.Default.ShowStartupForm;
+            // directoryicon is a 16x20 bitmap with no per-DPI sizes; above 100% the box grows
+            // around it, so show the vector Folder at the box's scale instead
+            if (DpiUtil.IsScaled(this))
+            {
+                openFileIcon.Image = DpiUtil.GetIcon(this, nameof(Resources.Folder), Resources.Folder);
+                openFileIcon.SizeMode = PictureBoxSizeMode.CenterImage;
+            }
             // Get placement values before changing anything.
 
-            // Restore window placement.
+            // Restore window placement. The persisted size is in 96-DPI logical units
+            // (see DpiUtil), so scale it to the current display DPI.
             if (!size.IsEmpty)
-                Size = size;
+                Size = DpiUtil.ScaleSize(this, size);
             if (!location.IsEmpty)
             {
                 StartPosition = FormStartPosition.Manual;
@@ -136,6 +144,8 @@ namespace pwiz.Skyline.Controls.Startup
         {
             base.OnShown(e);
 
+            // Again once load-time layout is done, which can resize the form and the strip
+            PositionButtonsModeUI();
             EnsureUIModeSet();
         }
 
@@ -152,7 +162,7 @@ namespace pwiz.Skyline.Controls.Startup
                 {
                     FileName = Path.GetFileName(filePath),
                     FilePath = filePath,
-                    Width = recentFilesPanel.Width - 20,
+                    Width = recentFilesPanel.Width - DpiUtil.Scale(this, 20),
                     Top = distanceFromTop,
                     EventAction = () => DoAction(skylineWindow=>skylineWindow.LoadFile(filePath, this))
                 };
@@ -163,7 +173,7 @@ namespace pwiz.Skyline.Controls.Startup
                     toolTip.SetToolTip(control, filePath);
                 }
                 recentFilesPanel.Controls.Add(recentFileControl);
-                distanceFromTop += recentFileControl.Height + 3; // 3 is padding between each RecentFileControl.
+                distanceFromTop += recentFileControl.Height + DpiUtil.Scale(this, 3); // 3 is padding between each RecentFileControl.
             }
         }
 
@@ -267,6 +277,9 @@ namespace pwiz.Skyline.Controls.Startup
             var labelFont = new Font(@"Arial", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
             var labelAnchor = AnchorStyles.Left | AnchorStyles.Right;
             var labelWidth = flowLayoutPanelTutorials.ClientRectangle.Width - SystemInformation.VerticalScrollBarWidth;
+            // Created after the form's autoscaling, so the Label default height (23 at 96 DPI)
+            // is scaled here; unscaled it clips the bottom of the DPI-scaled text
+            var labelHeight = DpiUtil.Scale(this, 23);
 
             // Build controls for each section from TutorialCatalog
             var sectionControls = new Dictionary<string, List<Control>>();
@@ -279,7 +292,8 @@ namespace pwiz.Skyline.Controls.Startup
                         Text = TutorialCatalog.GetSectionDisplayName(section),
                         Font = labelFont,
                         Anchor = labelAnchor,
-                        Width = labelWidth
+                        Width = labelWidth,
+                        Height = labelHeight
                     }
                 };
                 foreach (var t in TutorialCatalog.Tutorials.Where(t => t.Section == section))
@@ -421,7 +435,12 @@ namespace pwiz.Skyline.Controls.Startup
         private void PositionButtonsModeUI()
         {
             tooStripModeUI.GripStyle = ToolStripGripStyle.Hidden;
-            tooStripModeUI.Location = new Point(Width - (toolStripButtonModeUI.Width + 2*(Margin.Left+2*Margin.Right)), tabControlMain.Top);
+            // Positioned here alone: the designer's right anchor moved it again on every size
+            // change. ClientSize rather than Width keeps the window frame, which grows with the
+            // DPI, out of it; at 100% this is the same spot Width - (button + 18) gave.
+            tooStripModeUI.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+            tooStripModeUI.Location = new Point(ClientSize.Width - (toolStripButtonModeUI.Width + DpiUtil.Scale(this, 2)),
+                tabControlMain.Top);
             tooStripModeUI.BringToFront();
         }
 
@@ -431,12 +450,12 @@ namespace pwiz.Skyline.Controls.Startup
             leftPanel.Height = Height;
             flowLayoutPanelWizard.Height = Height;
             recentFilesPanel.Height = Height - recentFilesPanel.Top - leftBottomPanel.Height*2;
-            leftBottomPanel.Location = new Point(18,recentFilesPanel.Height + recentFilesPanel.Top);
+            leftBottomPanel.Location = new Point(DpiUtil.Scale(this, 18), recentFilesPanel.Height + recentFilesPanel.Top);
             // Tab Panel Controls
             tabControlMain.Width = Width - leftPanel.Width;
             tabControlMain.Height = Height;
             flowLayoutPanelWizard.Height = Height;
-            flowLayoutPanelWizard.Width = tabControlMain.Width - 40;
+            flowLayoutPanelWizard.Width = tabControlMain.Width - DpiUtil.Scale(this, 40);
             // Resize section tutorial dividers
             foreach (Control control in flowLayoutPanelTutorials.Controls)
             {
@@ -447,7 +466,7 @@ namespace pwiz.Skyline.Controls.Startup
             PositionButtonsModeUI(); 
             // Start Page Window Settings to avoid saving minimized or maximized sizes
             if (WindowState == FormWindowState.Normal)
-                Settings.Default.StartPageSize = Size;
+                Settings.Default.StartPageSize = DpiUtil.ScaleToLogical(this, Size);
             Settings.Default.StartPageMaximized =
                 (WindowState == FormWindowState.Maximized);
         }

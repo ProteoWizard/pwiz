@@ -68,6 +68,7 @@ public class MzMlbWriterLazyRoundTripTest
             Assert.AreEqual(100.0, mzs[0].Mz, 1e-9);
             Assert.AreEqual(12.0, mzs[0].Intensity, 1e-9);
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         finally { try { File.Delete(path); } catch { } }
     }
 }

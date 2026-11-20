@@ -587,8 +587,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             using (var graph = new GraphRegression(new[] { data }))
             {
-                graph.Width = 800;
-                graph.Height = 600;
+                graph.SetDialogSize();
                 graph.ShowDialog(this);
             }
         }

@@ -24,6 +24,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model;
@@ -93,8 +94,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             Move += WindowMove;
 
-            btnAutoCloseWindow.Image = imageListPushPin.Images[Settings.Default.ImportResultsAutoCloseWindow ? 1 : 0];
-            btnAutoScaleGraphs.Image = imageListLock.Images[Settings.Default.ImportResultsAutoScaleGraph ? 1 : 0];
+            btnAutoCloseWindow.Image = GetButtonIcon(imageListPushPin, Settings.Default.ImportResultsAutoCloseWindow ? 1 : 0);
+            btnAutoScaleGraphs.Image = GetButtonIcon(imageListLock, Settings.Default.ImportResultsAutoScaleGraph ? 1 : 0);
 
             _stopwatch.Start();
             _retryTime = DateTime.MaxValue;
@@ -768,7 +769,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void ClickAutoCloseWindow()
         {
             Settings.Default.ImportResultsAutoCloseWindow = !Settings.Default.ImportResultsAutoCloseWindow;
-            btnAutoCloseWindow.Image = imageListPushPin.Images[Settings.Default.ImportResultsAutoCloseWindow ? 1 : 0];
+            btnAutoCloseWindow.Image = GetButtonIcon(imageListPushPin, Settings.Default.ImportResultsAutoCloseWindow ? 1 : 0);
         }
          
         private void btnAutoScaleGraphs_Click(object sender, EventArgs e)
@@ -779,8 +780,18 @@ namespace pwiz.Skyline.Controls.Graphs
         public void ClickAutoScaleGraphs()
         {
             Settings.Default.ImportResultsAutoScaleGraph = !Settings.Default.ImportResultsAutoScaleGraph;
-            btnAutoScaleGraphs.Image = imageListLock.Images[Settings.Default.ImportResultsAutoScaleGraph ? 1 : 0];
+            btnAutoScaleGraphs.Image = GetButtonIcon(imageListLock, Settings.Default.ImportResultsAutoScaleGraph ? 1 : 0);
             graphChromatograms.ScaleIsLocked = !Settings.Default.ImportResultsAutoScaleGraph;
+        }
+
+        /// <summary>
+        /// A lock or push pin button image at the display DPI. The lists store 32 px copies
+        /// of 16 px icons on a magenta background, which the tool strip shrinks to its image
+        /// size and keys out (ImageTransparentColor), so the icon is 16 px at 96 DPI.
+        /// </summary>
+        private Image GetButtonIcon(ImageList imageList, int index)
+        {
+            return DpiIcons.GetListIcon(this, imageList, index, new Size(16, 16), Color.Magenta);
         }
 
         private void cbShowErrorDetails_CheckedChanged(object sender, EventArgs e)
@@ -946,6 +957,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (status.ProgressList[0].PercentComplete >= _freezeProgressPercent)
                 {
                     _isProgressFrozen = true;
+                    graphChromatograms.OnProgressFrozen();
                     return true;
                 }
 
@@ -975,7 +987,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!graphChromatograms.HasGraphData)
                     return false;
 
-                return true;
+                // Graph must have drawn its data
+                return graphChromatograms.IsRenderComplete;
             }
         }
 
