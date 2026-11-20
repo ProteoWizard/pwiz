@@ -513,7 +513,7 @@ function Invoke-Iscc {
     Write-Host "`n==> ISCC compile: $OutputBaseFilename" -ForegroundColor Cyan
     # Quiet, except when signing: /Q would hide the sign tool's output, which says why a
     # signing failed
-    $quiet = if ($sign) { @() } else { @("/Q") }
+    $quiet = @(if (-not $sign) { "/Q" })
     $args = $quiet + @(
         "/DStagingDir=$Staging",
         "/DOutputDir=$outDir",
