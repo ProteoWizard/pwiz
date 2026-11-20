@@ -33,9 +33,14 @@ public sealed class SpectrumListMzShift : SpectrumListWrapper
     }
 
     /// <inheritdoc/>
-    public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
+    public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
+        GetSpectrum(index, getBinaryData ? DetailLevel.FullData : DetailLevel.FullMetadata);
+
+    /// <inheritdoc/>
+    /// <remarks>The m/z metadata is shifted at every level; the peaks only when they are read.</remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel)
     {
-        var spec = Inner.GetSpectrum(index, getBinaryData);
+        var spec = Inner.GetSpectrum(index, detailLevel);
         int msLevel = spec.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0);
 
         // Shift the spectrum's own m/z metadata when this spectrum's level is in scope.
@@ -59,7 +64,7 @@ public sealed class SpectrumListMzShift : SpectrumListWrapper
                 }
             }
 
-            if (getBinaryData)
+            if (detailLevel >= DetailLevel.FullData)
             {
                 var mzArr = spec.GetMZArray();
                 if (mzArr is not null)

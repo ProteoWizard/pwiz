@@ -1,5 +1,6 @@
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
+using Pwiz.Data.MsData.Diff;
 using Pwiz.Data.MsData.Spectra;
 
 namespace Pwiz.Vendor.UNIFI.Tests;
@@ -184,6 +185,49 @@ public class SpectrumListUnifiTests
         Assert.IsTrue(spec.Params.HasCVParam(CVID.MS_profile_spectrum), "Profile lie should be set");
     }
 
+    [TestMethod]
+    public void GetSpectrum_MetadataLevels_ReadNoPeaks()
+    {
+        // The vendor harness checks every reader's detail levels against its reference files, but
+        // UNIFI has none, so the levels are checked here. cpp SpectrumList_UNIFI.cpp:122: instant
+        // metadata is the ms level alone, with no request to the source. Fast metadata asks for
+        // the spectrum without its arrays, and its precursors are what a full read gives.
+        var unifi = new UnifiSpectrum
+        {
+            MsLevel = 2,
+            RetentionTime = 1.5,
+            ScanPolarity = UnifiPolarity.Positive,
+            EnergyLevel = UnifiEnergyLevel.High,
+            DataIsContinuous = false,
+            ScanRange = (100.0, 600.0),
+            ArrayLength = 2,
+            MzArray = new[] { 150.0, 250.0 },
+            IntensityArray = new[] { 5.0, 6.0 },
+        };
+        var src = new FakeSource(RemoteApiType.Unifi, false, new[] { unifi });
+        var list = new SpectrumList_UNIFI(src, null, false);
+
+        var instant = list.GetSpectrum(0, DetailLevel.InstantMetadata);
+        Assert.AreEqual(0, src.SpectrumRequests, "instant metadata requested the spectrum");
+        Assert.AreEqual(2, instant.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0));
+        AssertNoPeaks(instant);
+
+        var fast = list.GetSpectrum(0, DetailLevel.FastMetadata);
+        Assert.AreEqual(1, src.SpectrumRequests);
+        AssertNoPeaks(fast);
+        Assert.AreEqual(1.5, fast.ScanList.Scans[0].CvParam(CVID.MS_scan_start_time).ValueAs<double>());
+
+        var full = list.GetSpectrum(0, DetailLevel.FullMetadata);
+        Assert.AreEqual(2, full.DefaultArrayLength);
+        Assert.AreEqual(string.Empty, MSDataDiff.DescribePrecursors(full.Precursors, fast.Precursors));
+    }
+
+    private static void AssertNoPeaks(Spectrum spectrum)
+    {
+        Assert.AreEqual(0, spectrum.DefaultArrayLength);
+        Assert.AreEqual(0, spectrum.BinaryDataArrays.Count);
+    }
+
     private static List<UnifiSpectrum> BuildSpectra(int count)
     {
         var list = new List<UnifiSpectrum>();
@@ -213,6 +257,7 @@ public class SpectrumListUnifiTests
         public RemoteApiType RemoteApi { get; }
         public bool HasIonMobilityData { get; }
         public int NumberOfSpectra => _spectra.Count;
+        public int SpectrumRequests { get; private set; }
         public IReadOnlyList<UnifiChromatogramInfo> ChromatogramInfo { get; init; } = Array.Empty<UnifiChromatogramInfo>();
         public Func<int, (int Channel, int Scan)> ChannelMap { get; set; } = _ => (0, 0);
 
@@ -221,6 +266,7 @@ public class SpectrumListUnifiTests
 
         public void GetSpectrum(int index, UnifiSpectrum spectrum, bool getBinaryData, bool doCentroid)
         {
+            SpectrumRequests++;
             var src = _spectra[index];
             spectrum.MsLevel = src.MsLevel;
             spectrum.RetentionTime = src.RetentionTime;

@@ -46,9 +46,14 @@ public sealed class SpectrumListTitleMaker : SpectrumListWrapper
     }
 
     /// <inheritdoc/>
-    public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
+    public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
+        GetSpectrum(index, getBinaryData ? DetailLevel.FullData : DetailLevel.FullMetadata);
+
+    /// <inheritdoc/>
+    /// <remarks>The title is made from metadata only, so it is set at every level.</remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel)
     {
-        var spec = Inner.GetSpectrum(index, getBinaryData);
+        var spec = Inner.GetSpectrum(index, detailLevel);
         spec.Params.Set(CVID.MS_spectrum_title, BuildTitle(spec));
         return spec;
     }

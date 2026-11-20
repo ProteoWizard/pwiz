@@ -56,4 +56,11 @@ public sealed class SpectrumListMzWindow : SpectrumListWrapper
         spec.DefaultArrayLength = newMz.Count;
         return spec;
     }
+
+    /// <inheritdoc/>
+    /// <remarks>The window changes the peaks only, so no peaks are read below full metadata.</remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel) =>
+        detailLevel < DetailLevel.FullMetadata
+            ? GetSpectrumWithoutPeakCount(index, detailLevel)
+            : GetSpectrum(index, detailLevel >= DetailLevel.FullData);
 }

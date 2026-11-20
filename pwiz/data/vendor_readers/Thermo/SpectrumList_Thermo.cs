@@ -418,8 +418,9 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
     /// the duration of the read and restores Device.MS afterward so subsequent MS reads see the
     /// original state.
     /// </summary>
-    private Spectrum GetPdaSpectrum(int index, IndexEntry ie, bool getBinaryData)
+    private Spectrum GetPdaSpectrum(int index, IndexEntry ie, DetailLevel detailLevel)
     {
+        bool getBinaryData = detailLevel == DetailLevel.FullData;
         var raw = _raw.Raw;
         try
         {
@@ -466,6 +467,11 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
             catch { /* stats unavailable on some PDA scans */ }
 
             spec.ScanList.Scans.Add(scan);
+
+            // The trace is read, for its point count, only from full metadata up, as an MS scan's
+            // mass list is.
+            if (detailLevel < DetailLevel.FullMetadata)
+                return spec;
 
             // Read the scan data: GetSegmentedScanFromScanNumber returns wavelength positions on
             // PDA controllers (the same call returns m/z on MS controllers — units come from the
@@ -518,7 +524,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         // PDA-as-spectra: separate population path. Cpp SpectrumList_Thermo.cpp:282-317 emits
         // these as MS_EMR_spectrum with wavelength axis (UO_nanometer) and no msLevel.
         if (ie.Controller == Device.Pda)
-            return GetPdaSpectrum(index, ie, getBinaryData);
+            return GetPdaSpectrum(index, ie, detailLevel);
 
         int scanNumber = ie.Scan;
         var raw = _raw.Raw;
