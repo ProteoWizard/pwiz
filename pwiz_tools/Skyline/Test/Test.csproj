@@ -56,6 +56,11 @@
     <Compile Include="..\SkylineNightly\RunInterruption.cs" Link="SkylineNightly\RunInterruption.cs" />
   </ItemGroup>
 
+  <!-- Likewise SkylineTester's crash report for TestRunner, which depends on nothing else there. -->
+  <ItemGroup>
+    <Compile Include="..\SkylineTester\TestRunnerCrashReport.cs" Link="SkylineTester\TestRunnerCrashReport.cs" />
+  </ItemGroup>
+
   <!-- protoc-generated code lives under ProtocolBuffers\GeneratedCode\ and is
        git-ignored, so a clean checkout has none. Regenerate it from the .proto
        via generatecode.bat and inject the result into @(Compile) here rather

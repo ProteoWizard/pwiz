@@ -28,7 +28,7 @@ namespace pwiz.Osprey.Centroid
     /// A linear ion trap scan rate (Thermo Stellar, Fusion and other LITs) and the profile point spacing its firmware
     /// fixes, which identifies it: the faster the scan, the coarser the points (and the wider the peaks). From
     /// Centrix's table (Centrix's README, <c>cwt.rs</c> <c>LIT_SCAN_RATES</c>, which also lists each rate's broadest
-    /// peak; docs/25-profile-centroiding.md). Centrix gives no spacing for 200 kTh/s; the 0.2 Th here (five points
+    /// peak; docs/26-profile-centroiding.md). Centrix gives no spacing for 200 kTh/s; the 0.2 Th here (five points
     /// per Th, on the 1000 / rate pattern of the others) is what the Stellar's MS2 at that rate has.
     /// <para>The rate is identified from the spacing rather than from the filter string's scan rate code (Centrix's
     /// first choice: n, r, t, u after "NSI"). The Stellar's MS1 carry "r" (67 kTh/s), but its MS2 carry "Z", a Zoom
@@ -84,7 +84,7 @@ namespace pwiz.Osprey.Centroid
     /// (demultiplexed jointly), was centroided at sigmas from 0.22 to 0.85 Th and searched with an entrapment library:
     /// identifications at matched entrapment FDP rise from 0.22 Th to a broad plateau from 0.6 to 0.85 Th, and 0.6 Th
     /// is within about 1% of the best in all three
-    /// (docs/25-profile-centroiding.md). The rule is set from that one scan rate and stands until others are
+    /// (docs/26-profile-centroiding.md). The rule is set from that one scan rate and stands until others are
     /// measured.</para>
     /// <para>Detecting peptides is not measuring them. Fragment m/z are measured best near two point spacings
     /// (0.38 Th at 200 kTh/s), where a fragment and its M+1 isotope come out as two centroids, each at its own m/z,

@@ -44,6 +44,7 @@ public sealed class TimsBinaryData : IDisposable
             throw new DirectoryNotFoundException($"Bruker .d directory not found: {analysisDirectory}");
         AnalysisDirectory = Path.GetFullPath(analysisDirectory);
 
+        NativeInit.EnsureCompatibleCrt();
         _handle = pressureCompensation == PressureCompensationStrategy.None
             ? NativeMethods.tims_open(AnalysisDirectory, useRecalibratedState ? 1u : 0u)
             : NativeMethods.tims_open_v2(AnalysisDirectory, useRecalibratedState ? 1u : 0u, pressureCompensation);
@@ -144,15 +145,25 @@ public sealed class TimsBinaryData : IDisposable
     }
 
     /// <summary>Mason-Shamp conversion: 1/K0 → CCS (Å²).</summary>
-    public static double OneOverK0ToCcs(double oneOverK0, int charge, double mz) =>
-        NativeMethods.tims_oneoverk0_to_ccs_for_mz(oneOverK0, charge, mz);
+    public static double OneOverK0ToCcs(double oneOverK0, int charge, double mz)
+    {
+        NativeInit.EnsureCompatibleCrt();
+        return NativeMethods.tims_oneoverk0_to_ccs_for_mz(oneOverK0, charge, mz);
+    }
 
     /// <summary>Mason-Shamp conversion: CCS (Å²) → 1/K0.</summary>
-    public static double CcsToOneOverK0(double ccs, int charge, double mz) =>
-        NativeMethods.tims_ccs_to_oneoverk0_for_mz(ccs, charge, mz);
+    public static double CcsToOneOverK0(double ccs, int charge, double mz)
+    {
+        NativeInit.EnsureCompatibleCrt();
+        return NativeMethods.tims_ccs_to_oneoverk0_for_mz(ccs, charge, mz);
+    }
 
     /// <summary>Sets the internal OpenMP thread count.</summary>
-    public static void SetNumThreads(uint n) => NativeMethods.tims_set_num_threads(n);
+    public static void SetNumThreads(uint n)
+    {
+        NativeInit.EnsureCompatibleCrt();
+        NativeMethods.tims_set_num_threads(n);
+    }
 
     /// <summary>Fetches the last-error string from the thread-local slot inside timsdata.dll.</summary>
     private static void ThrowLastError()

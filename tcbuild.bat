@@ -102,10 +102,11 @@ for %%d in (pwiz-sharp installer pwiz\src pwiz\test pwiz_tools\Skyline\Executabl
     )
 )
 
-REM # Build-warnings check. tcinspect.ps1 pre-builds what build.bat builds, with the same
-REM # properties, logging every restore and build warning. Running first is the point: it is
-REM # then the build's one from-scratch compile, and build.bat's build is incremental on top
-REM # of it. A warning turns its own GitHub status, "Core code inspection", red; the script
+REM # Build-warnings check and ReSharper inspection. tcinspect.ps1 pre-builds what build.bat
+REM # builds, with the same properties, logging every restore and build warning, then runs
+REM # inspectcode over Pwiz.sln. Running first is the point: it is then the build's one
+REM # from-scratch compile, and build.bat's build is incremental on top of it. A warning or an
+REM # inspection finding turns its own GitHub status, "Core code inspection", red; the script
 REM # always exits 0 and leaves this build's status alone, so build.bat and the tests run and
 REM # pass or fail on their own. Vendor builds only - see tcinspect.ps1 for why. The flags it
 REM # needs are the subset of %* that change build.bat's MSBUILD_PROPS.
@@ -118,7 +119,7 @@ for %%A in (%*) do (
     if /i "%%~A"=="Debug" set "INSPECT_ARGS=!INSPECT_ARGS! -Configuration Debug"
 )
 if %IAGREE%==1 (
-    echo ##teamcity[progressMessage 'tcinspect.ps1%INSPECT_ARGS% ^(build warnings^)']
+    echo ##teamcity[progressMessage 'tcinspect.ps1%INSPECT_ARGS% ^(build warnings, ReSharper inspection^)']
     pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\tcinspect.ps1"%INSPECT_ARGS%
 )
 

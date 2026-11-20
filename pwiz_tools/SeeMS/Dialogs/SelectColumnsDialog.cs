@@ -41,6 +41,7 @@ namespace Pwiz.SeeMS
             columnToCheckboxMap = new Map<string, CheckBox>();
 
             this.Name = "SelectColumnsDialog";
+            // ReSharper disable once VirtualMemberCallInConstructor
             this.Text = "Select Columns";
 
             SplitContainer splitContainer = new SplitContainer();

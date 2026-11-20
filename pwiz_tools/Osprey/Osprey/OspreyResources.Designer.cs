@@ -1648,5 +1648,14 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} names an unknown feature: '{1}'. Use PIN feature names separated by commas, or '{2}' to mask nothing..
+        /// </summary>
+        public static string Program_Run__0__names_an_unknown_feature___1____Use_PIN_feature_names_separated_by_commas__or___2___to_mask_nothing_ {
+            get {
+                return ResourceManager.GetString("Program_Run__0__names_an_unknown_feature___1____Use_PIN_feature_names_separated_by_commas__or___2___to_mask_nothing_", resourceCulture);
+            }
+        }
     }
 }

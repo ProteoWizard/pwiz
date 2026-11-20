@@ -247,8 +247,6 @@ namespace pwiz.Osprey.Core
         public const string ROUTE_SECOND_PASS_FOLD = @"second-pass-fold";
         /// <summary>The pass-2 q-value mode in force.</summary>
         public const string ROUTE_PASS2_QVALUE = @"pass2-qvalue";
-        /// <summary>The experiment-wide aggregation in force.</summary>
-        public const string ROUTE_EXPERIMENT_AGG = @"experiment-agg";
         /// <summary>How the model-diagnostics report was produced.</summary>
         public const string ROUTE_MODEL_DIAGNOSTICS = @"model-diagnostics";
         /// <summary>Protein-level FDR ran in this process.</summary>

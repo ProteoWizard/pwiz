@@ -1,0 +1,38 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Clipboard: yellow board shaded to orange on the right with a dark bottom edge, tan clip with
+       a flat bar and a small hole, white page over the lower right with gray-blue text bars. -->
+  <Rectangle Canvas.Left="0.5" Canvas.Top="4.5" Width="25" Height="24" RadiusX="1.5" RadiusY="1.5" Stroke="#9E9482" StrokeThickness="1">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,0.3">
+        <GradientStop Color="#FBF3B0" Offset="0"/>
+        <GradientStop Color="#F7E79A" Offset="0.4"/>
+        <GradientStop Color="#F2C232" Offset="0.75"/>
+        <GradientStop Color="#D49600" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <Rectangle Canvas.Left="1" Canvas.Top="26" Width="24" Height="2" Fill="#8E7E64" Opacity="0.8"/>
+  <Rectangle Canvas.Left="8.5" Canvas.Top="6.5" Width="12" Height="3" RadiusX="0.5" RadiusY="0.5" Fill="#9F8D5B" Stroke="#766646" StrokeThickness="1"/>
+  <Path Data="M 10.5,8.5 L 10.5,4.5 Q 10.5,2.5 12.5,2.5 L 16.5,2.5 Q 18.5,2.5 18.5,4.5 L 18.5,8.5 Z" Stroke="#766646" StrokeThickness="1" StrokeLineJoin="Round">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#D3CEBC" Offset="0"/>
+        <GradientStop Color="#C3B386" Offset="0.5"/>
+        <GradientStop Color="#9F8D5B" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Rectangle Canvas.Left="13" Canvas.Top="4" Width="3" Height="2" Fill="#A29773"/>
+  <Path Data="M 13,15 L 25,15 L 30,20 L 30,30 L 13,30 Z" Stroke="#566881" StrokeThickness="2" StrokeLineJoin="Miter">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FFFFFF" Offset="0"/>
+        <GradientStop Color="#FFFFFF" Offset="0.5"/>
+        <GradientStop Color="#D3DCE8" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Path Data="M 25,15 L 25,20 L 30,20 Z" Fill="#D3DCE8" Stroke="#566881" StrokeThickness="2" StrokeLineJoin="Miter"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="19" Width="8" Height="3" Fill="#8EA0B6"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="24" Width="12" Height="3" Fill="#8EA0B6"/>
+</Canvas>

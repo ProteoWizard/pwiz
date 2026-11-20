@@ -458,6 +458,43 @@ namespace pwiz.Osprey
                 }
             }) { Scope = OspreyPropertyScope.search, DefaultValue = Default(() => new OspreyConfig().SharedPeptides), DescriptionArgs = () => new object[] { @"all" } };
 
+        // How a detection is boosted by its protein's other detections: best (the protein-best training
+        // column, issue #4580, with the transfer second pass) by default for HRAM data, compact (the
+        // protein-compact second pass) at unit resolution (ResolutionDefaults), so like --feature-set it
+        // declares no single default. compact is to go once Stellar data is measured on a larger cohort;
+        // the developer switch that shapes the column stays an environment variable
+        // (OSPREY_PROTEIN_BEST_SHUFFLE). A block body, so the handler is an Action: a value-returning
+        // lambda would bind to the Func overload, whose false ends the parse.
+        public static readonly OspreyArgument ARG_PROTEIN_BOOST = new OspreyArgument(OspreyArgNames.PROTEIN_BOOST,
+            Enum.GetNames(typeof(ProteinBoost)),
+            (c, p) =>
+            {
+                c._config.ProteinBoost = (ProteinBoost)Enum.Parse(typeof(ProteinBoost), p.Value, true);
+                c._config.ProteinBoostGiven = true;
+            })
+            {
+                Scope = OspreyPropertyScope.search,
+                DescriptionArgs = () => new object[]
+                {
+                    ProteinBoost.best, ProteinBoost.compact, ProteinBoost.off, RESOLUTION_HRAM, RESOLUTION_UNIT
+                }
+            };
+
+        // The PIN features the FDR classifier trains on. Absent, the resolution chooses (default
+        // for HRAM, core at unit resolution), so there is no single default value to declare.
+        // OSPREY_FEATURE_MASK, a research switch, overrides it.
+        public static readonly OspreyArgument ARG_FEATURE_SET = new OspreyArgument(OspreyArgNames.FEATURE_SET,
+            Enum.GetNames(typeof(OspreyFeatureSet)),
+            (c, p) => { c._config.FeatureSet = (OspreyFeatureSet)Enum.Parse(typeof(OspreyFeatureSet), p.Value, true); })
+            {
+                Scope = OspreyPropertyScope.search,
+                DescriptionArgs = () => new object[]
+                {
+                    OspreyFeatureSet.core, OspreyFeatureSet.@default, OspreyFeatureSet.all,
+                    RESOLUTION_HRAM, RESOLUTION_UNIT, OspreyFeatureSet.efficient
+                }
+            };
+
         public static readonly OspreyArgument ARG_FDRBENCH = new OspreyArgument(@"fdrbench",
             () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.OutputFdrBench = p.Value)
             {
@@ -477,7 +514,7 @@ namespace pwiz.Osprey
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_FDR =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_FDR_Protein_Inference, true,
                 ARG_RUN_FDR, ARG_EXPERIMENT_FDR, ARG_RECONCILIATION_COMPACTION_FDR, ARG_PROTEIN_FDR, ARG_FDR_LEVEL, ARG_SHARED_PEPTIDES,
-                ARG_FDRBENCH, ARG_FDRBENCH_PER_RUN, ARG_FDRBENCH_PASS);
+                ARG_PROTEIN_BOOST, ARG_FEATURE_SET, ARG_FDRBENCH, ARG_FDRBENCH_PER_RUN, ARG_FDRBENCH_PASS);
 
         // --- Decoys -----------------------------------------------------------------------
         public static readonly OspreyArgument ARG_DECOYS_IN_LIBRARY = new OspreyArgument(OspreyArgNames.DECOYS_IN_LIBRARY,
@@ -497,9 +534,9 @@ namespace pwiz.Osprey
 
         // --- Training Export ---------------------------------------------------------------
         // A PerFileRescoring product (docs/22-training-export.md; P17 in
-        // docs/00-pipeline-architecture.md). Off, nothing about the run changes; on, it adds
-        // one <stem>.training.parquet per run, and adding it to a finished directory writes
-        // only the exports and re-scores nothing.
+        // docs/00-pipeline-architecture.md). On, it adds one <stem>.training.parquet per run and
+        // writes the reference XIC it reads into the scores parquets, which runs without it
+        // leave out; so adding it to a finished directory re-scores Stages 4 and 6 (#5023).
         public static readonly OspreyArgument ARG_TRAINING_EXPORT = new OspreyArgument(OspreyArgNames.TRAINING_EXPORT,
             (c, p) => c._config.TrainingExport.Enabled = true)
             { DescriptionArgs = () => new object[] { @"<stem>" + TrainingExportParquet.EXT, ARG_TRAINING_EXPORT_MAX_Q.ArgumentText } };
@@ -761,12 +798,12 @@ namespace pwiz.Osprey
         /// test. Exists so a test can prove that gbdt reaches the config: #4491 was the
         /// classifier silently not reaching training.
         /// </summary>
-        internal static OspreyConfig ParseArgs(string[] args, FdrClassifier fdrModel)
+        internal static OspreyConfig ParseArgs(string[] args, FdrClassifier? fdrModel)
         {
             return ParseArgs(args, fdrModel, out _);
         }
 
-        private static OspreyConfig ParseArgs(string[] args, FdrClassifier fdrModel, out LibraryBuildSettings librarySettings)
+        private static OspreyConfig ParseArgs(string[] args, FdrClassifier? fdrModel, out LibraryBuildSettings librarySettings)
         {
             var parser = new OspreyCommandArgs();
             CreateParser().Parse(parser, args);
@@ -861,7 +898,7 @@ namespace pwiz.Osprey
             return true;
         }
 
-        private OspreyConfig ToConfig(FdrClassifier fdrModel)
+        private OspreyConfig ToConfig(FdrClassifier? fdrModel)
         {
             // Expand --input-list BEFORE normalization, so a listed path is indistinguishable
             // from one given with -i from here on. Appended in the order the lists were given,
@@ -894,10 +931,13 @@ namespace pwiz.Osprey
 
             // The classifier comes from OSPREY_FDR_MODEL, read once at process start, and is set
             // here, where --fdr-method used to set it, so the rest of the pipeline reads the
-            // config and never the environment. An unrecognized value parses to the default only
-            // so the config is well-formed; Program aborts on OspreyEnvironment.FdrModelError
-            // before the pipeline runs.
-            _config.FdrClassifier = fdrModel;
+            // config and never the environment. Unset, the resolution's default fills it in
+            // (ApplyResolutionMode). An unrecognized value parses to that default only so the
+            // config is well-formed; Program aborts on OspreyEnvironment.FdrModelError before the
+            // pipeline runs.
+            if (fdrModel.HasValue)
+                _config.FdrClassifier = fdrModel.Value;
+            _config.FdrClassifierGiven = fdrModel.HasValue;
 
             // The explicit fragment tolerance and unit first, then the resolution, whose defaults
             // fill in only what the command line left out. A detected resolution reaches the same

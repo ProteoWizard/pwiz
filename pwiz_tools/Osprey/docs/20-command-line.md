@@ -261,9 +261,9 @@ Each is also a `--task` of its own on a cluster (see "The library build on a clu
 | `--fragment-unit` | `ppm \| mz` | `ppm`; `mz` at `unit` | Unit for `--fragment-tolerance`. |
 | `--no-prefilter` | — | prefilter on | Disable the coelution signal pre-filter (scores every candidate; ~30% slower). See [06-peak-detection.md](06-peak-detection.md). |
 | `--demux` | `off \| auto` | `off` | Demultiplex overlapping-window (staggered) DIA to its narrow bins before searching, into `<stem>.demux.spectra.bin` (see [23-demultiplexing.md](23-demultiplexing.md)). `auto` leaves a non-overlapping run as acquired. With `off`, a run whose windows overlap is refused, since searching it as acquired scores every precursor in more than one window. Give every task of an HPC chain the same value. Osprey-only. |
-| `--centroid` | `vendor \| centrix` | `vendor` | Who centroids profile spectra. `centrix` reads the profile, from a vendor file too, and centroids it with Centrix, a non-negative lasso for ion trap (unit resolution) profile data that separates peaks closer than 1 Th; its spectra are cached as `<stem>.centrix-<hash>.spectra.bin`, beside the vendor-centroided cache (see [25-profile-centroiding.md](25-profile-centroiding.md)). Osprey-only. |
+| `--centroid` | `vendor \| centrix` | `vendor` | Who centroids profile spectra. `centrix` reads the profile, from a vendor file too, and centroids it with Centrix, a non-negative lasso for ion trap (unit resolution) profile data that separates peaks closer than 1 Th; its spectra are cached as `<stem>.centrix-<hash>.spectra.bin`, beside the vendor-centroided cache (see [26-profile-centroiding.md](26-profile-centroiding.md)). Osprey-only. |
 | `--centrix-sigma-ms1` | `<Th>` | from the run | With `--centroid centrix`: the MS1 profile peak sigma. Absent or 0: 1.1 point spacings on a linear ion trap (the point spacing identifies the scan rate), which measures precursor isotopes best of the sigmas tried, otherwise one species' peak width measured from the run. |
-| `--centrix-sigma-ms2` | `<Th>` | from the run | The same for MS2, where the default is three point spacings, the sigma that detects the most peptides. About two point spacings (0.38 Th on a Thermo Stellar) measures fragment m/z best, resolving the M+1 isotope, at a cost in peptides detected (see [25-profile-centroiding.md](25-profile-centroiding.md#detecting-peptides-and-measuring-them)). |
+| `--centrix-sigma-ms2` | `<Th>` | from the run | The same for MS2, where the default is three point spacings, the sigma that detects the most peptides. About two point spacings (0.38 Th on a Thermo Stellar) measures fragment m/z best, resolving the M+1 isotope, at a cost in peptides detected (see [26-profile-centroiding.md](26-profile-centroiding.md#detecting-peptides-and-measuring-them)). |
 | `--centrix-solver` | `descent \| active-set` | `descent` | With `--centroid centrix`: Centrix's own coordinate descent, or the exact active-set solve of the same fit, several times faster. |
 
 ### FDR & Protein Inference
@@ -275,6 +275,7 @@ Each is also a `--task` of its own on a cluster (see "The library build on a clu
 | `--reconciliation-compaction-fdr` | `<threshold>` | `0.01` | Peptide q-value gate for first-pass compaction; loosen (e.g. `0.05`) to broaden the reconciliation pool. See [10-cross-run-reconciliation.md](10-cross-run-reconciliation.md). |
 | `--protein-fdr` | `<threshold>` | off → 0.01 gate | Enable protein-level FDR at this threshold (parsimony always runs regardless). See [08-protein-parsimony.md](08-protein-parsimony.md). |
 | `--fdr-level` | `precursor \| peptide \| both` | `precursor` | Which q-value gates the reported output. (`protein` is not a valid value.) |
+| `--protein-boost` | `best \| compact \| off` | `best`; `compact` at `unit` | How a detection is boosted by the other detections of its protein. `best` trains the first pass with each candidate's best first-round score among the other peptides of its protein in the run; `compact` competes the precursors of the proteins the first pass detected apart from the rest in the second pass, and will be removed once Stellar data is measured on a larger cohort; `off` boosts nothing. See [12](12-second-pass-fdr.md). |
 | `--shared-peptides` | `all \| razor \| unique` | `all` | Shared-peptide handling for protein inference. See [08-protein-parsimony.md](08-protein-parsimony.md). |
 | `--fdrbench` | `path/to/file.tsv` | off | Write an FDRBench-compatible input TSV (every reported target with the raw SVM score) for entrapment true-FDR. Level follows `--fdr-level`. See [fractional-entrapment.md](fractional-entrapment.md). |
 | `--fdrbench-per-run` | — | off | With `--fdrbench`: one row per (precursor, run) using run-level q-values. |
@@ -512,7 +513,7 @@ and *diagnostics* (extra files or log lines). The list cannot drift from the cod
   names the closest catalogued name (`OSPREY_PASS2_QVALUES` ... did you mean
   `OSPREY_PASS2_QVALUE`?). Osprey claims the `OSPREY_` prefix.
 - A switch that lists its values refuses any other value at startup (`OSPREY_PASS2_QVALUE`,
-  `OSPREY_FDR_MODEL`, `OSPREY_EXPERIMENT_AGG`, `OSPREY_DETERMINISTIC_MATH`,
+  `OSPREY_FDR_MODEL`, `OSPREY_DETERMINISTIC_MATH`,
   `OSPREY_SERIAL_READ_SCOPE`, `OSPREY_STUB_IDENTITY`): a value typo would otherwise run the
   default arm under the name of the one asked for. A retired arm is refused the same way:
   `OSPREY_STUB_IDENTITY` lists only `1|2`, and `OSPREY_BLOCK_READ_MB` accepts only a positive
@@ -529,12 +530,10 @@ The catalog text is developer text and is not translated. The ones most likely t
 | `OSPREY_TRAIN_PICK_RUN` | First-pass training selection, **on by default**: each precursor is represented by one uniformly drawn run's best candidate peak. `OSPREY_TRAIN_PICK_RUN=0` restores the pre-26.1 cross-run maximum. C#-only — Rust still takes the maximum | [07](07-fdr-control.md) |
 | `OSPREY_MAX_TRAIN_SIZE` | Cap on training rows (default 300000). Unchanged by the 26.1 selection flip: at matched FDP, 300K and 1M are indistinguishable | [07](07-fdr-control.md) |
 | `OSPREY_SVM_C_TOLERANCE` | First-pass SVM C selection: keep the most regularized C within this fraction of the best inner-CV count (default 0.01, in [0, 1); anything else is a startup ERROR). 0 is the strict maximum, the pre-#4703 rule; Rust uses the 1% default with no opt-out, so leave it unset for cross-implementation comparisons. Set the same value on every node of a relay chain | [07](07-fdr-control.md) |
-| `OSPREY_PASS2_QVALUE` | Second-pass q-value mode: `protein-compact` (**default**) / `transfer`. An unrecognized value is a startup ERROR - `percolator` and `transfer-compete` were removed | [12](12-second-pass-fdr.md) |
+| `OSPREY_PASS2_QVALUE` | Second-pass q-value mode, overriding the one `--protein-boost` implies: `transfer` / `protein-compact`. An unrecognized value is a startup ERROR - `percolator` and `transfer-compete` were removed | [12](12-second-pass-fdr.md) |
 | `OSPREY_FDR_MODEL` | First-pass classifier: unset / `svm` = linear SVM (**default**), `gbdt` = **experimental** gradient-boosted trees (C#-only). An unrecognized value is a startup ERROR. Replaced the removed `--fdr-method` | [07](07-fdr-control.md) |
 | `OSPREY_GBT_*` | GBDT hyperparameters; apply only under `OSPREY_FDR_MODEL=gbdt` | [07](07-fdr-control.md) |
 | `OSPREY_DETERMINISTIC_MATH` | Exp/Log in GBDT training: unset / `1` = managed fdlibm port, bit-identical on Windows and Linux (**default**); `0` = `System.Math`, which calls the OS C library and can differ in the last bit between OSes (an A/B arm for timing and for reproducing pre-switch models; keys the gbdt tasks). Anything else is a startup ERROR | [07](07-fdr-control.md) |
-| `OSPREY_EXPERIMENT_AGG` | Experimental first-pass experiment-wide aggregation (`max` / `mean-best-<N>`) | [07](07-fdr-control.md) |
-| `OSPREY_MEANBEST2_FLOOR_MEAN` / `OSPREY_MEANBEST2_FLOOR_PCT` | Missing-run floor arm for `mean-best-<N>` (decoy mean / decoy percentile instead of the default median) | [07](07-fdr-control.md) |
 | `OSPREY_DIAGNOSTICS` | Turns on the bundle of cross-impl bisection dumps (was the `-d` / `--diagnostics` argument) | [18](18-peptide-trace.md) |
 | `OSPREY_DUMP_*` / `OSPREY_DIAG_*` | Cross-impl bisection dumps, one at a time | [18](18-peptide-trace.md) |
 

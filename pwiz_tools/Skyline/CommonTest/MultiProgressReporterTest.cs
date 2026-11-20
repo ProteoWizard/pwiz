@@ -142,7 +142,7 @@ namespace CommonTest
             var capture = new StringWriter();
             CommandOutput.Out = capture;
             AssertEx.IsNull(MultiProgressReporter.Current, "no per-file scope should be active outside BeginFile");
-            using (var progress = new ProgressReporter("Standalone", 100, string.Empty, 0.0))
+            using (var progress = ProgressReporter.Begin("Standalone", 100, string.Empty, 0.0))
                 progress.Report(50);
             string output = capture.ToString();
             AssertEx.Contains(output, Heading("Standalone"));

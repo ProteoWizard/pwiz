@@ -321,6 +321,24 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The PIN features the FDR classifier trains on, each set within the next: {0} (the original 21 core features), {5} (the core and fewer family features: fewer feature columns for a small detection cost), {1} (the closest to {2} at HRAM) [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _feature_set {
+            get {
+                return ResourceManager.GetString("_feature_set", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to FDR feature set.
+        /// </summary>
+        public static string _feature_set_property {
+            get {
+                return ResourceManager.GetString("_feature_set_property", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Fragment m/z tolerance (default: 10).
         /// </summary>
         public static string _fragment_tolerance {
@@ -566,6 +584,24 @@ namespace pwiz.Osprey {
         public static string _perf_stats {
             get {
                 return ResourceManager.GetString("_perf_stats", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to How a detection is boosted by the other detections of its protein: {0} trains the first pass with a protein-aware column (for each candidate, the best first-round score among the other peptides of its protein in the same run, which turns on the two-round first-pass training); {1} competes the precursors of the proteins the first pass detected apart from the rest in the second pass, and will be removed; {2} boosts nothing. The default is {0} for {3} data and {1} at {4} resolution.
+        /// </summary>
+        public static string _protein_boost {
+            get {
+                return ResourceManager.GetString("_protein_boost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein boost.
+        /// </summary>
+        public static string _protein_boost_property {
+            get {
+                return ResourceManager.GetString("_protein_boost_property", resourceCulture);
             }
         }
         

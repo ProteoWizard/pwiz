@@ -21,6 +21,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using pwiz.Osprey.Core;
 
@@ -153,12 +154,21 @@ namespace pwiz.Osprey.FDR
         /// <para>Idempotent, and safe after <see cref="Accumulate"/> has already folded the
         /// peptide map row-wise: both reduce the same values under the same key.</para>
         /// </summary>
-        public void DerivePeptideFloors()
+        /// <param name="reportedTarget">When given, a TARGET entry contributes to its peptide's
+        /// floor only when this says it is a precursor the blib reports. The floor stands for
+        /// "a reported peptide has a run with an ID line", and only a reported precursor has ID
+        /// lines: a charge state that never reaches the blib, re-scored in the second pass at a
+        /// sibling's or the consensus boundaries, could otherwise lower a reported peptide's q
+        /// with a run the blib does not show. Null keeps every entry (the competition's second
+        /// pass, whose reported set this fold decides). Decoy entries always contribute.</param>
+        public void DerivePeptideFloors(Func<uint, bool> reportedTarget = null)
         {
             _minRunQByPeptide.Clear();
             foreach (var kvp in _minRunQByEntryId)
             {
                 if (!_peptideByEntryId.TryGetValue(kvp.Key, out var pkey))
+                    continue;
+                if (reportedTarget != null && !pkey.IsDecoy && !reportedTarget(kvp.Key))
                     continue;
                 if (!_minRunQByPeptide.TryGetValue(pkey, out double cur) || kvp.Value < cur)
                     _minRunQByPeptide[pkey] = kvp.Value;

@@ -117,7 +117,7 @@ If fewer than 20 consensus points exist for a run, or the fit throws, `Refit` re
 | Action | Condition (`ReconciliationPlanner.DetermineAction`, `ReconciliationPlanner.cs:248-291`) | What happens |
 |--------|------------------------------------------------------------------------------------------|--------------|
 | **Keep** (singleton `ReconcileAction.Keep`) | `\|apexRt - expectedRt\| <= rtTolerance` | No change; omitted from the returned map (implicit absence). |
-| **UseCwtPeak** | A stored CWT candidate has `\|cand.ApexRt - expectedRt\| <= rtTolerance` | Switch to the candidate whose apex is **closest** to expectedRt. Carries `CandidateIndex`, `StartRt`, `ApexRt`, `EndRt`. |
+| **UseCwtPeak** | One of the entry's first-pass CWT candidates has `\|cand.ApexRt - expectedRt\| <= rtTolerance` | Switch to the candidate whose apex is **closest** to expectedRt. Carries `CandidateIndex`, `StartRt`, `ApexRt`, `EndRt`. |
 | **ForcedIntegration** | Neither current peak nor any CWT candidate is within tolerance | Integrate at `expectedRt ± halfWidth`, where `halfWidth = MedianPeakWidth / 2` (`ReconciliationPlanner.cs:225`). |
 
 `DetermineAction` uses **apex proximity**, not boundary containment: a wrong-apex peak with a wide trailing edge spanning the expected RT is correctly rejected. CWT candidate selection also picks the closest apex, not merely any candidate whose boundaries overlap (`ReconciliationPlanner.cs:259-285`). Only non-Keep actions are stored, keyed `(fileName, entryIndex)` (`ReconciliationPlanner.cs:227-229`).
@@ -160,7 +160,7 @@ ceiling        = min(refinedTol, cap)
 
 ### CWT candidates
 
-CWT candidates were stored during the first-pass search (default 5 per precursor, `ReconciliationConfig.TopNPeaks`) and persisted in the per-file Parquet score cache. During planning they are loaded one run at a time via `CwtCandidateLoader.LoadOneFile` (in `RunReconciliationPlanner.PlanRun`) and released with the run's plan, keyed per entry by `ParquetIndex` (`ReconciliationPlanner.cs:214-218`) — avoiding a full re-extraction. `ForcedIntegration` is the last resort when no stored candidate's apex lands within tolerance.
+The CWT candidates are the top-N peaks the first-pass search ranked for a precursor (default 5, `ReconciliationConfig.TopNPeaks`). Rust stores them in every row of its scores parquet; Osprey computes them only for the entries the planner reads them for (#5024). `FilePlanner.PlanFile` first applies the Keep test (`ReconciliationPlanner.IsAtExpectedRt`) to every consensus, passing entry, then asks its `CwtCandidateSource` once for the rest - the entries whose apex is outside tolerance - and runs `DetermineAction` on them. In PerFileRescoring the source is `CwtCandidateRecompute.ForRows`, which re-runs first-pass detection for those entries in the windows holding their apex scans, with the run's first-pass calibration (or, for a run whose calibration failed, the library-to-run RT mapping Stage 4 searched around), and so reproduces Stage 4's lists bit for bit. `ForcedIntegration` is the last resort when no candidate's apex lands within tolerance.
 
 ---
 
@@ -218,7 +218,7 @@ The plan (`format_version = 4`) carries the validity stamp, the non-Keep actions
 |--------------|---------|----------------------|
 | `ReconciliationConfig.Enabled` (`Osprey.Core/ReconciliationConfig.cs:33`) | `true` | Master switch. FirstPassFDR runs `PlanStage6` (and writes `<blib-stem>.1st-pass.consensus.json`) only when it is on; PerFileRescoring declares and reads the consensus file only when it is on (`PerFileRescoreTask.Inputs`, `CreateRunPlanner`). When off, each run is planned with no consensus, so its plan has no actions or gap-fill targets. **There is no CLI flag to toggle it** — no `--no-reconciliation`; only a config/YAML `Reconciliation.Enabled = false` disables it. `--task FirstPassFDR` requires it enabled (`FirstPassFdrTask.ValidateSelection`). |
 | `ReconciliationConfig.ConsensusFdr` (`ReconciliationConfig.cs:39`) | `0.01` | The consensus qualification threshold (Step 1 hard precursor gate + peptide/protein rescue), the refit experiment-q gate (`RunReconciliationPlanner.PlanRun`), and the `experimentFdr` of both passing sets, `passingBaseIds` for the planner and the gap-fill passing precursors (`Stage6Planner.ScanFiles`). |
-| `ReconciliationConfig.TopNPeaks` (`ReconciliationConfig.cs:36`) | `5` | Number of CWT candidate peaks stored per precursor for later UseCwtPeak selection. |
+| `ReconciliationConfig.TopNPeaks` (`ReconciliationConfig.cs:36`) | `5` | Number of CWT candidate peaks computed per consulted precursor for UseCwtPeak selection. |
 | `--reconciliation-compaction-fdr <threshold>` (`OspreyCommandArgs.cs:116-117`) | `0.01` | Peptide-q gate for first-pass compaction, which sets the pool reconciliation operates on. Loosen (e.g. 0.05) to broaden the reconciliation pool. Not the consensus gate itself. |
 | `--protein-fdr <threshold>` (`config.EffectiveProteinFdr`, passed in `Stage6Planner.ScanFiles`) | protein machinery always runs; threshold 0.01 | Enables the Step 1 protein-rescue branch for borderline peptide-level evidence. When 0 / disabled, the rescue branch is off (`ConsensusRts.cs:249`). |
 | `--experiment-fdr <threshold>` | `0.01` | The second-pass (Stage 7) experiment FDR threshold; not consumed by planning itself. |

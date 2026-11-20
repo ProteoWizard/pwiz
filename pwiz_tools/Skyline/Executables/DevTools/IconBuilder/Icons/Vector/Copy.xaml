@@ -1,0 +1,16 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Two documents with folded corners: a gray-blue page behind with a dark bottom edge and
+       light-blue text bars, a blue-outlined page in front with blue text bars. -->
+  <Path Data="M 0.5,2.5 L 11.5,2.5 L 17.5,8.5 L 17.5,25.5 L 0.5,25.5 Z" Fill="#FFFFFF" Stroke="#9AAECA" StrokeThickness="1" StrokeLineJoin="Miter"/>
+  <Path Data="M 11.5,2.5 L 11.5,8.5 L 17.5,8.5 Z" Fill="#D9DDE2" Stroke="#9AAECA" StrokeThickness="1" StrokeLineJoin="Miter"/>
+  <Rectangle Canvas.Left="1" Canvas.Top="24" Width="16" Height="2" Fill="#354963"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="10" Width="8" Height="2" Fill="#AED0FF"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="14" Width="8" Height="2" Fill="#AED0FF"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="18" Width="8" Height="2" Fill="#AED0FF"/>
+  <Path Data="M 13,9 L 25,9 L 30,14 L 30,29 L 13,29 Z" Fill="#FFFFFF" Stroke="#2B57B1" StrokeThickness="2" StrokeLineJoin="Miter"/>
+  <Path Data="M 25,9 L 25,14 L 30,14 Z" Fill="#D2DEF0" Stroke="#2B57B1" StrokeThickness="2" StrokeLineJoin="Miter"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="28" Width="19" Height="2" Fill="#254A98"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="15" Width="12" Height="3" Fill="#7FA7F3"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="20" Width="12" Height="3" Fill="#7FA7F3"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="25" Width="8" Height="2" Fill="#7FA7F3"/>
+</Canvas>

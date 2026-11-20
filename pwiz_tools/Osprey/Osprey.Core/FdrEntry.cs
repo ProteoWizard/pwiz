@@ -168,12 +168,10 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// The per-entry score the EXPERIMENT-scope competitions ranked this entry on (sidecar
-        /// v4, issue #4522): max over the entry's rows across runs under the default
-        /// aggregation, <c>TargetDecoyCompetition.ComputeBaseIdMeanBestN</c>'s value under
-        /// mean-best-N. <see cref="Score"/> is the per-ROW discriminant the RUN-scope q-values
-        /// compete on; this is its experiment-scope counterpart, persisted beside the
-        /// experiment q-values so a consumer can re-gate at that scope without rebuilding the
-        /// roll-up and branching on <c>OSPREY_EXPERIMENT_AGG</c>.
+        /// v4, issue #4522): the max over the entry's rows across runs. <see cref="Score"/> is
+        /// the per-ROW discriminant the RUN-scope q-values compete on; this is its
+        /// experiment-scope counterpart, persisted beside the experiment q-values so a consumer
+        /// can re-gate at that scope without rebuilding the roll-up.
         /// </summary>
         public double ExperimentAggregateScore { get; set; }
 
@@ -183,35 +181,6 @@ namespace pwiz.Osprey.Core
         /// (e.g., for stubs loaded from a Parquet cache without features).
         /// </summary>
         public double[] Features { get; set; }
-
-        /// <summary>
-        /// All CWT-detected peak candidates evaluated during coelution scoring,
-        /// not just the winning peak. Populated by the scoring path; null on
-        /// stubs loaded from Parquet without the cwt_candidates column. Stage 6
-        /// reconciliation reads this list to decide whether a per-file peak
-        /// boundary should be replaced by an inter-replicate consensus
-        /// boundary, mirroring Rust CoelutionScoredEntry::cwt_candidates.
-        /// </summary>
-        public List<CwtCandidate> CwtCandidates { get; set; }
-
-        /// <summary>
-        /// Library fragment m/z list for this entry, mirroring Rust
-        /// CoelutionScoredEntry::fragment_mzs. Populated at scoring time
-        /// from the candidate's full fragment list (NOT just the top-N
-        /// used by XIC extraction). Null on stubs loaded from Parquet
-        /// before the column is read back. Carried through to the
-        /// reconciled .scores.parquet's `fragment_mzs` blob column for
-        /// downstream consumers (Skyline blib export, etc.).
-        /// </summary>
-        public double[] FragmentMzs { get; set; }
-
-        /// <summary>
-        /// Library fragment relative intensities for this entry, mirroring
-        /// Rust CoelutionScoredEntry::fragment_intensities. Same length /
-        /// ordering as <see cref="FragmentMzs"/>. f32 to match the
-        /// underlying LibraryFragment representation.
-        /// </summary>
-        public float[] FragmentIntensities { get; set; }
 
         /// <summary>
         /// Reference XIC retention times across the WINNING peak's

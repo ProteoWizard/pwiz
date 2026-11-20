@@ -61,15 +61,12 @@ namespace pwiz.Osprey.IO
         /// (issue #4522). <see cref="FdrScoreRecord.Score"/> is the per-ROW SVM discriminant,
         /// which is the quantity the RUN-scope q-values compete on; the experiment scope instead
         /// competes on a per-entry roll-up across runs, and without it persisted no consumer can
-        /// re-gate at experiment scope - it has to rebuild the roll-up itself and branch on
-        /// <c>OSPREY_EXPERIMENT_AGG</c>, which silently gives the wrong answer on exactly the
-        /// arms where the aggregation is under study.
+        /// re-gate at experiment scope without rebuilding the roll-up itself.
         ///
-        /// <para>Under the default aggregation this is the max over the entry's rows across all
-        /// runs; under mean-best-N it is <c>TargetDecoyCompetition.ComputeBaseIdMeanBestN</c>'s
-        /// value for the entry. Every row of an entry carried the same value in both modes even
-        /// when it was stored per row, which is what makes one record per entry_id lossless.
-        /// See <c>PercolatorQValues.ComputeExperimentAggregateScoreMap</c>.</para>
+        /// <para>This is the max over the entry's rows across all runs. Every row of an entry
+        /// carried the same value even when it was stored per row, which is what makes one record
+        /// per entry_id lossless. See
+        /// <c>PercolatorQValues.ComputeExperimentAggregateScoreMap</c>.</para>
         ///
         /// <para>Not a general q-to-score inverse: the best-of-runs clamp
         /// (<c>ClampExperimentQToBestRunFlat</c>, issue #4390) floors an experiment q up to a RUN

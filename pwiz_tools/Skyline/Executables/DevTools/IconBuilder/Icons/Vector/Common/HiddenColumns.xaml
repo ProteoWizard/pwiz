@@ -1,0 +1,43 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Hidden columns: rows of black and gray column marks with dotted gaps.
+       Traced from the native pixels: each rectangle is a run of one color on the 2-unit grid. -->
+  <Rectangle Canvas.Left="2" Canvas.Top="2" Width="4" Height="4" Fill="#000000"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="2" Width="2" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="2" Width="2" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="2" Width="2" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="2" Width="2" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="2" Width="2" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="4" Width="20" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="8" Width="2" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="8" Width="4" Height="4" Fill="#000000"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="8" Width="2" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="8" Width="2" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="8" Width="2" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="8" Width="2" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="10" Width="2" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="10" Width="16" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="12" Width="2" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="14" Width="4" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="14" Width="2" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="14" Width="2" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="14" Width="2" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="14" Width="2" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="16" Width="8" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="16" Width="16" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="20" Width="2" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="20" Width="4" Height="4" Fill="#000000"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="20" Width="2" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="20" Width="2" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="20" Width="2" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="20" Width="2" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="22" Width="2" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="22" Width="16" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="24" Width="2" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="26" Width="4" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="26" Width="2" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="26" Width="2" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="26" Width="2" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="26" Width="2" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="28" Width="8" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="28" Width="16" Height="2" Fill="#808080"/>
+</Canvas>
