@@ -104,6 +104,16 @@ public sealed class IterationListenerRegistry
         return result;
     }
 
+    /// <summary>
+    /// <see cref="Broadcast"/> for a loop that stops when a listener asks it to: throws
+    /// <see cref="OperationCanceledException"/> if any listener returns <see cref="IterationStatus.Cancel"/>.
+    /// </summary>
+    public void BroadcastOrCancel(IterationUpdate update)
+    {
+        if (Broadcast(update) == IterationStatus.Cancel)
+            throw new OperationCanceledException("Canceled by a progress listener.");
+    }
+
     private sealed class Subscription
     {
         public IIterationListener Listener { get; }

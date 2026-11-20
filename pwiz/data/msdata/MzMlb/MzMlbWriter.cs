@@ -40,6 +40,10 @@ public sealed class MzMlbWriter
     /// rather than aborting. See <see cref="MzmlWriter.ContinueOnError"/>.</summary>
     public bool ContinueOnError { get; set; }
 
+    /// <summary>Forwarded to the inner <see cref="MzmlWriter"/>; see
+    /// <see cref="MzmlWriter.SkipLog"/>.</summary>
+    public TextWriter SkipLog { get; set; } = Console.Error;
+
     /// <summary>Creates an mzMLb writer with the given binary-encoder config.
     /// The encoder config is mostly unused — mzMLb's binary arrays live in
     /// HDF5 datasets, not in the XML, so precision / compression / numpress
@@ -54,11 +58,22 @@ public sealed class MzMlbWriter
     /// <summary>Writes <paramref name="msd"/> to <paramref name="path"/> as
     /// an mzMLb file. Truncates the destination if it exists. Throws on I/O
     /// errors.</summary>
+    /// <remarks>When <see cref="ContinueOnError"/> skips an item, the file is written again
+    /// without it, so the mzML list counts match what the file holds. Rewinding the mzML
+    /// dataset alone would leave the skipped pass's arrays in the binary datasets, so each
+    /// pass starts a new file.</remarks>
     public void Write(MSData msd, string path)
     {
         ArgumentNullException.ThrowIfNull(msd);
         ArgumentException.ThrowIfNullOrEmpty(path);
 
+        ContinueOnErrorPolicy.WriteUntilNothingNewIsSkipped(
+            excluded => WritePass(msd, path, excluded), canRewrite: true, MzmlWriter.COUNTS_STILL_INCLUDE, SkipLog);
+    }
+
+    private SkippedItems WritePass(MSData msd, string path, SkippedItems excluded)
+    {
+        SkippedItems skipped;
         using var conn = MzMlbConnection.OpenForWrite(path, ChunkSize, CompressionLevel);
         using (var rawStream = conn.OpenMzMlStream())
         // Buffer the HDF5-backed stream: XmlWriter flushes in ~4 KB chunks and each
@@ -82,8 +97,9 @@ public sealed class MzMlbWriter
                 IterationListenerRegistry = IterationListenerRegistry,
                 ExternalBinarySink = conn,
                 ContinueOnError = ContinueOnError,
+                SkipLog = SkipLog,
             };
-            inner.Write(msd, stream);
+            skipped = inner.WritePass(msd, stream, excluded);
 
             // Emit the spectrum-index HDF5 datasets so MzMlbReaderAdapter can take the
             // lazy path on re-read. Format matches cpp Serializer_mzML.cpp:200-241:
@@ -113,5 +129,6 @@ public sealed class MzMlbWriter
                 conn.AppendBytes("mzML_spectrumIndex_idRef", idBytes);
             }
         }
+        return skipped;
     }
 }

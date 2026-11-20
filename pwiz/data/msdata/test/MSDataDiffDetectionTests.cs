@@ -102,15 +102,15 @@ public class MSDataDiffDetectionTests
 
         var a = Build();
         var b = Build();
-        a.Run.SpectrumList!.GetSpectrum(0, true).GetMZArray()!.Data[0] = 1.00001e10;
-        b.Run.SpectrumList!.GetSpectrum(0, true).GetMZArray()!.Data[0] = 1.00000e10;
+        Spec(a).GetMZArray()!.Data[0] = 1.00001e10;
+        Spec(b).GetMZArray()!.Data[0] = 1.00000e10;
         Assert.AreEqual(string.Empty, MSDataDiff.Describe(a, b, config),
             "1e-5 relative difference is inside a 1e-4 relative precision");
 
         var c = Build();
         var d = Build();
-        c.Run.SpectrumList!.GetSpectrum(0, true).GetMZArray()!.Data[0] = 1.00001e10;
-        d.Run.SpectrumList!.GetSpectrum(0, true).GetMZArray()!.Data[0] = 1.0002e10;
+        Spec(c).GetMZArray()!.Data[0] = 1.00001e10;
+        Spec(d).GetMZArray()!.Data[0] = 1.0002e10;
         Assert.AreNotEqual(string.Empty, MSDataDiff.Describe(c, d, config),
             "2e-4 relative difference is outside a 1e-4 relative precision");
     }
