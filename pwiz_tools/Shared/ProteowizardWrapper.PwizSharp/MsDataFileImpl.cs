@@ -1443,8 +1443,8 @@ namespace pwiz.ProteowizardWrapper
             return array;
         }
 
-        /// <param name="detach">True to take the binary arrays from <paramref name="spectrum"/>
-        /// instead of copying them. The caller must not read its arrays again.</param>
+        // detach: true to take the binary arrays from the spectrum instead of copying them.
+        // The caller must not read the spectrum's arrays again.
         private MsDataSpectrum GetSpectrum(Spectrum spectrum, int spectrumIndex, bool detach = false)
         {
             if (spectrum == null)

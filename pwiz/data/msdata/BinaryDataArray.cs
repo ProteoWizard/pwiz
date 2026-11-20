@@ -27,7 +27,7 @@ public sealed class BinaryDataArray : ParamContainer
             data.Capacity = 0;
             return Array.Empty<double>();
         }
-        var result = ListAccessor<double>.Items(data);
+        var result = ListAccessor<double>.Items(data) ?? data.ToArray();
         data.Clear();
         data.Capacity = 0;  // drop the list's reference to the returned array
         return result;
@@ -38,13 +38,18 @@ public sealed class BinaryDataArray : ParamContainer
 }
 
 /// <summary>
-/// Reaches <see cref="List{T}"/>'s backing array. The runtime resolves an accessor into a generic
-/// type only when the accessor itself is declared over the open type parameter.
+/// Reaches <see cref="List{T}"/>'s backing array through its private <c>_items</c> field, or
+/// returns null if a runtime names it differently. Reflection rather than an UnsafeAccessor
+/// extern: an extern method has no IL, and the coverage profiler on the build agents fails the
+/// test run when it cannot instrument one. The lookup happens once per spectrum array, so its
+/// cost is negligible next to the copy it saves.
 /// </summary>
 internal static class ListAccessor<T>
 {
-    [System.Runtime.CompilerServices.UnsafeAccessor(System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "_items")]
-    public static extern ref T[] Items(List<T> list);
+    private static readonly System.Reflection.FieldInfo? ItemsField = typeof(List<T>).GetField("_items",
+        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+
+    public static T[]? Items(List<T> list) => ItemsField?.GetValue(list) as T[];
 }
 
 /// <summary>A binary array of 64-bit integers. Port of pwiz::msdata::IntegerDataArray.</summary>
