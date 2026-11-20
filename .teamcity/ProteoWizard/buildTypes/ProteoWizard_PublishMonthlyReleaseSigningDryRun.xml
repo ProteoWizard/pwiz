@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="a19808b2-9a3b-4d6d-bad7-677b002b6f5c" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Core Windows x86_64 - Publish monthly release (signing dry run)</name>
+  <description>Dry run of a signed monthly release: picks the build the monthly job would release, without pinning or tagging it or publishing metadata, and rebuilds that commit's NoNetRuntime installer signed with the KeyLocker certificate. Each run uses 6 KeyLocker signatures: 4 executables, the uninstaller and the Setup.exe.</description>
+  <settings>
+    <options>
+      <option name="artifactRules" value="releases_out =&gt; releases&#xA;scripts/installer/build/ProteoWizard-*.exe =&gt; signed&#xA;scripts/installer/build/installer-version.txt =&gt; signed" />
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutDirectory" value="pwiz-release-signing" />
+      <option name="checkoutMode" value="ON_AGENT" />
+      <option name="executionTimeoutMin" value="90" />
+    </options>
+    <parameters>
+      <param name="release.latest" value="--latest" spec="checkbox checkedValue='--latest' uncheckedValue='' label='Use the latest build' description='Rebuild the newest successful build, as a daily release would; uncheck for the build a month release would use (fails if that month is already released)' display='normal'" />
+      <param name="release.month" value="" spec="text label='Release month' description='YYYY-MM whose last build to rebuild, with the latest build unchecked; leave empty for the previous month' validationMode='any' display='normal'" />
+      <param name="sign.cert.file" value="C:\KeyLocker\University of Washington (MacCoss Lab).crt" spec="text label='Signing certificate' description='Path on the agent to the public certificate (.crt) of the KeyLocker key' validationMode='not_empty' display='normal'" />
+      <param name="sign.key.alias" value="key_637015839" spec="text label='KeyLocker key alias' validationMode='not_empty' display='normal'" />
+    </parameters>
+    <build-runners order="pip_upgrade_certifi, Dry_run_monthly_release, Check_out_release_commit, Build_signed_installer">
+      <runner id="pip_upgrade_certifi" name="" type="pip_upgrade_certifi">
+        <parameters>
+          <param name="env.PYTHON_HOME" value="C:\Python38" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="Dry_run_monthly_release" name="Dry run with guest access" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="%python3.executable%" />
+          <param name="command.parameters" value="scripts/misc/publish_monthly_release.py --dry-run --output-dir releases_out --commit-file release_commit.txt --month=%release.month% %release.latest%" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="Check_out_release_commit" name="Check out the release's commit" type="simpleRunner">
+        <parameters>
+          <param name="script.content"><![CDATA[if not exist release_commit.txt (
+    echo ##teamcity[buildProblem description='The dry run picked no build to release, so there is nothing to rebuild']
+    exit /b 1
+)
+set /p RELEASE_COMMIT=<release_commit.txt
+REM The VCS root clones at depth 1, so the commit is fetched by SHA, as the monthly seed builds did
+git fetch --depth=1 --no-tags origin %%RELEASE_COMMIT%% || exit /b 1
+git checkout --force --detach FETCH_HEAD || exit /b 1
+git submodule update --init --recursive --force --depth 1 || exit /b 1
+git log -1 --format="Building %%%%H (%%%%ci)"
+REM The commit's own build.ps1 builds its installers, and commits before installer signing cannot sign
+findstr /c:"SignKeyAlias" scripts\installer\build.ps1 >nul || (
+    echo ##teamcity[buildProblem description='Commit %%RELEASE_COMMIT%% predates installer signing, so its installers cannot be rebuilt signed']
+    exit /b 1
+)
+REM This checkout persists between runs, and build.ps1 keeps earlier versions' installers beside new ones
+if exist scripts\installer\build del /q scripts\installer\build\ProteoWizard-*.exe scripts\installer\build\installer-version.txt 2>nul
+exit /b 0]]></param>
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner id="Build_signed_installer" name="Build the NoNetRuntime installer, signed" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="pwsh.exe" />
+          <param name="command.parameters" value="-NoProfile -ExecutionPolicy Bypass -File scripts/installer/build.ps1 -AutomatedBuild -Variants NoNetRuntime -SignKeyAlias %sign.key.alias% -SignCertFile &quot;%sign.cert.file%&quot;" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizard_PwizGithubMasterWithPRs" />
+    </vcs-settings>
+    <requirements>
+      <!-- The KeyLocker tools and credentials are only on this agent -->
+      <equals id="RQ_signing_agent" name="teamcity.agent.name" value="MacCoss TeamCity Agent 1" />
+    </requirements>
+    <build-triggers />
+    <cleanup>
+      <policy type="days" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepDays.count" value="14" />
+        </parameters>
+      </policy>
+    </cleanup>
+  </settings>
+</build-type>
