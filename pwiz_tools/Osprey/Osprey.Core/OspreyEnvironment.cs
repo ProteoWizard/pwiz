@@ -406,6 +406,16 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static double DirectReadAhead { get; set; } = ParseDoubleOrNull(ENV_DIRECT_READ_AHEAD) ?? 1;
 
+        private static readonly EnvVar ENV_DIRECT_READ_THREADS = new EnvVar(@"OSPREY_DIRECT_READ_THREADS", EnvVarGroup.performance,
+            @"Under OSPREY_DIRECT_READ, how many input files the reader reads at once.")
+            { DefaultValue = @"2" };
+
+        /// <summary>
+        /// EXPERIMENTAL. How many input files the <see cref="DirectRead"/> reader reads at once, each on
+        /// its own thread.
+        /// </summary>
+        public static int DirectReadThreads { get; set; } = ParseIntOrNull(ENV_DIRECT_READ_THREADS) ?? 2;
+
         /// <summary>
         /// The log line naming the window-read switches when either is set, so a timing run records
         /// which arm it was; null at the defaults, leaving a default run's log unchanged.

@@ -37,12 +37,17 @@ namespace pwiz.Osprey.Tasks
     /// overlaps the scoring of the files before it. A forward read completes no isolation window
     /// until it reaches the end of the file, so the overlap is across files, never within one.
     ///
+    /// <para>Files are read by <see cref="OspreyEnvironment.DirectReadThreads"/> threads at
+    /// above-normal priority: one decode thread competing with every scoring thread fell behind
+    /// four scoring lanes (77-120 s per 6 GB Astral file, against 37-41 s on an idle machine).</para>
+    ///
     /// <para>Memory is bounded by a byte budget over every file's resident peaks: (lanes +
     /// <see cref="OspreyEnvironment.DirectReadAhead"/>) times the first file's, which is unknown
-    /// until that file is read, so the first file reads unbudgeted. The reader holds back,
-    /// spectrum by spectrum, while the next spectrum would exceed the budget and another file
-    /// still holds memory; a file that alone exceeds it is still read, so the reader can never
-    /// wait on itself. Memory comes back as scoring takes each window for the last time
+    /// until that file is read, so the first files read unbudgeted. A read holds back, spectrum by
+    /// spectrum, while the next spectrum would exceed the budget and memory is held that will come
+    /// back without it: by files a lane has taken, which scoring frees, or, for any file but the
+    /// oldest still being read, by any other file. The oldest read therefore never waits on a read
+    /// behind it, and no read ever waits on itself. Memory comes back as scoring takes each window for the last time
     /// (<see cref="SpectraWindowIndex.ReleaseWindowsAsLoaded"/>) and, for whatever remains, when
     /// the lane finishes the file (<see cref="Release"/>).</para>
     ///
@@ -51,8 +56,8 @@ namespace pwiz.Osprey.Tasks
     /// file whose lane needs no spectra (its outputs are current) is still read; the cost is the
     /// read, not correctness.</para>
     ///
-    /// <para>The reader runs on a <see cref="QueueWorker{TItem}"/>: its producer thread reads each
-    /// file and its consumer thread hands the finished file to the lane waiting for it.</para>
+    /// <para>The reader runs on a <see cref="QueueWorker{TItem}"/>, whose producer threads read the
+    /// files; each publishes its own finished file to the lane waiting for it.</para>
     /// </summary>
     internal sealed class SpectraPrefetcher : IDisposable
     {
@@ -65,6 +70,8 @@ namespace pwiz.Osprey.Tasks
         private readonly HashSet<string> _skipped = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private QueueWorker<PrefetchedFile> _worker;
         private int _next;
+        private readonly SortedSet<int> _reading = new SortedSet<int>();
+        private long _takenBytes;
         private bool _readerDone;
         private bool _disposed;
         private long _residentBytes;
@@ -109,7 +116,7 @@ namespace pwiz.Osprey.Tasks
                 if (_worker == null && !_disposed)
                 {
                     _worker = new QueueWorker<PrefetchedFile>(ReadNext, Publish);
-                    _worker.RunAsync(1, @"Spectra handoff", 1, @"Spectra read");
+                    _worker.RunAsync(1, @"Spectra handoff", Math.Max(1, OspreyEnvironment.DirectReadThreads), @"Spectra read");
                 }
                 while (true)
                 {
@@ -123,6 +130,7 @@ namespace pwiz.Osprey.Tasks
                 if (file.Taken || file.Abandoned)
                     return null;
                 file.Taken = true;
+                _takenBytes += file.Bytes - file.ReleasedBytes;
             }
             swWait.Stop();
             if (file.Error != null)
@@ -166,6 +174,8 @@ namespace pwiz.Osprey.Tasks
                 {
                     // A file still being read stops at its next spectrum (see Reserve).
                     file.Abandoned = true;
+                    if (file.Taken)
+                        _takenBytes -= file.Bytes - file.ReleasedBytes;
                     _residentBytes -= file.Bytes - file.ReleasedBytes;
                     file.ReleasedBytes = file.Bytes;
                     file.Result = null;
@@ -193,6 +203,7 @@ namespace pwiz.Osprey.Tasks
         // Producer: read the next file not skipped, in full. Null ends the reading.
         private PrefetchedFile ReadNext(int threadIndex)
         {
+            Thread.CurrentThread.Priority = ThreadPriority.AboveNormal;
             PrefetchedFile file;
             lock (_lock)
             {
@@ -204,8 +215,10 @@ namespace pwiz.Osprey.Tasks
                     Monitor.PulseAll(_lock);
                     return null;
                 }
-                file = new PrefetchedFile(_inputs[_next++]);
+                file = new PrefetchedFile(_inputs[_next], _next);
+                _next++;
                 _files[file.Path] = file;
+                _reading.Add(file.Order);
             }
             var sw = Stopwatch.StartNew();
             try
@@ -221,6 +234,7 @@ namespace pwiz.Osprey.Tasks
                 file.Result = null;
                 lock (_lock)
                 {
+                    _reading.Remove(file.Order);
                     _readerDone = true;
                     Monitor.PulseAll(_lock);
                 }
@@ -234,6 +248,12 @@ namespace pwiz.Osprey.Tasks
             file.ReadSeconds = sw.Elapsed.TotalSeconds;
             lock (_lock)
             {
+                _reading.Remove(file.Order);
+                // Published here, not by the worker's consumer: with more than one producer the
+                // worker stops its consumer when the FIRST producer runs out of files, which would
+                // strand a file another producer is still reading.
+                file.Read = true;
+                Monitor.PulseAll(_lock);
                 // The first file read sets the budget.
                 if (_budgetBytes == 0 && file.Error == null)
                     _budgetBytes = (long)(_budgetFiles * file.Bytes);
@@ -244,14 +264,9 @@ namespace pwiz.Osprey.Tasks
             return file;
         }
 
-        // Consumer: hand a read file to the lane waiting for it.
-        private void Publish(PrefetchedFile file, int threadIndex)
+        // Consumer: the reader has already published the file (see ReadNext).
+        private static void Publish(PrefetchedFile file, int threadIndex)
         {
-            lock (_lock)
-            {
-                file.Read = true;
-                Monitor.PulseAll(_lock);
-            }
         }
 
         // Called by the reader before it reads the next spectrum: hold back while that would
@@ -261,7 +276,7 @@ namespace pwiz.Osprey.Tasks
             lock (_lock)
             {
                 while (!_disposed && !file.Abandoned && _budgetBytes > 0 && _residentBytes + bytes > _budgetBytes &&
-                       _residentBytes - (file.Bytes - file.ReleasedBytes) > 0)
+                       (_takenBytes > 0 || (_reading.Min != file.Order && _residentBytes - (file.Bytes - file.ReleasedBytes) > 0)))
                 {
                     Monitor.Wait(_lock);
                 }
@@ -281,6 +296,8 @@ namespace pwiz.Osprey.Tasks
             {
                 bytes = Math.Max(0, Math.Min(bytes, file.Bytes - file.ReleasedBytes));
                 file.ReleasedBytes += bytes;
+                if (file.Taken)
+                    _takenBytes -= bytes;
                 _residentBytes -= bytes;
                 Monitor.PulseAll(_lock);
             }
@@ -293,12 +310,14 @@ namespace pwiz.Osprey.Tasks
 
         private sealed class PrefetchedFile
         {
-            public PrefetchedFile(string path)
+            public PrefetchedFile(string path, int order)
             {
                 Path = path;
+                Order = order;
             }
 
             public string Path { get; }
+            public int Order { get; }
             public SpectrumFileResult Result { get; set; }
             public Exception Error { get; set; }
             public double ReadSeconds { get; set; }
