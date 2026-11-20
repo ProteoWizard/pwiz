@@ -41,7 +41,15 @@ REM The VCS root clones at depth 1, so the commit is fetched by SHA, as the mont
 git fetch --depth=1 --no-tags origin %%RELEASE_COMMIT%% || exit /b 1
 git checkout --force --detach FETCH_HEAD || exit /b 1
 git submodule update --init --recursive --force --depth 1 || exit /b 1
-git log -1 --format="Building %%H (%%ci)"]]></param>
+git log -1 --format="Building %%%%H (%%%%ci)"
+REM The commit's own build.ps1 builds its installers, and commits before installer signing cannot sign
+findstr /c:"SignKeyAlias" scripts\installer\build.ps1 >nul || (
+    echo ##teamcity[buildProblem description='Commit %%RELEASE_COMMIT%% predates installer signing, so its installers cannot be rebuilt signed']
+    exit /b 1
+)
+REM This checkout persists between runs, and build.ps1 keeps earlier versions' installers beside new ones
+if exist scripts\installer\build del /q scripts\installer\build\ProteoWizard-*.exe scripts\installer\build\installer-version.txt 2>nul
+exit /b 0]]></param>
           <param name="teamcity.step.mode" value="default" />
           <param name="use.custom.script" value="true" />
         </parameters>

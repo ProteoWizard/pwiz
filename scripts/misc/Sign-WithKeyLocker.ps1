@@ -58,10 +58,12 @@ function Find-SignTool {
     if ($onPath) { return $onPath.Source }
     $kits = Join-Path ${env:ProgramFiles(x86)} 'Windows Kits\10\bin'
     if (Test-Path $kits) {
-        $found = Get-ChildItem -Path $kits -Filter signtool.exe -Recurse -ErrorAction SilentlyContinue |
-            Where-Object { $_.Directory.Name -eq 'x64' } |
-            Sort-Object { [version]($_.Directory.Parent.Name -replace '[^\d.]', '') } -ErrorAction SilentlyContinue |
-            Select-Object -Last 1
+        $x64 = @(Get-ChildItem -Path $kits -Filter signtool.exe -Recurse -ErrorAction SilentlyContinue |
+            Where-Object { $_.Directory.Name -eq 'x64' })
+        # Newest versioned SDK (bin\10.0.x.y\x64), else the unversioned bin\x64 of older SDKs
+        $found = $x64 | Where-Object { $_.Directory.Parent.Name -match '^\d+(\.\d+)+$' } |
+            Sort-Object { [version]$_.Directory.Parent.Name } | Select-Object -Last 1
+        if (-not $found) { $found = $x64 | Select-Object -First 1 }
         if ($found) { return $found.FullName }
     }
     return $null

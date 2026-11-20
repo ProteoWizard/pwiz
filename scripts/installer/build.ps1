@@ -243,8 +243,10 @@ Write-Host "    vendor EULAs: $($eulas.Count) files"
 Build-Payload $stagingDir
 
 # 3a. Sign our own executables in the payload (signing builds only), before ISCC packs them.
-#     Every variant packs this one staging directory, so each is signed once. Third-party
-#     executables (7za.exe) and DLLs are left as they are.
+#     Every variant packs this one staging directory, so each is signed once. Only the
+#     executables, to keep each release to a few KeyLocker signatures: our own DLLs (Pwiz.*,
+#     and the assemblies behind these executables) are not signed yet, and third-party files
+#     (7za.exe, NuGet DLLs) are left as their publishers shipped them.
 $signScript = Join-Path $pwizSharp "scripts/misc/Sign-WithKeyLocker.ps1"
 $ownExecutables = @("MSConvertGUI-sharp.exe", "msconvert.exe", "seems-sharp.exe", "msdiff.exe")
 if ($sign) {
@@ -509,8 +511,10 @@ function Invoke-Iscc {
         [string] $Staging = $stagingDir
     )
     Write-Host "`n==> ISCC compile: $OutputBaseFilename" -ForegroundColor Cyan
-    $args = @(
-        "/Q",
+    # Quiet, except when signing: /Q would hide the sign tool's output, which says why a
+    # signing failed
+    $quiet = if ($sign) { @() } else { @("/Q") }
+    $args = $quiet + @(
         "/DStagingDir=$Staging",
         "/DOutputDir=$outDir",
         "/DOutputBaseFilename=$OutputBaseFilename",
