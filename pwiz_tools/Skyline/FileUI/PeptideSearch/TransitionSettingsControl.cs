@@ -465,7 +465,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 measuredIons,
                 settings.Filter.PrecursorMzWindow,
                 exclusionUseDIAWindow,
-                settings.Filter.AutoSelect);
+                settings.Filter.AutoSelect,
+                settings.Filter.IncludeLocalizingIons);
             Helpers.AssignIfEquals(ref filter, settings.Filter);
 
             // Validate and store library settings

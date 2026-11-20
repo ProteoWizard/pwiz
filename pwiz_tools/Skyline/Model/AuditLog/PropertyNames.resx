@@ -399,6 +399,9 @@
   <data name="IonMobilityWindowWidthCalculator_ResolvingPower" xml:space="preserve">
     <value>Resolving power</value>
   </data>
+  <data name="TransitionFilter_IncludeLocalizingIons" xml:space="preserve">
+    <value>Include ions that localize modifications</value>
+  </data>
   <data name="TransitionFilter_ExclusionUseDIAWindow" xml:space="preserve">
     <value>Use DIA precursor window for exlucison</value>
   </data>

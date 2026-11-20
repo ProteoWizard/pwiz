@@ -31,6 +31,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Localization;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -90,7 +91,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return FullScan.IsolationScheme == null || FullScan.IsolationScheme.IsInRangeMz(mz);
         }
 
-        public bool Accept(Target sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz)
+        public bool Accept(Target sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz, SiteDeterminingIonAnalyzer localizingAnalyzer = null, TransitionLosses losses = null)
         {
             if (Filter.ExclusionUseDIAWindow && FullScan.IsolationScheme != null &&
                 FullScan.IsolationScheme.MayFallIntoSameWindow(ionMz, precursorMz))
@@ -98,7 +99,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 return false;
             }
 
-            return Filter.Accept(sequence, precursorMz, type, cleavageOffset, ionMz, start, end, startMz);
+            return Filter.Accept(sequence, precursorMz, type, cleavageOffset, ionMz, start, end, startMz, localizingAnalyzer, losses);
         }
 
         public bool HasOptimizationLibrary
@@ -673,7 +674,8 @@ namespace pwiz.Skyline.Model.DocSettings
                                 IList<MeasuredIon> measuredIons,
                                 double precursorMzWindow,
                                 bool exclusionUseDIAWindow,
-                                bool autoSelect)
+                                bool autoSelect,
+                                bool includeLocalizingIons = false)
         {
             PeptidePrecursorCharges = peptidePrecursorCharges;
             PeptideProductCharges = peptideProductCharges;
@@ -687,6 +689,7 @@ namespace pwiz.Skyline.Model.DocSettings
             PrecursorMzWindow = precursorMzWindow;
             ExclusionUseDIAWindow = exclusionUseDIAWindow;
             AutoSelect = autoSelect;
+            IncludeLocalizingIons = includeLocalizingIons;
 
             Validate();
         }
@@ -886,12 +889,23 @@ namespace pwiz.Skyline.Model.DocSettings
             return PrecursorMzWindow != 0 && Math.Abs(ionMz - precursorMz)*2 < PrecursorMzWindow;
         }
 
-        public bool Accept(Target sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz)
+        /// <summary>
+        /// Decides whether a product ion is selected by the filter: inside the fragment range, a
+        /// special ion, or (when <see cref="IncludeLocalizingIons"/> is on and the caller passes
+        /// the peptide's analyzer) an ion that uniquely localizes a modification. The precursor
+        /// exclusion window applies in every case.
+        /// </summary>
+        public bool Accept(Target sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz, SiteDeterminingIonAnalyzer localizingAnalyzer = null, TransitionLosses losses = null)
         {
             if (IsExcluded(ionMz, precursorMz))
                 return false;
             if (start <= cleavageOffset && cleavageOffset <= end && startMz <= ionMz)
-                return true;            
+                return true;
+            if (IncludeLocalizingIons && localizingAnalyzer != null &&
+                localizingAnalyzer.IsUniqueToPrecursor(type, cleavageOffset, losses))
+            {
+                return true;
+            }
             return IsSpecialFragment(sequence, type, cleavageOffset);
         }
 
@@ -904,6 +918,14 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         [Track]
         public bool ExclusionUseDIAWindow { get; private set; }
+
+        /// <summary>
+        /// Whether product ions that uniquely localize an ambiguously placed modification (e.g. one
+        /// phosphorylation among several candidate residues) are selected even when they fall
+        /// outside the fragment ion range.
+        /// </summary>
+        [Track]
+        public bool IncludeLocalizingIons { get; private set; }
 
         #region Property change methods
 
@@ -974,6 +996,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.ExclusionUseDIAWindow = prop);
         }
 
+        public TransitionFilter ChangeIncludeLocalizingIons(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.IncludeLocalizingIons = prop);
+        }
+
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -999,6 +1026,7 @@ namespace pwiz.Skyline.Model.DocSettings
             precursor_mz_window,
             exclusion_use_dia_window,
             auto_select,
+            include_localizing_ions,
             precursor_adducts,  // For small molecule use
             product_adducts,  // For small molecule use
             small_molecule_fragment_types,
@@ -1075,6 +1103,7 @@ namespace pwiz.Skyline.Model.DocSettings
             bool lecacyGluAsp = reader.GetBoolAttribute(ATTR.include_c_glu_asp);
             ExclusionUseDIAWindow = reader.GetBoolAttribute(ATTR.exclusion_use_dia_window);
             AutoSelect = reader.GetBoolAttribute(ATTR.auto_select);
+            IncludeLocalizingIons = reader.GetBoolAttribute(ATTR.include_localizing_ions);
 
             // Consume tag
             reader.Read();
@@ -1110,6 +1139,7 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.precursor_mz_window, PrecursorMzWindow);
             writer.WriteAttribute(ATTR.exclusion_use_dia_window, ExclusionUseDIAWindow);
             writer.WriteAttribute(ATTR.auto_select, AutoSelect);
+            writer.WriteAttribute(ATTR.include_localizing_ions, IncludeLocalizingIons);
             writer.WriteElements(MeasuredIons);
         }
 
@@ -1216,7 +1246,8 @@ namespace pwiz.Skyline.Model.DocSettings
                    ArrayUtil.EqualsDeep(obj.MeasuredIons, MeasuredIons) &&
                    obj.PrecursorMzWindow.Equals(PrecursorMzWindow) &&
                    obj.ExclusionUseDIAWindow.Equals(ExclusionUseDIAWindow) &&
-                   obj.AutoSelect.Equals(AutoSelect);
+                   obj.AutoSelect.Equals(AutoSelect) &&
+                   obj.IncludeLocalizingIons.Equals(IncludeLocalizingIons);
         }
 
         public override bool Equals(object obj)
@@ -1243,6 +1274,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ PrecursorMzWindow.GetHashCode();
                 result = (result*397) ^ ExclusionUseDIAWindow.GetHashCode();
                 result = (result*397) ^ AutoSelect.GetHashCode();
+                result = (result*397) ^ IncludeLocalizingIons.GetHashCode();
                 return result;
             }
         }

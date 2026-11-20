@@ -187,6 +187,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     : DocNode.Transition.AA.ToString();
             }
         }
+        [InvariantDisplayName("UniquelyLocalizing")]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
+        public bool UniquelyLocalizing
+        {
+            get { return Precursor.Peptide.IsUniquelyLocalizing(DocNode); }
+        }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public double? LossNeutralMass

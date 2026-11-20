@@ -24,6 +24,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Localization;
 using RankedMI = pwiz.Skyline.Model.Lib.LibraryRankedSpectrumInfo.RankedMI;
 using pwiz.Skyline.Util;
 
@@ -214,12 +215,19 @@ namespace pwiz.Skyline.Model.Lib
             // Get values of interest from the settings.
             TransitionSettings = settings.TransitionSettings;
 
+            // Product ions that uniquely localize a modification rank past the fragment range when
+            // the filter asks for them, so library-filtered picking agrees with TransitionGroup.GetTransitions.
+            LocalizingAnalyzer = isProteomic && TransitionSettings.Filter.IncludeLocalizingIons
+                ? SiteDeterminingIonAnalyzer.CreateIfLocalizable(settings, group.Peptide, lookupMods)
+                : null;
+
             // Get potential losses to all fragments in this peptide
             TransitionLossMap =
                 TransitionLossMap.ForTarget(Sequence, settings.PeptideSettings.Modifications, lookupMods, MassType);
         }
 
         public TargetInfo TargetInfoObj { get; private set; }
+        private SiteDeterminingIonAnalyzer LocalizingAnalyzer { get; }
 
         public TransitionLibraryPick Pick
         {
@@ -880,7 +888,7 @@ namespace pwiz.Skyline.Model.Lib
                     if (TargetInfoObj.LookupMods == null || !TargetInfoObj.LookupMods.HasCrosslinks)
                     {
                         if (!TransitionSettings.Accept(Sequence, MoleculeMassesObj.precursorMz, type, offset, ionMz, start,
-                            end, startMz))
+                            end, startMz, LocalizingAnalyzer, match.Losses))
                         {
                             return false;
                         }

@@ -4516,6 +4516,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Include ions that localize modifications.
+        /// </summary>
+        public static string TransitionFilter_IncludeLocalizingIons {
+            get {
+                return ResourceManager.GetString("TransitionFilter_IncludeLocalizingIons", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Special ions.
         /// </summary>
         public static string TransitionFilter_MeasuredIons {

@@ -1528,6 +1528,15 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Uniquely localizes:.
+        /// </summary>
+        public static string GraphSpectrum_ToolTip_Uniquely_localizes {
+            get {
+                return ResourceManager.GetString("GraphSpectrum_ToolTip_Uniquely_localizes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure loading spectrum. Library may be corrupted..
         /// </summary>
         public static string GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted {

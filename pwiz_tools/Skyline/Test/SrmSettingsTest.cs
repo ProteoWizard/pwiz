@@ -773,6 +773,14 @@ namespace pwiz.SkylineTest
                 "</transition_filter>");
             AssertEx.DeserializeNoError<TransitionFilter>("<transition_filter precursor_charges=\"2\" product_charges=\"1\" " +
                 "fragment_range_first=\"m/z > precursor\" fragment_range_last=\"last y-ion - 3\" precursor_mz_window=\"" + TransitionFilter.MAX_EXCLUSION_WINDOW + "\"/>");
+            // Localizing ions: off when the attribute is absent, round-trips when set
+            var filterDefault = AssertEx.Deserialize<TransitionFilter>("<transition_filter precursor_charges=\"2\" product_charges=\"1\" " +
+                "fragment_range_first=\"m/z > precursor\" fragment_range_last=\"last y-ion - 3\"/>");
+            Assert.IsFalse(filterDefault.IncludeLocalizingIons);
+            var filterLocalizing = AssertEx.Deserialize<TransitionFilter>("<transition_filter precursor_charges=\"2\" product_charges=\"1\" " +
+                "fragment_range_first=\"m/z > precursor\" fragment_range_last=\"last y-ion - 3\" include_localizing_ions=\"true\"/>");
+            Assert.IsTrue(filterLocalizing.IncludeLocalizingIons);
+            AssertEx.Serializable(filterLocalizing, (expected, actual) => Assert.AreEqual(expected, actual));
 
             // Bad charges
             AssertEx.DeserializeError<TransitionFilter>("<transition_filter precursor_charges=\"0\" product_charges=\"1\" " +

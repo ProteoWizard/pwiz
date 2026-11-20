@@ -1658,7 +1658,7 @@ DPの最適化値が、メソッドおよびトランジションのリストで
     <value>21, 15</value>
   </data>
   <data name="tabControlPeptidesSmallMols.Size" type="System.Drawing.Size, System.Drawing">
-    <value>331, 331</value>
+    <value>331, 355</value>
   </data>
   <data name="tabControlPeptidesSmallMols.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1754,7 +1754,7 @@ DPの最適化値が、メソッドおよびトランジションのリストで
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabPage1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>313, 305</value>
+    <value>313, 329</value>
   </data>
   <data name="tabPage1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1879,7 +1879,7 @@ DPの最適化値が、メソッドおよびトランジションのリストで
     <value>8, 75</value>
   </data>
   <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>309, 222</value>
+    <value>309, 246</value>
   </data>
   <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
