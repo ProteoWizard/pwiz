@@ -406,17 +406,30 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>
         /// The score-ranked counterpart of <see cref="SubsampleByPeptideGroup"/>, for round 2 of
-        /// the two-round tree training: the same peptide groups (a target, its paired decoy and the
+        /// the two-round training: the same peptide groups (a target, its paired decoy and the
         /// peptide's other charge states stay together), taken in descending order of each group's
         /// BEST row score instead of a shuffle, until the next group would pass
         /// <paramref name="maxEntries"/>. Groups whose best scores tie are taken in ordinal key
         /// order, so the selection is a total order. Returns ascending indices.
+        ///
+        /// <para>With <paramref name="minBestScore"/> (OSPREY_GBT_PREFILTER_Q) the walk also stops
+        /// at the first group whose best score is below it, so the selection is every group at or
+        /// above that score, up to <paramref name="maxEntries"/> rows: a confidence cut that scales
+        /// with the data, where the cap alone is a fixed row count.</para>
+        ///
+        /// <para>With <paramref name="sampleSeed"/> (OSPREY_GBT_PREFILTER_SAMPLE) the groups at or
+        /// above <paramref name="minBestScore"/> are only the eligible set: when they hold more than
+        /// <paramref name="maxEntries"/> rows, a seeded Fisher-Yates shuffle of them (the same
+        /// xorshift as <see cref="SubsampleByPeptideGroup"/>) is taken up to the cap instead of the
+        /// best-scoring ones, so the cap bounds the cost without dropping the low-confidence end.</para>
         /// </summary>
         internal static int[] SelectTopScoringGroups(
-            bool[] labels, uint[] entryIds, string[] peptides, double[] scores, int maxEntries)
+            bool[] labels, uint[] entryIds, string[] peptides, double[] scores, int maxEntries,
+            double minBestScore = double.NegativeInfinity, ulong? sampleSeed = null)
         {
             int n = labels.Length;
-            if (n <= maxEntries)
+            bool scoreCut = !double.IsNegativeInfinity(minBestScore);
+            if (n <= maxEntries && !scoreCut)
             {
                 var all = new int[n];
                 for (int i = 0; i < n; i++)
@@ -443,10 +456,40 @@ namespace pwiz.Osprey.FDR
                 return c != 0 ? c : string.Compare(a.Key, b.Key, StringComparison.Ordinal);
             });
 
-            var selected = new List<int>(maxEntries);
+            if (sampleSeed.HasValue)
+            {
+                // The eligible groups: the score-ordered prefix at or above the cut (at least one).
+                int eligible = 0;
+                long eligibleRows = 0;
+                while (eligible < groups.Count &&
+                       (eligible == 0 || groups[eligible].BestScore >= minBestScore))
+                {
+                    eligibleRows += groups[eligible].Rows.Count;
+                    eligible++;
+                }
+                if (eligibleRows > maxEntries)
+                {
+                    groups.RemoveRange(eligible, groups.Count - eligible);
+                    ulong rngState = sampleSeed.Value;
+                    for (int i = groups.Count - 1; i >= 1; i--)
+                    {
+                        rngState ^= rngState << 13;
+                        rngState ^= rngState >> 7;
+                        rngState ^= rngState << 17;
+                        int j = (int)(rngState % (ulong)(i + 1));
+                        var tmp = groups[i];
+                        groups[i] = groups[j];
+                        groups[j] = tmp;
+                    }
+                }
+            }
+
+            var selected = new List<int>(Math.Min(maxEntries, n));
             foreach (var group in groups)
             {
                 if (selected.Count + group.Rows.Count > maxEntries && selected.Count > 0)
+                    break;
+                if (group.BestScore < minBestScore && selected.Count > 0)
                     break;
                 selected.AddRange(group.Rows);
             }

@@ -69,12 +69,15 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     internal sealed class PerFileScoringTask : OspreyTask
     {
-        // Equal-weight progress segments one input file's work is divided into for
-        // the --parallel-files "[i] p%" aggregate line: read spectra, calibrate RT/
-        // mass, score, write the scores parquet. ProcessFile advances them through
+        // Progress segments one input file's work is divided into for the
+        // --parallel-files "[i] p%" aggregate line: read spectra, calibrate RT/mass,
+        // score, write the scores parquet. ProcessFile advances them through
         // MultiProgressReporter.BeginSegment at each phase boundary; off the parallel
-        // path those calls are no-ops.
-        private const int PROCESS_FILE_SEGMENTS = 4;
+        // path those calls are no-ops. Weighted by time: coelution scoring is ~80% of a
+        // SEA-AD file and ~95% of a CHS file, calibration ~15% and ~3%. With equal
+        // quarters one visible percent of scoring took 4% of its windows, and 27 CHS
+        // files sat at 50% together for 287 s.
+        private static readonly int[] PROCESS_FILE_SEGMENT_WEIGHTS = { 2, 10, 80, 8 };
 
         /// <summary>
         /// This task's name, as a constant so the CLI selector, the validity stamp another
@@ -192,15 +195,12 @@ namespace pwiz.Osprey.Tasks
 
         // Phase B resume surface: the library and every input mzML are
         // read; per-file .scores.parquet + .calibration.json are written.
-        // ValidityKey is the default: the search and library hashes, plus
-        // the peak-pick arm the base key carries. The pick belongs to THIS
-        // stage - it chooses which candidate peak each precursor's row
-        // describes - so a re-run under a different pick model must not
-        // adopt these parquets. The override adds whether the parquets carry
-        // the reference XIC, which only the training export reads.
-        public override string ValidityKey(PipelineContext ctx) =>
-            base.ValidityKey(ctx) + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config);
-
+        // ValidityKey is the default - the search and library hashes, plus
+        // the peak-pick arm the base key carries - and the recorded features.
+        // The pick belongs to THIS stage - it chooses which candidate peak each
+        // precursor's row describes - so a re-run under a different pick model
+        // must not adopt these parquets.
+        //
         // The data file is declared as the input it is, and a node that holds only its
         // <stem>.spectra.bin satisfies it: the cache stands in for an absent source (doc 00,
         // "HPC relay checklist"), so a harness ships the cache in its place.
@@ -211,6 +211,19 @@ namespace pwiz.Osprey.Tasks
             if (ctx.Config.InputFiles != null)
                 foreach (var input in ctx.Config.InputFiles)
                     yield return input;
+        }
+
+        /// <summary>
+        /// The default key and the recorded-feature term: the scores parquet holds a column for
+        /// each recorded feature only, so a run that needs a feature these scores lack (a wider
+        /// mask, or OSPREY_RECORD_ALL_FEATURES=1) must score again rather than adopt them. Empty
+        /// under the default mask (<see cref="PinFeatureSelection.RecordedFeaturesValidityKeySuffix"/>).
+        /// </summary>
+        public override string ValidityKey(PipelineContext ctx)
+        {
+            return base.ValidityKey(ctx) + PinFeatureMask.For(ctx.Config).RecordedFeaturesValidityKeySuffix()
+                // Whether the parquets carry the reference XIC, which only the training export reads.
+                + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config);
         }
 
         public override IEnumerable<string> Outputs(PipelineContext ctx)
@@ -255,9 +268,8 @@ namespace pwiz.Osprey.Tasks
             // calibration so Stage 6 gap-fill filters candidates by isolation
             // coverage (essential for GPF datasets with disjoint m/z ranges).
             var perFileIsolationMz = new ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>>();
-            // fileName -> .scores.parquet path, populated below so Stage 6
-            // reconciliation can lazily load CWT candidates per file via
-            // ParquetScoreCache.LoadCwtCandidatesFromParquet.
+            // fileName -> .scores.parquet path, populated below so the later stages
+            // can find each file's scores.
             var perFileParquetPaths = new Dictionary<string, string>();
             // Decouple scoring from FirstPassFDR (issue #4355): during the scoring
             // loop below we record ONLY each scored file's name, in original
@@ -278,11 +290,10 @@ namespace pwiz.Osprey.Tasks
             // file and mutates FragmentTolerance during MS2 calibration,
             // so reading config.Identity.SearchParameterHash() inside ProcessFile
             // would produce a hash that the --input-scores validator would
-            // not recognize. Built unconditionally because Stage 6
-            // reconciliation needs the per-file .scores.parquet on disk to
-            // lazily load CWT candidates -- matches Rust's end-to-end
-            // behavior, which always writes the parquet sidecar regardless
-            // of --task PerFileScoring.
+            // not recognize. Built unconditionally because the later stages
+            // read the per-file .scores.parquet from disk -- matches Rust's
+            // end-to-end behavior, which always writes the parquet sidecar
+            // regardless of --task PerFileScoring.
             string validityKey = ValidityKey(ctx);
             _outputStamp = OspreyVersion.Stamp(Name, validityKey);
             var parquetFooterMetadata = ParquetScoreCache.WithStamp(new Dictionary<string, string>
@@ -291,6 +302,7 @@ namespace pwiz.Osprey.Tasks
                 { @"osprey.search_hash", config.Identity.SearchParameterHash() },
                 { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
                 { ParquetScoreCache.META_RECONCILED, @"false" },
+                { ParquetScoreCache.META_XIC_FRAGMENTS, ParquetScoreCache.XicFragmentsText(config.Scoring.XicFragments) },
             }, _outputStamp);
 
             // Resolve how many input files score concurrently for this invocation
@@ -371,13 +383,13 @@ namespace pwiz.Osprey.Tasks
                 // "[i] p%" aggregate line, and buffer each file's narrative so its
                 // block flushes contiguously on completion rather than interleaving
                 // with the other files' lines. Each file is one BeginFile scope; the
-                // PROCESS_FILE_SEGMENTS phases inside ProcessFile drive its percent.
+                // PROCESS_FILE_SEGMENT_WEIGHTS phases inside ProcessFile drive its percent.
                 var multi = new MultiProgressReporter();
                 OrderedFileLanes.For(config.InputFiles.Count, effectiveParallelism, fileIdx =>
                 {
                     string inputFile = config.InputFiles[fileIdx];
                     string fileName = Path.GetFileNameWithoutExtension(inputFile);
-                    using (multi.BeginFile(fileIdx, PROCESS_FILE_SEGMENTS))
+                    using (multi.BeginFile(fileIdx, PROCESS_FILE_SEGMENT_WEIGHTS))
                     {
                         var fileResult = ScoreOrLoadForFile(
                             inputFile, fileName, fileIdx, config.InputFiles.Count,
@@ -399,10 +411,10 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(LogTag.TIMING, @"All files processed: {0:F1}s",
                 swAllFiles.Elapsed.TotalSeconds);
 
-            // Populate perFileParquetPaths from config.InputFiles so Stage 6
-            // reconciliation can locate each file's freshly-written
-            // .scores.parquet to lazy-load CWT candidates from. ProcessFile
-            // always writes the parquet (parquetFooterMetadata is non-null).
+            // Populate perFileParquetPaths from config.InputFiles so the later
+            // stages can locate each file's freshly-written .scores.parquet.
+            // ProcessFile always writes the parquet (parquetFooterMetadata is
+            // non-null).
             foreach (string inputFile in config.InputFiles)
             {
                 string fileName = Path.GetFileNameWithoutExtension(inputFile);
@@ -911,13 +923,15 @@ namespace pwiz.Osprey.Tasks
             Action<string> log)
         {
             var request = config.GetFileParallelism(stage, out string argName);
-            int envCap = stage == FileStage.Caching ? 0 : OspreyEnvironment.MaxParallelFiles;
+            bool caching = stage == FileStage.Caching;
+            int envCap = caching ? 0 : OspreyEnvironment.MaxParallelFiles;
             return FileParallelismResolver.Resolve(
                 request, nFiles, envCap,
-                Environment.ProcessorCount,
+                caching ? Environment.ProcessorCount : config.NThreads,
                 SystemMemory.AvailablePhysicalBytes,
                 () => EstimateInputBytes(config.InputFiles),
-                log, argName);
+                log, argName,
+                caching ? 1 : FileParallelismResolver.MIN_THREADS_PER_FILE);
         }
 
         /// <summary>
@@ -1368,7 +1382,7 @@ namespace pwiz.Osprey.Tasks
                     // waste the resume path carried, on the node that can least afford it.
                     //
                     // It also read that footer TWICE and used neither count: HasPinFeatureColumns
-                    // above opened the file for the schema, ProbeCwtRowMetadata opened it again
+                    // above opened the file for the schema, a CWT-row probe opened it again
                     // for NumRows, and the resulting hint was handed to BeginFile - which
                     // returns before touching capacityHint in counts-only mode, because there is
                     // no row list to pre-size. ProbeResumeSchemaAndRows answers both in one open.
@@ -1697,7 +1711,7 @@ namespace pwiz.Osprey.Tasks
             try
             {
                 stubs = ParquetScoreCache.LoadFdrStubsFromParquet(scoresPath, null, null);
-                var features = ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath);
+                var features = ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath, PinFeatureMask.For(ctx.Config));
                 if (features.Count != stubs.Count)
                 {
                     ctx.LogWarning(TextUtil.GetIndentation(1) + string.Format(
@@ -1823,8 +1837,8 @@ namespace pwiz.Osprey.Tasks
 
             // Resolve the per-file calibration (load a cached/Rust JSON or
             // compute via Calibrator) and persist the calibration JSON.
-            // Segment 2/4 (calibrate): no inner reporter today, so this slice
-            // carries the file forward as a step when scoring begins.
+            // Segment 2/4 (calibrate): the calibration scoring passes report into it
+            // (Calibrator, one sub-range per pass).
             MultiProgressReporter.Current?.BeginSegment();
             RTCalibration rtCalibration = ResolveCalibration(
                 inputFile, fileName, fullLibrary, windowIndex, ms1Spectra, isolationWindows,
@@ -1919,8 +1933,7 @@ namespace pwiz.Osprey.Tasks
 
             // Retention snapshot at the in-scoring PEAK -- this is the moment the memory
             // work targets. Here scoredEntries still hold every heavy per-entry array
-            // (Features / CwtCandidates /
-            // ReferenceXic*) and the library is still resident, but the resident MS2 is
+            // (Features / ReferenceXic*) and the library is still resident, but the resident MS2 is
             // gone on the streaming path (dropped above), which is the reduction this
             // snapshot exists to confirm. Those per-entry arrays are dropped a few lines
             // below (the #4355 write-then-null), so the later
@@ -1933,8 +1946,8 @@ namespace pwiz.Osprey.Tasks
             ProfilerHooks.CaptureRetentionSnapshot(@"perfile-scoring-peak");
 
             // Persist the full FdrEntry results (with features) to
-            // {stem}.scores.parquet so (a) Stage 6 reconciliation can lazy-load
-            // CWT candidates per file, and (b) a subsequent --task FirstPassFDR
+            // {stem}.scores.parquet so (a) Stage 5 and 6 can reload each file's
+            // rows, and (b) a subsequent --task FirstPassFDR
             // invocation can pick them up without re-running Stages 1-4.
             // Same path convention as Rust (`scores_path_for_input`).
             // Snappy-compressed; cross-impl ZSTD/Snappy compatibility tracked
@@ -1955,7 +1968,7 @@ namespace pwiz.Osprey.Tasks
                 var swParquet = Stopwatch.StartNew();
                 ParquetScoreCache.WriteScoresParquet(
                     parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName,
-                    ParquetScoreCache.WritesReferenceXic(config));
+                    ParquetScoreCache.WritesReferenceXic(config), PinFeatureMask.For(config));
                 swParquet.Stop();
                 ctx.LogInfo(string.Format(
                     OspreyTasksResources.PerFileScoringTask_ProcessFile_Wrote__0__precursor_candidate_peaks_to__1____2_s_,
@@ -1965,14 +1978,13 @@ namespace pwiz.Osprey.Tasks
                 // the parquet above and are reloadable by ParquetIndex, so drop them from
                 // the retained buffer to bound memory -- all N files' entries are held at
                 // once for FirstPassFDR, and these arrays dominate. Features is reloaded before
-                // first-pass Percolator (FirstPassFdrTask); CWT / ref-XIC are
+                // first-pass Percolator (FirstPassFdrTask); ref-XIC is
                 // reloaded from parquet in Stage 6 / 7. This brings the cold buffer to the
                 // same stub shape LoadFdrStubsFromParquet produces (see the FdrEntry field
                 // docs, which already document these as null on parquet-loaded stubs).
                 foreach (var entry in scoredEntries)
                 {
                     entry.Features = null;
-                    entry.CwtCandidates = null;
                     entry.ReferenceXicRts = null;
                     entry.ReferenceXicIntensities = null;
                 }
@@ -2060,10 +2072,9 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Resolve the per-file RT/MS1/MS2 calibration: load a cached/Rust
-        /// calibration JSON when OSPREY_LOAD_CALIBRATION points at one, else
-        /// compute it via <see cref="Calibrator"/>; then persist the full
-        /// calibration JSON next to the input. Returns the RT calibration (null
+        /// Resolve the per-file RT/MS1/MS2 calibration: compute it via
+        /// <see cref="Calibrator"/>, then persist the full calibration JSON
+        /// next to the input. Returns the RT calibration (null
         /// when disabled / not computed); <paramref name="ms2Cal"/> and
         /// <paramref name="ms1Cal"/> receive the mass calibrations (Uncalibrated
         /// when none). Extracted from ProcessFile (pure code motion).
@@ -2081,68 +2092,20 @@ namespace pwiz.Osprey.Tasks
             RTCalibration rtCalibration = null;
             ms2Cal = MzCalibrationResult.Uncalibrated();
             ms1Cal = MzCalibrationResult.Uncalibrated();
-            // CAL-view per-file diagnostics for --model-diagnostics; null on the cached-JSON
-            // load path (no calibration matches available) and on a normal run.
+            // CAL-view per-file diagnostics for --model-diagnostics; null when calibration
+            // is off and on a normal run.
             calDiagnostics = null;
             // The wide pre-calibration RT tolerance (the "before" number in the
             // console calibration summary). Set by the compute path below; stays 0
-            // when calibration is loaded from a cached JSON (no summary emitted then).
+            // when calibration is off (no summary emitted then).
             double calInitialRtTolerance = 0.0;
             // Total matches scored during pass 1 of calibration; threaded
             // into CalibrationMetadata.NumSampledPrecursors to match Rust's
             // accumulated_matches.len() (Stellar Single: 192289). Stays 0
-            // when calibration is loaded from a cached JSON.
+            // when calibration is off.
             int numSampledPrecursorsForMetadata = 0;
 
-            // BISECT: load Rust's calibration JSON instead of computing our own.
-            // This eliminates calibration noise from the feature comparison.
-            // Usage: OSPREY_LOAD_CALIBRATION=Ste-...20.calibration.json
-            string loadCalPath = OspreyEnvironment.LoadCalibrationPath;
-            if (!string.IsNullOrEmpty(loadCalPath) && File.Exists(loadCalPath))
-            {
-                ctx.LogInfo(LogTag.BISECT, string.Format(@"Loading calibration from: {0}", loadCalPath));
-                var calParams = CalibrationIO.LoadCalibration(loadCalPath);
-                if (calParams.RtCalibration != null && calParams.RtCalibration.ModelParams != null)
-                {
-                    var mp = calParams.RtCalibration.ModelParams;
-                    rtCalibration = RTCalibration.FromModelParams(
-                        mp.LibraryRts, mp.FittedRts, mp.AbsResiduals,
-                        calParams.RtCalibration.ResidualSD);
-                    ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ResolveCalibration_Loaded_RT_calibration___0__points__R2__1_,
-                        calParams.RtCalibration.NPoints, calParams.RtCalibration.RSquared));
-                }
-                if (calParams.Ms2Calibration != null && calParams.Ms2Calibration.Calibrated)
-                {
-                    ms2Cal = new MzCalibrationResult
-                    {
-                        Mean = calParams.Ms2Calibration.Mean,
-                        Median = calParams.Ms2Calibration.Median,
-                        SD = calParams.Ms2Calibration.SD,
-                        Count = calParams.Ms2Calibration.Count,
-                        Unit = calParams.Ms2Calibration.Unit,
-                        AdjustedTolerance = calParams.Ms2Calibration.AdjustedTolerance,
-                        Calibrated = true
-                    };
-                    ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ResolveCalibration_Loaded_MS2_calibration__mean__0___1___SD__2_,
-                        ms2Cal.Mean, MzCalibration.GetUnitText(ms2Cal.Unit), ms2Cal.SD));
-                }
-                if (calParams.Ms1Calibration != null && calParams.Ms1Calibration.Calibrated)
-                {
-                    ms1Cal = new MzCalibrationResult
-                    {
-                        Mean = calParams.Ms1Calibration.Mean,
-                        Median = calParams.Ms1Calibration.Median,
-                        SD = calParams.Ms1Calibration.SD,
-                        Count = calParams.Ms1Calibration.Count,
-                        Unit = calParams.Ms1Calibration.Unit,
-                        AdjustedTolerance = calParams.Ms1Calibration.AdjustedTolerance,
-                        Calibrated = true
-                    };
-                    ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ResolveCalibration_Loaded_MS1_calibration__mean__0___1___SD__2_,
-                        ms1Cal.Mean, MzCalibration.GetUnitText(ms1Cal.Unit), ms1Cal.SD));
-                }
-            }
-            else if (config.RtCalibration.Enabled)
+            if (config.RtCalibration.Enabled)
             {
                 var swCal = Stopwatch.StartNew();
                 rtCalibration = new Calibrator(ctx).RunCalibration(
@@ -2169,10 +2132,9 @@ namespace pwiz.Osprey.Tasks
             ctx.Diagnostics?.WriteCalibrationSummary(rtCalibration, ms1Cal, ms2Cal);
 
             // Save the full calibration state to {inputStem}.calibration.json
-            // in the same directory as the mzML input. Same schema as Rust
-            // so the file is round-trippable via OSPREY_LOAD_CALIBRATION in
-            // either tool. Enables HPC "compute cal once, reuse on another
-            // node" and the cross-runtime cal-swap bisection.
+            // in the same directory as the mzML input. Same schema as Rust,
+            // so either tool can read the other's. Enables HPC "compute cal
+            // once, reuse on another node".
             try
             {
                 var calParams = new CalibrationParams

@@ -119,7 +119,7 @@ The C# adds a **fallback the Rust doc does not describe**: if *no* run passes ru
 
 ### Step 7 — Metadata
 
-`WriteMetadata` (BlibOutputWriter.cs) writes the `LibMetadata` rows (via `INSERT OR REPLACE`): `osprey.version`, `osprey.search_mode = coelution`, `osprey.run_fdr`, `osprey.experiment_fdr`, and `osprey.command`, the full command line of the run. One more row, `osprey.validity`, holds the blib's embedded validity stamp (`OspreyBlibWriter.AddStamp` / `ReadStamp`; see [14](14-intermediate-files.md) section 8). The stamp and the command line are provenance, not content: the blib comparisons (`BlibComparer` in Osprey.Test, `Regression/BlibGolden.ps1`) exclude both, since an HPC chain reproducing a straight-through run has a different command line, and so must any cross-impl comparison.
+`WriteMetadata` (BlibOutputWriter.cs) writes the `LibMetadata` rows (via `INSERT OR REPLACE`): `osprey.version`, `osprey.search_mode = coelution`, `osprey.run_fdr`, `osprey.experiment_fdr`, `osprey.protein_best = on` when the first pass trained with `--protein-boost best`, `osprey.feature_set` when the PIN feature set is not `core` (`default` for an HRAM search left at its default; no row under `OSPREY_FEATURE_MASK`), and `osprey.command`, the full command line of the run. One more row, `osprey.validity`, holds the blib's embedded validity stamp (`OspreyBlibWriter.AddStamp` / `ReadStamp`; see [14](14-intermediate-files.md) section 8). The stamp and the command line are provenance, not content: the blib comparisons (`BlibComparer` in Osprey.Test, `Regression/BlibGolden.ps1`) exclude both, since an HPC chain reproducing a straight-through run has a different command line, and so must any cross-impl comparison.
 
 ### Step 8 — Complete
 

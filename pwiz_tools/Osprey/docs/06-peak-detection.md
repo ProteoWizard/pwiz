@@ -345,16 +345,24 @@ divergences).
 
 ### Stage 6 CWT-candidate capture
 
-`CoelutionScorer.CaptureCwtCandidates` (`CoelutionScorer.cs:315`) keeps the
+`CoelutionScorer.CaptureCwtCandidates` keeps the
 top-`N` peaks (`ReconciliationConfig.TopNPeaks`, default 5;
-`ReconciliationConfig.cs:36`) ranked by penalized `rankScore`, each with its
-apex/area/SNR recomputed over the reference-XIC slice, storing the **raw**
-coelution score (not the RT-penalized rank) as `CoelutionScore`. These become the
-`CwtCandidate` list (`Osprey.Core/CwtCandidate.cs`) serialized into the parquet
-`cwt_candidates` column (6 little-endian f64 per candidate,
-`CwtCandidateCodec`) for cross-run reconciliation (`see
-10-cross-run-reconciliation.md`). The override path leaves this list empty,
-matching Rust.
+`ReconciliationConfig.cs:36`) ranked by penalized `rankScore` (a stable sort under
+IEEE total order), each with its apex/area/SNR recomputed over the reference-XIC
+slice, storing the **raw** coelution score (not the RT-penalized rank) as
+`CoelutionScore`. These are the `CwtCandidate` list (`Osprey.Core/CwtCandidate.cs`)
+cross-run reconciliation re-picks peaks from (`see 10-cross-run-reconciliation.md`).
+
+Stage 4 no longer builds the list (#5024). Rust writes it for every row into a
+`cwt_candidates` parquet column, but reconciliation consults it only for a precursor in
+the consensus set that passed and whose apex is outside the RT tolerance - under 1% of
+rows (about 91k of 13M on three SEA-AD runs). Stage 6 computes those rows' lists when it
+plans the run: `CoelutionScorer.RecomputeCwtCandidates` runs this detection (the
+scan-major prefilter and XIC extraction included) and `CaptureCwtCandidates` over the
+window's spectra, with the search settings `ScoringPipeline.ApplySearchSettings`
+resolves for the run's **first-pass** calibration. The lists equal what Stage 4 stored
+bit for bit: on SEA-AD, 90,853 consulted rows / 326,898 candidates, all six fields. The
+override path computes none, matching Rust's empty list.
 
 ---
 
@@ -392,7 +400,7 @@ unit-resolution runs no MS1 data is produced and both features evaluate to 0.0
 | `--resolution {auto\|hram\|unit}` | `auto`: measured from the data ([20-command-line.md](20-command-line.md#resolution-detection)) | Selects the resolution strategy; HRAM enables the MS1 chromatogram/isotope features produced here, unit resolution disables them. |
 | `MinRtTolerance` / `MaxRtTolerance` (`RTCalibrationConfig`) | `0.5` / `3.0` min | Clamp on the scan-window `rtTolerance = 3*MAD*1.4826` (`RTCalibration.SearchWindowHalfWidth`). The XIC extraction half-width is `rtTolerance + max(rtTolerance, 0.1)`; the apex-acceptance filter uses `rtTolerance`. The RT-penalty sigma (`5*MAD*1.4826`, floor 0.1) is deliberately **not** clamped. |
 | `FallbackRtTolerance` (`RTCalibrationConfig`) | used when no RT calibration | Sets both `rtTolerance` and `rtSigma` when calibration is absent (`ScoringPipeline.cs:185-186`). |
-| `ReconciliationConfig.TopNPeaks` | `5` | Number of CWT candidates captured per entry for reconciliation (`CoelutionScorer.cs:322`). `0` captures none. |
+| `ReconciliationConfig.TopNPeaks` | `5` | Number of CWT candidates computed per consulted entry for reconciliation (`CoelutionScorer.CaptureCwtCandidates`). `0` computes none. |
 | `--task PerFileRescoring` (Stage 6) | off | Activates the boundary-override path: detection skipped, bounds taken from the supplied triple (`see 11-boundary-overrides.md`). |
 | `OSPREY_PICK_LDA` | **on** (learned pick) | The hardcoded resolution-keyed learned linear model (`PickLdaModel.ForResolution`) is the default pick. Set `OSPREY_PICK_LDA=0` for the legacy product form, which is how the A/B stays available. |
 | `OSPREY_PICK_LDA_MODEL` | unset | Path to a frozen JSON pick model that overrides the built-in model; its `features` order is validated on load. See [peak-model-training.md](peak-model-training.md). |
