@@ -2005,16 +2005,32 @@ namespace pwiz.ProteowizardWrapper
             TVal val = getValue(spectrum);
             if (isUsableValue(val) || detailLevel >= maxDetailLevel)
                 return returnValue(val);
+            // A non-MS spectrum (a UV/DAD/PDA trace) may lack a value at a level where the file's
+            // MS spectra report it, so it looks for the value one level up for itself only. Raising
+            // the level for the whole file on its account would make every later request read at
+            // that level.
+            if (IsNonMsSpectrum(spectrum))
+            {
+                var nonMsDetailLevel = detailLevel + 1;
+                return GetMetaDataValue(scanIndex, getValue, isUsableValue, returnValue, ref nonMsDetailLevel, maxDetailLevel);
+            }
             // If level is not found with faster metadata methods, try the slower ones.
-            if (detailLevel < maxDetailLevel)
-                detailLevel++;
-            return GetMetaDataValue(scanIndex, getValue, isUsableValue, returnValue, ref detailLevel);
+            detailLevel++;
+            return GetMetaDataValue(scanIndex, getValue, isUsableValue, returnValue, ref detailLevel, maxDetailLevel);
         }
 
         public int GetMsLevel(int scanIndex)
         {
-            return (int) GetMetaDataValue(scanIndex, GetMsLevel, v => v.HasValue, v => v ?? 0, ref _detailMsLevel);
+            // A non-MS spectrum has no ms level at any detail level, so its 0 is final.
+            return (int) GetMetaDataValue(scanIndex, s => IsNonMsSpectrum(s) ? 0 : GetMsLevel(s),
+                v => v.HasValue, v => v ?? 0, ref _detailMsLevel);
         }
+
+        /// <summary>
+        /// The detail levels this file's ms level and start time requests now start at. Each
+        /// only rises, for the rest of the file, when a spectrum lacks the value at that level.
+        /// </summary>
+        internal (DetailLevel MsLevel, DetailLevel StartTime) MetadataDetailLevels => (_detailMsLevel, _detailStartTime);
 
         private static int? GetMsLevel(Spectrum spectrum)
         {
@@ -2022,6 +2038,11 @@ namespace pwiz.ProteowizardWrapper
             if (param.IsEmpty)
                 return null;
             return (int) param;
+        }
+
+        private static bool IsNonMsSpectrum(Spectrum spectrum)
+        {
+            return spectrum.Params.HasCVParamChild(CVID.MS_EMR_spectrum);
         }
 
         public string GetScanDescription(int scanIndex)
