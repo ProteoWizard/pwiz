@@ -105,6 +105,33 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// EXPERIMENTAL (OSPREY_DIRECT_READ). Starts a reader that reads a per-file stage's
+        /// <paramref name="inputs"/> ahead of its <paramref name="lanes"/>; a no-op without direct
+        /// reading. Pair with <see cref="EndPrefetch"/> in a finally, and release each file with
+        /// <see cref="ReleasePrefetched"/> when its lane is done with it.
+        /// </summary>
+        internal static void StartPrefetch(IEnumerable<string> inputs, int lanes, PipelineContext ctx)
+        {
+            if (!OspreyEnvironment.DirectRead)
+                return;
+            ctx.RunPlan.Prefetcher = new SpectraPrefetcher(inputs, lanes, DemuxCache.CreateParams(ctx.Config), ctx);
+        }
+
+        /// <summary>Stops the reader <see cref="StartPrefetch"/> started, if any.</summary>
+        internal static void EndPrefetch(PipelineContext ctx)
+        {
+            var prefetcher = ctx.RunPlan.Prefetcher;
+            ctx.RunPlan.Prefetcher = null;
+            prefetcher?.Dispose();
+        }
+
+        /// <summary>Gives back whatever memory the reader still holds for <paramref name="inputFile"/>.</summary>
+        internal static void ReleasePrefetched(string inputFile, PipelineContext ctx)
+        {
+            ctx.RunPlan.Prefetcher?.Release(inputFile);
+        }
+
+        /// <summary>
         /// Ensure a valid <c>.spectra.bin</c> cache exists for the input and return a
         /// streaming <see cref="SpectraWindowIndex"/> over it (per-window MS2 offsets, plus
         /// MS1 and the run's isolation windows) WITHOUT materializing the full MS2
@@ -132,6 +159,14 @@ namespace pwiz.Osprey.Tasks
             var demuxHit = DemuxCache.TryOpen(inputFile, ctx);
             if (demuxHit != null)
                 return demuxHit;
+
+            // EXPERIMENTAL: the spectra the stage's reader read ahead, when it read this file.
+            if (OspreyEnvironment.DirectRead && ctx.RunPlan.Prefetcher != null)
+            {
+                var prefetched = ctx.RunPlan.Prefetcher.Take(inputFile, true, out unsortedCount);
+                if (prefetched != null)
+                    return prefetched;
+            }
 
             // Shared GetCachePath so the write and the rescore read (PerFileRescoreTask)
             // derive an identical filename + directory (ArtifactPaths redirects the dir).
@@ -302,6 +337,9 @@ namespace pwiz.Osprey.Tasks
             // EXPERIMENTAL: read the source again in full rather than a cache that was never written.
             if (OspreyEnvironment.DirectRead)
             {
+                var prefetched = ctx.RunPlan.Prefetcher?.Take(inputFile, loadMs1, out _);
+                if (prefetched != null)
+                    return prefetched;
                 var spectra = SpectrumFileReader.LoadAllSpectra(inputFile);
                 return SpectraWindowIndex.FromSpectra(spectra.Ms2Spectra, spectra.Ms1Spectra, loadMs1);
             }

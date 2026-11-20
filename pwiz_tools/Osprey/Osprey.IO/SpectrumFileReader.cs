@@ -87,6 +87,18 @@ namespace pwiz.Osprey.IO
         /// demultiplex filter writes it. Null reads every run as acquired.</param>
         public static SpectrumFileResult LoadAllSpectra(string path, SpectrumListDemux.Params demultiplex = null)
         {
+            return LoadAllSpectra(path, demultiplex, null, true);
+        }
+
+        /// <summary>
+        /// <see cref="LoadAllSpectra(string, SpectrumListDemux.Params)"/> that hands
+        /// <paramref name="onSpectrumRead"/> the peak bytes of each spectrum as it is kept, before
+        /// the next is read, so a caller can hold the read back while memory is short. Without
+        /// <paramref name="reportProgress"/> it reads silently, for a read running behind other work.
+        /// </summary>
+        public static SpectrumFileResult LoadAllSpectra(string path, SpectrumListDemux.Params demultiplex,
+            Action<long> onSpectrumRead, bool reportProgress)
+        {
             var ms2Spectra = new List<Spectrum>();
             var ms1Spectra = new List<MS1Spectrum>();
             int unsortedCount = 0;
@@ -150,19 +162,38 @@ namespace pwiz.Osprey.IO
                     // and this reads nothing. Osprey has no use for such a file, but an
                     // empty result says so far more clearly than a throw would.
                     int count = msData.SpectrumCount;
-                    // Per-spectrum rather than per-byte progress (a vendor reader exposes
-                    // no byte position), on the same throttled interval the mzML read used
-                    // - a large file is minutes of otherwise silent work.
-                    ProgressReporter.Run(
-                        string.Format(OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Reading__0_, Path.GetFileName(path)), count, progress =>
+                    void ReadSpectrum(int i)
+                    {
+                        int ms2Before = ms2Spectra.Count, ms1Before = ms1Spectra.Count;
+                        AddSpectrum(msData.GetSpectrum(i), i, ms2Spectra, ms1Spectra,
+                            ref unsortedCount);
+                        if (onSpectrumRead == null)
+                            return;
+                        if (ms2Spectra.Count > ms2Before)
+                            onSpectrumRead(PeakBytes(ms2Spectra[ms2Before].Count));
+                        else if (ms1Spectra.Count > ms1Before)
+                            onSpectrumRead(PeakBytes(ms1Spectra[ms1Before].Count));
+                    }
+                    if (!reportProgress)
                     {
                         for (int i = 0; i < count; i++)
+                            ReadSpectrum(i);
+                    }
+                    else
+                    {
+                        // Per-spectrum rather than per-byte progress (a vendor reader exposes
+                        // no byte position), on the same throttled interval the mzML read used
+                        // - a large file is minutes of otherwise silent work.
+                        ProgressReporter.Run(
+                            string.Format(OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Reading__0_, Path.GetFileName(path)), count, progress =>
                         {
-                            AddSpectrum(msData.GetSpectrum(i), i, ms2Spectra, ms1Spectra,
-                                ref unsortedCount);
-                            progress.Report(i + 1);
-                        }
-                    }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
+                            for (int i = 0; i < count; i++)
+                            {
+                                ReadSpectrum(i);
+                                progress.Report(i + 1);
+                            }
+                        }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
+                    }
                 }
             }
             catch (Exception ex) when (ReadErrorMessage(path, ex) != null)
@@ -181,8 +212,17 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// The memory a spectrum's peaks hold, as a read budget counts it: 8-byte m/z and 4-byte
+        /// intensity per peak, plus the two arrays' headers.
+        /// </summary>
+        public static long PeakBytes(int peakCount)
+        {
+            return peakCount * 12L + 64;
+        }
+
+        /// <summary>
         /// Hands the file's MS2 spectra to <paramref name="visit"/> in acquisition order, read
-        /// as <see cref="LoadAllSpectra"/> reads them without demultiplexing, until it returns
+        /// as <see cref="LoadAllSpectra(string, SpectrumListDemux.Params)"/> reads them without demultiplexing, until it returns
         /// false. Stops reading there, so a sample from the start of a run does not parse the
         /// rest of it.
         /// </summary>

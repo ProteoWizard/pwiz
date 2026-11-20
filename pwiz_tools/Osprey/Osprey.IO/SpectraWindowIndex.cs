@@ -64,6 +64,11 @@ namespace pwiz.Osprey.IO
         // Every window's spectra, when the index was built from a source file read in full
         // (OSPREY_DIRECT_READ) instead of from a cache; null for a cache index.
         private readonly Dictionary<int, List<Spectrum>> _windowKeyToSpectra;
+        // Set once scoring takes each resident window for the last time: a load then hands the
+        // window's own spectra over and drops them (see ReleaseWindowsAsLoaded).
+        private bool _releaseOnLoad;
+        private readonly HashSet<int> _releasedKeys = new HashSet<int>();
+        private Action<long> _peakBytesReleased;
         // Held by LoadWindowSerialRead only while it reads a block from disk.
         private readonly object _blockReadLock = new object();
 
@@ -291,6 +296,34 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// EXPERIMENTAL (OSPREY_DIRECT_READ). From now on each load of a resident window hands
+        /// over the window's own spectra, without copying them, and drops the index's hold on
+        /// them, passing their peak bytes to <see cref="PeakBytesReleased"/>; loading the same
+        /// window again throws. For the one pass that reads every window once and last (per-file
+        /// scoring after calibration), so a file's memory falls as it is scored. A no-op on an
+        /// index over a cache file, whose loads decode fresh spectra anyway.
+        /// </summary>
+        public void ReleaseWindowsAsLoaded()
+        {
+            if (_windowKeyToSpectra == null)
+                return;
+            lock (_windowKeyToSpectra)
+            {
+                _releaseOnLoad = true;
+            }
+        }
+
+        /// <summary>
+        /// EXPERIMENTAL (OSPREY_DIRECT_READ). Told the peak bytes of each resident window
+        /// <see cref="ReleaseWindowsAsLoaded"/> hands over.
+        /// </summary>
+        public Action<long> PeakBytesReleased
+        {
+            get { return _peakBytesReleased; }
+            set { _peakBytesReleased = value; }
+        }
+
+        /// <summary>
         /// The isolation window of every MS2 record of a <c>.spectra.bin</c> (not a demultiplexed
         /// cache), in acquisition order, read again from the cache's index: what a caller needs
         /// to tell whether the run is multiplexed without its source file. Not kept by the index,
@@ -423,8 +456,34 @@ namespace pwiz.Osprey.IO
         // because callers calibrate the m/z values they are handed in place.
         private List<Spectrum> CopyResidentWindow(int windowKey)
         {
-            if (!_windowKeyToSpectra.TryGetValue(windowKey, out var spectra))
-                return new List<Spectrum>();
+            List<Spectrum> spectra;
+            bool handOver;
+            Action<long> released = null;
+            lock (_windowKeyToSpectra)
+            {
+                if (_releasedKeys.Contains(windowKey))
+                    throw new InvalidOperationException(string.Format(@"Isolation window {0} was already released.", windowKey));
+                if (!_windowKeyToSpectra.TryGetValue(windowKey, out spectra))
+                    return new List<Spectrum>();
+                handOver = _releaseOnLoad;
+                if (handOver)
+                {
+                    _windowKeyToSpectra.Remove(windowKey);
+                    _releasedKeys.Add(windowKey);
+                    released = _peakBytesReleased;
+                }
+            }
+            if (handOver)
+            {
+                if (released != null)
+                {
+                    long bytes = 0;
+                    foreach (var s in spectra)
+                        bytes += SpectrumFileReader.PeakBytes(s.Count);
+                    released(bytes);
+                }
+                return spectra;
+            }
             var result = new List<Spectrum>(spectra.Count);
             foreach (var s in spectra)
             {

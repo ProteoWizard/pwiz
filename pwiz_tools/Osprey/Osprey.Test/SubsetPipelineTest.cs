@@ -848,6 +848,32 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(stagesLog, ExplicitParallelismLine(RUN_NAMES.Length, OspreyArgNames.PARALLEL_FILES_SCORING));
             StringAssert.Contains(stagesLog, ExplicitParallelismLine(rescoringLanes, OspreyArgNames.PARALLEL_FILES_RESCORING));
 
+            // EXPERIMENTAL direct read: each input read in full by a reader running ahead of the
+            // lanes, scored from memory with each window freed as it is scored, gives the cached
+            // answer - on one lane, on a lane per file, and on one lane with a budget of a file and
+            // a half, where the reader must wait part-way through a file for scoring to free windows.
+            foreach (var (lanes, ahead) in new[] { (1, 1.0), (RUN_NAMES.Length, 1.0), (1, 0.5) })
+            {
+                string directDir = CreateDir(string.Format(CultureInfo.InvariantCulture, @"direct-read-{0}-{1}", lanes, ahead));
+                bool savedDirectRead = OspreyEnvironment.DirectRead;
+                double savedAhead = OspreyEnvironment.DirectReadAhead;
+                OspreyEnvironment.DirectRead = true;
+                OspreyEnvironment.DirectReadAhead = ahead;
+                string directLog;
+                try
+                {
+                    directLog = RunAnalysis(directDir, DataInputs(), FdrLanes(1),
+                        OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText, lanes.ToString(CultureInfo.InvariantCulture));
+                }
+                finally
+                {
+                    OspreyEnvironment.DirectRead = savedDirectRead;
+                    OspreyEnvironment.DirectReadAhead = savedAhead;
+                }
+                StringAssert.Contains(directLog, @"Direct read: peak");
+                AssertBlibsEqual(baseBlib, Path.Combine(directDir, BLIB_FILE));
+            }
+
             // OSPREY_DIAGNOSTICS writes its dumps to the current directory.
             string diagnosticsDir = CreateDir(@"diagnostics");
             // It also sets every OSPREY_DUMP_* variable in the process environment, which would turn

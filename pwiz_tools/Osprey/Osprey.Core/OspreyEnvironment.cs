@@ -392,6 +392,20 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static bool DirectRead { get; set; } = IsSetAndNotZero(ENV_DIRECT_READ);
 
+        private static readonly EnvVar ENV_DIRECT_READ_AHEAD = new EnvVar(@"OSPREY_DIRECT_READ_AHEAD", EnvVarGroup.performance,
+            @"Under OSPREY_DIRECT_READ, how many files' spectra the reader may hold beyond one per file lane, " +
+            @"measured in the first file's size. 0 reads each file only when its lane asks for it.")
+            { DefaultValue = @"1" };
+
+        /// <summary>
+        /// EXPERIMENTAL. Under <see cref="DirectRead"/> a reader reads the stage's input files in order
+        /// ahead of the lanes that score them, holding back while the resident spectra would exceed
+        /// (lanes + this) times the first file's. Scoring frees each window as it scores it, so with
+        /// one lane and the default of 1 the next file is read while the current one scores, and no
+        /// more than two files' spectra are ever resident.
+        /// </summary>
+        public static double DirectReadAhead { get; set; } = ParseDoubleOrNull(ENV_DIRECT_READ_AHEAD) ?? 1;
+
         /// <summary>
         /// The log line naming the window-read switches when either is set, so a timing run records
         /// which arm it was; null at the defaults, leaving a default run's log unchanged.
