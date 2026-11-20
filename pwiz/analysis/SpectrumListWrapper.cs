@@ -60,6 +60,23 @@ public abstract class SpectrumListWrapper : SpectrumListBase
     public override bool CalibrationSpectraAreOmitted => Inner.CalibrationSpectraAreOmitted;
 
     /// <summary>
+    /// The inner spectrum at <paramref name="detailLevel"/>, below full metadata, for a wrapper
+    /// that changes the peaks: nothing is changed without the peaks, and the inner peak count,
+    /// which the change would make wrong, is dropped. cpp's <c>SpectrumList_PeakFilter</c> does
+    /// the same.
+    /// </summary>
+    protected Spectrum GetSpectrumWithoutPeakCount(int index, DetailLevel detailLevel)
+    {
+        var spec = Inner.GetSpectrum(index, detailLevel);
+        if (spec.DefaultArrayLength == 0)
+            return spec;
+        // A copy: some lists hand out their stored instance (SpectrumListSimple does).
+        spec = spec.ShallowCopy();
+        spec.DefaultArrayLength = 0;
+        return spec;
+    }
+
+    /// <summary>
     /// Drops this wrapper's share of <see cref="Inner"/>. The inner list isn't actually
     /// freed until ALL its holders have disposed — sibling wrappers and the document
     /// Run can keep using it after one wrapper is gone.

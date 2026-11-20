@@ -56,6 +56,16 @@ public sealed class SpectrumListMetadataFixer : SpectrumListWrapper
     }
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// The metadata is recomputed from the peaks, so below full metadata no peaks are read and the
+    /// inner list's values stand.
+    /// </remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel) =>
+        detailLevel < DetailLevel.FullMetadata
+            ? Inner.GetSpectrum(index, detailLevel)
+            : GetSpectrum(index, detailLevel >= DetailLevel.FullData);
+
+    /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
     {
         // Always load binary data — we need the peaks to recompute metadata.

@@ -324,7 +324,11 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
 
     /// <inheritdoc/>
     public Spectrum GetCentroidSpectrum(int index, bool getBinaryData, IntegerSet msLevelsToCentroid) =>
-        GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
+        GetSpectrumImpl(index, ToDetailLevel(getBinaryData), msLevelsToCentroid, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
+
+    /// <inheritdoc/>
+    public Spectrum GetCentroidSpectrum(int index, DetailLevel detailLevel, IntegerSet msLevelsToCentroid) =>
+        GetSpectrumImpl(index, detailLevel, msLevelsToCentroid, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
 
     /// <summary>
     /// Lockmass-aware vendor centroid path — used by <c>SpectrumList_LockmassRefiner</c>
@@ -332,14 +336,27 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
     /// extension surface: not part of <see cref="ISpectrumList"/>, only meaningful when the
     /// inner reader is a <see cref="SpectrumList_Waters"/>.
     /// </summary>
-    public Spectrum GetCentroidSpectrumWithLockmass(int index, bool getBinaryData,
+    public Spectrum GetCentroidSpectrumWithLockmass(int index, DetailLevel detailLevel,
         IntegerSet msLevelsToCentroid,
         double lockmassMzPos, double lockmassMzNeg, double lockmassTolerance) =>
-        GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid, lockmassMzPos, lockmassMzNeg, lockmassTolerance);
+        GetSpectrumImpl(index, detailLevel, msLevelsToCentroid, lockmassMzPos, lockmassMzNeg, lockmassTolerance);
 
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
-        GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid: null, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
+        GetSpectrumImpl(index, ToDetailLevel(getBinaryData), msLevelsToCentroid: null, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Overridden, as cpp's is, so a metadata request skips the scan-stat and peak reads.
+    /// Instant metadata is what the function and index give without a scan stat (type, ms level,
+    /// start time, drift time, polarity, representation), plus the collision energy the MSe
+    /// heuristic needs to settle the ms level, as in cpp (SpectrumList_Waters.cpp:166). Fast
+    /// metadata adds the scan stats and the precursors. The peak count waits for full metadata,
+    /// one level later than cpp's PEAKS_IN_SCAN at fast metadata (:241), so no level below full
+    /// metadata reports a count.
+    /// </remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel) =>
+        GetSpectrumImpl(index, detailLevel, msLevelsToCentroid: null, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
 
     /// <summary>
     /// Lockmass-aware overload — vendor-specific extension surface for the analysis-side
@@ -349,15 +366,19 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
     /// returns is already gain-adjusted) and the SET_MASS scan-stat used for the MS2 isolation
     /// window is corrected via the per-RT gain factor.
     /// </summary>
-    public Spectrum GetSpectrumWithLockmass(int index, bool getBinaryData,
+    public Spectrum GetSpectrumWithLockmass(int index, DetailLevel detailLevel,
         double lockmassMzPos, double lockmassMzNeg, double lockmassTolerance,
         IntegerSet? msLevelsToCentroid = null) =>
-        GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid, lockmassMzPos, lockmassMzNeg, lockmassTolerance);
+        GetSpectrumImpl(index, detailLevel, msLevelsToCentroid, lockmassMzPos, lockmassMzNeg, lockmassTolerance);
 
-    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, IntegerSet? msLevelsToCentroid,
+    private static DetailLevel ToDetailLevel(bool getBinaryData) =>
+        getBinaryData ? DetailLevel.FullData : DetailLevel.FullMetadata;
+
+    private Spectrum GetSpectrumImpl(int index, DetailLevel detailLevel, IntegerSet? msLevelsToCentroid,
         double lockmassMzPos, double lockmassMzNeg, double lockmassTolerance)
     {
         if (index < 0 || index >= _index.Count) throw new ArgumentOutOfRangeException(nameof(index));
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
         var ie = _index[index];
         var spec = new Spectrum { Index = ie.Index, Id = ie.Id };
 
@@ -478,6 +499,9 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
             spec.Params.Set(CVID.MS_centroid_spectrum);
         }
 
+        if (detailLevel == DetailLevel.InstantMetadata)
+            return spec;
+
         // Base peak / TIC / peak count come from per-scan stats (not from the binary data),
         // matching pwiz C++ which fills these from MassLynxScanItem entries directly. Reading
         // a single item via the parameters round-trip (createParameters → getScanItemValue →
@@ -502,7 +526,8 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
                 if (TryParseDouble(bpMass, out double bpMassD)) spec.Params.Set(CVID.MS_base_peak_m_z, bpMassD);
                 if (TryParseDouble(bpInt, out double bpIntD)) spec.Params.Set(CVID.MS_base_peak_intensity, bpIntD);
                 if (TryParseDouble(tic, out double ticD)) spec.Params.Set(CVID.MS_total_ion_current, ticD);
-                if (int.TryParse(peaks, NumberStyles.Integer, CultureInfo.InvariantCulture, out int peaksI))
+                if (detailLevel >= DetailLevel.FullMetadata
+                    && int.TryParse(peaks, NumberStyles.Integer, CultureInfo.InvariantCulture, out int peaksI))
                     spec.DefaultArrayLength = peaksI;
             }
             else // non-combine IMS: per-block TIC, no base peak / peak count
@@ -618,6 +643,8 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
         // getCombinedSpectrumData for anything short of full data (SpectrumList_Waters.cpp:347-350).
         // Decoding every bin just to count peaks made each metadata request cost as much as
         // reading the spectrum, and Skyline asks for metadata on every spectrum it then skips.
+        if (detailLevel < DetailLevel.FullMetadata)
+            return spec;
         bool combined = isMs && ie.Combined;
         if (combined && getBinaryData)
         {

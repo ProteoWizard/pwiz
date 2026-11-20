@@ -68,13 +68,17 @@ public sealed class SpectrumListSorter : SpectrumListWrapper
     }
 
     /// <inheritdoc/>
-    public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
+    public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
+        GetSpectrum(index, getBinaryData ? DetailLevel.FullData : DetailLevel.FullMetadata);
+
+    /// <inheritdoc/>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel)
     {
         // Copy before renumbering (cpp does the same): stamping in place would leave the inner
         // list's own spectra carrying sorted positions, so the unsorted list would report the
         // sorted order. SpectrumListSimple hands out its stored instances, so this is not
         // hypothetical.
-        var spec = Inner.GetSpectrum(_permutation[index], getBinaryData).ShallowCopy();
+        var spec = Inner.GetSpectrum(_permutation[index], detailLevel).ShallowCopy();
         spec.Index = index;
         return spec;
     }

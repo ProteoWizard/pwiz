@@ -46,10 +46,20 @@ public sealed class SpectrumListTitleMaker : SpectrumListWrapper
     }
 
     /// <inheritdoc/>
-    public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
+    public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
+        GetSpectrum(index, getBinaryData ? DetailLevel.FullData : DetailLevel.FullMetadata);
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// The title is set from full metadata up. Below it a reader may not report yet what the
+    /// format names (precursors, charge, polarity), and a title made from that would differ from
+    /// the full read's, so the spectrum is passed through untitled.
+    /// </remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel)
     {
-        var spec = Inner.GetSpectrum(index, getBinaryData);
-        spec.Params.Set(CVID.MS_spectrum_title, BuildTitle(spec));
+        var spec = Inner.GetSpectrum(index, detailLevel);
+        if (detailLevel >= DetailLevel.FullMetadata)
+            spec.Params.Set(CVID.MS_spectrum_title, BuildTitle(spec));
         return spec;
     }
 

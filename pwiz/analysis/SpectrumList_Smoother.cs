@@ -55,6 +55,13 @@ public sealed class SpectrumList_Smoother : SpectrumListWrapper
     }
 
     /// <inheritdoc/>
+    /// <remarks>Smoothing changes the peaks only, so no peaks are read below full metadata.</remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel) =>
+        detailLevel < DetailLevel.FullMetadata
+            ? GetSpectrumWithoutPeakCount(index, detailLevel)
+            : GetSpectrum(index, detailLevel >= DetailLevel.FullData);
+
+    /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
     {
         var spec = Inner.GetSpectrum(index, getBinaryData: true);

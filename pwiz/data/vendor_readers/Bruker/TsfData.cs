@@ -133,6 +133,11 @@ internal sealed class TsfData : IBrukerData
         if (msLevel > 1 && frame.PrecursorMz.HasValue)
             AddTsfPrecursor(spec, frame);
 
+        // Profile or centroid is known only by reading the peaks, so it waits for full metadata
+        // along with the peak count, as in cpp (SpectrumList_Bruker.cpp:377, :511).
+        if (detailLevel < DetailLevel.FullMetadata)
+            return;
+
         // Read peaks: caller may override via preferCentroid (vendor peak-picking feed).
         double[] mz = Array.Empty<double>();
         double[] intensity = Array.Empty<double>();

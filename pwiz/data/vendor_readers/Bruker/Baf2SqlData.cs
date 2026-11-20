@@ -306,6 +306,11 @@ internal sealed class Baf2SqlData : IBrukerData
         if (row.MsLevel > 1 && row.PrecursorMz.HasValue)
             AddPrecursor(spec, row);
 
+        // Profile or centroid is known only by reading the peaks, so it waits for full metadata
+        // along with the peak count, as in cpp (SpectrumList_Bruker.cpp:377, :511).
+        if (detailLevel < DetailLevel.FullMetadata)
+            return;
+
         // Decide profile vs centroid. cpp: prefer profile, fall back to line if profile empty
         // OR if caller asked for line data via msLevelsToCentroid (we pass that as preferCentroid).
         double[] mz = Array.Empty<double>();
