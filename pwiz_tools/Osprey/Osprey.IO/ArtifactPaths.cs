@@ -59,6 +59,14 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static string CacheDir { get; set; }
 
+        /// <summary>
+        /// A name for the processing that made a run's spectra, inserted into the spectra cache's
+        /// file name (<c>{stem}.{tag}.spectra.bin</c>, and likewise the demultiplexed cache), or null
+        /// for the vendor's centroids and the historical name. Each cache stays a function of its
+        /// source file alone: spectra Osprey centroided itself never overwrite, or stand in for, the
+        /// vendor-centroided ones, and a change to the centroiding settings changes the tag.
+        /// </summary>
+        public static string SpectraCacheTag { get; set; }
         // The output directory the cache resolves against, when a scope from
         // ResolveCacheAs has pinned it apart from OutputDir.
         private static bool _cacheOutputDirPinned;

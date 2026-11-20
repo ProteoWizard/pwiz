@@ -230,7 +230,7 @@ namespace pwiz.Osprey.IO
                 foreach (int key in windowKeysInFileOrder)
                     isolationWindows.Add(windowKeyToFirstIso[key]);
 
-                // Sorted by center.
+                // Sorted by center, as ExtractIsolationWindows sorted the first cycle.
                 isolationWindows.Sort((a, b) => a.Center.CompareTo(b.Center)); // Array.Sort OK: dedup on the rounded center key leaves distinct centers, so the comparator never ties
 
                 // MS1 in full from the recorded section offset (small in DIA and needed

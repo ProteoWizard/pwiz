@@ -124,6 +124,12 @@ namespace pwiz.Osprey.Core
                 // every existing hash, is unchanged, including the cross-impl match with Rust.
                 if (_config.DemuxMode != DemuxMode.off)
                     sb.AppendFormat(ic, "demux:{0}\n", _config.DemuxMode);
+                // Likewise: with vendor centroiding nothing is appended.
+                if (_config.CentroidMode != CentroidMode.vendor)
+                {
+                    sb.AppendFormat(ic, "centroid:{0} sigma_ms1:{1} sigma_ms2:{2} active_set:{3}\n", _config.CentroidMode,
+                        _config.CentrixSigmaMs1, _config.CentrixSigmaMs2, b(_config.CentrixActiveSet));
+                }
 
                 byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
                 var result = new StringBuilder(64);
