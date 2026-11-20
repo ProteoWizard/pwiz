@@ -397,12 +397,14 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
 
     /// <inheritdoc/>
     /// <remarks>
-    /// Overridden, as cpp's is, so a metadata request stops where cpp's does
-    /// (SpectrumList_Thermo.cpp:263, :592, :645, :743): instant metadata is the ms level and
-    /// start time from the index; fast metadata adds the scan filter and precursors without the
-    /// zoom-scan search; the precursor intensity and the mass list wait for full metadata. The
-    /// base class turned every level below <see cref="DetailLevel.FullData"/> into a full-metadata
-    /// read, which decoded the scan's peaks to answer a question about its ms level.
+    /// Overridden, as cpp's is, so a metadata request skips the peak reads cpp skips
+    /// (SpectrumList_Thermo.cpp:263, :645, :743): instant metadata is the ms level and start
+    /// time from the index; fast metadata adds the scan filter and the precursors; the precursor
+    /// intensity and the mass list, which read peaks, wait for full metadata. Unlike cpp (:592),
+    /// fast metadata keeps the selected ion and its zoom-scan correction, so its precursors
+    /// match a full read's: MsDataFileImpl.GetPrecursors settles on the first level that returns
+    /// any. The base class turned every level below <see cref="DetailLevel.FullData"/> into a
+    /// full-metadata read, which decoded the scan's peaks to answer a question about its ms level.
     /// </remarks>
     public override Spectrum GetSpectrum(int index, DetailLevel detailLevel) =>
         GetSpectrumImpl(index, detailLevel, msLevelsToCentroid: null);
@@ -1159,10 +1161,9 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
             {
                 // Triple-play acquisitions insert a narrow zoom scan between the survey MS1 and
                 // the MSn; the monoisotopic m/z and charge live on THAT scan, not on the MSn.
-                // cpp SpectrumList_Thermo.cpp:596-614, skipped at fast metadata as cpp's :592 does.
-                var zoomScan = detailLevel > DetailLevel.FastMetadata
-                    ? FindPrecursorZoomScan(precursorMsLevel, isolationMz, ie.Index)
-                    : -1;
+                // cpp SpectrumList_Thermo.cpp:596-614. Searched at fast metadata too, though cpp's
+                // :592 skips it there: see GetSpectrum(int, DetailLevel).
+                var zoomScan = FindPrecursorZoomScan(precursorMsLevel, isolationMz, ie.Index);
                 if (zoomScan >= 0)
                 {
                     if (selectedIonMz == isolationMz
