@@ -176,8 +176,8 @@ namespace pwiz.Osprey.FDR
             log?.LogInfo(LogTag.COUNT, @"Protein parsimony groups: {0}", parsimony.Groups.Count);
 
             // Scored from the first pass, not from bestScores: see LibraryProteinScores for why
-            // the second-pass pool cannot supply the decoy side. Rust still competes only the
-            // groups with a detected target, scored from this pool (pipeline.rs:4389).
+            // the second-pass pool cannot supply the decoy side. Rust does the same
+            // (compute_library_picked_protein_fdr).
             var proteinFdr = ProteinFdr.ComputeLibraryPickedProteinFdr(parsimony, proteinScores.ByProtein());
 
             // Count passing proteins

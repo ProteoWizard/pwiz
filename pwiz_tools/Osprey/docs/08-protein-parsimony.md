@@ -236,7 +236,8 @@ FDR, on the compacted + reconciled + rescored pool.
   has no `Protein` variant.
 - Parsimony rebuilt (`ProteinFdrEngine.cs:192`).
 - Picked-protein FDR over **every library protein**
-  (`ProteinFdr.ComputeLibraryPickedProteinFdr`), not only the groups with a detected target:
+  (`ProteinFdr.ComputeLibraryPickedProteinFdr`, Rust `compute_library_picked_protein_fdr`),
+  not only the groups with a detected target as before #4823:
   - **Units**: each parsimony group, plus each library protein in no group. A group scores
     the best of its accessions on each side.
   - **Scores come from the first pass.** `SecondPassFdrTask.ReadFirstPassProteinScores` folds
