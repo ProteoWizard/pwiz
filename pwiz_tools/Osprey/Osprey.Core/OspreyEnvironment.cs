@@ -379,12 +379,27 @@ namespace pwiz.Osprey.Core
         public static bool SerialReadsProcessWide { get; set; } =
             string.Equals(ENV_SERIAL_READ_SCOPE.Value?.Trim(), @"process", StringComparison.OrdinalIgnoreCase);
 
+        private static readonly EnvVar ENV_DIRECT_READ = new EnvVar(@"OSPREY_DIRECT_READ", EnvVarGroup.performance,
+            @"Read each input file in full, forward, once per task that needs its spectra, and score " +
+            @"from memory, without writing or reading a .spectra.bin cache.");
+
+        /// <summary>
+        /// EXPERIMENTAL. <c>OSPREY_DIRECT_READ=1</c> reads each input file in full in acquisition
+        /// order whenever a task needs its spectra (per-file scoring, then again for the second-pass
+        /// re-score) and serves isolation windows from memory, holding about the decoded file per
+        /// file in flight. No <c>.spectra.bin</c> is written or read. A multiplexed run under --demux
+        /// still uses its demultiplexed cache. Output is the same either way.
+        /// </summary>
+        public static bool DirectRead { get; set; } = IsSetAndNotZero(ENV_DIRECT_READ);
+
         /// <summary>
         /// The log line naming the window-read switches when either is set, so a timing run records
         /// which arm it was; null at the defaults, leaving a default run's log unchanged.
         /// </summary>
         public static string DescribeWindowReads()
         {
+            if (DirectRead)
+                return @"Window reads (EXPERIMENTAL): each input read in full from its source file, no .spectra.bin (OSPREY_DIRECT_READ=1)";
             if (SerialWindowReads && !SerialReadsProcessWide)
                 return null;
             return string.Format(@"Window reads (DIAGNOSTIC): calibration and Stage 6 {0}; serial read lock {1}",

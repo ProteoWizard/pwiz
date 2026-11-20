@@ -136,7 +136,7 @@ namespace pwiz.Osprey.Tasks
             // Shared GetCachePath so the write and the rescore read (PerFileRescoreTask)
             // derive an identical filename + directory (ArtifactPaths redirects the dir).
             string cachePath = SpectraCache.GetCachePath(inputFile);
-            if (File.Exists(cachePath))
+            if (!OspreyEnvironment.DirectRead && File.Exists(cachePath))
             {
                 try
                 {
@@ -220,6 +220,10 @@ namespace pwiz.Osprey.Tasks
                     Path.GetFileName(inputFile), OspreyArgNames.Text(OspreyArgNames.DEMUX)));
             }
 
+            // EXPERIMENTAL: score from the spectra just read, with no cache written.
+            if (OspreyEnvironment.DirectRead && scheme == null)
+                return SpectraWindowIndex.FromSpectra(mzmlResult.Ms2Spectra, mzmlResult.Ms1Spectra);
+
             try
             {
                 SpectraCache.SaveSpectraCache(cachePath, mzmlResult.Ms2Spectra, mzmlResult.Ms1Spectra, inputFile,
@@ -294,6 +298,13 @@ namespace pwiz.Osprey.Tasks
             var demuxIndex = DemuxCache.TryOpen(inputFile, ctx, loadMs1);
             if (demuxIndex != null)
                 return demuxIndex;
+
+            // EXPERIMENTAL: read the source again in full rather than a cache that was never written.
+            if (OspreyEnvironment.DirectRead)
+            {
+                var spectra = SpectrumFileReader.LoadAllSpectra(inputFile);
+                return SpectraWindowIndex.FromSpectra(spectra.Ms2Spectra, spectra.Ms1Spectra, loadMs1);
+            }
 
             string cachePath = SpectraCache.GetCachePath(inputFile);
             SpectraWindowIndex index;
