@@ -1444,9 +1444,12 @@ namespace pwiz.ProteowizardWrapper
         }
 
         // detach: true to take the binary arrays from the spectrum instead of copying them.
-        // The caller must not read the spectrum's arrays again.
+        // The caller must not read the spectrum's arrays again. A spectrum its list keeps for
+        // later reads is always copied.
         private MsDataSpectrum GetSpectrum(Spectrum spectrum, int spectrumIndex, bool detach = false)
         {
+            if (spectrum != null && spectrum.RetainedByList)
+                detach = false;
             if (spectrum == null)
             {
                 return new MsDataSpectrum();

@@ -791,14 +791,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static bool IsSorted(double[] array)
         {
-            if (array == null || array.Length < 2)
-                return true;
-            for (int i = 1; i < array.Length; i++)
-            {
-                if (array[i - 1] > array[i])
-                    return false;
-            }
-            return true;
+            return array == null || IsSorted(array, array.Length);
         }
 
         private const int INSERTION_SORT_THRESHOLD = 16;

@@ -454,7 +454,13 @@ public sealed class SpectrumListSimple : SpectrumListBase
     public override SpectrumIdentity SpectrumIdentity(int index) => Spectra[index];
 
     /// <inheritdoc/>
-    public override Spectrum GetSpectrum(int index, bool getBinaryData = false) => Spectra[index];
+    /// <remarks>Returns the stored instance, marked <see cref="Spectrum.RetainedByList"/>.</remarks>
+    public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
+    {
+        var spectrum = Spectra[index];
+        spectrum.RetainedByList = true;
+        return spectrum;
+    }
 
     /// <inheritdoc/>
     public override DataProcessing? DataProcessing => Dp;

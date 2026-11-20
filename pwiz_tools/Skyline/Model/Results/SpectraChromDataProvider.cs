@@ -1296,22 +1296,21 @@ namespace pwiz.Skyline.Model.Results
                     Index = index;
                     AllSpectra = allSpectra;
                     RetentionTime = retentionTime;
-                    // Size should be dominated by the array lengths
-                    int arrayLen = 0, arrayCount = 0;
+                    // Size should be dominated by the arrays. Count the buffers as allocated rather
+                    // than PeakCount: a reader's buffer can be longer than the peaks it holds.
+                    long arrayLen = 0;
                     if (allSpectra != null)
                     {
                         DataSpectrum = allSpectra[0];
-                        arrayLen = allSpectra.Sum(s => s.PeakCount);
-                        arrayCount = 2;
+                        arrayLen = allSpectra.Sum(s => (long) (s.MzBuffer?.Length ?? 0) +
+                                                       (s.IntensityBuffer?.Length ?? 0) +
+                                                       (s.IonMobilityBuffer?.Length ?? 0));
                     }
 
                     if (DataSpectrum != null && DataSpectrum.HasIonMobilities)
-                    {
                         SortEvent = new ManualResetEvent(false);
-                        arrayCount++;
-                    }
 
-                    Size = arrayLen * arrayCount * sizeof(double);
+                    Size = (int) Math.Min(int.MaxValue, arrayLen * sizeof(double));
                 }
 
                 public ManualResetEvent SortEvent { get; private set; }
