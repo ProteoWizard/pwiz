@@ -174,6 +174,38 @@ namespace pwiz.Skyline.Model.Localization
         }
 
         /// <summary>
+        /// The peptide sequence without modifications, for showing an ion's span.
+        /// </summary>
+        public string UnmodifiedSequence
+        {
+            get { return _unmodifiedSequence; }
+        }
+
+        /// <summary>
+        /// Residue indices, in sequence order, that some ambiguous modification can occupy: the
+        /// candidate sites among which the positional isomers differ.
+        /// </summary>
+        public IEnumerable<int> CandidateSites
+        {
+            get
+            {
+                for (int i = 0; i < _length; i++)
+                {
+                    if (_ambiguousMods.Any(mod => mod.IsCandidate(i)))
+                        yield return i;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Residue indices where an ambiguous modification is placed in this isomer.
+        /// </summary>
+        public IEnumerable<int> PlacedSites
+        {
+            get { return _ambiguousMods.SelectMany(mod => mod.PlacedPositions).Distinct().OrderBy(i => i); }
+        }
+
+        /// <summary>
         /// Number of positional isomers for the peptide, the product over ambiguous modifications
         /// of <c>C(n, k)</c>. Returns 1 when there are no ambiguous modifications (a single
         /// arrangement). Clamped to <see cref="MAX_COUNT"/> to guard against overflow.
@@ -355,6 +387,29 @@ namespace pwiz.Skyline.Model.Localization
         }
 
         /// <summary>
+        /// The number of positional isomers an observed ion narrows the modification placement to:
+        /// its producing-set size when fewer than all isomers produce it, so the ion carries
+        /// localization information, or 0 when every isomer produces it, it has no span, or the
+        /// peptide has nothing to localize. A value of 1 means the ion is unique to this placement.
+        /// </summary>
+        public long GetLocalizingSetSize(TransitionDocNode nodeTran)
+        {
+            return GetLocalizingSetSize(nodeTran.Transition, nodeTran.Losses);
+        }
+
+        /// <summary>
+        /// <see cref="GetLocalizingSetSize(TransitionDocNode)"/> for a transition identity and its
+        /// neutral losses.
+        /// </summary>
+        public long GetLocalizingSetSize(Transition transition, TransitionLosses losses)
+        {
+            if (!CanLocalize)
+                return 0;
+            long size = GetProducingSetSize(transition, losses);
+            return 0 < size && size < IsomerCount ? size : 0;
+        }
+
+        /// <summary>
         /// True iff this ion is produced by exactly one positional isomer (the placement this
         /// analyzer was built from) and localization is meaningful for the peptide.
         /// </summary>
@@ -386,7 +441,11 @@ namespace pwiz.Skyline.Model.Localization
             return transition != null && !transition.IsPrecursor() && !transition.IsCustom();
         }
 
-        private bool TryGetSpan(IonType type, int cleavageOffset, out int lo, out int hi)
+        /// <summary>
+        /// The residue index range [lo, hi] a product ion covers, or false for an ion type without
+        /// a span (precursor) or an empty peptide.
+        /// </summary>
+        public bool TryGetSpan(IonType type, int cleavageOffset, out int lo, out int hi)
         {
             lo = 0;
             hi = -1;
@@ -473,11 +532,17 @@ namespace pwiz.Skyline.Model.Localization
             public long MassShiftKey { get; }  // Identity of the ambiguity
             public int Count { get; }      // k_m
             public int SiteCount { get; }  // n_m
+            public IEnumerable<int> PlacedPositions { get { return _placedPositions; } }
 
             public int InsideSpan(int lo, int hi)
             {
                 // Number of candidate sites with index in [lo .. hi].
                 return _prefixCandidates[hi + 1] - _prefixCandidates[lo];
+            }
+
+            public bool IsCandidate(int index)
+            {
+                return _prefixCandidates[index + 1] > _prefixCandidates[index];
             }
 
             public int PlacedInsideSpan(int lo, int hi)

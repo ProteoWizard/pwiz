@@ -440,6 +440,24 @@ namespace pwiz.Skyline.Controls.SeqNode {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ion span.
+        /// </summary>
+        public static string TransitionTreeNode_RenderTip_Ion_span {
+            get {
+                return ResourceManager.GetString("TransitionTreeNode_RenderTip_Ion_span", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} of {1} isomers.
+        /// </summary>
+        public static string TransitionTreeNode_RenderTip_Isomers__0__of__1_ {
+            get {
+                return ResourceManager.GetString("TransitionTreeNode_RenderTip_Isomers__0__of__1_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Loss.
         /// </summary>
         public static string TransitionTreeNode_RenderTip_Loss {
@@ -457,6 +475,15 @@ namespace pwiz.Skyline.Controls.SeqNode {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Produced by.
+        /// </summary>
+        public static string TransitionTreeNode_RenderTip_Produced_by {
+            get {
+                return ResourceManager.GetString("TransitionTreeNode_RenderTip_Produced_by", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Product m/z.
         /// </summary>

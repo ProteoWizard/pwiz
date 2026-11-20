@@ -238,6 +238,12 @@
   <data name="TransitionTreeNode_RenderTip_Ion" xml:space="preserve">
     <value>Ion</value>
   </data>
+  <data name="TransitionTreeNode_RenderTip_Ion_span" xml:space="preserve">
+    <value>Ion span</value>
+  </data>
+  <data name="TransitionTreeNode_RenderTip_Isomers__0__of__1_" xml:space="preserve">
+    <value>{0} of {1} isomers</value>
+  </data>
   <data name="TransitionTreeNode_RenderTip_Library_intensity" xml:space="preserve">
     <value>Library intensity</value>
   </data>
@@ -249,6 +255,9 @@
   </data>
   <data name="TransitionTreeNode_RenderTip_Losses" xml:space="preserve">
     <value>Losses</value>
+  </data>
+  <data name="TransitionTreeNode_RenderTip_Produced_by" xml:space="preserve">
+    <value>Produced by</value>
   </data>
   <data name="TransitionTreeNode_RenderTip_Product_m_z" xml:space="preserve">
     <value>Product m/z</value>

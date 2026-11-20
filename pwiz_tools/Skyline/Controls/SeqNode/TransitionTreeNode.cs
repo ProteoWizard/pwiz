@@ -1,9 +1,10 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2009 University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,8 +18,10 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
@@ -70,7 +73,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         
         public int TypeImageIndex
         {
-            get { return GetTypeImageIndex(DocNode, IsUniquelyLocalizing); }
+            get { return GetTypeImageIndex(DocNode, LocalizingSetSize); }
         }
 
         /// <summary>
@@ -96,19 +99,24 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
 
         /// <summary>
-        /// The names of the modifications this ion uniquely localizes, or null.
+        /// The number of positional isomers this product ion narrows the modification placement
+        /// of its peptide to, which sets the fill of its badge, or 0 when it narrows nothing.
         /// </summary>
-        private string LocalizedModificationName
+        public long LocalizingSetSize
         {
-            get { return SiteDeterminingAnalyzer?.GetUniquelyLocalizedModificationNames(DocNode); }
+            get
+            {
+                var analyzer = SiteDeterminingAnalyzer;
+                return analyzer != null ? analyzer.GetLocalizingSetSize(DocNode) : 0;
+            }
         }
 
-        public static Image GetTypeImage(TransitionDocNode nodeTran, SequenceTree sequenceTree, bool uniquelyLocalizing)
+        public static Image GetTypeImage(TransitionDocNode nodeTran, SequenceTree sequenceTree, long localizingSetSize)
         {
-            return sequenceTree.ImageList.Images[GetTypeImageIndex(nodeTran, uniquelyLocalizing)];
+            return sequenceTree.ImageList.Images[GetTypeImageIndex(nodeTran, localizingSetSize)];
         }
 
-        private static int GetTypeImageIndex(TransitionDocNode nodeTran, bool uniquelyLocalizing)
+        private static int GetTypeImageIndex(TransitionDocNode nodeTran, long localizingSetSize)
         {
             if (nodeTran.IsDecoy)
             {
@@ -116,12 +124,8 @@ namespace pwiz.Skyline.Controls.SeqNode
                     ? SequenceTree.ImageId.fragment_lib_decoy
                     : SequenceTree.ImageId.fragment_decoy);
             }
-            if (uniquelyLocalizing)
-            {
-                return (int)(nodeTran.HasLibInfo
-                    ? SequenceTree.ImageId.fragment_lib_unique
-                    : SequenceTree.ImageId.fragment_unique);
-            }
+            if (localizingSetSize > 0)
+                return (int) SequenceTree.GetLocalizingImageId(localizingSetSize, nodeTran.HasLibInfo);
             return (int)(nodeTran.HasLibInfo
                 ? SequenceTree.ImageId.fragment_lib
                 : SequenceTree.ImageId.fragment);
@@ -220,11 +224,11 @@ namespace pwiz.Skyline.Controls.SeqNode
             if (draw)
                 g.TranslateTransform(0, size.Height);
             Size sizeMaxNew = new Size(sizeMax.Width, sizeMax.Height - size.Height);
-            var sizeNew = RenderTip(DocNode, g, sizeMaxNew, draw, LocalizedModificationName);
+            var sizeNew = RenderTip(DocNode, g, sizeMaxNew, draw, SiteDeterminingAnalyzer);
             return new Size(Math.Max(size.Width, sizeNew.Width), size.Height + sizeNew.Height);
         }
 
-        public static Size RenderTip(TransitionDocNode nodeTran, Graphics g, Size sizeMax, bool draw, string localizedModName = null)
+        public static Size RenderTip(TransitionDocNode nodeTran, Graphics g, Size sizeMax, bool draw, SiteDeterminingIonAnalyzer analyzer = null)
         {
             var table = new TableDesc();
             using (RenderTools rt = new RenderTools())
@@ -232,8 +236,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Ion, nodeTran.Transition.FragmentIonName, rt);
                 table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Charge, FormatAdductTip(nodeTran.Transition.Adduct), rt);
                 table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Product_m_z, string.Format(@"{0:F04}", nodeTran.Mz), rt);
-                if (!string.IsNullOrEmpty(localizedModName))
-                    table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Uniquely_localizes, localizedModName, rt);
+                AddLocalizationRows(table, nodeTran, analyzer, rt);
                 int? decoyMassShift = nodeTran.Transition.DecoyMassShift;
                 if (decoyMassShift.HasValue)
                     table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Decoy_Mass_Shift, decoyMassShift.Value.ToString(LocalizationHelper.CurrentCulture), rt);
@@ -270,6 +273,60 @@ namespace pwiz.Skyline.Controls.SeqNode
 
                 return new Size((int)size.Width + 2, (int)size.Height + 2);
             }
+        }
+
+        /// <summary>
+        /// Adds the rows that explain what a product ion says about the placement of an
+        /// ambiguous modification: the peptide sequence with the ion's span in brackets and the
+        /// candidate sites marked, how many positional isomers produce the ion, and the
+        /// modifications it localizes when it is unique to the placement. Nothing is added for an
+        /// ion that narrows the isomer set no further than the whole peptide does, so the rows
+        /// appear exactly when the icon carries a badge.
+        /// </summary>
+        private static void AddLocalizationRows(TableDesc table, TransitionDocNode nodeTran, SiteDeterminingIonAnalyzer analyzer, RenderTools rt)
+        {
+            if (analyzer == null)
+                return;
+            var transition = nodeTran.Transition;
+            long localizingSetSize = analyzer.GetLocalizingSetSize(transition, nodeTran.Losses);
+            if (localizingSetSize == 0 || !analyzer.TryGetSpan(transition.IonType, transition.CleavageOffset, out int lo, out int hi))
+                return;
+
+            table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Ion_span,
+                new TextSequenceCellDesc(CreateSpanSequences(analyzer, lo, hi, rt), rt), rt);
+            table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Produced_by,
+                string.Format(SeqNodeResources.TransitionTreeNode_RenderTip_Isomers__0__of__1_, localizingSetSize, analyzer.IsomerCount), rt);
+            string localizedModName = analyzer.GetUniquelyLocalizedModificationNames(nodeTran);
+            if (!string.IsNullOrEmpty(localizedModName))
+                table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Uniquely_localizes, localizedModName, rt);
+        }
+
+        /// <summary>
+        /// The unmodified sequence as text runs, with the residues of the span [lo, hi] in square
+        /// brackets, the sites where the modification is placed in this isomer bold and underlined
+        /// as the tree shows a modified residue, and the other candidate sites bold.
+        /// </summary>
+        private static IList<TextSequence> CreateSpanSequences(SiteDeterminingIonAnalyzer analyzer, int lo, int hi, RenderTools rt)
+        {
+            string sequence = analyzer.UnmodifiedSequence;
+            var candidateSites = new HashSet<int>(analyzer.CandidateSites);
+            var placedSites = new HashSet<int>(analyzer.PlacedSites);
+            var runs = new List<TextSequence>();
+            for (int i = 0; i < sequence.Length; i++)
+            {
+                if (i == lo)
+                    runs.Add(CreateRun(@"[", rt.FontNormal));
+                var font = placedSites.Contains(i) ? rt.FontBoldUnderline : candidateSites.Contains(i) ? rt.FontBold : rt.FontNormal;
+                runs.Add(CreateRun(sequence[i].ToString(), font));
+                if (i == hi)
+                    runs.Add(CreateRun(@"]", rt.FontNormal));
+            }
+            return TextSequence.Coalesce(runs).ToList();
+        }
+
+        private static TextSequence CreateRun(string text, Font font)
+        {
+            return new TextSequence { Text = text, Font = font, Color = Color.Black };
         }
 
         #endregion

@@ -47,7 +47,7 @@ namespace pwiz.SkylineTestFunctional
     ///    not - the unique set must be a strict, non-empty subset containing the former and not
     ///    the latter;
     ///  - an UNRESOLVABLE peptide (modified serine inside a contiguous run of candidate serines)
-    ///    where no ion is unique;
+    ///    where no ion is unique, though some narrow the placement to two of the three serines;
     ///  - a NON-LOCALIZABLE peptide (no candidate residue) where nothing is unique.
     ///
     /// Assertions are made on transition identities (ion type + ordinal) and booleans/counts,
@@ -287,7 +287,7 @@ namespace pwiz.SkylineTestFunctional
                 var tranNodes = tgNode.Nodes.OfType<TransitionTreeNode>().ToList();
                 var nodeUnique = tranNodes.First(n => IsIon(n.DocNode, IonType.b, UNIQUE_B_ORDINAL));
                 Assert.IsTrue(nodeUnique.IsUniquelyLocalizing);
-                Assert.AreEqual((int) SequenceTree.ImageId.fragment_unique, nodeUnique.ImageIndex);
+                Assert.AreEqual((int) SequenceTree.ImageId.fragment_localizing_1, nodeUnique.ImageIndex);
                 var nodeShared = tranNodes.First(n => IsIon(n.DocNode, IonType.b, SHARED_B_ORDINAL));
                 Assert.IsFalse(nodeShared.IsUniquelyLocalizing);
                 Assert.AreEqual((int) SequenceTree.ImageId.fragment, nodeShared.ImageIndex);
@@ -366,7 +366,7 @@ namespace pwiz.SkylineTestFunctional
 
                 // The pick list draws the same badged icon as the tree for a uniquely localizing ion
                 var imageList = SkylineWindow.SequenceTree.ImageList;
-                AssertSameImage(imageList.Images[(int) SequenceTree.ImageId.fragment_unique],
+                AssertSameImage(imageList.Images[(int) SequenceTree.ImageId.fragment_localizing_1],
                     tgNode.GetPickTypeImage(choiceUnique));
                 AssertSameImage(imageList.Images[(int) SequenceTree.ImageId.fragment],
                     tgNode.GetPickTypeImage(choiceShared));
@@ -375,13 +375,13 @@ namespace pwiz.SkylineTestFunctional
 
         /// <summary>
         /// Unresolvable peptide: the modified serine sits inside a contiguous run of candidate
-        /// serines, so no ion uniquely localizes it and nothing is badged, even though the
-        /// peptide is localizable.
+        /// serines, so no ion uniquely localizes it and none carries the full bar, but the ions
+        /// that leave two of the three placements possible carry a partial bar.
         /// </summary>
         private void TestUnresolvablePeptide()
         {
             SelectPrecursor(SERINE_RUN_SEQ);
-            AssertNoUniquelyLocalizingIons("No ion uniquely localizes a serine inside a run");
+            AssertNoUniquelyLocalizingIons("No ion uniquely localizes a serine inside a run", true);
         }
 
         /// <summary>
@@ -390,10 +390,14 @@ namespace pwiz.SkylineTestFunctional
         private void TestNonLocalizablePeptide()
         {
             SelectPrecursor(UNMODIFIED_SEQ);
-            AssertNoUniquelyLocalizingIons("Unmodified peptide should not be localizable");
+            AssertNoUniquelyLocalizingIons("Unmodified peptide should not be localizable", false);
         }
 
-        private void AssertNoUniquelyLocalizingIons(string message)
+        /// <summary>
+        /// No choice of the selected precursor is unique to its placement or drawn with the full
+        /// bar of a unique ion; partial bars are expected only when the peptide is localizable.
+        /// </summary>
+        private void AssertNoUniquelyLocalizingIons(string message, bool expectPartialBadges)
         {
             RunUI(() =>
             {
@@ -401,9 +405,19 @@ namespace pwiz.SkylineTestFunctional
                 var choices = tgNode.GetChoices(false).ToArray();
                 Assert.IsTrue(choices.Length > 0, "Expected at least one ion choice");
                 Assert.IsFalse(choices.Any(tgNode.IsUniquelyLocalizing), message);
-                var imagePlain = SkylineWindow.SequenceTree.ImageList.Images[(int) SequenceTree.ImageId.fragment];
+                var imageList = SkylineWindow.SequenceTree.ImageList;
+                var imagePlain = imageList.Images[(int) SequenceTree.ImageId.fragment];
+                var imageUnique = imageList.Images[(int) SequenceTree.ImageId.fragment_localizing_1];
+                int countPartial = 0;
                 foreach (var choice in choices)
-                    AssertSameImage(imagePlain, tgNode.GetPickTypeImage(choice));
+                {
+                    var image = tgNode.GetPickTypeImage(choice);
+                    Assert.IsFalse(IsSameImage(imageUnique, image), "No ion may carry the full bar of a unique ion");
+                    if (!IsSameImage(imagePlain, image))
+                        countPartial++;
+                }
+                Assert.AreEqual(expectPartialBadges, countPartial > 0,
+                    "Partial bars {0} for {1}", expectPartialBadges ? "expected" : "not expected", message);
             });
         }
 
@@ -466,14 +480,24 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private static void AssertSameImage(Image expected, Image actual)
         {
-            Assert.AreEqual(expected.Size, actual.Size);
+            Assert.IsTrue(IsSameImage(expected, actual), "Images differ");
+        }
+
+        private static bool IsSameImage(Image expected, Image actual)
+        {
+            if (expected.Size != actual.Size)
+                return false;
             using var bmpExpected = new Bitmap(expected);
             using var bmpActual = new Bitmap(actual);
             for (int x = 0; x < bmpExpected.Width; x++)
             {
                 for (int y = 0; y < bmpExpected.Height; y++)
-                    Assert.AreEqual(bmpExpected.GetPixel(x, y), bmpActual.GetPixel(x, y), "Pixel ({0}, {1}) differs", x, y);
+                {
+                    if (bmpExpected.GetPixel(x, y) != bmpActual.GetPixel(x, y))
+                        return false;
+                }
             }
+            return true;
         }
 
         /// <summary>

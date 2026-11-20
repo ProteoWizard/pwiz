@@ -1,6 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2009 University of Washington - Seattle, WA
  *
@@ -297,6 +298,7 @@ namespace pwiz.Skyline.Controls
         {
             FontNormal = new Font(NodeTip.FontFace, NodeTip.FontSize);
             FontBold = new Font(NodeTip.FontFace, NodeTip.FontSize, FontStyle.Bold);
+            FontBoldUnderline = new Font(NodeTip.FontFace, NodeTip.FontSize, FontStyle.Bold | FontStyle.Underline);
             BrushNormal = Brushes.Black;
             BrushChoice = BrushNormal;
             BrushChosen = Brushes.Blue;
@@ -305,6 +307,10 @@ namespace pwiz.Skyline.Controls
 
         public Font FontNormal { get; private set; }
         public Font FontBold { get; private set; }
+        /// <summary>
+        /// The style the Targets tree gives a modified residue, for a sequence shown in a tip.
+        /// </summary>
+        public Font FontBoldUnderline { get; private set; }
         public Brush BrushNormal { get; private set; }
         public Brush BrushChoice { get; private set; }
         public Brush BrushChosen { get; private set; }
@@ -320,6 +326,8 @@ namespace pwiz.Skyline.Controls
                     FontNormal.Dispose();
                 if (FontBold != null)
                     FontBold.Dispose();
+                if (FontBoldUnderline != null)
+                    FontBoldUnderline.Dispose();
                 _disposed = true;
             }
         }
@@ -334,10 +342,24 @@ namespace pwiz.Skyline.Controls
 
         public void AddDetailRow(string name, string value, RenderTools rt, StringAlignment dataAlign, Font nameFont, Font valueFont)
         {
+            AddDetailRow(name, new CellDesc(value, rt) { Align = dataAlign, Font = valueFont }, rt, nameFont);
+        }
+
+        /// <summary>
+        /// Adds a row with a bold name and a ready-made value cell, such as a
+        /// <see cref="TextSequenceCellDesc"/>.
+        /// </summary>
+        public void AddDetailRow(string name, CellDesc valueCell, RenderTools rt)
+        {
+            AddDetailRow(name, valueCell, rt, rt.FontBold);
+        }
+
+        private void AddDetailRow(string name, CellDesc valueCell, RenderTools rt, Font nameFont)
+        {
             var row = new RowDesc
             {
                 new CellDesc(name, rt) { Font = nameFont },
-                new CellDesc(value, rt) { Align = dataAlign, Font = valueFont }
+                valueCell
             };
             row.ColumnSpacing = COL_SPACING;
             Add(row);
@@ -451,9 +473,7 @@ namespace pwiz.Skyline.Controls
                     sf.Alignment = cell.Align;
                     sf.LineAlignment = StringAlignment.Near;
                     RectangleF rect = new RectangleF(x, y, cell.Width, cell.Height);
-                    Font font = cell.Font;
-                    Brush brush = cell.Brush;
-                    g.DrawString(cell.Text, font, brush, rect, sf);
+                    cell.Draw(g, rect, sf);
                     x += cell.Width;
                 }
                 y += row[0].Height;
@@ -473,7 +493,7 @@ namespace pwiz.Skyline.Controls
         public void CalcDimensions(Graphics g)
         {
             foreach (CellDesc cell in this)
-                cell.SizeF = g.MeasureString(cell.Text, cell.Font);
+                cell.SizeF = cell.Measure(g);
         }
 
         public override string ToString()
@@ -514,9 +534,62 @@ namespace pwiz.Skyline.Controls
             set { _sizeF.Height = value; }
         }
 
+        public virtual SizeF Measure(Graphics g)
+        {
+            return g.MeasureString(Text, Font);
+        }
+
+        public virtual void Draw(Graphics g, RectangleF rect, StringFormat sf)
+        {
+            g.DrawString(Text, Font, Brush, rect, sf);
+        }
+
         public override string ToString()
         {
             return Text;
+        }
+    }
+
+    /// <summary>
+    /// A cell drawn as consecutive runs of text in different fonts, such as a peptide sequence
+    /// with its candidate modification sites in the Targets tree's bold, underlined style. The
+    /// runs are measured without the padding a default-format
+    /// <see cref="Graphics.DrawString(string,Font,Brush,RectangleF,StringFormat)"/> adds around
+    /// a string, so they abut, and each is drawn with the cell's format so the first one lines up
+    /// with the plain cells of the other rows.
+    /// </summary>
+    public class TextSequenceCellDesc : CellDesc
+    {
+        private readonly IList<TextSequence> _runs;
+
+        public TextSequenceCellDesc(IList<TextSequence> runs, RenderTools rt)
+            : base(string.Concat(runs.Select(run => run.Text)), rt)
+        {
+            _runs = runs;
+        }
+
+        public override SizeF Measure(Graphics g)
+        {
+            float width = 0;
+            foreach (var run in _runs)
+            {
+                run.Width = (int) Math.Ceiling(g.MeasureString(run.Text, run.Font, int.MaxValue, StringFormat.GenericTypographic).Width);
+                width += run.Width;
+            }
+            // The whole text in the cell font gives the row height and the padding the draw adds
+            var sizeDefault = g.MeasureString(Text, Font);
+            float padding = sizeDefault.Width - g.MeasureString(Text, Font, int.MaxValue, StringFormat.GenericTypographic).Width;
+            return new SizeF(width + padding, sizeDefault.Height);
+        }
+
+        public override void Draw(Graphics g, RectangleF rect, StringFormat sf)
+        {
+            float x = rect.X;
+            foreach (var run in _runs)
+            {
+                g.DrawString(run.Text, run.Font, Brush, new RectangleF(x, rect.Y, rect.Right - x, rect.Height), sf);
+                x += run.Width;
+            }
         }
     }
 }

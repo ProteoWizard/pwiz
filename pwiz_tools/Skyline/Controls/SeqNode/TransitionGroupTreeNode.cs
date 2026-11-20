@@ -1,9 +1,10 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2009 University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -203,7 +204,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override Image GetPickTypeImage(DocNode child)
         {
-            return TransitionTreeNode.GetTypeImage((TransitionDocNode)child, SequenceTree, IsUniquelyLocalizing(child));
+            return TransitionTreeNode.GetTypeImage((TransitionDocNode)child, SequenceTree, GetLocalizingSetSize(child));
         }
 
         public override Image GetPickPeakImage(DocNode child)
@@ -214,28 +215,29 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override ITipProvider GetPickTip(DocNode child)
         {
-            var nodeTran = (TransitionDocNode) child;
-            return new PickTransitionTip(nodeTran,
-                SiteDeterminingAnalyzer?.GetUniquelyLocalizedModificationNames(nodeTran));
+            return new PickTransitionTip((TransitionDocNode) child, SiteDeterminingAnalyzer);
         }
 
         private sealed class PickTransitionTip : ITipProvider
         {
             private readonly TransitionDocNode _nodeTran;
-            private readonly string _localizedModNames;
+            private readonly SiteDeterminingIonAnalyzer _analyzer;
 
-            public PickTransitionTip(TransitionDocNode nodeTran, string localizedModNames)
+            public PickTransitionTip(TransitionDocNode nodeTran, SiteDeterminingIonAnalyzer analyzer)
             {
                 _nodeTran = nodeTran;
-                _localizedModNames = localizedModNames;
+                _analyzer = analyzer;
             }
 
             // Only losses and localization add information beyond the pick-list label itself
-            public bool HasTip { get { return _nodeTran.HasLoss || _localizedModNames != null; } }
+            public bool HasTip
+            {
+                get { return _nodeTran.HasLoss || (_analyzer != null && _analyzer.GetLocalizingSetSize(_nodeTran) > 0); }
+            }
 
             public Size RenderTip(Graphics g, Size sizeMax, bool draw)
             {
-                return TransitionTreeNode.RenderTip(_nodeTran, g, sizeMax, draw, _localizedModNames);
+                return TransitionTreeNode.RenderTip(_nodeTran, g, sizeMax, draw, _analyzer);
             }
         }
 
@@ -379,6 +381,17 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             var analyzer = SiteDeterminingAnalyzer;
             return analyzer != null && choice is TransitionDocNode nodeTran && analyzer.IsUniqueToPrecursor(nodeTran);
+        }
+
+        /// <summary>
+        /// The number of positional isomers the given choice narrows the modification placement
+        /// to, which sets the fill of its pick list badge, or 0 when it narrows nothing; see
+        /// <see cref="TransitionTreeNode.LocalizingSetSize"/>.
+        /// </summary>
+        public long GetLocalizingSetSize(DocNode choice)
+        {
+            var analyzer = SiteDeterminingAnalyzer;
+            return analyzer != null && choice is TransitionDocNode nodeTran ? analyzer.GetLocalizingSetSize(nodeTran) : 0;
         }
 
         #region ITipProvider Members
