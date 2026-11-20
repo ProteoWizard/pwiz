@@ -1,0 +1,5 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Push pin pointing left, flat warm gray: taller flange on the left of the head, hollow
+       slot through head and flange, needle running to the left edge. -->
+  <Path Fill="#988C8C" Data="M 0,14 L 10,14 L 10,7 L 14,7 L 14,8 L 16,8 L 16,10 L 30,10 L 30,24 L 16,24 L 16,26 L 14,26 L 14,25 L 10,25 L 10,18 L 0,18 Z M 14,14 L 27,14 L 27,18 L 14,18 Z"/>
+</Canvas>

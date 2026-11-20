@@ -1,0 +1,22 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Binding navigator "last": a blue triangle pointing right at a blue bar on the right, both
+       lit from the upper left. Stock WinForms glyph. -->
+  <Path Data="M 21,16 L 9,4 L 9,28 Z" Stroke="#1A3E9E" StrokeThickness="1" StrokeLineJoin="Miter">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#A9C5F5" Offset="0"/>
+        <GradientStop Color="#5A88E4" Offset="0.45"/>
+        <GradientStop Color="#1F4EC6" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Rectangle Canvas.Left="23.5" Canvas.Top="4.5" Width="4" Height="23" Stroke="#1A3E9E" StrokeThickness="1">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#A9C5F5" Offset="0"/>
+        <GradientStop Color="#5A88E4" Offset="0.45"/>
+        <GradientStop Color="#1F4EC6" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+</Canvas>

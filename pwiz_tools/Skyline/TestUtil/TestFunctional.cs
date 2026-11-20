@@ -378,9 +378,16 @@ namespace pwiz.SkylineTestUtil
             {
                 // If the form has the current Skyline resource Icon, but it is not the same
                 // as the Skyline window icon, use the Skyline window icon to avoid recording
-                // screenshots of the Skyline-daily icon
-                if (AreIconsEqual(dlg.Icon, Resources.Skyline) && !AreIconsEqual(dlg.Icon, SkylineWindow.Icon))
-                    RunUI(() => dlg.Icon = SkylineWindow.Icon);
+                // screenshots of the Skyline-daily icon. Above 100% the form holds that icon
+                // with frames added at the scaled title bar sizes (DpiFormIcons).
+                RunUI(() =>
+                {
+                    using var skylineIcon = Resources.Skyline;
+                    var isSkylineIcon = AreIconsEqual(dlg.Icon, skylineIcon) ||
+                                        AreIconsEqual(dlg.Icon, DpiFormIcons.GetIcon(dlg, skylineIcon));
+                    if (isSkylineIcon && !AreIconsEqual(dlg.Icon, SkylineWindow.Icon))
+                        dlg.Icon = SkylineWindow.Icon;
+                });
             }
         }
 
@@ -3131,8 +3138,9 @@ namespace pwiz.SkylineTestUtil
                     SkylineWindow.AssumeNonNullModificationAuditLogging = true;
                     if (IsRecordingScreenShots)
                     {
-                        // Screenshots should be taken with release icon and "Skyline" in the window title
-                        SkylineWindow.Icon = Resources.Skyline_Release1;
+                        // Screenshots should be taken with release icon and "Skyline" in the window title,
+                        // with frames at the scaled title bar sizes above 100%
+                        SkylineWindow.Icon = DpiFormIcons.GetIcon(SkylineWindow, Resources.Skyline_Release1);
                     }
                 });
                  

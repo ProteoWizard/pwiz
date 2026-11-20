@@ -1,0 +1,10 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="24" Height="24">
+  <!-- MassSpecFile hinted for 24 px (150%), one unit per pixel: 2-pixel peaks at the native
+       columns times 1.5, rounded, keeping the native's 2-1-3-1 pixel gaps between them. -->
+  <Rectangle Canvas.Left="3" Canvas.Top="9" Width="2" Height="10" Fill="#000000"/>
+  <Rectangle Canvas.Left="7" Canvas.Top="3" Width="2" Height="16" Fill="#000000"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="12" Width="2" Height="7" Fill="#000000"/>
+  <Rectangle Canvas.Left="15" Canvas.Top="8" Width="2" Height="11" Fill="#000000"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="15" Width="2" Height="4" Fill="#000000"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="19" Width="20" Height="2" Fill="#808080"/>
+</Canvas>

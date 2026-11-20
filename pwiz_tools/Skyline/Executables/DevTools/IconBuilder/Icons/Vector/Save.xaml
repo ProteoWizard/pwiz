@@ -1,0 +1,37 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Floppy disk: periwinkle body lit from the top left with a darker right and bottom edge,
+       top-right corner cut, white label with a soft diagonal lighting gradient, write-protect
+       notch under the cut, slate shutter with a light slider and a black hole. -->
+  <Path Data="M 2,3.5 Q 2,2 3.5,2 L 25.5,2 L 30,6.5 L 30,28.5 Q 30,30 28.5,30 L 3.5,30 Q 2,30 2,28.5 Z">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#BEBDFF" Offset="0"/>
+        <GradientStop Color="#8584E6" Offset="0.45"/>
+        <GradientStop Color="#5A59C0" Offset="0.8"/>
+        <GradientStop Color="#45458F" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Path Data="M 28,8 L 30,6.5 L 30,28.5 Q 30,30 28.5,30 L 3.5,30 Q 2,30 2,28.5 L 4,28 L 28,28 Z" Fill="#3E3E7D" Opacity="0.75"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="4" Width="16" Height="12" RadiusX="0.5" RadiusY="0.5">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFFFFF" Offset="0"/>
+        <GradientStop Color="#FFFFFF" Offset="0.45"/>
+        <GradientStop Color="#D2DBEA" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <Rectangle Canvas.Left="26" Canvas.Top="5" Width="2" Height="2" Fill="#333367"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="20" Width="16" Height="10" Fill="#4B5B71"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="22" Width="8" Height="8">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#E8EEF5" Offset="0"/>
+        <GradientStop Color="#CED9E9" Offset="0.5"/>
+        <GradientStop Color="#A9B2C0" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <Rectangle Canvas.Left="12" Canvas.Top="22" Width="4" Height="4" Fill="#000000"/>
+</Canvas>

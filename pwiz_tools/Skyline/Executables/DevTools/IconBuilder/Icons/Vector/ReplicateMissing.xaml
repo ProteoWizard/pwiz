@@ -1,0 +1,10 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Missing replicate: same bitmap as FileMissing. Dashed dark gray outline of a page with a
+       folded top-right corner (the fold drawn as a dashed triangle), and a glowing red X over
+       the lower-right corner. -->
+  <Path Data="M 7,3 L 19,3 L 27,11 L 27,27 L 7,27 Z" Stroke="#606060" StrokeThickness="2" StrokeDashArray="1 1" StrokeLineJoin="Miter"/>
+  <Path Data="M 19,3 L 19,11 L 27,11" Stroke="#606060" StrokeThickness="2" StrokeDashArray="1 1" StrokeLineJoin="Miter"/>
+  <!-- Red X with glow -->
+  <Path Data="M 23,23 L 29,29 M 29,23 L 23,29" Stroke="#F08080" StrokeThickness="5" Opacity="0.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+  <Path Data="M 23,23 L 29,29 M 29,23 L 23,29" Stroke="#D81818" StrokeThickness="2"/>
+</Canvas>

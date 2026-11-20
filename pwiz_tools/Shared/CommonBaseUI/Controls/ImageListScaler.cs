@@ -39,7 +39,9 @@ namespace pwiz.Common.Controls
             new ConditionalWeakTable<ImageList, object>();
 
         /// <summary>
-        /// Scales the list and every icon in it to the display DPI. Icons added afterwards
+        /// Scales the list and every icon in it to the display DPI, using the per-DPI file
+        /// named by an icon's key when one is embedded (see
+        /// <see cref="DpiIcons.LoadKeyedIcon"/>) and resampling the rest. Icons added afterwards
         /// go through <see cref="AddScaled"/> or <see cref="AddRangeScaled"/>, which resample
         /// to the list's new size; a plain Add would have ImageList stretch them with
         /// nearest-neighbor sampling. The list keeps its transparent color, so keyed icons
@@ -60,7 +62,12 @@ namespace pwiz.Common.Controls
             imageList.Images.Clear();
             foreach (var original in originals)
             {
-                var scaled = Resample(imageList, original.Value);
+                // The IconBuilder file named by the image's key, where there is one
+                var native = original.Value;
+                var scaled = (native.Width == native.Height
+                                 ? DpiIcons.LoadKeyedIcon(control, original.Key, native.Width, size)
+                                 : null) ??
+                             Resample(imageList, native);
                 if (string.IsNullOrEmpty(original.Key))
                     imageList.Images.Add(scaled);
                 else
