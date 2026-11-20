@@ -20,9 +20,16 @@ runtime — drops the dual-MSI complexity of the prior WiX build. .NET 10 prereq
 is detected via registry and the bundled runtime EXE installs (with UAC) if
 missing.
 
+Signing (release builds only): with -SignKeyAlias and -SignCertFile, our own executables
+are signed in the staging directory before ISCC packs them, and ISCC signs each
+uninstaller and Setup.exe as it compiles, all through scripts/misc/Sign-WithKeyLocker.ps1.
+Each file signed uses one KeyLocker signature.
+
 .USAGE
     pwsh -File scripts/installer/build.ps1
     pwsh -File scripts/installer/build.ps1 -SkipBuild   # dotnet output is fresh
+    pwsh -File scripts/installer/build.ps1 -AutomatedBuild -Variants NoNetRuntime `
+        -SignKeyAlias <alias> -SignCertFile <crt>
 #>
 
 #requires -Version 7.0
@@ -32,9 +39,23 @@ param(
     # installer plus every Windows vendor SDK, pre-extracted into VendorSdkLoader's cache.
     # That variant never contacts raw.githubusercontent.com, which is what makes it usable
     # in an offline or containerised deployment (see ProteoWizard/container).
-    [switch] $WithVendorSdks
+    [switch] $WithVendorSdks,
+    # Which of the default installers to compile: Bundled (ProteoWizard-Setup) and/or
+    # NoNetRuntime (ProteoWizard-NoNetRuntime-Setup).
+    [ValidateSet('Bundled', 'NoNetRuntime')]
+    [string[]] $Variants = @('Bundled', 'NoNetRuntime'),
+    # Stamp the assemblies "(automated build)", as build.bat --automated does for TeamCity.
+    [switch] $AutomatedBuild,
+    # The KeyLocker key alias and its public certificate (.crt); both or neither.
+    [string] $SignKeyAlias,
+    [string] $SignCertFile
 )
 $ErrorActionPreference = 'Stop'
+
+$sign = [bool]($SignKeyAlias -or $SignCertFile)
+if ($sign -and -not ($SignKeyAlias -and $SignCertFile)) {
+    throw "-SignKeyAlias and -SignCertFile must be given together"
+}
 
 # .NET 10 desktop runtime download. Cached locally to avoid re-fetching on every
 # build. The aka.ms URL redirects to the latest stable 10.0.x; pinned-by-content
@@ -87,13 +108,15 @@ if ($LASTEXITCODE -ne 0) { throw "VendorPinsGenerator failed (exit $LASTEXITCODE
 #    staging time).
 if (-not $SkipBuild) {
     Write-Host "`n==> dotnet build (Release)" -ForegroundColor Cyan
-    dotnet build $msconvertGui -c Release -p:Platform=x64 "-p:IAgreeToVendorLicenses=true" --nologo
+    $buildProps = @("-p:Platform=x64", "-p:IAgreeToVendorLicenses=true")
+    if ($AutomatedBuild) { $buildProps += "-p:AutomatedBuild=true" }
+    dotnet build $msconvertGui -c Release @buildProps --nologo
     if ($LASTEXITCODE -ne 0) { throw "MSConvertGUI build failed (exit $LASTEXITCODE)" }
-    dotnet build $seems        -c Release -p:Platform=x64 "-p:IAgreeToVendorLicenses=true" --nologo
+    dotnet build $seems        -c Release @buildProps --nologo
     if ($LASTEXITCODE -ne 0) { throw "SeeMS build failed (exit $LASTEXITCODE)" }
     # Built on its own: msdiff is not in MSConvertGUI's or SeeMS's reference chain, so nothing
     # above produces it.
-    dotnet build $msdiff       -c Release -p:Platform=x64 "-p:IAgreeToVendorLicenses=true" --nologo
+    dotnet build $msdiff       -c Release @buildProps --nologo
     if ($LASTEXITCODE -ne 0) { throw "MsDiff build failed (exit $LASTEXITCODE)" }
 }
 
@@ -218,6 +241,27 @@ Write-Host "    vendor EULAs: $($eulas.Count) files"
 }
 
 Build-Payload $stagingDir
+
+# 3a. Sign our own executables in the payload (signing builds only), before ISCC packs them.
+#     Every variant packs this one staging directory, so each is signed once. Third-party
+#     executables (7za.exe) and DLLs are left as they are.
+$signScript = Join-Path $pwizSharp "scripts/misc/Sign-WithKeyLocker.ps1"
+$ownExecutables = @("MSConvertGUI-sharp.exe", "msconvert.exe", "seems-sharp.exe", "msdiff.exe")
+if ($sign) {
+    Write-Host "`n==> sign our executables in the payload" -ForegroundColor Cyan
+    $toSign = $ownExecutables | ForEach-Object {
+        $path = Join-Path $stagingDir $_
+        if (-not (Test-Path $path)) { throw "expected $_ in the payload to sign it, but it is missing" }
+        $path
+    }
+    & $signScript -Path $toSign -KeyAlias $SignKeyAlias -CertFile $SignCertFile
+    if ($LASTEXITCODE -ne 0) { throw "Signing the payload executables failed (exit $LASTEXITCODE)" }
+    # Report, not fail: an executable added to the payload later shows up here until it is
+    # either added to the list above or found to be third-party
+    Get-ChildItem $stagingDir -Recurse -File -Filter *.exe |
+        Where-Object { (Get-AuthenticodeSignature -LiteralPath $_.FullName).Status -ne 'Valid' } |
+        ForEach-Object { Write-Host "    unsigned executable in the payload: $($_.FullName.Substring($stagingDir.Length + 1))" }
+}
 
 # 3b. Vendor SDK cache (only for -WithVendorSdks).
 #
@@ -447,6 +491,17 @@ Write-Host "`n==> Stamping version: $appVersion" -ForegroundColor Cyan
 #            .NET 10 isn't already present).
 $iss = Join-Path $installerDir "Setup.iss"
 
+# Signing builds name a sign tool for Setup.iss's SignTool directive; ISCC then signs the
+# uninstaller and the Setup.exe. In the command, $f is the (quoted) file to sign, $q a
+# literal quote and $$ a literal $.
+$signIsccArgs = @()
+if ($sign) {
+    function Quote-ForIscc([string] $text) { '$q' + $text.Replace('$', '$$') + '$q' }
+    $signCommand = "pwsh.exe -NoProfile -ExecutionPolicy Bypass -File $(Quote-ForIscc $signScript)" +
+        " -KeyAlias $(Quote-ForIscc $SignKeyAlias) -CertFile $(Quote-ForIscc $SignCertFile) -Path `$f"
+    $signIsccArgs = @("/DSignSetup", "/Spwizsign=$signCommand")
+}
+
 function Invoke-Iscc {
     param(
         [string] $OutputBaseFilename,
@@ -460,7 +515,7 @@ function Invoke-Iscc {
         "/DOutputDir=$outDir",
         "/DOutputBaseFilename=$OutputBaseFilename",
         "/DMyAppVersion=$appVersion"
-    ) + $ExtraDefines + @($iss)
+    ) + $ExtraDefines + $signIsccArgs + @($iss)
     & $iscc @args
     if ($LASTEXITCODE -ne 0) { throw "ISCC compile failed for $OutputBaseFilename (exit $LASTEXITCODE)" }
 }
@@ -471,8 +526,15 @@ function Invoke-Iscc {
 # previous run's artifact).
 $bundledName = "ProteoWizard-Setup-$appVersion"
 $lightName   = "ProteoWizard-NoNetRuntime-Setup-$appVersion"
-Invoke-Iscc -OutputBaseFilename $bundledName
-Invoke-Iscc -OutputBaseFilename $lightName -ExtraDefines @("/DNoNetRuntime")
+$reportNames = @()
+if ('Bundled' -in $Variants) {
+    Invoke-Iscc -OutputBaseFilename $bundledName
+    $reportNames += $bundledName
+}
+if ('NoNetRuntime' -in $Variants) {
+    Invoke-Iscc -OutputBaseFilename $lightName -ExtraDefines @("/DNoNetRuntime")
+    $reportNames += $lightName
+}
 
 # Pass 3 (opt-in): bundled runtime + the vendor SDK cache. Built on the bundled-runtime
 # variant rather than the light one because its whole reason to exist is deployments that
@@ -481,6 +543,7 @@ $vendorName = "ProteoWizard-WithVendorSdks-Setup-$appVersion"
 if ($WithVendorSdks) {
     Invoke-Iscc -OutputBaseFilename $vendorName -Staging $stagingDir `
         -ExtraDefines @("/DWithVendorSdks", "/DVendorCacheDir=$vendorCacheDir")
+    $reportNames += $vendorName
 }
 
 # Write the resolved version next to the .exes so Installer.Tests can pin to it
@@ -490,8 +553,6 @@ Set-Content -Path (Join-Path $outDir "installer-version.txt") -Value $appVersion
 
 # 7. Report.
 Write-Host ""
-$reportNames = @($bundledName, $lightName)
-if ($WithVendorSdks) { $reportNames += $vendorName }
 foreach ($base in $reportNames) {
     $setupPath = Join-Path $outDir "$base.exe"
     if (-not (Test-Path $setupPath)) {

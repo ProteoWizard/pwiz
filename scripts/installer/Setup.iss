@@ -119,6 +119,12 @@ UninstallDisplayIcon={app}\MSConvertGUI-sharp.exe
 LicenseFile=
 SetupIconFile=
 MinVersion=10.0
+#ifdef SignSetup
+; build.ps1 -SignKeyAlias/-SignCertFile defines the "pwizsign" tool on the ISCC command
+; line (/Spwizsign=...); Inno then signs the uninstaller and the Setup.exe.
+SignTool=pwizsign
+SignedUninstaller=yes
+#endif
 ; CloseApplications detects running instances of our app and prompts the user to
 ; close them so file replacement doesn't fall back to "schedule for restart".
 ; RestartApplications=no skips Inno's "want me to restart those apps for you?"
