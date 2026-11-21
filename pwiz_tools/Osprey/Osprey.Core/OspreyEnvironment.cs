@@ -379,73 +379,29 @@ namespace pwiz.Osprey.Core
         public static bool SerialReadsProcessWide { get; set; } =
             string.Equals(ENV_SERIAL_READ_SCOPE.Value?.Trim(), @"process", StringComparison.OrdinalIgnoreCase);
 
-        private static readonly EnvVar ENV_DIRECT_READ = new EnvVar(@"OSPREY_DIRECT_READ", EnvVarGroup.performance,
-            @"Read each input file in full, forward, once per task that needs its spectra, and score " +
-            @"from memory, without writing or reading a .spectra.bin cache.");
-
-        /// <summary>
-        /// EXPERIMENTAL. <c>OSPREY_DIRECT_READ=1</c> reads each input file in full in acquisition
-        /// order whenever a task needs its spectra (per-file scoring, then again for the second-pass
-        /// re-score) and serves isolation windows from memory, holding about the decoded file per
-        /// file in flight. No <c>.spectra.bin</c> is written or read. A multiplexed run under --demux
-        /// still uses its demultiplexed cache. Output is the same either way.
-        /// </summary>
-        public static bool DirectRead { get; set; } = IsSetAndNotZero(ENV_DIRECT_READ);
-
-        private static readonly EnvVar ENV_DIRECT_READ_AHEAD = new EnvVar(@"OSPREY_DIRECT_READ_AHEAD", EnvVarGroup.performance,
-            @"Under OSPREY_DIRECT_READ, how many files' spectra the reader may hold beyond one per file lane, " +
-            @"measured in the first file's size. 0 reads each file only when its lane asks for it.")
+        private static readonly EnvVar ENV_READ_AHEAD = new EnvVar(@"OSPREY_READ_AHEAD", EnvVarGroup.performance,
+            @"How many files' spectra the reader of input files without a .spectra.bin may hold beyond one per " +
+            @"file lane, measured in the first file's size. 0 reads each file only when its lane asks for it.")
             { DefaultValue = @"1" };
 
         /// <summary>
-        /// EXPERIMENTAL. Under <see cref="DirectRead"/> a reader reads the stage's input files in order
-        /// ahead of the lanes that score them, holding back while the resident spectra would exceed
+        /// The reader of input files with no <c>.spectra.bin</c> (<c>SpectraPrefetcher</c>) reads them in
+        /// order ahead of the lanes that score them, holding back while the resident spectra would exceed
         /// (lanes + this) times the first file's. Scoring frees each window as it scores it, so with
         /// one lane and the default of 1 the next file is read while the current one scores, and no
         /// more than two files' spectra are ever resident.
         /// </summary>
-        public static double DirectReadAhead { get; set; } = ParseDoubleOrNull(ENV_DIRECT_READ_AHEAD) ?? 1;
+        public static double ReadAhead { get; set; } = ParseDoubleOrNull(ENV_READ_AHEAD) ?? 1;
 
-        private static readonly EnvVar ENV_DIRECT_READ_THREADS = new EnvVar(@"OSPREY_DIRECT_READ_THREADS", EnvVarGroup.performance,
-            @"Under OSPREY_DIRECT_READ, how many input files the reader reads at once.")
+        private static readonly EnvVar ENV_READ_THREADS = new EnvVar(@"OSPREY_READ_THREADS", EnvVarGroup.performance,
+            @"How many input files without a .spectra.bin are read at once.")
             { DefaultValue = @"2" };
 
         /// <summary>
-        /// EXPERIMENTAL. How many input files the <see cref="DirectRead"/> reader reads at once, each on
+        /// How many input files the reader of files with no <c>.spectra.bin</c> reads at once, each on
         /// its own thread.
         /// </summary>
-        public static int DirectReadThreads { get; set; } = ParseIntOrNull(ENV_DIRECT_READ_THREADS) ?? 2;
-
-        private static readonly EnvVar ENV_DIRECT_READ_WARM_MB = new EnvVar(@"OSPREY_DIRECT_READ_WARM_MB", EnvVarGroup.performance,
-            @"Under OSPREY_DIRECT_READ, the block size in MB of a sequential pass over each input file before its " +
-            @"spectra are decoded, so the decoder reads from the OS file cache. 0 decodes straight from disk.")
-            { DefaultValue = @"0" };
-
-        /// <summary>
-        /// EXPERIMENTAL. When above 0, each <see cref="DirectRead"/> reader first reads its file start to end
-        /// in blocks of this many MB, then decodes it. The vendor reader faults the file in small pieces, and
-        /// on a spinning disk two such readers beside scoring got 64-87 MB/s where one sequential stream gets
-        /// about 200.
-        /// </summary>
-        public static int DirectReadWarmMb { get; set; } = ParseIntOrNull(ENV_DIRECT_READ_WARM_MB) ?? 0;
-
-        private static readonly EnvVar ENV_DIRECT_READ_WRITE_CACHE = new EnvVar(@"OSPREY_DIRECT_READ_WRITE_CACHE", EnvVarGroup.performance,
-            @"Under OSPREY_DIRECT_READ, write each file's .spectra.bin from the spectra read ahead for scoring, " +
-            @"score from memory, and rescore from the cache.");
-
-        /// <summary>
-        /// EXPERIMENTAL. With <see cref="DirectRead"/>, the per-file scoring reader also writes each
-        /// file's <c>.spectra.bin</c> from the spectra it read, before handing them to scoring, so the
-        /// write overlaps the scoring of the files before it and scoring never reads the cache back.
-        /// The second-pass re-score then reads the cache, as without direct reading.
-        /// </summary>
-        public static bool DirectReadWritesCache { get; set; } = IsSetAndNotZero(ENV_DIRECT_READ_WRITE_CACHE);
-
-        /// <summary>
-        /// True when the second-pass re-score reads each file in full from its source rather than
-        /// from the <c>.spectra.bin</c> per-file scoring wrote.
-        /// </summary>
-        public static bool DirectReadRescore => DirectRead && !DirectReadWritesCache;
+        public static int ReadThreads { get; set; } = ParseIntOrNull(ENV_READ_THREADS) ?? 2;
 
         /// <summary>
         /// The log line naming the window-read switches when either is set, so a timing run records
@@ -453,10 +409,6 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static string DescribeWindowReads()
         {
-            if (DirectRead && DirectReadWritesCache)
-                return @"Window reads (EXPERIMENTAL): each input read in full from its source file for scoring, .spectra.bin written from it for the re-score (OSPREY_DIRECT_READ_WRITE_CACHE=1)";
-            if (DirectRead)
-                return @"Window reads (EXPERIMENTAL): each input read in full from its source file, no .spectra.bin (OSPREY_DIRECT_READ=1)";
             if (SerialWindowReads && !SerialReadsProcessWide)
                 return null;
             return string.Format(@"Window reads (DIAGNOSTIC): calibration and Stage 6 {0}; serial read lock {1}",

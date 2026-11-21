@@ -32,17 +32,19 @@ using pwiz.Osprey.IO;
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
-    /// EXPERIMENTAL (OSPREY_DIRECT_READ). Reads a per-file stage's input files in full, in input
-    /// order, on one thread of its own, ahead of the lanes that score them, so a file's read
-    /// overlaps the scoring of the files before it. A forward read completes no isolation window
-    /// until it reaches the end of the file, so the overlap is across files, never within one.
+    /// Reads a per-file stage's input files that have no spectra cache in full, in input order,
+    /// ahead of the lanes that score them, so a file's read overlaps the scoring of the files before
+    /// it. A forward read completes no isolation window until it reaches the end of the file, so the
+    /// overlap is across files, never within one. In per-file scoring it also writes each file's
+    /// <c>.spectra.bin</c> from the spectra it read, before handing them over, so scoring never
+    /// reads the cache back (<c>--spectra-cache off</c> writes none).
     ///
-    /// <para>Files are read by <see cref="OspreyEnvironment.DirectReadThreads"/> threads at
+    /// <para>Files are read by <see cref="OspreyEnvironment.ReadThreads"/> threads at
     /// above-normal priority: one decode thread competing with every scoring thread fell behind
     /// four scoring lanes (77-120 s per 6 GB Astral file, against 37-41 s on an idle machine).</para>
     ///
     /// <para>Memory is bounded by a byte budget over every file's resident peaks: (lanes +
-    /// <see cref="OspreyEnvironment.DirectReadAhead"/>) times the first file's, which is unknown
+    /// <see cref="OspreyEnvironment.ReadAhead"/>) times the first file's, which is unknown
     /// until that file is read, so the first files read unbudgeted. A read holds back, spectrum by
     /// spectrum, while the next spectrum would exceed the budget and memory is held that will come
     /// back without it: by files a lane has taken, which scoring frees, or, for any file but the
@@ -67,7 +69,6 @@ namespace pwiz.Osprey.Tasks
         private readonly SpectrumListDemux.Params _demultiplex;
         private readonly bool _writeCache;
         private readonly object _lock = new object();
-        private readonly object _warmLock = new object();
         private readonly Dictionary<string, PrefetchedFile> _files = new Dictionary<string, PrefetchedFile>(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _skipped = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private QueueWorker<PrefetchedFile> _worker;
@@ -93,7 +94,7 @@ namespace pwiz.Osprey.Tasks
             _inputs = new List<string>(inputs);
             _demultiplex = demultiplex;
             _writeCache = writeCache;
-            _budgetFiles = Math.Max(1, lanes) + Math.Max(0, OspreyEnvironment.DirectReadAhead);
+            _budgetFiles = Math.Max(1, lanes) + Math.Max(0, OspreyEnvironment.ReadAhead);
             _ctx = ctx;
         }
 
@@ -121,7 +122,7 @@ namespace pwiz.Osprey.Tasks
                 if (_worker == null && !_disposed)
                 {
                     _worker = new QueueWorker<PrefetchedFile>(ReadNext, Publish);
-                    _worker.RunAsync(1, @"Spectra handoff", Math.Max(1, OspreyEnvironment.DirectReadThreads), @"Spectra read");
+                    _worker.RunAsync(1, @"Spectra handoff", Math.Max(1, OspreyEnvironment.ReadThreads), @"Spectra read");
                 }
                 while (true)
                 {
@@ -161,10 +162,9 @@ namespace pwiz.Osprey.Tasks
                 ReleaseBytes(file, ms1Bytes);
             }
             index.PeakBytesReleased = bytes => ReleaseBytes(file, bytes);
-            _ctx.LogInfo(LogTag.TIMING, @"Direct read {0}: read ahead in {1:F1}s, waited {2:F1}s; {3:F2} GB resident of {4:F2} GB budget; warm {5:F1}s; cache write {6:F1}s",
+            _ctx.LogInfo(LogTag.TIMING, @"Read ahead {0}: read in {1:F1}s, waited {2:F1}s; {3:F2} GB resident of {4:F2} GB budget; cache write {5:F1}s",
                 Path.GetFileName(inputFile), file.ReadSeconds, swWait.Elapsed.TotalSeconds,
-                ToGb(Volatile.Read(ref _residentBytes)), ToGb(Volatile.Read(ref _budgetBytes)), file.WarmSeconds,
-                file.WriteSeconds);
+                ToGb(Volatile.Read(ref _residentBytes)), ToGb(Volatile.Read(ref _budgetBytes)), file.WriteSeconds);
             return index;
         }
 
@@ -202,7 +202,7 @@ namespace pwiz.Osprey.Tasks
                 Monitor.PulseAll(_lock);
             }
             _worker?.Dispose();
-            _ctx.LogInfo(LogTag.TIMING, @"Direct read: peak {0:F2} GB of spectra resident, budget {1:F2} GB",
+            _ctx.LogInfo(LogTag.TIMING, @"Read ahead: peak {0:F2} GB of spectra resident, budget {1:F2} GB",
                 ToGb(PeakResidentBytes), ToGb(_budgetBytes));
         }
 
@@ -229,8 +229,6 @@ namespace pwiz.Osprey.Tasks
             var sw = Stopwatch.StartNew();
             try
             {
-                WarmFileCache(file.Path);
-                file.WarmSeconds = sw.Elapsed.TotalSeconds;
                 file.Result = SpectrumFileReader.LoadAllSpectra(file.Path, _demultiplex, bytes => Reserve(file, bytes), false);
                 if (_writeCache && file.Result.DemultiplexScheme == null)
                 {
@@ -318,31 +316,6 @@ namespace pwiz.Osprey.Tasks
             }
         }
 
-        /// <summary>
-        /// Reads <paramref name="path"/> start to end in large blocks when
-        /// <see cref="OspreyEnvironment.DirectReadWarmMb"/> is set, so the decoder that follows finds it
-        /// in the OS file cache rather than faulting it from disk in small pieces. One file at a time, so
-        /// the readers' passes do not interleave on the disk.
-        /// </summary>
-        private void WarmFileCache(string path)
-        {
-            int blockMb = OspreyEnvironment.DirectReadWarmMb;
-            if (blockMb <= 0)
-                return;
-            var buffer = new byte[blockMb << 20];
-            lock (_warmLock)
-            {
-                using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 1, FileOptions.SequentialScan))
-                {
-                    while (true)
-                    {
-                        if (stream.Read(buffer, 0, buffer.Length) == 0)
-                            break;
-                    }
-                }
-            }
-        }
-
         private static double ToGb(long bytes)
         {
             return bytes / 1024.0 / 1024.0 / 1024.0;
@@ -361,7 +334,6 @@ namespace pwiz.Osprey.Tasks
             public SpectrumFileResult Result { get; set; }
             public Exception Error { get; set; }
             public double ReadSeconds { get; set; }
-            public double WarmSeconds { get; set; }
             public double WriteSeconds { get; set; }
             // Guarded by the prefetcher's lock.
             public long Bytes { get; set; }

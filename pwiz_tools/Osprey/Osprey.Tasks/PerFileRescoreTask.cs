@@ -1184,7 +1184,7 @@ namespace pwiz.Osprey.Tasks
             // parallel body so the actionable message survives (see RescoreOneFileStreamed).
             var loadErrors = new string[nTotalFiles];
 
-            // EXPERIMENTAL (OSPREY_DIRECT_READ): read the files ahead of the lanes that rescore them.
+            // With --spectra-cache off, read the files ahead of the lanes that rescore them.
             var prefetchInputs = new List<string>(nTotalFiles);
             foreach (var perFile in perFileEntries)
             {

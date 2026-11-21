@@ -105,19 +105,26 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// EXPERIMENTAL (OSPREY_DIRECT_READ). Starts a reader that reads a per-file stage's
-        /// <paramref name="inputs"/> ahead of its <paramref name="lanes"/>; a no-op without direct
-        /// reading. Pair with <see cref="EndPrefetch"/> in a finally, and release each file with
+        /// Starts a reader that reads those of a per-file stage's <paramref name="inputs"/> that have
+        /// no spectra cache ahead of its <paramref name="lanes"/>; a no-op when every input has one.
+        /// Pair with <see cref="EndPrefetch"/> in a finally, and release each file with
         /// <see cref="ReleasePrefetched"/> when its lane is done with it. <paramref name="scoring"/> is
-        /// true for per-file scoring, whose reader also writes the <c>.spectra.bin</c> under
-        /// OSPREY_DIRECT_READ_WRITE_CACHE; the re-score then reads that cache and starts no reader.
+        /// true for per-file scoring, whose reader also writes each <c>.spectra.bin</c> unless
+        /// <c>--spectra-cache off</c>; the re-score then reads that cache, so it starts a reader only
+        /// when no cache was written.
         /// </summary>
         internal static void StartPrefetch(IEnumerable<string> inputs, int lanes, bool scoring, PipelineContext ctx)
         {
-            if (!OspreyEnvironment.DirectRead || (!scoring && !OspreyEnvironment.DirectReadRescore))
+            if (!scoring && ctx.Config.SpectraCache)
                 return;
-            bool writeCache = scoring && OspreyEnvironment.DirectReadWritesCache;
-            ctx.RunPlan.Prefetcher = new SpectraPrefetcher(inputs, lanes, DemuxCache.CreateParams(ctx.Config), writeCache, ctx);
+            // A cache that exists is read where it is needed, as before, and one found stale there is
+            // rebuilt there. A demultiplexed run keeps its own cache (DemuxCache).
+            var uncached = inputs.Where(inputFile => !File.Exists(SpectraCache.GetCachePath(inputFile)) &&
+                                                     !File.Exists(SpectraCache.GetDemuxCachePath(inputFile))).ToList();
+            if (uncached.Count == 0)
+                return;
+            ctx.RunPlan.Prefetcher = new SpectraPrefetcher(uncached, lanes, DemuxCache.CreateParams(ctx.Config),
+                scoring && ctx.Config.SpectraCache, ctx);
         }
 
         /// <summary>Stops the reader <see cref="StartPrefetch"/> started, if any.</summary>
@@ -146,6 +153,11 @@ namespace pwiz.Osprey.Tasks
         /// full resident load survives only in Stage-6 rescore
         /// (<see cref="LoadSpectraForRescore"/>, a separate follow-up).
         ///
+        /// A file the stage's <see cref="SpectraPrefetcher"/> read ahead (one with no cache when the
+        /// stage began) is served from those spectra instead, its cache already written from them, so
+        /// the read-back above is left to a cache found stale here and to <c>--task SpectraCache</c>.
+        /// With <c>--spectra-cache off</c> a miss writes nothing and scores from the spectra read.
+        ///
         /// Shared here rather than owned by <see cref="PerFileScoringTask"/> because
         /// <see cref="SpectraCacheTask"/> (<c>--task SpectraCache</c>) builds exactly the
         /// same caches. Two copies would let the staging path and the scoring path drift,
@@ -163,18 +175,16 @@ namespace pwiz.Osprey.Tasks
             if (demuxHit != null)
                 return demuxHit;
 
-            // EXPERIMENTAL: the spectra the stage's reader read ahead, when it read this file.
-            if (OspreyEnvironment.DirectRead && ctx.RunPlan.Prefetcher != null)
-            {
-                var prefetched = ctx.RunPlan.Prefetcher.Take(inputFile, true, out unsortedCount);
-                if (prefetched != null)
-                    return prefetched;
-            }
+            // The spectra the stage's reader read ahead (and cached, unless --spectra-cache off),
+            // when it read this file.
+            var prefetched = ctx.RunPlan.Prefetcher?.Take(inputFile, true, out unsortedCount);
+            if (prefetched != null)
+                return prefetched;
 
             // Shared GetCachePath so the write and the rescore read (PerFileRescoreTask)
             // derive an identical filename + directory (ArtifactPaths redirects the dir).
             string cachePath = SpectraCache.GetCachePath(inputFile);
-            if (!OspreyEnvironment.DirectRead && File.Exists(cachePath))
+            if (File.Exists(cachePath))
             {
                 try
                 {
@@ -258,14 +268,9 @@ namespace pwiz.Osprey.Tasks
                     Path.GetFileName(inputFile), OspreyArgNames.Text(OspreyArgNames.DEMUX)));
             }
 
-            // EXPERIMENTAL: score from the spectra just read, writing the cache from them first only
-            // when the re-score is to read it.
-            if (OspreyEnvironment.DirectRead && scheme == null)
-            {
-                if (OspreyEnvironment.DirectReadWritesCache)
-                    SpectraCache.SaveSpectraCache(cachePath, mzmlResult.Ms2Spectra, mzmlResult.Ms1Spectra, inputFile);
+            // --spectra-cache off: score from the spectra just read, writing no cache.
+            if (!ctx.Config.SpectraCache && scheme == null)
                 return SpectraWindowIndex.FromSpectra(mzmlResult.Ms2Spectra, mzmlResult.Ms1Spectra);
-            }
 
             try
             {
@@ -342,17 +347,18 @@ namespace pwiz.Osprey.Tasks
             if (demuxIndex != null)
                 return demuxIndex;
 
-            // EXPERIMENTAL: read the source again in full rather than a cache that was never written.
-            if (OspreyEnvironment.DirectReadRescore)
+            // --spectra-cache off: read the source again in full rather than a cache that was never
+            // written.
+            var prefetched = ctx.RunPlan.Prefetcher?.Take(inputFile, loadMs1, out _);
+            if (prefetched != null)
+                return prefetched;
+            string cachePath = SpectraCache.GetCachePath(inputFile);
+            if (!ctx.Config.SpectraCache && !File.Exists(cachePath))
             {
-                var prefetched = ctx.RunPlan.Prefetcher?.Take(inputFile, loadMs1, out _);
-                if (prefetched != null)
-                    return prefetched;
                 var spectra = SpectrumFileReader.LoadAllSpectra(inputFile);
                 return SpectraWindowIndex.FromSpectra(spectra.Ms2Spectra, spectra.Ms1Spectra, loadMs1);
             }
 
-            string cachePath = SpectraCache.GetCachePath(inputFile);
             SpectraWindowIndex index;
             var reason = SpectraCacheRejection.None;
             try

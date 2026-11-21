@@ -186,6 +186,13 @@ namespace pwiz.Osprey
                 DescriptionArgs = () => new object[] { SpectraCache.EXT, ARG_WORK_DIR.ArgumentText, TextUtil.EXT_TSV,
                     ARG_TASK.ArgumentText, ARG_OUTPUT_DIR.ArgumentText, LibrarySource.EXT_BLIB }
             };
+        public static readonly OspreyArgument ARG_SPECTRA_CACHE = new OspreyArgument(OspreyArgNames.SPECTRA_CACHE,
+            new[] { OspreyArgNames.VALUE_ON, OspreyArgNames.VALUE_OFF },
+            (c, p) => c._config.SpectraCache = p.Value.ToLowerInvariant() == OspreyArgNames.VALUE_ON)
+            {
+                Scope = OspreyPropertyScope.search, DefaultValue = Default(() => OspreyArgNames.VALUE_ON),
+                DescriptionArgs = () => new object[] { SpectraCache.EXT, OspreyArgNames.VALUE_OFF, ARG_CACHE_DIR.ArgumentText }
+            };
         public static readonly OspreyArgument ARG_EXPORT_LIBRARY = new OspreyArgument(@"export-library",
             () => GetPathToFile(LibrarySource.EXT_BLIB), (c, p) => c._config.ExportLibraryBlib = p.Value)
             {
@@ -197,7 +204,7 @@ namespace pwiz.Osprey
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_GENERAL_IO =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_General_IO, true,
                 ARG_INPUT, ARG_INPUT_LIST, ARG_LIBRARY, ARG_OUTPUT, ARG_WORK_DIR, ARG_OUTPUT_DIR, ARG_CACHE_DIR,
-                ARG_EXPORT_LIBRARY);
+                ARG_SPECTRA_CACHE, ARG_EXPORT_LIBRARY);
 
         // --- Library Build ----------------------------------------------------------------
         // The one command from a protein FASTA to a .blib: --fasta predicts the library with

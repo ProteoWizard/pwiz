@@ -62,7 +62,7 @@ namespace pwiz.Osprey.IO
         private readonly List<int> _windowKeysInFileOrder;
         private readonly long _ms1SectionOffset;
         // Every window's spectra, when the index was built from a source file read in full
-        // (OSPREY_DIRECT_READ) instead of from a cache; null for a cache index.
+        // instead of from a cache; null for a cache index.
         private readonly Dictionary<int, List<Spectrum>> _windowKeyToSpectra;
         // Set once scoring takes each resident window for the last time: a load then hands the
         // window's own spectra over and drops them (see ReleaseWindowsAsLoaded).
@@ -262,10 +262,10 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// EXPERIMENTAL (OSPREY_DIRECT_READ). An index over spectra already read in full from
+        /// An index over spectra already read in full from
         /// their source file, grouped by the same window key and in the same order a cache built
-        /// from them would hold, so every caller sees what it would see from that cache, with no
-        /// cache written or read. The index keeps the spectra for its lifetime, about the size
+        /// from them would hold, so every caller sees what it would see from that cache, without
+        /// reading one. The index keeps the spectra for its lifetime, about the size
         /// of the decoded file.
         /// </summary>
         public static SpectraWindowIndex FromSpectra(IReadOnlyList<Spectrum> ms2Spectra,
@@ -296,7 +296,7 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// EXPERIMENTAL (OSPREY_DIRECT_READ). From now on each load of a resident window hands
+        /// From now on each load of a resident window hands
         /// over the window's own spectra, without copying them, and drops the index's hold on
         /// them, passing their peak bytes to <see cref="PeakBytesReleased"/>; loading the same
         /// window again throws. For the one pass that reads every window once and last (per-file
@@ -314,7 +314,7 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// EXPERIMENTAL (OSPREY_DIRECT_READ). Told the peak bytes of each resident window
+        /// Told the peak bytes of each resident window
         /// <see cref="ReleaseWindowsAsLoaded"/> hands over.
         /// </summary>
         public Action<long> PeakBytesReleased
