@@ -138,6 +138,28 @@ public class ReaderThermoTests
         ctx.Check();
     }
 
+    /// <summary>
+    /// Skyline asks each spectrum for its ms level and start time at instant metadata before it
+    /// reads the data. cpp returns before parsing the scan filter there (SpectrumList_Thermo.cpp:263)
+    /// and reads peaks only from full metadata up (:743); without its own detail-level overload
+    /// this reader parsed the filter and trailer and read the peaks for every such question. What
+    /// the early return reports must still agree with a full read, including the representation
+    /// that keeps vendor peak picking from raising the request.
+    /// </summary>
+    [TestMethod]
+    public void Reader_Thermo_InstantMetadata_AgreesWithFullRead()
+    {
+        string? root = FindTestDataRoot();
+        if (root is null) { Assert.Inconclusive("Thermo test data tree not found."); return; }
+        foreach (var name in new[] { "090701-LTQVelos-unittest-01.raw", "BSA-FT-HCD.raw", "IT-HCD-SPS.raw" })
+        {
+            string path = Path.Combine(root, name);
+            if (!File.Exists(path)) { Assert.Inconclusive(name + " not present."); return; }
+            var problems = DetailLevelChecks.InstantMetadataMismatches(new Reader_Thermo(), path, 50);
+            Assert.AreEqual(0, problems.Count, name + ":\n" + string.Join("\n", problems.Take(10)));
+        }
+    }
+
     // ---------- below the harness: identify / header detection / read errors ----------
 
     [TestMethod]
