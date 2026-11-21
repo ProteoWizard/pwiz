@@ -874,6 +874,34 @@ namespace pwiz.Osprey.Test
                 AssertBlibsEqual(baseBlib, Path.Combine(directDir, BLIB_FILE));
             }
 
+            // EXPERIMENTAL direct read that also writes the caches: scoring reads ahead and writes each
+            // .spectra.bin from memory, the re-score reads the caches, and both the answer and the
+            // caches match the cached run's.
+            string writeCacheDir = CreateDir(@"direct-read-write-cache");
+            bool savedRead = OspreyEnvironment.DirectRead;
+            bool savedWrite = OspreyEnvironment.DirectReadWritesCache;
+            OspreyEnvironment.DirectRead = true;
+            OspreyEnvironment.DirectReadWritesCache = true;
+            string writeCacheLog;
+            try
+            {
+                writeCacheLog = RunAnalysis(writeCacheDir, DataInputs(), FdrLanes(1),
+                    OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText, RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture));
+            }
+            finally
+            {
+                OspreyEnvironment.DirectRead = savedRead;
+                OspreyEnvironment.DirectReadWritesCache = savedWrite;
+            }
+            StringAssert.Contains(writeCacheLog, @"Direct read: peak");
+            AssertBlibsEqual(baseBlib, Path.Combine(writeCacheDir, BLIB_FILE));
+            foreach (string run in RUN_NAMES)
+            {
+                CollectionAssert.AreEqual(File.ReadAllBytes(Path.Combine(baseDir, run + SPECTRA_CACHE_EXTENSION)),
+                    File.ReadAllBytes(Path.Combine(writeCacheDir, run + SPECTRA_CACHE_EXTENSION)),
+                    @"a cache written from the read-ahead spectra differs from the cached run's: " + run);
+            }
+
             // OSPREY_DIAGNOSTICS writes its dumps to the current directory.
             string diagnosticsDir = CreateDir(@"diagnostics");
             // It also sets every OSPREY_DUMP_* variable in the process environment, which would turn

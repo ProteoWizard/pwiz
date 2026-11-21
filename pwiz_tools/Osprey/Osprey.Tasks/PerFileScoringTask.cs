@@ -321,7 +321,7 @@ namespace pwiz.Osprey.Tasks
             ProfilerHooks.StartMeasure();
             var swAllFiles = Stopwatch.StartNew();
             // EXPERIMENTAL (OSPREY_DIRECT_READ): read the files ahead of the lanes that score them.
-            ScoringTaskShared.StartPrefetch(config.InputFiles, effectiveParallelism, ctx);
+            ScoringTaskShared.StartPrefetch(config.InputFiles, effectiveParallelism, true, ctx);
             try
             {
                 if (nFiles == 1)

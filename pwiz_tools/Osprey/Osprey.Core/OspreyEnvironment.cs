@@ -416,12 +416,45 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static int DirectReadThreads { get; set; } = ParseIntOrNull(ENV_DIRECT_READ_THREADS) ?? 2;
 
+        private static readonly EnvVar ENV_DIRECT_READ_WARM_MB = new EnvVar(@"OSPREY_DIRECT_READ_WARM_MB", EnvVarGroup.performance,
+            @"Under OSPREY_DIRECT_READ, the block size in MB of a sequential pass over each input file before its " +
+            @"spectra are decoded, so the decoder reads from the OS file cache. 0 decodes straight from disk.")
+            { DefaultValue = @"0" };
+
+        /// <summary>
+        /// EXPERIMENTAL. When above 0, each <see cref="DirectRead"/> reader first reads its file start to end
+        /// in blocks of this many MB, then decodes it. The vendor reader faults the file in small pieces, and
+        /// on a spinning disk two such readers beside scoring got 64-87 MB/s where one sequential stream gets
+        /// about 200.
+        /// </summary>
+        public static int DirectReadWarmMb { get; set; } = ParseIntOrNull(ENV_DIRECT_READ_WARM_MB) ?? 0;
+
+        private static readonly EnvVar ENV_DIRECT_READ_WRITE_CACHE = new EnvVar(@"OSPREY_DIRECT_READ_WRITE_CACHE", EnvVarGroup.performance,
+            @"Under OSPREY_DIRECT_READ, write each file's .spectra.bin from the spectra read ahead for scoring, " +
+            @"score from memory, and rescore from the cache.");
+
+        /// <summary>
+        /// EXPERIMENTAL. With <see cref="DirectRead"/>, the per-file scoring reader also writes each
+        /// file's <c>.spectra.bin</c> from the spectra it read, before handing them to scoring, so the
+        /// write overlaps the scoring of the files before it and scoring never reads the cache back.
+        /// The second-pass re-score then reads the cache, as without direct reading.
+        /// </summary>
+        public static bool DirectReadWritesCache { get; set; } = IsSetAndNotZero(ENV_DIRECT_READ_WRITE_CACHE);
+
+        /// <summary>
+        /// True when the second-pass re-score reads each file in full from its source rather than
+        /// from the <c>.spectra.bin</c> per-file scoring wrote.
+        /// </summary>
+        public static bool DirectReadRescore => DirectRead && !DirectReadWritesCache;
+
         /// <summary>
         /// The log line naming the window-read switches when either is set, so a timing run records
         /// which arm it was; null at the defaults, leaving a default run's log unchanged.
         /// </summary>
         public static string DescribeWindowReads()
         {
+            if (DirectRead && DirectReadWritesCache)
+                return @"Window reads (EXPERIMENTAL): each input read in full from its source file for scoring, .spectra.bin written from it for the re-score (OSPREY_DIRECT_READ_WRITE_CACHE=1)";
             if (DirectRead)
                 return @"Window reads (EXPERIMENTAL): each input read in full from its source file, no .spectra.bin (OSPREY_DIRECT_READ=1)";
             if (SerialWindowReads && !SerialReadsProcessWide)

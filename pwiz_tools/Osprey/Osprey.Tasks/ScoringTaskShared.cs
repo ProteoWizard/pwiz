@@ -108,13 +108,16 @@ namespace pwiz.Osprey.Tasks
         /// EXPERIMENTAL (OSPREY_DIRECT_READ). Starts a reader that reads a per-file stage's
         /// <paramref name="inputs"/> ahead of its <paramref name="lanes"/>; a no-op without direct
         /// reading. Pair with <see cref="EndPrefetch"/> in a finally, and release each file with
-        /// <see cref="ReleasePrefetched"/> when its lane is done with it.
+        /// <see cref="ReleasePrefetched"/> when its lane is done with it. <paramref name="scoring"/> is
+        /// true for per-file scoring, whose reader also writes the <c>.spectra.bin</c> under
+        /// OSPREY_DIRECT_READ_WRITE_CACHE; the re-score then reads that cache and starts no reader.
         /// </summary>
-        internal static void StartPrefetch(IEnumerable<string> inputs, int lanes, PipelineContext ctx)
+        internal static void StartPrefetch(IEnumerable<string> inputs, int lanes, bool scoring, PipelineContext ctx)
         {
-            if (!OspreyEnvironment.DirectRead)
+            if (!OspreyEnvironment.DirectRead || (!scoring && !OspreyEnvironment.DirectReadRescore))
                 return;
-            ctx.RunPlan.Prefetcher = new SpectraPrefetcher(inputs, lanes, DemuxCache.CreateParams(ctx.Config), ctx);
+            bool writeCache = scoring && OspreyEnvironment.DirectReadWritesCache;
+            ctx.RunPlan.Prefetcher = new SpectraPrefetcher(inputs, lanes, DemuxCache.CreateParams(ctx.Config), writeCache, ctx);
         }
 
         /// <summary>Stops the reader <see cref="StartPrefetch"/> started, if any.</summary>
@@ -255,9 +258,14 @@ namespace pwiz.Osprey.Tasks
                     Path.GetFileName(inputFile), OspreyArgNames.Text(OspreyArgNames.DEMUX)));
             }
 
-            // EXPERIMENTAL: score from the spectra just read, with no cache written.
+            // EXPERIMENTAL: score from the spectra just read, writing the cache from them first only
+            // when the re-score is to read it.
             if (OspreyEnvironment.DirectRead && scheme == null)
+            {
+                if (OspreyEnvironment.DirectReadWritesCache)
+                    SpectraCache.SaveSpectraCache(cachePath, mzmlResult.Ms2Spectra, mzmlResult.Ms1Spectra, inputFile);
                 return SpectraWindowIndex.FromSpectra(mzmlResult.Ms2Spectra, mzmlResult.Ms1Spectra);
+            }
 
             try
             {
@@ -335,7 +343,7 @@ namespace pwiz.Osprey.Tasks
                 return demuxIndex;
 
             // EXPERIMENTAL: read the source again in full rather than a cache that was never written.
-            if (OspreyEnvironment.DirectRead)
+            if (OspreyEnvironment.DirectReadRescore)
             {
                 var prefetched = ctx.RunPlan.Prefetcher?.Take(inputFile, loadMs1, out _);
                 if (prefetched != null)

@@ -1192,7 +1192,7 @@ namespace pwiz.Osprey.Tasks
                 if (prefetchInput != null)
                     prefetchInputs.Add(prefetchInput);
             }
-            ScoringTaskShared.StartPrefetch(prefetchInputs, parallelism, ctx);
+            ScoringTaskShared.StartPrefetch(prefetchInputs, parallelism, false, ctx);
             try
             {
                 if (nTotalFiles == 1 || parallelism == 1)
