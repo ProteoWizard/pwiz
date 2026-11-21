@@ -115,10 +115,12 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static void StartPrefetch(IEnumerable<string> inputs, int lanes, bool scoring, PipelineContext ctx)
         {
-            if (!scoring && ctx.Config.SpectraCache)
+            // A multiplexed run is read demultiplexed into its own cache by the stage's own read
+            // (DemuxCache), so under --demux the reader would only read it a second time.
+            if ((!scoring && ctx.Config.SpectraCache) || ctx.Config.DemuxMode != DemuxMode.off)
                 return;
             // A cache that exists is read where it is needed, as before, and one found stale there is
-            // rebuilt there. A demultiplexed run keeps its own cache (DemuxCache).
+            // rebuilt there.
             var uncached = inputs.Where(inputFile => !File.Exists(SpectraCache.GetCachePath(inputFile)) &&
                                                      !File.Exists(SpectraCache.GetDemuxCachePath(inputFile))).ToList();
             if (uncached.Count == 0)
@@ -164,7 +166,7 @@ namespace pwiz.Osprey.Tasks
         /// which is precisely what a raw-vs-mzML parity check must be able to rule out.
         /// </summary>
         internal static SpectraWindowIndex EnsureSpectraCache(string inputFile, bool serializeMzmlRead,
-            out int unsortedCount, PipelineContext ctx, int concurrentReads = 1)
+            out int unsortedCount, PipelineContext ctx, int concurrentReads = 1, bool alwaysWriteCache = false)
         {
             unsortedCount = 0;
             // With --demux auto, a valid demultiplexed cache is all the search needs, so a run
@@ -268,8 +270,9 @@ namespace pwiz.Osprey.Tasks
                     Path.GetFileName(inputFile), OspreyArgNames.Text(OspreyArgNames.DEMUX)));
             }
 
-            // --spectra-cache off: score from the spectra just read, writing no cache.
-            if (!ctx.Config.SpectraCache && scheme == null)
+            // --spectra-cache off: score from the spectra just read, writing no cache - except for
+            // --task SpectraCache, whose only output the cache is.
+            if (!ctx.Config.SpectraCache && !alwaysWriteCache && scheme == null)
                 return SpectraWindowIndex.FromSpectra(mzmlResult.Ms2Spectra, mzmlResult.Ms1Spectra);
 
             try
@@ -353,8 +356,24 @@ namespace pwiz.Osprey.Tasks
             if (prefetched != null)
                 return prefetched;
             string cachePath = SpectraCache.GetCachePath(inputFile);
-            if (!ctx.Config.SpectraCache && !File.Exists(cachePath))
+            if (!ctx.Config.SpectraCache)
             {
+                // A cache that exists is read here as in scoring; one scoring found stale it did not
+                // rewrite, so that one is passed over for the source too.
+                SpectraWindowIndex cached = null;
+                if (File.Exists(cachePath))
+                {
+                    try
+                    {
+                        cached = SpectraWindowIndex.BuildFromCache(cachePath, inputFile, loadMs1, out _);
+                    }
+                    catch (Exception)
+                    {
+                        cached = null;
+                    }
+                }
+                if (cached != null)
+                    return cached;
                 var spectra = SpectrumFileReader.LoadAllSpectra(inputFile);
                 return SpectraWindowIndex.FromSpectra(spectra.Ms2Spectra, spectra.Ms1Spectra, loadMs1);
             }

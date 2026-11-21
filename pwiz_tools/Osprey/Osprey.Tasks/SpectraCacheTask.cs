@@ -183,7 +183,7 @@ namespace pwiz.Osprey.Tasks
                 // Ungated reads on lanes share --threads among their demultiplexers.
                 bool gateRead = lanes > 1 && !SpectrumFileReader.IsVendorFormat(inputFile);
                 index = ScoringTaskShared.EnsureSpectraCache(
-                    inputFile, gateRead, out int unsortedCount, ctx, lanes);
+                    inputFile, gateRead, out int unsortedCount, ctx, lanes, true);
                 if (unsortedCount > 0)
                 {
                     ctx.LogWarning(string.Format(

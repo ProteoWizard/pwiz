@@ -997,11 +997,13 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(BlibComparer.CountRows(Path.Combine(sampledDir, BLIB_FILE), @"RefSpectra") > 0,
                 @"sampled calibration reported no precursors");
 
-            // The spectra-cache task alone writes one cache per run and nothing downstream. Pinned
-            // to one lane, so the lane comparison below always has a sequential baseline.
+            // The spectra-cache task alone writes one cache per run and nothing downstream, even with
+            // --spectra-cache off, since the cache is all it is for. Pinned to one lane, so the lane
+            // comparison below always has a sequential baseline.
             string cacheDir = CreateDir(@"spectra-cache");
             RunAnalysis(cacheDir, DataInputs(), Verifier(false), OspreyCommandArgs.ARG_TASK.ArgumentText,
-                SpectraCacheTask.TASK_NAME, OspreyCommandArgs.ARG_PARALLEL_FILES_CACHING.ArgumentText, @"1");
+                SpectraCacheTask.TASK_NAME, OspreyCommandArgs.ARG_PARALLEL_FILES_CACHING.ArgumentText, @"1",
+                OspreyCommandArgs.ARG_SPECTRA_CACHE.ArgumentText, OspreyArgNames.VALUE_OFF);
             Assert.AreEqual(RUN_NAMES.Length, Directory.GetFiles(cacheDir, @"*" + SPECTRA_CACHE_EXTENSION).Length);
             Assert.IsFalse(File.Exists(Path.Combine(cacheDir, BLIB_FILE)));
             // The task writes each cache from a read of its own; the search above wrote them from

@@ -409,11 +409,16 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static string DescribeWindowReads()
         {
-            if (SerialWindowReads && !SerialReadsProcessWide)
+            string readAhead = ReadAhead != 1 || ReadThreads != 2
+                ? string.Format(CultureInfo.InvariantCulture,
+                    @"; uncached inputs read {0} file(s) ahead of the lanes on {1} thread(s) (OSPREY_READ_AHEAD, OSPREY_READ_THREADS)",
+                    ReadAhead, ReadThreads)
+                : string.Empty;
+            if (SerialWindowReads && !SerialReadsProcessWide && readAhead.Length == 0)
                 return null;
             return string.Format(@"Window reads (DIAGNOSTIC): calibration and Stage 6 {0}; serial read lock {1}",
                 SerialWindowReads ? @"serial" : @"parallel (OSPREY_SERIAL_WINDOW_READS=0)",
-                SerialReadsProcessWide ? @"process-wide (OSPREY_SERIAL_READ_SCOPE=process)" : @"per file");
+                SerialReadsProcessWide ? @"process-wide (OSPREY_SERIAL_READ_SCOPE=process)" : @"per file") + readAhead;
         }
 
         private static readonly EnvVar ENV_PICK_DUMP_CANDIDATES = new EnvVar(@"OSPREY_PICK_DUMP_CANDIDATES", EnvVarGroup.diagnostic,

@@ -152,6 +152,24 @@ namespace pwiz.Osprey.Tasks
                 return null;
             }
             unsortedCount = result.UnsortedSpectrumCount;
+            // The messages the stage's own read gives for the same file.
+            if (result.MultiplexedSchemeNotDemultiplexed != null)
+            {
+                _ctx.LogWarning(string.Format(
+                    OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache__0__was_acquired_with_overlapping_isolation_windows_and_is_searched_as_acquired,
+                    Path.GetFileName(inputFile), OspreyArgNames.Text(OspreyArgNames.DEMUX)));
+            }
+            if (file.WriteError != null)
+            {
+                _ctx.LogWarning(string.Format(OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Failed_to_save_spectra_cache___0_,
+                    file.WriteError.Message));
+            }
+            else if (file.CacheWritten)
+            {
+                string cachePath = SpectraCache.GetCachePath(inputFile);
+                _ctx.LogInfo(string.Format(OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Saved_spectra_cache___0__MS2____1__MS1___2__GB__to___3__,
+                    result.Ms2Spectra.Count, result.Ms1Spectra.Count, ToGb(FileLength(cachePath)), cachePath));
+            }
             var index = SpectraWindowIndex.FromSpectra(result.Ms2Spectra, result.Ms1Spectra, loadMs1);
             if (!loadMs1)
             {
@@ -233,8 +251,22 @@ namespace pwiz.Osprey.Tasks
                 if (_writeCache && file.Result.DemultiplexScheme == null)
                 {
                     double readSeconds = sw.Elapsed.TotalSeconds;
-                    SpectraCache.SaveSpectraCache(SpectraCache.GetCachePath(file.Path), file.Result.Ms2Spectra,
-                        file.Result.Ms1Spectra, file.Path, null, false);
+                    // A failed write leaves the spectra to score from, as the stage's own read does;
+                    // the re-score then reports the missing cache by name.
+                    try
+                    {
+                        SpectraCache.SaveSpectraCache(SpectraCache.GetCachePath(file.Path), file.Result.Ms2Spectra,
+                            file.Result.Ms1Spectra, file.Path, null, false);
+                        file.CacheWritten = true;
+                    }
+                    catch (IOException ex)
+                    {
+                        file.WriteError = ex;
+                    }
+                    catch (UnauthorizedAccessException ex)
+                    {
+                        file.WriteError = ex;
+                    }
                     file.WriteSeconds = sw.Elapsed.TotalSeconds - readSeconds;
                 }
             }
@@ -316,6 +348,18 @@ namespace pwiz.Osprey.Tasks
             }
         }
 
+        private static long FileLength(string path)
+        {
+            try
+            {
+                return File.Exists(path) ? new FileInfo(path).Length : 0;
+            }
+            catch (IOException)
+            {
+                return 0;
+            }
+        }
+
         private static double ToGb(long bytes)
         {
             return bytes / 1024.0 / 1024.0 / 1024.0;
@@ -335,6 +379,8 @@ namespace pwiz.Osprey.Tasks
             public Exception Error { get; set; }
             public double ReadSeconds { get; set; }
             public double WriteSeconds { get; set; }
+            public bool CacheWritten { get; set; }
+            public Exception WriteError { get; set; }
             // Guarded by the prefetcher's lock.
             public long Bytes { get; set; }
             public long ReleasedBytes { get; set; }
