@@ -1449,6 +1449,29 @@ namespace pwiz.Osprey.Core
         /// in-sample-vs-held-out A/B runs without a code revert. Tree-only.</summary>
         public static readonly int GbtInnerFolds = ParseIntOrNull(ENV_GBT_INNER_FOLDS) ?? 5;
 
+        /// <summary>The <see cref="PerFileFdr"/> value that trains one first-pass model per file.</summary>
+        public const string PER_FILE_FDR_MODEL = @"model";
+
+        /// <summary>The <see cref="PerFileFdr"/> value that stacks a global model on per-file scores.</summary>
+        public const string PER_FILE_FDR_STACKED = @"stacked";
+
+        private static readonly EnvVar ENV_PER_FILE_FDR = new EnvVar(@"OSPREY_PER_FILE_FDR", EnvVarGroup.behavior,
+            @"Experiment, first pass only: 'model' scores each file with a model trained on that file's own rows " +
+            @"(out of fold, calibrated per file), after the global training supplies the protein-best column; " +
+            @"'stacked' trains the per-file models first, without the protein-best column, and trains the global " +
+            @"model on their calibrated scores alone. Changes the validity key. The saved model stays the " +
+            @"global one, so only the first-pass results are meaningful.")
+            { Values = new[] { PER_FILE_FDR_MODEL, PER_FILE_FDR_STACKED } };
+
+        /// <summary>OSPREY_PER_FILE_FDR: the per-file first-pass model study (DIA-NN trains one
+        /// model per run). Null when unset, otherwise <see cref="PER_FILE_FDR_MODEL"/> or
+        /// <see cref="PER_FILE_FDR_STACKED"/>; any other value is refused at startup by the
+        /// catalog's listed values. Keyed into the first-pass validity key
+        /// (<c>PercolatorEngine.GbdtValidityKeySuffix</c>) so a rerun recomputes rather than adopt
+        /// another arm's sidecars.</summary>
+        public static readonly string PerFileFdr =
+            string.IsNullOrWhiteSpace(ENV_PER_FILE_FDR.Value) ? null : ENV_PER_FILE_FDR.Value.Trim().ToLowerInvariant();
+
         private static readonly EnvVar ENV_MZML_DECODE_THREADS = new EnvVar(@"OSPREY_MZML_DECODE_THREADS", EnvVarGroup.performance,
             @"Threads that decode mzML binary arrays. 1 is the serial decode, the A/B arm.")
             { ValueExample = @"<N>", DefaultValue = @"8" };

@@ -75,6 +75,9 @@ namespace pwiz.Osprey.FDR
         // a file in the steps after the load, so counting those as one step left a 31 s gap.
         private const int PASS1_ROW_COUNTS = 5;
 
+        // The one feature the OSPREY_PER_FILE_FDR=stacked training sees: each file's own model score.
+        private const string PER_FILE_SCORE_FEATURE = @"per_file_score";
+
         // How many times the protein-best column step counts each row: read, loaded, scored.
         private const int PROTEIN_BEST_ROW_COUNTS = 3;
         private const int ORDER1_COMPETITION = 0;
@@ -318,6 +321,10 @@ namespace pwiz.Osprey.FDR
                 if (proteinBest)
                     suffix += OspreyEnvironment.ProteinBestValidityKeySuffix(config);
             }
+            // The per-file model study trains different models and writes different scores, so a
+            // rerun under another arm must recompute rather than adopt this one's sidecars.
+            if (OspreyEnvironment.PerFileFdr != null)
+                suffix += @";perfilefdr=" + OspreyEnvironment.PerFileFdr;
             return suffix;
         }
 
@@ -1079,6 +1086,14 @@ namespace pwiz.Osprey.FDR
             }
 
             int nFiles = fileNames.Count;
+            // OSPREY_PER_FILE_FDR=stacked: every file's own model scores its rows first, and the
+            // training below sees one feature, that calibrated score, in place of the feature vectors.
+            if (string.Equals(OspreyEnvironment.PerFileFdr, OspreyEnvironment.PER_FILE_FDR_STACKED, StringComparison.Ordinal))
+            {
+                loadFileFeatures = PerFileScoresAsFeatures(fileNames, streamFileRows, loadFileFeatures, percConfig,
+                    fileLanes, log, passLabel);
+                percConfig.FeatureInfos = new[] { new OspreyFeatureInfo(PER_FILE_SCORE_FEATURE, null, false) };
+            }
             int nFeatures = percConfig.FeatureInfos.Length;
             int maxTrain = percConfig.MaxTrainSize;
             // Each pass below walks the files through OrderedFileLanes: the file-local work - the
@@ -1471,6 +1486,10 @@ namespace pwiz.Osprey.FDR
             if (gbtModels == null)
                 avgWeights = PercolatorScorer.AverageFoldWeights(trainResults.FoldWeights, trainResults.FoldBiases, scoreFeatures, out avgBias);
             var standardizer = trainResults.Standardizer;
+            // OSPREY_PER_FILE_FDR=model: each file scored in pass 1 trains and applies its own model.
+            var perFileModel = string.Equals(OspreyEnvironment.PerFileFdr, OspreyEnvironment.PER_FILE_FDR_MODEL, StringComparison.Ordinal)
+                ? new PerFileFirstPassModel(percConfig, LanesUsed(fileLanes, nFiles))
+                : null;
 
             // ---- Pass 1: score + build the 3 bounded q maps + reduce the clamp floors ----
             // Reuses the verified StreamingFdr.StreamingFirstPassQ kernel; per-file run-q from a bounded one-file
@@ -1558,6 +1577,13 @@ namespace pwiz.Osprey.FDR
                         t = lane1.Stop(LANE1_FEATURES, t);
                         scores = ScoreRows(file, featureRows, gbtModels, avgWeights, avgBias, standardizer, scoreFeatures,
                             percConfig.NThreads, HeldOutFoldsOf(heldOutFolds, fileName));
+                        // OSPREY_PER_FILE_FDR=model: the file's own model replaces the global
+                        // scores. The global score pass above still runs for the feature report.
+                        if (perFileModel != null)
+                        {
+                            scores = file.Scores = perFileModel.TrainAndScore(fileName, rows.EntryIds, rows.Charges,
+                                rows.IsDecoys, rows.CoelutionSums, rows.Peptides, featureRows, scoreFeatures);
+                        }
                         rowProgress.Add(count);
                         t = lane1.Stop(LANE1_SCORE, t);
                     }
@@ -1660,6 +1686,7 @@ namespace pwiz.Osprey.FDR
                 lane1.Seconds(LANE1_SCORE), lane1.Seconds(LANE1_COMPETITION), lane1.Seconds(LANE1_RUN_Q), lane1.Seconds(LANE1_FLOORS),
                 lane1.Seconds(LANE1_FLUSH), lane1.Seconds(LANE1_SINK), order1.Seconds(ORDER1_COMPETITION));
             LogBlockReads(log, passLabel, @"pass 1");
+            perFileModel?.LogTiming(log, passLabel, @"pass 1");
             proteinBestColumn?.LogFloorCounts(log, passLabel);
 
             // A report over only the files this process scored would describe a different
@@ -1881,6 +1908,51 @@ namespace pwiz.Osprey.FDR
             PercolatorScorer.ScoreRowsGbt(destination.Length, r => PercolatorScorer.ResolveFeatureRow(rows, (uint)r, coelutionSums[r], nFeatures),
                 gbtModels, standardizer, nFeatures, destination, 0, nThreads, heldOutFoldByRow);
             return destination;
+        }
+
+        /// <summary>
+        /// The <c>OSPREY_PER_FILE_FDR=stacked</c> pre-pass: trains each file's own model on its raw
+        /// feature vectors (<see cref="PerFileFirstPassModel"/>), keeps every row's calibrated
+        /// score resident (8 bytes a row, 2.9 GB at 82 SEA-AD files), and returns a feature loader
+        /// that hands a file's rows back as one-feature vectors of those scores.
+        /// </summary>
+        private static Func<string, IReadOnlyList<double[]>> PerFileScoresAsFeatures(IReadOnlyList<string> fileNames,
+            Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRows,
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures, PercolatorConfig percConfig, int fileLanes,
+            IOspreyLog log, string passLabel)
+        {
+            int nFiles = fileNames.Count;
+            int nRawFeatures = percConfig.FeatureInfos.Length;
+            var model = new PerFileFirstPassModel(percConfig, LanesUsed(fileLanes, nFiles));
+            var scoresByFile = new double[nFiles][];
+            var wall = Stopwatch.StartNew();
+            int filesDone = 0;
+            ProgressReporter.Run(string.Format(@"Training a first-pass model for each of {0} files...", nFiles), nFiles,
+                progress =>
+                {
+                    OrderedFileLanes.For(nFiles, fileLanes, f =>
+                    {
+                        RowBuffer rows = ReadFileRows(streamFileRows, fileNames[f], StubColumns.Core);
+                        var featureRows = loadFileFeatures(fileNames[f]);
+                        scoresByFile[f] = model.TrainAndScore(fileNames[f], rows.EntryIds, rows.Charges, rows.IsDecoys,
+                            rows.CoelutionSums, rows.Peptides, featureRows, nRawFeatures);
+                        progress.Report(Interlocked.Increment(ref filesDone));
+                    });
+                });
+            log.LogInfo(LogTag.TIMING, @"{0} per-file model pre-pass over {1} files: wall {2:F1}s",
+                passLabel, nFiles, wall.Elapsed.TotalSeconds);
+            model.LogTiming(log, passLabel, @"pre-pass");
+            var fileIndex = new Dictionary<string, int>(nFiles, StringComparer.Ordinal);
+            for (int f = 0; f < nFiles; f++)
+                fileIndex[fileNames[f]] = f;
+            return fileName =>
+            {
+                double[] scores = scoresByFile[fileIndex[fileName]];
+                var rows = new double[scores.Length][];
+                for (int r = 0; r < scores.Length; r++)
+                    rows[r] = new[] { scores[r] };
+                return rows;
+            };
         }
 
         /// <summary>One run's held-out folds by parquet row index, or <c>null</c> when there are none.</summary>
