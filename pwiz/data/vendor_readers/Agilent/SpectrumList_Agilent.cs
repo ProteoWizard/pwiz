@@ -442,6 +442,13 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
         spec.Params.Set(CVID.MS_ms_level, msLevel);
         spec.Params.Set(spectrumType);
 
+        // Past this point the SDK spectrum is required, and fetching it decompresses and
+        // mass-calibrates the whole scan. cpp returns here for anything short of full metadata
+        // (SpectrumList_Agilent.cpp:289); Skyline asks for ms level, retention time and
+        // precursors at InstantMetadata before it reads each spectrum's data.
+        if (detailLevel < DetailLevel.FullMetadata)
+            return spec;
+
         // cpp SpectrumList_Agilent.cpp:313 - `canCentroid && msLevelsToCentroid.contains(msLevel)`,
         // evaluated against the PROMOTED msLevel (cpp promotes at :270, gates at :313), which is
         // why this sits after the promotion above rather than at the entry point.

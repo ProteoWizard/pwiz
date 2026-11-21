@@ -133,6 +133,12 @@ internal sealed class TsfData : IBrukerData
         if (msLevel > 1 && frame.PrecursorMz.HasValue)
             AddTsfPrecursor(spec, frame);
 
+        // Everything below decodes the peak arrays. cpp returns before reading them for anything
+        // short of full metadata (SpectrumList_Bruker.cpp:282); Skyline asks for ms level,
+        // retention time and precursors at InstantMetadata before it reads each spectrum's data.
+        if (detailLevel < DetailLevel.FullMetadata)
+            return;
+
         // Read peaks: caller may override via preferCentroid (vendor peak-picking feed).
         double[] mz = Array.Empty<double>();
         double[] intensity = Array.Empty<double>();
