@@ -109,6 +109,9 @@
   <data name="_demux" xml:space="preserve">
     <value>Demultiplex overlapping-window (staggered) DIA to its narrow bins before searching (default: {0})</value>
   </data>
+  <data name="_diskstamp" xml:space="preserve">
+    <value>Write a {0} line with the change in used space, since the run started, on the volume holding the run's per-file outputs (the output directory, else the first input file's folder), and the volume's free space: at the start, every {1} seconds, at each task boundary and at the end, for monitoring disk use during long runs</value>
+  </data>
   <data name="_experiment_fdr" xml:space="preserve">
     <value>The experiment-level FDR threshold (default: 0.01): a precursor is reported when its q-value across all the runs is at most this. {0} says which q-value.</value>
   </data>
