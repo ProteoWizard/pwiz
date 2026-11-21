@@ -187,7 +187,7 @@ a { color: #1565c0; }
 <tr><th>参数</th><th>描述</th></tr>
 <tr><td><nobr>--timestamp</nobr></td><td>在每行输出前加上 [yyyy/MM/dd HH:mm:ss]</td></tr>
 <tr><td><nobr>--memstamp</nobr></td><td>Prefix each output line with two memory usage values, managed and process private bytes in MB, for monitoring memory use during long runs</td></tr>
-<tr><td><nobr>--diskstamp</nobr></td><td>Write a [DISK] line with the change in used space on the output directory&#39;s drive since the run started, and the drive&#39;s free space: at the start, every 60 seconds, at each task boundary and at the end, for monitoring disk use during long runs</td></tr>
+<tr><td><nobr>--diskstamp</nobr></td><td>Write a [DISK] line with the change in used space, since the run started, on the volume holding the run&#39;s <nobr>per-file</nobr> outputs (the output directory, else the first input file&#39;s folder), and the volume&#39;s free space: at the start, every 60 seconds, at each task boundary and at the end, for monitoring disk use during long runs</td></tr>
 <tr><td><nobr>--log-file</nobr>&nbsp;路径/到/文件</td><td>Write all output to this file instead of the console</td></tr>
 <tr><td><nobr>--perf-stats</nobr></td><td>输出脚本和性能工具读取的机器可解析 [COUNT], [TIMING], [BENCH], [<nobr>STAGE-WALL</nobr>], [PATH], [TRAIN] 行（默认关闭）</td></tr>
 <tr><td><nobr>--verbose</nobr></td><td>显示默认隐藏的更多详细信息（例如每折的 Percolator 迭代）</td></tr>

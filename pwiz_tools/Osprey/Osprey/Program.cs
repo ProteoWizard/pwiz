@@ -390,7 +390,6 @@ namespace pwiz.Osprey
                 // line is written at all is decided where it is emitted (OspreyLog.Write), which
                 // reads PerfStats here.
                 OspreyOutput.PerfStats = config.PerfStats;
-                OspreyOutput.DiskStamp = config.IsDiskStamped;
                 OspreyOutput.Verbose = config.Verbose;
                 // The shared atomic writer reads no OSPREY_* variable itself; the host hands it the
                 // forensic switch here, before the first durable write.
@@ -1623,25 +1622,33 @@ namespace pwiz.Osprey
         }
 
         /// <summary>
-        /// The <c>--diskstamp</c> stamper for this run, or null when it was not asked for. The drive is
-        /// the output directory's, or -o's when there is none, since that is where a search writes.
-        /// It writes to <see cref="_out"/> itself, not <see cref="CommandOutput.Out"/>: the timer
-        /// thread must not land in whatever per-file block is open on another thread.
+        /// The <c>--diskstamp</c> stamper for this run, or null when it was not asked for. It writes to
+        /// <see cref="_out"/> itself, not <see cref="CommandOutput.Out"/>: the timer thread must not
+        /// land in whatever per-file block is open on another thread. <see cref="_out"/> is the
+        /// writer the pipeline's lines end up in too, and a <see cref="CommandStatusWriter"/>
+        /// synchronizes its sink, so the timer's lines and the pipeline's serialize on one lock.
         /// </summary>
         private static DiskStamper StartDiskStamper(OspreyConfig config)
         {
             if (!config.IsDiskStamped)
                 return null;
-            return DiskStamper.Start(GetDiskStampDirectory(config), OspreyLog.FromDelegate(line => _out.WriteLine(line)));
+            return DiskStamper.Start(GetDiskStampDirectory(config, ArtifactPaths.ResolveOutputDir),
+                OspreyLog.FromDelegate(line => _out.WriteLine(line)));
         }
 
         /// <summary>
-        /// The directory whose drive <c>--diskstamp</c> measures: <c>--output-dir</c> (or
-        /// <c>--work-dir</c>), where the per-file artifacts go, else the folder of <c>-o</c>, else
-        /// the current directory (empty).
+        /// The directory whose volume <c>--diskstamp</c> measures: where the run writes its per-file
+        /// artifacts (the scores parquets and sidecars), as <paramref name="resolveOutputDir"/>
+        /// (<see cref="ArtifactPaths.ResolveOutputDir"/>) resolves it for the first input -
+        /// <c>--output-dir</c> when given, else that input's own folder. With no inputs (a library
+        /// phase), <c>--output-dir</c>, else the folder of <c>-o</c>, else the current directory
+        /// (empty). One volume only: a run that spreads its artifacts over several is measured on
+        /// the first.
         /// </summary>
-        internal static string GetDiskStampDirectory(OspreyConfig config)
+        internal static string GetDiskStampDirectory(OspreyConfig config, Func<string, string> resolveOutputDir)
         {
+            if (config.InputFiles.Count > 0)
+                return resolveOutputDir(config.InputFiles[0]);
             if (!string.IsNullOrEmpty(config.OutputDir))
                 return config.OutputDir;
             return string.IsNullOrEmpty(config.OutputBlib) ? string.Empty : Path.GetDirectoryName(config.OutputBlib);

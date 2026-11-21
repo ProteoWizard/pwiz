@@ -350,8 +350,8 @@ namespace pwiz.Osprey.Core
         public bool IsMemStamped { get; set; }
 
         /// <summary>
-        /// --diskstamp: write a [DISK] line with the used-space change on the output directory's
-        /// drive since the run started, at start, every minute, at each task boundary and at the
+        /// --diskstamp: write a [DISK] line with the used-space change on the volume holding the
+        /// run's artifact directory since the run started, at start, every minute, at each task boundary and at the
         /// end (<see cref="DiskStamper"/>). Runtime-only.
         /// </summary>
         public bool IsDiskStamped { get; set; }

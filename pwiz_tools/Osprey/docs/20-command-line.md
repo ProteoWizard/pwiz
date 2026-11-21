@@ -323,7 +323,7 @@ None of these counts enters a validity key or changes an output byte; one lane i
 |--------|--------|
 | `--timestamp` | Prefix each output line with `[yyyy/MM/dd HH:mm:ss]`. |
 | `--memstamp` | Prefix each line with managed and process private bytes in MB, for monitoring memory use during long runs. |
-| `--diskstamp` | Write a `[DISK]` line with the change in used space on the output directory's drive since the run started, and the drive's free space: at the start, every 60 seconds, at each `[TASK]` done and at the end. See [Log format](#log-format). |
+| `--diskstamp` | Write a `[DISK]` line with the change in used space, since the run started, on the volume holding the run's per-file outputs (`--output-dir`, else the first input file's folder), and the volume's free space: at the start, every 60 seconds, at each `[TASK]` done and at the end. See [Log format](#log-format). |
 | `--log-file <path>` | Write all output to a file instead of stderr. |
 | `--perf-stats` | Emit the machine-channel lines (`[COUNT]`, `[TIMING]`, `[BENCH]`, `[STAGE-WALL]`, `[PATH]`, `[TRAIN]`); see [Log format](#log-format). |
 | `--verbose` | Show implementer-grade detail (e.g. per-fold Percolator iterations). |
@@ -354,7 +354,7 @@ translated, and it is the only part of the log a script or test may read.
 | `[PATH]` | `--perf-stats` | which code route the run took, e.g. `[PATH] second-pass-join: per-run runs=3` |
 | `[TIMING]`, `[STAGE-WALL]`, `[BENCH]` | `--perf-stats` | timings the perf tools read |
 | `[TRAIN]` | `--perf-stats` | which population a model trained on |
-| `[DISK]` | `--diskstamp` | `[DISK] used: +12.34 GB since start, 812.50 GB free on D:` - the used-space change (signed) and free space in GB (1024^3 bytes, two decimals) on the drive holding `--output-dir`, else `-o`'s folder. Measured on the whole drive, so another process writing there shows up too. A probe that fails writes no line. |
+| `[DISK]` | `--diskstamp` | `[DISK] used: +12.34 GB since start, 812.50 GB free on D:` - the used-space change (signed) and free space in GB (1024^3 bytes, two decimals; used + free is the volume size) on the volume holding the run's per-file outputs - `--output-dir`, else the first input file's folder; with no inputs, `--output-dir` or `-o`'s folder. The volume is the mount point the path is under (`/mnt/data`, not `/`) and comes last on the line, since it may contain spaces. Measured on the whole volume, so another process writing there shows up too, and a run whose outputs span several volumes is measured on the first. A probe that fails writes no line. |
 | `[MEM <label>]` | `OSPREY_LOG_MEMORY` | a memory probe |
 
 Prose that the user asked for with an option (`--model-diagnostics`, `--training-export`,

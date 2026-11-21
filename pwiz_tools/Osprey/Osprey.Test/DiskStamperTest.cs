@@ -18,11 +18,15 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Test
@@ -31,7 +35,9 @@ namespace pwiz.Osprey.Test
     /// <c>--diskstamp</c>: the <see cref="LogTag.DISK"/> line perfviz reads, the stamper that writes
     /// it from a probe, and the rule that a probe which fails writes nothing and throws nothing.
     /// The timer is not exercised by waiting on it: the stamper is built without one and sampled
-    /// directly, which is all the timer does.
+    /// directly, which is all the timer does. Every stamper here is a local instance with its own
+    /// log and probe - none touches <see cref="DiskStamper.Current"/> or any other process-wide
+    /// state - so the test is safe beside any other in a parallel run.
     /// </summary>
     [TestClass]
     public class DiskStamperTest
@@ -41,21 +47,13 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestDiskStamper()
         {
-            bool savedDiskStamp = OspreyOutput.DiskStamp;
-            try
-            {
-                OspreyOutput.DiskStamp = true;
-                AssertLineRoundTrips();
-                AssertStamperSamples();
-                AssertFailedProbeIsSilent();
-                AssertGateOffWritesNothing();
-                AssertDriveProbe();
-                AssertDiskStampDirectory();
-            }
-            finally
-            {
-                OspreyOutput.DiskStamp = savedDiskStamp;
-            }
+            AssertLineRoundTrips();
+            AssertStamperSamples();
+            AssertFailedProbeIsSilent();
+            AssertConcurrentLinesStayWhole();
+            AssertVolumeRoot();
+            AssertDriveProbe();
+            AssertDiskStampDirectory();
         }
 
         /// <summary>
@@ -71,6 +69,8 @@ namespace pwiz.Osprey.Test
                 StringAssert.Contains(grown, @"+12.25");
                 AssertParses(DiskStamper.FormatLine(-GB / 2, GB, @"D:"), -0.5, 1, @"D:");
                 AssertParses(DiskStamper.FormatLine(0, 0, @"/"), 0, 0, @"/");
+                // A mount point with spaces is the last field and reads back whole.
+                AssertParses(DiskStamper.FormatLine(GB, GB, @"/mnt/run data"), 1, 1, @"/mnt/run data");
             }
             Assert.IsFalse(DiskStamper.TryParseLine(null, out _, out _, out _));
             Assert.IsFalse(DiskStamper.TryParseLine(string.Empty, out _, out _, out _));
@@ -97,9 +97,6 @@ namespace pwiz.Osprey.Test
             stamper.Sample();
             stamper.Dispose();
             Assert.AreEqual(3, lines.Count);
-            // The internal constructor never becomes the run's stamper.
-            Assert.IsNull(DiskStamper.Current);
-            DiskStamper.SampleCurrent();
         }
 
         /// <summary>
@@ -130,19 +127,58 @@ namespace pwiz.Osprey.Test
             new DiskStamper(failingLog, new FakeDrive(GB, GB).Probe, @"D:", Timeout.Infinite).Dispose();
         }
 
-        private static void AssertGateOffWritesNothing()
+        /// <summary>
+        /// The timer thread writes while the pipeline does. Through the
+        /// <see cref="CommandStatusWriter"/> Program gives the stamper - the writer the pipeline's
+        /// lines reach too - every line arrives whole: no interleaving, nothing lost, nothing thrown.
+        /// A 1 ms timer stands in for the minute one, and the main thread keeps writing until the
+        /// timer has written several lines, so the two writers really overlap.
+        /// </summary>
+        private static void AssertConcurrentLinesStayWhole()
         {
-            var lines = new List<string>();
-            OspreyOutput.DiskStamp = false;
-            try
+            const int timerLines = 5;
+            var sink = new StringWriter();
+            var drive = new FakeDrive(GB, GB);
+            int mainLines = 0;
+            using (var writer = new CommandStatusWriter(sink))
             {
-                new DiskStamper(OspreyLog.FromDelegate(lines.Add), new FakeDrive(GB, GB).Probe, @"D:", Timeout.Infinite).Dispose();
+                var stamper = new DiskStamper(OspreyLog.FromDelegate(line => writer.WriteLine(line)),
+                    drive.Probe, @"D:", 1);
+                var timeout = Stopwatch.StartNew();
+                while (drive.ProbeCount < timerLines + 1 && timeout.Elapsed < TimeSpan.FromSeconds(30))
+                    writer.WriteLine(@"main " + mainLines++);
+                stamper.Dispose();
             }
-            finally
+            var lines = sink.ToString().Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            var diskLines = lines.Where(line => !line.StartsWith(@"main ")).ToList();
+            CollectionAssert.AreEqual(Enumerable.Range(0, mainLines).Select(i => @"main " + i).ToList(),
+                lines.Where(line => line.StartsWith(@"main ")).ToList());
+            // The start line, the timer's, and the end line.
+            Assert.IsTrue(diskLines.Count >= timerLines + 2, diskLines.Count.ToString(CultureInfo.InvariantCulture));
+            AssertDiskLines(diskLines, diskLines.Select(_ => 0.0).ToArray());
+        }
+
+        /// <summary>
+        /// The volume is the mount whose root is the longest whole-segment prefix of the path, so a
+        /// run under a mounted volume measures that volume and not the root it hangs from.
+        /// </summary>
+        private static void AssertVolumeRoot()
+        {
+            var unixRoots = new[] { @"/", @"/mnt/data", @"/mnt/data2", @"/home" };
+            Assert.AreEqual(@"/mnt/data", DiskStamper.FindVolumeRoot(@"/mnt/data/runs/x", unixRoots, false));
+            Assert.AreEqual(@"/mnt/data", DiskStamper.FindVolumeRoot(@"/mnt/data", unixRoots, false));
+            Assert.AreEqual(@"/mnt/data2", DiskStamper.FindVolumeRoot(@"/mnt/data2/x", unixRoots, false));
+            Assert.AreEqual(@"/", DiskStamper.FindVolumeRoot(@"/mnt/database/x", unixRoots, false));
+            Assert.AreEqual(@"/", DiskStamper.FindVolumeRoot(@"/MNT/DATA/x", unixRoots, false));
+            // Backslash separates segments only on Windows.
+            if (Path.DirectorySeparatorChar == '\\')
             {
-                OspreyOutput.DiskStamp = true;
+                var windowsRoots = new[] { @"C:\", @"D:\", @"D:\mounts\fast\" };
+                Assert.AreEqual(@"D:\mounts\fast\", DiskStamper.FindVolumeRoot(@"d:\Mounts\Fast\run", windowsRoots, true));
+                Assert.AreEqual(@"D:\", DiskStamper.FindVolumeRoot(@"D:\test\run", windowsRoots, true));
+                Assert.IsNull(DiskStamper.FindVolumeRoot(@"E:\x", windowsRoots, true));
             }
-            Assert.AreEqual(0, lines.Count);
+            Assert.IsNotNull(DiskStamper.GetVolumeRoot(string.Empty));
         }
 
         /// <summary>
@@ -151,7 +187,7 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private static void AssertDriveProbe()
         {
-            string root = DiskStamper.GetDriveRoot(Path.GetTempPath());
+            string root = DiskStamper.GetVolumeRoot(Path.GetTempPath());
             Assert.IsNotNull(root);
             var reading = DiskStamper.ProbeDrive(root);
             Assert.IsNotNull(reading);
@@ -160,17 +196,30 @@ namespace pwiz.Osprey.Test
             Assert.IsFalse(DiskStamper.ProbeDrive(null).HasValue);
             Assert.IsFalse(DiskStamper.ProbeDrive(string.Empty).HasValue);
             Assert.IsFalse(DiskStamper.ProbeDrive(@"\\no-such-server\no-such-share").HasValue);
-            Assert.IsNotNull(DiskStamper.GetDriveRoot(string.Empty));
         }
 
-        /// <summary>The drive is --output-dir's, else -o's folder, else the current directory's.</summary>
+        /// <summary>
+        /// The directory is where the first input's artifacts go, as the artifact resolution says;
+        /// with no inputs, --output-dir, else -o's folder, else the current directory.
+        /// </summary>
         private static void AssertDiskStampDirectory()
         {
             string outputDir = Path.Combine(Path.GetTempPath(), @"runs", @"x");
             string blib = Path.Combine(Path.GetTempPath(), @"out", @"result.blib");
-            Assert.AreEqual(outputDir, Program.GetDiskStampDirectory(new OspreyConfig { OutputDir = outputDir, OutputBlib = blib }));
-            Assert.AreEqual(Path.GetDirectoryName(blib), Program.GetDiskStampDirectory(new OspreyConfig { OutputBlib = blib }));
-            Assert.AreEqual(string.Empty, Program.GetDiskStampDirectory(new OspreyConfig()));
+            string input = Path.Combine(Path.GetTempPath(), @"data", @"a.mzML");
+            var asked = new List<string>();
+            string Resolve(string path)
+            {
+                asked.Add(path);
+                return outputDir;
+            }
+            var withInputs = new OspreyConfig { OutputBlib = blib, InputFiles = new List<string> { input, @"b.mzML" } };
+            Assert.AreEqual(outputDir, Program.GetDiskStampDirectory(withInputs, Resolve));
+            CollectionAssert.AreEqual(new[] { input }, asked);
+            Assert.AreEqual(outputDir, Program.GetDiskStampDirectory(new OspreyConfig { OutputDir = outputDir, OutputBlib = blib }, Resolve));
+            Assert.AreEqual(Path.GetDirectoryName(blib), Program.GetDiskStampDirectory(new OspreyConfig { OutputBlib = blib }, Resolve));
+            Assert.AreEqual(string.Empty, Program.GetDiskStampDirectory(new OspreyConfig(), Resolve));
+            Assert.AreEqual(1, asked.Count);
         }
 
         /// <summary>Every line carries the tag and the expected used-space change, in order.</summary>
@@ -204,6 +253,7 @@ namespace pwiz.Osprey.Test
         {
             private long _usedBytes;
             private long _freeBytes;
+            private int _probeCount;
 
             public FakeDrive(long usedBytes, long freeBytes)
             {
@@ -217,6 +267,9 @@ namespace pwiz.Osprey.Test
             /// <summary>The probe throws.</summary>
             public bool Throws { get; set; }
 
+            /// <summary>How many times the probe has been asked, from any thread.</summary>
+            public int ProbeCount => Volatile.Read(ref _probeCount);
+
             public void Grow(long bytes)
             {
                 _usedBytes += bytes;
@@ -225,6 +278,7 @@ namespace pwiz.Osprey.Test
 
             public (long UsedBytes, long FreeBytes)? Probe()
             {
+                Interlocked.Increment(ref _probeCount);
                 if (Throws)
                     throw new IOException();
                 if (Unreadable)

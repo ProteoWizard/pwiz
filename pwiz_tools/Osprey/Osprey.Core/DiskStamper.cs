@@ -19,8 +19,10 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 
@@ -28,7 +30,8 @@ namespace pwiz.Osprey.Core
 {
     /// <summary>
     /// <c>--diskstamp</c>: writes a <see cref="LogTag.DISK"/> line with the change in used space on
-    /// the output directory's drive since the run started, and the drive's free space - once at
+    /// the volume holding the run's artifact directory since the run started, and the volume's free
+    /// space - once at
     /// start (a change of zero), every <see cref="SAMPLE_INTERVAL_MS"/> from a timer thread, at each
     /// task boundary (<see cref="SampleCurrent"/>) and once at the end (<see cref="Dispose"/>).
     ///
@@ -39,6 +42,12 @@ namespace pwiz.Osprey.Core
     ///
     /// <para>It must never disturb the run: a probe that fails writes nothing, and nothing here
     /// throws to its caller or to the timer thread, where an exception would end the process.</para>
+    ///
+    /// <para>The timer thread writes while the pipeline writes on others, so the log it is given
+    /// must be safe to write from any thread. Program hands it the same
+    /// <see cref="pwiz.Common.SystemUtil.CommandStatusWriter"/> the pipeline writes through, which
+    /// wraps its sink (the console, or the <c>--log-file</c> StreamWriter) in
+    /// <see cref="TextWriter.Synchronized"/>, so the two serialize on one lock line by line.</para>
     /// </summary>
     public sealed class DiskStamper : IDisposable
     {
@@ -48,10 +57,11 @@ namespace pwiz.Osprey.Core
         private const double BYTES_PER_GB = 1024.0 * 1024.0 * 1024.0;
 
         // The text after the [DISK] tag. A contract with ai/scripts/perfviz.py and perfviz.html:
-        // the used change is signed, both values are GB with two decimals in the invariant culture.
+        // the used change is signed, both values are GB with two decimals in the invariant culture,
+        // and the volume comes last because a mount point may contain spaces.
         private const string LINE_FORMAT = @"used: {0:+0.00;-0.00;+0.00} GB since start, {1:0.00} GB free on {2}";
         private static readonly Regex LINE_REGEX = new Regex(
-            @"^used: ([+-]\d+\.\d+) GB since start, (\d+\.\d+) GB free on (\S+)$", RegexOptions.CultureInvariant);
+            @"^used: ([+-]\d+\.\d+) GB since start, (\d+\.\d+) GB free on (.+)$", RegexOptions.CultureInvariant);
 
         /// <summary>
         /// The stamper of the run in progress, or null when <c>--diskstamp</c> is off. Set by
@@ -60,13 +70,13 @@ namespace pwiz.Osprey.Core
         public static DiskStamper Current { get; private set; }
 
         /// <summary>
-        /// Start stamping the drive that holds <paramref name="directory"/> to
+        /// Start stamping the volume that holds <paramref name="directory"/> to
         /// <paramref name="log"/>, writing the start line, and make the stamper
         /// <see cref="Current"/>. Disposing it writes the end line and stops the timer.
         /// </summary>
         public static DiskStamper Start(string directory, IOspreyLog log)
         {
-            string root = GetDriveRoot(directory);
+            string root = GetVolumeRoot(directory);
             var stamper = new DiskStamper(log, () => ProbeDrive(root), FormatDrive(root), SAMPLE_INTERVAL_MS);
             Current = stamper;
             return stamper;
@@ -161,14 +171,17 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// The root of the drive that holds <paramref name="directory"/> (the current directory
-        /// when it is empty), or null when it has none.
+        /// The root of the volume that holds <paramref name="directory"/> (the current directory
+        /// when it is empty): the mounted volume whose root is the longest prefix of its full path,
+        /// so <c>/mnt/data/run</c> measures <c>/mnt/data</c>, not <c>/</c>. Falls back to the path
+        /// root when the volumes cannot be listed; null when there is no root at all.
         /// </summary>
-        internal static string GetDriveRoot(string directory)
+        internal static string GetVolumeRoot(string directory)
         {
             try
             {
-                return Path.GetPathRoot(Path.GetFullPath(string.IsNullOrEmpty(directory) ? @"." : directory));
+                string fullPath = Path.GetFullPath(string.IsNullOrEmpty(directory) ? @"." : directory);
+                return FindVolumeRoot(fullPath, ListVolumeRoots(), IsPathCaseInsensitive()) ?? Path.GetPathRoot(fullPath);
             }
             catch (Exception)
             {
@@ -176,7 +189,23 @@ namespace pwiz.Osprey.Core
             }
         }
 
-        /// <summary>The used and free bytes of the drive at <paramref name="root"/>, or null when it cannot be read.</summary>
+        /// <summary>
+        /// The entry of <paramref name="volumeRoots"/> that is the longest whole-segment prefix of
+        /// <paramref name="fullPath"/>, or null when none is.
+        /// </summary>
+        internal static string FindVolumeRoot(string fullPath, IEnumerable<string> volumeRoots, bool ignoreCase)
+        {
+            var comparison = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+            return volumeRoots.Where(root => !string.IsNullOrEmpty(root) && IsUnder(fullPath, root, comparison))
+                .OrderByDescending(root => TrimSeparators(root).Length)
+                .FirstOrDefault();
+        }
+
+        /// <summary>
+        /// The used and free bytes of the volume at <paramref name="root"/>, or null when it cannot be
+        /// read. Both come from <see cref="DriveInfo.TotalFreeSpace"/>, so used + free is the volume
+        /// size; the space available to this user under a quota is not what is reported.
+        /// </summary>
         internal static (long UsedBytes, long FreeBytes)? ProbeDrive(string root)
         {
             if (string.IsNullOrEmpty(root))
@@ -184,7 +213,8 @@ namespace pwiz.Osprey.Core
             try
             {
                 var drive = new DriveInfo(root);
-                return (drive.TotalSize - drive.TotalFreeSpace, drive.AvailableFreeSpace);
+                long free = drive.TotalFreeSpace;
+                return (drive.TotalSize - free, free);
             }
             catch (Exception)
             {
@@ -211,13 +241,56 @@ namespace pwiz.Osprey.Core
             }
         }
 
-        /// <summary>The drive as the line names it: <c>D:</c> for <c>D:\</c>, the root itself otherwise.</summary>
+        /// <summary>
+        /// The volume as the line names it: <c>D:</c> for <c>D:\</c>, <c>/mnt/data</c> for
+        /// <c>/mnt/data/</c>, and <c>/</c> for the root itself.
+        /// </summary>
         private static string FormatDrive(string root)
         {
             if (string.IsNullOrEmpty(root))
                 return @"?";
-            string trimmed = root.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string trimmed = TrimSeparators(root);
             return trimmed.Length > 0 ? trimmed : root;
+        }
+
+        private static IEnumerable<string> ListVolumeRoots()
+        {
+            try
+            {
+                return DriveInfo.GetDrives().Select(drive => drive.RootDirectory.FullName).ToList();
+            }
+            catch (Exception)
+            {
+                return Array.Empty<string>();
+            }
+        }
+
+        private static bool IsPathCaseInsensitive()
+        {
+            return Path.DirectorySeparatorChar == '\\';
+        }
+
+        private static string TrimSeparators(string path)
+        {
+            return path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        }
+
+        /// <summary>
+        /// True when <paramref name="fullPath"/> is <paramref name="root"/> or below it, whole
+        /// segments only: <c>/mnt/database</c> is not under <c>/mnt/data</c>.
+        /// </summary>
+        private static bool IsUnder(string fullPath, string root, StringComparison comparison)
+        {
+            string path = TrimSeparators(fullPath);
+            string trimmedRoot = TrimSeparators(root);
+            if (!path.StartsWith(trimmedRoot, comparison))
+                return false;
+            return path.Length == trimmedRoot.Length || IsSeparator(path[trimmedRoot.Length]);
+        }
+
+        private static bool IsSeparator(char c)
+        {
+            return c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar;
         }
     }
 }
