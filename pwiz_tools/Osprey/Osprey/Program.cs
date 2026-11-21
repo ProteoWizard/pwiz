@@ -390,6 +390,7 @@ namespace pwiz.Osprey
                 // line is written at all is decided where it is emitted (OspreyLog.Write), which
                 // reads PerfStats here.
                 OspreyOutput.PerfStats = config.PerfStats;
+                OspreyOutput.DiskStamp = config.IsDiskStamped;
                 OspreyOutput.Verbose = config.Verbose;
                 // The shared atomic writer reads no OSPREY_* variable itself; the host hands it the
                 // forensic switch here, before the first durable write.
@@ -802,41 +803,46 @@ namespace pwiz.Osprey
                 // Machine twin of the banner: the liveness anchor a route assertion needs before
                 // it can trust an absence.
                 LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_STARTUP, @"threads={0}", config.NThreads));
-                LogInfo(string.Empty);
-
-                // --task ModelDiagnostics is a RENDER over completed analysis state, not a run.
-                // Settled before the pipeline is built, because the whole point is that most
-                // invocations never build one.
-                if (config.DiagnosticsOnly)
+                // --diskstamp: the start line, then a timer line every minute until the using ends and
+                // writes the end line (before RunCommand closes a --log-file writer).
+                using (StartDiskStamper(config))
                 {
-                    int diagnosticsExit = RunModelDiagnosticsTask(config);
-                    if (diagnosticsExit >= 0)
-                        return diagnosticsExit;
-                }
+                    LogInfo(string.Empty);
 
-                // The one command (--fasta): the library is predicted first, then the same
-                // pipeline searches it. Dispatched through a class of its own, so a run that
-                // searches a given library compiles no method that reaches the predictor and
-                // never loads its native runtime.
-                TaskBudget.Reset();
-                try
-                {
-                    if (BuildsLibrary(config))
-                        return new LibraryBuildWorkflow(config, librarySettings).Run(pipeline);
+                    // --task ModelDiagnostics is a RENDER over completed analysis state, not a run.
+                    // Settled before the pipeline is built, because the whole point is that most
+                    // invocations never build one.
+                    if (config.DiagnosticsOnly)
+                    {
+                        int diagnosticsExit = RunModelDiagnosticsTask(config);
+                        if (diagnosticsExit >= 0)
+                            return diagnosticsExit;
+                    }
 
-                    // Single entry point. The rescore worker (--task
-                    // PerFileRescoring) includes only PerFileRescoreTask
-                    // (OspreyConfig.Includes); PerFileScoring's lazy-rehydrate (via
-                    // ctx.Demand) populates the upstream state from the boundary files
-                    // on disk.
-                    return new AnalysisPipeline().Run(config, pipeline);
-                }
-                catch (TaskBudgetSpentException stop)
-                {
-                    // OSPREY_STOP_AFTER_TASKS: every task run so far committed its outputs, and
-                    // the next run of the same command line resumes after the last.
-                    LogInfo(LogTag.TASK, @"stop:after {0} ({1}; {2})", stop.TasksRun, stop.TaskName, @"OSPREY_STOP_AFTER_TASKS");
-                    return EXIT_CODE_SUCCESS;
+                    // The one command (--fasta): the library is predicted first, then the same
+                    // pipeline searches it. Dispatched through a class of its own, so a run that
+                    // searches a given library compiles no method that reaches the predictor and
+                    // never loads its native runtime.
+                    TaskBudget.Reset();
+                    try
+                    {
+                        if (BuildsLibrary(config))
+                            return new LibraryBuildWorkflow(config, librarySettings).Run(pipeline);
+
+                        // Single entry point. The rescore worker (--task
+                        // PerFileRescoring) includes only PerFileRescoreTask
+                        // (OspreyConfig.Includes); PerFileScoring's lazy-rehydrate (via
+                        // ctx.Demand) populates the upstream state from the boundary files
+                        // on disk.
+                        return new AnalysisPipeline().Run(config, pipeline);
+                    }
+                    catch (TaskBudgetSpentException stop)
+                    {
+                        // OSPREY_STOP_AFTER_TASKS: every task run so far committed its outputs, and
+                        // the next run of the same command line resumes after the last.
+                        LogInfo(LogTag.TASK, @"stop:after {0} ({1}; {2})", stop.TasksRun, stop.TaskName, @"OSPREY_STOP_AFTER_TASKS");
+                        return EXIT_CODE_SUCCESS;
+                    }
                 }
             }
             catch (Exception ex)
@@ -1614,6 +1620,31 @@ namespace pwiz.Osprey
             config.OutputDir = FullPathOrEmpty(config.OutputDir);
             config.CacheDir = FullPathOrEmpty(config.CacheDir);
             config.OutputBlib = FullPathOrEmpty(config.OutputBlib);
+        }
+
+        /// <summary>
+        /// The <c>--diskstamp</c> stamper for this run, or null when it was not asked for. The drive is
+        /// the output directory's, or -o's when there is none, since that is where a search writes.
+        /// It writes to <see cref="_out"/> itself, not <see cref="CommandOutput.Out"/>: the timer
+        /// thread must not land in whatever per-file block is open on another thread.
+        /// </summary>
+        private static DiskStamper StartDiskStamper(OspreyConfig config)
+        {
+            if (!config.IsDiskStamped)
+                return null;
+            return DiskStamper.Start(GetDiskStampDirectory(config), OspreyLog.FromDelegate(line => _out.WriteLine(line)));
+        }
+
+        /// <summary>
+        /// The directory whose drive <c>--diskstamp</c> measures: <c>--output-dir</c> (or
+        /// <c>--work-dir</c>), where the per-file artifacts go, else the folder of <c>-o</c>, else
+        /// the current directory (empty).
+        /// </summary>
+        internal static string GetDiskStampDirectory(OspreyConfig config)
+        {
+            if (!string.IsNullOrEmpty(config.OutputDir))
+                return config.OutputDir;
+            return string.IsNullOrEmpty(config.OutputBlib) ? string.Empty : Path.GetDirectoryName(config.OutputBlib);
         }
 
         private static string FullPathOrEmpty(string path)

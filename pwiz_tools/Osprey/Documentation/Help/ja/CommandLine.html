@@ -187,6 +187,7 @@ a { color: #1565c0; }
 <tr><th>引数</th><th>説明</th></tr>
 <tr><td><nobr>--timestamp</nobr></td><td>各出力行の先頭に[yyyy/MM/dd HH:mm:ss]を付加します</td></tr>
 <tr><td><nobr>--memstamp</nobr></td><td>Prefix each output line with two memory usage values, managed and process private bytes in MB, for monitoring memory use during long runs</td></tr>
+<tr><td><nobr>--diskstamp</nobr></td><td>Write a [DISK] line with the change in used space on the output directory&#39;s drive since the run started, and the drive&#39;s free space: at the start, every 60 seconds, at each task boundary and at the end, for monitoring disk use during long runs</td></tr>
 <tr><td><nobr>--log-file</nobr>&nbsp;path/to/file（ファイル）</td><td>Write all output to this file instead of the console</td></tr>
 <tr><td><nobr>--perf-stats</nobr></td><td>スクリプトやパフォーマンスツールが読み取る、機械解析可能な[COUNT], [TIMING], [BENCH], [<nobr>STAGE-WALL</nobr>], [PATH], [TRAIN]行を出力します（デフォルトはオフ）</td></tr>
 <tr><td><nobr>--verbose</nobr></td><td>デフォルトでは非表示の詳細（フォールドごとのPercolator反復など）を表示します</td></tr>

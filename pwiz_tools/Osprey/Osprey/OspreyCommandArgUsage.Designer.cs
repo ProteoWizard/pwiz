@@ -150,6 +150,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Write a {0} line with the change in used space on the output directory&apos;s drive since the run started, and the drive&apos;s free space: at the start, every {1} seconds, at each task boundary and at the end, for monitoring disk use during long runs.
+        /// </summary>
+        public static string _diskstamp {
+            get {
+                return ResourceManager.GetString("_diskstamp", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to With {0}: add an entrapment peptide to every target (or to this fraction of the targets, {1} to 1 [rest of string was truncated]";.
         /// </summary>
         public static string _entrapment {

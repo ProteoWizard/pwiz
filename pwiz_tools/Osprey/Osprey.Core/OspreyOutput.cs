@@ -45,6 +45,12 @@ namespace pwiz.Osprey.Core
         public static bool PerfStats { get; set; }
 
         /// <summary>
+        /// When true (--diskstamp), the <see cref="LogTag.DISK"/> lines <see cref="DiskStamper"/>
+        /// writes are emitted.
+        /// </summary>
+        public static bool DiskStamp { get; set; }
+
+        /// <summary>
         /// When true (--verbose), implementer-grade detail that the default log hides is
         /// emitted (e.g. per-fold Percolator iterations). Use <see cref="WriteVerbose"/> to
         /// gate such lines.

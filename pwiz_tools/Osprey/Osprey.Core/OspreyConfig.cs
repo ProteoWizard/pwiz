@@ -350,6 +350,13 @@ namespace pwiz.Osprey.Core
         public bool IsMemStamped { get; set; }
 
         /// <summary>
+        /// --diskstamp: write a [DISK] line with the used-space change on the output directory's
+        /// drive since the run started, at start, every minute, at each task boundary and at the
+        /// end (<see cref="DiskStamper"/>). Runtime-only.
+        /// </summary>
+        public bool IsDiskStamped { get; set; }
+
+        /// <summary>
         /// --log-file: redirect all output to this file instead of stderr. Null leaves
         /// output on stderr. Runtime-only.
         /// </summary>
