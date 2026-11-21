@@ -1535,7 +1535,9 @@ namespace pwiz.ProteowizardWrapper
                         // One more linear walk should be fine, given how much copying and walking gets done
                         double min = double.MaxValue, max = double.MinValue;
                         var ionMobilityBuffer = msDataSpectrum.IonMobilityBuffer;
-                        for (int i = 0; i < msDataSpectrum.PeakCount; i++)
+                        // ionMobilityCount, not PeakCount: when the lengths differ the arrays are
+                        // kept whole and PeakCount is the m/z length
+                        for (int i = 0; i < ionMobilityCount; i++)
                         {
                             min = Math.Min(min, ionMobilityBuffer[i]);
                             max = Math.Max(max, ionMobilityBuffer[i]);

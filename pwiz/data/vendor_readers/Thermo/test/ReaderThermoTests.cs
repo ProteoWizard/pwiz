@@ -151,13 +151,18 @@ public class ReaderThermoTests
     {
         string? root = FindTestDataRoot();
         if (root is null) { Assert.Inconclusive("Thermo test data tree not found."); return; }
+        int compared = 0;
         foreach (var name in new[] { "090701-LTQVelos-unittest-01.raw", "BSA-FT-HCD.raw", "IT-HCD-SPS.raw" })
         {
             string path = Path.Combine(root, name);
-            if (!File.Exists(path)) { Assert.Inconclusive(name + " not present."); return; }
+            if (!File.Exists(path))
+                continue;
+            compared++;
             var problems = DetailLevelChecks.InstantMetadataMismatches(new Reader_Thermo(), path, 50);
             Assert.AreEqual(0, problems.Count, name + ":\n" + string.Join("\n", problems.Take(10)));
         }
+        if (compared == 0)
+            Assert.Inconclusive("None of the instant-metadata fixtures are present.");
     }
 
     // ---------- below the harness: identify / header detection / read errors ----------

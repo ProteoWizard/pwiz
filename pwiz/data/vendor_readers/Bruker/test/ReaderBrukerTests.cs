@@ -43,10 +43,13 @@ public class ReaderBrukerTests
     {
         string? root = FindTestDataRoot();
         if (root is null) { Assert.Inconclusive("Bruker test data tree not found."); return; }
+        int compared = 0;
         foreach (var name in new[] { "CsI_Pos_0_G1_000003.d", "timsTOF_autoMSMS_Urine_50s_neg.d", "20percLaser_100fold_1_0_H6_MS.d" })
         {
             string d = Path.Combine(root, name);
-            if (!Directory.Exists(d)) { Assert.Inconclusive(name + " not present."); return; }
+            if (!Directory.Exists(d))
+                continue;
+            compared++;
             IReadOnlyList<string> problems;
             try { problems = DetailLevelChecks.InstantMetadataMismatches(new Reader_Bruker(), d, 50); }
             catch (Pwiz.Data.MsData.Readers.VendorSupportNotEnabledException)
@@ -56,6 +59,8 @@ public class ReaderBrukerTests
             }
             Assert.AreEqual(0, problems.Count, name + ":\n" + string.Join("\n", problems.Take(10)));
         }
+        if (compared == 0)
+            Assert.Inconclusive("None of the instant-metadata fixtures are present.");
     }
 
     [TestMethod]

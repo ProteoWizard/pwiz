@@ -315,7 +315,8 @@ internal sealed class Baf2SqlData : IBrukerData
         // to the line arrays below, is reported differently once decoded.
         if (detailLevel < DetailLevel.FullMetadata)
         {
-            bool lineOnly = preferCentroid || !row.ProfileIntensityId.HasValue;
+            // As decoded below: a row with neither array reads as profile unless centroid was asked for
+            bool lineOnly = preferCentroid || (!row.ProfileIntensityId.HasValue && row.LineIntensityId.HasValue);
             spec.Params.Set(lineOnly ? CVID.MS_centroid_spectrum : CVID.MS_profile_spectrum);
             return;
         }

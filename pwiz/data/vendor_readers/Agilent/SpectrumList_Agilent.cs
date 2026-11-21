@@ -446,8 +446,16 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
         // mass-calibrates the whole scan. cpp returns here for anything short of full metadata
         // (SpectrumList_Agilent.cpp:289); Skyline asks for ms level, retention time and
         // precursors at InstantMetadata before it reads each spectrum's data.
+        // The all-ions and neutral loss/gain precursor gets its isolation window from the SDK
+        // spectrum's mass range, so it is incomplete here. cpp returns it anyway, but Skyline takes
+        // any non-empty precursor list as final and would never ask again; without one it raises
+        // its precursor request to full metadata, while ms level and start time stay instant.
         if (detailLevel < DetailLevel.FullMetadata)
+        {
+            if (reportMs2ForAllIons || isNeutralLossOrGain)
+                spec.Precursors.Clear();
             return spec;
+        }
 
         // cpp SpectrumList_Agilent.cpp:313 - `canCentroid && msLevelsToCentroid.contains(msLevel)`,
         // evaluated against the PROMOTED msLevel (cpp promotes at :270, gates at :313), which is

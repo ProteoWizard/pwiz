@@ -619,6 +619,15 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
         // Decoding every bin just to count peaks made each metadata request cost as much as
         // reading the spectrum, and Skyline asks for metadata on every spectrum it then skips.
         bool combined = isMs && ie.Combined;
+        if (combined && !getBinaryData && willCentroid)
+        {
+            // The PeaksInScan block above is skipped when centroiding. cpp never centroids an IMS
+            // block (SpectrumList_Waters.cpp:229), so it always reports PeaksInScan here; without
+            // it the count stays 0 and defaultArrayLength filters drop every combined spectrum.
+            string peaks = _data.GetScanItem(ie.Function, ie.Block, WatersScanItem.PeaksInScan);
+            if (int.TryParse(peaks, NumberStyles.Integer, CultureInfo.InvariantCulture, out int peaksI))
+                spec.DefaultArrayLength = peaksI;
+        }
         if (combined && getBinaryData)
         {
             // Combine path: concatenate the peaks of all drift bins of the block.

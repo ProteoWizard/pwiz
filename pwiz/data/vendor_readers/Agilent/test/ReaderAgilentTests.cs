@@ -59,10 +59,13 @@ public class ReaderAgilentTests
     {
         string? root = FindTestDataRoot();
         if (root is null) { Assert.Inconclusive("Agilent test data tree not found."); return; }
+        int compared = 0;
         foreach (var name in new[] { "GFb_4Scan_TimeSegs_1530_100ng.d", "RS080806_NL_448.2_001.d", "Neg_MS_002_1scan.d" })
         {
             string d = Path.Combine(root, name);
-            if (!Directory.Exists(d)) { Assert.Inconclusive(name + " not present."); return; }
+            if (!Directory.Exists(d))
+                continue;
+            compared++;
             IReadOnlyList<string> problems;
             try { problems = DetailLevelChecks.InstantMetadataMismatches(new Reader_Agilent(), d, 50); }
             catch (Pwiz.Data.MsData.Readers.VendorSupportNotEnabledException)
@@ -72,6 +75,8 @@ public class ReaderAgilentTests
             }
             Assert.AreEqual(0, problems.Count, name + ":\n" + string.Join("\n", problems.Take(10)));
         }
+        if (compared == 0)
+            Assert.Inconclusive("None of the instant-metadata fixtures are present.");
     }
 
     [TestMethod]
