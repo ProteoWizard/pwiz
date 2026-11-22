@@ -177,14 +177,17 @@ namespace pwiz.Skyline.Controls
             if (e.ColumnIndex == colHdrDisplayText.Index)
             {
                 var findResult = (FindResult) e.Item.Tag;
-                var textRendererHelper = new TextRendererHelper
-                                             {
-                                                 ForeColor = foreColor,
-                                                 BackColor = backColor,
-                                                 Font = e.Item.Font,
-                                                 HighlightFont = new Font(e.Item.Font, FontStyle.Bold),
-                                             };
-                textRendererHelper.DrawHighlightedText(e.Graphics, e.SubItem.Bounds, findResult.FindMatch);
+                using (var highlightFont = new Font(e.Item.Font, FontStyle.Bold))
+                {
+                    var textRendererHelper = new TextRendererHelper
+                                                 {
+                                                     ForeColor = foreColor,
+                                                     BackColor = backColor,
+                                                     Font = e.Item.Font,
+                                                     HighlightFont = highlightFont,
+                                                 };
+                    textRendererHelper.DrawHighlightedText(e.Graphics, e.SubItem.Bounds, findResult.FindMatch);
+                }
             }
             else
             {

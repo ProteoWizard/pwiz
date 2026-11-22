@@ -285,8 +285,10 @@ namespace pwiz.Skyline.Controls
                     iOffset += imageList.ImageSize.Width;
                 }
                 // Draw item text
-                pe.Graphics.DrawString(item.Text, pe.Font, new SolidBrush(pe.ForeColor), 
-                    bounds.Left + iOffset, bounds.Top);
+                using (var brush = new SolidBrush(pe.ForeColor))
+                {
+                    pe.Graphics.DrawString(item.Text, pe.Font, brush, bounds.Left + iOffset, bounds.Top);
+                }
             }
             base.OnDrawItem(pe);
         }
