@@ -12,6 +12,9 @@ REM # Skyline is not swept here: Skyline\CleanSkyline.bat (called below) sweeps 
 REM # tree, so that running it on its own cleans Skyline completely.
 call :CleanBinaries Shared
 call :CleanBinaries Osprey
+REM # Osprey's tests and regression.ps1 write their run output here (gitignored); a few
+REM # regression sweeps reach 100+ GB.
+IF EXIST Osprey\TestResults rmdir /s/q Osprey\TestResults
 
 IF EXIST Shared\CommonTest rmdir /s/q Shared\CommonTest
 
