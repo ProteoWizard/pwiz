@@ -29,7 +29,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public class ShareListDlg<TItem> : FormEx where TItem : IKeyContainer<string>
+    public sealed class ShareListDlg<TItem> : FormEx where TItem : IKeyContainer<string>
     {
         private readonly CheckedListBox _checkedListBox;
 
