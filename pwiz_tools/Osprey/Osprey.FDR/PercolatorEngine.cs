@@ -296,7 +296,8 @@ namespace pwiz.Osprey.FDR
         public static string GbdtValidityKeySuffix(OspreyConfig config)
         {
             string suffix = GbdtValidityKeySuffix(config?.FdrClassifier ?? FdrClassifier.LinearSvm, BuildGbtParams(),
-                OspreyEnvironment.GbtMaxIterations, OspreyEnvironment.GbtInnerFolds, config?.Scoring.GbtOutOfFold ?? false);
+                OspreyEnvironment.GbtMaxIterations, OspreyEnvironment.GbtInnerFolds, config?.Scoring.GbtOutOfFold ?? false,
+                OspreyEnvironment.GbtPatience);
             // The two-round training (OSPREY_GBT_PREFILTER_SIZE, or its --protein-boost best default size)
             // trains a different model, so it is keyed when on - and only then, so a one-round key
             // (no protein-best column, the default) is unchanged. The same terms under either classifier: the linear
@@ -330,7 +331,9 @@ namespace pwiz.Osprey.FDR
                           (OspreyEnvironment.PerFileFdrTrainSize.HasValue
                               ? string.Format(CultureInfo.InvariantCulture, @";perfilefdrsize={0}", OspreyEnvironment.PerFileFdrTrainSize.Value)
                               : string.Empty) +
-                          (OspreyEnvironment.PerFileFdrRound2Size.HasValue
+                          (OspreyEnvironment.PerFileFdrRound2Size.HasValue &&
+                           (OspreyEnvironment.PerFileFdrTwoRound ||
+                            string.Equals(OspreyEnvironment.PerFileFdr, OspreyEnvironment.PER_FILE_FDR_FILE, StringComparison.Ordinal))
                               ? string.Format(CultureInfo.InvariantCulture, @";perfilefdrround2={0}", OspreyEnvironment.PerFileFdrRound2Size.Value)
                               : string.Empty);
             }
@@ -347,9 +350,10 @@ namespace pwiz.Osprey.FDR
         /// directory written under it, is unchanged. <paramref name="outOfFold"/>
         /// (OSPREY_GBT_OOF=1) keys the same way, only when on: it changes the first-pass scores
         /// of the training rows, so a resume under the other setting must not adopt them.
+        /// <paramref name="patience"/> (OSPREY_GBT_PATIENCE) keys only when it is not the default.
         /// </summary>
         public static string GbdtValidityKeySuffix(FdrClassifier fdrClassifier, GbtParams gbtParams,
-            int maxIterations, int innerFolds, bool outOfFold)
+            int maxIterations, int innerFolds, bool outOfFold, int patience = OspreyEnvironment.GBT_PATIENCE_DEFAULT)
         {
             if (fdrClassifier != FdrClassifier.Gbdt)
                 return string.Empty;
@@ -363,8 +367,8 @@ namespace pwiz.Osprey.FDR
                 gbtParams.RegLambda, gbtParams.RegAlpha, gbtParams.MaxBins, gbtParams.Seed,
                 maxIterations, innerFolds, gbtParams.UseDeterministicMath ? string.Empty : @";gbtmath=system",
                 outOfFold ? @";gbtoof=1" : string.Empty) +
-                (OspreyEnvironment.GbtPatience != 2
-                    ? string.Format(CultureInfo.InvariantCulture, @";gbtpatience={0}", OspreyEnvironment.GbtPatience)
+                (patience != OspreyEnvironment.GBT_PATIENCE_DEFAULT
+                    ? string.Format(CultureInfo.InvariantCulture, @";gbtpatience={0}", patience)
                     : string.Empty);
         }
 

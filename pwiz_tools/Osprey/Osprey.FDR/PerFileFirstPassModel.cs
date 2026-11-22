@@ -85,14 +85,16 @@ namespace pwiz.Osprey.FDR
                 : null;
             _threads = Math.Max(1, percConfig.NThreads / Math.Max(1, lanes));
             _trainConfig = percConfig.CloneForTrainOnly();
-            // OSPREY_PER_FILE_FDR_TRAIN_SIZE: round 1's rows, and two thirds of them for round 2.
+            // OSPREY_PER_FILE_FDR_TRAIN_SIZE: round 1's rows, and two thirds of them for round 2
+            // unless OSPREY_PER_FILE_FDR_ROUND2_SIZE names round 2's own size.
             int? trainSize = OspreyEnvironment.PerFileFdrTrainSize;
             if (trainSize.HasValue)
                 _trainConfig.MaxTrainSize = trainSize.Value;
             int round2Size = OspreyEnvironment.PrefilterSizeFor(true);
             if (trainSize.HasValue)
                 round2Size = Math.Min(round2Size, trainSize.Value * 2 / 3);
-            if (OspreyEnvironment.PerFileFdrRound2Size.HasValue)
+            // The override never turns on a round 2 that OSPREY_GBT_PREFILTER_SIZE=0 turned off.
+            if (OspreyEnvironment.PerFileFdrRound2Size.HasValue && round2Size > 0)
                 round2Size = OspreyEnvironment.PerFileFdrRound2Size.Value;
             _round2Size = OspreyEnvironment.PerFileFdrTwoRound || _ownProteinBest != null ? round2Size : 0;
             _trainConfig.NThreads = _threads;

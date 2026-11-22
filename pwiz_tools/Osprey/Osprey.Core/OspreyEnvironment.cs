@@ -628,7 +628,8 @@ namespace pwiz.Osprey.Core
         /// hit the shared cap of 10 -- i.e. the cap was binding on the trees, so their
         /// reported discrimination may understate the model rather than measure it. Raising
         /// it costs nothing when it is not binding: the existing
-        /// stop-after-2-non-improving-iterations rule still ends training on convergence.
+        /// stop-after-N-non-improving-iterations rule (<see cref="GbtPatience"/>, 2 by default)
+        /// still ends training on convergence.
         /// </summary>
         public static readonly int GbtMaxIterations = ResolveGbtMaxIterations();
 
@@ -1488,7 +1489,8 @@ namespace pwiz.Osprey.Core
 
         private static readonly EnvVar ENV_PER_FILE_FDR_TRAIN_SIZE = new EnvVar(@"OSPREY_PER_FILE_FDR_TRAIN_SIZE", EnvVarGroup.behavior,
             @"Experiment, with OSPREY_PER_FILE_FDR: the rows each per-file model's round 1 trains on; round 2 " +
-            @"takes two thirds of it, at most the global round-2 size. Changes the validity key.")
+            @"takes two thirds of it, at most the global round-2 size, unless OSPREY_PER_FILE_FDR_ROUND2_SIZE " +
+            @"is set. Changes the validity key.")
             { ValueExample = @"<N>", DefaultValue = @"300000" };
 
         /// <summary>OSPREY_PER_FILE_FDR_TRAIN_SIZE: each per-file model's round-1 training rows (the
@@ -1498,8 +1500,9 @@ namespace pwiz.Osprey.Core
 
         private static readonly EnvVar ENV_PER_FILE_FDR_ROUND2_SIZE = new EnvVar(@"OSPREY_PER_FILE_FDR_ROUND2_SIZE", EnvVarGroup.behavior,
             @"Experiment, with OSPREY_PER_FILE_FDR: the rows each per-file model's round 2 trains on, in place " +
-            @"of two thirds of OSPREY_PER_FILE_FDR_TRAIN_SIZE. Changes the validity key.")
-            { ValueExample = @"<N>", DefaultValue = @"200000" };
+            @"of the size OSPREY_PER_FILE_FDR_TRAIN_SIZE implies. Ignored when the per-file model trains one " +
+            @"round. Changes the validity key.")
+            { ValueExample = @"<N>", DefaultValue = @"the global round-2 size, or 2/3 of OSPREY_PER_FILE_FDR_TRAIN_SIZE" };
 
         /// <summary>OSPREY_PER_FILE_FDR_ROUND2_SIZE: each per-file model's round-2 training rows, or
         /// null for the size <see cref="PerFileFdrTrainSize"/> implies.</summary>
@@ -1511,9 +1514,14 @@ namespace pwiz.Osprey.Core
             @"stops. Changes the validity key.")
             { ValueExample = @"<N>", DefaultValue = @"2" };
 
+        /// <summary>Default for <see cref="GbtPatience"/>: the measured behavior.</summary>
+        public const int GBT_PATIENCE_DEFAULT = 2;
+
         /// <summary>OSPREY_GBT_PATIENCE: how many iterations without a held-out improvement end a tree
-        /// fold's semi-supervised loop (default 2, the measured behavior).</summary>
-        public static readonly int GbtPatience = ParseIntOrNull(ENV_GBT_PATIENCE) is { } patience && patience > 0 ? patience : 2;
+        /// fold's semi-supervised loop (default <see cref="GBT_PATIENCE_DEFAULT"/>). Read by the
+        /// trainer directly, so the global and per-file models share it.</summary>
+        public static readonly int GbtPatience =
+            ParseIntOrNull(ENV_GBT_PATIENCE) is { } patience && patience > 0 ? patience : GBT_PATIENCE_DEFAULT;
 
         private static readonly EnvVar ENV_MZML_DECODE_THREADS = new EnvVar(@"OSPREY_MZML_DECODE_THREADS", EnvVarGroup.performance,
             @"Threads that decode mzML binary arrays. 1 is the serial decode, the A/B arm.")
