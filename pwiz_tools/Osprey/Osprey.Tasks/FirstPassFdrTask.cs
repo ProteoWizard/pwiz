@@ -212,14 +212,22 @@ namespace pwiz.Osprey.Tasks
             {
                 yield return ParquetScoreCache.GetScoresPath(input);
                 yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
+                // OSPREY_PER_FILE_FDR=file: the run's first-pass scores, from its own model.
+                if (PerFileScoringTask.TrainsOwnFirstPassModel)
+                    yield return FdrScoresSidecar.Pass1Path(input);
             }
         }
 
         public override IEnumerable<string> Outputs(PipelineContext ctx)
         {
             if (ctx.Config.InputFiles == null) yield break;
+            // OSPREY_PER_FILE_FDR=file: PerFileScoring writes each run's first-pass scores, and
+            // this task, a join, writes no per-run file (doc 00, P3).
+            bool ownModels = PerFileScoringTask.TrainsOwnFirstPassModel;
             foreach (var input in ctx.Config.InputFiles)
             {
+                if (ownModels)
+                    continue;
                 yield return FdrScoresSidecar.Pass1Path(input);
                 // --protein-boost best: the column each run was scored with, which the second
                 // pass scores that run's rescored rows with and cannot recompute.
@@ -1663,12 +1671,26 @@ namespace pwiz.Osprey.Tasks
             // taken over the sorted input file stems). Drop 82 more files into a directory and
             // every existing sidecar stops being current, which is exactly right.
             var resumableFiles = new HashSet<string>(StringComparer.Ordinal);
+            // OSPREY_PER_FILE_FDR=file: every run's scores come from its own model, written by
+            // PerFileScoring under that task's model key, which names no cohort. Nothing here can
+            // score a run without them, so every run must have them.
+            bool ownModels = PerFileScoringTask.TrainsOwnFirstPassModel;
+            string ownModelKey = ownModels ? new PerFileScoringTask().OwnModelValidityKey(ctx) : null;
             foreach (var kv in projections.PerFile)
             {
                 string resumeBase = ScoringTaskShared.ResolveSidecarBasePath(
                     kv.Key, perFileParquetPaths, config);
                 if (string.IsNullOrEmpty(resumeBase))
                     continue;
+                if (ownModels)
+                {
+                    if (PerFileResumeDriver.IsCurrent(FdrScoresSidecar.Pass1Path(resumeBase),
+                            PerFileScoringTask.TASK_NAME, ownModelKey))
+                    {
+                        resumableFiles.Add(kv.Key);
+                    }
+                    continue;
+                }
                 // Under --protein-boost best a file is resumable only beside a current column: the
                 // score pass writes the column only for the files it scores.
                 if (PerFileResumeDriver.IsCurrent(
@@ -1678,6 +1700,17 @@ namespace pwiz.Osprey.Tasks
                 {
                     resumableFiles.Add(kv.Key);
                 }
+            }
+            if (ownModels && resumableFiles.Count < projections.PerFile.Count)
+            {
+                var missing = projections.PerFile.Select(kv => kv.Key).Where(f => !resumableFiles.Contains(f)).ToList();
+                // Experiment-only refusal, not displayed outside OSPREY_PER_FILE_FDR runs
+                ctx.LogError(string.Format(
+                    @"OSPREY_PER_FILE_FDR=file: {0} of {1} files have no first-pass scores from their own model ({2}). Run {3} with the same settings first.",
+                    missing.Count, projections.PerFile.Count, string.Join(@", ", missing.Take(5)),
+                    OspreyArgNames.TaskText(PerFileScoringTask.TASK_NAME)));
+                ctx.ExitCode = 1;
+                return null;
             }
             if (resumableFiles.Count > 0)
             {
@@ -1715,7 +1748,7 @@ namespace pwiz.Osprey.Tasks
             // one sidecar adopted there is already an on-disk score that model produced, so
             // reusing it is the consistent choice rather than a surprising one.
             var reloadedModel = LoadCurrentModelSidecar(config, sidecarValidityKey);
-            PercolatorResults adoptedModel = resumableFiles.Count > 0
+            PercolatorResults adoptedModel = !ownModels && resumableFiles.Count > 0
                 ? reloadedModel?.Model
                 : null;
 
@@ -1953,7 +1986,7 @@ namespace pwiz.Osprey.Tasks
                 config, featureInfos, ctx, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
                 @"First-pass", captureContributions, captureModel, tryStreamCompletedScores,
                 pretrainedModel, flushFileRunScope, ctx.RunPlan.FirstPassFdrLanes, tryLoadFeatureSums,
-                BuildProteinBestRequest(config, fullLibrary, PersistProteinBest));
+                ownModels ? null : BuildProteinBestRequest(config, fullLibrary, PersistProteinBest), ownModels);
             // How many files' 1st-pass sidecars are on disk after the score pass - written by it
             // or adopted from an earlier run. flushFileRunScope is the only writer of these files
             // on this path, so a shortfall here is a file the compaction gate will fail to read.
@@ -2081,7 +2114,7 @@ namespace pwiz.Osprey.Tasks
         /// The accessions are already free of the Carafe per-peptide suffix
         /// (<see cref="CarafeProteinIdNormalizer"/>).
         /// </summary>
-        private static ProteinBestRequest BuildProteinBestRequest(OspreyConfig config, List<LibraryEntry> library,
+        internal static ProteinBestRequest BuildProteinBestRequest(OspreyConfig config, List<LibraryEntry> library,
             Action<string, ProteinBestRunValues> persistRun)
         {
             if (!config.ProteinBest)

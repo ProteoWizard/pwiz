@@ -433,6 +433,19 @@ entries).** The joins are the bottleneck - one node, no horizontal scaling - so 
 placed there is paid at full cost by every cohort. Moving work into a `PerFile*` task
 makes it scale with the cluster; leaving it in a join makes it scale with nothing.
 
+Two corollaries make P3 checkable from a directory listing:
+
+- **Per-file tasks write every per-run artifact; join tasks write only experiment-wide
+  ones.** A `<stem>.*` file written by `FirstPassFDR` or `SecondPassFDR` is per-run work
+  done in the join. The audit against today's code: `SecondPassFDR` conforms, and
+  `FirstPassFDR` breaks the rule in exactly two files, `<stem>.1st-pass.fdr_scores.bin`
+  and `<stem>.1st-pass.protein_best.bin` (In flight, item 5).
+- **A join reads a fixed-size, mergeable summary from each run, and holds O(library).**
+  What a run hands the join must combine in any order and any batching: a maximum
+  per precursor, a score histogram, per-protein maxima and counts, and a fixed-size RT
+  summary. An exact median is not mergeable and must not be part of the contract. At
+  5,000 runs this is what keeps the join's input from being the cohort's rows.
+
 **P4. A per-run artifact's validity key must not name the cohort.** `PerFileScoring`'s
 key is the base key - search parameters, library identity, and the peak-pick arm - and
 deliberately omits the file set, because a run's Stage 1-4 scores do not depend on which
@@ -1473,7 +1486,27 @@ the text says so rather than describing the current shape as though it were the 
    `regression.ps1` demands it per leg (the cold run, both resumes, and mode 3's phase 4),
    scoped to the configurations that can actually stream.
 
-5. **Whether the 500-run / 64 GB target is met.** It is not yet, and which stage binds is
+5. **Per-run first-pass models.** The target (`OSPREY_PER_FILE_FDR=file`, branch
+   `Skyline/work/20261122_osprey_per_file_fdr`) keeps the four file-to-file tasks and moves
+   the first-pass model into the fan-out:
+   - `PerFileScoring` trains the run's own two-round model after extraction, scores every
+     row out of fold, calibrates it (run precursor q at the test FDR maps to 0, the median
+     best decoy to -1), and writes the run-scope `<stem>.1st-pass.fdr_scores.bin` and the
+     run's model. It reads its own current `.scores.parquet` when one is present, and writes
+     it only when asked (`--keep-scores-parquet`). Two keys decide its validity: a feature
+     key on the parquet and a model key that adds the model settings, so a model change
+     re-models from the parquet and a feature change re-extracts.
+   - `FirstPassFDR` becomes a reduce: the experiment competition over the runs' calibrated
+     scores, experiment q and PEP, protein FDR and planning, with no feature loads, no
+     training and no file lanes.
+   - `PerFileRescoring` rescores with the run's own frozen model.
+   - `--task FirstPass` (`PerFileScoring` + `FirstPassFDR`) and `--task SecondPass`
+     (`PerFileRescoring` + `SecondPassFDR`) are composites for local iteration only.
+
+   Until it lands, the run-scope sidecar and the protein-best column are written by
+   `FirstPassFDR`, and the `.scores.parquet` is the link between the first two tasks.
+
+6. **Whether the 500-run / 64 GB target is met.** It is not yet, and which stage binds is
    itself moving as each is fixed. The two TODOs above carry the current measurements;
    deliberately not restated here, because a number in a contract document is stale the
    week after it is written.

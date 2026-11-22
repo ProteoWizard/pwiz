@@ -247,7 +247,8 @@ namespace pwiz.Osprey.FDR
             FileRunScopeSink flushFileRunScope = null,
             int fileLanes = 1,
             Func<string, FeatureSums> tryLoadFeatureSums = null,
-            ProteinBestRequest proteinBest = null)
+            ProteinBestRequest proteinBest = null,
+            bool scoresPrecomputed = false)
         {
             if (sink == null)
                 throw new ArgumentNullException(nameof(sink));
@@ -264,7 +265,47 @@ namespace pwiz.Osprey.FDR
             return RunStreamingFirstPass(
                 fileNames, streamFileRows, loadFileFeatures, percConfig, log, passLabel, sink,
                 captureContributions, captureModel, tryStreamCompletedScores, pretrainedModel,
-                flushFileRunScope, fileLanes, tryLoadFeatureSums);
+                flushFileRunScope, fileLanes, tryLoadFeatureSums, scoresPrecomputed);
+        }
+
+        /// <summary>
+        /// The <c>OSPREY_PER_FILE_FDR=file</c> first-pass model of ONE run: trains the run's own
+        /// two-round model with its own protein-best column, scores every row out of fold,
+        /// calibrates the scores (<see cref="PerFileFirstPassModel"/>), and returns them in row
+        /// order with the run q-values they imply. Nothing outside the run is read, which is what
+        /// lets <c>PerFileScoring</c> run it on a fan-out node; <see cref="RunFirstPassStreaming"/>
+        /// then takes these scores with <c>scoresPrecomputed</c>.
+        /// </summary>
+        /// <param name="fileName">The run, for the log lines.</param>
+        /// <param name="entryIds">Each row's entry_id, in parquet row order.</param>
+        /// <param name="charges">Each row's charge.</param>
+        /// <param name="isDecoys">Each row's decoy flag.</param>
+        /// <param name="coelutionSums">Each row's coelution sum.</param>
+        /// <param name="peptides">Each row's modified sequence.</param>
+        /// <param name="featureRows">Each row's feature vector, by row index.</param>
+        /// <param name="config">The analysis configuration.</param>
+        /// <param name="featureInfos">The features the vectors hold.</param>
+        /// <param name="proteinBest">The protein membership the column is computed from, or null.</param>
+        /// <param name="lanes">How many runs train at once, which divides the threads between them.</param>
+        /// <param name="log">Where the training reports.</param>
+        /// <param name="runPrecursorQvalues">Each row's run precursor q-value under the returned scores.</param>
+        /// <param name="runPeptideQvalues">Each row's run peptide q-value under the returned scores.</param>
+        public static double[] ScoreRunWithOwnModel(string fileName, IReadOnlyList<uint> entryIds,
+            IReadOnlyList<byte> charges, IReadOnlyList<bool> isDecoys, IReadOnlyList<double> coelutionSums,
+            IReadOnlyList<string> peptides, IReadOnlyList<double[]> featureRows, OspreyConfig config,
+            OspreyFeatureInfo[] featureInfos, ProteinBestRequest proteinBest, int lanes, IOspreyLog log,
+            out double[] runPrecursorQvalues, out double[] runPeptideQvalues)
+        {
+            var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, null);
+            percConfig.ProteinBest = proteinBest;
+            percConfig.PrefilterTrainSize = OspreyEnvironment.PrefilterSizeFor(proteinBest != null);
+            var model = new PerFileFirstPassModel(percConfig, lanes, log, FIRST_PASS_LABEL);
+            int nFeatures = featureInfos.Length;
+            double[] scores = model.TrainAndScore(fileName, entryIds, charges, isDecoys, coelutionSums, peptides,
+                featureRows, nFeatures);
+            PercolatorQValues.ComputePerFileRunQvalues(scores, isDecoys.ToArray(), entryIds.ToArray(),
+                peptides.ToArray(), 0, scores.Length, out runPrecursorQvalues, out runPeptideQvalues);
+            return scores;
         }
 
         /// <summary>
@@ -1071,7 +1112,8 @@ namespace pwiz.Osprey.FDR
             PercolatorResults pretrainedModel = null,
             FileRunScopeSink flushFileRunScope = null,
             int fileLanes = 1,
-            Func<string, FeatureSums> tryLoadFeatureSums = null)
+            Func<string, FeatureSums> tryLoadFeatureSums = null,
+            bool scoresPrecomputed = false)
         {
             if (streamFileRows == null)
                 throw new ArgumentNullException(nameof(streamFileRows));
@@ -1337,7 +1379,10 @@ namespace pwiz.Osprey.FDR
             // features loaded; the round-1 subset is the same entry objects. Off (the default), only
             // the subset is built and loaded, as always. A resume trains nothing, so it never needs
             // the candidates.
-            bool prefilter = percConfig.PrefilterTrainSize > 0 && pretrainedModel == null;
+            // OSPREY_PER_FILE_FDR=file: every run's scores came from its own model in
+            // PerFileScoring, so there is no model to train here and no training rows to load.
+            bool train = pretrainedModel == null && !scoresPrecomputed;
+            bool prefilter = percConfig.PrefilterTrainSize > 0 && train;
             List<PercolatorEntry> candidateEntries = null;
             if (prefilter)
             {
@@ -1370,7 +1415,7 @@ namespace pwiz.Osprey.FDR
             // there is nothing for a model to do, and loading the training subset's feature
             // vectors is the single most expensive thing left - 21 minutes at 446 files, spent
             // to reproduce a model that was already persisted as the analysis's .1st-pass.model.json.
-            if (pretrainedModel == null)
+            if (train)
             {
                 // Each file fills only its own subset entries, so the files need no ordering. The
                 // lanes read a copy of the list reference, because the method drops its own below.
@@ -1401,7 +1446,10 @@ namespace pwiz.Osprey.FDR
             else
             {
                 // No training subset is loaded and no model is trained.
-                log.LogInfo(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Reusing_the_saved_first_pass_model_);
+                // Log text for developers, not displayed in the default output
+                log.LogInfo(scoresPrecomputed
+                    ? @"Each run's first-pass scores come from its own model, trained when the run was scored."
+                    : OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Reusing_the_saved_first_pass_model_);
             }
 
             // The same train-only copy the two resident streaming paths hand the trainer. This
@@ -1413,7 +1461,9 @@ namespace pwiz.Osprey.FDR
             // --protein-boost best: set once round 1 has trained. Null on every other path, which
             // scores the rows as loaded.
             ProteinBestColumn proteinBestColumn = null;
-            if (pretrainedModel != null)
+            if (scoresPrecomputed)
+                trainResults = null;
+            else if (pretrainedModel != null)
                 trainResults = pretrainedModel;
             else if (candidateEntries != null)
             {
@@ -1434,7 +1484,7 @@ namespace pwiz.Osprey.FDR
             }
             else
                 trainResults = PercolatorTrainer.RunPercolator(subsetEntries, trainConfig);
-            if (trainResults.DiagnosticAbort)
+            if (trainResults?.DiagnosticAbort == true)
                 return true;
             // Every step from here reads the model's width and the names it trained on.
             int scoreFeatures = proteinBestColumn != null ? nFeatures + 1 : nFeatures;
@@ -1445,13 +1495,14 @@ namespace pwiz.Osprey.FDR
             // Publish the frozen first-pass model (fold weights + biases + standardizer) for the
             // OSPREY_PASS2_QVALUE=transfer pass-2 step. No-op (null) on the default path, so this
             // streaming first pass stays byte-identical. See TODO-osprey_pass2_per_run_only_qvalue.
-            captureModel?.Invoke(trainResults);
+            if (trainResults != null)
+                captureModel?.Invoke(trainResults);
             LogBlockReads(log, passLabel, @"training load");
 
             // OSPREY_GBT_OOF: each training row's held-out fold, by run and parquet row index. The
             // tree model only: the linear score pass scores every row with the averaged weights.
             Dictionary<string, Dictionary<int, int>> heldOutFolds = null;
-            if (trainResults.TrainEntryFolds != null && trainResults.IsGradientBoostedTrees)
+            if (trainResults?.TrainEntryFolds != null && trainResults.IsGradientBoostedTrees)
             {
                 heldOutFolds = new Dictionary<string, Dictionary<int, int>>();
                 int heldOutRows = 0;
@@ -1488,8 +1539,8 @@ namespace pwiz.Osprey.FDR
 
             // Trees or linear weights - whichever this run trained, exactly as on the projection
             // score pass. Null gbtModels selects the linear path, which is unchanged.
-            var gbtModels = PercolatorScorer.ResolveGbtModels(trainResults);
-            int nModels = gbtModels != null ? gbtModels.Count : trainResults.FoldWeights.Count;
+            var gbtModels = trainResults != null ? PercolatorScorer.ResolveGbtModels(trainResults) : null;
+            int nModels = trainResults == null ? -1 : gbtModels != null ? gbtModels.Count : trainResults.FoldWeights.Count;
             if (nModels == 0)
                 throw new InvalidOperationException(
                     @"RunStreamingFirstPass: trainResults contains no fold models");
@@ -1499,12 +1550,13 @@ namespace pwiz.Osprey.FDR
             // weight than the raw features.
             double[] avgWeights = null;
             double avgBias = 0.0;
-            if (gbtModels == null)
+            if (gbtModels == null && trainResults != null)
                 avgWeights = PercolatorScorer.AverageFoldWeights(trainResults.FoldWeights, trainResults.FoldBiases, scoreFeatures, out avgBias);
-            var standardizer = trainResults.Standardizer;
+            var standardizer = trainResults?.Standardizer;
             // OSPREY_PER_FILE_FDR=model or file: each file scored in pass 1 trains and applies its own model.
-            var perFileModel = string.Equals(OspreyEnvironment.PerFileFdr, OspreyEnvironment.PER_FILE_FDR_MODEL, StringComparison.Ordinal) ||
-                               string.Equals(OspreyEnvironment.PerFileFdr, OspreyEnvironment.PER_FILE_FDR_FILE, StringComparison.Ordinal)
+            var perFileModel = !scoresPrecomputed &&
+                               (string.Equals(OspreyEnvironment.PerFileFdr, OspreyEnvironment.PER_FILE_FDR_MODEL, StringComparison.Ordinal) ||
+                                string.Equals(OspreyEnvironment.PerFileFdr, OspreyEnvironment.PER_FILE_FDR_FILE, StringComparison.Ordinal))
                 ? new PerFileFirstPassModel(percConfig, LanesUsed(fileLanes, nFiles), log, passLabel)
                 : null;
 
@@ -1583,6 +1635,13 @@ namespace pwiz.Osprey.FDR
                         rowProgress.Add((PASS1_ROW_COUNTS - 2) * (long)count);
                     }
                     t = lane1.Stop(LANE1_SIDECAR, t);
+                    if (scoredHere && scoresPrecomputed)
+                    {
+                        // Exception text for internal diagnostics, not displayed to user
+                        throw new InvalidOperationException(string.Format(
+                            @"{0} has no first-pass scores from its own model, and there is no model here to score it.",
+                            fileName));
+                    }
                     if (scoredHere)
                     {
                         IReadOnlyList<double[]> featureRows = rowProgress.Counting(() => loadFileFeatures(fileName));
@@ -1712,7 +1771,7 @@ namespace pwiz.Osprey.FDR
 
             // A report over only the files this process scored would describe a different
             // population than the run's, with nothing on the page to say so.
-            var contributions = sharesComplete
+            var contributions = sharesComplete && trainResults != null
                 ? PercolatorScorer.BuildContributions(contribAcc, gbtModels, trainResults, reportConfig)
                 : null;
             captureContributions?.Invoke(contributions);

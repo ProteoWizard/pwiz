@@ -152,6 +152,12 @@ namespace pwiz.Osprey.Tasks
         // The validity stamp every per-file output of this run embeds (the parquet in its footer,
         // the calibration JSON as its first property). Set once in Run, before any file is scored.
         private ArtifactStamp _outputStamp;
+        // OSPREY_PER_FILE_FDR=file: the stamp of each run's own first-pass scores, and the
+        // protein membership their column is computed from, built once for every file. Null
+        // when the arm is off.
+        private ArtifactStamp _ownModelStamp;
+        private string _ownModelKey;
+        private Lazy<ProteinBestRequest> _ownModelProteinBest;
         // The ONE pool the run's sidecar readers canonicalize through, held here rather than
         // built per loader so the instance this task's own stub loads use is the instance it
         // publishes. Two pools over the same library would not share a single string.
@@ -226,6 +232,24 @@ namespace pwiz.Osprey.Tasks
                 + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config);
         }
 
+        /// <summary>
+        /// Whether each run trains its own first-pass model here (<c>OSPREY_PER_FILE_FDR=file</c>),
+        /// so <c>FirstPassFDR</c> reduces the runs' scores rather than training one model on all of
+        /// them.
+        /// </summary>
+        public static bool TrainsOwnFirstPassModel =>
+            string.Equals(OspreyEnvironment.PerFileFdr, OspreyEnvironment.PER_FILE_FDR_FILE, StringComparison.Ordinal);
+
+        /// <summary>
+        /// The key of a run's own first-pass scores: this task's key, which covers the features,
+        /// plus every setting that changes the model trained on them. Like the parquet's key it
+        /// names no cohort (doc 00, P4), so a run's scores survive rebatching.
+        /// </summary>
+        public string OwnModelValidityKey(PipelineContext ctx)
+        {
+            return ValidityKey(ctx) + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
+        }
+
         public override IEnumerable<string> Outputs(PipelineContext ctx)
         {
             if (ctx.Config.InputFiles == null) yield break;
@@ -233,10 +257,25 @@ namespace pwiz.Osprey.Tasks
             {
                 foreach (var output in OutputsForInput(input))
                     yield return output;
+                // OSPREY_PER_FILE_FDR=file: the run's own first-pass scores, under the model key.
+                if (TrainsOwnFirstPassModel)
+                    yield return FdrScoresSidecar.Pass1Path(input);
             }
         }
 
-        /// <summary>The outputs this task writes for one input file.</summary>
+        /// <summary>
+        /// The run's own first-pass scores carry the model key, which adds the model settings to
+        /// the feature key the parquet and calibration carry: a model change re-models a run from
+        /// its current parquet, and a feature change re-extracts it.
+        /// </summary>
+        public override string OutputValidityKey(PipelineContext ctx, string taskKey, string output)
+        {
+            if (TrainsOwnFirstPassModel && output.EndsWith(FdrScoresSidecar.EXT_FIRST_PASS, StringComparison.Ordinal))
+                return taskKey + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
+            return taskKey;
+        }
+
+        /// <summary>The feature outputs this task writes for one input file, which carry the task key.</summary>
         private static IEnumerable<string> OutputsForInput(string input)
         {
             yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
@@ -304,6 +343,13 @@ namespace pwiz.Osprey.Tasks
                 { ParquetScoreCache.META_RECONCILED, @"false" },
                 { ParquetScoreCache.META_XIC_FRAGMENTS, ParquetScoreCache.XicFragmentsText(config.Scoring.XicFragments) },
             }, _outputStamp);
+            if (TrainsOwnFirstPassModel)
+            {
+                _ownModelKey = OwnModelValidityKey(ctx);
+                _ownModelStamp = OspreyVersion.Stamp(Name, _ownModelKey);
+                _ownModelProteinBest = new Lazy<ProteinBestRequest>(
+                    () => FirstPassFdrTask.BuildProteinBestRequest(config, fullLibrary, null));
+            }
 
             // Resolve how many input files score concurrently for this invocation
             // (--parallel-files-scoring, else --parallel-files, the OSPREY_MAX_PARALLEL_FILES
@@ -1565,7 +1611,7 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx)
         {
             string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
-            if (IsFileCurrent(inputFile, validityKey))
+            if (IsFileCurrent(inputFile, validityKey, ctx))
             {
                 var loaded = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx);
                 if (loaded != null)
@@ -1573,7 +1619,7 @@ namespace pwiz.Osprey.Tasks
                     ctx.LogInfo(string.Format(
                         OspreyTasksResources.PerFileScoringTask_ScoreOrLoadForFile_File__0___1____2__was_already_scored__keeping_it_,
                         fileIdx + 1, totalFiles, fileName));
-                    return loaded;
+                    return WithOwnFirstPassScores(loaded, inputFile, fileName, config, ctx);
                 }
                 // load failed -- fall through and rescore the file.
             }
@@ -1581,7 +1627,61 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ScoreOrLoadForFile_Scoring_file__0___1____2_,
                 fileIdx + 1, totalFiles, inputFile));
             ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SCORE_FILE, @"{0}/{1}", fileIdx + 1, totalFiles));
-            return ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations, perFileIsolationMz, ctx);
+            var scored = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations, perFileIsolationMz, ctx);
+            return WithOwnFirstPassScores(scored, inputFile, fileName, config, ctx);
+        }
+
+        /// <summary>
+        /// <c>OSPREY_PER_FILE_FDR=file</c>: the run's own first-pass model, trained, applied and
+        /// saved as the run's <c>.1st-pass.fdr_scores.bin</c> once its <c>.scores.parquet</c> is
+        /// on disk, so <c>FirstPassFDR</c> reduces the runs' scores instead of training. The
+        /// parquet is read back rather than the rows in memory, so the model sees exactly the
+        /// rows and features <c>FirstPassFDR</c> would have trained it on, and a current parquet
+        /// is re-modeled without being scored again. Kept when already current under the model
+        /// key. Returns <paramref name="entries"/>.
+        /// </summary>
+        private List<FdrEntry> WithOwnFirstPassScores(List<FdrEntry> entries, string inputFile, string fileName,
+            OspreyConfig config, PipelineContext ctx)
+        {
+            if (entries == null || _ownModelStamp == null)
+                return entries;
+            string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
+            // The OSPREY_EXIT_AFTER_CALIBRATION bench stop writes no parquet, so there is nothing to model.
+            if (!File.Exists(scoresPath))
+                return entries;
+            string sidecarPath = FdrScoresSidecar.Pass1Path(inputFile);
+            if (ArtifactValidity.IsCurrent(sidecarPath, Name, _ownModelKey))
+                return entries;
+
+            var swModel = Stopwatch.StartNew();
+            var entryIds = new List<uint>();
+            var charges = new List<byte>();
+            var isDecoys = new List<bool>();
+            var coelutionSums = new List<double>();
+            var peptides = new List<string>();
+            var apexRts = new List<double>();
+            ParquetScoreCache.ReadFdrStubScalars(scoresPath, (entryId, charge, isDecoy, coelutionSum, peptide, apexRt) =>
+            {
+                entryIds.Add(entryId);
+                charges.Add(charge);
+                isDecoys.Add(isDecoy);
+                coelutionSums.Add(coelutionSum);
+                peptides.Add(peptide);
+                apexRts.Add(apexRt);
+            }, StubColumns.ApexRt);
+            var featureRows = ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath, PinFeatureMask.For(config));
+            double[] scores = PercolatorEngine.ScoreRunWithOwnModel(fileName, entryIds, charges, isDecoys,
+                coelutionSums, peptides, featureRows, config, ScoringTaskShared.FdrFeatureInfos(config),
+                _ownModelProteinBest.Value, ctx.RunPlan.ScoringFileParallelism, ctx,
+                out double[] runPrecursorQ, out double[] runPeptideQ);
+            var records = new List<FdrScoreRecord>(scores.Length);
+            for (int r = 0; r < scores.Length; r++)
+                records.Add(new FdrScoreRecord(entryIds[r], scores[r], runPrecursorQ[r], runPeptideQ[r], apexRts[r]));
+            FdrScoresSidecar.Write(sidecarPath, records, FdrScoresSidecar.Pass.FirstPass, _ownModelStamp);
+            // Log text for developers, not displayed in the default output
+            ctx.LogInfo(LogTag.TIMING, @"{0}: own first-pass model over {1} rows, written to {2} ({3:F1}s)",
+                fileName, scores.Length, sidecarPath, swModel.Elapsed.TotalSeconds);
+            return entries;
         }
 
         /// <summary>
@@ -1589,14 +1689,53 @@ namespace pwiz.Osprey.Tasks
         /// stamp current for this task and <paramref name="validityKey"/>: the one predicate for
         /// "this file is already scored", so the file's outputs are valid together or not at all.
         /// </summary>
-        private bool IsFileCurrent(string inputFile, string validityKey)
+        private bool IsFileCurrent(string inputFile, string validityKey, PipelineContext ctx)
         {
             foreach (var output in OutputsForInput(inputFile))
             {
                 if (!ArtifactValidity.IsCurrent(output, Name, validityKey))
+                {
+                    LogWhyNotCurrent(output, validityKey, ctx);
                     return false;
+                }
             }
             return true;
+        }
+
+        /// <summary>
+        /// For an output that exists but is not current, a [PATH] line naming what differs: the
+        /// task, the version, or the first term of the key. A refused cache otherwise looks exactly
+        /// like a missing one, and the work it costs is the whole extraction of the file.
+        /// </summary>
+        private void LogWhyNotCurrent(string output, string validityKey, PipelineContext ctx)
+        {
+            var stamp = ArtifactValidity.ReadStamp(output);
+            if (stamp == null)
+                return;
+            string reason;
+            if (!string.Equals(stamp.Task, Name, StringComparison.Ordinal))
+                reason = string.Format(@"task {0}", stamp.Task);
+            else if (!string.Equals(stamp.Version, OspreyVersion.Current, StringComparison.Ordinal))
+                reason = string.Format(@"version {0}, this build {1}", stamp.Version, OspreyVersion.Current);
+            else
+                reason = FirstKeyDifference(stamp.Key ?? string.Empty, validityKey);
+            // Log text for developers, not displayed in the default output
+            ctx.LogInfo(LogTag.PATH, string.Format(@"not current: {0} ({1})", output, reason));
+        }
+
+        private static string FirstKeyDifference(string stored, string current)
+        {
+            string[] storedTerms = stored.Split(';');
+            string[] currentTerms = current.Split(';');
+            int n = Math.Max(storedTerms.Length, currentTerms.Length);
+            for (int i = 0; i < n; i++)
+            {
+                string a = i < storedTerms.Length ? storedTerms[i] : @"(none)";
+                string b = i < currentTerms.Length ? currentTerms[i] : @"(none)";
+                if (!string.Equals(a, b, StringComparison.Ordinal))
+                    return string.Format(@"key term {0}: stored '{1}', this run '{2}'", i + 1, a, b);
+            }
+            return @"key equal";
         }
 
         /// <summary>
