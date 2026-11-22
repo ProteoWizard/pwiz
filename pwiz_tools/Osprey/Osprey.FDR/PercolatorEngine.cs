@@ -324,7 +324,10 @@ namespace pwiz.Osprey.FDR
             // The per-file model study trains different models and writes different scores, so a
             // rerun under another arm must recompute rather than adopt this one's sidecars.
             if (OspreyEnvironment.PerFileFdr != null)
-                suffix += @";perfilefdr=" + OspreyEnvironment.PerFileFdr;
+            {
+                suffix += @";perfilefdr=" + OspreyEnvironment.PerFileFdr +
+                          (OspreyEnvironment.PerFileFdrTwoRound ? @";perfilefdrrounds=2" : string.Empty);
+            }
             return suffix;
         }
 
@@ -1488,7 +1491,7 @@ namespace pwiz.Osprey.FDR
             var standardizer = trainResults.Standardizer;
             // OSPREY_PER_FILE_FDR=model: each file scored in pass 1 trains and applies its own model.
             var perFileModel = string.Equals(OspreyEnvironment.PerFileFdr, OspreyEnvironment.PER_FILE_FDR_MODEL, StringComparison.Ordinal)
-                ? new PerFileFirstPassModel(percConfig, LanesUsed(fileLanes, nFiles))
+                ? new PerFileFirstPassModel(percConfig, LanesUsed(fileLanes, nFiles), log, passLabel)
                 : null;
 
             // ---- Pass 1: score + build the 3 bounded q maps + reduce the clamp floors ----
@@ -1923,7 +1926,7 @@ namespace pwiz.Osprey.FDR
         {
             int nFiles = fileNames.Count;
             int nRawFeatures = percConfig.FeatureInfos.Length;
-            var model = new PerFileFirstPassModel(percConfig, LanesUsed(fileLanes, nFiles));
+            var model = new PerFileFirstPassModel(percConfig, LanesUsed(fileLanes, nFiles), log, passLabel);
             var scoresByFile = new double[nFiles][];
             var wall = Stopwatch.StartNew();
             int filesDone = 0;

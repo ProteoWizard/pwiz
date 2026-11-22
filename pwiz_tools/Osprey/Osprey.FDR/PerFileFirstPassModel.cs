@@ -33,6 +33,9 @@ namespace pwiz.Osprey.FDR
     ///
     /// <para>The training rows are the file's best candidate peak per precursor, subsampled by
     /// peptide group to <see cref="PercolatorConfig.MaxTrainSize"/> as the global training does.
+    /// With <c>OSPREY_PER_FILE_FDR_ROUNDS=2</c> the file trains as the global model
+    /// does, through <see cref="PercolatorTrainer.TrainWithScorePrefilter"/>: round 1 on that subsample,
+    /// round 2 on the peptide groups round 1 scores best, started from round 1's scores.
     /// At SEA-AD scale that subset covers most of the file's precursors, so the score pass is OUT
     /// OF FOLD: every row is scored by the one fold model that held its peptide group out, and only
     /// a row whose peptide group no fold trained on gets the fold mean.</para>
@@ -50,6 +53,11 @@ namespace pwiz.Osprey.FDR
     {
         private readonly PercolatorConfig _trainConfig;
         private readonly int _threads;
+        private readonly IOspreyLog _log;
+        private readonly string _passLabel;
+        // Round 2's row count when each file trains in two rounds (OSPREY_PER_FILE_FDR_ROUNDS=2),
+        // as the global model does; 0 for one round.
+        private readonly int _round2Size;
         private long _files;
         private long _trainTicks;
         private long _scoreTicks;
@@ -61,8 +69,15 @@ namespace pwiz.Osprey.FDR
         /// model is trained with.</param>
         /// <param name="lanes">How many files train at once, which divides the threads between
         /// them so the lanes do not oversubscribe the machine.</param>
-        public PerFileFirstPassModel(PercolatorConfig percConfig, int lanes)
+        /// <param name="log">Where the two-round training reports its round-2 subset.</param>
+        /// <param name="passLabel">The pass label for those lines.</param>
+        public PerFileFirstPassModel(PercolatorConfig percConfig, int lanes, IOspreyLog log, string passLabel)
         {
+            _log = log;
+            _passLabel = passLabel;
+            _round2Size = OspreyEnvironment.PerFileFdrTwoRound
+                ? OspreyEnvironment.PrefilterSizeFor(true)
+                : 0;
             _threads = Math.Max(1, percConfig.NThreads / Math.Max(1, lanes));
             _trainConfig = percConfig.CloneForTrainOnly();
             _trainConfig.NThreads = _threads;
@@ -110,23 +125,37 @@ namespace pwiz.Osprey.FDR
             // The file's best peak per precursor - one run, so the reservoir over runs reduces to
             // the best-scoring row - then the peptide-grouped subsample.
             int[] subset = PercolatorSampling.BuildTrainingSubset(labels, ids, seqs, new List<PercolatorEntry>(),
-                _trainConfig.MaxTrainSize, _trainConfig.Seed, out _, bestScores, new[] { 0 });
-            var entries = new List<PercolatorEntry>(subset.Length);
-            foreach (int r in subset)
+                _trainConfig.MaxTrainSize, _trainConfig.Seed, out int[] bestPerPrecursor, bestScores, new[] { 0 });
+            PercolatorResults model;
+            List<PercolatorEntry> entries;
+            if (_round2Size > 0)
             {
-                entries.Add(new PercolatorEntry
+                // Two rounds, as the global training: every best-per-precursor row is a candidate,
+                // round 1 trains on the subsample, and round 2 on the groups round 1 scores best.
+                var candidates = new List<PercolatorEntry>(bestPerPrecursor.Length);
+                var candidateByRow = new Dictionary<int, int>(bestPerPrecursor.Length);
+                foreach (int r in bestPerPrecursor)
                 {
-                    FileName = fileName,
-                    Peptide = seqs[r],
-                    Charge = charges[r],
-                    IsDecoy = labels[r],
-                    EntryId = ids[r],
-                    ParquetIndex = (uint)r,
-                    CoelutionSum = bestScores[r],
-                    Features = (double[])PercolatorScorer.ResolveFeatureRow(featureRows, (uint)r, bestScores[r], nFeatures).Clone()
-                });
+                    candidateByRow[r] = candidates.Count;
+                    candidates.Add(NewEntry(fileName, r, labels, ids, seqs, charges, bestScores, featureRows, nFeatures));
+                }
+                var round1Subset = new int[subset.Length];
+                for (int k = 0; k < subset.Length; k++)
+                    round1Subset[k] = candidateByRow[subset[k]];
+                // The trainer expects round 1's rows in ascending candidate order.
+                Array.Sort(round1Subset); // Array.Sort OK: distinct candidate indices, so no ties
+                var config = _trainConfig.CloneForTrainOnly();
+                config.PrefilterTrainSize = _round2Size;
+                model = PercolatorTrainer.TrainWithScorePrefilter(candidates, round1Subset, config, _log, _passLabel,
+                    out entries);
             }
-            var model = PercolatorTrainer.RunPercolator(entries, _trainConfig);
+            else
+            {
+                entries = new List<PercolatorEntry>(subset.Length);
+                foreach (int r in subset)
+                    entries.Add(NewEntry(fileName, r, labels, ids, seqs, charges, bestScores, featureRows, nFeatures));
+                model = PercolatorTrainer.RunPercolator(entries, _trainConfig);
+            }
             t = Accumulate(ref _trainTicks, t);
             Interlocked.Add(ref _trainRows, entries.Count);
 
@@ -151,6 +180,23 @@ namespace pwiz.Osprey.FDR
                 passLabel, where, Interlocked.Read(ref _files), Interlocked.Read(ref _trainRows),
                 Seconds(Interlocked.Read(ref _trainTicks)), Seconds(Interlocked.Read(ref _scoreTicks)),
                 Seconds(Interlocked.Read(ref _calibrateTicks)), _threads, Interlocked.Read(ref _uncalibrated));
+        }
+
+        /// <summary>A training entry for row <paramref name="r"/> of the file, owning a copy of its features.</summary>
+        private static PercolatorEntry NewEntry(string fileName, int r, bool[] labels, uint[] ids, string[] seqs,
+            IReadOnlyList<byte> charges, double[] bestScores, IReadOnlyList<double[]> featureRows, int nFeatures)
+        {
+            return new PercolatorEntry
+            {
+                FileName = fileName,
+                Peptide = seqs[r],
+                Charge = charges[r],
+                IsDecoy = labels[r],
+                EntryId = ids[r],
+                ParquetIndex = (uint)r,
+                CoelutionSum = bestScores[r],
+                Features = (double[])PercolatorScorer.ResolveFeatureRow(featureRows, (uint)r, bestScores[r], nFeatures).Clone()
+            };
         }
 
         /// <summary>

@@ -1472,6 +1472,15 @@ namespace pwiz.Osprey.Core
         public static readonly string PerFileFdr =
             string.IsNullOrWhiteSpace(ENV_PER_FILE_FDR.Value) ? null : ENV_PER_FILE_FDR.Value.Trim().ToLowerInvariant();
 
+        private static readonly EnvVar ENV_PER_FILE_FDR_ROUNDS = new EnvVar(@"OSPREY_PER_FILE_FDR_ROUNDS", EnvVarGroup.behavior,
+            @"Experiment, with OSPREY_PER_FILE_FDR: 2 trains each per-file model in two rounds, as the global " +
+            @"model is trained; 1 (the default) in one. Changes the validity key.")
+            { Values = new[] { @"1", @"2" } };
+
+        /// <summary>OSPREY_PER_FILE_FDR_ROUNDS=2: each per-file model trains in two rounds, round 2
+        /// on the peptide groups round 1 scores best, as the global first-pass model does.</summary>
+        public static readonly bool PerFileFdrTwoRound = ParseIntOrNull(ENV_PER_FILE_FDR_ROUNDS) == 2;
+
         private static readonly EnvVar ENV_MZML_DECODE_THREADS = new EnvVar(@"OSPREY_MZML_DECODE_THREADS", EnvVarGroup.performance,
             @"Threads that decode mzML binary arrays. 1 is the serial decode, the A/B arm.")
             { ValueExample = @"<N>", DefaultValue = @"8" };
