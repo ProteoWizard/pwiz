@@ -29,11 +29,14 @@ namespace pwiz.Skyline.Util
             ForeColor = SystemColors.ControlText;
             BackColor = Color.Transparent;
             Font = SystemFonts.DefaultFont;
-            HighlightFont = new Font(Font, FontStyle.Bold);
         }
         public Color ForeColor { get; set; }
         public Color BackColor { get; set; }
         public Font Font { get; set; }
+        /// <summary>
+        /// Font for the matched text. The caller owns it and disposes it after drawing; it is
+        /// not created here, where every helper would leak one font handle per paint.
+        /// </summary>
         public Font HighlightFont { get; set; }
         public void DrawHighlightedText(Graphics graphics, Rectangle descriptionBounds, FindMatch findMatch)
         {

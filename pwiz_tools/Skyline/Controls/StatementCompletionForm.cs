@@ -126,8 +126,11 @@ namespace pwiz.Skyline.Controls
             var bounds = item.Bounds;
             graphics.FillRectangle(SystemBrushes.Window, bounds);
             int dxIcon = bounds.Height;
-            DpiUtil.DrawImageCentered(graphics, item.ImageList.Images[item.ImageIndex],
-                bounds.Left, bounds.Top, bounds.Height);
+            // ImageList.Images[i] returns a new bitmap on every read
+            using (var image = item.ImageList.Images[item.ImageIndex])
+            {
+                DpiUtil.DrawImageCentered(graphics, image, bounds.Left, bounds.Top, bounds.Height);
+            }
             var textBounds = new Rectangle(bounds.Left + dxIcon, bounds.Top,
                 bounds.Width - dxIcon, bounds.Height);
             Color textColor = ListView.ForeColor;
@@ -174,14 +177,17 @@ namespace pwiz.Skyline.Controls
             {
                 findMatch = findMatch.ChangeRange(0,0); // No highlighting
             }
-            var textRendererHelper = new TextRendererHelper
+            using (var highlightFont = new Font(ListView.Font, FontStyle.Bold))
             {
-                Font = ListView.Font,
-                HighlightFont = new Font(ListView.Font, FontStyle.Bold),
-                ForeColor = textColor,
-                BackColor = backColor,
-            };
-            textRendererHelper.DrawHighlightedText(graphics, descriptionBounds, findMatch);
+                var textRendererHelper = new TextRendererHelper
+                {
+                    Font = ListView.Font,
+                    HighlightFont = highlightFont,
+                    ForeColor = textColor,
+                    BackColor = backColor,
+                };
+                textRendererHelper.DrawHighlightedText(graphics, descriptionBounds, findMatch);
+            }
         }
 
         /// <summary>

@@ -104,6 +104,9 @@ namespace pwiz.CommonFileDialogs
             ImageListScaler.ScaleToDpi(this, lookInImageList);
             // The owner-drawn Look in list draws these at their size and sizes its rows to them
             ImageListScaler.ScaleToDpi(this, lookInImageListSmall);
+            // Details columns and tiles are not controls, so autoscaling left their 96-DPI sizes
+            DpiScale.ScaleColumnWidths(this, listView);
+            listView.TileSize = DpiScale.ScaleSize(this, listView.TileSize);
 
             // The system renderer draws a light line along the strip's bottom edge, which shows
             // as a stray white line beside the Look in list
@@ -1326,7 +1329,7 @@ namespace pwiz.CommonFileDialogs
                 if (view == View.Details)
                 {
                     populateListViewFromDirectory(_currentDirectory);
-                    listView.Columns[0].Width = 200;
+                    listView.Columns[0].Width = DpiScale.Scale(this, 200);
                 }
                 else
                 {

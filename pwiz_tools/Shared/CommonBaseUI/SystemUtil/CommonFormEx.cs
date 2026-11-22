@@ -82,6 +82,40 @@ namespace pwiz.Common.SystemUtil
 
         private static readonly List<CommonFormEx> _undisposedForms = new List<CommonFormEx>();
 
+        // The client size InitializeComponent asked for, in 96-DPI pixels, until autoscaling
+        private Size? _designClientSize;
+        private bool _autoScaled;
+
+        protected override void SetClientSizeCore(int x, int y)
+        {
+            if (!_autoScaled)
+                _designClientSize = new Size(x, y);
+            base.SetClientSizeCore(x, y);
+        }
+
+        /// <summary>
+        /// Windows clamps a window to its minimum tracking size in device pixels, and the form
+        /// applies it while InitializeComponent still sets 96-DPI sizes, before autoscaling. A
+        /// form designed narrower than that minimum (324 pixels at 250%) is clamped and the clamp
+        /// is then scaled too, so it comes up wider than its scaled contents, with blank space
+        /// its anchored controls never reach. After the first autoscaling the client size is
+        /// set to the designed size times the scale factor (issue #4599).
+        /// </summary>
+        protected override void ScaleControl(SizeF factor, BoundsSpecified specified)
+        {
+            base.ScaleControl(factor, specified);
+            if (_autoScaled || !_designClientSize.HasValue)
+                return;
+            _autoScaled = true;
+            var scaled = new Size((int)Math.Round(_designClientSize.Value.Width * factor.Width),
+                (int)Math.Round(_designClientSize.Value.Height * factor.Height));
+            if (ClientSize.Width > scaled.Width || ClientSize.Height > scaled.Height)
+            {
+                ClientSize = new Size(Math.Min(ClientSize.Width, scaled.Width),
+                    Math.Min(ClientSize.Height, scaled.Height));
+            }
+        }
+
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
