@@ -83,11 +83,16 @@ namespace pwiz.Osprey.FDR
             _ownProteinBest = string.Equals(OspreyEnvironment.PerFileFdr, OspreyEnvironment.PER_FILE_FDR_FILE, StringComparison.Ordinal)
                 ? percConfig.ProteinBest
                 : null;
-            _round2Size = OspreyEnvironment.PerFileFdrTwoRound || _ownProteinBest != null
-                ? OspreyEnvironment.PrefilterSizeFor(true)
-                : 0;
             _threads = Math.Max(1, percConfig.NThreads / Math.Max(1, lanes));
             _trainConfig = percConfig.CloneForTrainOnly();
+            // OSPREY_PER_FILE_FDR_TRAIN_SIZE: round 1's rows, and two thirds of them for round 2.
+            int? trainSize = OspreyEnvironment.PerFileFdrTrainSize;
+            if (trainSize.HasValue)
+                _trainConfig.MaxTrainSize = trainSize.Value;
+            int round2Size = OspreyEnvironment.PrefilterSizeFor(true);
+            if (trainSize.HasValue)
+                round2Size = Math.Min(round2Size, trainSize.Value * 2 / 3);
+            _round2Size = OspreyEnvironment.PerFileFdrTwoRound || _ownProteinBest != null ? round2Size : 0;
             _trainConfig.NThreads = _threads;
             _trainConfig.ReportTrainEntryFolds = true;
             // A file's training-set analysis would be a report nobody reads, at minutes per file.
@@ -122,6 +127,9 @@ namespace pwiz.Osprey.FDR
             if (count == 0)
                 return scores;
             long t = Stopwatch.GetTimestamp();
+            long fileStart = t;
+            // This file's own step times for its [TIMING] line: the column inside round 2's setup.
+            long columnTicks = 0;
             var labels = new bool[count];
             var ids = new uint[count];
             var seqs = new string[count];
@@ -165,8 +173,10 @@ namespace pwiz.Osprey.FDR
                 {
                     appendColumn = (round1, heldOutFoldByBaseId, round2Rows) =>
                     {
+                        long columnStart = Stopwatch.GetTimestamp();
                         column = OwnProteinBestColumn(round1, heldOutFoldByBaseId, ids, labels, bestScores,
                             featureRows, nFeatures);
+                        columnTicks = Stopwatch.GetTimestamp() - columnStart;
                         foreach (var entry in round2Rows)
                         {
                             var extended = new double[entry.Features.Length + 1];
@@ -186,6 +196,8 @@ namespace pwiz.Osprey.FDR
                     entries.Add(NewEntry(fileName, r, labels, ids, seqs, charges, bestScores, featureRows, nFeatures));
                 model = PercolatorTrainer.RunPercolator(entries, _trainConfig);
             }
+            long trainEnd = Stopwatch.GetTimestamp();
+            double trainSeconds = Seconds(trainEnd - t);
             t = Accumulate(ref _trainTicks, t);
             Interlocked.Add(ref _trainRows, entries.Count);
 
@@ -207,9 +219,14 @@ namespace pwiz.Osprey.FDR
             PercolatorScorer.ScoreRowsWithModel(count, rowAt, model, scoreFeatures, scores, 0, _threads, heldOutFoldByRow);
             t = Accumulate(ref _scoreTicks, t);
 
+            double scoreSeconds = Seconds(t - trainEnd);
             if (!Calibrate(scores, labels, ids, seqs, _trainConfig.TestFdr))
                 Interlocked.Increment(ref _uncalibrated);
             Accumulate(ref _calibrateTicks, t);
+            _log.LogInfo(LogTag.TIMING,
+                @"{0} per-file model [{1}]: {2:F1}s wall at {3} thread(s); {4} rows, {5} best-per-precursor, {6} final training rows; train {7:F1}s (protein-best column {8:F1}s), out-of-fold scoring {9:F1}s",
+                _passLabel, fileName, Seconds(Stopwatch.GetTimestamp() - fileStart), _threads, count,
+                bestPerPrecursor.Length, entries.Count, trainSeconds, Seconds(columnTicks), scoreSeconds);
             Interlocked.Increment(ref _files);
             return scores;
         }

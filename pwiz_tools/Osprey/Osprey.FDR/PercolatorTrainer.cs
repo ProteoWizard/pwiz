@@ -565,7 +565,9 @@ namespace pwiz.Osprey.FDR
             var round1Config = trainConfig.CloneForTrainOnly();
             round1Config.ReportTrainEntryFolds = true;
             round1Config.Diagnostics = null;
+            var swRound1 = Stopwatch.StartNew();
             var round1 = RunPercolator(round1Entries, round1Config);
+            double round1Seconds = swRound1.Elapsed.TotalSeconds;
 
             // Score every candidate with the round-1 models, out of fold where it trained.
             int m = candidates.Count;
@@ -580,6 +582,8 @@ namespace pwiz.Osprey.FDR
             var round1Scores = new double[m];
             PercolatorScorer.ScoreRowsWithModel(m, k => candidates[k].Features, round1,
                 nFeatures, round1Scores, 0, trainConfig.NThreads, heldOutFold);
+            log.LogInfo(LogTag.TIMING, @"{0} two-round training: round 1 {1:F1}s on {2} rows, round-1 scoring of {3} candidates {4:F1}s",
+                passLabel, round1Seconds, round1Subset.Length, m, swRound1.Elapsed.TotalSeconds - round1Seconds);
 
             // Round 2's subset: the best-scoring peptide groups, kept whole.
             var labels = new bool[m];

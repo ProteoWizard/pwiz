@@ -1486,6 +1486,16 @@ namespace pwiz.Osprey.Core
         /// on the peptide groups round 1 scores best, as the global first-pass model does.</summary>
         public static readonly bool PerFileFdrTwoRound = ParseIntOrNull(ENV_PER_FILE_FDR_ROUNDS) == 2;
 
+        private static readonly EnvVar ENV_PER_FILE_FDR_TRAIN_SIZE = new EnvVar(@"OSPREY_PER_FILE_FDR_TRAIN_SIZE", EnvVarGroup.behavior,
+            @"Experiment, with OSPREY_PER_FILE_FDR: the rows each per-file model's round 1 trains on; round 2 " +
+            @"takes two thirds of it, at most the global round-2 size. Changes the validity key.")
+            { ValueExample = @"<N>", DefaultValue = @"300000" };
+
+        /// <summary>OSPREY_PER_FILE_FDR_TRAIN_SIZE: each per-file model's round-1 training rows (the
+        /// study's cost lever), or null for the global <c>MaxTrainSize</c>.</summary>
+        public static readonly int? PerFileFdrTrainSize =
+            ParseIntOrNull(ENV_PER_FILE_FDR_TRAIN_SIZE) is { } size && size > 0 ? size : null;
+
         private static readonly EnvVar ENV_MZML_DECODE_THREADS = new EnvVar(@"OSPREY_MZML_DECODE_THREADS", EnvVarGroup.performance,
             @"Threads that decode mzML binary arrays. 1 is the serial decode, the A/B arm.")
             { ValueExample = @"<N>", DefaultValue = @"8" };

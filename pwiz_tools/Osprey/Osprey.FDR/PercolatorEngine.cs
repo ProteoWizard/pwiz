@@ -326,7 +326,10 @@ namespace pwiz.Osprey.FDR
             if (OspreyEnvironment.PerFileFdr != null)
             {
                 suffix += @";perfilefdr=" + OspreyEnvironment.PerFileFdr +
-                          (OspreyEnvironment.PerFileFdrTwoRound ? @";perfilefdrrounds=2" : string.Empty);
+                          (OspreyEnvironment.PerFileFdrTwoRound ? @";perfilefdrrounds=2" : string.Empty) +
+                          (OspreyEnvironment.PerFileFdrTrainSize.HasValue
+                              ? string.Format(CultureInfo.InvariantCulture, @";perfilefdrsize={0}", OspreyEnvironment.PerFileFdrTrainSize.Value)
+                              : string.Empty);
             }
             return suffix;
         }
