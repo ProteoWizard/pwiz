@@ -149,12 +149,26 @@ internal sealed class TsfData : IBrukerData
         }
 
         // Read peaks: caller may override via preferCentroid (vendor peak-picking feed).
+        // A profile spectrum of hundreds of thousands of points goes straight into the
+        // spectrum's arrays, sized from the reader's count.
+        int profileCount = useProfile ? _tsf.ReadProfileSpectrum(frame.FrameId) : 0;
+        if (profileCount > 0)
+        {
+            spec.Params.Set(CVID.MS_profile_spectrum);
+            spec.DefaultArrayLength = profileCount;
+            if (getBinaryData)
+            {
+                var mzOut = TdfData.AddBinaryDataArray(spec, CVID.MS_m_z_array, CVID.MS_m_z, profileCount);
+                var intensityOut = TdfData.AddBinaryDataArray(spec, CVID.MS_intensity_array, CVID.MS_number_of_detector_counts, profileCount);
+                _tsf.CopyProfileSpectrum(mzOut, intensityOut);
+            }
+            return;
+        }
+
         double[] mz = Array.Empty<double>();
         double[] intensity = Array.Empty<double>();
         bool isCentroid = false;
-        if (useProfile)
-            (mz, intensity) = _tsf.ReadProfileSpectrum(frame.FrameId);
-        if (mz.Length == 0 && _meta.HasLineSpectra)
+        if (_meta.HasLineSpectra)
         {
             (mz, intensity) = _tsf.ReadLineSpectrum(frame.FrameId);
             isCentroid = true;

@@ -753,7 +753,7 @@ internal sealed class TdfData : IBrukerData
     /// tagged the way <see cref="Spectrum.SetMZIntensityArrays"/> tags its arrays, and returns
     /// its storage for filling in place. The span stays valid because nothing resizes the list.
     /// </summary>
-    private static Span<double> AddBinaryDataArray(Spectrum spec, CVID arrayType, CVID units, int count)
+    internal static Span<double> AddBinaryDataArray(Spectrum spec, CVID arrayType, CVID units, int count)
     {
         var array = new BinaryDataArray();
         array.Set(arrayType, "", units);
