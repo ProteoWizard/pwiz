@@ -407,6 +407,40 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public const string META_XIC_FRAGMENTS = @"osprey.xic_fragments";
 
+        /// <summary>
+        /// The footer metadata key marking a STUB scores parquet, holding
+        /// <see cref="FEATURE_COLUMNS_STUB"/>: the scalar columns and <c>fragment_coelution_sum</c>,
+        /// without the other feature columns or the reference XIC. Absent on a full parquet.
+        /// </summary>
+        public const string META_FEATURE_COLUMNS = @"osprey.feature_columns";
+
+        /// <summary>The <see cref="META_FEATURE_COLUMNS"/> value of a stub scores parquet.</summary>
+        public const string FEATURE_COLUMNS_STUB = @"stub";
+
+        /// <summary>
+        /// True when the scores parquet at <paramref name="path"/> is a stub
+        /// (<see cref="META_FEATURE_COLUMNS"/>), so it cannot supply feature vectors. Reads the
+        /// footer only; false for a missing or unreadable file.
+        /// </summary>
+        public static bool IsStubScoresParquet(string path)
+        {
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+                return false;
+            try
+            {
+                using (var stream = BlockReadStream.OpenRead(path))
+                using (var reader = OpenReader(stream))
+                {
+                    return reader.CustomMetadata.TryGetValue(META_FEATURE_COLUMNS, out string value) &&
+                           string.Equals(value, FEATURE_COLUMNS_STUB, StringComparison.Ordinal);
+                }
+            }
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
+            {
+                return false;
+            }
+        }
+
         private const string XIC_KEY_TERM = @";xic=";
 
         /// <summary>The <see cref="META_XIC_FRAGMENTS"/> value for <paramref name="count"/>.</summary>

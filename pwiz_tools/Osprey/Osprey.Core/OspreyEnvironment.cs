@@ -1509,6 +1509,16 @@ namespace pwiz.Osprey.Core
         public static readonly int? PerFileFdrRound2Size =
             ParseIntOrNull(ENV_PER_FILE_FDR_ROUND2_SIZE) is { } size2 && size2 > 0 ? size2 : null;
 
+        private static readonly EnvVar ENV_PER_FILE_FDR_KEEP_PARQUET = new EnvVar(@"OSPREY_PER_FILE_FDR_KEEP_PARQUET", EnvVarGroup.behavior,
+            @"Experiment, with OSPREY_PER_FILE_FDR=file: 1 writes each run's full .scores.parquet, with every " +
+            @"feature column, so a later run can train its model again without scoring the run again; unset, " +
+            @"the run writes a stub parquet of the scalar columns only.")
+            { Values = new[] { @"1" } };
+
+        /// <summary>OSPREY_PER_FILE_FDR_KEEP_PARQUET=1: under <c>OSPREY_PER_FILE_FDR=file</c>, write the
+        /// full scores parquet rather than the stub. The flag this becomes is <c>--keep-scores-parquet</c>.</summary>
+        public static readonly bool PerFileFdrKeepParquet = ParseIntOrNull(ENV_PER_FILE_FDR_KEEP_PARQUET) == 1;
+
         private static readonly EnvVar ENV_GBT_PATIENCE = new EnvVar(@"OSPREY_GBT_PATIENCE", EnvVarGroup.behavior,
             @"Gradient-boosted trees: semi-supervised iterations without a held-out improvement before a fold " +
             @"stops. Changes the validity key.")

@@ -2272,6 +2272,62 @@ namespace pwiz.Osprey.Test
                     { "osprey.version", "2.0.0" },
                 };
                 Assert.IsFalse(ParquetScoreCache.ValidateMetadata(saver.SafeName, wrongMeta));
+                Assert.IsFalse(ParquetScoreCache.IsStubScoresParquet(saver.SafeName));
+
+                AssertStubParquetRoundTrip(entries, metadata, stubs, new FileInfo(saver.SafeName).Length);
+            }
+        }
+
+        /// <summary>
+        /// The same entries as a stub parquet (OSPREY_PER_FILE_FDR=file without the full parquet):
+        /// marked as a stub, smaller, and read by the stub readers exactly as the full parquet is,
+        /// including the coelution sum they take from the one feature column it keeps.
+        /// </summary>
+        private static void AssertStubParquetRoundTrip(List<CoelutionScoredEntry> entries,
+            Dictionary<string, string> metadata, List<FdrEntry> fullStubs, long fullLength)
+        {
+            string dest = Path.Combine(Path.GetTempPath(),
+                @"osprey_stub_" + Path.GetRandomFileName() + @".parquet");
+            using (var saver = new SimpleFileSaver(dest))
+            {
+                var stubMetadata = new Dictionary<string, string>(metadata)
+                {
+                    [ParquetScoreCache.META_FEATURE_COLUMNS] = ParquetScoreCache.FEATURE_COLUMNS_STUB
+                };
+                // Through the FdrEntry writer, the one PerFileScoring writes with, from the full
+                // parquet's rows: each carries its coelution sum as PIN feature 0.
+                var fdrEntries = fullStubs.ConvertAll(stub =>
+                {
+                    var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
+                    features[0] = stub.CoelutionSum;
+                    return new FdrEntry
+                    {
+                        EntryId = stub.EntryId, IsDecoy = stub.IsDecoy, Charge = stub.Charge,
+                        ModifiedSequence = stub.ModifiedSequence, ScanNumber = stub.ScanNumber,
+                        ApexRt = stub.ApexRt, StartRt = stub.StartRt, EndRt = stub.EndRt, Features = features
+                    };
+                });
+                ParquetScoreCache.WriteScoresParquet(saver.SafeName, fdrEntries, stubMetadata, null, "test",
+                    false, PinFeatureMask.Hram.StubColumnsOnly());
+                Assert.IsTrue(ParquetScoreCache.IsStubScoresParquet(saver.SafeName));
+                Assert.IsTrue(new FileInfo(saver.SafeName).Length < fullLength);
+                // The resume probes accept it: the scalar columns and the first feature column.
+                Assert.IsTrue(ParquetScoreCache.HasPinFeatureColumns(saver.SafeName));
+                var probe = ParquetScoreCache.ProbeResumeSchemaAndRows(saver.SafeName);
+                Assert.IsTrue(probe.HasPinFeatures);
+                Assert.AreEqual(entries.Count, (int)probe.RowCount);
+
+                var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(saver.SafeName);
+                Assert.AreEqual(fullStubs.Count, stubs.Count);
+                for (int i = 0; i < stubs.Count; i++)
+                {
+                    Assert.AreEqual(fullStubs[i].EntryId, stubs[i].EntryId);
+                    Assert.AreEqual(fullStubs[i].IsDecoy, stubs[i].IsDecoy);
+                    Assert.AreEqual(fullStubs[i].Charge, stubs[i].Charge);
+                    Assert.AreEqual(fullStubs[i].ApexRt, stubs[i].ApexRt);
+                    Assert.AreEqual(fullStubs[i].CoelutionSum, stubs[i].CoelutionSum);
+                    Assert.AreEqual(fullStubs[i].ModifiedSequence, stubs[i].ModifiedSequence);
+                }
             }
         }
 

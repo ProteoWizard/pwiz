@@ -85,6 +85,9 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public const string TASK_NAME = OspreyTaskNames.PER_FILE_SCORING;
 
+        // The key term of a stub scores parquet (OSPREY_PER_FILE_FDR=file without the full parquet).
+        private const string STUB_PARQUET_KEY_TERM = @";parquet=stub";
+
         /// <summary>
         /// The largest share of generated decoys that may have no fragment of their own before
         /// the library is refused. A well-annotated library has essentially none; a share this
@@ -267,11 +270,21 @@ namespace pwiz.Osprey.Tasks
         /// The run's own first-pass scores carry the model key, which adds the model settings to
         /// the feature key the parquet and calibration carry: a model change re-models a run from
         /// its current parquet, and a feature change re-extracts it.
+        ///
+        /// <para>A stub scores parquet carries the task key plus <see cref="STUB_PARQUET_KEY_TERM"/>.
+        /// A run that writes stubs accepts it, and still accepts a full parquet, which holds
+        /// everything a stub does; any other run needs the features, so a stub is never current
+        /// for it.</para>
         /// </summary>
         public override string OutputValidityKey(PipelineContext ctx, string taskKey, string output)
         {
             if (TrainsOwnFirstPassModel && output.EndsWith(FdrScoresSidecar.EXT_FIRST_PASS, StringComparison.Ordinal))
                 return taskKey + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
+            if (WritesStubParquet(ctx.Config) && output.EndsWith(ParquetScoreCache.EXT_SCORES, StringComparison.Ordinal) &&
+                ParquetScoreCache.IsStubScoresParquet(output))
+            {
+                return taskKey + STUB_PARQUET_KEY_TERM;
+            }
             return taskKey;
         }
 
@@ -1611,7 +1624,7 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx)
         {
             string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
-            if (IsFileCurrent(inputFile, validityKey, ctx))
+            if (IsFileCurrent(inputFile, validityKey, ctx) && StubServesThisRun(inputFile, scoresPath, ctx))
             {
                 var loaded = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx);
                 if (loaded != null)
@@ -1654,34 +1667,138 @@ namespace pwiz.Osprey.Tasks
                 return entries;
 
             var swModel = Stopwatch.StartNew();
-            var entryIds = new List<uint>();
-            var charges = new List<byte>();
-            var isDecoys = new List<bool>();
-            var coelutionSums = new List<double>();
-            var peptides = new List<string>();
-            var apexRts = new List<double>();
-            ParquetScoreCache.ReadFdrStubScalars(scoresPath, (entryId, charge, isDecoy, coelutionSum, peptide, apexRt) =>
+            var rows = new OwnModelRows();
+            ParquetScoreCache.ReadFdrStubScalars(scoresPath, rows.Add, StubColumns.ApexRt);
+            rows.FeatureRows = ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath, PinFeatureMask.For(config));
+            WriteOwnModelScores(rows, sidecarPath, fileName, config, swModel, ctx);
+            return entries;
+        }
+
+        /// <summary>
+        /// <c>OSPREY_PER_FILE_FDR=file</c>: the run's own first-pass model from its freshly scored
+        /// entries, before their features are dropped. Each entry's row is its
+        /// <see cref="FdrEntry.ParquetIndex"/>, which the parquet write has just assigned, and each
+        /// value is what the parquet holds for it (a non-finite feature is 0 there, as here), so
+        /// the model is the one a reader of a full parquet would train.
+        /// </summary>
+        private void TrainOwnModelFromEntries(List<FdrEntry> entries, string inputFile, string fileName,
+            PinFeatureSelection featureMask, OspreyConfig config, PipelineContext ctx)
+        {
+            var swModel = Stopwatch.StartNew();
+            int n = entries.Count;
+            var byRow = new FdrEntry[n];
+            foreach (var entry in entries)
             {
-                entryIds.Add(entryId);
-                charges.Add(charge);
-                isDecoys.Add(isDecoy);
-                coelutionSums.Add(coelutionSum);
-                peptides.Add(peptide);
-                apexRts.Add(apexRt);
-            }, StubColumns.ApexRt);
-            var featureRows = ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath, PinFeatureMask.For(config));
-            double[] scores = PercolatorEngine.ScoreRunWithOwnModel(fileName, entryIds, charges, isDecoys,
-                coelutionSums, peptides, featureRows, config, ScoringTaskShared.FdrFeatureInfos(config),
+                if (!entry.ParquetIndex.HasValue)
+                {
+                    // Exception text for internal diagnostics, not displayed to user
+                    throw new InvalidOperationException(string.Format(
+                        @"{0}: entry_id {1} reached its first-pass model with no parquet row.", fileName, entry.EntryId));
+                }
+                byRow[entry.ParquetIndex.Value] = entry;
+            }
+            int[] fdrIndices = featureMask.FdrFeatureIndices;
+            var rows = new OwnModelRows { FeatureRows = new List<double[]>(n) };
+            foreach (var entry in byRow)
+            {
+                var features = new double[fdrIndices.Length];
+                if (entry.Features != null && entry.Features.Length == ParquetScoreCache.NUM_PIN_FEATURES)
+                {
+                    for (int i = 0; i < fdrIndices.Length; i++)
+                        features[i] = FiniteOrZero(entry.Features[fdrIndices[i]]);
+                }
+                double coelutionSum = entry.Features != null && entry.Features.Length > 0 ? FiniteOrZero(entry.Features[0]) : 0.0;
+                rows.Add(entry.EntryId, entry.Charge, entry.IsDecoy, coelutionSum, entry.ModifiedSequence ?? string.Empty, entry.ApexRt);
+                rows.FeatureRows.Add(features);
+            }
+            WriteOwnModelScores(rows, FdrScoresSidecar.Pass1Path(inputFile), fileName, config, swModel, ctx);
+        }
+
+        /// <summary>
+        /// Whether this task writes a stub scores parquet: under the own-model arm, unless the full
+        /// one is asked for (<c>OSPREY_PER_FILE_FDR_KEEP_PARQUET=1</c>) or the training export needs
+        /// the reference XIC it carries.
+        /// </summary>
+        private static bool WritesStubParquet(OspreyConfig config)
+        {
+            return TrainsOwnFirstPassModel && !OspreyEnvironment.PerFileFdrKeepParquet &&
+                   !ParquetScoreCache.WritesReferenceXic(config);
+        }
+
+        /// <summary>
+        /// The footer metadata of a stub parquet: the run's, marked as a stub and stamped with the
+        /// stub key, so a run that needs the features never takes it for a full parquet.
+        /// </summary>
+        private Dictionary<string, string> StubFooterMetadata(Dictionary<string, string> metadata)
+        {
+            var stub = ParquetScoreCache.WithStamp(metadata,
+                OspreyVersion.Stamp(Name, _outputStamp.Key + STUB_PARQUET_KEY_TERM));
+            stub[ParquetScoreCache.META_FEATURE_COLUMNS] = ParquetScoreCache.FEATURE_COLUMNS_STUB;
+            return stub;
+        }
+
+        /// <summary>
+        /// Whether a current scores parquet can be kept for this run. A full one always can. A stub
+        /// holds no features, so it serves only a run under the own-model arm whose own first-pass
+        /// scores are already current and that does not ask for the full parquet; any other run
+        /// scores the file again.
+        /// </summary>
+        private bool StubServesThisRun(string inputFile, string scoresPath, PipelineContext ctx)
+        {
+            if (!ParquetScoreCache.IsStubScoresParquet(scoresPath))
+                return true;
+            bool serves = _ownModelStamp != null &&
+                          ArtifactValidity.IsCurrent(FdrScoresSidecar.Pass1Path(inputFile), Name, _ownModelKey);
+            if (!serves)
+            {
+                // Log text for developers, not displayed in the default output
+                ctx.LogInfo(LogTag.PATH, string.Format(@"not current: {0} (a stub parquet, and the run's own scores need its features)", scoresPath));
+            }
+            return serves;
+        }
+
+        /// <summary>Trains the run's own model on <paramref name="rows"/> and writes its first-pass scores.</summary>
+        private void WriteOwnModelScores(OwnModelRows rows, string sidecarPath, string fileName, OspreyConfig config,
+            Stopwatch swModel, PipelineContext ctx)
+        {
+            double[] scores = PercolatorEngine.ScoreRunWithOwnModel(fileName, rows.EntryIds, rows.Charges, rows.IsDecoys,
+                rows.CoelutionSums, rows.Peptides, rows.FeatureRows, config, ScoringTaskShared.FdrFeatureInfos(config),
                 _ownModelProteinBest.Value, ctx.RunPlan.ScoringFileParallelism, ctx,
                 out double[] runPrecursorQ, out double[] runPeptideQ);
             var records = new List<FdrScoreRecord>(scores.Length);
             for (int r = 0; r < scores.Length; r++)
-                records.Add(new FdrScoreRecord(entryIds[r], scores[r], runPrecursorQ[r], runPeptideQ[r], apexRts[r]));
+                records.Add(new FdrScoreRecord(rows.EntryIds[r], scores[r], runPrecursorQ[r], runPeptideQ[r], rows.ApexRts[r]));
             FdrScoresSidecar.Write(sidecarPath, records, FdrScoresSidecar.Pass.FirstPass, _ownModelStamp);
             // Log text for developers, not displayed in the default output
             ctx.LogInfo(LogTag.TIMING, @"{0}: own first-pass model over {1} rows, written to {2} ({3:F1}s)",
                 fileName, scores.Length, sidecarPath, swModel.Elapsed.TotalSeconds);
-            return entries;
+        }
+
+        private static double FiniteOrZero(double v)
+        {
+            return double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
+        }
+
+        /// <summary>One run's rows for its own model, in parquet row order.</summary>
+        private sealed class OwnModelRows
+        {
+            public readonly List<uint> EntryIds = new List<uint>();
+            public readonly List<byte> Charges = new List<byte>();
+            public readonly List<bool> IsDecoys = new List<bool>();
+            public readonly List<double> CoelutionSums = new List<double>();
+            public readonly List<string> Peptides = new List<string>();
+            public readonly List<double> ApexRts = new List<double>();
+            public List<double[]> FeatureRows;
+
+            public void Add(uint entryId, byte charge, bool isDecoy, double coelutionSum, string peptide, double apexRt)
+            {
+                EntryIds.Add(entryId);
+                Charges.Add(charge);
+                IsDecoys.Add(isDecoy);
+                CoelutionSums.Add(coelutionSum);
+                Peptides.Add(peptide);
+                ApexRts.Add(apexRt);
+            }
         }
 
         /// <summary>
@@ -1693,9 +1810,10 @@ namespace pwiz.Osprey.Tasks
         {
             foreach (var output in OutputsForInput(inputFile))
             {
-                if (!ArtifactValidity.IsCurrent(output, Name, validityKey))
+                string outputKey = OutputValidityKey(ctx, validityKey, output);
+                if (!ArtifactValidity.IsCurrent(output, Name, outputKey))
                 {
-                    LogWhyNotCurrent(output, validityKey, ctx);
+                    LogWhyNotCurrent(output, outputKey, ctx);
                     return false;
                 }
             }
@@ -1850,6 +1968,12 @@ namespace pwiz.Osprey.Tasks
             try
             {
                 stubs = ParquetScoreCache.LoadFdrStubsFromParquet(scoresPath, null, null);
+                // A stub carries no feature vectors, and the caller has already found it serves this run.
+                if (ParquetScoreCache.IsStubScoresParquet(scoresPath))
+                {
+                    LoadCalibrationAndIsolation(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx);
+                    return stubs;
+                }
                 var features = ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath, PinFeatureMask.For(ctx.Config));
                 if (features.Count != stubs.Count)
                 {
@@ -2105,13 +2229,22 @@ namespace pwiz.Osprey.Tasks
                 // it to pull sequence / precursor_mz / protein_ids from
                 // the library since FdrEntry doesn't carry these).
                 var swParquet = Stopwatch.StartNew();
+                bool writeStub = WritesStubParquet(config);
+                var featureMask = PinFeatureMask.For(config);
                 ParquetScoreCache.WriteScoresParquet(
-                    parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName,
-                    ParquetScoreCache.WritesReferenceXic(config), PinFeatureMask.For(config));
+                    parquetPath, scoredEntries, writeStub ? StubFooterMetadata(parquetFooterMetadata) : parquetFooterMetadata,
+                    _libraryById, fileName, ParquetScoreCache.WritesReferenceXic(config),
+                    writeStub ? featureMask.StubColumnsOnly() : featureMask);
                 swParquet.Stop();
                 ctx.LogInfo(string.Format(
                     OspreyTasksResources.PerFileScoringTask_ProcessFile_Wrote__0__precursor_candidate_peaks_to__1____2_s_,
                     scoredEntries.Count, parquetPath, swParquet.Elapsed.TotalSeconds));
+
+                // OSPREY_PER_FILE_FDR=file: the run's own model, from the features still in memory.
+                // The write above numbered every entry with its parquet row, so these are the rows
+                // and the order a reader of the parquet would see.
+                if (_ownModelStamp != null)
+                    TrainOwnModelFromEntries(scoredEntries, inputFile, fileName, featureMask, config, ctx);
 
                 // Phase 1 (issue #4355): the heavy per-entry arrays are now persisted in
                 // the parquet above and are reloadable by ParquetIndex, so drop them from

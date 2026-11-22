@@ -97,6 +97,20 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// This selection, recording only the first PIN column (<c>fragment_coelution_sum</c>), for
+        /// a stub scores parquet: the stub readers take each row's coelution sum from that column,
+        /// and nothing that reads a stub reads another feature. What the classifier sees and what
+        /// Stage 4 computes are unchanged. Only the <c>FdrEntry</c> writer takes it: the
+        /// <c>CoelutionScoredEntry</c> one expects every core feature column.
+        /// </summary>
+        public PinFeatureSelection StubColumnsOnly()
+        {
+            var recorded = new bool[_recorded.Length];
+            recorded[0] = true;
+            return new PinFeatureSelection(Mode, FeatureSetGiven, _masked, _fdrIndices, recorded, _computed);
+        }
+
+        /// <summary>
         /// True when Stage 4 computes the PIN feature at <paramref name="featureIndex"/>: a core
         /// feature, or a feature of a family with a recorded feature. Every recorded feature is computed.
         /// </summary>
