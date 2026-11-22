@@ -652,7 +652,7 @@ namespace pwiz.Osprey
         // --diskstamp writes lines of its own rather than a column (the shared CommandStatusWriter
         // stamps are Skyline's format too); perfviz reads them as the disk series.
         public static readonly OspreyArgument ARG_DISKSTAMP = new OspreyArgument(@"diskstamp",
-            (c, p) => c._config.IsDiskStamped = true) { DescriptionArgs = () => new object[] { @"[DISK]", DiskStamper.SAMPLE_INTERVAL_MS / 1000 } }; // Log tag OK: help text naming the tag
+            (c, p) => c._config.IsDiskStamped = true) { DescriptionArgs = () => new object[] { LogTag.DISK.Name, DiskStamper.SAMPLE_INTERVAL_MS / 60000 } };
         public static readonly OspreyArgument ARG_LOG_FILE = new OspreyArgument(@"log-file",
             () => GetPathToFile(string.Empty), (c, p) => c._config.LogFilePath = p.Value);
         public static readonly OspreyArgument ARG_PERF_STATS = new OspreyArgument(@"perf-stats",

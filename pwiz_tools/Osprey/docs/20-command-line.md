@@ -323,7 +323,7 @@ None of these counts enters a validity key or changes an output byte; one lane i
 |--------|--------|
 | `--timestamp` | Prefix each output line with `[yyyy/MM/dd HH:mm:ss]`. |
 | `--memstamp` | Prefix each line with managed and process private bytes in MB, for monitoring memory use during long runs. |
-| `--diskstamp` | Write a `[DISK]` line with the change in used space, since the run started, on the volume holding the run's per-file outputs (`--output-dir`, else the first input file's folder), and the volume's free space: at the start, every 60 seconds, at each `[TASK]` done and at the end. See [Log format](#log-format). |
+| `--diskstamp` | Write a `[DISK]` line with the change in used space, since the run started, on the volume holding the run's per-file outputs (`--output-dir`, else the first input file's folder), and the volume's free space: at the start, every 5 minutes, at each `[TASK]` done and at the end. See [Log format](#log-format). |
 | `--log-file <path>` | Write all output to a file instead of stderr. |
 | `--perf-stats` | Emit the machine-channel lines (`[COUNT]`, `[TIMING]`, `[BENCH]`, `[STAGE-WALL]`, `[PATH]`, `[TRAIN]`); see [Log format](#log-format). |
 | `--verbose` | Show implementer-grade detail (e.g. per-fold Percolator iterations). |

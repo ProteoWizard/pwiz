@@ -802,46 +802,44 @@ namespace pwiz.Osprey
                 // Machine twin of the banner: the liveness anchor a route assertion needs before
                 // it can trust an absence.
                 LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_STARTUP, @"threads={0}", config.NThreads));
-                // --diskstamp: the start line, then a timer line every minute until the using ends and
-                // writes the end line (before RunCommand closes a --log-file writer).
-                using (StartDiskStamper(config))
+                // --diskstamp: the start line, then a timer line every few minutes until the try block
+                // ends and disposal writes the end line (before RunCommand closes a --log-file writer).
+                using var diskStamper = StartDiskStamper(config);
+                LogInfo(string.Empty);
+
+                // --task ModelDiagnostics is a RENDER over completed analysis state, not a run.
+                // Settled before the pipeline is built, because the whole point is that most
+                // invocations never build one.
+                if (config.DiagnosticsOnly)
                 {
-                    LogInfo(string.Empty);
+                    int diagnosticsExit = RunModelDiagnosticsTask(config);
+                    if (diagnosticsExit >= 0)
+                        return diagnosticsExit;
+                }
 
-                    // --task ModelDiagnostics is a RENDER over completed analysis state, not a run.
-                    // Settled before the pipeline is built, because the whole point is that most
-                    // invocations never build one.
-                    if (config.DiagnosticsOnly)
-                    {
-                        int diagnosticsExit = RunModelDiagnosticsTask(config);
-                        if (diagnosticsExit >= 0)
-                            return diagnosticsExit;
-                    }
+                // The one command (--fasta): the library is predicted first, then the same
+                // pipeline searches it. Dispatched through a class of its own, so a run that
+                // searches a given library compiles no method that reaches the predictor and
+                // never loads its native runtime.
+                TaskBudget.Reset();
+                try
+                {
+                    if (BuildsLibrary(config))
+                        return new LibraryBuildWorkflow(config, librarySettings).Run(pipeline);
 
-                    // The one command (--fasta): the library is predicted first, then the same
-                    // pipeline searches it. Dispatched through a class of its own, so a run that
-                    // searches a given library compiles no method that reaches the predictor and
-                    // never loads its native runtime.
-                    TaskBudget.Reset();
-                    try
-                    {
-                        if (BuildsLibrary(config))
-                            return new LibraryBuildWorkflow(config, librarySettings).Run(pipeline);
-
-                        // Single entry point. The rescore worker (--task
-                        // PerFileRescoring) includes only PerFileRescoreTask
-                        // (OspreyConfig.Includes); PerFileScoring's lazy-rehydrate (via
-                        // ctx.Demand) populates the upstream state from the boundary files
-                        // on disk.
-                        return new AnalysisPipeline().Run(config, pipeline);
-                    }
-                    catch (TaskBudgetSpentException stop)
-                    {
-                        // OSPREY_STOP_AFTER_TASKS: every task run so far committed its outputs, and
-                        // the next run of the same command line resumes after the last.
-                        LogInfo(LogTag.TASK, @"stop:after {0} ({1}; {2})", stop.TasksRun, stop.TaskName, @"OSPREY_STOP_AFTER_TASKS");
-                        return EXIT_CODE_SUCCESS;
-                    }
+                    // Single entry point. The rescore worker (--task
+                    // PerFileRescoring) includes only PerFileRescoreTask
+                    // (OspreyConfig.Includes); PerFileScoring's lazy-rehydrate (via
+                    // ctx.Demand) populates the upstream state from the boundary files
+                    // on disk.
+                    return new AnalysisPipeline().Run(config, pipeline);
+                }
+                catch (TaskBudgetSpentException stop)
+                {
+                    // OSPREY_STOP_AFTER_TASKS: every task run so far committed its outputs, and
+                    // the next run of the same command line resumes after the last.
+                    LogInfo(LogTag.TASK, @"stop:after {0} ({1}; {2})", stop.TasksRun, stop.TaskName, @"OSPREY_STOP_AFTER_TASKS");
+                    return EXIT_CODE_SUCCESS;
                 }
             }
             catch (Exception ex)

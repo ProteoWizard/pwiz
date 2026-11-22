@@ -52,7 +52,7 @@ namespace pwiz.Osprey.Core
     public sealed class DiskStamper : IDisposable
     {
         /// <summary>How often the timer samples the drive.</summary>
-        public const int SAMPLE_INTERVAL_MS = 60 * 1000;
+        public const int SAMPLE_INTERVAL_MS = 5 * 60 * 1000;
 
         private const double BYTES_PER_GB = 1024.0 * 1024.0 * 1024.0;
 
