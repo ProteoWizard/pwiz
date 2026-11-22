@@ -58,6 +58,9 @@ namespace pwiz.Osprey.FDR
         // Round 2's row count when each file trains in two rounds (OSPREY_PER_FILE_FDR_ROUNDS=2),
         // as the global model does; 0 for one round.
         private readonly int _round2Size;
+        // OSPREY_PER_FILE_FDR=file: the protein-best column each file computes from its OWN round-1
+        // model and appends for round 2 and the score pass; null otherwise.
+        private readonly ProteinBestRequest _ownProteinBest;
         private long _files;
         private long _trainTicks;
         private long _scoreTicks;
@@ -75,7 +78,12 @@ namespace pwiz.Osprey.FDR
         {
             _log = log;
             _passLabel = passLabel;
-            _round2Size = OspreyEnvironment.PerFileFdrTwoRound
+            // The file's own column reaches its model only through round 2, so that arm always
+            // trains two rounds.
+            _ownProteinBest = string.Equals(OspreyEnvironment.PerFileFdr, OspreyEnvironment.PER_FILE_FDR_FILE, StringComparison.Ordinal)
+                ? percConfig.ProteinBest
+                : null;
+            _round2Size = OspreyEnvironment.PerFileFdrTwoRound || _ownProteinBest != null
                 ? OspreyEnvironment.PrefilterSizeFor(true)
                 : 0;
             _threads = Math.Max(1, percConfig.NThreads / Math.Max(1, lanes));
@@ -88,6 +96,10 @@ namespace pwiz.Osprey.FDR
             _trainConfig.PrefilterTrainSize = 0;
             _trainConfig.ProteinBest = null;
         }
+
+        /// <summary>Whether each file computes its own protein-best column, and so wants its raw
+        /// feature vectors rather than ones the global column already extends.</summary>
+        public bool UsesOwnProteinBest => _ownProteinBest != null;
 
         /// <summary>
         /// Trains one file's model on its own rows and returns every row's calibrated, out-of-fold
@@ -128,6 +140,8 @@ namespace pwiz.Osprey.FDR
                 _trainConfig.MaxTrainSize, _trainConfig.Seed, out int[] bestPerPrecursor, bestScores, new[] { 0 });
             PercolatorResults model;
             List<PercolatorEntry> entries;
+            // The file's own protein-best column, a value per row, once its round 1 has trained.
+            double[] column = null;
             if (_round2Size > 0)
             {
                 // Two rounds, as the global training: every best-per-precursor row is a candidate,
@@ -146,8 +160,24 @@ namespace pwiz.Osprey.FDR
                 Array.Sort(round1Subset); // Array.Sort OK: distinct candidate indices, so no ties
                 var config = _trainConfig.CloneForTrainOnly();
                 config.PrefilterTrainSize = _round2Size;
+                Action<PercolatorResults, IReadOnlyDictionary<uint, int>, List<PercolatorEntry>> appendColumn = null;
+                if (_ownProteinBest != null)
+                {
+                    appendColumn = (round1, heldOutFoldByBaseId, round2Rows) =>
+                    {
+                        column = OwnProteinBestColumn(round1, heldOutFoldByBaseId, ids, labels, bestScores,
+                            featureRows, nFeatures);
+                        foreach (var entry in round2Rows)
+                        {
+                            var extended = new double[entry.Features.Length + 1];
+                            Array.Copy(entry.Features, extended, entry.Features.Length);
+                            extended[entry.Features.Length] = column[entry.ParquetIndex];
+                            entry.Features = extended;
+                        }
+                    };
+                }
                 model = PercolatorTrainer.TrainWithScorePrefilter(candidates, round1Subset, config, _log, _passLabel,
-                    out entries);
+                    out entries, appendColumn);
             }
             else
             {
@@ -160,9 +190,21 @@ namespace pwiz.Osprey.FDR
             Interlocked.Add(ref _trainRows, entries.Count);
 
             var heldOutFoldByRow = HeldOutFoldByRow(entries, model.TrainEntryFolds, labels, ids, seqs);
-            PercolatorScorer.ScoreRowsWithModel(count,
-                r => PercolatorScorer.ResolveFeatureRow(featureRows, (uint)r, bestScores[r], nFeatures),
-                model, nFeatures, scores, 0, _threads, heldOutFoldByRow);
+            Func<int, double[]> rowAt = r => PercolatorScorer.ResolveFeatureRow(featureRows, (uint)r, bestScores[r], nFeatures);
+            int scoreFeatures = nFeatures;
+            if (column != null)
+            {
+                var rawRowAt = rowAt;
+                rowAt = r =>
+                {
+                    var extended = new double[nFeatures + 1];
+                    Array.Copy(rawRowAt(r), extended, nFeatures);
+                    extended[nFeatures] = column[r];
+                    return extended;
+                };
+                scoreFeatures = nFeatures + 1;
+            }
+            PercolatorScorer.ScoreRowsWithModel(count, rowAt, model, scoreFeatures, scores, 0, _threads, heldOutFoldByRow);
             t = Accumulate(ref _scoreTicks, t);
 
             if (!Calibrate(scores, labels, ids, seqs, _trainConfig.TestFdr))
@@ -180,6 +222,32 @@ namespace pwiz.Osprey.FDR
                 passLabel, where, Interlocked.Read(ref _files), Interlocked.Read(ref _trainRows),
                 Seconds(Interlocked.Read(ref _trainTicks)), Seconds(Interlocked.Read(ref _scoreTicks)),
                 Seconds(Interlocked.Read(ref _calibrateTicks)), _threads, Interlocked.Read(ref _uncalibrated));
+        }
+
+        /// <summary>
+        /// The file's protein-best column from its own round-1 model: every row scored by round 1,
+        /// out of fold where its base_id trained (as the global column is), then each row's best
+        /// sibling-peptide score on its proteins within this run (<see cref="ProteinBestFeature.ComputeColumn(ProteinBestMembership,int,IReadOnlyList{uint},IReadOnlyList{bool},IReadOnlyList{double})"/>).
+        /// Nothing outside the file is read.
+        /// </summary>
+        private double[] OwnProteinBestColumn(PercolatorResults round1, IReadOnlyDictionary<uint, int> heldOutFoldByBaseId,
+            uint[] ids, bool[] labels, double[] bestScores, IReadOnlyList<double[]> featureRows, int nFeatures)
+        {
+            int count = ids.Length;
+            var baseIds = new uint[count];
+            var heldOut = new Dictionary<int, int>();
+            for (int r = 0; r < count; r++)
+            {
+                baseIds[r] = ids[r] & PercolatorEntry.BASE_ID_MASK;
+                if (heldOutFoldByBaseId.TryGetValue(baseIds[r], out int fold))
+                    heldOut[r] = fold;
+            }
+            var priorScores = new double[count];
+            PercolatorScorer.ScoreRowsWithModel(count,
+                r => PercolatorScorer.ResolveFeatureRow(featureRows, (uint)r, bestScores[r], nFeatures),
+                round1, nFeatures, priorScores, 0, _threads, heldOut);
+            return ProteinBestFeature.ComputeColumn(_ownProteinBest.Membership, _ownProteinBest.TopN,
+                baseIds, labels, priorScores);
         }
 
         /// <summary>A training entry for row <paramref name="r"/> of the file, owning a copy of its features.</summary>

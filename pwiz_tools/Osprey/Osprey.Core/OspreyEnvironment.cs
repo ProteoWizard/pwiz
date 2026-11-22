@@ -1455,13 +1455,18 @@ namespace pwiz.Osprey.Core
         /// <summary>The <see cref="PerFileFdr"/> value that stacks a global model on per-file scores.</summary>
         public const string PER_FILE_FDR_STACKED = @"stacked";
 
+        /// <summary>The <see cref="PerFileFdr"/> value that trains each file's model with its own
+        /// protein-best column, from its own round-1 model, so no input crosses files.</summary>
+        public const string PER_FILE_FDR_FILE = @"file";
+
         private static readonly EnvVar ENV_PER_FILE_FDR = new EnvVar(@"OSPREY_PER_FILE_FDR", EnvVarGroup.behavior,
             @"Experiment, first pass only: 'model' scores each file with a model trained on that file's own rows " +
             @"(out of fold, calibrated per file), after the global training supplies the protein-best column; " +
             @"'stacked' trains the per-file models first, without the protein-best column, and trains the global " +
             @"model on their calibrated scores alone. Changes the validity key. The saved model stays the " +
-            @"global one, so only the first-pass results are meaningful.")
-            { Values = new[] { PER_FILE_FDR_MODEL, PER_FILE_FDR_STACKED } };
+            @"global one, so only the first-pass results are meaningful. 'file' is 'model' with each file's " +
+            @"protein-best column computed from that file's own round-1 model (two rounds always).")
+            { Values = new[] { PER_FILE_FDR_MODEL, PER_FILE_FDR_STACKED, PER_FILE_FDR_FILE } };
 
         /// <summary>OSPREY_PER_FILE_FDR: the per-file first-pass model study (DIA-NN trains one
         /// model per run). Null when unset, otherwise <see cref="PER_FILE_FDR_MODEL"/> or

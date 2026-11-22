@@ -1489,8 +1489,9 @@ namespace pwiz.Osprey.FDR
             if (gbtModels == null)
                 avgWeights = PercolatorScorer.AverageFoldWeights(trainResults.FoldWeights, trainResults.FoldBiases, scoreFeatures, out avgBias);
             var standardizer = trainResults.Standardizer;
-            // OSPREY_PER_FILE_FDR=model: each file scored in pass 1 trains and applies its own model.
-            var perFileModel = string.Equals(OspreyEnvironment.PerFileFdr, OspreyEnvironment.PER_FILE_FDR_MODEL, StringComparison.Ordinal)
+            // OSPREY_PER_FILE_FDR=model or file: each file scored in pass 1 trains and applies its own model.
+            var perFileModel = string.Equals(OspreyEnvironment.PerFileFdr, OspreyEnvironment.PER_FILE_FDR_MODEL, StringComparison.Ordinal) ||
+                               string.Equals(OspreyEnvironment.PerFileFdr, OspreyEnvironment.PER_FILE_FDR_FILE, StringComparison.Ordinal)
                 ? new PerFileFirstPassModel(percConfig, LanesUsed(fileLanes, nFiles), log, passLabel)
                 : null;
 
@@ -1572,6 +1573,7 @@ namespace pwiz.Osprey.FDR
                     if (scoredHere)
                     {
                         IReadOnlyList<double[]> featureRows = rowProgress.Counting(() => loadFileFeatures(fileName));
+                        var rawFeatureRows = featureRows;
                         // Persisted for the second pass only where the file is scored: a resumed
                         // file's run-scope sidecar is current only beside a current column.
                         if (proteinBestColumn != null)
@@ -1580,12 +1582,15 @@ namespace pwiz.Osprey.FDR
                         t = lane1.Stop(LANE1_FEATURES, t);
                         scores = ScoreRows(file, featureRows, gbtModels, avgWeights, avgBias, standardizer, scoreFeatures,
                             percConfig.NThreads, HeldOutFoldsOf(heldOutFolds, fileName));
-                        // OSPREY_PER_FILE_FDR=model: the file's own model replaces the global
-                        // scores. The global score pass above still runs for the feature report.
+                        // OSPREY_PER_FILE_FDR=model or file: the file's own model replaces the global
+                        // scores. The global score pass above still runs for the feature report. The
+                        // file arm computes its own protein-best column, so it takes the raw rows.
                         if (perFileModel != null)
                         {
+                            bool raw = perFileModel.UsesOwnProteinBest;
                             scores = file.Scores = perFileModel.TrainAndScore(fileName, rows.EntryIds, rows.Charges,
-                                rows.IsDecoys, rows.CoelutionSums, rows.Peptides, featureRows, scoreFeatures);
+                                rows.IsDecoys, rows.CoelutionSums, rows.Peptides, raw ? rawFeatureRows : featureRows,
+                                raw ? nFeatures : scoreFeatures);
                         }
                         rowProgress.Add(count);
                         t = lane1.Stop(LANE1_SCORE, t);
