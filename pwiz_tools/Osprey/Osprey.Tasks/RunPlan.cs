@@ -74,8 +74,9 @@ namespace pwiz.Osprey.Tasks
         public int FirstPassFdrLanes { get; set; } = 1;
 
         /// <summary>
-        /// The reader that reads the current stage's input files that have no spectra cache ahead
-        /// of the lanes that score them, or null when spectra are read where they are needed.
+        /// With <c>--spectra-cache off</c>, the reader that reads the current stage's input files that
+        /// have no spectra cache ahead of the lanes that score them, or null when spectra are read
+        /// where they are needed.
         /// Set by a per-file stage for the length of its file loop.
         /// </summary>
         internal SpectraPrefetcher Prefetcher { get; set; }

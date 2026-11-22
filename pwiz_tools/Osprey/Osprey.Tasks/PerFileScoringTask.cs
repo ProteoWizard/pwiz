@@ -320,8 +320,9 @@ namespace pwiz.Osprey.Tasks
             // process pays once however many files it scores. A no-op without a profiler.
             ProfilerHooks.StartMeasure();
             var swAllFiles = Stopwatch.StartNew();
-            // Read the files that have no spectra cache ahead of the lanes that score them.
-            ScoringTaskShared.StartPrefetch(config.InputFiles, effectiveParallelism, true, ctx);
+            // With --spectra-cache off, read the files that have no spectra cache ahead of the lanes
+            // that score them.
+            ScoringTaskShared.StartPrefetch(config.InputFiles, effectiveParallelism, ctx);
             try
             {
                 if (nFiles == 1)

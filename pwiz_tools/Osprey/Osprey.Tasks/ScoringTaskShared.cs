@@ -105,19 +105,19 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Starts a reader that reads those of a per-file stage's <paramref name="inputs"/> that have
-        /// no spectra cache ahead of its <paramref name="lanes"/>; a no-op when every input has one.
-        /// Pair with <see cref="EndPrefetch"/> in a finally, and release each file with
-        /// <see cref="ReleasePrefetched"/> when its lane is done with it. <paramref name="scoring"/> is
-        /// true for per-file scoring, whose reader also writes each <c>.spectra.bin</c> unless
-        /// <c>--spectra-cache off</c>; the re-score then reads that cache, so it starts a reader only
-        /// when no cache was written.
+        /// With <c>--spectra-cache off</c>, starts a reader that reads those of a per-file stage's
+        /// <paramref name="inputs"/> that have no spectra cache ahead of its <paramref name="lanes"/>;
+        /// otherwise, or when every input has one, a no-op. Pair with <see cref="EndPrefetch"/> in a
+        /// finally, and release each file with <see cref="ReleasePrefetched"/> when its lane is done
+        /// with it. Writing the cache from the read-ahead spectra was measured and not kept: at 82
+        /// SEA-AD Astral files on a spinning disk the writes slowed the reads beside them, and scoring
+        /// took 9,526 s against 9,739 s for the read-back path below and 8,175 s writing nothing.
         /// </summary>
-        internal static void StartPrefetch(IEnumerable<string> inputs, int lanes, bool scoring, PipelineContext ctx)
+        internal static void StartPrefetch(IEnumerable<string> inputs, int lanes, PipelineContext ctx)
         {
             // A multiplexed run is read demultiplexed into its own cache by the stage's own read
             // (DemuxCache), so under --demux the reader would only read it a second time.
-            if ((!scoring && ctx.Config.SpectraCache) || ctx.Config.DemuxMode != DemuxMode.off)
+            if (ctx.Config.SpectraCache || ctx.Config.DemuxMode != DemuxMode.off)
                 return;
             // A cache that exists is read where it is needed, as before, and one found stale there is
             // rebuilt there.
@@ -125,8 +125,7 @@ namespace pwiz.Osprey.Tasks
                                                      !File.Exists(SpectraCache.GetDemuxCachePath(inputFile))).ToList();
             if (uncached.Count == 0)
                 return;
-            ctx.RunPlan.Prefetcher = new SpectraPrefetcher(uncached, lanes, DemuxCache.CreateParams(ctx.Config),
-                scoring && ctx.Config.SpectraCache, ctx);
+            ctx.RunPlan.Prefetcher = new SpectraPrefetcher(uncached, lanes, DemuxCache.CreateParams(ctx.Config), ctx);
         }
 
         /// <summary>Stops the reader <see cref="StartPrefetch"/> started, if any.</summary>
@@ -155,10 +154,8 @@ namespace pwiz.Osprey.Tasks
         /// full resident load survives only in Stage-6 rescore
         /// (<see cref="LoadSpectraForRescore"/>, a separate follow-up).
         ///
-        /// A file the stage's <see cref="SpectraPrefetcher"/> read ahead (one with no cache when the
-        /// stage began) is served from those spectra instead, its cache already written from them, so
-        /// the read-back above is left to a cache found stale here and to <c>--task SpectraCache</c>.
-        /// With <c>--spectra-cache off</c> a miss writes nothing and scores from the spectra read.
+        /// With <c>--spectra-cache off</c> a miss writes nothing and scores from the spectra read: those
+        /// the stage's <see cref="SpectraPrefetcher"/> read ahead, or this method's own read.
         ///
         /// Shared here rather than owned by <see cref="PerFileScoringTask"/> because
         /// <see cref="SpectraCacheTask"/> (<c>--task SpectraCache</c>) builds exactly the
@@ -177,8 +174,7 @@ namespace pwiz.Osprey.Tasks
             if (demuxHit != null)
                 return demuxHit;
 
-            // The spectra the stage's reader read ahead (and cached, unless --spectra-cache off),
-            // when it read this file.
+            // --spectra-cache off: the spectra the stage's reader read ahead, when it read this file.
             var prefetched = ctx.RunPlan.Prefetcher?.Take(inputFile, true, out unsortedCount);
             if (prefetched != null)
                 return prefetched;

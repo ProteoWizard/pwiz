@@ -136,12 +136,10 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Save spectra to a binary cache file. A non-null <paramref name="demuxDescriptor"/>
-        /// writes a demultiplexed cache carrying that descriptor. Without
-        /// <paramref name="reportProgress"/> it writes silently, for a write running behind other work.
+        /// writes a demultiplexed cache carrying that descriptor.
         /// </summary>
         public static void SaveSpectraCache(string path, IReadOnlyList<Spectrum> ms2Spectra,
-            List<MS1Spectrum> ms1Spectra, string sourcePath = null, string demuxDescriptor = null,
-            bool reportProgress = true)
+            List<MS1Spectrum> ms1Spectra, string sourcePath = null, string demuxDescriptor = null)
         {
             if (ms2Spectra == null)
                 ms2Spectra = new List<Spectrum>();
@@ -215,23 +213,19 @@ namespace pwiz.Osprey.IO
                     // showed up only as an unexplained gap between the reader's "100%" and the
                     // "Loaded N MS1 and M MS/MS spectra" line - long enough that a run looked
                     // hung, with nothing in the log naming the file being written.
-                    void WriteMs2Records(ProgressReporter progress)
+                    ProgressReporter.Run(OspreyIOResources.SpectraCache_SaveSpectraCache_Writing_spectra_cache, nMs2, progress =>
                     {
                         long nWritten = 0;
                         foreach (int key in windowKeyOrder)
                         {
                             foreach (int i in windowKeyToIndices[key])
                             {
-                                progress?.Report(++nWritten);
+                                progress.Report(++nWritten);
                                 recordOffsets[i] = fs.Position;
                                 WriteMs2Record(w, ms2Spectra[i]);
                             }
                         }
-                    }
-                    if (!reportProgress)
-                        WriteMs2Records(null);
-                    else
-                        ProgressReporter.Run(OspreyIOResources.SpectraCache_SaveSpectraCache_Writing_spectra_cache, nMs2, WriteMs2Records, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
+                    }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
 
                     // MS1 records (acquisition order; every consumer reads them in full)
                     long ms1SectionOffset = fs.Position;

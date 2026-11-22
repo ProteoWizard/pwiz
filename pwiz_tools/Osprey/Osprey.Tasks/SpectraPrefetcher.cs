@@ -35,9 +35,8 @@ namespace pwiz.Osprey.Tasks
     /// Reads a per-file stage's input files that have no spectra cache in full, in input order,
     /// ahead of the lanes that score them, so a file's read overlaps the scoring of the files before
     /// it. A forward read completes no isolation window until it reaches the end of the file, so the
-    /// overlap is across files, never within one. In per-file scoring it also writes each file's
-    /// <c>.spectra.bin</c> from the spectra it read, before handing them over, so scoring never
-    /// reads the cache back (<c>--spectra-cache off</c> writes none).
+    /// overlap is across files, never within one. Used with <c>--spectra-cache off</c>, where no
+    /// cache is written and the second-pass re-score reads each file again.
     ///
     /// <para>Files are read by <see cref="OspreyEnvironment.ReadThreads"/> threads at
     /// above-normal priority: one decode thread competing with every scoring thread fell behind
@@ -67,7 +66,6 @@ namespace pwiz.Osprey.Tasks
         private readonly double _budgetFiles;
         private readonly PipelineContext _ctx;
         private readonly SpectrumListDemux.Params _demultiplex;
-        private readonly bool _writeCache;
         private readonly object _lock = new object();
         private readonly Dictionary<string, PrefetchedFile> _files = new Dictionary<string, PrefetchedFile>(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _skipped = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -85,15 +83,12 @@ namespace pwiz.Osprey.Tasks
         /// <param name="lanes">How many files the stage works on at once.</param>
         /// <param name="demultiplex">The demultiplexing settings the stage's own read would use, so
         /// a run is read here exactly as it would be there.</param>
-        /// <param name="writeCache">Write each file's <c>.spectra.bin</c> from the spectra read,
-        /// before handing them over, so a later stage can read the cache.</param>
         /// <param name="ctx">For the read-ahead log lines.</param>
         public SpectraPrefetcher(IEnumerable<string> inputs, int lanes, SpectrumListDemux.Params demultiplex,
-            bool writeCache, PipelineContext ctx)
+            PipelineContext ctx)
         {
             _inputs = new List<string>(inputs);
             _demultiplex = demultiplex;
-            _writeCache = writeCache;
             _budgetFiles = Math.Max(1, lanes) + Math.Max(0, OspreyEnvironment.ReadAhead);
             _ctx = ctx;
         }
@@ -152,23 +147,12 @@ namespace pwiz.Osprey.Tasks
                 return null;
             }
             unsortedCount = result.UnsortedSpectrumCount;
-            // The messages the stage's own read gives for the same file.
+            // The warning the stage's own read gives for the same file.
             if (result.MultiplexedSchemeNotDemultiplexed != null)
             {
                 _ctx.LogWarning(string.Format(
                     OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache__0__was_acquired_with_overlapping_isolation_windows_and_is_searched_as_acquired,
                     Path.GetFileName(inputFile), OspreyArgNames.Text(OspreyArgNames.DEMUX)));
-            }
-            if (file.WriteError != null)
-            {
-                _ctx.LogWarning(string.Format(OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Failed_to_save_spectra_cache___0_,
-                    file.WriteError.Message));
-            }
-            else if (file.CacheWritten)
-            {
-                string cachePath = SpectraCache.GetCachePath(inputFile);
-                _ctx.LogInfo(string.Format(OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Saved_spectra_cache___0__MS2____1__MS1___2__GB__to___3__,
-                    result.Ms2Spectra.Count, result.Ms1Spectra.Count, ToGb(FileLength(cachePath)), cachePath));
             }
             var index = SpectraWindowIndex.FromSpectra(result.Ms2Spectra, result.Ms1Spectra, loadMs1);
             if (!loadMs1)
@@ -180,9 +164,9 @@ namespace pwiz.Osprey.Tasks
                 ReleaseBytes(file, ms1Bytes);
             }
             index.PeakBytesReleased = bytes => ReleaseBytes(file, bytes);
-            _ctx.LogInfo(LogTag.TIMING, @"Read ahead {0}: read in {1:F1}s, waited {2:F1}s; {3:F2} GB resident of {4:F2} GB budget; cache write {5:F1}s",
+            _ctx.LogInfo(LogTag.TIMING, @"Read ahead {0}: read in {1:F1}s, waited {2:F1}s; {3:F2} GB resident of {4:F2} GB budget",
                 Path.GetFileName(inputFile), file.ReadSeconds, swWait.Elapsed.TotalSeconds,
-                ToGb(Volatile.Read(ref _residentBytes)), ToGb(Volatile.Read(ref _budgetBytes)), file.WriteSeconds);
+                ToGb(Volatile.Read(ref _residentBytes)), ToGb(Volatile.Read(ref _budgetBytes)));
             return index;
         }
 
@@ -248,27 +232,6 @@ namespace pwiz.Osprey.Tasks
             try
             {
                 file.Result = SpectrumFileReader.LoadAllSpectra(file.Path, _demultiplex, bytes => Reserve(file, bytes), false);
-                if (_writeCache && file.Result.DemultiplexScheme == null)
-                {
-                    double readSeconds = sw.Elapsed.TotalSeconds;
-                    // A failed write leaves the spectra to score from, as the stage's own read does;
-                    // the re-score then reports the missing cache by name.
-                    try
-                    {
-                        SpectraCache.SaveSpectraCache(SpectraCache.GetCachePath(file.Path), file.Result.Ms2Spectra,
-                            file.Result.Ms1Spectra, file.Path, null, false);
-                        file.CacheWritten = true;
-                    }
-                    catch (IOException ex)
-                    {
-                        file.WriteError = ex;
-                    }
-                    catch (UnauthorizedAccessException ex)
-                    {
-                        file.WriteError = ex;
-                    }
-                    file.WriteSeconds = sw.Elapsed.TotalSeconds - readSeconds;
-                }
             }
             catch (AbandonedReadException)
             {
@@ -348,18 +311,6 @@ namespace pwiz.Osprey.Tasks
             }
         }
 
-        private static long FileLength(string path)
-        {
-            try
-            {
-                return File.Exists(path) ? new FileInfo(path).Length : 0;
-            }
-            catch (IOException)
-            {
-                return 0;
-            }
-        }
-
         private static double ToGb(long bytes)
         {
             return bytes / 1024.0 / 1024.0 / 1024.0;
@@ -378,9 +329,6 @@ namespace pwiz.Osprey.Tasks
             public SpectrumFileResult Result { get; set; }
             public Exception Error { get; set; }
             public double ReadSeconds { get; set; }
-            public double WriteSeconds { get; set; }
-            public bool CacheWritten { get; set; }
-            public Exception WriteError { get; set; }
             // Guarded by the prefetcher's lock.
             public long Bytes { get; set; }
             public long ReleasedBytes { get; set; }

@@ -820,8 +820,8 @@ namespace pwiz.Osprey.Test
             string baseLog = RunAnalysis(baseDir, DataInputs(), FdrLanes(1),
                 OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText, @"1");
             string baseBlib = Path.Combine(baseDir, BLIB_FILE);
-            // No run has a cache yet, so scoring reads each ahead of its lane and caches it from memory.
-            StringAssert.Contains(baseLog, @"Read ahead: peak");
+            // The read-ahead reader is for --spectra-cache off only.
+            StringAssert.DoesNotMatch(baseLog, new Regex(@"Read ahead: peak"));
 
             // Files scored and re-scored concurrently must give the sequential answer. The subset's
             // three runs reach the second-pass worker together, so a race there shows every time
@@ -1006,13 +1006,12 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_SPECTRA_CACHE.ArgumentText, OspreyArgNames.VALUE_OFF);
             Assert.AreEqual(RUN_NAMES.Length, Directory.GetFiles(cacheDir, @"*" + SPECTRA_CACHE_EXTENSION).Length);
             Assert.IsFalse(File.Exists(Path.Combine(cacheDir, BLIB_FILE)));
-            // The task writes each cache from a read of its own; the search above wrote them from
-            // the spectra it read ahead for scoring. The two must be byte-identical.
+            // The task writes each cache exactly as the search above wrote it while scoring.
             foreach (string run in RUN_NAMES)
             {
                 CollectionAssert.AreEqual(File.ReadAllBytes(Path.Combine(cacheDir, run + SPECTRA_CACHE_EXTENSION)),
                     File.ReadAllBytes(Path.Combine(baseDir, run + SPECTRA_CACHE_EXTENSION)),
-                    @"a cache written from the read-ahead spectra differs from the one the spectra-cache task wrote: " + run);
+                    @"the search's cache differs from the one the spectra-cache task wrote: " + run);
             }
 
             // With --parallel-files the runs cache on lanes at once, and every cache is
