@@ -1496,6 +1496,25 @@ namespace pwiz.Osprey.Core
         public static readonly int? PerFileFdrTrainSize =
             ParseIntOrNull(ENV_PER_FILE_FDR_TRAIN_SIZE) is { } size && size > 0 ? size : null;
 
+        private static readonly EnvVar ENV_PER_FILE_FDR_ROUND2_SIZE = new EnvVar(@"OSPREY_PER_FILE_FDR_ROUND2_SIZE", EnvVarGroup.behavior,
+            @"Experiment, with OSPREY_PER_FILE_FDR: the rows each per-file model's round 2 trains on, in place " +
+            @"of two thirds of OSPREY_PER_FILE_FDR_TRAIN_SIZE. Changes the validity key.")
+            { ValueExample = @"<N>", DefaultValue = @"200000" };
+
+        /// <summary>OSPREY_PER_FILE_FDR_ROUND2_SIZE: each per-file model's round-2 training rows, or
+        /// null for the size <see cref="PerFileFdrTrainSize"/> implies.</summary>
+        public static readonly int? PerFileFdrRound2Size =
+            ParseIntOrNull(ENV_PER_FILE_FDR_ROUND2_SIZE) is { } size2 && size2 > 0 ? size2 : null;
+
+        private static readonly EnvVar ENV_GBT_PATIENCE = new EnvVar(@"OSPREY_GBT_PATIENCE", EnvVarGroup.behavior,
+            @"Gradient-boosted trees: semi-supervised iterations without a held-out improvement before a fold " +
+            @"stops. Changes the validity key.")
+            { ValueExample = @"<N>", DefaultValue = @"2" };
+
+        /// <summary>OSPREY_GBT_PATIENCE: how many iterations without a held-out improvement end a tree
+        /// fold's semi-supervised loop (default 2, the measured behavior).</summary>
+        public static readonly int GbtPatience = ParseIntOrNull(ENV_GBT_PATIENCE) is { } patience && patience > 0 ? patience : 2;
+
         private static readonly EnvVar ENV_MZML_DECODE_THREADS = new EnvVar(@"OSPREY_MZML_DECODE_THREADS", EnvVarGroup.performance,
             @"Threads that decode mzML binary arrays. 1 is the serial decode, the A/B arm.")
             { ValueExample = @"<N>", DefaultValue = @"8" };

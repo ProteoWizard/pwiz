@@ -92,6 +92,8 @@ namespace pwiz.Osprey.FDR
             int round2Size = OspreyEnvironment.PrefilterSizeFor(true);
             if (trainSize.HasValue)
                 round2Size = Math.Min(round2Size, trainSize.Value * 2 / 3);
+            if (OspreyEnvironment.PerFileFdrRound2Size.HasValue)
+                round2Size = OspreyEnvironment.PerFileFdrRound2Size.Value;
             _round2Size = OspreyEnvironment.PerFileFdrTwoRound || _ownProteinBest != null ? round2Size : 0;
             _trainConfig.NThreads = _threads;
             _trainConfig.ReportTrainEntryFolds = true;

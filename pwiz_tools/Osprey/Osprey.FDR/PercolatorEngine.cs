@@ -329,6 +329,9 @@ namespace pwiz.Osprey.FDR
                           (OspreyEnvironment.PerFileFdrTwoRound ? @";perfilefdrrounds=2" : string.Empty) +
                           (OspreyEnvironment.PerFileFdrTrainSize.HasValue
                               ? string.Format(CultureInfo.InvariantCulture, @";perfilefdrsize={0}", OspreyEnvironment.PerFileFdrTrainSize.Value)
+                              : string.Empty) +
+                          (OspreyEnvironment.PerFileFdrRound2Size.HasValue
+                              ? string.Format(CultureInfo.InvariantCulture, @";perfilefdrround2={0}", OspreyEnvironment.PerFileFdrRound2Size.Value)
                               : string.Empty);
             }
             return suffix;
@@ -359,7 +362,10 @@ namespace pwiz.Osprey.FDR
                 gbtParams.MinChildWeight, gbtParams.Subsample, gbtParams.ColSample, gbtParams.Gamma,
                 gbtParams.RegLambda, gbtParams.RegAlpha, gbtParams.MaxBins, gbtParams.Seed,
                 maxIterations, innerFolds, gbtParams.UseDeterministicMath ? string.Empty : @";gbtmath=system",
-                outOfFold ? @";gbtoof=1" : string.Empty);
+                outOfFold ? @";gbtoof=1" : string.Empty) +
+                (OspreyEnvironment.GbtPatience != 2
+                    ? string.Format(CultureInfo.InvariantCulture, @";gbtpatience={0}", OspreyEnvironment.GbtPatience)
+                    : string.Empty);
         }
 
         /// <summary>

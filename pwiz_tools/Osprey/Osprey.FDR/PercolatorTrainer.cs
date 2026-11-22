@@ -1502,7 +1502,7 @@ namespace pwiz.Osprey.FDR
                     consecutiveNoImprove++;
                 }
 
-                if (consecutiveNoImprove >= 2)
+                if (consecutiveNoImprove >= OspreyEnvironment.GbtPatience)
                     break;
             }
 
