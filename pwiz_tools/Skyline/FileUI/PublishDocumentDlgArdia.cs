@@ -51,9 +51,10 @@ namespace pwiz.Skyline.FileUI
             Client = ArdiaClient.Create(Account);
 
             treeViewFolders.ImageList.TransparentColor = Color.Magenta;
-            treeViewFolders.ImageList.Images.Add(Resources.ArdiaIcon);  // 32bpp
-            treeViewFolders.ImageList.Images.Add(Resources.Folder);     // 32bpp
-            treeViewFolders.ImageList.Images.Add(Resources.Blank);      // 32bpp
+            treeViewFolders.ImageList.Images.Add(nameof(Resources.ArdiaIcon), Resources.ArdiaIcon);  // 32bpp
+            treeViewFolders.ImageList.Images.Add(nameof(Resources.Folder), Resources.Folder);     // 32bpp
+            treeViewFolders.ImageList.Images.Add(nameof(Resources.Blank), Resources.Blank);      // 32bpp
+            // Keyed by resource name so ScaleToDpi finds the IconBuilder files (DpiIcons.LoadKeyedIcon)
             ImageListScaler.ScaleToDpi(this, treeViewFolders.ImageList);   // 16x16 icons are a 96-DPI design (issue #4599)
         }
 
