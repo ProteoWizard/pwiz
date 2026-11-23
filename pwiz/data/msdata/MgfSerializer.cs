@@ -393,6 +393,8 @@ public sealed class MgfSpectrumList : SpectrumListBase
         ArgumentNullException.ThrowIfNull(spec);
         EnsureMzAscending(spec);
         int index = _spectra.Count;
+        // Every GetSpectrum call returns this same instance, so a reader must copy its arrays
+        // rather than take them, or the next read would find them empty
         spec.RetainedByList = true;
         _spectra.Add(spec);
 
