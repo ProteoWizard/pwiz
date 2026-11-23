@@ -891,7 +891,9 @@ node running that task needs a copy, whatever batch it was handed.
 | `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileScoring`, `FirstPassFDR`, `PerFileRescoring` | with the run, to every leg before `SecondPassFDR` |
 | `<stem>.scores.parquet` | per-run product | `PerFileScoring` (Stage 4) | `FirstPassFDR`, `PerFileRescoring` | with the run |
 | `<stem>.scores.parquet`, stub (EXPERIMENTAL, `OSPREY_PER_FILE_FDR=file`; In flight, item 5) | per-run product, in place of the full parquet: scalar columns, `fragment_coelution_sum` and the run's own calibrated `first_pass_score`, `run_precursor_q`, `run_peptide_q`; footer `osprey.feature_columns=stub`; stamped with the model key | `PerFileScoring` (Stage 4, after the run's own model is trained) | `FirstPassFDR` (the reduce, which refuses a run without it); the first-pass score readers in place of the absent `.1st-pass.fdr_scores.bin` | with the run |
-| `<stem>.features.parquet` (EXPERIMENTAL, `OSPREY_PER_FILE_FDR=file` with `OSPREY_PER_FILE_FDR_KEEP_PARQUET=1`; In flight, item 5) | per-run product: the full scores layout, every scalar and feature column, checkpointed before the model is trained; stamped with the feature key | `PerFileScoring` (Stage 4) | `PerFileScoring` itself, to re-train a run's model after a model-setting change without re-extracting (`--task FirstPass`) | not needed: no other task reads it |
+| `<stem>.features.parquet` (EXPERIMENTAL, `OSPREY_PER_FILE_FDR=file` with `OSPREY_PER_FILE_FDR_KEEP_PARQUET=1`; In flight, item 5) | per-run product: the full scores layout, every scalar and feature column, checkpointed before the model is trained; stamped with the feature key | `PerFileScoring` (Stage 4) | `PerFileScoring` itself, to re-train a run's model after a model-setting change without re-extracting (`--task FirstPass`); `PerFileRescoring`, for the unmoved rows of `<stem>.features-reconciled.parquet` when feature writing is on | only with feature writing on |
+| `<stem>.1st-pass.model.json`, per run (EXPERIMENTAL, `OSPREY_PER_FILE_FDR=file`; In flight, item 5) | per-run product: the run's own model, calibration map and protein-best floor; stamped with the model key | `PerFileScoring` (Stage 4) | `PerFileRescoring`, which scores the run's moved rows with it | with the run |
+| `<stem>.features-reconciled.parquet` (EXPERIMENTAL, `OSPREY_PER_FILE_FDR=file` with feature writing on; In flight, item 5) | per-run product: the full layout of the run's second-pass rows, the reconciled counterpart of `<stem>.features.parquet`; under the mode `<stem>.scores-reconciled.parquet` is a stub | `PerFileRescoring` (Stage 6) | the training export | not needed by `SecondPassFDR` |
 | `<stem>.1st-pass.fdr_scores.bin` | per-run product, carrying the run's share of the report's Model tab (`FeatureSums`); not written under `OSPREY_PER_FILE_FDR=file` | `FirstPassFDR` (pass 1) | `PerFileRescoring`; `FirstPassFDR`'s pay-later report; `SecondPassFDR` only under `OSPREY_PASS2_VERIFY_WORKER` | with the run |
 | `<stem>.reconciliation.json` | per-run product | `PerFileRescoring` (the run's Stage 6 plan, written just before it is rescored) | `SecondPassFDR` (gap-fill entry ids) | with the run, from the rescore node to `SecondPassFDR` |
 | `<blib-stem>.1st-pass.consensus.json` | experiment product | `FirstPassFDR` (end of the consensus pass) | `PerFileRescoring` (every run's plan) | **every node** running `PerFileRescoring` |
@@ -1526,16 +1528,35 @@ the text says so rather than describing the current shape as though it were the 
      `.calibration.json` and `.features.parquet` (the Stages 1-4 checkpoint), so
      `PerFileScoring` re-trains every model from its checkpoint and `FirstPassFDR` reduces.
      An HPC chain never needs it.
+   - `PerFileScoring` also writes each run's `<stem>.1st-pass.model.json`: the final round's
+     model (trees or weights per fold, and the standardizer), its calibration map (threshold
+     and denominator; the identity when the run could not be calibrated) and, under
+     `--protein-boost best`, the floor of its protein-best column, whose per-row values are a
+     `protein_best` column of the stub. It carries the model key. There is no analysis-wide
+     `<blib-stem>.1st-pass.model.json` under the mode.
+   - Pass 2: `PerFileRescoring` scores every row it re-scored - moved, gap-filled, CWT, each
+     holding its features in memory - with the run's own frozen model, appending the row's
+     protein-best value (the floor for an entry the run had no row for), and puts the score
+     through the run's calibration map; the features are not kept. An unmoved row carries its
+     first-pass score from the stub. `<stem>.scores-reconciled.parquet` takes the stub layout
+     (scalars, score, run q-values, `protein_best`), and the transfer reads each survivor's
+     score from it, so an unmoved row matches its first-pass record bit for bit and keeps its
+     q-values, and a moved row is re-mapped through the run's own score-to-q table. With
+     feature writing on (`OSPREY_PER_FILE_FDR_KEEP_PARQUET=1`, or `--training-export`, which
+     implies it) the second pass's features go to `<stem>.features-reconciled.parquet`, streamed
+     from `<stem>.features.parquet`, which is then a required input: `PerFileRescoring` stops
+     at its start without it. The training export reads the features files.
+     `OSPREY_PASS2_QVALUE=protein-compact` (the default for `--protein-boost compact`, so for
+     `--resolution unit`) is refused at `PerFileScoring` start under the mode.
 
    Measured on SEA-AD (82 runs, three at a time on a 30-thread box), against the global model:
    98,280 precursors at true FDP 1% against 97,120; the first pass 15,455 s against 14,992 s,
    with `FirstPassFDR` 894 s against 4,337 s; and about 264 MB on disk per run (one file)
    against about 2,184 MB (the 2,026 MB full parquet plus the 158 MB binary).
 
-   **Still to do:** pass 2 on the per-run models - `PerFileRescoring` and `SecondPassFDR` do not
-   yet work under the mode, because no frozen per-run model is persisted - and with it
-   `--task SecondPass`; `OSPREY_PER_FILE_FDR_KEEP_PARQUET=1` becoming the
-   `--keep-scores-parquet` flag; and the mode becoming the default. Until then the default
+   **Still to do:** protein-compact on the per-run models (or its removal); the Model tab of
+   the diagnostics report per run; `--task SecondPass`; `OSPREY_PER_FILE_FDR_KEEP_PARQUET=1`
+   becoming the `--keep-scores-parquet` flag; and the mode becoming the default. Until then the default
    run is unchanged: the run-scope sidecar and the protein-best column are written by
    `FirstPassFDR`, and the full `.scores.parquet` is the link between the first two tasks.
 
