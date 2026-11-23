@@ -1066,8 +1066,10 @@ namespace pwiz.Osprey.Tasks
             // StopAfterStage5: a straight-through run (or any run that later
             // writes the .blib) still needs the fragments. Decoy generation and
             // the fragment diagnostic below are told about the omission so they
-            // stay byte-identical (see LibraryLoadOptions / DecoyGenerator).
-            bool omitFragments = config.StopAfterStage5;
+            // stay byte-identical (see LibraryLoadOptions / DecoyGenerator). Not under --task
+            // FirstPass, which also stops after Stage 5 but scores the runs' spectra in this
+            // process first, and scoring needs every fragment.
+            bool omitFragments = config.StopAfterStage5 && !ScoringTaskShared.Includes<PerFileScoringTask>(config);
             var loadOptions = new LibraryLoadOptions { OmitFragments = omitFragments };
 
             // --task SecondPassFDR knows its retained set BEFORE the library is read, so it can
