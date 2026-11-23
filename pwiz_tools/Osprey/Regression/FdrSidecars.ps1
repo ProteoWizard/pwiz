@@ -80,7 +80,8 @@ file pair equal on the strength of records it never read.
 $ospreyComparerType = ([System.Management.Automation.PSTypeName]'OspreyFdrSidecarComparer').Type
 if ($ospreyComparerType) {
     foreach ($required in @('CheckPass2ProteinQ', 'LoadExperimentMap', 'CompareFused',
-                            'CompareBytes', 'CompareExperimentBytes')) {
+                            'CompareBytes', 'CompareExperimentBytes', 'CompareLoaded',
+                            'ValidateImage', 'ReadRunScope')) {
         if (-not $ospreyComparerType.GetMethod($required)) {
             throw ("An older OspreyFdrSidecarComparer is already loaded in this PowerShell " +
                    "session and has no $required method. A loaded .NET type cannot be " +
@@ -343,14 +344,35 @@ public static class OspreyFdrSidecarComparer
     public static FdrSidecarDiff Compare(
         string pathExpected, string pathActual, double tolerance, int expectedPass)
     {
+        byte[] a = ReadIfValid(pathExpected, expectedPass, out long na, out string problemA);
+        byte[] b = ReadIfValid(pathActual, expectedPass, out long nb, out string problemB);
+        return CompareLoaded(a, na, problemA, b, nb, problemB, tolerance);
+    }
+
+    /// Validates a run-scope image built in memory - a run whose records live in its stub
+    /// scores parquet, re-encoded by OspreyFdrStubReader.ReadAsSidecar - exactly as a file is.
+    /// ReadIfValid for the PowerShell side: one run-scope file, validated.
+    public static byte[] ReadRunScope(string path, int expectedPass, out long count, out string problem)
+    {
+        return ReadIfValid(path, expectedPass, out count, out problem);
+    }
+
+    public static byte[] ValidateImage(byte[] data, int expectedPass, out long count, out string problem)
+    {
+        return ValidateData(data, expectedPass, out count, out problem);
+    }
+
+    /// Compare on two run-scope images already read and validated (ReadIfValid or
+    /// ValidateImage); a null side is unreadable, for the reason its problem names.
+    public static FdrSidecarDiff CompareLoaded(
+        byte[] a, long na, string problemA, byte[] b, long nb, string problemB, double tolerance)
+    {
         var result = new FdrSidecarDiff
         {
             FieldCounts = new long[Fields.Length],
             FirstExample = new string[Fields.Length],
         };
 
-        byte[] a = ReadIfValid(pathExpected, expectedPass, out long na, out string problemA);
-        byte[] b = ReadIfValid(pathActual, expectedPass, out long nb, out string problemB);
         result.ReadableExpected = a != null;
         result.ReadableActual = b != null;
         result.ProblemExpected = problemA;
@@ -848,6 +870,13 @@ public static class OspreyFdrSidecarComparer
             problem = string.Format("could not be read: {0}", ex.Message);
             return null;
         }
+        return ValidateData(data, expectedPass, out count, out problem);
+    }
+
+    private static byte[] ValidateData(byte[] data, int expectedPass, out long count, out string problem)
+    {
+        count = 0;
+        problem = null;
         if (data.Length < HeaderLen)
         {
             problem = string.Format(
@@ -906,10 +935,166 @@ public static class OspreyFdrSidecarComparer
 '@
 }
 
+function Initialize-OspreyStubReader {
+    <#
+    Compile OspreyFdrStubReader against the Osprey build at -OspreyBinDir, so the per-run
+    comparisons below read records a run keeps in its stub scores parquets.
+
+    Per-run first- and second-pass records live in <stem>.scores.parquet and
+    <stem>.scores-reconciled.parquet; no .fdr_scores.bin is written. The records are read through
+    Osprey.IO's own FdrScoresSidecar.ReadRecords, which prefers a stub exactly as every Osprey
+    reader does, rather than a parquet decoder of this harness's own that could drift from it.
+    Each run's records are re-encoded in the v9 run-scope layout so the comparer above validates
+    and compares them as it does a file. The stubs carry no feature sums, so that section is empty.
+
+    Call once per session, after the build (the dlls are held open for its life).
+    #>
+    param([Parameter(Mandatory = $true)][string]$OspreyBinDir)
+
+    if (([System.Management.Automation.PSTypeName]'OspreyFdrStubReader').Type) { return }
+    $refs = @('Osprey.IO.dll', 'Osprey.Core.dll', 'pwiz.CommonUtil.dll') |
+        ForEach-Object { Join-Path $OspreyBinDir $_ }
+    foreach ($dll in $refs) {
+        if (-not (Test-Path $dll)) { throw "$dll not found - build Osprey (net10.0) first." }
+        [void][System.Reflection.Assembly]::LoadFrom($dll)
+    }
+    Add-Type -ReferencedAssemblies ($refs + @('System.Collections', 'System.Runtime')) -TypeDefinition @'
+using System;
+using System.Collections.Generic;
+using System.IO;
+using pwiz.Osprey.IO;
+
+public static class OspreyFdrStubReader
+{
+    private const int HeaderLen = 32;
+    private const int RecordLen = 36;
+    private const byte Version = 9;
+    private static readonly byte[] Magic =
+        { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'F', (byte)'D', (byte)'R' };
+
+    /// The file Osprey reads <paramref name="sidecarPath"/>'s records from: its stub scores
+    /// parquet when that holds them, else the path itself.
+    public static string ReadablePath(string sidecarPath, int pass)
+    {
+        return FdrScoresSidecar.ReadablePath(sidecarPath, (FdrScoresSidecar.Pass)pass);
+    }
+
+    /// Whether <paramref name="parquetPath"/> is a parquet that carries a run's scores.
+    public static bool HasScores(string parquetPath)
+    {
+        return ParquetScoreCache.HasScores(parquetPath);
+    }
+
+    /// The task named in the validity stamp of the parquet at <paramref name="parquetPath"/>,
+    /// or null when it has none.
+    public static string ProducedBy(string parquetPath)
+    {
+        var stamp = ParquetScoreCache.ReadStamp(parquetPath);
+        return stamp == null ? null : stamp.Task;
+    }
+
+    /// The run's records of <paramref name="pass"/>, read as Osprey reads them, encoded as a
+    /// v9 run-scope image with no feature sums and no stamp; null with a problem when unreadable.
+    public static byte[] ReadAsSidecar(string sidecarPath, int pass, out string problem)
+    {
+        problem = null;
+        var records = new List<FdrScoreRecord>();
+        bool ok;
+        try
+        {
+            ok = FdrScoresSidecar.ReadRecords(sidecarPath, (FdrScoresSidecar.Pass)pass, records.Add);
+        }
+        catch (Exception ex)
+        {
+            problem = string.Format("could not be read: {0}", ex.Message);
+            return null;
+        }
+        if (!ok)
+        {
+            string source = ReadablePath(sidecarPath, pass);
+            problem = File.Exists(source)
+                ? string.Format("{0} is not readable as pass-{1} records", Path.GetFileName(source), pass)
+                : "neither the sidecar nor a stub scores parquet holding its records exists";
+            return null;
+        }
+        var data = new byte[HeaderLen + (long)records.Count * RecordLen];
+        Array.Copy(Magic, data, Magic.Length);
+        data[8] = Version;
+        data[9] = (byte)pass;
+        BitConverter.GetBytes((ulong)records.Count).CopyTo(data, 16);
+        int off = HeaderLen;
+        foreach (var r in records)
+        {
+            BitConverter.GetBytes(r.EntryId).CopyTo(data, off);
+            BitConverter.GetBytes(r.Score).CopyTo(data, off + 4);
+            BitConverter.GetBytes(r.RunPrecursorQvalue).CopyTo(data, off + 12);
+            BitConverter.GetBytes(r.RunPeptideQvalue).CopyTo(data, off + 20);
+            BitConverter.GetBytes(r.ApexRt).CopyTo(data, off + 28);
+            off += RecordLen;
+        }
+        return data;
+    }
+}
+'@
+}
+
+function Get-RunScopeStems {
+    <#
+    Stem -> sidecar path for every run in -Dir with -Pass run-scope records: a binary
+    .fdr_scores.bin, or a stub scores parquet that carries scores (the sidecar path is then the
+    one Osprey resolves to that stub, and need not exist).
+    #>
+    param([Parameter(Mandatory = $true)][string]$Dir, [int]$Pass)
+
+    $suffix = if ($Pass -eq 1) { '.1st-pass.fdr_scores.bin' } else { '.2nd-pass.fdr_scores.bin' }
+    $stubExt = if ($Pass -eq 1) { '.scores.parquet' } else { '.scores-reconciled.parquet' }
+    $stems = @{}
+    foreach ($f in Get-ChildItem -File -Path $Dir -Filter "*$suffix" -ErrorAction SilentlyContinue) {
+        $stems[$f.Name.Substring(0, $f.Name.Length - $suffix.Length)] = $f.FullName
+    }
+    if (([System.Management.Automation.PSTypeName]'OspreyFdrStubReader').Type) {
+        foreach ($f in Get-ChildItem -File -Path $Dir -Filter "*$stubExt" -ErrorAction SilentlyContinue) {
+            if (-not [OspreyFdrStubReader]::HasScores($f.FullName)) { continue }
+            $stem = $f.Name.Substring(0, $f.Name.Length - $stubExt.Length)
+            $stems[$stem] = Join-Path $Dir "$stem$suffix"
+        }
+    }
+    return $stems
+}
+
+function Read-RunScopeImage {
+    <#
+    One run's run-scope records of -Pass for Compare-FdrSidecars: the binary sidecar at -Path
+    when Osprey would read that file, else the records its stub scores parquet holds, through
+    OspreyFdrStubReader (Initialize-OspreyStubReader). Returns Data, Count, Problem and Source.
+    #>
+    param([Parameter(Mandatory = $true)][string]$Path, [int]$Pass)
+
+    $source = $Path
+    if (([System.Management.Automation.PSTypeName]'OspreyFdrStubReader').Type) {
+        $source = [OspreyFdrStubReader]::ReadablePath($Path, $Pass)
+    }
+    $count = [long]0
+    $problem = $null
+    if ($source -eq $Path) {
+        $data = [OspreyFdrSidecarComparer]::ReadRunScope($Path, $Pass, [ref]$count, [ref]$problem)
+    } else {
+        $image = [OspreyFdrStubReader]::ReadAsSidecar($Path, $Pass, [ref]$problem)
+        $data = $null
+        if ($null -ne $image) {
+            $data = [OspreyFdrSidecarComparer]::ValidateImage($image, $Pass, [ref]$count, [ref]$problem)
+        }
+    }
+    return @{ Data = $data; Count = $count; Problem = $problem; Source = $source }
+}
+
 function Compare-FdrSidecars {
     <#
-    Compare every <stem>.<Pass>-pass.fdr_scores.bin between two run directories, all seven
-    scalar fields at Tolerance, matched by stem and then by entry_id. Returns Pass, Issues
+    Compare every run's <Pass> run-scope records between two run directories, all seven
+    scalar fields at Tolerance, matched by stem and then by entry_id. A run's records are its
+    <stem>.<Pass>-pass.fdr_scores.bin, or - what every current run writes - its stub scores
+    parquet (<stem>.scores.parquet for pass 1, <stem>.scores-reconciled.parquet for pass 2),
+    read through Osprey.IO once Initialize-OspreyStubReader has run. Returns Pass, Issues
     and Compared (the record count actually verified - the caller should assert it is
     non-zero, because comparing nothing is not the same as agreeing).
 
@@ -927,17 +1112,11 @@ function Compare-FdrSidecars {
 
     $issues = [System.Collections.Generic.List[string]]::new()
     $suffix = if ($Pass -eq 1) { '.1st-pass.fdr_scores.bin' } else { '.2nd-pass.fdr_scores.bin' }
-    $expected = @{}
-    foreach ($f in Get-ChildItem -File -Path $ExpectedDir -Filter "*$suffix" -ErrorAction SilentlyContinue) {
-        $expected[$f.Name.Substring(0, $f.Name.Length - $suffix.Length)] = $f.FullName
-    }
-    $actual = @{}
-    foreach ($f in Get-ChildItem -File -Path $ActualDir -Filter "*$suffix" -ErrorAction SilentlyContinue) {
-        $actual[$f.Name.Substring(0, $f.Name.Length - $suffix.Length)] = $f.FullName
-    }
+    $expected = Get-RunScopeStems -Dir $ExpectedDir -Pass $Pass
+    $actual = Get-RunScopeStems -Dir $ActualDir -Pass $Pass
 
     if ($expected.Count -eq 0) {
-        $issues.Add("no $suffix files in expected dir $ExpectedDir")
+        $issues.Add("no $suffix files or stub scores parquets in expected dir $ExpectedDir")
         return @{ Pass = $false; Issues = $issues; Compared = 0 }
     }
     foreach ($stem in $expected.Keys) {
@@ -951,8 +1130,10 @@ function Compare-FdrSidecars {
     foreach ($stem in ($expected.Keys | Sort-Object)) {
         if (-not $actual.ContainsKey($stem)) { continue }
 
-        $diff = [OspreyFdrSidecarComparer]::Compare(
-            $expected[$stem], $actual[$stem], $Tolerance, $Pass)
+        $a = Read-RunScopeImage -Path $expected[$stem] -Pass $Pass
+        $b = Read-RunScopeImage -Path $actual[$stem] -Pass $Pass
+        $diff = [OspreyFdrSidecarComparer]::CompareLoaded(
+            $a.Data, $a.Count, $a.Problem, $b.Data, $b.Count, $b.Problem, $Tolerance)
         if (-not $diff.ReadableExpected -or -not $diff.ReadableActual) {
             # Name the reason. "Not readable" on a version bump reads as corruption and sends
             # the next person looking at the wrong thing.
