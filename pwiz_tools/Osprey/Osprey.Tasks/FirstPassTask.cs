@@ -26,8 +26,8 @@ namespace pwiz.Osprey.Tasks
     /// <summary>
     /// <c>--task FirstPass</c>: a selector, never a pipeline stage, for local iteration on the
     /// first-pass model. It runs <see cref="PerFileScoringTask"/> and then
-    /// <see cref="FirstPassFdrTask"/>, and stops where <c>--task FirstPassFDR</c> stops. Under
-    /// <c>OSPREY_PER_FILE_FDR=file</c> the per-run models train in PerFileScoring, so a directory
+    /// <see cref="FirstPassFdrTask"/>, and stops where <c>--task FirstPassFDR</c> stops. The
+    /// per-run models train in PerFileScoring, so a directory
     /// that holds each run's features checkpoint (<c>&lt;stem&gt;.features.parquet</c>) and
     /// calibration - Stages 1-4, linked from an earlier run - trains every model again from the
     /// checkpoints and reduces them, without scoring a run from its spectra. An HPC chain never

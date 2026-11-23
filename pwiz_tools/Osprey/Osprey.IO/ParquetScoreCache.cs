@@ -260,7 +260,7 @@ namespace pwiz.Osprey.IO
         // and as one of the 21 PIN features). Not added to the write
         // schema -- it's already there via the PIN feature fields.
         private const string COLUMN_COELUTION_SUM = @"fragment_coelution_sum";
-        // A stub's scores (OSPREY_PER_FILE_FDR=file): each row's score and the two run q-values, of
+        // A stub's scores: each row's score and the two run q-values, of
         // the pass the file belongs to - the run's own calibrated first-pass score in .scores.parquet,
         // the second pass's in .scores-reconciled.parquet. The records FdrScoresSidecar otherwise
         // writes per run and per pass.
@@ -2708,8 +2708,8 @@ namespace pwiz.Osprey.IO
         public const string EXT_SCORES_RECONCILED = @".scores-reconciled.parquet";
 
         /// <summary>
-        /// The extension of a run's features checkpoint (<c>OSPREY_PER_FILE_FDR=file</c> with
-        /// <c>OSPREY_PER_FILE_FDR_KEEP_PARQUET=1</c>): the full scores layout, every scalar and
+        /// The extension of a run's features checkpoint (<c>--keep-scores-parquet</c>, or
+        /// <c>--training-export</c>): the full scores layout, every scalar and
         /// feature column, written by PerFileScoring before the run's own model is trained, so a
         /// later run can train the model again without scoring the run again.
         /// </summary>
@@ -2724,8 +2724,7 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// The extension of a run's second-pass features (<c>OSPREY_PER_FILE_FDR=file</c> with
-        /// feature writing on): the reconciled counterpart of <see cref="EXT_FEATURES"/>, in the
+        /// The extension of a run's second-pass features (with feature writing on): the reconciled counterpart of <see cref="EXT_FEATURES"/>, in the
         /// full layout, written by PerFileRescoring from the run's features checkpoint with the
         /// moved rows' features replaced. The <see cref="EXT_SCORES_RECONCILED"/> file beside it
         /// is a stub.

@@ -266,7 +266,7 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// The <c>OSPREY_PER_FILE_FDR=file</c> first-pass model of ONE run: trains the run's own
+        /// The first-pass model of ONE run: trains the run's own
         /// two-round model with its own protein-best column, scores every row out of fold,
         /// calibrates the scores (<see cref="PerFileFirstPassModel"/>), and returns them in row
         /// order with the run q-values they imply. Nothing outside the run is read, which is what
@@ -1360,7 +1360,7 @@ namespace pwiz.Osprey.FDR
             // features loaded; the round-1 subset is the same entry objects. Off (the default), only
             // the subset is built and loaded, as always. A resume trains nothing, so it never needs
             // the candidates.
-            // OSPREY_PER_FILE_FDR=file: every run's scores came from its own model in
+            // Every run's scores came from its own model in
             // PerFileScoring, so there is no model to train here and no training rows to load.
             bool train = pretrainedModel == null && !scoresPrecomputed;
             bool prefilter = percConfig.PrefilterTrainSize > 0 && train;

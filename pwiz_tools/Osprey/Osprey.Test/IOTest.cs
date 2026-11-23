@@ -2280,7 +2280,7 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// A stub scores parquet (OSPREY_PER_FILE_FDR=file without the full parquet) against the
+        /// A stub scores parquet against the
         /// full parquet of the same rows: marked as a stub, smaller, accepted by the resume
         /// probes, and read back - with the library supplying each row's peptide, charge and decoy
         /// flag - exactly as the full parquet reads. Read without the library it refuses rather

@@ -85,7 +85,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public const string TASK_NAME = OspreyTaskNames.PER_FILE_SCORING;
 
-        // The key term of a stub scores parquet (OSPREY_PER_FILE_FDR=file without the full parquet),
+        // The key term of a stub scores parquet,
         // with its layout version: 2 names the score column "score" and adds protein_best.
         private const string STUB_PARQUET_KEY_TERM = @";parquet=stubscores2";
 
@@ -156,7 +156,7 @@ namespace pwiz.Osprey.Tasks
         // The validity stamp every per-file output of this run embeds (the parquet in its footer,
         // the calibration JSON as its first property). Set once in Run, before any file is scored.
         private ArtifactStamp _outputStamp;
-        // OSPREY_PER_FILE_FDR=file: the stamp of each run's own first-pass scores, and the
+        // The stamp of each run's own first-pass scores, and the
         // protein membership their column is computed from, built once for every file. Null
         // when the arm is off.
         private ArtifactStamp _ownModelStamp;
@@ -270,7 +270,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Under <c>OSPREY_PER_FILE_FDR=file</c> the scores parquet is a stub that holds the run's
+        /// The scores parquet is a stub that holds the run's
         /// own first-pass scores, so it carries the model key - this task's key plus every setting
         /// that changes the model - and <see cref="STUB_PARQUET_KEY_TERM"/>, which no run that needs
         /// the features ever expects. The calibration and the features checkpoint carry the task
@@ -1671,7 +1671,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// <c>OSPREY_PER_FILE_FDR=file</c>, when the run's stub is not current but its features
+        /// When the run's stub is not current but its features
         /// checkpoint and calibration are: the model settings changed and the features did not, so
         /// the run's own model is trained again from the checkpoint and its stub written again,
         /// without scoring the run. This is the iteration loop of <c>--task FirstPass</c> over a
@@ -1725,7 +1725,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// <c>OSPREY_PER_FILE_FDR=file</c>: the run's own first-pass model from its entries and
+        /// The run's own first-pass model from its entries and
         /// their features - freshly scored, or read back from the run's features checkpoint.
         /// Each entry's row is its
         /// <see cref="FdrEntry.ParquetIndex"/>, its row in the parquet, and each value is what the

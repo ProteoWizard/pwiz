@@ -137,7 +137,7 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<uint, (double score, uint entryId)>> _writeAnswer;
 
         /// <param name="scorer">The frozen 1st-pass model, or null when each run trained its own
-        /// (<c>OSPREY_PER_FILE_FDR=file</c>): each run's reconciled parquet then carries every
+        /// (per-run first-pass models): each run's reconciled parquet then carries every
         /// survivor's second-pass score, a moved row's from the run's own frozen model, and the
         /// transfer reads them from there.</param>
         /// <param name="features">The search's features, as the reconciled parquet holds them.</param>
@@ -319,7 +319,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// The transfer under per-run first-pass models (<c>OSPREY_PER_FILE_FDR=file</c>), BEFORE
+        /// The transfer under per-run first-pass models, BEFORE
         /// the run's reconciled stub is written, which then carries its answer: each survivor's
         /// second-pass score is the one it holds in memory - its first-pass score from the stub
         /// for a row whose peak did not move, and the run's own frozen model's calibrated score

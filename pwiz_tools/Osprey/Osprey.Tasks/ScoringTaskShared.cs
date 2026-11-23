@@ -73,7 +73,7 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// The library identity a reader of a stub layout scores parquet takes each row's peptide,
-        /// charge and decoy flag from, under per-run first-pass models (<c>OSPREY_PER_FILE_FDR=file</c>),
+        /// charge and decoy flag from, under per-run first-pass models,
         /// where a run's scores parquet and its reconciled parquet are both stubs with no peptide
         /// column; null otherwise, so every other run reads its files as it always has. Built once
         /// per loaded library.

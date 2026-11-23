@@ -1106,8 +1106,8 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// True when a run's first-pass records can be read from <paramref name="pass1Path"/>:
-        /// the file itself, or - for a run whose scores live in its stub scores parquet
-        /// (<c>OSPREY_PER_FILE_FDR=file</c>) - that parquet. The existence test a reader of the
+        /// the file itself, or - for a run whose scores live in its stub scores parquet, as every
+        /// current run's do - that parquet. The existence test a reader of the
         /// records asks instead of <c>File.Exists</c>.
         /// </summary>
         public static bool Pass1Available(string pass1Path)

@@ -202,8 +202,8 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// One run's own first-pass model file, <c>&lt;stem&gt;.1st-pass.model.json</c>, beside the
-        /// run's other first-pass artifacts: written by PerFileScoring when each run trains its own
-        /// model (<c>OSPREY_PER_FILE_FDR=file</c>), read by PerFileRescoring.
+        /// run's other first-pass artifacts: written by PerFileScoring, which trains each run's own
+        /// model, read by PerFileRescoring.
         /// </summary>
         public static string RunModelPathFor(string inputFile)
         {

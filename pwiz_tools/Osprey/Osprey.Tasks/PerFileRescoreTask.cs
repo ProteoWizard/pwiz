@@ -169,7 +169,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public const string TASK_NAME = OspreyTaskNames.PER_FILE_RESCORING;
 
-        // The key term of a reconciled stub (OSPREY_PER_FILE_FDR=file), with its layout version.
+        // The key term of a reconciled stub, with its layout version.
         private const string RECONCILED_STUB_KEY_TERM = @";reconciled=stub1";
 
         public override string Name => TASK_NAME;
@@ -222,22 +222,17 @@ namespace pwiz.Osprey.Tasks
         //
         // Inputs are what a node rescoring its runs must be given, doc 00's "Boundary 2 -> 3"
         // made checkable. Per run: the spectra cache Stage 6 streams its MS2 from (no data file -
-        // there is no mzML fallback), the Stage 4 parquet the run is rehydrated from, the
-        // calibration (mass calibration is required; the RT calibration plans the run), and the
-        // run's 1st-pass FDR sidecar. Analysis-wide, the four files FirstPassFDR wrote for every
-        // node: the experiment sidecar (Stage 6's compaction reads its q-values), the retained
-        // base_id summary (fatal when absent), the frozen 1st-pass model the pass-2 worker scores
-        // with (both pass-2 modes are frozen, so it is unconditional), and under protein-compact
-        // the stratum it competes within.
+        // there is no mzML fallback), the run's stub scores parquet (its first-pass records and
+        // protein-best column, which the run is rehydrated from), the calibration (mass
+        // calibration is required; the RT calibration plans the run), the run's own
+        // <stem>.1st-pass.model.json (the frozen model its moved rows are scored with) and, with
+        // feature writing on, its <stem>.features.parquet (read for its unmoved rows).
+        // Analysis-wide, the files FirstPassFDR wrote for every node: the experiment sidecar
+        // (Stage 6's compaction reads its q-values), the retained base_id summary (fatal when
+        // absent) and the cross-run consensus. There is no analysis-wide model.
         //
         // Under --demux a multiplexed run streams <stem>.demux.spectra.bin instead of the plain
         // cache, which the configuration alone cannot tell; the plain cache is what is declared.
-        //
-        // Under per-run first-pass models (OSPREY_PER_FILE_FDR=file) the run's stub scores parquet
-        // holds its first-pass records and protein-best column, and the run's own
-        // <stem>.1st-pass.model.json is the model its moved rows are scored with, so neither the
-        // 1st-pass FDR sidecar, the protein-best file nor an analysis-wide model is read; with
-        // feature writing on, the run's <stem>.features.parquet is read for its unmoved rows.
         public override IEnumerable<string> Inputs(PipelineContext ctx)
         {
             var config = ctx.Config;
@@ -2085,7 +2080,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// The reconciled write under per-run first-pass models (<c>OSPREY_PER_FILE_FDR=file</c>).
+        /// The reconciled write under per-run first-pass models.
         /// Every row the rescore re-scored holds its features in memory; each is scored with the
         /// run's own frozen model and calibrated (<see cref="RunModelScorer"/>), and the reconciled
         /// parquet is written in the stub layout from the run's stub: scalars, each row's score

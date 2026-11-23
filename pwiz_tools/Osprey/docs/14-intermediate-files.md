@@ -28,19 +28,19 @@ experiment-wide. There is no third scope: experiment-wide content is written onc
 | `<stem>.calibration.json` | run | JSON (Newtonsoft) | `Osprey.Chromatography/CalibrationIO.cs` | RT + MS1/MS2 mass calibration parameters, and `model_diagnostics`: the run's row of the report's calibration view (`CalFileRow`) and mass unit, written by `ModelDiagnosticsReport.CalibrationDiagnosticsToJson` on every calibrated run, with or without `--model-diagnostics`, because only Stage 3 holds the calibration matches it is binned from (00, P16). Opaque to `Osprey.Chromatography`, which cannot see the row type |
 | `<stem>.spectra.bin` | run | Custom binary v4 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload - and the only copy once the source is deleted |
 | `<stem>.demux.spectra.bin` | run | Custom binary v4, own magic + descriptor | `Osprey.IO/SpectraCache.cs`, `Osprey.Tasks/DemuxCache.cs` | `--demux auto` on a multiplexed run only: the demultiplexed spectra the search reads in place of `.spectra.bin`, built from the source (section 2, [23-demultiplexing](23-demultiplexing.md)) |
-| `<stem>.scores.parquet` | run | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | Scored entries: identity and peak boundaries, the recorded PIN features + footer metadata |
-| `<stem>.scores.parquet`, stub | run | Apache Parquet (ZSTD), footer `osprey.feature_columns=stub` | `Osprey.IO/ParquetScoreCache.cs` | EXPERIMENTAL, `OSPREY_PER_FILE_FDR=file` only, in place of the full parquet: boundary scalars, `fragment_coelution_sum` and the run's own first-pass scores, no identity or other feature columns. The run's only scores file; no `.1st-pass.fdr_scores.bin` is written beside it (section 3, "The stub scores parquet") |
-| `<stem>.features.parquet` | run | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | EXPERIMENTAL, `OSPREY_PER_FILE_FDR=file` with `OSPREY_PER_FILE_FDR_KEEP_PARQUET=1` only: the features checkpoint, the full scores layout taken before the run's own model is trained (section 3) |
-| `<stem>.scores-reconciled.parquet` | run | Apache Parquet (ZSTD) | `Osprey.Tasks/ReconciledParquetWriter.cs` | Stage 6 reconciled rewrite (separate file, not in-place) |
-| `<stem>.1st-pass.fdr_scores.bin` | run | Custom binary **v9**, 32-byte header + 36-byte records + feature sums + validity stamp trailer | `Osprey.IO/FdrScoresSidecar.cs` | entry_id, SVM score, run precursor q, run peptide q, detection apex RT. The experiment-scope columns moved OUT at v5 (#4486) - see the experiment sidecar row; apex RT arrived at v7 (#4522), so the diagnostics co-assignment panel stops opening every `.scores.parquet` a second time for it; the embedded validity stamp at v8 (section 8). At v9 the run's `FeatureSums` (`Osprey.Core/FeatureSums.cs`, ~10 KB): its share of the report's Model tab - class counts, standardized feature sums in row order, fixed-bin histograms - written on every run, so a report asked for later, or over runs that resumed, adds the shares in run order and needs no re-scoring (00, P16) |
-| `<stem>.2nd-pass.fdr_scores.bin` | run | Custom binary **v9**, same layout, no feature sums | `Osprey.IO/FdrScoresSidecar.cs` | Same record shape after second-pass Percolator |
+| `<stem>.scores.parquet`, stub | run | Apache Parquet (ZSTD), footer `osprey.feature_columns=stub` | `Osprey.IO/ParquetScoreCache.cs` | The run's only first-pass scores file, written by `PerFileScoring` after the run's own model is trained: boundary scalars, `fragment_coelution_sum` and the run's own first-pass scores, no identity or other feature columns. It holds the run's first-pass records; no `.1st-pass.fdr_scores.bin` is written beside it (section 3, "The stub scores parquet") |
+| `<stem>.features.parquet` | run | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | `--keep-scores-parquet` (or `--training-export`, which implies it) only: the features checkpoint, the full scores layout taken before the run's own model is trained (section 3) |
+| `<stem>.scores-reconciled.parquet`, stub | run | Apache Parquet (ZSTD) | `Osprey.Tasks/ReconciledParquetWriter.cs` | Stage 6 reconciled rewrite (separate file, not in-place), in the stub layout: the run's second-pass records; no `.2nd-pass.fdr_scores.bin` is written beside it. With feature writing on, `<stem>.features-reconciled.parquet` holds the full layout of the same rows |
+| `<stem>.1st-pass.fdr_scores.bin` (not written; an earlier build's, or read in place of a stub) | run | Custom binary **v9**, 32-byte header + 36-byte records + feature sums + validity stamp trailer | `Osprey.IO/FdrScoresSidecar.cs` | entry_id, SVM score, run precursor q, run peptide q, detection apex RT. The experiment-scope columns moved OUT at v5 (#4486) - see the experiment sidecar row; apex RT arrived at v7 (#4522), so the diagnostics co-assignment panel stops opening every `.scores.parquet` a second time for it; the embedded validity stamp at v8 (section 8). At v9 the run's `FeatureSums` (`Osprey.Core/FeatureSums.cs`, ~10 KB): its share of the report's Model tab - class counts, standardized feature sums in row order, fixed-bin histograms - written on every run, so a report asked for later, or over runs that resumed, adds the shares in run order and needs no re-scoring (00, P16) |
+| `<stem>.2nd-pass.fdr_scores.bin` (not written; the reconciled stub is read in its place) | run | Custom binary **v9**, same layout, no feature sums | `Osprey.IO/FdrScoresSidecar.cs` | Same record shape after second-pass Percolator |
 | `<stem>.2nd-pass.fdr_decoys.bin` | run | Custom binary **v2** (v2 adds the validity stamp trailer) | `Osprey.IO/Pass2CompetitionDecoys.cs` | Per-run second-pass competition decoys; written before the scores sidecar |
-| `<stem>.1st-pass.protein_best.bin` | run | Custom binary **v1**, 32-byte header + 12-byte records + 8-byte extension + validity stamp trailer | `Osprey.IO/ProteinBestSidecar.cs` | `--protein-boost best` only (the HRAM default): the protein-best column the first-pass score pass scored the run with, one value per entry_id ascending, and the run's floor in the extension. The second pass scores each rescored row with its entry's value, or the floor for an entry the run had no first-pass row for. A run's first-pass scores resume only beside a current column |
+| `<stem>.1st-pass.protein_best.bin` | run | Custom binary **v1**, 32-byte header + 12-byte records + 8-byte extension + validity stamp trailer | `Osprey.IO/ProteinBestSidecar.cs` | Not written by per-run first-pass models, whose stub carries a `protein_best` column and whose `<stem>.1st-pass.model.json` the floor. Was `--protein-boost best` only (the HRAM default): the protein-best column the first-pass score pass scored the run with, one value per entry_id ascending, and the run's floor in the extension. The second pass scores each rescored row with its entry's value, or the floor for an entry the run had no first-pass row for. A run's first-pass scores resume only beside a current column |
 | `<stem>.reconciliation.json` | run | JSON (Newtonsoft) v4 | `Osprey.IO/ReconciliationFile.cs` | The run's Stage 6 plan, written by `PerFileRescoring` as it plans the run: actions, gap-fill targets, refined RT calibration (section 5) |
 | `<blib-stem>.1st-pass.consensus.json` | exp | JSON | `Osprey.Tasks/Stage6ConsensusFile.cs` | The cross-run consensus every run's plan reads: consensus RTs and the two passing sets (section 5a) |
 | `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` | exp | Custom binary **v4**, 32-byte header + 52-byte records + validity stamp trailer | `Osprey.IO/FdrExperimentSidecar.cs` | The experiment-scope columns: precursor q, peptide q, PEP, protein q, aggregate score, peptide PEP (v4). Both q-values are FLOORED to the precursor's best run before they are written (#4522) - see 07-fdr-control.md 3j. **Name** from the output blib, **directory** from `ResolveOutputDir` |
 | `<blib-stem>.1st-pass.retained_base_ids.bin` | exp | Custom binary **v2**, 32-byte header + 4-byte records + validity stamp trailer | `Osprey.IO/RetainedBaseIdSidecar.cs` | The join-wide compaction set: every base_id the Stage 6 rescore retains, ascending - the distinct base_ids of every run's first-pass survivors. Written once when the consensus pass ends. (It used to add each planned action target's base_id, which never added one: every action targets a survivor.) Bounded by the library, not by run count - on the 446-run CHS cohort of #4650 it is 2,502,512 bytes for 625,620 ids, against the megabytes each of the 446 `reconciliation.json` envelopes spends restating the first half. (Counts travel with their run: `RetainedBaseIdSidecar` quotes 744,943 ids / 2.98 MB from a different arm of the same cohort.) Eight read sites across four tasks: `FirstPassFdrTask` (x3), `PerFileScoringTask`, `PerFileRescoreTask` (x3: one of them the streamed Stage 7 join, one the training export's library load on its export-only arm, which retains fragments for these ids alone and loads everything without the file) and Stage 7's library-fragment release (#4650). **Absence is fatal at most of them, and deliberately so** - the fallback would be rebuilding the union from every envelope, the O(runs) pre-pass this file exists to delete - but not at all of them: `PerFileRescoreTask.BuildPerRunHydrate` takes the null-returning reader and declines the per-run shape, because the run is by then already failing elsewhere for a named reason |
-| `<blib-stem>.1st-pass.model.json` | exp | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | Frozen first-pass Percolator model (normalization plus weights and biases, a few hundred KB, or per-fold tree ensembles under `OSPREY_FDR_MODEL=gbdt`, about 3.4 MB), plus `TrainingAnalysis`, the training-set feature analysis the `--model-diagnostics` report reads, because the fold training sets it describes exist nowhere else (07, "Training-set feature analysis"). Written whenever FirstPassFDR trains a model; not rewritten when it adopts the one on disk. The protein-compact stratum is NOT in it - see the next row. **Name** from the output blib, **directory** from `ResolveOutputDir`, like the experiment sidecar. Until 2026-10 it was copied identically beside every run as `<stem>.1st-pass.model.json` |
+| `<stem>.1st-pass.model.json` | run | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | The run's own first-pass model (trees or weights per fold, and the standardizer), its calibration map and, under `--protein-boost best`, the floor of its protein-best column; written by `PerFileScoring` under the model key, read by `PerFileRescoring` to score the run's moved rows |
+| `<blib-stem>.1st-pass.model.json` (not written: the pooled model is retired) | exp | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | Frozen first-pass Percolator model (normalization plus weights and biases, a few hundred KB, or per-fold tree ensembles under `OSPREY_FDR_MODEL=gbdt`, about 3.4 MB), plus `TrainingAnalysis`, the training-set feature analysis the `--model-diagnostics` report reads, because the fold training sets it describes exist nowhere else (07, "Training-set feature analysis"). Written whenever FirstPassFDR trains a model; not rewritten when it adopts the one on disk. The protein-compact stratum is NOT in it - see the next row. **Name** from the output blib, **directory** from `ResolveOutputDir`, like the experiment sidecar. Until 2026-10 it was copied identically beside every run as `<stem>.1st-pass.model.json` |
 | `<blib-stem>.1st-pass.stratum.json` | exp | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | The protein-compact stratum: base ids of every library precursor whose peptide belongs to a protein with >=2 detected peptides, ascending. Absent under every mode but protein-compact. A SECOND file rather than a member of the model file because a different PHASE produces it - the model exists when training ends, the stratum only after first-pass protein FDR resolves which proteins carry two detected peptides. Writing one file meant holding the model in memory for the whole first pass, which made a run killed in the score passes unrecoverable. `LoadForAnalysis` merges the two on read when their stamps match. Until 2026-10 it was copied beside every run: 82 x 9.6 MB = 790 MB on the SEA-AD cohort |
 | `<library-leaf>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/LibraryBlibWriter.cs` from `Osprey.IO/LibraryLoader.cs` | The derived library: a `.tsv` or `.parquet` source's FINISHED form (deduplicated, decoys marked and paired, pairing ids assigned, a `DecoyPairs` table for a decoy or entrapment library), written once from the parse and read on every later run through `BlibLoader`, the same branch a `.blib` source takes. Validated by its `LibMetadata` row `osprey.library_hash` (section 7) |
 | `<output>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/OspreyBlibWriter.cs` over `Shared/BiblioSpec/BiblioSpec.IO/BlibWriter.cs` | Final output; see 13-blib-output-schema.md |
@@ -416,11 +416,11 @@ re-scores. The C# port has no such enum (the only reference is a stray comment a
   A stale stamp re-runs the work and overwrites the parquet (net behavior matches Rust's
   "stale => re-score", via a different mechanism).
 
-### The stub scores parquet and the features checkpoint (EXPERIMENTAL)
+### The stub scores parquet and the features checkpoint
 
-Under `OSPREY_PER_FILE_FDR=file` (00, In flight, item 5) `PerFileScoring` trains each run's
-own first-pass model from the run's features in memory, after extraction, and writes the
-run's scores where the full parquet used to go. The default run is unchanged.
+Every run trains its own first-pass model (00, In flight, item 5): `PerFileScoring` trains it
+from the run's features in memory, after extraction, and writes the run's scores where the
+full parquet used to go. The full layout above is written only as the features checkpoint.
 
 **`<stem>.scores.parquet`, stub.** The run's one scores file, written
 `WriteFields(..., stub: true)`:
@@ -429,13 +429,13 @@ run's scores where the full parquet used to go. The default run is unchanged.
   `end_rt`, `bounds_area`, `bounds_snr`, and the one feature column `fragment_coelution_sum`.
 - **Scores (3)**, then `protein_best`: `score` (the run's calibrated out-of-fold
   first-pass score: run precursor q 1% maps to 0, the median best decoy to -1), `run_precursor_q`,
-  `run_peptide_q` - the record a `.1st-pass.fdr_scores.bin` otherwise carries per run - and,
+  `run_peptide_q` - the record a `.1st-pass.fdr_scores.bin` used to carry per run - and,
   under `--protein-boost best`, `protein_best`, the run's protein-best value of the row.
-- **`<stem>.scores-reconciled.parquet`** under the mode takes the same layout plus
+- **`<stem>.scores-reconciled.parquet`** takes the same layout plus
   `score_index`, holding the SECOND pass's values: each row's pass-2 `score` (the first-pass
   score of an unmoved row, the run's frozen model's calibrated score of a moved one) and its
-  pass-2 run q-values - the record a `.2nd-pass.fdr_scores.bin` otherwise carries, which the
-  mode does not write. The column names are the same in both files; the file's pass says
+  pass-2 run q-values - the record a `.2nd-pass.fdr_scores.bin` used to carry, which is no
+  longer written. The column names are the same in both files; the file's pass says
   which score it is.
 - **Absent**: every other feature column, and `sequence`, `modified_sequence`,
   `precursor_mz`, `protein_ids` and `file_name`. Readers take peptide, charge and decoy
@@ -446,14 +446,14 @@ Its footer adds `osprey.feature_columns` = `stub` (`ParquetScoreCache.IsStubScor
 Its validity stamp carries the **model key**: `PerFileScoring`'s task key, plus the gbdt
 model terms (`PercolatorEngine.GbdtValidityKeySuffix`), plus `;parquet=stubscores`
 (`PerFileScoringTask.OutputValidityKey`), so a model-setting change makes it stale while the
-calibration stays current. No `<stem>.1st-pass.fdr_scores.bin` is written in this mode:
-`FdrScoresSidecar.ReadRecords`, `TryRead` and `Pass1Available` fall back to the stub's three
-score columns when the first-pass binary is absent (`StubScoresPathFor`), so every reader
-serves a one-file run as it serves a two-file one. `FirstPassFDR` requires every run's stub
+calibration stays current. No `<stem>.1st-pass.fdr_scores.bin` is written:
+`FdrScoresSidecar.ReadRecords`, `TryRead` and `Pass1Available` read the stub's three score
+columns when the first-pass binary is absent (`StubScoresPathFor`), and the pass-2 readers
+the reconciled stub's, so every reader of the records reads the stubs. `FirstPassFDR` requires every run's stub
 to be current (`PerFileScoringTask.OwnScoresCurrent`) and refuses the run otherwise.
 
 **`<stem>.features.parquet`, the features checkpoint.** Written only with
-`OSPREY_PER_FILE_FDR_KEEP_PARQUET=1` (to become `--keep-scores-parquet`): the full former
+`--keep-scores-parquet` (or `--training-export`, which implies it): the full former
 scores layout - every identity, boundary and recorded feature column, as the schema above -
 written before the model is trained (`ParquetScoreCache.GetFeaturesPath`, `EXT_FEATURES`).
 Its stamp carries the **feature key**, the task key alone. The two keys split the work: a
@@ -463,7 +463,7 @@ and a feature change re-extracts. `--task FirstPass` over a directory holding on
 reduces them (00, "In flight", item 5).
 
 On SEA-AD a run's scores now take about 264 MB in one file, against about 2,184 MB (the
-2,026 MB full parquet plus the 158 MB first-pass binary) on the default path.
+2,026 MB full parquet plus the 158 MB first-pass binary) under the retired pooled model.
 
 ### Reconciled output is a separate file, not an in-place overwrite
 
@@ -487,6 +487,11 @@ the probe was inferring it from a side effect.
 ---
 
 ## 4. FDR score sidecars (`<stem>.{1st,2nd}-pass.fdr_scores.bin`)
+
+**No longer written.** A run's first- and second-pass records live in its stub
+`<stem>.scores.parquet` and `<stem>.scores-reconciled.parquet` (section 3); `FdrScoresSidecar`'s
+readers read them from there, and this format is what each record decodes to. The section
+describes the binary layout a reader still accepts.
 
 **C# source**: `Osprey.IO/FdrScoresSidecar.cs`; record shape `Osprey.IO/FdrScoreRecord.cs`.
 Paths: `Pass1Path` / `Pass2Path` (`FdrScoresSidecar.cs:139`, `:145`), routed through
@@ -753,10 +758,10 @@ stamped after one: a stale artifact is simply overwritten, its new stamp with it
 driver writes nothing, so it cannot certify a stale file as current.
 
 The per-file tasks ask ONE question per input file over all of that file's outputs:
-`PerFileScoring` requires `.calibration.json` and `.scores.parquet` both current
-(`PerFileScoringTask.IsFileCurrent`); `PerFileRescoring` is done for a run when its reconciled
-parquet is current and its `.2nd-pass.fdr_scores.bin` - with `.2nd-pass.fdr_decoys.bin` under
-protein-compact - carries the same `PerFileRescoring` stamp (`IsFileRescored`), for every run
+`PerFileScoring` requires `.calibration.json`, the `.scores.parquet` stub and the run's
+`.1st-pass.model.json` current (`PerFileScoringTask.IsFileCurrent`); `PerFileRescoring` is done
+for a run when its reconciled stub is current and its `.reconciliation.json` carries the same
+`PerFileRescoring` stamp (`IsFileRescored`), for every run
 whether or not Stage 6 had work for it (#4665). A kill between
 two writes leaves one output stale or missing, so the file recomputes. `FirstPassFDR` keeps
 progressive per-file completion: each per-file product carries its stamp from the moment it
@@ -926,8 +931,8 @@ run:
 - `<stem>.demux.spectra.bin` — the same rule: recreated by reading the source with
   `--demux auto`, and only then. It is never derived from the `.spectra.bin`.
 - `<stem>.scores.parquet` / `<stem>.scores-reconciled.parquet` — recreated by re-scoring.
-- `<stem>.{1st,2nd}-pass.fdr_scores.bin` — first-pass required by the Stage 6 worker; deleting
-  forces a Stage 5 re-join.
+- `<stem>.1st-pass.model.json` - the run's own model, required by the Stage 6 worker;
+  deleting it re-trains the run in `PerFileScoring`.
 - `<stem>.reconciliation.json` — deleting forces a Stage 5 re-join.
 - `<stem>.calibration.json` — small; worth keeping across runs with the same LC-MS setup, but in
   C# recalibration is triggered by the validity stamp inside it, not by its presence alone.

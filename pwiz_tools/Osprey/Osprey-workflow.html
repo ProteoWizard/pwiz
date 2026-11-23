@@ -1151,7 +1151,7 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">per-run fan-out &#183; trains the run's own model &#183; 1..N nodes</text>
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan>spectral library (.blib / DIA-NN TSV), DIA mzML / .raw file(s) via -i, or the run's <tspan class="sc-cache">.spectra.bin</tspan></text>
   <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan> (STUB), <tspan class="sc-run">&lt;stem&gt;.calibration.json</tspan>, <tspan class="sc-run">&lt;stem&gt;.1st-pass.model.json</tspan></text>
-  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">opt&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.features.parquet</tspan>  (--keep-scores-parquet <tspan class="pf-planned">planned</tspan>; today OSPREY_PER_FILE_FDR_KEEP_PARQUET=1)</text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">opt&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.features.parquet</tspan>  (--keep-scores-parquet)</text>
   <text x="140" y="88" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-cache">&lt;stem&gt;.spectra.bin</tspan>, <tspan class="sc-cache">&lt;library-leaf&gt;.blib</tspan>  &#183;  caches, --work-dir</text>
   <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: each node needs only its own runs</text>
 </g>
@@ -1314,7 +1314,7 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
   <rect class="pf-opt" x="780" y="88" width="340" height="62" rx="4"/>
   <text class="stage-title" x="950" y="108" text-anchor="middle">&lt;stem&gt;.features.parquet (optional)</text>
   <text class="stage-desc"  x="950" y="124" text-anchor="middle">Stages 1-4 checkpoint: the full former layout</text>
-  <text class="stage-desc"  x="950" y="138" text-anchor="middle">--keep-scores-parquet (planned name)</text>
+  <text class="stage-desc"  x="950" y="138" text-anchor="middle">--keep-scores-parquet</text>
   <path class="flow-loop" d="M 780 119 L 744 119" marker-end="url(#s-arrow-loop)"/>
   <text class="pf-loop-note" x="950" y="166" text-anchor="middle">a model change re-trains from here (--task FirstPass);</text>
   <text class="pf-loop-note" x="950" y="179" text-anchor="middle">pass 2 requires it when its features are saved</text>
@@ -1887,13 +1887,14 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
 <p class="sub">
     The previous design wrote every feature of every run to its <code>.scores.parquet</code> and
     trained ONE global first-pass model in FirstPassFDR from every run's full feature parquet. That
-    design is being retired entirely: the per-run first-pass model drawn above becomes the only
-    pipeline, for <code>--resolution hram</code> and <code>--resolution unit</code> alike. Today the
-    first pass of this design runs under <code>OSPREY_PER_FILE_FDR=file</code>
-    (<code>OSPREY_PER_FILE_FDR_ROUNDS=2</code>), pass 2 included; protein-compact is refused under it.
+    design is retired: the per-run first-pass model drawn above is the only pipeline, for
+    <code>--resolution hram</code> and <code>--resolution unit</code> alike, pass 2 included, and
+    <code>OSPREY_PER_FILE_FDR</code> is gone with it. Protein-compact is refused (it is retired in a
+    follow-up). A run with no target passing q 1% anchors its calibration on its best decoy; one with
+    no usable decoy is excluded from the experiment competition, shifted below every calibrated run.
     File names are the ones <code>Osprey --task &lt;T&gt; --task-files</code> declares on a SEA-AD
-    command line with and without the mode, plus the analysis-wide files FirstPassFDR writes without
-    declaring them (<code>docs/00-pipeline-architecture.md</code>, "The sidecar file contract").
+    command line, before and after the change (<code>docs/00-pipeline-architecture.md</code>, "The
+    sidecar file contract").
     Anything marked <em>planned</em> is not built yet.
   </p>
 <div class="notes">
@@ -1916,7 +1917,7 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
         <td>written by PerFileScoring: the run's model (trees or weights per fold, and the standardizer), its calibration map and its protein-best floor; read by PerFileRescoring</td></tr>
       <tr><td><strong>added</strong></td><td><code>&lt;stem&gt;.features.parquet</code> (optional)</td>
         <td>-</td>
-        <td>written by PerFileScoring with <code>--keep-scores-parquet</code> (planned flag name; today <code>OSPREY_PER_FILE_FDR_KEEP_PARQUET=1</code>): the full former scores layout, a Stages 1-4 checkpoint; read by PerFileScoring, to re-train under <code>--task FirstPass</code>, and by PerFileRescoring when pass-2 features are saved (below)</td></tr>
+        <td>written by PerFileScoring with <code>--keep-scores-parquet</code> (or <code>--training-export</code>, which implies it): the full former scores layout, a Stages 1-4 checkpoint; read by PerFileScoring, to re-train under <code>--task FirstPass</code>, and by PerFileRescoring when pass-2 features are saved (below)</td></tr>
       <tr><td><strong>changed</strong></td><td><code>&lt;stem&gt;.scores.parquet</code></td>
         <td>full layout: scalars, every feature column, sequence / modified_sequence / precursor_mz / protein_ids / file_name; about 2,026 MB per SEA-AD run</td>
         <td>a STUB: entry_id, is_decoy, charge, scan_number, apex_rt, start_rt, end_rt, bounds_area, bounds_snr, fragment_coelution_sum + <code>score</code>, <code>run_precursor_q</code>, <code>run_peptide_q</code>, <code>protein_best</code>; footer <code>osprey.feature_columns=stub</code>; about 264 MB</td></tr>
@@ -2046,9 +2047,9 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
       <strong>Protein-compact is to be removed.</strong> That is the long-term goal; until then,
       anything that defers the work without completely breaking protein-compact is acceptable: for
       example SecondPassFDR's frozen competition scoring with each run's own model, or
-      protein-compact refusing clearly under the new pipeline if that is simpler. Today
-      SecondPassFDR's <code>Inputs</code> declare the analysis-wide model and the stratum under
-      protein-compact, and <code>ComputePass2FrozenCompetition</code> refuses to run without both.
+      protein-compact refusing clearly under the new pipeline if that is simpler. Done the second
+      way: <code>OSPREY_PASS2_QVALUE=protein-compact</code> is refused at PerFileScoring start, and
+      its removal is a follow-up PR.
     </li>
     <li>
       <strong>Task declarations match what the code reads and writes.</strong> Every task's
@@ -2057,10 +2058,9 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
       the runs' own <code>&lt;stem&gt;.1st-pass.model.json</code> (a PerFileScoring output and a
       PerFileRescoring input), and the <code>OSPREY_DIANN_REPORTS</code> outputs
       <code>&lt;output&gt;.protein_groups.tsv</code> / <code>&lt;output&gt;.stats.tsv</code>,
-      conditional SecondPassFDR outputs written only when that variable is set. Today, under the
-      mode, PerFileRescoring still declares <code>&lt;stem&gt;.1st-pass.fdr_scores.bin</code>,
-      <code>&lt;stem&gt;.1st-pass.protein_best.bin</code> and the analysis-wide
-      <code>.1st-pass.model.json</code>, which nothing writes.
+      conditional SecondPassFDR outputs written only when that variable is set. Done:
+      PerFileRescoring declares each run's stub and own model in place of the first-pass sidecars and
+      the analysis-wide model, and the DIA-NN reports are derived reports, not declared outputs.
     </li>
   </ol>
 </div>

@@ -29,7 +29,7 @@ namespace pwiz.Osprey.Tasks
 {
     /// <summary>
     /// One run's own frozen first-pass model, as its second pass applies it to the rows
-    /// reconciliation moved (<c>OSPREY_PER_FILE_FDR=file</c>): the model from the run's
+    /// reconciliation moved: the model from the run's
     /// <c>&lt;stem&gt;.1st-pass.model.json</c>, the protein-best column from its stub scores
     /// parquet, and the calibration map, so a moved row's score lands on the scale of the run's
     /// first-pass scores. The protein-best value of a row is its entry's first-pass value - what
