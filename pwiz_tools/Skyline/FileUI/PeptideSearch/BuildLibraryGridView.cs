@@ -165,22 +165,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             getScoreTypesException = x;
                         }
 
-                        // Cancelled means the grid is being torn down -- do not touch it. BeginInvoke (not
-                        // Invoke) keeps this off the UI thread's back so a join from there cannot deadlock.
+                        // Cancelled means the grid is being torn down -- do not touch it.
                         if (token.IsCancellationRequested)
                             return;
-                        try
+                        PostScoreTypesUpdate(() =>
                         {
-                            BeginInvoke(new MethodInvoker(() =>
-                            {
-                                if (!token.IsCancellationRequested)
-                                    GridUpdateScoreInfo(scoreTypes, getScoreTypesException);
-                            }));
-                        }
-                        catch (InvalidOperationException)
-                        {
-                            // The grid's handle was destroyed after the check above -- nothing to update.
-                        }
+                            if (!token.IsCancellationRequested)
+                                GridUpdateScoreInfo(scoreTypes, getScoreTypesException);
+                        });
                     })
                     {
                         IsBackground = true,
@@ -206,6 +198,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ScoreTypesLoaded => Files.All(f => !f.HasScoreTypeError && f.ScoreType != null);
+
+        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool IsScoreTypeDetectionRunning => _scoreTypesThread?.IsAlive ?? false;
 
         [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsReady => FilesList.Count > 0 && (IsFileOnly || Files.All(f => !f.HasScoreTypeError && f.ScoreType != null && f.ScoreThreshold.HasValue));
@@ -337,6 +332,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private Thread _scoreTypesThread;
         private CancellationTokenSource _scoreTypesCts;
 
+        // A detection result that finished before the grid had a window handle, held for OnHandleCreated.
+        private readonly object _scoreTypesUpdateLock = new object();
+        private Action _pendingScoreTypesUpdate;
+
         /// <summary>
         /// Cancels the background score-type detection, if any, and waits for its thread to finish. Called when
         /// the grid is disposed, when the hosting wizard closes (ImportPeptideSearchDlg.OnFormClosing), and
@@ -349,6 +348,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var thread = _scoreTypesThread;
             _scoreTypesCts = null;
             _scoreTypesThread = null;
+            lock (_scoreTypesUpdateLock)
+            {
+                _pendingScoreTypesUpdate = null;
+            }
             if (cts != null)
             {
                 try { cts.Cancel(); }
@@ -363,6 +366,49 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (disposing)
                 CancelScoreTypeDetection();
             base.Dispose(disposing);
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+
+            Action update;
+            lock (_scoreTypesUpdateLock)
+            {
+                update = _pendingScoreTypesUpdate;
+                _pendingScoreTypesUpdate = null;
+            }
+            if (update != null)
+                BeginInvoke(update);
+        }
+
+        /// <summary>
+        /// Marshals a score-type detection result to the UI thread. Search wizards add their results to Import
+        /// Peptide Search before showing it, so detection can finish before the grid has a window handle, and
+        /// BeginInvoke would throw. The result is then held until OnHandleCreated, rather than lost, which
+        /// would leave the score types loading forever. BeginInvoke (not Invoke) keeps the detection thread
+        /// from waiting on the UI thread, so CancelScoreTypeDetection can join it from there without deadlock.
+        /// </summary>
+        private void PostScoreTypesUpdate(Action update)
+        {
+            // The lock orders this against OnHandleCreated: the handle exists before OnHandleCreated runs, so
+            // either the check below sees it, or OnHandleCreated picks up the held result.
+            lock (_scoreTypesUpdateLock)
+            {
+                if (IsHandleCreated)
+                {
+                    try
+                    {
+                        BeginInvoke(update);
+                        return;
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // The handle was destroyed after the check above; hold the result in case it is recreated.
+                    }
+                }
+                _pendingScoreTypesUpdate = update;
+            }
         }
 
         private void GridUpdateScoreInfo(IReadOnlyDictionary<string, ScoreTypesResult> scoreTypes, Exception exception)

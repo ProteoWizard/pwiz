@@ -298,7 +298,19 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             // BlibBuild score-type lookup on the parquet runs async on the spectra page;
             // wait for it to finish before the Next button can validate.
-            WaitForConditionUI(() => importPeptideSearchDlg.BuildPepSearchLibControl.Grid.ScoreTypesLoaded);
+            // Stop waiting as soon as a file reports a score-type error, and report that error, since
+            // ScoreTypesLoaded can never become true once one is set.
+            var scoreTypesGrid = importPeptideSearchDlg.BuildPepSearchLibControl.Grid;
+            WaitForConditionUI(() => scoreTypesGrid.ScoreTypesLoaded || scoreTypesGrid.Files.Any(f => f.HasScoreTypeError),
+                () => @"Score types never loaded and no error was reported. Files: " +
+                      string.Join(@", ", scoreTypesGrid.Files.Select(f => f.FilePath + @" = " + (f.ScoreTypeName ?? @"(null)"))));
+            RunUI(() =>
+            {
+                var scoreTypeErrors = scoreTypesGrid.Files.Where(f => f.HasScoreTypeError)
+                    .Select(f => f.FilePath + @": " + f.ScoreTypeError).ToArray();
+                if (scoreTypeErrors.Any())
+                    AssertEx.Fail(@"Score type detection failed:{0}{1}", Environment.NewLine, string.Join(Environment.NewLine, scoreTypeErrors));
+            });
 
             // 1.9.1's lib parquet only contains entries from the relaxed --qvalue 0.3
             // search (1% FDR drops all entries due to 1.9.1's empirical-lib heuristic).
