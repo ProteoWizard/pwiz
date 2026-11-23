@@ -1438,7 +1438,8 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             }
 
-            using var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages);
+            using var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages,
+                SpectrumClassColumn.GetEditorCvColumns(skylineDataSchema.Document));
             dlg.AutoComplete = new SpectrumFilterAutoComplete(_parent);
             dlg.CreateCopyVisible = false;
             if (dlg.ShowDialog(this) == DialogResult.OK)
