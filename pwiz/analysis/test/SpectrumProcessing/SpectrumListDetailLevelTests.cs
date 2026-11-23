@@ -33,7 +33,9 @@ public class SpectrumListDetailLevelTests
             ("metadata fixer", inner => new SpectrumListMetadataFixer(inner)),
             ("ion mobility", inner => new SpectrumList_IonMobility(inner)),
             ("peak picker", inner => new SpectrumList_PeakPicker(inner, new LocalMaximumPeakDetector(3), false, IntegerSet.Positive)),
+#if !NO_WATERS_SUPPORT
             ("lockmass refiner", inner => new SpectrumList_LockmassRefiner(inner, 0, 0, 0)),
+#endif
         };
 
         foreach (var (name, wrap) in wrappers)
