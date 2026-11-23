@@ -188,6 +188,7 @@ a { color: #1565c0; }
 <tr><th>Argument</th><th>Description</th></tr>
 <tr><td><nobr>--timestamp</nobr></td><td>Prefix each output line with [yyyy/MM/dd HH:mm:ss]</td></tr>
 <tr><td><nobr>--memstamp</nobr></td><td>Prefix each output line with two memory usage values, managed and process private bytes in MB, for monitoring memory use during long runs</td></tr>
+<tr><td><nobr>--diskstamp</nobr></td><td>Write a [DISK] line with the change in used space, since the run started, on the volume holding the run&#39;s <nobr>per-file</nobr> outputs (the output directory, else the first input file&#39;s folder), and the volume&#39;s free space: at the start, every 5 minutes, at each task boundary and at the end, for monitoring disk use during long runs</td></tr>
 <tr><td><nobr>--log-file</nobr>&nbsp;path/to/file</td><td>Write all output to this file instead of the console</td></tr>
 <tr><td><nobr>--perf-stats</nobr></td><td>Emit the <nobr>machine-parseable</nobr> [COUNT], [TIMING], [BENCH], [<nobr>STAGE-WALL</nobr>], [PATH], [TRAIN] lines that scripts and performance tools read (off by default)</td></tr>
 <tr><td><nobr>--verbose</nobr></td><td>Show more detail (e.g. <nobr>per-fold</nobr> Percolator iterations) that is hidden by default</td></tr>

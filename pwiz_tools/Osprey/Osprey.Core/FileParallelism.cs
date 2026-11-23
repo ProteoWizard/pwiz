@@ -304,11 +304,17 @@ namespace pwiz.Osprey.Core
             }
         }
 
-        // Through a handle, so a symbolic link reports the size of its target:
-        // FileInfo.Length measures the link itself (0 on Windows, the length of the
-        // stored target path on Unix). A dangling link throws, which reads as 0.
+        // The length the file's metadata reports, unless the path is a reparse point such as a
+        // symbolic link: FileInfo.Length measures a link itself (0 on Windows, the length of
+        // the stored target path on Unix), so only a reparse point is opened, to measure what
+        // it points at. A dangling link throws, which reads as 0. Regular files are never
+        // opened: a read-access open of a multi-GB input can cost far more than its stat, and
+        // this runs on every input before auto mode logs its decision.
         private static long TargetLength(string path)
         {
+            var info = new FileInfo(path);
+            if ((info.Attributes & FileAttributes.ReparsePoint) == 0)
+                return info.Length;
             using (var handle = File.OpenHandle(path, FileMode.Open, FileAccess.Read,
                        FileShare.ReadWrite | FileShare.Delete))
             {

@@ -650,6 +650,7 @@ namespace pwiz.Osprey
             protected override void OnDone(PipelineTask task, TaskContext ctx, TimeSpan elapsed)
             {
                 Program.LogInfo(LogTag.TASK, @"{0}:done ({1:F1}s)", task.Name, elapsed.TotalSeconds);
+                DiskStamper.SampleCurrent();
                 TaskBudget.TaskDone(task.Name, ctx.ExitCode);
             }
         }

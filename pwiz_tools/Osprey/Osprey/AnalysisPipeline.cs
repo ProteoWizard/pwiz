@@ -175,6 +175,8 @@ namespace pwiz.Osprey
                 var ospreyCtx = (PipelineContext)ctx;
                 ospreyCtx.LogInfo(LogTag.TASK, @"{0}:done ({1:F1}s)",
                     task.Name, elapsed.TotalSeconds);
+                // --diskstamp: a reading at every stage transition, beside the timer's.
+                DiskStamper.SampleCurrent();
                 ospreyCtx.LogInfo(LogTag.PATH, @"{0}: {1}", task.Name, BlockReadStats.Text());
                 // DIAGNOSTIC (OSPREY_DROP_BETWEEN_TASKS=1): make the in-process pipeline behave like
                 // the HPC split - this task drops everything but the library, and the next reloads

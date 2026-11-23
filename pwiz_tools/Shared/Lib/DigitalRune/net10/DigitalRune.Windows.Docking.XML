@@ -5328,6 +5328,30 @@
             <param name="foreColor">Color of the glyph.</param>
             <param name="unpinned"><c>true</c> for the unpinned (horizontal) pin.</param>
         </member>
+        <member name="M:DigitalRune.Windows.Docking.DockPanelProfessionalRenderer.DrawOptionGlyph(System.Drawing.Graphics,System.Drawing.Rectangle,System.Drawing.Color,System.Boolean)">
+            <summary>
+            Draws the "options" / "window list" down triangle, following the DockPane_Option bitmap
+            (15x14: columns 3-10, rows 7-10) as an anti-aliased filled triangle, and for the overflow
+            variant (DockPane_OptionOverflow) the 2-pixel bar above it (rows 4-5) on whole pixels.
+            </summary>
+            <param name="graphics">The graphics context.</param>
+            <param name="rectangle">The button rectangle.</param>
+            <param name="foreColor">Color of the glyph.</param>
+            <param name="overflow"><c>true</c> to draw the overflow bar.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockPanelProfessionalRenderer.DrawScrollGlyph(System.Drawing.Graphics,System.Drawing.Rectangle,System.Drawing.Color,System.Boolean,System.Boolean)">
+            <summary>
+            Draws the document strip's scroll left/right triangle, following the
+            DockPaneStrip_Scroll* bitmaps (15x13: tip at column 5 or 9, base at the other, rows 2-10):
+            filled when enabled, an outline one 96-DPI pixel per DPI step wide when disabled, both
+            anti-aliased.
+            </summary>
+            <param name="graphics">The graphics context.</param>
+            <param name="rectangle">The button rectangle.</param>
+            <param name="foreColor">Color of the glyph.</param>
+            <param name="pointLeft"><c>true</c> for the scroll-left triangle.</param>
+            <param name="filled"><c>true</c> for the enabled (filled) triangle.</param>
+        </member>
         <member name="M:DigitalRune.Windows.Docking.DockPanelProfessionalRenderer.DrawCaption(System.Drawing.Graphics,System.Drawing.Rectangle,System.Drawing.Rectangle,System.String,System.Boolean)">
             <summary>
             Draws the caption of a <see cref="T:DigitalRune.Windows.Docking.DockPane"/>.

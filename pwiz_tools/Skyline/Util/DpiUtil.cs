@@ -125,6 +125,17 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// A form icon made from a 16 px Skyline Resources bitmap and its IconBuilder drawing,
+        /// for a form whose icon should match the menu or toolbar image that opens it; see
+        /// <see cref="DpiFormIcons.CreateIcon"/>. Pass <c>nameof(Resources.X)</c> as the name.
+        /// </summary>
+        public static Icon CreateFormIcon(Control control, string name, Bitmap native, Color? transparentKey = null)
+        {
+            return DpiFormIcons.CreateIcon(control, native, transparentKey, name,
+                size => DpiIcons.LoadIcon(typeof(Resources), name, 16, size));
+        }
+
+        /// <summary>
         /// The pre-rendered pixel sizes IconBuilder emits for a native icon size; see
         /// <see cref="DpiIcons.GetIconSizes"/>.
         /// </summary>

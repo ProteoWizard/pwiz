@@ -656,6 +656,10 @@ namespace pwiz.Osprey
             (c, p) => c._config.IsTimeStamped = true) { DescriptionArgs = () => new object[] { @"[yyyy/MM/dd HH:mm:ss]" } };
         public static readonly OspreyArgument ARG_MEMSTAMP = new OspreyArgument(@"memstamp",
             (c, p) => c._config.IsMemStamped = true);
+        // --diskstamp writes lines of its own rather than a column (the shared CommandStatusWriter
+        // stamps are Skyline's format too); perfviz reads them as the disk series.
+        public static readonly OspreyArgument ARG_DISKSTAMP = new OspreyArgument(@"diskstamp",
+            (c, p) => c._config.IsDiskStamped = true) { DescriptionArgs = () => new object[] { LogTag.DISK.Name, DiskStamper.SAMPLE_INTERVAL_MS / 60000 } };
         public static readonly OspreyArgument ARG_LOG_FILE = new OspreyArgument(@"log-file",
             () => GetPathToFile(string.Empty), (c, p) => c._config.LogFilePath = p.Value);
         public static readonly OspreyArgument ARG_PERF_STATS = new OspreyArgument(@"perf-stats",
@@ -665,7 +669,7 @@ namespace pwiz.Osprey
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_LOGGING =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Logging, true,
-                ARG_TIMESTAMP, ARG_MEMSTAMP, ARG_LOG_FILE, ARG_PERF_STATS, ARG_VERBOSE);
+                ARG_TIMESTAMP, ARG_MEMSTAMP, ARG_DISKSTAMP, ARG_LOG_FILE, ARG_PERF_STATS, ARG_VERBOSE);
 
         // --- Diagnostics & Info -----------------------------------------------------------
         // -h/--help and -v/--version are terminal: their handlers render help / print the
