@@ -105,8 +105,8 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// A fresh set of instances: the seven tasks, the canonical pipeline over four of them,
-        /// and what the other three run when selected.
+        /// A fresh set of instances: the eight tasks, the canonical pipeline over four of them,
+        /// and what the other four run when selected.
         /// </summary>
         public static OspreyTasks Create()
         {
@@ -117,10 +117,11 @@ namespace pwiz.Osprey.Tasks
             var secondPassFdr = new SecondPassFdrTask();
             var trainingExport = new TrainingExportTask();
             var modelDiagnostics = new ModelDiagnosticsTask();
+            var firstPass = new FirstPassTask();
 
             var pipeline = new OspreyTask[] { perFileScoring, firstPassFdr, perFileRescore, secondPassFdr };
             return new OspreyTasks(
-                new OspreyTask[] { spectraCache, perFileScoring, firstPassFdr, perFileRescore, secondPassFdr, trainingExport, modelDiagnostics },
+                new OspreyTask[] { spectraCache, perFileScoring, firstPassFdr, perFileRescore, secondPassFdr, trainingExport, modelDiagnostics, firstPass },
                 pipeline,
                 new Dictionary<OspreyTask, IReadOnlyList<OspreyTask>>
                 {
@@ -136,6 +137,9 @@ namespace pwiz.Osprey.Tasks
                     // writes only the missing exports; on an unfinished one the analysis runs
                     // with the export. A selector, never a stage (P17).
                     { trainingExport, pipeline },
+                    // FirstPass is the local first-pass iteration loop: the two stages through
+                    // FirstPassFDR, each run's own model trained in PerFileScoring.
+                    { firstPass, new OspreyTask[] { perFileScoring, firstPassFdr } },
                 });
         }
 

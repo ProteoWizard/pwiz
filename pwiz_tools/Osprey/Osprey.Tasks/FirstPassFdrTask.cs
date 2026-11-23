@@ -81,7 +81,8 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Exit after Stage 5 + the cross-run consensus, having written each input's first-pass
-        /// sidecar and the analysis-wide files. The ONLY setter of that flag.
+        /// sidecar and the analysis-wide files. Set here and by the FirstPass selector, which
+        /// stops at the same place.
         /// </summary>
         public override void ApplySelection(OspreyConfig config)
         {
@@ -212,10 +213,6 @@ namespace pwiz.Osprey.Tasks
             {
                 yield return ParquetScoreCache.GetScoresPath(input);
                 yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
-                // OSPREY_PER_FILE_FDR=file: the run's first-pass scores, from its own model, in
-                // their own file unless the scores parquet above is a stub that carries them.
-                if (PerFileScoringTask.TrainsOwnFirstPassModel && !PerFileScoringTask.WritesStubParquet(ctx.Config))
-                    yield return FdrScoresSidecar.Pass1Path(input);
             }
         }
 

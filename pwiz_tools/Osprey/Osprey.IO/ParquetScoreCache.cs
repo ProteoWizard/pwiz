@@ -2562,6 +2562,22 @@ namespace pwiz.Osprey.IO
         public const string EXT_SCORES_RECONCILED = @".scores-reconciled.parquet";
 
         /// <summary>
+        /// The extension of a run's features checkpoint (<c>OSPREY_PER_FILE_FDR=file</c> with
+        /// <c>OSPREY_PER_FILE_FDR_KEEP_PARQUET=1</c>): the full scores layout, every scalar and
+        /// feature column, written by PerFileScoring before the run's own model is trained, so a
+        /// later run can train the model again without scoring the run again.
+        /// </summary>
+        public const string EXT_FEATURES = @".features.parquet";
+
+        /// <summary>The features checkpoint path for <paramref name="mzmlPath"/>, beside its scores parquet.</summary>
+        public static string GetFeaturesPath(string mzmlPath)
+        {
+            string dir = ArtifactPaths.ResolveOutputDir(mzmlPath);
+            string stem = Path.GetFileNameWithoutExtension(mzmlPath);
+            return Path.Combine(dir, stem + EXT_FEATURES);
+        }
+
+        /// <summary>
         /// Returns the reconciled scores Parquet path for a given mzML path:
         /// {stem}.scores-reconciled.parquet in the same directory. Stage 6
         /// (<c>PerFileRescoreTask</c>) writes this file instead of overwriting

@@ -111,7 +111,7 @@ namespace pwiz.Osprey.Test
                 {
                     SpectraCacheTask.TASK_NAME, PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME,
                     PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME, TrainingExportTask.TASK_NAME,
-                    ModelDiagnosticsTask.TASK_NAME
+                    ModelDiagnosticsTask.TASK_NAME, FirstPassTask.TASK_NAME
                 },
                 set.All.Select(t => t.Name).ToArray(),
                 string.Format(@"the {0} values, in {1} order", OspreyCommandArgs.ARG_TASK.ArgumentText, OspreyCommandArgs.ARG_HELP.ArgumentText));
@@ -133,6 +133,9 @@ namespace pwiz.Osprey.Test
                 @"SpectraCache runs alone");
             Assert.AreSame(set.Pipeline, set.PipelineFor(set.FindByName(ModelDiagnosticsTask.TASK_NAME)),
                 @"ModelDiagnostics runs the canonical stages");
+            CollectionAssert.AreEqual(new[] { set.Pipeline[0], set.Pipeline[1] },
+                set.PipelineFor(set.FindByName(FirstPassTask.TASK_NAME)).ToArray(),
+                @"FirstPass runs PerFileScoring and FirstPassFDR");
             Assert.AreSame(set.Pipeline, set.PipelineFor(set.FindByName(TrainingExportTask.TASK_NAME)),
                 @"TrainingExport runs the canonical stages");
 
@@ -182,6 +185,7 @@ namespace pwiz.Osprey.Test
                 (SecondPassFdrTask.TASK_NAME,    false, false, true,  true,  true),
                 (TrainingExportTask.TASK_NAME,   false, true,  false, false, true),
                 (ModelDiagnosticsTask.TASK_NAME, false, true,  false, false, true),
+                (FirstPassTask.TASK_NAME,        false, false, false, false, false),
             };
             var set = OspreyTasks.Create();
             Assert.AreEqual(expected.Length, set.All.Count, @"every task has a row");

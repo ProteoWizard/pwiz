@@ -258,58 +258,56 @@ namespace pwiz.Osprey.Tasks
             if (ctx.Config.InputFiles == null) yield break;
             foreach (var input in ctx.Config.InputFiles)
             {
-                foreach (var output in OutputsForInput(input))
+                foreach (var output in OutputsForInput(input, ctx.Config))
                     yield return output;
-                // OSPREY_PER_FILE_FDR=file: the run's own first-pass scores, under the model key -
-                // in their own file only beside a full parquet; a stub carries them.
-                if (TrainsOwnFirstPassModel && !WritesStubParquet(ctx.Config))
-                    yield return FdrScoresSidecar.Pass1Path(input);
             }
         }
 
         /// <summary>
-        /// The run's own first-pass scores carry the model key, which adds the model settings to
-        /// the feature key the parquet and calibration carry: a model change re-models a run from
-        /// its current parquet, and a feature change re-extracts it.
-        ///
-        /// <para>A stub scores parquet holds the run's own first-pass scores, so it carries the
-        /// model key plus <see cref="STUB_PARQUET_KEY_TERM"/>. A run that writes stubs accepts it,
-        /// and still accepts a full parquet, which holds everything a stub does but the scores
-        /// (those are in their own file beside it); any other run needs the features, so a stub
-        /// is never current for it.</para>
+        /// Under <c>OSPREY_PER_FILE_FDR=file</c> the scores parquet is a stub that holds the run's
+        /// own first-pass scores, so it carries the model key - this task's key plus every setting
+        /// that changes the model - and <see cref="STUB_PARQUET_KEY_TERM"/>, which no run that needs
+        /// the features ever expects. The calibration and the features checkpoint carry the task
+        /// key: a model change re-trains a run from its current checkpoint, and a feature change
+        /// scores the run again.
         /// </summary>
         public override string OutputValidityKey(PipelineContext ctx, string taskKey, string output)
         {
-            if (TrainsOwnFirstPassModel && output.EndsWith(FdrScoresSidecar.EXT_FIRST_PASS, StringComparison.Ordinal))
-                return taskKey + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
-            if (WritesStubParquet(ctx.Config) && output.EndsWith(ParquetScoreCache.EXT_SCORES, StringComparison.Ordinal) &&
-                ParquetScoreCache.IsStubScoresParquet(output))
-            {
+            if (TrainsOwnFirstPassModel && output.EndsWith(ParquetScoreCache.EXT_SCORES, StringComparison.Ordinal))
                 return taskKey + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config) + STUB_PARQUET_KEY_TERM;
-            }
             return taskKey;
         }
 
         /// <summary>
-        /// Whether a run's own first-pass scores are on disk and current for this analysis: in
-        /// their own file, beside a full parquet, or in the run's stub scores parquet. What
-        /// <c>FirstPassFDR</c> asks of every run before it reduces them.
+        /// Whether a run's own first-pass scores are on disk and current for this analysis: its
+        /// stub scores parquet, under the model key. What <c>FirstPassFDR</c> asks of every run
+        /// before it reduces them.
         /// </summary>
         public bool OwnScoresCurrent(string inputFile, PipelineContext ctx)
         {
-            string modelKey = OwnModelValidityKey(ctx);
-            if (ArtifactValidity.IsCurrent(FdrScoresSidecar.Pass1Path(inputFile), Name, modelKey))
-                return true;
             string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
-            return ParquetScoreCache.HasFirstPassScores(scoresPath) &&
-                   ArtifactValidity.IsCurrent(scoresPath, Name, modelKey + STUB_PARQUET_KEY_TERM);
+            return ArtifactValidity.IsCurrent(scoresPath, Name, OwnModelValidityKey(ctx) + STUB_PARQUET_KEY_TERM) &&
+                   ParquetScoreCache.HasFirstPassScores(scoresPath);
         }
 
-        /// <summary>The feature outputs this task writes for one input file, which carry the task key.</summary>
-        private static IEnumerable<string> OutputsForInput(string input)
+        /// <summary>
+        /// Whether this run writes each run's features checkpoint (<c>&lt;stem&gt;.features.parquet</c>):
+        /// under the own-model arm with <c>OSPREY_PER_FILE_FDR_KEEP_PARQUET=1</c>, the diagnostic
+        /// and development setting that lets <c>--task FirstPass</c> train the models again from
+        /// it, without scoring the runs again.
+        /// </summary>
+        public static bool WritesFeaturesCheckpoint(OspreyConfig config)
+        {
+            return TrainsOwnFirstPassModel && OspreyEnvironment.PerFileFdrKeepParquet;
+        }
+
+        /// <summary>The outputs this task writes for one input file.</summary>
+        private static IEnumerable<string> OutputsForInput(string input, OspreyConfig config)
         {
             yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
             yield return ParquetScoreCache.GetScoresPath(input);
+            if (WritesFeaturesCheckpoint(config))
+                yield return ParquetScoreCache.GetFeaturesPath(input);
         }
 
         public override bool Run(PipelineContext ctx)
@@ -1649,62 +1647,86 @@ namespace pwiz.Osprey.Tasks
                     ctx.LogInfo(string.Format(
                         OspreyTasksResources.PerFileScoringTask_ScoreOrLoadForFile_File__0___1____2__was_already_scored__keeping_it_,
                         fileIdx + 1, totalFiles, fileName));
-                    return WithOwnFirstPassScores(loaded, inputFile, fileName, config, ctx);
+                    return loaded;
                 }
                 // load failed -- fall through and rescore the file.
+            }
+            if (_ownModelStamp != null)
+            {
+                var retrained = TryRetrainFromFeatures(inputFile, fileName, fileIdx, totalFiles, parquetFooterMetadata,
+                    perFileCalibrations, perFileIsolationMz, validityKey, ctx);
+                if (retrained != null)
+                    return retrained;
             }
 
             ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ScoreOrLoadForFile_Scoring_file__0___1____2_,
                 fileIdx + 1, totalFiles, inputFile));
             ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SCORE_FILE, @"{0}/{1}", fileIdx + 1, totalFiles));
-            var scored = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations, perFileIsolationMz, ctx);
-            return WithOwnFirstPassScores(scored, inputFile, fileName, config, ctx);
+            return ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations, perFileIsolationMz, ctx);
         }
 
         /// <summary>
-        /// <c>OSPREY_PER_FILE_FDR=file</c>: the run's own first-pass model, trained, applied and
-        /// saved as the run's <c>.1st-pass.fdr_scores.bin</c> once its <c>.scores.parquet</c> is
-        /// on disk, so <c>FirstPassFDR</c> reduces the runs' scores instead of training. The
-        /// parquet is read back rather than the rows in memory, so the model sees exactly the
-        /// rows and features <c>FirstPassFDR</c> would have trained it on, and a current parquet
-        /// is re-modeled without being scored again. Kept when already current under the model
-        /// key. Returns <paramref name="entries"/>.
+        /// <c>OSPREY_PER_FILE_FDR=file</c>, when the run's stub is not current but its features
+        /// checkpoint and calibration are: the model settings changed and the features did not, so
+        /// the run's own model is trained again from the checkpoint and its stub written again,
+        /// without scoring the run. This is the iteration loop of <c>--task FirstPass</c> over a
+        /// directory that links each run's checkpoint. Null when there is no current checkpoint.
         /// </summary>
-        private List<FdrEntry> WithOwnFirstPassScores(List<FdrEntry> entries, string inputFile, string fileName,
-            OspreyConfig config, PipelineContext ctx)
+        private List<FdrEntry> TryRetrainFromFeatures(string inputFile, string fileName, int fileIdx, int totalFiles,
+            Dictionary<string, string> parquetFooterMetadata,
+            ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
+            ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
+            string validityKey, PipelineContext ctx)
         {
-            if (entries == null || _ownModelStamp == null)
-                return entries;
+            string featuresPath = ParquetScoreCache.GetFeaturesPath(inputFile);
+            string calibrationPath = CalibrationIO.CalibrationPathForInput(inputFile, ArtifactPaths.ResolveOutputDir(inputFile));
+            if (!ArtifactValidity.IsCurrent(featuresPath, Name, validityKey) ||
+                !ArtifactValidity.IsCurrent(calibrationPath, Name, validityKey))
+            {
+                return null;
+            }
+            // Log text for developers, not displayed in the default output
+            ctx.LogInfo(string.Format(@"File {0}/{1}: {2} - training its first-pass model again from {3}",
+                fileIdx + 1, totalFiles, fileName, featuresPath));
+            var featureMask = PinFeatureMask.For(ctx.Config);
+            var entries = ParquetScoreCache.LoadFullFdrEntries(featuresPath, featureMask);
+            TrainOwnModelFromEntries(entries, fileName, featureMask, ctx);
+            WriteStubScores(entries, inputFile, fileName, parquetFooterMetadata, featureMask, ctx);
             string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
-            // The OSPREY_EXIT_AFTER_CALIBRATION bench stop writes no parquet, so there is nothing to model.
-            if (!File.Exists(scoresPath))
-                return entries;
-            // A kept stub carries the run's scores, current under the model key it was kept by.
-            if (ParquetScoreCache.IsStubScoresParquet(scoresPath))
-                return entries;
-            string sidecarPath = FdrScoresSidecar.Pass1Path(inputFile);
-            if (ArtifactValidity.IsCurrent(sidecarPath, Name, _ownModelKey))
-                return entries;
-
-            var swModel = Stopwatch.StartNew();
-            var rows = new OwnModelRows();
-            ParquetScoreCache.ReadFdrStubScalars(scoresPath, rows.Add, StubColumns.ApexRt);
-            rows.FeatureRows = ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath, PinFeatureMask.For(config));
-            WriteOwnModelScores(rows, sidecarPath, fileName, swModel, ctx);
-            return entries;
+            LoadCalibrationAndIsolation(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx);
+            // The lean path keeps no rows; the caller needs only a scored file.
+            return new List<FdrEntry>();
         }
 
         /// <summary>
-        /// <c>OSPREY_PER_FILE_FDR=file</c>: the run's own first-pass model from its freshly scored
-        /// entries, before their features are dropped. Each entry's row is its
+        /// The run's stub scores parquet: the scalar columns and the run's own first-pass scores,
+        /// which <paramref name="entries"/> carry, under the model key. A first-pass score file an
+        /// earlier run left beside it is removed first: its readers prefer it to the stub.
+        /// </summary>
+        private void WriteStubScores(List<FdrEntry> entries, string inputFile, string fileName,
+            Dictionary<string, string> parquetFooterMetadata, PinFeatureSelection featureMask, PipelineContext ctx)
+        {
+            FileEx.SafeDelete(FdrScoresSidecar.Pass1Path(inputFile));
+            string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
+            var swParquet = Stopwatch.StartNew();
+            ParquetScoreCache.WriteScoresParquet(scoresPath, entries, StubFooterMetadata(parquetFooterMetadata),
+                _libraryById, fileName, false, featureMask.StubColumnsOnly(), true);
+            ctx.LogInfo(string.Format(
+                OspreyTasksResources.PerFileScoringTask_ProcessFile_Wrote__0__precursor_candidate_peaks_to__1____2_s_,
+                entries.Count, scoresPath, swParquet.Elapsed.TotalSeconds));
+        }
+
+        /// <summary>
+        /// <c>OSPREY_PER_FILE_FDR=file</c>: the run's own first-pass model from its entries and
+        /// their features - freshly scored, or read back from the run's features checkpoint.
+        /// Each entry's row is its
         /// <see cref="FdrEntry.ParquetIndex"/>, its row in the parquet, and each value is what the
         /// parquet holds for it (a non-finite feature is 0 there, as here), so the model is the
-        /// one a reader of a full parquet would train. With <paramref name="intoEntries"/> the
-        /// scores land on the entries, for the stub write that follows to carry; otherwise in the
-        /// run's own score file.
+        /// one a reader of a full parquet would train. The scores land on the entries, for the
+        /// stub write that follows to carry.
         /// </summary>
-        private void TrainOwnModelFromEntries(List<FdrEntry> entries, string inputFile, string fileName,
-            PinFeatureSelection featureMask, bool intoEntries, PipelineContext ctx)
+        private void TrainOwnModelFromEntries(List<FdrEntry> entries, string fileName,
+            PinFeatureSelection featureMask, PipelineContext ctx)
         {
             var swModel = Stopwatch.StartNew();
             int n = entries.Count;
@@ -1730,13 +1752,8 @@ namespace pwiz.Osprey.Tasks
                         features[i] = FiniteOrZero(entry.Features[fdrIndices[i]]);
                 }
                 double coelutionSum = entry.Features != null && entry.Features.Length > 0 ? FiniteOrZero(entry.Features[0]) : 0.0;
-                rows.Add(entry.EntryId, entry.Charge, entry.IsDecoy, coelutionSum, entry.ModifiedSequence ?? string.Empty, entry.ApexRt);
+                rows.Add(entry.EntryId, entry.Charge, entry.IsDecoy, coelutionSum, entry.ModifiedSequence ?? string.Empty);
                 rows.FeatureRows.Add(features);
-            }
-            if (!intoEntries)
-            {
-                WriteOwnModelScores(rows, FdrScoresSidecar.Pass1Path(inputFile), fileName, swModel, ctx);
-                return;
             }
             double[] scores = ScoreWithOwnModel(rows, fileName, ctx, out double[] runPrecursorQ, out double[] runPeptideQ);
             for (int r = 0; r < n; r++)
@@ -1748,17 +1765,6 @@ namespace pwiz.Osprey.Tasks
             // Log text for developers, not displayed in the default output
             ctx.LogInfo(LogTag.TIMING, @"{0}: own first-pass model over {1} rows, for its stub scores parquet ({2:F1}s)",
                 fileName, n, swModel.Elapsed.TotalSeconds);
-        }
-
-        /// <summary>
-        /// Whether this task writes a stub scores parquet: under the own-model arm, unless the full
-        /// one is asked for (<c>OSPREY_PER_FILE_FDR_KEEP_PARQUET=1</c>) or the training export needs
-        /// the reference XIC it carries.
-        /// </summary>
-        internal static bool WritesStubParquet(OspreyConfig config)
-        {
-            return TrainsOwnFirstPassModel && !OspreyEnvironment.PerFileFdrKeepParquet &&
-                   !ParquetScoreCache.WritesReferenceXic(config);
         }
 
         /// <summary>
@@ -1793,25 +1799,6 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Trains the run's own model on <paramref name="rows"/> and writes its first-pass scores.
-        /// The model takes the RUN's configuration, not a file's copy: <c>ProcessFile</c>'s copy has
-        /// its threads already divided between the concurrent files, and the model divides them
-        /// itself by the same count.
-        /// </summary>
-        private void WriteOwnModelScores(OwnModelRows rows, string sidecarPath, string fileName,
-            Stopwatch swModel, PipelineContext ctx)
-        {
-            double[] scores = ScoreWithOwnModel(rows, fileName, ctx, out double[] runPrecursorQ, out double[] runPeptideQ);
-            var records = new List<FdrScoreRecord>(scores.Length);
-            for (int r = 0; r < scores.Length; r++)
-                records.Add(new FdrScoreRecord(rows.EntryIds[r], scores[r], runPrecursorQ[r], runPeptideQ[r], rows.ApexRts[r]));
-            FdrScoresSidecar.Write(sidecarPath, records, FdrScoresSidecar.Pass.FirstPass, _ownModelStamp);
-            // Log text for developers, not displayed in the default output
-            ctx.LogInfo(LogTag.TIMING, @"{0}: own first-pass model over {1} rows, written to {2} ({3:F1}s)",
-                fileName, scores.Length, sidecarPath, swModel.Elapsed.TotalSeconds);
-        }
-
-        /// <summary>
         /// The run's own model over <paramref name="rows"/>: every row's calibrated score and the
         /// two run q-values. The model takes the RUN's configuration, not a file's copy:
         /// <c>ProcessFile</c>'s copy has its threads already divided between the concurrent files,
@@ -1840,17 +1827,15 @@ namespace pwiz.Osprey.Tasks
             public readonly List<bool> IsDecoys = new List<bool>();
             public readonly List<double> CoelutionSums = new List<double>();
             public readonly List<string> Peptides = new List<string>();
-            public readonly List<double> ApexRts = new List<double>();
             public List<double[]> FeatureRows;
 
-            public void Add(uint entryId, byte charge, bool isDecoy, double coelutionSum, string peptide, double apexRt)
+            public void Add(uint entryId, byte charge, bool isDecoy, double coelutionSum, string peptide)
             {
                 EntryIds.Add(entryId);
                 Charges.Add(charge);
                 IsDecoys.Add(isDecoy);
                 CoelutionSums.Add(coelutionSum);
                 Peptides.Add(peptide);
-                ApexRts.Add(apexRt);
             }
         }
 
@@ -1861,7 +1846,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private bool IsFileCurrent(string inputFile, string validityKey, PipelineContext ctx)
         {
-            foreach (var output in OutputsForInput(inputFile))
+            foreach (var output in OutputsForInput(inputFile, ctx.Config))
             {
                 string outputKey = OutputValidityKey(ctx, validityKey, output);
                 if (!ArtifactValidity.IsCurrent(output, Name, outputKey))
@@ -2283,34 +2268,39 @@ namespace pwiz.Osprey.Tasks
                 // before the per-file fan-out (WriteScoresParquet needs
                 // it to pull sequence / precursor_mz / protein_ids from
                 // the library since FdrEntry doesn't carry these).
-                bool writeStub = WritesStubParquet(config);
                 var featureMask = PinFeatureMask.For(config);
-                // OSPREY_PER_FILE_FDR=file with a stub: the run's own model runs BEFORE the write,
-                // on the rows the write will produce, so the stub carries its scores. A score file
-                // an earlier run left beside it is removed: its readers prefer it to the stub.
-                if (writeStub)
+                if (_ownModelStamp == null)
                 {
+                    var swParquet = Stopwatch.StartNew();
+                    ParquetScoreCache.WriteScoresParquet(
+                        parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName,
+                        ParquetScoreCache.WritesReferenceXic(config), featureMask);
+                    swParquet.Stop();
+                    ctx.LogInfo(string.Format(
+                        OspreyTasksResources.PerFileScoringTask_ProcessFile_Wrote__0__precursor_candidate_peaks_to__1____2_s_,
+                        scoredEntries.Count, parquetPath, swParquet.Elapsed.TotalSeconds));
+                }
+                else
+                {
+                    // OSPREY_PER_FILE_FDR=file: the features checkpoint first, when it is kept -
+                    // everything Stages 1-4 produced, before the run's own model - then the model,
+                    // on the rows the stub will hold, then the stub that carries its scores.
+                    if (WritesFeaturesCheckpoint(config))
+                    {
+                        string featuresPath = ParquetScoreCache.GetFeaturesPath(inputFile);
+                        var swFeatures = Stopwatch.StartNew();
+                        ParquetScoreCache.WriteScoresParquet(featuresPath, scoredEntries, parquetFooterMetadata,
+                            _libraryById, fileName, ParquetScoreCache.WritesReferenceXic(config), featureMask);
+                        ctx.LogInfo(string.Format(
+                            OspreyTasksResources.PerFileScoringTask_ProcessFile_Wrote__0__precursor_candidate_peaks_to__1____2_s_,
+                            scoredEntries.Count, featuresPath, swFeatures.Elapsed.TotalSeconds));
+                    }
                     int[] rowOrder = ParquetScoreCache.RowOrder(scoredEntries);
                     for (int row = 0; row < rowOrder.Length; row++)
                         scoredEntries[rowOrder[row]].ParquetIndex = (uint)row;
-                    TrainOwnModelFromEntries(scoredEntries, inputFile, fileName, featureMask, true, ctx);
-                    FileEx.SafeDelete(FdrScoresSidecar.Pass1Path(inputFile));
+                    TrainOwnModelFromEntries(scoredEntries, fileName, featureMask, ctx);
+                    WriteStubScores(scoredEntries, inputFile, fileName, parquetFooterMetadata, featureMask, ctx);
                 }
-                var swParquet = Stopwatch.StartNew();
-                ParquetScoreCache.WriteScoresParquet(
-                    parquetPath, scoredEntries, writeStub ? StubFooterMetadata(parquetFooterMetadata) : parquetFooterMetadata,
-                    _libraryById, fileName, ParquetScoreCache.WritesReferenceXic(config),
-                    writeStub ? featureMask.StubColumnsOnly() : featureMask, writeStub);
-                swParquet.Stop();
-                ctx.LogInfo(string.Format(
-                    OspreyTasksResources.PerFileScoringTask_ProcessFile_Wrote__0__precursor_candidate_peaks_to__1____2_s_,
-                    scoredEntries.Count, parquetPath, swParquet.Elapsed.TotalSeconds));
-
-                // OSPREY_PER_FILE_FDR=file: the run's own model, from the features still in memory.
-                // The write above numbered every entry with its parquet row, so these are the rows
-                // and the order a reader of the parquet would see.
-                if (_ownModelStamp != null && !writeStub)
-                    TrainOwnModelFromEntries(scoredEntries, inputFile, fileName, featureMask, false, ctx);
 
                 // Phase 1 (issue #4355): the heavy per-entry arrays are now persisted in
                 // the parquet above and are reloadable by ParquetIndex, so drop them from
