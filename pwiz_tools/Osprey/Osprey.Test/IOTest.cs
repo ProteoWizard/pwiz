@@ -2274,60 +2274,79 @@ namespace pwiz.Osprey.Test
                 Assert.IsFalse(ParquetScoreCache.ValidateMetadata(saver.SafeName, wrongMeta));
                 Assert.IsFalse(ParquetScoreCache.IsStubScoresParquet(saver.SafeName));
 
-                AssertStubParquetRoundTrip(entries, metadata, stubs, new FileInfo(saver.SafeName).Length);
+                AssertStubParquetRoundTrip(metadata);
             }
         }
 
         /// <summary>
-        /// The same entries as a stub parquet (OSPREY_PER_FILE_FDR=file without the full parquet):
-        /// marked as a stub, smaller, and read by the stub readers exactly as the full parquet is,
-        /// including the coelution sum they take from the one feature column it keeps.
+        /// A stub scores parquet (OSPREY_PER_FILE_FDR=file without the full parquet) against the
+        /// full parquet of the same rows: marked as a stub, smaller, accepted by the resume
+        /// probes, and read back - with the library supplying each row's peptide, charge and decoy
+        /// flag - exactly as the full parquet reads. Read without the library it refuses rather
+        /// than hand every row an empty peptide.
         /// </summary>
-        private static void AssertStubParquetRoundTrip(List<CoelutionScoredEntry> entries,
-            Dictionary<string, string> metadata, List<FdrEntry> fullStubs, long fullLength)
+        private static void AssertStubParquetRoundTrip(Dictionary<string, string> metadata)
         {
-            string dest = Path.Combine(Path.GetTempPath(),
-                @"osprey_stub_" + Path.GetRandomFileName() + @".parquet");
-            using (var saver = new SimpleFileSaver(dest))
+            var library = new List<LibraryEntry>
             {
-                var stubMetadata = new Dictionary<string, string>(metadata)
+                new LibraryEntry(100, @"PEPTIDE", @"PEPTIDE", 2, 400.2, 5.0),
+                new LibraryEntry(100 | LibraryEntry.DECOY_ID_BIT, @"EDITPEP", @"EDITPEP", 2, 400.2, 5.0),
+                new LibraryEntry(102, @"PEPTIDEK", @"PEPM[+16.0]TIDEK", 3, 320.5, 6.0),
+            };
+            var entries = library.Select((lib, i) =>
+            {
+                var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
+                features[0] = 0.9 + i * 0.01;
+                features[6] = 2.5 + i;
+                return new FdrEntry
                 {
-                    [ParquetScoreCache.META_FEATURE_COLUMNS] = ParquetScoreCache.FEATURE_COLUMNS_STUB
+                    EntryId = lib.Id, IsDecoy = (lib.Id & LibraryEntry.DECOY_ID_BIT) != 0, Charge = lib.Charge,
+                    ModifiedSequence = lib.ModifiedSequence, ScanNumber = (uint)(1000 + i), ApexRt = 5.0 + i,
+                    StartRt = 4.5 + i, EndRt = 5.5 + i, BoundsArea = 100.0 * (i + 1), BoundsSnr = 3.0 + i,
+                    Features = features
                 };
-                // Through the FdrEntry writer, the one PerFileScoring writes with, from the full
-                // parquet's rows: each carries its coelution sum as PIN feature 0.
-                var fdrEntries = fullStubs.ConvertAll(stub =>
-                {
-                    var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
-                    features[0] = stub.CoelutionSum;
-                    return new FdrEntry
-                    {
-                        EntryId = stub.EntryId, IsDecoy = stub.IsDecoy, Charge = stub.Charge,
-                        ModifiedSequence = stub.ModifiedSequence, ScanNumber = stub.ScanNumber,
-                        ApexRt = stub.ApexRt, StartRt = stub.StartRt, EndRt = stub.EndRt, Features = features
-                    };
-                });
-                ParquetScoreCache.WriteScoresParquet(saver.SafeName, fdrEntries, stubMetadata, null, "test",
-                    false, PinFeatureMask.Hram.StubColumnsOnly());
-                Assert.IsTrue(ParquetScoreCache.IsStubScoresParquet(saver.SafeName));
-                Assert.IsTrue(new FileInfo(saver.SafeName).Length < fullLength);
-                // The resume probes accept it: the scalar columns and the first feature column.
-                Assert.IsTrue(ParquetScoreCache.HasPinFeatureColumns(saver.SafeName));
-                var probe = ParquetScoreCache.ProbeResumeSchemaAndRows(saver.SafeName);
+            }).ToList();
+            var libraryById = library.ToDictionary(lib => lib.Id);
+            string tempDir = Path.GetTempPath();
+            using (var full = new SimpleFileSaver(Path.Combine(tempDir, @"osprey_full_" + Path.GetRandomFileName() + @".parquet")))
+            using (var stub = new SimpleFileSaver(Path.Combine(tempDir, @"osprey_stub_" + Path.GetRandomFileName() + @".parquet")))
+            {
+                ParquetScoreCache.WriteScoresParquet(full.SafeName, entries, metadata, libraryById, @"test", false,
+                    PinFeatureMask.Hram);
+                ParquetScoreCache.WriteScoresParquet(stub.SafeName, entries, metadata, libraryById, @"test", false,
+                    PinFeatureMask.Hram.StubColumnsOnly(), true);
+                Assert.IsFalse(ParquetScoreCache.IsStubScoresParquet(full.SafeName));
+                Assert.IsTrue(ParquetScoreCache.IsStubScoresParquet(stub.SafeName));
+                Assert.IsTrue(new FileInfo(stub.SafeName).Length < new FileInfo(full.SafeName).Length);
+                foreach (string absent in new[] { @"sequence", @"modified_sequence", @"precursor_mz", @"protein_ids", @"file_name", @"xcorr" })
+                    Assert.IsFalse(ParquetScoreCache.HasColumn(stub.SafeName, absent), absent);
+                Assert.IsTrue(ParquetScoreCache.HasPinFeatureColumns(stub.SafeName));
+                var probe = ParquetScoreCache.ProbeResumeSchemaAndRows(stub.SafeName);
                 Assert.IsTrue(probe.HasPinFeatures);
                 Assert.AreEqual(entries.Count, (int)probe.RowCount);
 
-                var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(saver.SafeName);
-                Assert.AreEqual(fullStubs.Count, stubs.Count);
-                for (int i = 0; i < stubs.Count; i++)
+                var identity = new LibraryIdentity(library);
+                var fullStubs = ParquetScoreCache.LoadFdrStubsFromParquet(full.SafeName);
+                var stubStubs = ParquetScoreCache.LoadFdrStubsFromParquet(stub.SafeName, null, null, identity);
+                Assert.AreEqual(fullStubs.Count, stubStubs.Count);
+                for (int i = 0; i < stubStubs.Count; i++)
                 {
-                    Assert.AreEqual(fullStubs[i].EntryId, stubs[i].EntryId);
-                    Assert.AreEqual(fullStubs[i].IsDecoy, stubs[i].IsDecoy);
-                    Assert.AreEqual(fullStubs[i].Charge, stubs[i].Charge);
-                    Assert.AreEqual(fullStubs[i].ApexRt, stubs[i].ApexRt);
-                    Assert.AreEqual(fullStubs[i].CoelutionSum, stubs[i].CoelutionSum);
-                    Assert.AreEqual(fullStubs[i].ModifiedSequence, stubs[i].ModifiedSequence);
+                    Assert.AreEqual(fullStubs[i].EntryId, stubStubs[i].EntryId);
+                    Assert.AreEqual(fullStubs[i].IsDecoy, stubStubs[i].IsDecoy);
+                    Assert.AreEqual(fullStubs[i].Charge, stubStubs[i].Charge);
+                    Assert.AreEqual(fullStubs[i].ModifiedSequence, stubStubs[i].ModifiedSequence);
+                    Assert.AreEqual(fullStubs[i].ApexRt, stubStubs[i].ApexRt);
+                    Assert.AreEqual(fullStubs[i].StartRt, stubStubs[i].StartRt);
+                    Assert.AreEqual(fullStubs[i].CoelutionSum, stubStubs[i].CoelutionSum);
+                    Assert.AreEqual(fullStubs[i].BoundsArea, stubStubs[i].BoundsArea);
                 }
+                var scalars = new List<string>();
+                ParquetScoreCache.ReadFdrStubScalars(stub.SafeName,
+                    (entryId, charge, isDecoy, coelutionSum, peptide, apexRt) => scalars.Add(peptide),
+                    StubColumns.ApexRt, identity);
+                CollectionAssert.AreEqual(fullStubs.Select(s => s.ModifiedSequence).ToList(), scalars);
+                Assert.ThrowsException<InvalidOperationException>(() =>
+                    ParquetScoreCache.LoadFdrStubsFromParquet(stub.SafeName));
             }
         }
 

@@ -1973,13 +1973,15 @@ namespace pwiz.Osprey.Tasks
             List<FdrEntry> stubs;
             try
             {
-                stubs = ParquetScoreCache.LoadFdrStubsFromParquet(scoresPath, null, null);
-                // A stub carries no feature vectors, and the caller has already found it serves this run.
+                // A stub carries no feature vectors to check, and the caller has already found it
+                // serves this run. Its rows are not loaded: the lean path keeps none of them, and a
+                // stub's peptides come only from the library.
                 if (ParquetScoreCache.IsStubScoresParquet(scoresPath))
                 {
                     LoadCalibrationAndIsolation(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx);
-                    return stubs;
+                    return new List<FdrEntry>();
                 }
+                stubs = ParquetScoreCache.LoadFdrStubsFromParquet(scoresPath, null, null);
                 var features = ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath, PinFeatureMask.For(ctx.Config));
                 if (features.Count != stubs.Count)
                 {
@@ -2240,7 +2242,7 @@ namespace pwiz.Osprey.Tasks
                 ParquetScoreCache.WriteScoresParquet(
                     parquetPath, scoredEntries, writeStub ? StubFooterMetadata(parquetFooterMetadata) : parquetFooterMetadata,
                     _libraryById, fileName, ParquetScoreCache.WritesReferenceXic(config),
-                    writeStub ? featureMask.StubColumnsOnly() : featureMask);
+                    writeStub ? featureMask.StubColumnsOnly() : featureMask, writeStub);
                 swParquet.Stop();
                 ctx.LogInfo(string.Format(
                     OspreyTasksResources.PerFileScoringTask_ProcessFile_Wrote__0__precursor_candidate_peaks_to__1____2_s_,
