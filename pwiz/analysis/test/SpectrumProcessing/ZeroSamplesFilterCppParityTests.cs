@@ -85,8 +85,10 @@ public class ZeroSamplesFilterCppParityTests
         Assert.AreNotEqual(0.0, y[y.Count - 2], "and the sample before it is a real one");
         Assert.AreEqual(intensity[9], y[1], 1e-9, "the first real sample is input index 9");
 
-        // addMissing then pads that trimmed spectrum out to the requested flank.
-        var filled = new SpectrumListZeroSamplesFilter(list, new IntegerSet(2),
+        // addMissing then pads that trimmed spectrum out to the requested flank. The two filters
+        // are stacked: the list hands out copies, so the trim above did not change what it stores.
+        var trimmed = new SpectrumListZeroSamplesFilter(list, new IntegerSet(2));
+        var filled = new SpectrumListZeroSamplesFilter(trimmed, new IntegerSet(2),
                 ZeroSamplesMode.AddMissing, nzeros)
             .GetSpectrum(0, getBinaryData: true);
         var padded = filled.GetIntensityArray()!.Data;

@@ -172,6 +172,19 @@ public static class MSDataFile
             return;
         }
 
+        // mzML and mzXML reopen the file for each pass, so they can still be rewritten after a
+        // skip when gzip leaves them unable to seek.
+        if (config.Format == WriteFormat.Mzml)
+        {
+            CreateMzmlWriter(config, ilr).Write(msd, () => OpenOutputStream(path, config.Gzip));
+            return;
+        }
+        if (config.Format == WriteFormat.MzXml)
+        {
+            CreateMzxmlWriter(config, ilr).Write(msd, () => OpenOutputStream(path, config.Gzip));
+            return;
+        }
+
         using Stream output = OpenOutputStream(path, config.Gzip);
         Write(msd, output, config, ilr);
     }
@@ -187,47 +200,57 @@ public static class MSDataFile
         switch (config.Format)
         {
             case WriteFormat.Mzml:
-                new MzmlWriter(config.EncoderConfig)
-                {
-                    Indexed = config.Indexed,
-                    IterationListenerRegistry = ilr,
-                    ContinueOnError = config.ContinueOnError,
-                }.Write(msd, output);
+                CreateMzmlWriter(config, ilr).Write(msd, output);
                 break;
             case WriteFormat.MzXml:
-                new MzxmlWriter(config.EncoderConfig)
-                {
-                    Indexed = config.Indexed,
-                    IterationListenerRegistry = ilr,
-                }.Write(msd, output);
+                CreateMzxmlWriter(config, ilr).Write(msd, output);
                 break;
             case WriteFormat.Mgf:
                 using (var tw = new StreamWriter(output, leaveOpen: true))
-                    new MgfSerializer { IterationListenerRegistry = ilr }.Write(msd, tw);
+                    new MgfSerializer { IterationListenerRegistry = ilr, ContinueOnError = config.ContinueOnError }.Write(msd, tw);
                 break;
             case WriteFormat.Ms1:
-                new SerializerMSn(MSnType.Ms1) { IterationListenerRegistry = ilr }.Write(msd, output);
+                WriteMSn(MSnType.Ms1);
                 break;
             case WriteFormat.Bms1:
-                new SerializerMSn(MSnType.Bms1) { IterationListenerRegistry = ilr }.Write(msd, output);
+                WriteMSn(MSnType.Bms1);
                 break;
             case WriteFormat.Cms1:
-                new SerializerMSn(MSnType.Cms1) { IterationListenerRegistry = ilr }.Write(msd, output);
+                WriteMSn(MSnType.Cms1);
                 break;
             case WriteFormat.Ms2:
-                new SerializerMSn(MSnType.Ms2) { IterationListenerRegistry = ilr }.Write(msd, output);
+                WriteMSn(MSnType.Ms2);
                 break;
             case WriteFormat.Bms2:
-                new SerializerMSn(MSnType.Bms2) { IterationListenerRegistry = ilr }.Write(msd, output);
+                WriteMSn(MSnType.Bms2);
                 break;
             case WriteFormat.Cms2:
-                new SerializerMSn(MSnType.Cms2) { IterationListenerRegistry = ilr }.Write(msd, output);
+                WriteMSn(MSnType.Cms2);
                 break;
             default:
                 throw new NotImplementedException(
                     $"pwiz-sharp has no writer for {config.Format}.");
         }
+
+        void WriteMSn(MSnType type) =>
+            new SerializerMSn(type) { IterationListenerRegistry = ilr, ContinueOnError = config.ContinueOnError }.Write(msd, output);
     }
+
+    private static MzmlWriter CreateMzmlWriter(WriteConfig config, IterationListenerRegistry? ilr) =>
+        new MzmlWriter(config.EncoderConfig)
+        {
+            Indexed = config.Indexed,
+            IterationListenerRegistry = ilr,
+            ContinueOnError = config.ContinueOnError,
+        };
+
+    private static MzxmlWriter CreateMzxmlWriter(WriteConfig config, IterationListenerRegistry? ilr) =>
+        new MzxmlWriter(config.EncoderConfig)
+        {
+            Indexed = config.Indexed,
+            IterationListenerRegistry = ilr,
+            ContinueOnError = config.ContinueOnError,
+        };
 
     private static Stream OpenOutputStream(string path, bool gzipped)
     {

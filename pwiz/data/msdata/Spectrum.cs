@@ -104,6 +104,91 @@ public sealed class Spectrum : SpectrumIdentity
     /// </remarks>
     public Spectrum ShallowCopy() => (Spectrum)MemberwiseClone();
 
+    /// <summary>
+    /// Deep copy: a new <see cref="Spectrum"/> sharing nothing a caller can change through it -
+    /// params, scan list, precursors, products and binary arrays are all copied.
+    /// </summary>
+    /// <remarks>
+    /// For lists that store their spectra and would otherwise hand the stored instance to every
+    /// caller. The analysis wrappers modify the spectrum they read in place (an m/z shift adds to
+    /// the m/z array and its CV params), so a second read of a stored instance through the same
+    /// wrapper applies the change twice. Document-level references - param groups, data
+    /// processing, source files and instrument configurations - are shared, as they belong to
+    /// the document, not the spectrum.
+    /// </remarks>
+    public Spectrum DeepCopy()
+    {
+        var copy = new Spectrum
+        {
+            Index = Index,
+            Id = Id,
+            SpotId = SpotId,
+            SourceFilePosition = SourceFilePosition,
+            DefaultArrayLength = DefaultArrayLength,
+            DataProcessing = DataProcessing,
+            SourceFile = SourceFile,
+            ScanList = CopyOf(ScanList),
+        };
+        CopyParams(Params, copy.Params);
+        copy.Precursors.AddRange(Precursors.Select(CopyOf));
+        copy.Products.AddRange(Products.Select(p => new Product { IsolationWindow = CopyParams(p.IsolationWindow, new IsolationWindow()) }));
+        copy.BinaryDataArrays.AddRange(BinaryDataArrays.Select(a =>
+        {
+            var c = CopyParams(a, new BinaryDataArray { DataProcessing = a.DataProcessing });
+            c.Data.AddRange(a.Data);
+            return c;
+        }));
+        copy.IntegerDataArrays.AddRange(IntegerDataArrays.Select(a =>
+        {
+            var c = CopyParams(a, new IntegerDataArray { DataProcessing = a.DataProcessing });
+            c.Data.AddRange(a.Data);
+            return c;
+        }));
+        return copy;
+    }
+
+    private static ScanList CopyOf(ScanList scanList)
+    {
+        var copy = CopyParams(scanList, new ScanList());
+        copy.Scans.AddRange(scanList.Scans.Select(s =>
+        {
+            var c = CopyParams(s, new Scan
+            {
+                SourceFile = s.SourceFile,
+                ExternalSpectrumId = s.ExternalSpectrumId,
+                SpectrumId = s.SpectrumId,
+                InstrumentConfiguration = s.InstrumentConfiguration,
+            });
+            c.ScanWindows.AddRange(s.ScanWindows.Select(w => CopyParams(w, new ScanWindow())));
+            return c;
+        }));
+        return copy;
+    }
+
+    private static Precursor CopyOf(Precursor precursor)
+    {
+        var copy = CopyParams(precursor, new Precursor
+        {
+            SourceFile = precursor.SourceFile,
+            ExternalSpectrumId = precursor.ExternalSpectrumId,
+            SpectrumId = precursor.SpectrumId,
+            IsolationWindow = CopyParams(precursor.IsolationWindow, new IsolationWindow()),
+            Activation = CopyParams(precursor.Activation, new Activation()),
+        });
+        copy.SelectedIons.AddRange(precursor.SelectedIons.Select(si => CopyParams(si, new SelectedIon())));
+        return copy;
+    }
+
+    /// <summary>Gives <paramref name="target"/> its own copy of every CV and user param in
+    /// <paramref name="source"/>, and the same param group references.</summary>
+    private static T CopyParams<T>(ParamContainer source, T target) where T : ParamContainer
+    {
+        target.ParamGroups.AddRange(source.ParamGroups);
+        target.CVParams.AddRange(source.CVParams.Select(p => new CVParam(p.Cvid, p.Value, p.Units)));
+        target.UserParams.AddRange(source.UserParams.Select(p => new UserParam(p.Name, p.Value, p.Type, p.Units)));
+        return target;
+    }
+
     /// <summary>True iff the spectrum has any populated binary data.</summary>
     public bool HasBinaryData =>
         BinaryDataArrays.Count > 0 || IntegerDataArrays.Count > 0;
