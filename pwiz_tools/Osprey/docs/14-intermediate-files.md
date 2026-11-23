@@ -29,6 +29,8 @@ experiment-wide. There is no third scope: experiment-wide content is written onc
 | `<stem>.spectra.bin` | run | Custom binary v4 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload - and the only copy once the source is deleted |
 | `<stem>.demux.spectra.bin` | run | Custom binary v4, own magic + descriptor | `Osprey.IO/SpectraCache.cs`, `Osprey.Tasks/DemuxCache.cs` | `--demux auto` on a multiplexed run only: the demultiplexed spectra the search reads in place of `.spectra.bin`, built from the source (section 2, [23-demultiplexing](23-demultiplexing.md)) |
 | `<stem>.scores.parquet` | run | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | Scored entries: identity and peak boundaries, the recorded PIN features + footer metadata |
+| `<stem>.scores.parquet`, stub | run | Apache Parquet (ZSTD), footer `osprey.feature_columns=stub` | `Osprey.IO/ParquetScoreCache.cs` | EXPERIMENTAL, `OSPREY_PER_FILE_FDR=file` only, in place of the full parquet: boundary scalars, `fragment_coelution_sum` and the run's own first-pass scores, no identity or other feature columns. The run's only scores file; no `.1st-pass.fdr_scores.bin` is written beside it (section 3, "The stub scores parquet") |
+| `<stem>.features.parquet` | run | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | EXPERIMENTAL, `OSPREY_PER_FILE_FDR=file` with `OSPREY_PER_FILE_FDR_KEEP_PARQUET=1` only: the features checkpoint, the full scores layout taken before the run's own model is trained (section 3) |
 | `<stem>.scores-reconciled.parquet` | run | Apache Parquet (ZSTD) | `Osprey.Tasks/ReconciledParquetWriter.cs` | Stage 6 reconciled rewrite (separate file, not in-place) |
 | `<stem>.1st-pass.fdr_scores.bin` | run | Custom binary **v9**, 32-byte header + 36-byte records + feature sums + validity stamp trailer | `Osprey.IO/FdrScoresSidecar.cs` | entry_id, SVM score, run precursor q, run peptide q, detection apex RT. The experiment-scope columns moved OUT at v5 (#4486) - see the experiment sidecar row; apex RT arrived at v7 (#4522), so the diagnostics co-assignment panel stops opening every `.scores.parquet` a second time for it; the embedded validity stamp at v8 (section 8). At v9 the run's `FeatureSums` (`Osprey.Core/FeatureSums.cs`, ~10 KB): its share of the report's Model tab - class counts, standardized feature sums in row order, fixed-bin histograms - written on every run, so a report asked for later, or over runs that resumed, adds the shares in run order and needs no re-scoring (00, P16) |
 | `<stem>.2nd-pass.fdr_scores.bin` | run | Custom binary **v9**, same layout, no feature sums | `Osprey.IO/FdrScoresSidecar.cs` | Same record shape after second-pass Percolator |
@@ -413,6 +415,48 @@ re-scores. The C# port has no such enum (the only reference is a stray comment a
   `osprey.validity` footer stamp (Section 8), whose key folds the same search + library hashes.
   A stale stamp re-runs the work and overwrites the parquet (net behavior matches Rust's
   "stale => re-score", via a different mechanism).
+
+### The stub scores parquet and the features checkpoint (EXPERIMENTAL)
+
+Under `OSPREY_PER_FILE_FDR=file` (00, In flight, item 5) `PerFileScoring` trains each run's
+own first-pass model from the run's features in memory, after extraction, and writes the
+run's scores where the full parquet used to go. The default run is unchanged.
+
+**`<stem>.scores.parquet`, stub.** The run's one scores file, written
+`WriteFields(..., stub: true)`:
+
+- **Scalars (10)**: `entry_id`, `is_decoy`, `charge`, `scan_number`, `apex_rt`, `start_rt`,
+  `end_rt`, `bounds_area`, `bounds_snr`, and the one feature column `fragment_coelution_sum`.
+- **First-pass scores (3)**, last: `first_pass_score` (the run's calibrated out-of-fold
+  score: run precursor q 1% maps to 0, the median best decoy to -1), `run_precursor_q`,
+  `run_peptide_q` - the record a `.1st-pass.fdr_scores.bin` otherwise carries per run.
+- **Absent**: every other feature column, and `sequence`, `modified_sequence`,
+  `precursor_mz`, `protein_ids` and `file_name`. Readers take peptide, charge and decoy
+  from the library by entry_id (`RequireLibraryForStub` refuses a read without one), and
+  the file name from the file's own name.
+
+Its footer adds `osprey.feature_columns` = `stub` (`ParquetScoreCache.IsStubScoresParquet`).
+Its validity stamp carries the **model key**: `PerFileScoring`'s task key, plus the gbdt
+model terms (`PercolatorEngine.GbdtValidityKeySuffix`), plus `;parquet=stubscores`
+(`PerFileScoringTask.OutputValidityKey`), so a model-setting change makes it stale while the
+calibration stays current. No `<stem>.1st-pass.fdr_scores.bin` is written in this mode:
+`FdrScoresSidecar.ReadRecords`, `TryRead` and `Pass1Available` fall back to the stub's three
+score columns when the first-pass binary is absent (`StubScoresPathFor`), so every reader
+serves a one-file run as it serves a two-file one. `FirstPassFDR` requires every run's stub
+to be current (`PerFileScoringTask.OwnScoresCurrent`) and refuses the run otherwise.
+
+**`<stem>.features.parquet`, the features checkpoint.** Written only with
+`OSPREY_PER_FILE_FDR_KEEP_PARQUET=1` (to become `--keep-scores-parquet`): the full former
+scores layout - every identity, boundary and recorded feature column, as the schema above -
+written before the model is trained (`ParquetScoreCache.GetFeaturesPath`, `EXT_FEATURES`).
+Its stamp carries the **feature key**, the task key alone. The two keys split the work: a
+model-setting change re-trains the run from its current checkpoint without re-extracting,
+and a feature change re-extracts. `--task FirstPass` over a directory holding only each run's
+`.calibration.json` and `.features.parquet` re-trains every model from the checkpoints and
+reduces them (00, "In flight", item 5).
+
+On SEA-AD a run's scores now take about 264 MB in one file, against about 2,184 MB (the
+2,026 MB full parquet plus the 158 MB first-pass binary) on the default path.
 
 ### Reconciled output is a separate file, not an in-place overwrite
 

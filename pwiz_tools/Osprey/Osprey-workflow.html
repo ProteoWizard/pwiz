@@ -101,6 +101,7 @@
     <a href="#library-phases">1.2 Inside the library phases</a>
     <a href="#library-carafe">1.3 CarafeSharp and Carafe 2.2.0</a>
     <a href="#search">2. The search pipeline</a>
+    <a href="#search-per-file-models">2.1 Experimental: per-run first-pass models</a>
   </nav>
 </header>
 
@@ -939,7 +940,9 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
     (<code>--resolution unit</code>) and Astral (<code>--resolution hram</code>)
     3-file datasets; box color shows per-stage port status. Per-stage parity
     detail and end-to-end performance are in the tables near the bottom of the
-    page.
+    page. An experimental variant that trains each run's own first-pass model in
+    PerFileScoring (<code>OSPREY_PER_FILE_FDR=file</code>) is drawn in
+    <a href="#search-per-file-models">2.1</a>.
   </p>
 <svg class="pipeline" viewBox="0 0 1200 2900" xmlns="http://www.w3.org/2000/svg">
 <defs>
@@ -1789,6 +1792,214 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
     per-issue narrative, and the perf-fix log that backs the figures
     above — lives in the completed TODOs at
     <code>pwiz-ai/todos/completed/TODO-*osprey*.md</code>.
+  </p>
+</div>
+
+<h3 id="search-per-file-models">2.1 Experimental: per-run first-pass models (<code>OSPREY_PER_FILE_FDR=file</code>)</h3>
+<p class="sub">
+    A variant of the first half of the search, selected by <code>OSPREY_PER_FILE_FDR=file</code>
+    with <code>OSPREY_PER_FILE_FDR_ROUNDS=2</code>; the default pipeline above is unchanged. The
+    first-pass model moves out of the FirstPassFDR join and into the PerFileScoring fan-out:
+    each run trains, scores and calibrates its own model and writes one scores file, and
+    FirstPassFDR becomes a reduce over the runs' calibrated scores. Pass 2 does not yet run
+    under the mode. The contract is in
+    <code>docs/00-pipeline-architecture.md</code> ("In flight", item 5) and the file layouts in
+    <code>docs/14-intermediate-files.md</code> (section 3).
+  </p>
+<svg class="pipeline" viewBox="0 0 1200 1140" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="pf-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#424242"/>
+  </marker>
+  <marker id="pf-arrow-loop" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#6a1b9a"/>
+  </marker>
+  <style>
+    /* Per-run first-pass model variant (OSPREY_PER_FILE_FDR=file). The */
+    /* shared classes (task-hdr-*, phase-*, stage-*, sc-*) come from the */
+    /* search pipeline diagram above.                                    */
+    .pf-new      { fill: #fff3e0; stroke: #e65100; stroke-width: 2; }
+    .pf-new-sw   { fill: #fff3e0; stroke: #e65100; stroke-width: 1; }
+    .pf-opt      { fill: #ffffff; stroke: #00695c; stroke-width: 2; stroke-dasharray: 6,3; }
+    .pf-opt-sw   { fill: #ffffff; stroke: #00695c; stroke-width: 1; stroke-dasharray: 3,2; }
+    .pf-bracket  { stroke: #6a1b9a; stroke-width: 2; fill: none; }
+    .pf-selector { font-family: ui-monospace, SFMono-Regular, monospace;
+                   font-size: 12px; font-weight: 700; fill: #6a1b9a; }
+    .pf-loop-note { font-size: 10px; fill: #6a1b9a; font-style: italic; }
+  </style>
+</defs>
+
+<!-- TITLE + SUBTITLE -->
+<g transform="translate(40, 40)">
+  <text class="title">Experimental: per-run first-pass models</text>
+  <text class="subtitle" y="22">
+    OSPREY_PER_FILE_FDR=file, OSPREY_PER_FILE_FDR_ROUNDS=2  -  the first-pass model moves from the FirstPassFDR join into the PerFileScoring fan-out. The default pipeline above is unchanged.
+  </text>
+  <text class="subtitle" y="38">
+    Pass 2 (PerFileRescoring, SecondPassFDR) does not yet run under the mode: no frozen per-run model is persisted yet.
+  </text>
+</g>
+
+<!-- LEGEND -->
+<g transform="translate(40, 100)">
+  <rect class="sc-run-sw"   x="0"   y="0" width="16" height="12"/>
+  <text class="legend-label" x="22" y="10">per-run file</text>
+
+  <rect class="sc-exp-sw"   x="130" y="0" width="16" height="12"/>
+  <text class="legend-label" x="152" y="10">experiment-wide file</text>
+
+  <rect class="pf-new-sw"   x="320" y="0" width="16" height="12"/>
+  <text class="legend-label" x="342" y="10">new or changed under the mode</text>
+
+  <rect class="pf-opt-sw"   x="560" y="0" width="16" height="12"/>
+  <text class="legend-label" x="582" y="10">optional checkpoint</text>
+
+  <rect class="st-missing"  x="740" y="0" width="16" height="12"/>
+  <text class="legend-label" x="762" y="10">not yet under the mode</text>
+</g>
+
+<!-- INPUTS -->
+<g transform="translate(0, 140)">
+  <rect class="input-pill" x="260" y="16" width="260" height="48" rx="24"/>
+  <text class="stage-title" x="390" y="38" text-anchor="middle">Spectral library</text>
+  <text class="stage-desc"  x="390" y="54" text-anchor="middle">DIA-NN TSV or .blib</text>
+
+  <rect class="input-pill" x="680" y="16" width="260" height="48" rx="24"/>
+  <text class="stage-title" x="810" y="38" text-anchor="middle">DIA mzML file(s)</text>
+  <text class="stage-desc"  x="810" y="54" text-anchor="middle">one or more replicates</text>
+</g>
+<path class="flow" d="M 390 204 L 390 222" marker-end="url(#pf-arrow)"/>
+<path class="flow" d="M 810 204 L 810 222" marker-end="url(#pf-arrow)"/>
+
+<!-- The FirstPass task selector: PerFileScoring + FirstPassFDR -->
+<path class="pf-bracket" d="M 86 226 L 72 226 L 72 1034 L 86 1034"/>
+<text class="pf-selector" transform="translate(60, 630) rotate(-90)" text-anchor="middle">--task FirstPass = PerFileScoring + FirstPassFDR  (local iteration; stops where FirstPassFDR stops)</text>
+
+<!-- TASK: PerFileScoring, with the run's own model -->
+<g transform="translate(0, 226)">
+  <rect class="task-hdr-bg" x="120" y="0" width="960" height="112" rx="8"/>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileScoring<tspan class="task-hdr-count">   &#183; out: 2 files/run, 3 with the checkpoint<title>Per run: the stub .scores.parquet and .calibration.json, plus .features.parquet under OSPREY_PER_FILE_FDR_KEEP_PARQUET=1. No .1st-pass.fdr_scores.bin and no .1st-pass.protein_best.bin.</title></tspan></text>
+  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">per-run fan-out &#183; trains the run's own model</text>
+  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan>spectral library, DIA mzML file(s) via -i   &#183;   or, to re-train only: the run's <tspan class="sc-run">.calibration.json</tspan> + <tspan class="sc-run">.features.parquet</tspan></text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan> (STUB), <tspan class="sc-run">&lt;stem&gt;.calibration.json</tspan>   &#183;   stub stamped with the MODEL key: task key + gbdt terms + ;parquet=stubscores</text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">opt&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.features.parquet</tspan>  (OSPREY_PER_FILE_FDR_KEEP_PARQUET=1, to become --keep-scores-parquet)   &#183;   stamped with the FEATURE key: task key</text>
+  <text x="140" y="88" class="task-hdr-io"><tspan class="task-hdr-key">not&#160;</tspan>&lt;stem&gt;.1st-pass.fdr_scores.bin - the readers fall back to the stub's score columns when it is absent</text>
+  <text x="1060" y="104" text-anchor="end" class="task-hdr-relay">relay: each node needs only its own runs</text>
+</g>
+<path class="flow" d="M 600 338 L 600 356" marker-end="url(#pf-arrow)"/>
+
+<!-- STAGES 1-4 + THE RUN'S OWN MODEL -->
+<g transform="translate(0, 358)">
+  <rect class="phase-bg" x="100" y="0" width="1060" height="400" rx="6"/>
+  <text class="phase-label" x="120" y="24">stages 1-4 + model</text>
+  <text class="phase-title" x="120" y="42">Stages 1-4, then the run's own first-pass model</text>
+  <text class="phase-shape-fanout" x="1145" y="24" text-anchor="end">per-run fan-out - 1..N nodes</text>
+  <text class="phase-note" x="120" y="58">Stages 1-4 are unchanged (part 2 above). The model trains from the run's features in memory; FirstPassFDR never loads a feature.</text>
+
+  <rect class="st-done" x="140" y="76" width="980" height="42" rx="4"/>
+  <text class="stage-title" x="630" y="96" text-anchor="middle">Stages 1-4 as above: library, spectra, calibration, 21 PIN features per entry</text>
+  <text class="stage-desc"  x="630" y="110" text-anchor="middle">the run's features stay in memory after extraction; no full scores parquet is written</text>
+
+  <path class="flow" d="M 450 118 L 450 148" marker-end="url(#pf-arrow)"/>
+  <path class="flow" d="M 960 118 L 960 148" marker-end="url(#pf-arrow)"/>
+
+  <rect class="pf-new" x="140" y="150" width="620" height="62" rx="4"/>
+  <text class="stage-title" x="450" y="170" text-anchor="middle">Train the run's own two-round first-pass model</text>
+  <text class="stage-desc"  x="450" y="186" text-anchor="middle">gbdt, OSPREY_PER_FILE_FDR_ROUNDS=2, the run's own protein-best column</text>
+  <text class="stage-desc"  x="450" y="200" text-anchor="middle">out of fold: every row is scored by a fold that did not train on it</text>
+
+  <rect class="pf-opt" x="800" y="150" width="320" height="62" rx="4"/>
+  <text class="stage-title" x="960" y="170" text-anchor="middle">&lt;stem&gt;.features.parquet (optional)</text>
+  <text class="stage-desc"  x="960" y="186" text-anchor="middle">checkpoint before training: the full former layout</text>
+  <text class="stage-desc"  x="960" y="200" text-anchor="middle">KEEP_PARQUET=1 &#183; FEATURE key</text>
+
+  <path class="flow-loop" d="M 800 181 L 764 181" marker-end="url(#pf-arrow-loop)"/>
+  <text class="pf-loop-note" x="960" y="228" text-anchor="middle">a model-setting change re-trains from here, without re-extracting;</text>
+  <text class="pf-loop-note" x="960" y="241" text-anchor="middle">a feature change re-extracts (Stages 1-4)</text>
+
+  <path class="flow" d="M 450 212 L 450 238" marker-end="url(#pf-arrow)"/>
+
+  <rect class="pf-new" x="140" y="240" width="620" height="48" rx="4"/>
+  <text class="stage-title" x="450" y="260" text-anchor="middle">Calibrate the run's scores</text>
+  <text class="stage-desc"  x="450" y="276" text-anchor="middle">run precursor q 1% -&gt; 0, median best decoy -&gt; -1; run precursor q and run peptide q</text>
+
+  <path class="flow" d="M 450 288 L 450 304" marker-end="url(#pf-arrow)"/>
+
+  <rect class="pf-new" x="140" y="306" width="980" height="62" rx="4"/>
+  <text class="stage-title" x="630" y="326" text-anchor="middle">Write ONE scores file per run: the stub &lt;stem&gt;.scores.parquet</text>
+  <text class="stage-desc"  x="630" y="342" text-anchor="middle">entry_id, is_decoy, charge, scan_number, apex_rt, start_rt, end_rt, bounds_area, bounds_snr, fragment_coelution_sum + first_pass_score, run_precursor_q, run_peptide_q</text>
+  <text class="stage-desc"  x="630" y="356" text-anchor="middle">no other feature, no sequence / modified_sequence / precursor_mz / protein_ids / file_name (taken from the library by entry_id)  &#183;  footer osprey.feature_columns=stub</text>
+
+  <text class="stage-meta" x="140" y="388">SEA-AD: about 264 MB per run in one file, against about 2,184 MB on the default path (the 2,026 MB full scores parquet + the 158 MB .1st-pass.fdr_scores.bin)</text>
+</g>
+<path class="flow" d="M 600 758 L 600 776" marker-end="url(#pf-arrow)"/>
+
+<!-- TASK: FirstPassFDR as the reduce -->
+<g transform="translate(0, 778)">
+  <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task FirstPassFDR<tspan class="task-hdr-count">   &#183; out: 0 files/run <tspan class="sc-exp">+ experiment-wide</tspan><title>No per-run file: the declared outputs drop each run's .1st-pass.fdr_scores.bin and .1st-pass.protein_best.bin.</title></tspan></text>
+  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">join &#183; 1 node &#183; a reduce: trains nothing, loads no features</text>
+  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan> (stub: every run's own current scores, refused otherwise), <tspan class="sc-run">&lt;stem&gt;.calibration.json</tspan></text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan>, <tspan class="sc-exp">.1st-pass.retained_base_ids.bin</tspan>, <tspan class="sc-exp">.1st-pass.consensus.json</tspan></text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">not&#160;</tspan>any per-run file: no &lt;stem&gt;.1st-pass.fdr_scores.bin, no &lt;stem&gt;.1st-pass.protein_best.bin (P3)</text>
+  <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: every experiment-wide file to every downstream node</text>
+</g>
+<path class="flow" d="M 600 874 L 600 892" marker-end="url(#pf-arrow)"/>
+
+<!-- STAGE 5 AS A REDUCE -->
+<g transform="translate(0, 894)">
+  <rect class="phase-bg" x="100" y="0" width="1060" height="140" rx="6"/>
+  <text class="phase-label" x="120" y="24">stage 5</text>
+  <text class="phase-title" x="120" y="42">The reduce: experiment competition over the runs' calibrated scores</text>
+  <text class="phase-shape-join" x="1145" y="24" text-anchor="end">join - reads one small file per run</text>
+
+  <rect class="pf-new" x="140" y="58" width="980" height="42" rx="4"/>
+  <text class="stage-title" x="630" y="78" text-anchor="middle">Experiment target-decoy competition over each run's first_pass_score</text>
+  <text class="stage-desc"  x="630" y="92" text-anchor="middle">experiment q and PEP, first-pass protein FDR, compaction and the cross-run consensus, as in stage 5 above; no training, no feature loads, no file lanes</text>
+
+  <text class="stage-meta" x="140" y="124">SEA-AD, 82 runs, 3 at a time on 30 threads: 98,280 precursors at true FDP 1% (global model 97,120); first pass 15,455 s (14,992 s); FirstPassFDR 894 s (4,337 s)</text>
+</g>
+<path class="flow" d="M 600 1034 L 600 1052" marker-end="url(#pf-arrow)"/>
+
+<!-- PASS 2: NOT YET -->
+<g transform="translate(0, 1054)">
+  <rect class="st-missing" x="120" y="0" width="960" height="56" rx="6"/>
+  <text class="stage-title" x="600" y="22" text-anchor="middle">PerFileRescoring + SecondPassFDR (pass 2): not yet under the mode</text>
+  <text class="stage-desc"  x="600" y="40" text-anchor="middle">no frozen per-run model is persisted yet; rescoring with each run's own model, and --task SecondPass, are the next step</text>
+</g>
+
+</svg>
+<div class="notes">
+  <p>
+    <strong>Two validity keys.</strong> The stub <code>&lt;stem&gt;.scores.parquet</code> carries the
+    MODEL key (PerFileScoring's task key, plus the gbdt model terms, plus
+    <code>;parquet=stubscores</code>); the <code>.calibration.json</code> and the optional
+    <code>&lt;stem&gt;.features.parquet</code> carry the FEATURE key (the task key alone). A
+    model-setting change leaves the checkpoint current, so the run re-trains from it without
+    re-extracting; a feature change makes both stale and the run is scored again from its spectra.
+    No <code>&lt;stem&gt;.1st-pass.fdr_scores.bin</code> is written in this mode:
+    <code>FdrScoresSidecar.ReadRecords</code>, <code>TryRead</code> and <code>Pass1Available</code>
+    read the stub's three score columns when the binary is absent.
+  </p>
+  <p>
+    <strong>Iterating on the model locally.</strong> With the checkpoints kept
+    (<code>OSPREY_PER_FILE_FDR_KEEP_PARQUET=1</code>), a new output directory that links only each
+    run's Stages 1-4 checkpoint re-trains every model and reduces them, without touching a spectrum:
+  </p>
+  <pre>pwsh -File ai/scripts/Osprey/SEA-AD/Run-SeaAd.ps1 -Task FirstPass -LinkFrom &lt;run with checkpoints&gt;</pre>
+  <p>
+    <code>-LinkFrom</code> links each run's <code>.calibration.json</code> and
+    <code>.features.parquet</code>; PerFileScoring finds its stub missing, re-trains from the
+    checkpoint, and FirstPassFDR reduces. An HPC chain never needs <code>--task FirstPass</code>:
+    there the two tasks are separate nodes.
+  </p>
+  <p>
+    <strong>Still to do:</strong> pass 2 on the per-run models (a persisted frozen model per run,
+    then PerFileRescoring and SecondPassFDR under the mode, and <code>--task SecondPass</code>);
+    <code>OSPREY_PER_FILE_FDR_KEEP_PARQUET=1</code> becoming <code>--keep-scores-parquet</code>; and
+    the mode becoming the default.
   </p>
 </div>
 </section>
