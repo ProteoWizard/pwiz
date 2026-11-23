@@ -137,6 +137,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public class ToolTipImplementation : ITipProvider
         {
             LibraryRankedSpectrumInfo.RankedMI _peakRMI;
+            private SpectrumGraphItem _graphItem;
             private TableDesc _table;       // Used for test support
 
             // This property for testing purposes only, not visible to the user
@@ -163,9 +164,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            public ToolTipImplementation(LibraryRankedSpectrumInfo.RankedMI peakRMI)
+            public ToolTipImplementation(LibraryRankedSpectrumInfo.RankedMI peakRMI, SpectrumGraphItem graphItem)
             {
                 _peakRMI = peakRMI;
+                _graphItem = graphItem;
             }
             public bool HasTip => _peakRMI != null;
 
@@ -190,6 +192,17 @@ namespace pwiz.Skyline.Controls.Graphs
                             table.AddDetailRow(AbstractSpectrumGraphItem.GetLabel(mfi, _peakRMI.Rank, false, false),
                                 mfi.PredictedMz.ToString(Formats.Mz, CultureInfo.CurrentCulture) + @"  " +
                                 AbstractSpectrumGraphItem.GetMassErrorString(_peakRMI, mfi), rt);
+                        // Name the modification an ion uniquely localizes; name the ion too when
+                        // the peak has more than one matched ion.
+                        foreach (var mfi in _peakRMI.MatchedIons)
+                        {
+                            var modName = _graphItem?.GetLocalizedModificationName(mfi);
+                            if (modName == null)
+                                continue;
+                            if (_peakRMI.MatchedIons.Count > 1)
+                                modName = string.Format(@"{0} ({1})", modName, AbstractSpectrumGraphItem.GetLabel(mfi, 0, false, false));
+                            table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_Uniquely_localizes, modName, rt);
+                        }
                     }
                     _table = table;
                     var size = table.CalcDimensions(g);
@@ -1928,6 +1941,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void DisplayTooltip(MouseEventArgs e)
         {
             LibraryRankedSpectrumInfo.RankedMI peakRmi = null;
+            SpectrumGraphItem peakItem = null;
             using (var g = Graphics.FromHwnd(IntPtr.Zero))
             {
                 // Check if the mouse is over a label
@@ -1938,6 +1952,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (curve.Tag is SpectrumGraphItem graphItem)
                     {
                         peakRmi = graphItem.SpectrumInfo.PeaksMatched.FirstOrDefault(rmi => graphItem.GetLabel(rmi).Equals(label.Text));
+                        peakItem = graphItem;
                     }
                 }
             }
@@ -1959,6 +1974,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         var spectrumIndex = Enumerable.Range(0, gItem.SpectrumInfo.Peaks.Count).FirstOrDefault(i =>
                             gItem.SpectrumInfo.Peaks[i].ObservedMz == nearestCurve.Points[nearestIndex].X);
                         peakRmi = gItem.SpectrumInfo.Peaks[spectrumIndex];
+                        peakItem = gItem;
                     }
                 }
             }
@@ -1969,7 +1985,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (_toolTip == null)
                     _toolTip = new NodeTip(this) { Parent = graphControl, AutoHideDelay = 10000 };
-                _toolTip.SetTipProvider(new ToolTipImplementation(peakRmi), new Rectangle(e.Location, new Size()), e.Location);
+                _toolTip.SetTipProvider(new ToolTipImplementation(peakRmi, peakItem), new Rectangle(e.Location, new Size()), e.Location);
                 return;
             }
             // No Invalidate here: UpdateHoveredPeak above already invalidates when the

@@ -105,6 +105,8 @@ Double Blank（ダブルブランク）</td><td class="ColumnType">試料タイ�
 </table>
 
 </td></tr>
+<tr><td class="ColumnCaption">Modification Localization Group</td><td class="ColumnDescription">A key identifying peptides that share the same unmodified sequence and the same set of ambiguously localized modifications.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Localization Isomer Count</td><td class="ColumnDescription">The number of positional isomers arising from ambiguously localized modifications on the peptide.</td><td class="ColumnType">Int64</td></tr>
 <tr><td class="ColumnCaption">分子名</td><td class="ColumnDescription">荷電されていない非標識の分子に割り当てできる一般的な名前です。</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">分子式</td><td class="ColumnDescription">質量分析計で測定される荷電されていない非標識の分子の原子化学式。</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">標準タイプ</td><td class="ColumnDescription">標準タイプ</td><td class="ColumnType">標準タイプ</td></tr>
@@ -417,6 +419,7 @@ Double Blank（ダブルブランク）</td><td class="ColumnType">試料タイ�
 <tr><td class="ColumnCaption">断片イオンタイプ</td><td class="ColumnDescription">プロダクトイオンのタイプ（y、b、c、z、a、x、プリカーサー）</td><td class="ColumnType">IonType</td></tr>
 <tr><td class="ColumnCaption">断片イオン序数</td><td class="ColumnDescription">ペプチドが断片化によって開裂されているペプチド内のアミノ酸の 位置（C末端）です。（8、10、7など）</td><td class="ColumnType">Int32</td></tr>
 <tr><td class="ColumnCaption">開裂Aa</td><td class="ColumnDescription">フラグメンテーションの際に切断された（C末端の）ペプチドの後の特定のアミノ酸残基 （例えば、P、M、S、Tなど）。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Uniquely Localizing</td><td class="ColumnDescription">True when this product ion is produced only by the current modification placement, uniquely localizing the modification.</td><td class="ColumnType">Boolean</td></tr>
 <tr><td class="ColumnCaption">ロスニュートラル質量</td><td class="ColumnDescription">このフラグメントからのすべてのニュートラルロスの合計質量</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">ロス</td><td class="ColumnDescription">このフラグメントからのすべてのニュートラルロスのカンマで区切られたリスト</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">損失式</td><td class="ColumnDescription">A comma separated list of the chemical formulas for all neutral losses from this fragment, or empty if not all losses have formulas</td><td class="ColumnType">String</td></tr>

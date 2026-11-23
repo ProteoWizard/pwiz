@@ -1,9 +1,10 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2009 University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,6 +30,7 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Localization;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -202,7 +204,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override Image GetPickTypeImage(DocNode child)
         {
-            return TransitionTreeNode.GetTypeImage((TransitionDocNode)child, SequenceTree);
+            return TransitionTreeNode.GetTypeImage((TransitionDocNode)child, SequenceTree, GetLocalizingSetSize(child));
         }
 
         public override Image GetPickPeakImage(DocNode child)
@@ -213,24 +215,29 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override ITipProvider GetPickTip(DocNode child)
         {
-            return new PickTransitionTip((TransitionDocNode) child);
+            return new PickTransitionTip((TransitionDocNode) child, SiteDeterminingAnalyzer);
         }
 
         private sealed class PickTransitionTip : ITipProvider
         {
             private readonly TransitionDocNode _nodeTran;
+            private readonly SiteDeterminingIonAnalyzer _analyzer;
 
-            public PickTransitionTip(TransitionDocNode nodeTran)
+            public PickTransitionTip(TransitionDocNode nodeTran, SiteDeterminingIonAnalyzer analyzer)
             {
                 _nodeTran = nodeTran;
+                _analyzer = analyzer;
             }
 
-            // Not enough useful information in this tip yet
-            public bool HasTip { get { return _nodeTran.HasLoss; } }
+            // Only losses and localization add information beyond the pick-list label itself
+            public bool HasTip
+            {
+                get { return _nodeTran.HasLoss || (_analyzer != null && _analyzer.GetLocalizingSetSize(_nodeTran) > 0); }
+            }
 
             public Size RenderTip(Graphics g, Size sizeMax, bool draw)
             {
-                return TransitionTreeNode.RenderTip(_nodeTran, g, sizeMax, draw);
+                return TransitionTreeNode.RenderTip(_nodeTran, g, sizeMax, draw, _analyzer);
             }
         }
 
@@ -355,6 +362,37 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
         
         #endregion
+
+        /// <summary>
+        /// The analyzer of the parent peptide, or null when the peptide carries no ambiguously
+        /// placed modification. The peptide node owns and invalidates it.
+        /// </summary>
+        private SiteDeterminingIonAnalyzer SiteDeterminingAnalyzer
+        {
+            get { return ((PeptideTreeNode) Parent)?.SiteDeterminingAnalyzer; }
+        }
+
+        /// <summary>
+        /// True when the given choice is a product ion that <em>uniquely localizes</em> the
+        /// modification, i.e. no other positional placement produces it. Drives the badge on the
+        /// pick list icon, matching <see cref="TransitionTreeNode.IsUniquelyLocalizing"/> in the tree.
+        /// </summary>
+        public bool IsUniquelyLocalizing(DocNode choice)
+        {
+            var analyzer = SiteDeterminingAnalyzer;
+            return analyzer != null && choice is TransitionDocNode nodeTran && analyzer.IsUniqueToPrecursor(nodeTran);
+        }
+
+        /// <summary>
+        /// The number of positional isomers the given choice narrows the modification placement
+        /// to, which sets the fill of its pick list badge, or 0 when it narrows nothing; see
+        /// <see cref="TransitionTreeNode.LocalizingSetSize"/>.
+        /// </summary>
+        public long GetLocalizingSetSize(DocNode choice)
+        {
+            var analyzer = SiteDeterminingAnalyzer;
+            return analyzer != null && choice is TransitionDocNode nodeTran ? analyzer.GetLocalizingSetSize(nodeTran) : 0;
+        }
 
         #region ITipProvider Members
 

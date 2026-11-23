@@ -447,6 +447,18 @@
   <data name="&gt;&gt;cbAutoSelect.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
+  <data name="&gt;&gt;cbLocalizingIons.Name" xml:space="preserve">
+    <value>cbLocalizingIons</value>
+  </data>
+  <data name="&gt;&gt;cbLocalizingIons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbLocalizingIons.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;cbLocalizingIons.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="&gt;&gt;lbPrecursorMzWindow.Name" xml:space="preserve">
     <value>lbPrecursorMzWindow</value>
   </data>
@@ -1663,7 +1675,7 @@ to use in calculating all precursor masses</value>
     <value>21, 15</value>
   </data>
   <data name="tabControlPeptidesSmallMols.Size" type="System.Drawing.Size, System.Drawing">
-    <value>321, 331</value>
+    <value>321, 355</value>
   </data>
   <data name="tabControlPeptidesSmallMols.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1759,7 +1771,7 @@ to use in calculating all precursor masses</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabPage1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>313, 305</value>
+    <value>313, 329</value>
   </data>
   <data name="tabPage1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1806,7 +1818,7 @@ Alternatively, z* and z" can be used.</value>
     <value>groupBox1</value>
   </data>
   <data name="&gt;&gt;btnEditSpecialTransitions.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;label18.Name" xml:space="preserve">
     <value>label18</value>
@@ -1818,7 +1830,7 @@ Alternatively, z* and z" can be used.</value>
     <value>groupBox1</value>
   </data>
   <data name="&gt;&gt;label18.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="&gt;&gt;listAlwaysAdd.Name" xml:space="preserve">
     <value>listAlwaysAdd</value>
@@ -1830,7 +1842,7 @@ Alternatively, z* and z" can be used.</value>
     <value>groupBox1</value>
   </data>
   <data name="&gt;&gt;listAlwaysAdd.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;comboRangeFrom.Name" xml:space="preserve">
     <value>comboRangeFrom</value>
@@ -1842,7 +1854,7 @@ Alternatively, z* and z" can be used.</value>
     <value>groupBox1</value>
   </data>
   <data name="&gt;&gt;comboRangeFrom.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -1854,7 +1866,7 @@ Alternatively, z* and z" can be used.</value>
     <value>groupBox1</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="&gt;&gt;comboRangeTo.Name" xml:space="preserve">
     <value>comboRangeTo</value>
@@ -1866,7 +1878,7 @@ Alternatively, z* and z" can be used.</value>
     <value>groupBox1</value>
   </data>
   <data name="&gt;&gt;comboRangeTo.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -1878,13 +1890,13 @@ Alternatively, z* and z" can be used.</value>
     <value>groupBox1</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
     <value>8, 75</value>
   </data>
   <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>299, 222</value>
+    <value>299, 246</value>
   </data>
   <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -2328,6 +2340,28 @@ within 10 on either side of the precursor m/z.</value>
     <value>If checked, tranitions are automatically chosen for peptides
 using specified filter and library settings. Otherwise, all transition
 selection must be done by manual document editing.</value>
+  </data>
+  <data name="cbLocalizingIons.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbLocalizingIons.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 206</value>
+  </data>
+  <data name="cbLocalizingIons.Size" type="System.Drawing.Size, System.Drawing">
+    <value>218, 17</value>
+  </data>
+  <data name="cbLocalizingIons.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="cbLocalizingIons.Text" xml:space="preserve">
+    <value>Include ions that locali&amp;ze modifications</value>
+  </data>
+  <data name="cbLocalizingIons.ToolTip" xml:space="preserve">
+    <value>If checked, product ions that are unique to the current placement
+of an ambiguously localized modification (e.g. one phosphorylation
+among several candidate residues) are also selected, even when they
+fall outside the ion range above. The selected ion types and charges
+and the precursor exclusion window still apply.</value>
   </data>
   <data name="lbPrecursorMzWindow.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>

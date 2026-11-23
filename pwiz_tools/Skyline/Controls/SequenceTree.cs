@@ -1,9 +1,10 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2009 University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -112,6 +113,61 @@ namespace pwiz.Skyline.Controls
             molecule_list,
             peptide_list,
             empty_list,
+            // Fragment icons badged for a product ion that narrows the placement of a
+            // modification, one per producing-set size from 1 (unique to the placement) to
+            // LOCALIZING_BADGE_LEVELS, which also serves every larger size
+            fragment_localizing_1,
+            fragment_localizing_2,
+            fragment_localizing_3,
+            fragment_localizing_4,
+            fragment_localizing_5,
+            fragment_localizing_6,
+            fragment_lib_localizing_1,
+            fragment_lib_localizing_2,
+            fragment_lib_localizing_3,
+            fragment_lib_localizing_4,
+            fragment_lib_localizing_5,
+            fragment_lib_localizing_6,
+        }
+
+        /// <summary>
+        /// Number of badge levels for a localizing product ion, each a fragment icon whose bar is
+        /// filled by 1 / producing-set size; the last level is shared by every larger size.
+        /// </summary>
+        public const int LOCALIZING_BADGE_LEVELS = 6;
+
+        /// <summary>
+        /// The badged fragment image for a product ion that narrows the modification placement
+        /// of its peptide to the given number of positional isomers, at least 1.
+        /// </summary>
+        public static ImageId GetLocalizingImageId(long localizingSetSize, bool hasLibInfo)
+        {
+            int level = (int) Math.Min(localizingSetSize, LOCALIZING_BADGE_LEVELS) - 1;
+            return (hasLibInfo ? ImageId.fragment_lib_localizing_1 : ImageId.fragment_localizing_1) + level;
+        }
+
+        /// <summary>
+        /// Returns a copy of a fragment icon with a bar along its left edge, filled from the bottom
+        /// by the given fraction of its height, marking a product ion that narrows the placement of
+        /// a modification: a full bar for an ion unique to the placement, half a bar when two
+        /// isomers produce it, and so on. The bar is 3 x 11 pixels in the 16 px design, left of
+        /// the peak and clear of the library glyph. It scales with the icon and is set pixel by
+        /// pixel so it stays crisp at any DPI.
+        /// </summary>
+        private static Image AddLocalizingBadge(Image imageFragment, double fraction)
+        {
+            var bitmap = new Bitmap(imageFragment);
+            var color = Color.FromArgb(0, 90, 200);
+            double scale = bitmap.Height / 16.0;
+            int width = Math.Max(1, (int) Math.Round(3 * scale));
+            int height = (int) Math.Round(11 * scale);
+            int filled = Math.Max(1, (int) Math.Round(height * fraction));
+            for (int y = height - filled; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                    bitmap.SetPixel(x, y, color);
+            }
+            return bitmap;
         }
 
         public enum StateImageId
@@ -180,6 +236,8 @@ namespace pwiz.Skyline.Controls
             AddNodeImage(nameof(Resources.MoleculeList), Resources.MoleculeList); // 16bpp
             AddNodeImage(nameof(Resources.PeptideList), Resources.PeptideList); // 16bpp
             AddNodeImage(nameof(Resources.EmptyList), Resources.EmptyList);  // 16bpp
+            AddLocalizingImages(nameof(Resources.Fragment), Resources.Fragment);
+            AddLocalizingImages(nameof(Resources.FragmentLib), Resources.FragmentLib);
 
             StateImageList = new ImageList
             {
@@ -209,6 +267,17 @@ namespace pwiz.Skyline.Controls
         private void AddNodeImage(string name, Image image)
         {
             ImageList.Images.Add(DpiUtil.GetIcon(this, name, image, Color.Magenta));
+        }
+
+        /// <summary>
+        /// Adds the <see cref="LOCALIZING_BADGE_LEVELS"/> badged copies of a fragment icon, one
+        /// per producing-set size, in the order <see cref="GetLocalizingImageId"/> expects.
+        /// </summary>
+        private void AddLocalizingImages(string name, Image image)
+        {
+            var icon = DpiUtil.GetIcon(this, name, image, Color.Magenta);
+            for (int size = 1; size <= LOCALIZING_BADGE_LEVELS; size++)
+                ImageList.Images.Add(AddLocalizingBadge(icon, 1.0 / size));
         }
 
         private void AddStateImage(string name, Image image)
