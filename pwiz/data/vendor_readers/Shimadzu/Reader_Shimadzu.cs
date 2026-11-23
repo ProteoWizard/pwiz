@@ -146,7 +146,7 @@ public sealed class Reader_Shimadzu : IReader
         result.InstrumentConfigurations.Add(ic);
         result.Run.DefaultInstrumentConfiguration = ic;
 
-        // Acquisition timestamp. Encoding (incl. the cpp-equivalent host-tz adjustment) lives
+        // Acquisition timestamp. Encoding (incl. the host-tz adjustment) lives
         // on ReaderConfig so every vendor reader can share the same logic + flag wiring.
         // Shimadzu is one of the three readers where cpp gates the shift on the config flag
         // (Reader_Shimadzu.cpp: getAnalysisDate(config.adjustUnknownTimeZonesToHostTimeZone)).

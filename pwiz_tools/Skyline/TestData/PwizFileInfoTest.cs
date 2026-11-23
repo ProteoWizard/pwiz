@@ -441,6 +441,39 @@ namespace pwiz.SkylineTestData
             }
         }
 
+        /// <summary>
+        /// The acquired time Skyline reads from a Thermo raw file must be the clock time stored in the raw file,
+        /// on any computer and on any date. The reader converts the stored time to UTC with the host's offset and
+        /// <see cref="MsDataFileImpl.RunStartTime"/> converts it back, so both must use the offset on the
+        /// acquisition date. The value must also have <see cref="DateTimeKind.Unspecified"/>, so the .skyd stores
+        /// the clock time. A <see cref="DateTimeKind.Local"/> value would be stored as a point in time and shifted to
+        /// the time zone of the computer that opens the .skyd. A file imported in Seattle as 10:36:38 would then show
+        /// as 13:36:38 when the document is opened in Boston, and a save there would write 13:36:38 to the .sky.
+        /// </summary>
+        /// <remarks>
+        /// This test checks the whole path on a real raw file, from the Thermo reader through
+        /// <see cref="MsDataFileImpl.RunStartTime"/>. Its first assertion catches an offset taken on the date of
+        /// reading only when the test runs in a zone with DST, on a date on the other side of DST from 2009-07-02
+        /// (in winter, in North America and Europe). The pwiz-sharp FormatStartTimeStampTests check the offset alone,
+        /// in a fixed time zone, so they catch that on any computer on any date. The second assertion fails on any
+        /// computer if the value has a time zone.
+        /// </remarks>
+        [TestMethod]
+        public void TestRunStartTime()
+        {
+            if (Skyline.Program.NoVendorReaders)
+                return;
+
+            // Stores 2009-07-02 10:36:38, a date in daylight saving time in North America and Europe
+            var path = TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Thermo, "090701-LTQVelos-unittest-01.raw");
+            using var msDataFile = new MsDataFileImpl(path);
+            var runStartTime = msDataFile.RunStartTime;
+            AssertEx.AreEqual(new DateTime(2009, 7, 2, 10, 36, 38), runStartTime,
+                @"RunStartTime must be the clock time the file stores");
+            AssertEx.AreEqual(DateTimeKind.Unspecified, runStartTime.Value.Kind,
+                @"RunStartTime must have no time zone, so the .skyd stores the clock time on any computer");
+        }
+
         [TestMethod]
         public void TestQcTraces()
         {
