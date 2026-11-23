@@ -225,7 +225,14 @@ namespace pwiz.Osprey.FDR
 
             double scoreSeconds = Seconds(t - trainEnd);
             if (!Calibrate(scores, labels, ids, seqs, _trainConfig.TestFdr))
+            {
+                // Its scores stay on the model's own scale, so its precursors meet the other runs'
+                // calibrated scores in the experiment competition unadjusted.
                 Interlocked.Increment(ref _uncalibrated);
+                _log.LogInfo(LogTag.COUNT, string.Format(
+                    @"{0}: the run's first-pass model passed no target at q {1}, so its scores could not be calibrated against the other runs.",
+                    fileName, _trainConfig.TestFdr));
+            }
             Accumulate(ref _calibrateTicks, t);
             _log.LogInfo(LogTag.TIMING,
                 @"{0} per-file model [{1}]: {2:F1}s wall at {3} thread(s); {4} rows, {5} best-per-precursor, {6} final training rows; train {7:F1}s (protein-best column {8:F1}s), out-of-fold scoring {9:F1}s",

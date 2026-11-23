@@ -2352,9 +2352,10 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// A stub that carries the run's first-pass scores stands in for the run's
-        /// <c>.1st-pass.fdr_scores.bin</c>: with no such file beside it, the score file's readers
-        /// return the stub's records, in row order, score and both run q-values intact.
+        /// A stub that carries the run's first-pass scores returns its records - score, both run
+        /// q-values and apex RT intact. The score file's readers take them in place of a missing
+        /// <c>.1st-pass.fdr_scores.bin</c> only under <c>OSPREY_PER_FILE_FDR=file</c>, which a
+        /// test process does not set: outside the mode a stub left on disk is not a score file.
         /// </summary>
         private static void AssertStubCarriesFirstPassScores(List<FdrEntry> entries,
             Dictionary<string, string> metadata, Dictionary<uint, LibraryEntry> libraryById)
@@ -2371,12 +2372,14 @@ namespace pwiz.Osprey.Test
             {
                 string stem = Path.Combine(dir, @"run1");
                 string pass1Path = stem + FdrScoresSidecar.EXT_FIRST_PASS;
-                Assert.IsFalse(FdrScoresSidecar.Pass1Available(pass1Path));
-                ParquetScoreCache.WriteScoresParquet(stem + ParquetScoreCache.EXT_SCORES, entries, metadata, libraryById,
+                string scoresPath = stem + ParquetScoreCache.EXT_SCORES;
+                ParquetScoreCache.WriteScoresParquet(scoresPath, entries, metadata, libraryById,
                     @"run1", false, PinFeatureMask.Hram.StubColumnsOnly(), true);
-                Assert.IsTrue(FdrScoresSidecar.Pass1Available(pass1Path));
+                Assert.IsTrue(ParquetScoreCache.HasFirstPassScores(scoresPath));
+                Assert.IsFalse(FdrScoresSidecar.Pass1Available(pass1Path), @"outside the mode a stub is not a score file");
+                Assert.IsFalse(FdrScoresSidecar.ReadRecords(pass1Path, FdrScoresSidecar.Pass.FirstPass, r => { }));
                 var records = new List<FdrScoreRecord>();
-                Assert.IsTrue(FdrScoresSidecar.ReadRecords(pass1Path, FdrScoresSidecar.Pass.FirstPass, records.Add));
+                Assert.IsTrue(ParquetScoreCache.ReadFirstPassScoreRecords(scoresPath, records.Add));
                 Assert.AreEqual(entries.Count, records.Count);
                 var byId = entries.ToDictionary(e => e.EntryId);
                 foreach (var record in records)

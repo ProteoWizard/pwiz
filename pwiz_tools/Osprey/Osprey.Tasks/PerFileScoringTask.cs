@@ -250,7 +250,19 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public string OwnModelValidityKey(PipelineContext ctx)
         {
-            return ValidityKey(ctx) + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
+            return ValidityKey(ctx) + ModelKeyTerms(ctx.Config);
+        }
+
+        /// <summary>
+        /// The settings that change a run's own first-pass model, as the terms FirstPassFDR keys
+        /// the global model with: the training sample, the FDR features and the classifier. Not
+        /// the cohort or the second-pass terms, which the run's model does not depend on.
+        /// </summary>
+        private static string ModelKeyTerms(OspreyConfig config)
+        {
+            return OspreyEnvironment.TrainSampleValidityKeySuffix()
+                   + PinFeatureMask.For(config).ValidityKeySuffix()
+                   + PercolatorEngine.GbdtValidityKeySuffix(config);
         }
 
         public override IEnumerable<string> Outputs(PipelineContext ctx)
@@ -274,7 +286,7 @@ namespace pwiz.Osprey.Tasks
         public override string OutputValidityKey(PipelineContext ctx, string taskKey, string output)
         {
             if (TrainsOwnFirstPassModel && output.EndsWith(ParquetScoreCache.EXT_SCORES, StringComparison.Ordinal))
-                return taskKey + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config) + STUB_PARQUET_KEY_TERM;
+                return taskKey + ModelKeyTerms(ctx.Config) + STUB_PARQUET_KEY_TERM;
             return taskKey;
         }
 
@@ -319,6 +331,19 @@ namespace pwiz.Osprey.Tasks
             // spectra is right), and a worker-mode consumer materializes it via
             // ctx.Demand, which routes to Rehydrate.
             var config = ctx.Config;
+            // OSPREY_PER_FILE_FDR=file: the second pass rescores with the first pass's frozen model,
+            // and under this mode no model is kept yet, so a run that goes on past the first pass
+            // is refused before any run is scored rather than hours later.
+            if (TrainsOwnFirstPassModel && (ScoringTaskShared.Includes<PerFileRescoreTask>(config) ||
+                                            ScoringTaskShared.Includes<SecondPassFdrTask>(config)))
+            {
+                // Experiment-only refusal, not displayed outside OSPREY_PER_FILE_FDR runs
+                ctx.LogError(string.Format(
+                    @"OSPREY_PER_FILE_FDR=file runs the first pass only for now: use {0} or {1}.",
+                    OspreyArgNames.TaskText(FirstPassTask.TASK_NAME), OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME)));
+                ctx.ExitCode = 1;
+                return false;
+            }
 
             // Stage 1: Load library + generate/pair decoys, then build the
             // full target+decoy library and its by-id lookup.

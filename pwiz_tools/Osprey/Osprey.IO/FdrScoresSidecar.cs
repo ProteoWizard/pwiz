@@ -1096,12 +1096,6 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Decode one <see cref="RecordLength"/>-byte record into a
-        /// <see cref="FdrScoreRecord"/>, reading the exact v7 field order
-        /// <see cref="WriteRecord"/> wrote (little-endian). Single-sourced with the writer so
-        /// the read/write byte layout cannot drift.
-        /// </summary>
-        /// <summary>
         /// True when a run's first-pass records can be read from <paramref name="pass1Path"/>:
         /// the file itself, or - for a run whose scores live in its stub scores parquet
         /// (<c>OSPREY_PER_FILE_FDR=file</c>) - that parquet. The existence test a reader of the
@@ -1120,7 +1114,10 @@ namespace pwiz.Osprey.IO
         /// </summary>
         private static string StubScoresPathFor(string path, Pass expectedPass)
         {
+            // Only a run under OSPREY_PER_FILE_FDR=file writes scores into its stub; any other
+            // run that finds a stub left by one reads the missing file as missing.
             if (path == null || expectedPass != Pass.FirstPass || File.Exists(path) ||
+                !string.Equals(OspreyEnvironment.PerFileFdr, OspreyEnvironment.PER_FILE_FDR_FILE, StringComparison.Ordinal) ||
                 !path.EndsWith(EXT_FIRST_PASS, StringComparison.Ordinal))
             {
                 return null;
@@ -1136,25 +1133,41 @@ namespace pwiz.Osprey.IO
         /// </summary>
         private static bool TryWalkStubRecords(string stubPath, Func<byte[], int, bool> onRecord)
         {
+            // Read whole before any record is handed over, so a fault reading the stub is "this
+            // file is unusable" (false) and never a partly applied file, as for the binary file.
             var records = new List<FdrScoreRecord>();
-            if (!ParquetScoreCache.ReadFirstPassScoreRecords(stubPath, records.Add))
+            try
+            {
+                if (!ParquetScoreCache.ReadFirstPassScoreRecords(stubPath, records.Add))
+                    return false;
+            }
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
+            {
                 return false;
+            }
             var buffer = new byte[RecordLength];
             long delivered = 0;
-            foreach (var record in records)
+            using (var bw = new BinaryWriter(new MemoryStream(buffer)))
             {
-                using (var bw = new BinaryWriter(new MemoryStream(buffer)))
+                foreach (var record in records)
                 {
+                    bw.Seek(0, SeekOrigin.Begin);
                     WriteRecord(bw, record.EntryId, record.Score, record.RunPrecursorQvalue,
                         record.RunPeptideQvalue, record.ApexRt);
+                    if (!onRecord(buffer, 0))
+                        return delivered == 0 ? false : ThrowPartialWalk(stubPath, delivered);
+                    delivered++;
                 }
-                if (!onRecord(buffer, 0))
-                    return delivered == 0 ? false : ThrowPartialWalk(stubPath, delivered);
-                delivered++;
             }
             return true;
         }
 
+        /// <summary>
+        /// Decode one <see cref="RecordLength"/>-byte record into a
+        /// <see cref="FdrScoreRecord"/>, reading the exact v7 field order
+        /// <see cref="WriteRecord"/> wrote (little-endian). Single-sourced with the writer so
+        /// the read/write byte layout cannot drift.
+        /// </summary>
         private static FdrScoreRecord DecodeRecord(byte[] rec, int offset = 0)
         {
             return new FdrScoreRecord(
