@@ -1670,7 +1670,7 @@ namespace pwiz.Osprey.Tasks
             var rows = new OwnModelRows();
             ParquetScoreCache.ReadFdrStubScalars(scoresPath, rows.Add, StubColumns.ApexRt);
             rows.FeatureRows = ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath, PinFeatureMask.For(config));
-            WriteOwnModelScores(rows, sidecarPath, fileName, config, swModel, ctx);
+            WriteOwnModelScores(rows, sidecarPath, fileName, swModel, ctx);
             return entries;
         }
 
@@ -1682,7 +1682,7 @@ namespace pwiz.Osprey.Tasks
         /// the model is the one a reader of a full parquet would train.
         /// </summary>
         private void TrainOwnModelFromEntries(List<FdrEntry> entries, string inputFile, string fileName,
-            PinFeatureSelection featureMask, OspreyConfig config, PipelineContext ctx)
+            PinFeatureSelection featureMask, PipelineContext ctx)
         {
             var swModel = Stopwatch.StartNew();
             int n = entries.Count;
@@ -1711,7 +1711,7 @@ namespace pwiz.Osprey.Tasks
                 rows.Add(entry.EntryId, entry.Charge, entry.IsDecoy, coelutionSum, entry.ModifiedSequence ?? string.Empty, entry.ApexRt);
                 rows.FeatureRows.Add(features);
             }
-            WriteOwnModelScores(rows, FdrScoresSidecar.Pass1Path(inputFile), fileName, config, swModel, ctx);
+            WriteOwnModelScores(rows, FdrScoresSidecar.Pass1Path(inputFile), fileName, swModel, ctx);
         }
 
         /// <summary>
@@ -1757,10 +1757,16 @@ namespace pwiz.Osprey.Tasks
             return serves;
         }
 
-        /// <summary>Trains the run's own model on <paramref name="rows"/> and writes its first-pass scores.</summary>
-        private void WriteOwnModelScores(OwnModelRows rows, string sidecarPath, string fileName, OspreyConfig config,
+        /// <summary>
+        /// Trains the run's own model on <paramref name="rows"/> and writes its first-pass scores.
+        /// The model takes the RUN's configuration, not a file's copy: <c>ProcessFile</c>'s copy has
+        /// its threads already divided between the concurrent files, and the model divides them
+        /// itself by the same count.
+        /// </summary>
+        private void WriteOwnModelScores(OwnModelRows rows, string sidecarPath, string fileName,
             Stopwatch swModel, PipelineContext ctx)
         {
+            var config = ctx.Config;
             double[] scores = PercolatorEngine.ScoreRunWithOwnModel(fileName, rows.EntryIds, rows.Charges, rows.IsDecoys,
                 rows.CoelutionSums, rows.Peptides, rows.FeatureRows, config, ScoringTaskShared.FdrFeatureInfos(config),
                 _ownModelProteinBest.Value, ctx.RunPlan.ScoringFileParallelism, ctx,
@@ -2244,7 +2250,7 @@ namespace pwiz.Osprey.Tasks
                 // The write above numbered every entry with its parquet row, so these are the rows
                 // and the order a reader of the parquet would see.
                 if (_ownModelStamp != null)
-                    TrainOwnModelFromEntries(scoredEntries, inputFile, fileName, featureMask, config, ctx);
+                    TrainOwnModelFromEntries(scoredEntries, inputFile, fileName, featureMask, ctx);
 
                 // Phase 1 (issue #4355): the heavy per-entry arrays are now persisted in
                 // the parquet above and are reloadable by ParquetIndex, so drop them from
