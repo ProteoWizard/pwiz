@@ -188,7 +188,9 @@ namespace pwiz.Osprey
             };
         public static readonly OspreyArgument ARG_SPECTRA_CACHE = new OspreyArgument(OspreyArgNames.SPECTRA_CACHE,
             new[] { OspreyArgNames.VALUE_ON, OspreyArgNames.VALUE_OFF },
-            (c, p) => c._config.SpectraCache = p.Value.ToLowerInvariant() == OspreyArgNames.VALUE_ON)
+            // A statement body: an assignment expression of type bool binds to the Func overload,
+            // and its value (false for off) would end the parse (see ParseArgs).
+            (c, p) => { c._config.SpectraCache = p.Value.ToLowerInvariant() == OspreyArgNames.VALUE_ON; })
             {
                 Scope = OspreyPropertyScope.search, DefaultValue = Default(() => OspreyArgNames.VALUE_ON),
                 DescriptionArgs = () => new object[] { SpectraCache.EXT, OspreyArgNames.VALUE_OFF, ARG_CACHE_DIR.ArgumentText }
@@ -380,7 +382,7 @@ namespace pwiz.Osprey
             new[] { @"ppm", @"mz" }, (c, p) => c._fragmentUnit = p.Value.ToLowerInvariant())
             { Scope = OspreyPropertyScope.search, DescriptionArgs = () => new object[] { ARG_FRAGMENT_TOLERANCE.ArgumentText, ARG_RESOLUTION.ArgumentText, @"unit" } };
         public static readonly OspreyArgument ARG_NO_PREFILTER = new OspreyArgument(@"no-prefilter",
-            (c, p) => c._config.PrefilterEnabled = false) { Scope = OspreyPropertyScope.search };
+            (c, p) => { c._config.PrefilterEnabled = false; }) { Scope = OspreyPropertyScope.search };
         public static readonly OspreyArgument ARG_DEMUX = new OspreyArgument(OspreyArgNames.DEMUX,
             new[] { @"off", @"auto" }, (c, p) => c._config.DemuxMode =
                 p.Value.ToLowerInvariant() == @"auto" ? DemuxMode.auto : DemuxMode.off)
@@ -806,7 +808,11 @@ namespace pwiz.Osprey
         private static OspreyConfig ParseArgs(string[] args, FdrClassifier? fdrModel, out LibraryBuildSettings librarySettings)
         {
             var parser = new OspreyCommandArgs();
-            CreateParser().Parse(parser, args);
+            // Parse stops at a handler that returns false. No Osprey handler means to, so a false
+            // here is a handler returning a bool by accident, and every argument after it would be
+            // silently ignored (--no-prefilter dropped all that followed it this way).
+            if (!CreateParser().Parse(parser, args))
+                throw new InvalidOperationException(@"An argument handler stopped the parse: " + CommandLineText.Format(@"Osprey", args));
             var config = parser.ToConfig(fdrModel);
             config.CommandLine = CommandLineText.Format(@"Osprey", args);
             librarySettings = parser.InterpretLibraryBuild(config);
