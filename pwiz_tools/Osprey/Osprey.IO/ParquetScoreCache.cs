@@ -260,6 +260,11 @@ namespace pwiz.Osprey.IO
         // and as one of the 21 PIN features). Not added to the write
         // schema -- it's already there via the PIN feature fields.
         private const string COLUMN_COELUTION_SUM = @"fragment_coelution_sum";
+        // A stub's first-pass scores (OSPREY_PER_FILE_FDR=file): the run's own calibrated score and
+        // the two run q-values it implies, the record FdrScoresSidecar otherwise writes per run.
+        private const string COLUMN_FIRST_PASS_SCORE = @"first_pass_score";
+        private const string COLUMN_RUN_PRECURSOR_Q = @"run_precursor_q";
+        private const string COLUMN_RUN_PEPTIDE_Q = @"run_peptide_q";
 
         /// <summary>
         /// The <see cref="DataField"/>s of ONE parquet write, attached to that write's schema
@@ -301,6 +306,12 @@ namespace pwiz.Osprey.IO
                     PrecursorMz = new DataField<double>(COLUMN_PRECURSOR_MZ);
                     ProteinIds = new DataField(COLUMN_PROTEIN_IDS, typeof(string), isNullable: true, isArray: false);
                     FileName = new DataField<string>(COLUMN_FILE_NAME);
+                }
+                else
+                {
+                    FirstPassScore = new DataField<double>(COLUMN_FIRST_PASS_SCORE);
+                    RunPrecursorQ = new DataField<double>(COLUMN_RUN_PRECURSOR_Q);
+                    RunPeptideQ = new DataField<double>(COLUMN_RUN_PEPTIDE_Q);
                 }
                 Charge = new DataField<byte>(COLUMN_CHARGE);
                 ScanNumber = new DataField<uint>(COLUMN_SCAN_NUMBER);
@@ -345,6 +356,9 @@ namespace pwiz.Osprey.IO
                 if (ScoreIndex != null)
                     fields.Add(ScoreIndex);
                 fields.AddRange(Features.Where(field => field != null));
+                // A stub's scores, last, where BuildFdrEntryColumns appends their columns.
+                if (FirstPassScore != null)
+                    fields.AddRange(new[] { FirstPassScore, RunPrecursorQ, RunPeptideQ });
                 Schema = new ParquetSchema(fields.ToArray());
             }
 
@@ -370,6 +384,10 @@ namespace pwiz.Osprey.IO
             public DataField ScoreIndex { get; }
             /// <summary>Per PIN feature, its field, or null for a feature that is not recorded (<see cref="PinFeatureSelection.IsRecorded"/>).</summary>
             public DataField[] Features { get; }
+            /// <summary>Null, with the two run q-value fields, unless the write is a stub.</summary>
+            public DataField FirstPassScore { get; }
+            public DataField RunPrecursorQ { get; }
+            public DataField RunPeptideQ { get; }
         }
 
         #endregion
@@ -798,11 +816,7 @@ namespace pwiz.Osprey.IO
             // pipeline.rs::write_scores_parquet_with_metadata. ParquetIndex is
             // assigned to the post-sort destination row below (the global row
             // position, preserved across the bounded row-group boundaries).
-            var sortedIndices = Enumerable.Range(0, n)
-                .OrderBy(idx => entries[idx].EntryId)
-                .ThenBy(idx => entries[idx].Charge)
-                .ThenBy(idx => entries[idx].ScanNumber)
-                .ToArray();
+            int[] sortedIndices = RowOrder(entries);
 
             // Build and write one bounded row group at a time. Each chunk
             // materializes only its own column arrays (including the heavy blob
@@ -950,11 +964,85 @@ namespace pwiz.Osprey.IO
                 // else: leave zeros (entries without features can't drive Stage 5+).
             }
 
-            return BuildRowGroupColumns(
+            var columns = BuildRowGroupColumns(
                 entryIds, isDecoys, sequences, modifiedSequences, charges,
                 precursorMzs, proteinIds, scanNumbers, apexRts, startRts, endRts,
                 boundsAreas, boundsSnrs, fileNames, refXicRts, refXicIntensities,
                 fields, featureArrays, scoreIndices);
+            // A stub's first-pass scores, last, matching the WriteFields schema order.
+            if (fields.FirstPassScore != null)
+            {
+                var scores = new double[count];
+                var runPrecursorQs = new double[count];
+                var runPeptideQs = new double[count];
+                for (int j = 0; j < count; j++)
+                {
+                    scores[j] = entries[j].Score;
+                    runPrecursorQs[j] = entries[j].RunPrecursorQvalue;
+                    runPeptideQs[j] = entries[j].RunPeptideQvalue;
+                }
+                columns.Add(Column(fields.FirstPassScore, scores));
+                columns.Add(Column(fields.RunPrecursorQ, runPrecursorQs));
+                columns.Add(Column(fields.RunPeptideQ, runPeptideQs));
+            }
+            return columns;
+        }
+
+        /// <summary>
+        /// The order the FdrEntry writer puts <paramref name="entries"/> in, as indices into the
+        /// list: ascending (entry_id, charge, scan_number), ties in list order. Row <c>i</c> of
+        /// the parquet is <c>entries[RowOrder(entries)[i]]</c>, so a caller that must know each
+        /// entry's row BEFORE the write - the stub's own first-pass model, whose scores the
+        /// write carries - gets the rows the write will produce.
+        /// </summary>
+        public static int[] RowOrder(IReadOnlyList<FdrEntry> entries)
+        {
+            return Enumerable.Range(0, entries.Count)
+                .OrderBy(idx => entries[idx].EntryId)
+                .ThenBy(idx => entries[idx].Charge)
+                .ThenBy(idx => entries[idx].ScanNumber)
+                .ToArray();
+        }
+
+        /// <summary>
+        /// Streams a stub scores parquet's first-pass records - entry_id, the run's own score, the
+        /// two run q-values and apex RT - in row order, the records <c>FdrScoresSidecar</c> holds
+        /// for a run whose scores live in its stub. False, with nothing handed over, when the file
+        /// is missing or carries no scores.
+        /// </summary>
+        public static bool ReadFirstPassScoreRecords(string path, Action<FdrScoreRecord> onRecord)
+        {
+            if (onRecord == null)
+                throw new ArgumentNullException(nameof(onRecord));
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+                return false;
+            using (var stream = BlockReadStream.OpenRead(path))
+            using (var reader = OpenReader(stream))
+            {
+                var fieldsByName = BuildFieldLookup(reader);
+                if (!fieldsByName.ContainsKey(COLUMN_FIRST_PASS_SCORE))
+                    return false;
+                for (int g = 0; g < reader.RowGroupCount; g++)
+                {
+                    using (var groupReader = reader.OpenRowGroupReader(g))
+                    {
+                        var entryIds = ReadColumnByName<uint>(groupReader, fieldsByName, COLUMN_ENTRY_ID);
+                        var scores = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_FIRST_PASS_SCORE);
+                        var runPrecursorQs = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_RUN_PRECURSOR_Q);
+                        var runPeptideQs = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_RUN_PEPTIDE_Q);
+                        var apexRts = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_APEX_RT);
+                        for (int row = 0; row < entryIds.Length; row++)
+                            onRecord(new FdrScoreRecord(entryIds[row], scores[row], runPrecursorQs[row], runPeptideQs[row], apexRts[row]));
+                    }
+                }
+            }
+            return true;
+        }
+
+        /// <summary>True when the scores parquet at <paramref name="path"/> carries first-pass scores (a stub's).</summary>
+        public static bool HasFirstPassScores(string path)
+        {
+            return File.Exists(path) && HasColumn(path, COLUMN_FIRST_PASS_SCORE);
         }
 
         /// <summary>

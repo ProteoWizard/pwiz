@@ -2348,6 +2348,50 @@ namespace pwiz.Osprey.Test
                 Assert.ThrowsException<InvalidOperationException>(() =>
                     ParquetScoreCache.LoadFdrStubsFromParquet(stub.SafeName));
             }
+            AssertStubCarriesFirstPassScores(entries, metadata, libraryById);
+        }
+
+        /// <summary>
+        /// A stub that carries the run's first-pass scores stands in for the run's
+        /// <c>.1st-pass.fdr_scores.bin</c>: with no such file beside it, the score file's readers
+        /// return the stub's records, in row order, score and both run q-values intact.
+        /// </summary>
+        private static void AssertStubCarriesFirstPassScores(List<FdrEntry> entries,
+            Dictionary<string, string> metadata, Dictionary<uint, LibraryEntry> libraryById)
+        {
+            for (int i = 0; i < entries.Count; i++)
+            {
+                entries[i].Score = 1.5 - i;
+                entries[i].RunPrecursorQvalue = 0.001 * (i + 1);
+                entries[i].RunPeptideQvalue = 0.002 * (i + 1);
+            }
+            string dir = Path.Combine(Path.GetTempPath(), @"osprey_stubscores_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string stem = Path.Combine(dir, @"run1");
+                string pass1Path = stem + FdrScoresSidecar.EXT_FIRST_PASS;
+                Assert.IsFalse(FdrScoresSidecar.Pass1Available(pass1Path));
+                ParquetScoreCache.WriteScoresParquet(stem + ParquetScoreCache.EXT_SCORES, entries, metadata, libraryById,
+                    @"run1", false, PinFeatureMask.Hram.StubColumnsOnly(), true);
+                Assert.IsTrue(FdrScoresSidecar.Pass1Available(pass1Path));
+                var records = new List<FdrScoreRecord>();
+                Assert.IsTrue(FdrScoresSidecar.ReadRecords(pass1Path, FdrScoresSidecar.Pass.FirstPass, records.Add));
+                Assert.AreEqual(entries.Count, records.Count);
+                var byId = entries.ToDictionary(e => e.EntryId);
+                foreach (var record in records)
+                {
+                    var entry = byId[record.EntryId];
+                    Assert.AreEqual(entry.Score, record.Score);
+                    Assert.AreEqual(entry.RunPrecursorQvalue, record.RunPrecursorQvalue);
+                    Assert.AreEqual(entry.RunPeptideQvalue, record.RunPeptideQvalue);
+                    Assert.AreEqual(entry.ApexRt, record.ApexRt);
+                }
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
         }
 
         /// <summary>

@@ -913,6 +913,10 @@ namespace pwiz.Osprey.IO
         private static bool TryWalkRecords(string path, Pass expectedPass,
             Func<byte[], int, bool> onRecord)
         {
+            string stubPath = StubScoresPathFor(path, expectedPass);
+            if (stubPath != null)
+                return TryWalkStubRecords(stubPath, onRecord);
+
             // How many records the caller has already been handed. Decides whether a fault
             // means "unusable file" (return false, nothing applied) or "partly applied"
             // (throw) - see the catch below.
@@ -1036,6 +1040,9 @@ namespace pwiz.Osprey.IO
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (onRecord == null) throw new ArgumentNullException(nameof(onRecord));
+            string stubPath = StubScoresPathFor(path, expectedPass);
+            if (stubPath != null)
+                return ParquetScoreCache.ReadFirstPassScoreRecords(stubPath, onRecord);
 
             try
             {
@@ -1094,6 +1101,60 @@ namespace pwiz.Osprey.IO
         /// <see cref="WriteRecord"/> wrote (little-endian). Single-sourced with the writer so
         /// the read/write byte layout cannot drift.
         /// </summary>
+        /// <summary>
+        /// True when a run's first-pass records can be read from <paramref name="pass1Path"/>:
+        /// the file itself, or - for a run whose scores live in its stub scores parquet
+        /// (<c>OSPREY_PER_FILE_FDR=file</c>) - that parquet. The existence test a reader of the
+        /// records asks instead of <c>File.Exists</c>.
+        /// </summary>
+        public static bool Pass1Available(string pass1Path)
+        {
+            return File.Exists(pass1Path) || StubScoresPathFor(pass1Path, Pass.FirstPass) != null;
+        }
+
+        /// <summary>
+        /// The stub scores parquet that holds a run's first-pass records in place of
+        /// <paramref name="path"/>, or null: only for a first-pass path with no file, beside a
+        /// parquet that carries scores. Every reader here asks it first, so each one serves a
+        /// run that writes one file as it serves a run that writes two.
+        /// </summary>
+        private static string StubScoresPathFor(string path, Pass expectedPass)
+        {
+            if (path == null || expectedPass != Pass.FirstPass || File.Exists(path) ||
+                !path.EndsWith(EXT_FIRST_PASS, StringComparison.Ordinal))
+            {
+                return null;
+            }
+            string scoresPath = path.Substring(0, path.Length - EXT_FIRST_PASS.Length) + ParquetScoreCache.EXT_SCORES;
+            return ParquetScoreCache.HasFirstPassScores(scoresPath) ? scoresPath : null;
+        }
+
+        /// <summary>
+        /// <see cref="TryWalkRecords"/> over a stub's records, each encoded in this file's own
+        /// record layout so the callback cannot tell the sources apart, with the same answer to
+        /// a rejected record: false when nothing was handed over, a throw when something was.
+        /// </summary>
+        private static bool TryWalkStubRecords(string stubPath, Func<byte[], int, bool> onRecord)
+        {
+            var records = new List<FdrScoreRecord>();
+            if (!ParquetScoreCache.ReadFirstPassScoreRecords(stubPath, records.Add))
+                return false;
+            var buffer = new byte[RecordLength];
+            long delivered = 0;
+            foreach (var record in records)
+            {
+                using (var bw = new BinaryWriter(new MemoryStream(buffer)))
+                {
+                    WriteRecord(bw, record.EntryId, record.Score, record.RunPrecursorQvalue,
+                        record.RunPeptideQvalue, record.ApexRt);
+                }
+                if (!onRecord(buffer, 0))
+                    return delivered == 0 ? false : ThrowPartialWalk(stubPath, delivered);
+                delivered++;
+            }
+            return true;
+        }
+
         private static FdrScoreRecord DecodeRecord(byte[] rec, int offset = 0)
         {
             return new FdrScoreRecord(

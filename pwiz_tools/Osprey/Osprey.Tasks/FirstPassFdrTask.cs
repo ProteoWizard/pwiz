@@ -212,8 +212,9 @@ namespace pwiz.Osprey.Tasks
             {
                 yield return ParquetScoreCache.GetScoresPath(input);
                 yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
-                // OSPREY_PER_FILE_FDR=file: the run's first-pass scores, from its own model.
-                if (PerFileScoringTask.TrainsOwnFirstPassModel)
+                // OSPREY_PER_FILE_FDR=file: the run's first-pass scores, from its own model, in
+                // their own file unless the scores parquet above is a stub that carries them.
+                if (PerFileScoringTask.TrainsOwnFirstPassModel && !PerFileScoringTask.WritesStubParquet(ctx.Config))
                     yield return FdrScoresSidecar.Pass1Path(input);
             }
         }
@@ -1675,7 +1676,7 @@ namespace pwiz.Osprey.Tasks
             // PerFileScoring under that task's model key, which names no cohort. Nothing here can
             // score a run without them, so every run must have them.
             bool ownModels = PerFileScoringTask.TrainsOwnFirstPassModel;
-            string ownModelKey = ownModels ? new PerFileScoringTask().OwnModelValidityKey(ctx) : null;
+            var scoringTask = ownModels ? new PerFileScoringTask() : null;
             foreach (var kv in projections.PerFile)
             {
                 string resumeBase = ScoringTaskShared.ResolveSidecarBasePath(
@@ -1684,11 +1685,9 @@ namespace pwiz.Osprey.Tasks
                     continue;
                 if (ownModels)
                 {
-                    if (PerFileResumeDriver.IsCurrent(FdrScoresSidecar.Pass1Path(resumeBase),
-                            PerFileScoringTask.TASK_NAME, ownModelKey))
-                    {
+                    // In their own file or in the run's stub scores parquet.
+                    if (scoringTask.OwnScoresCurrent(resumeBase, ctx))
                         resumableFiles.Add(kv.Key);
-                    }
                     continue;
                 }
                 // Under --protein-boost best a file is resumable only beside a current column: the
