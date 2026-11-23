@@ -770,38 +770,29 @@ namespace pwiz.Skyline.Controls.Graphs
                 ToolTip.AddLine(GraphsResources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
                 var total = CurveList.OfType<BarItem>().Sum(curve => curve.Points[index].Y);
 
-                var dataFormat = @"0.###";
-                if (Settings.Default.UsePowerOfTen)
-                    dataFormat += @"e0";
+                var dataFormat = Settings.Default.UsePowerOfTen ? @"0.000e0" : @"#,0.000";
                 var percentageFormat = @"0.#%";
                 var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
+                // The share of the total is shown wherever the total itself is
+                bool showTotal = !(normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel) && !NormalizeOption.TOTAL.Equals(normalizeOption);
 
+                // Maximum and Total normalization show shares; every other method keeps area units (TIC included)
+                if ((NormalizeOption.MAXIMUM.Equals(normalizeOption) || NormalizeOption.TOTAL.Equals(normalizeOption))
+                    && !(selectedTreeNode is PeptideTreeNode))
+                {
+                    dataFormat = percentageFormat;
+                }
+                var valueScale = NormalizeOption.TOTAL.Equals(normalizeOption) ? 100 : 1;
 
                 foreach (var ion in CurveList.OfType<BarItem>())
                 {
-                    var dataPoint = "";
-                    if (NormalizeOption.DEFAULT.Equals(normalizeOption) || NormalizationMethod.EQUALIZE_MEDIANS.Equals(normalizeOption.NormalizationMethod))
-                    {
-                        if (index== 0)
-                            dataPoint = (ion.Points[index].Y / total ).ToString(percentageFormat, CultureInfo.CurrentCulture);
-                        else
-                            dataPoint = ion.Points[index].Y.ToString(dataFormat, CultureInfo.CurrentCulture);
-                    }
-                    else if (NormalizeOption.MAXIMUM.Equals(normalizeOption)
-                             || NormalizationMethod.TIC.Equals(normalizeOption.NormalizationMethod) 
-                             || NormalizeOption.TOTAL.Equals(normalizeOption))
-                    {
-                        if(!(selectedTreeNode is PeptideTreeNode))
-                            dataFormat = percentageFormat;
-                        dataPoint = (ion.Points[index].Y/(NormalizeOption.TOTAL.Equals(normalizeOption) ? 100:1))
-                            .ToString(dataFormat, CultureInfo.CurrentCulture);
-                    }
-                    else if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel || NormalizationMethod.NONE.Equals(normalizeOption.NormalizationMethod))
-                        dataPoint = (ion.Points[index].Y).ToString(dataFormat, CultureInfo.CurrentCulture);
-
-                    ToolTip.AddLine(ion.Label.Text,dataPoint);
+                    var dataPoint = (ion.Points[index].Y / valueScale).ToString(dataFormat, CultureInfo.CurrentCulture);
+                    if (showTotal && total > 0)
+                        ToolTip.AddLine(ion.Label.Text, dataPoint, (ion.Points[index].Y / total).ToString(@"0.0%", CultureInfo.CurrentCulture));
+                    else
+                        ToolTip.AddLine(ion.Label.Text, dataPoint);
                 }
-                if (!(normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel) && !NormalizeOption.TOTAL.Equals(normalizeOption))
+                if (showTotal)
                     ToolTip.AddLine(GraphsResources.AreaReplicateGraphPane_Tooltip_Total, total.ToString(dataFormat, CultureInfo.CurrentCulture));
                 
                 if (BarSettings.Type == BarType.Stack || BarSettings.Type == BarType.PercentStack)
