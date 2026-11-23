@@ -90,7 +90,7 @@ namespace pwiz.Osprey.Tasks
             double claimantQ = settings.EffectiveClaimantQ;
             string stem = Path.GetFileNameWithoutExtension(input);
 
-            string reconciledPath = ParquetScoreCache.GetReconciledScoresPath(input);
+            string reconciledPath = ReconciledRowsPath(input);
             if (!File.Exists(reconciledPath))
             {
                 throw new FileNotFoundException(string.Format(
@@ -391,11 +391,24 @@ namespace pwiz.Osprey.Tasks
         public static string RunInputIdentities(string input)
         {
             string runQPath = RunQPath(input, out var pass);
-            return @";recon=" + IdentityOrAbsent(ParquetScoreCache.GetReconciledScoresPath(input))
+            return @";recon=" + IdentityOrAbsent(ReconciledRowsPath(input))
                 + @";runq=" + (pass == FdrScoresSidecar.Pass.SecondPass ? @"2:" : @"1:") + IdentityOrAbsent(runQPath)
                 + @";calib=" + IdentityOrAbsent(CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input)))
                 + @";spectra=" + IdentityOrAbsent(SpectraCache.GetCachePath(input))
                 + DemuxSpectraIdentity(input);
+        }
+
+        /// <summary>
+        /// The reconciled file one run's export reads its rows from: the reconciled scores parquet,
+        /// or under per-run first-pass models (<c>OSPREY_PER_FILE_FDR=file</c>), whose reconciled
+        /// scores parquet is a stub with no features, the second-pass features file beside it,
+        /// which the export makes PerFileRescoring write.
+        /// </summary>
+        private static string ReconciledRowsPath(string input)
+        {
+            return PerFileScoringTask.TrainsOwnFirstPassModel
+                ? ParquetScoreCache.GetReconciledFeaturesPath(input)
+                : ParquetScoreCache.GetReconciledScoresPath(input);
         }
 
         /// <summary>

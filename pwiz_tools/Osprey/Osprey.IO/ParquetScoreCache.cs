@@ -265,6 +265,10 @@ namespace pwiz.Osprey.IO
         private const string COLUMN_FIRST_PASS_SCORE = @"first_pass_score";
         private const string COLUMN_RUN_PRECURSOR_Q = @"run_precursor_q";
         private const string COLUMN_RUN_PEPTIDE_Q = @"run_peptide_q";
+        // A stub's protein-best value per row (--protein-boost best): what the row's siblings
+        // scored in round 1 of the run's own model, which the second pass appends when it scores
+        // a moved row of the same entry. The run's floor is in its model file.
+        private const string COLUMN_PROTEIN_BEST = @"protein_best";
 
         /// <summary>
         /// The <see cref="DataField"/>s of ONE parquet write, attached to that write's schema
@@ -295,7 +299,9 @@ namespace pwiz.Osprey.IO
             /// <param name="stub">True for a stub scores parquet, which leaves out the columns the
             /// library holds for every entry_id (sequence, modified sequence, precursor m/z, protein
             /// ids) and the file name, which the file's own name gives.</param>
-            public WriteFields(bool reconciled, bool referenceXic, PinFeatureSelection features, bool stub = false)
+            /// <param name="proteinBest">True for a stub that carries the run's protein-best column.</param>
+            public WriteFields(bool reconciled, bool referenceXic, PinFeatureSelection features, bool stub = false,
+                bool proteinBest = false)
             {
                 EntryId = new DataField<uint>(COLUMN_ENTRY_ID);
                 IsDecoy = new DataField<bool>(COLUMN_IS_DECOY);
@@ -312,6 +318,8 @@ namespace pwiz.Osprey.IO
                     FirstPassScore = new DataField<double>(COLUMN_FIRST_PASS_SCORE);
                     RunPrecursorQ = new DataField<double>(COLUMN_RUN_PRECURSOR_Q);
                     RunPeptideQ = new DataField<double>(COLUMN_RUN_PEPTIDE_Q);
+                    if (proteinBest)
+                        ProteinBest = new DataField<double>(COLUMN_PROTEIN_BEST);
                 }
                 Charge = new DataField<byte>(COLUMN_CHARGE);
                 ScanNumber = new DataField<uint>(COLUMN_SCAN_NUMBER);
@@ -359,6 +367,8 @@ namespace pwiz.Osprey.IO
                 // A stub's scores, last, where BuildFdrEntryColumns appends their columns.
                 if (FirstPassScore != null)
                     fields.AddRange(new[] { FirstPassScore, RunPrecursorQ, RunPeptideQ });
+                if (ProteinBest != null)
+                    fields.Add(ProteinBest);
                 Schema = new ParquetSchema(fields.ToArray());
             }
 
@@ -388,6 +398,8 @@ namespace pwiz.Osprey.IO
             public DataField FirstPassScore { get; }
             public DataField RunPrecursorQ { get; }
             public DataField RunPeptideQ { get; }
+            /// <summary>Null unless the write is a stub carrying the run's protein-best column.</summary>
+            public DataField ProteinBest { get; }
         }
 
         #endregion
@@ -786,10 +798,20 @@ namespace pwiz.Osprey.IO
         /// Library lookup (by entry_id) supplies the sequence / precursor_mz
         /// / protein_ids columns that Rust expects in the schema.
         /// </summary>
+        /// <param name="path">The file to write.</param>
+        /// <param name="entries">The rows, in any order.</param>
+        /// <param name="metadata">The footer metadata.</param>
+        /// <param name="libraryById">The library, for the columns a full parquet copies from it.</param>
+        /// <param name="fileName">The run.</param>
+        /// <param name="writeReferenceXic">Whether to write the reference XIC (never into a stub).</param>
+        /// <param name="features">The feature columns to write.</param>
+        /// <param name="stub">True for a stub scores parquet.</param>
+        /// <param name="proteinBestOf">A stub's protein-best value of each entry_id, or null for none.</param>
         public static void WriteScoresParquet(string path, List<FdrEntry> entries,
             Dictionary<string, string> metadata,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
-            string fileName, bool writeReferenceXic, PinFeatureSelection features, bool stub = false)
+            string fileName, bool writeReferenceXic, PinFeatureSelection features, bool stub = false,
+            Func<uint, double> proteinBestOf = null)
         {
             if (path == null)
                 throw new ArgumentNullException(nameof(path));
@@ -806,7 +828,8 @@ namespace pwiz.Osprey.IO
                     [META_FEATURE_COLUMNS] = FEATURE_COLUMNS_STUB
                 };
             }
-            var fields = new WriteFields(reconciled: false, referenceXic: writeReferenceXic && !stub, features, stub);
+            var fields = new WriteFields(reconciled: false, referenceXic: writeReferenceXic && !stub, features, stub,
+                stub && proteinBestOf != null);
 
             // Iterate in canonical sorted order (entry_id, charge, scan_number)
             // so per-side parquets have identical physical row order across
@@ -831,7 +854,7 @@ namespace pwiz.Osprey.IO
                 var chunk = new FdrEntry[count];
                 for (int j = 0; j < count; j++)
                     chunk[j] = entries[sortedIndices[start + j]];
-                return BuildFdrEntryColumns(chunk, start, libraryById, fileName, fields);
+                return BuildFdrEntryColumns(chunk, start, libraryById, fileName, fields, proteinBestOf: proteinBestOf);
             });
         }
 
@@ -841,14 +864,14 @@ namespace pwiz.Osprey.IO
         /// entry's <see cref="FdrEntry.ParquetIndex"/> is (re)assigned to its global
         /// row position <paramref name="startIndex"/> + j, matching
         /// <see cref="LoadFdrStubsFromParquet(string)"/>'s read-side "ParquetIndex = row"
-        /// convention. Shared by the chunked <see cref="WriteScoresParquet(string,List{FdrEntry},Dictionary{string,string},IReadOnlyDictionary{uint,LibraryEntry},string,bool,PinFeatureSelection,bool)"/>
+        /// convention. Shared by the chunked <see cref="WriteScoresParquet(string,List{FdrEntry},Dictionary{string,string},IReadOnlyDictionary{uint,LibraryEntry},string,bool,PinFeatureSelection,bool,Func{uint,double})"/>
         /// write and the Stage-6 streaming reconciled transfer
         /// (<see cref="StreamReconciledScoresParquet"/>) so both emit byte-identical
         /// row groups.
         /// </summary>
         private static List<ColumnWriter> BuildFdrEntryColumns(IReadOnlyList<FdrEntry> entries,
             int startIndex, IReadOnlyDictionary<uint, LibraryEntry> libraryById, string fileName,
-            WriteFields fields, bool writeScoreIndex = false)
+            WriteFields fields, bool writeScoreIndex = false, Func<uint, double> proteinBestOf = null)
         {
             // When the score_index column is written, each row carries the Stage 4 ordinal it
             // ALREADY has and is not renumbered - the whole point is that the reconciled file
@@ -985,6 +1008,15 @@ namespace pwiz.Osprey.IO
                 columns.Add(Column(fields.RunPrecursorQ, runPrecursorQs));
                 columns.Add(Column(fields.RunPeptideQ, runPeptideQs));
             }
+            if (fields.ProteinBest != null)
+            {
+                if (proteinBestOf == null)
+                    throw new ArgumentNullException(nameof(proteinBestOf));
+                var proteinBest = new double[count];
+                for (int j = 0; j < count; j++)
+                    proteinBest[j] = proteinBestOf(entries[j].EntryId);
+                columns.Add(Column(fields.ProteinBest, proteinBest));
+            }
             return columns;
         }
 
@@ -1037,6 +1069,66 @@ namespace pwiz.Osprey.IO
                 }
             }
             return true;
+        }
+
+        /// <summary>
+        /// Streams a stub scores parquet's protein-best column - each row's entry_id and value - in
+        /// row order. False, with nothing handed over, when the file is missing or has no such column.
+        /// </summary>
+        public static bool ReadProteinBestRows(string path, Action<uint, double> onRow)
+        {
+            if (onRow == null)
+                throw new ArgumentNullException(nameof(onRow));
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+                return false;
+            using (var stream = BlockReadStream.OpenRead(path))
+            using (var reader = OpenReader(stream))
+            {
+                var fieldsByName = BuildFieldLookup(reader);
+                if (!fieldsByName.ContainsKey(COLUMN_PROTEIN_BEST))
+                    return false;
+                for (int g = 0; g < reader.RowGroupCount; g++)
+                {
+                    using (var groupReader = reader.OpenRowGroupReader(g))
+                    {
+                        var entryIds = ReadColumnByName<uint>(groupReader, fieldsByName, COLUMN_ENTRY_ID);
+                        var values = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_PROTEIN_BEST);
+                        for (int row = 0; row < entryIds.Length; row++)
+                            onRow(entryIds[row], values[row]);
+                    }
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Each row's score of a scores parquet that carries them (a stub, or a reconciled parquet
+        /// in the stub layout), by the row's score_index: the stored ordinal where the file has the
+        /// column, the row's position where it does not. Null when the file has no scores.
+        /// </summary>
+        public static Dictionary<uint, double> LoadScoresByScoreIndex(string path)
+        {
+            using (var stream = BlockReadStream.OpenRead(path))
+            using (var reader = OpenReader(stream))
+            {
+                var fieldsByName = BuildFieldLookup(reader);
+                if (!fieldsByName.ContainsKey(COLUMN_FIRST_PASS_SCORE))
+                    return null;
+                var scores = new Dictionary<uint, double>(checked((int)(reader.Metadata?.NumRows ?? 0L)));
+                int position = 0;
+                for (int g = 0; g < reader.RowGroupCount; g++)
+                {
+                    using (var groupReader = reader.OpenRowGroupReader(g))
+                    {
+                        var scoreIndexCol = ReadColumnByName<uint>(groupReader, fieldsByName, COLUMN_SCORE_INDEX);
+                        var scoreCol = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_FIRST_PASS_SCORE);
+                        for (int row = 0; row < scoreCol.Length; row++)
+                            scores[scoreIndexCol != null ? scoreIndexCol[row] : (uint)(position + row)] = scoreCol[row];
+                        position += scoreCol.Length;
+                    }
+                }
+                return scores;
+            }
         }
 
         /// <summary>True when the scores parquet at <paramref name="path"/> carries first-pass scores (a stub's).</summary>
@@ -2067,7 +2159,7 @@ namespace pwiz.Osprey.IO
         /// residency is one original row group being read + one output group being filled +
         /// the small resident overlay map / gap-fill list -- it never materializes the whole
         /// file's <see cref="FdrEntry"/> list the way LoadFullFdrEntries +
-        /// <see cref="WriteScoresParquet(string,List{FdrEntry},Dictionary{string,string},IReadOnlyDictionary{uint,LibraryEntry},string,bool,PinFeatureSelection,bool)"/>
+        /// <see cref="WriteScoresParquet(string,List{FdrEntry},Dictionary{string,string},IReadOnlyDictionary{uint,LibraryEntry},string,bool,PinFeatureSelection,bool,Func{uint,double})"/>
         /// did (the ~4.4 GB reload this replaces).
         ///
         /// The reconciled physical row order must equal the former load-all + re-sort write:
@@ -2116,7 +2208,8 @@ namespace pwiz.Osprey.IO
             Dictionary<string, string> metadata,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById, string fileName,
             ISet<(uint, byte, uint)> keepIdentities, string taskName, string progressIndent,
-            Action<string> logWarning, bool writeReferenceXic, PinFeatureSelection features)
+            Action<string> logWarning, bool writeReferenceXic, PinFeatureSelection features,
+            Func<uint, double> stubProteinBestOf = null, bool stub = false)
         {
             if (originalPath == null)
                 throw new ArgumentNullException(nameof(originalPath));
@@ -2135,7 +2228,20 @@ namespace pwiz.Osprey.IO
                 .ToList();
             int gapFillCount = sortedGapFill.Count;
 
-            var fields = new WriteFields(reconciled: true, referenceXic: writeReferenceXic, features);
+            // A stub source makes a stub reconciled file, the same layout: the scalars, each row's
+            // score and run q-values, and the protein-best column, with no feature beyond the
+            // coelution sum. A moved row's score is the one its caller computed in memory.
+            if (stub)
+            {
+                writeReferenceXic = false;
+                features = features.StubColumnsOnly();
+                metadata = new Dictionary<string, string>(metadata ?? new Dictionary<string, string>())
+                {
+                    [META_FEATURE_COLUMNS] = FEATURE_COLUMNS_STUB
+                };
+            }
+            var fields = new WriteFields(reconciled: true, referenceXic: writeReferenceXic, features, stub,
+                stub && stubProteinBestOf != null);
             int rowsPerGroup = Math.Max(1, RowGroupRowCapForTest ?? MAX_ROWS_PER_ROW_GROUP);
 
             int nReplaced = 0;
@@ -2211,7 +2317,7 @@ namespace pwiz.Osprey.IO
                         using (var group = writer.CreateRowGroup())
                             WriteRowGroupColumns(group, BuildFdrEntryColumns(
                                 buffer, written, libraryById, fileName, fields,
-                                writeScoreIndex: true));
+                                writeScoreIndex: true, proteinBestOf: stubProteinBestOf));
                         written += buffer.Count;
                         // Report rows CONSUMED, not written. With the compacted-away rows
                         // dropped the two differ by ~5.6x, and a bar driven by the written
@@ -2391,6 +2497,11 @@ namespace pwiz.Osprey.IO
                 var coelutionCol = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_COELUTION_SUM);
                 var boundsAreaCol = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_BOUNDS_AREA);
                 var boundsSnrCol = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_BOUNDS_SNR);
+                // A stub's scores: the row's score and run q-values, which a stub reconciled write
+                // carries across for a row it does not replace.
+                var scoreCol = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_FIRST_PASS_SCORE);
+                var runPrecursorQCol = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_RUN_PRECURSOR_Q);
+                var runPeptideQCol = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_RUN_PEPTIDE_Q);
                 // The heavy columns: read only when the caller wants the payload.
                 var refXicRtsCol = scalarsOnly
                     ? null
@@ -2432,7 +2543,7 @@ namespace pwiz.Osprey.IO
                         }
                     }
 
-                    entries.Add(new FdrEntry
+                    var entry = new FdrEntry
                     {
                         EntryId = entryIdCol[row],
                         ParquetIndex = scoreIndexCol != null
@@ -2451,7 +2562,14 @@ namespace pwiz.Osprey.IO
                         BoundsSnr = boundsSnrCol != null ? boundsSnrCol[row] : 0.0,
                         ReferenceXicRts = ParquetBlobCodec.DecodeF64Blob(refXicRtsCol != null ? refXicRtsCol[row] : null),
                         ReferenceXicIntensities = ParquetBlobCodec.DecodeF64Blob(refXicIntsCol != null ? refXicIntsCol[row] : null),
-                    });
+                    };
+                    if (scoreCol != null)
+                    {
+                        entry.Score = scoreCol[row];
+                        entry.RunPrecursorQvalue = runPrecursorQCol != null ? runPrecursorQCol[row] : 1.0;
+                        entry.RunPeptideQvalue = runPeptideQCol != null ? runPeptideQCol[row] : 1.0;
+                    }
+                    entries.Add(entry);
                 }
             }
             return entries;
@@ -2575,6 +2693,23 @@ namespace pwiz.Osprey.IO
             string dir = ArtifactPaths.ResolveOutputDir(mzmlPath);
             string stem = Path.GetFileNameWithoutExtension(mzmlPath);
             return Path.Combine(dir, stem + EXT_FEATURES);
+        }
+
+        /// <summary>
+        /// The extension of a run's second-pass features (<c>OSPREY_PER_FILE_FDR=file</c> with
+        /// feature writing on): the reconciled counterpart of <see cref="EXT_FEATURES"/>, in the
+        /// full layout, written by PerFileRescoring from the run's features checkpoint with the
+        /// moved rows' features replaced. The <see cref="EXT_SCORES_RECONCILED"/> file beside it
+        /// is a stub.
+        /// </summary>
+        public const string EXT_FEATURES_RECONCILED = @".features-reconciled.parquet";
+
+        /// <summary>The second-pass features path for <paramref name="mzmlPath"/>, beside its reconciled scores parquet.</summary>
+        public static string GetReconciledFeaturesPath(string mzmlPath)
+        {
+            string dir = ArtifactPaths.ResolveOutputDir(mzmlPath);
+            string stem = Path.GetFileNameWithoutExtension(mzmlPath);
+            return Path.Combine(dir, stem + EXT_FEATURES_RECONCILED);
         }
 
         /// <summary>

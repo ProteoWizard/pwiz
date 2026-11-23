@@ -126,6 +126,20 @@ namespace pwiz.Osprey.FDR
             IReadOnlyList<bool> isDecoys, IReadOnlyList<double> coelutionSums, IReadOnlyList<string> peptides,
             IReadOnlyList<double[]> featureRows, int nFeatures)
         {
+            return TrainAndScore(fileName, entryIds, charges, isDecoys, coelutionSums, peptides, featureRows, nFeatures,
+                out _);
+        }
+
+        /// <summary>
+        /// <see cref="TrainAndScore(string,IReadOnlyList{uint},IReadOnlyList{byte},IReadOnlyList{bool},IReadOnlyList{double},IReadOnlyList{string},IReadOnlyList{double[]},int)"/>,
+        /// also returning what the run's second pass scores its moved rows with: the final model,
+        /// the calibration map and the protein-best column with its floor. Null for a run with no rows.
+        /// </summary>
+        public double[] TrainAndScore(string fileName, IReadOnlyList<uint> entryIds, IReadOnlyList<byte> charges,
+            IReadOnlyList<bool> isDecoys, IReadOnlyList<double> coelutionSums, IReadOnlyList<string> peptides,
+            IReadOnlyList<double[]> featureRows, int nFeatures, out RunFirstPassModel trained)
+        {
+            trained = null;
             int count = entryIds.Count;
             var scores = new double[count];
             if (count == 0)
@@ -152,8 +166,10 @@ namespace pwiz.Osprey.FDR
                 _trainConfig.MaxTrainSize, _trainConfig.Seed, out int[] bestPerPrecursor, bestScores, new[] { 0 });
             PercolatorResults model;
             List<PercolatorEntry> entries;
-            // The file's own protein-best column, a value per row, once its round 1 has trained.
+            // The file's own protein-best column, a value per row, once its round 1 has trained,
+            // and the floor it gives an entry with no row.
             double[] column = null;
+            double columnFloor = 0;
             if (_round2Size > 0)
             {
                 // Two rounds, as the global training: every best-per-precursor row is a candidate,
@@ -179,7 +195,7 @@ namespace pwiz.Osprey.FDR
                     {
                         long columnStart = Stopwatch.GetTimestamp();
                         column = OwnProteinBestColumn(round1, heldOutFoldByBaseId, ids, labels, bestScores,
-                            featureRows, nFeatures);
+                            featureRows, nFeatures, out columnFloor);
                         columnTicks = Stopwatch.GetTimestamp() - columnStart;
                         foreach (var entry in round2Rows)
                         {
@@ -224,8 +240,10 @@ namespace pwiz.Osprey.FDR
             t = Accumulate(ref _scoreTicks, t);
 
             double scoreSeconds = Seconds(t - trainEnd);
-            if (!Calibrate(scores, labels, ids, seqs, _trainConfig.TestFdr))
+            if (!Calibrate(scores, labels, ids, seqs, _trainConfig.TestFdr, out double threshold, out double denominator))
             {
+                threshold = 0.0;
+                denominator = 1.0;
                 // Its scores stay on the model's own scale, so its precursors meet the other runs'
                 // calibrated scores in the experiment competition unadjusted.
                 Interlocked.Increment(ref _uncalibrated);
@@ -239,6 +257,7 @@ namespace pwiz.Osprey.FDR
                 _passLabel, fileName, Seconds(Stopwatch.GetTimestamp() - fileStart), _threads, count,
                 bestPerPrecursor.Length, entries.Count, trainSeconds, Seconds(columnTicks), scoreSeconds);
             Interlocked.Increment(ref _files);
+            trained = new RunFirstPassModel(model, threshold, denominator, column, columnFloor);
             return scores;
         }
 
@@ -259,7 +278,8 @@ namespace pwiz.Osprey.FDR
         /// Nothing outside the file is read.
         /// </summary>
         private double[] OwnProteinBestColumn(PercolatorResults round1, IReadOnlyDictionary<uint, int> heldOutFoldByBaseId,
-            uint[] ids, bool[] labels, double[] bestScores, IReadOnlyList<double[]> featureRows, int nFeatures)
+            uint[] ids, bool[] labels, double[] bestScores, IReadOnlyList<double[]> featureRows, int nFeatures,
+            out double floor)
         {
             int count = ids.Length;
             var baseIds = new uint[count];
@@ -275,7 +295,7 @@ namespace pwiz.Osprey.FDR
                 r => PercolatorScorer.ResolveFeatureRow(featureRows, (uint)r, bestScores[r], nFeatures),
                 round1, nFeatures, priorScores, 0, _threads, heldOut);
             return ProteinBestFeature.ComputeColumn(_ownProteinBest.Membership, _ownProteinBest.TopN,
-                baseIds, labels, priorScores);
+                baseIds, labels, priorScores, out floor);
         }
 
         /// <summary>A training entry for row <paramref name="r"/> of the file, owning a copy of its features.</summary>
@@ -346,15 +366,18 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>
         /// Maps the file's scores in place so the lowest target passing the run's precursor q at
-        /// <paramref name="testFdr"/> sits at 0 and the median best decoy per entry at -1. Returns
-        /// false, leaving the scores as they are, when no target passes or the two coincide.
+        /// <paramref name="testFdr"/> sits at 0 and the median best decoy per entry at -1, the map
+        /// <c>(score - threshold) / denominator</c>. Returns false, leaving the scores as they are,
+        /// when no target passes or the two coincide.
         /// </summary>
-        private static bool Calibrate(double[] scores, bool[] labels, uint[] ids, string[] seqs, double testFdr)
+        private static bool Calibrate(double[] scores, bool[] labels, uint[] ids, string[] seqs, double testFdr,
+            out double threshold, out double denom)
         {
             int count = scores.Length;
             PercolatorQValues.ComputePerFileRunQvalues(scores, labels, ids, seqs, 0, count,
                 out double[] runPrecursorQ, out _);
-            double threshold = double.MaxValue;
+            threshold = double.MaxValue;
+            denom = 0;
             var bestDecoy = new Dictionary<uint, double>();
             for (int r = 0; r < count; r++)
             {
@@ -372,7 +395,7 @@ namespace pwiz.Osprey.FDR
                 return false;
             var decoys = new List<double>(bestDecoy.Values);
             decoys.Sort(); // Array.Sort OK: median of single primitive list, no parallel data; tie order irrelevant
-            double denom = threshold - decoys[decoys.Count / 2];
+            denom = threshold - decoys[decoys.Count / 2];
             if (denom <= 0.0)
                 return false;
             for (int r = 0; r < count; r++)

@@ -290,11 +290,12 @@ namespace pwiz.Osprey.FDR
         /// <param name="log">Where the training reports.</param>
         /// <param name="runPrecursorQvalues">Each row's run precursor q-value under the returned scores.</param>
         /// <param name="runPeptideQvalues">Each row's run peptide q-value under the returned scores.</param>
+        /// <param name="runModel">What the run's second pass scores its moved rows with; null for a run with no rows.</param>
         public static double[] ScoreRunWithOwnModel(string fileName, IReadOnlyList<uint> entryIds,
             IReadOnlyList<byte> charges, IReadOnlyList<bool> isDecoys, IReadOnlyList<double> coelutionSums,
             IReadOnlyList<string> peptides, IReadOnlyList<double[]> featureRows, OspreyConfig config,
             OspreyFeatureInfo[] featureInfos, ProteinBestRequest proteinBest, int lanes, IOspreyLog log,
-            out double[] runPrecursorQvalues, out double[] runPeptideQvalues)
+            out double[] runPrecursorQvalues, out double[] runPeptideQvalues, out RunFirstPassModel runModel)
         {
             var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, null);
             percConfig.ProteinBest = proteinBest;
@@ -302,7 +303,7 @@ namespace pwiz.Osprey.FDR
             var model = new PerFileFirstPassModel(percConfig, lanes, log, FIRST_PASS_LABEL);
             int nFeatures = featureInfos.Length;
             double[] scores = model.TrainAndScore(fileName, entryIds, charges, isDecoys, coelutionSums, peptides,
-                featureRows, nFeatures);
+                featureRows, nFeatures, out runModel);
             PercolatorQValues.ComputePerFileRunQvalues(scores, isDecoys.ToArray(), entryIds.ToArray(),
                 peptides.ToArray(), 0, scores.Length, out runPrecursorQvalues, out runPeptideQvalues);
             return scores;

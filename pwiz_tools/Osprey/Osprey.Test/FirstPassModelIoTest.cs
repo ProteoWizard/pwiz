@@ -342,6 +342,9 @@ namespace pwiz.Osprey.Test
                 Assert.IsTrue(FirstPassModelIO.Save(linearPath, MakeSvmModel(), TestStamps.Any), @"SVM model should persist");
                 Assert.IsNull(JObject.Parse(File.ReadAllText(linearPath))[@"FoldGbtModels"],
                     @"a linear model's file must not gain a tree property");
+
+                AssertRunModelRoundTrip(model, path, linearPath);
+                AssertRunModelRoundTrip(MakeSvmModel(), path, linearPath);
             }
             finally
             {
@@ -349,6 +352,61 @@ namespace pwiz.Osprey.Test
                     File.Delete(path);
                 if (File.Exists(linearPath))
                     File.Delete(linearPath);
+            }
+        }
+
+        /// <summary>
+        /// A run's own model file (per-run first-pass models) round-trips the model, its
+        /// calibration map: the reloaded model scores bit-identically
+        /// and calibrates through the same map. An analysis-wide model file, which has no
+        /// calibration map, does not load as a run's model, nor does a map that could not be
+        /// applied. <paramref name="analysisPath"/> holds an analysis-wide model.
+        /// </summary>
+        private static void AssertRunModelRoundTrip(PercolatorResults model, string path, string analysisPath)
+        {
+            Assert.IsTrue(FirstPassModelIO.SaveRunModel(path, new RunFirstPassModel(model, 0.75, 2.5, null, -0.25),
+                TestStamps.Any));
+            var reloaded = FirstPassModelIO.LoadRunModel(path, PinFeatureMask.Hram);
+            Assert.IsNotNull(reloaded, @"a run's model should reload");
+            AssertBitEqual(0.75, reloaded.CalibrationThreshold, @"calibration threshold");
+            AssertBitEqual(2.5, reloaded.CalibrationDenominator, @"calibration denominator");
+            Assert.IsFalse(reloaded.ScoresProteinBest);
+            Assert.IsNull(JObject.Parse(File.ReadAllText(path))[@"ProteinBestFloor"],
+                @"a model without the protein-best column records no floor");
+            var before = FrozenModelScorer.TryCreate(model);
+            var after = FrozenModelScorer.TryCreate(reloaded.Model);
+            Assert.IsNotNull(before);
+            Assert.IsNotNull(after);
+            var rng = new Random(11);
+            for (int i = 0; i < 20; i++)
+            {
+                var row = new double[before.NumFeatures];
+                for (int j = 0; j < row.Length; j++)
+                    row[j] = 2.0 * rng.NextDouble() - 0.5;
+                double raw = before.Score(row);
+                AssertBitEqual(raw, after.Score(row), @"run model Score");
+                AssertBitEqual((raw - 0.75) / 2.5, reloaded.Calibrate(after.Score(row)), @"calibrated score");
+            }
+            Assert.IsNull(FirstPassModelIO.LoadRunModel(analysisPath, PinFeatureMask.Hram),
+                @"an analysis-wide model has no calibration map");
+            var written = JObject.Parse(File.ReadAllText(path));
+            AssertRunModelLoadsNull(Edited(written, json => json[@"CalibrationDenominator"] = 0.0), @"zero denominator");
+            AssertRunModelLoadsNull(Edited(written, json => json.Remove(@"CalibrationThreshold")), @"no threshold");
+        }
+
+        private static void AssertRunModelLoadsNull(string json, string what)
+        {
+            string path = Path.Combine(Path.GetTempPath(),
+                @"osprey_run_model_bad_" + Guid.NewGuid().ToString(@"N") + @".json");
+            try
+            {
+                File.WriteAllText(path, json);
+                Assert.IsNull(FirstPassModelIO.LoadRunModel(path, PinFeatureMask.Hram), what + @" should load as null");
+            }
+            finally
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
             }
         }
 

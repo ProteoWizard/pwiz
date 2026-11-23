@@ -229,17 +229,31 @@ namespace pwiz.Osprey.Tasks
         //
         // Under --demux a multiplexed run streams <stem>.demux.spectra.bin instead of the plain
         // cache, which the configuration alone cannot tell; the plain cache is what is declared.
+        //
+        // Under per-run first-pass models (OSPREY_PER_FILE_FDR=file) the run's stub scores parquet
+        // holds its first-pass records and protein-best column, and the run's own
+        // <stem>.1st-pass.model.json is the model its moved rows are scored with, so neither the
+        // 1st-pass FDR sidecar, the protein-best file nor an analysis-wide model is read; with
+        // feature writing on, the run's <stem>.features.parquet is read for its unmoved rows.
         public override IEnumerable<string> Inputs(PipelineContext ctx)
         {
             var config = ctx.Config;
             foreach (string libraryInput in ScoringTaskShared.LibraryInputs(config))
                 yield return libraryInput;
             if (config.InputFiles == null) yield break;
+            bool ownModels = PerFileScoringTask.TrainsOwnFirstPassModel;
             foreach (var input in config.InputFiles)
             {
                 yield return SpectraCache.GetCachePath(input);
                 yield return ParquetScoreCache.GetScoresPath(input);
                 yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
+                if (ownModels)
+                {
+                    yield return FirstPassModelIO.RunModelPathFor(input);
+                    if (PerFileScoringTask.WritesFeaturesCheckpoint(config))
+                        yield return ParquetScoreCache.GetFeaturesPath(input);
+                    continue;
+                }
                 yield return FdrScoresSidecar.Pass1Path(input);
                 // The column the pass-2 worker scores the run's rescored rows with, under
                 // --protein-boost best: the frozen model was trained with it.
@@ -254,10 +268,10 @@ namespace pwiz.Osprey.Tasks
             string retainedSummary = RetainedBaseIdSidecar.PathFor(config.OutputBlib, siblingPath);
             if (!string.IsNullOrEmpty(retainedSummary))
                 yield return retainedSummary;
-            string modelPath = FirstPassModelIO.PathFor(config);
+            string modelPath = ownModels ? null : FirstPassModelIO.PathFor(config);
             if (!string.IsNullOrEmpty(modelPath))
                 yield return modelPath;
-            if (config.Pass2ProteinCompact)
+            if (config.Pass2ProteinCompact && !ownModels)
             {
                 string stratumPath = FirstPassModelIO.StratumPathFor(config);
                 if (!string.IsNullOrEmpty(stratumPath))
@@ -285,6 +299,14 @@ namespace pwiz.Osprey.Tasks
             // fast per-file-skip its way back to the same answer.
             foreach (var input in ctx.Config.InputFiles)
                 yield return ParquetScoreCache.GetReconciledScoresPath(input);
+
+            // Under per-run first-pass models with feature writing on, the second pass's features,
+            // which the reconciled stub beside them leaves out.
+            if (PerFileScoringTask.WritesFeaturesCheckpoint(ctx.Config))
+            {
+                foreach (var input in ctx.Config.InputFiles)
+                    yield return ParquetScoreCache.GetReconciledFeaturesPath(input);
+            }
 
             // Each run's Stage 6 plan, written by this task as it plans the run just before
             // rescoring it, under the stamp its reconciled parquet carries.
@@ -680,6 +702,11 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private bool RunRescore(PipelineContext ctx)
         {
+            // Under per-run first-pass models, saving the second pass's features takes the unmoved
+            // rows' features from each run's first-pass checkpoint, the only file that has them,
+            // so a run without one stops here rather than after hours of re-scoring.
+            if (!RequireFeaturesCheckpoints(ctx))
+                return false;
             // Compute path (Stage 6 rescore): re-score each file's entries
             // against the consensus + reconciliation boundaries and write the
             // reconciled parquets. Used by the straight-through pipeline and
@@ -1292,14 +1319,6 @@ namespace pwiz.Osprey.Tasks
         private static Pass2PerFileWorker CreatePass2Worker(OspreyConfig config,
             PipelineContext ctx, string taskName, string taskValidityKey)
         {
-            var sidecar = FirstPassModelIO.LoadForAnalysis(config);
-            var scorer = sidecar?.Model != null ? FrozenModelScorer.TryCreate(sidecar.Model) : null;
-            if (scorer == null)
-            {
-                throw new InvalidOperationException(string.Format(
-                    OspreyTasksResources.Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__,
-                    OspreyArgNames.Text(OspreyArgNames.TASK)));
-            }
             var inputByName = new Dictionary<string, string>(StringComparer.Ordinal);
             if (config.InputFiles != null)
             {
@@ -1335,6 +1354,27 @@ namespace pwiz.Osprey.Tasks
                 FdrScoresSidecar.Write(FdrScoresSidecar.Pass2Path(inputFile), records,
                     FdrScoresSidecar.Pass.SecondPass, stamp);
             }
+            // Per-run first-pass models (OSPREY_PER_FILE_FDR=file): there is no analysis-wide
+            // model. Each run's reconciled parquet carries every survivor's second-pass score -
+            // a moved row's from the run's own frozen model (RunModelScorer) - and the transfer
+            // reads them from there. The protein-compact competition scores every survivor with
+            // one model for the analysis, and is refused.
+            if (PerFileScoringTask.TrainsOwnFirstPassModel)
+            {
+                if (config.Pass2ProteinCompact)
+                    throw new InvalidOperationException(OwnModelsProteinCompactMessage());
+                Pass2FdrSidecar.RequireTransferExperimentSidecar(config);
+                return new Pass2PerFileWorker(null, PinFeatureMask.For(config), true, null,
+                    Pass2FdrSidecar.LoadPass1ExperimentRecords(config), WriteAnswer, ctx.LogWarning);
+            }
+            var sidecar = FirstPassModelIO.LoadForAnalysis(config);
+            var scorer = sidecar?.Model != null ? FrozenModelScorer.TryCreate(sidecar.Model) : null;
+            if (scorer == null)
+            {
+                throw new InvalidOperationException(string.Format(
+                    OspreyTasksResources.Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__,
+                    OspreyArgNames.Text(OspreyArgNames.TASK)));
+            }
             // --protein-boost best: a model with the column scores only with each run's column,
             // and one without cannot use it. The validity key already keeps the two arms apart, so
             // a disagreement here is a model from another arm, which no run may score with.
@@ -1365,6 +1405,19 @@ namespace pwiz.Osprey.Tasks
                 WriteAnswer,
                 ctx.LogWarning,
                 sidecar.Stamp);
+        }
+
+        /// <summary>
+        /// Why the protein-compact second pass is refused under per-run first-pass models: it
+        /// competes every survivor under one first-pass model for the analysis, and each run
+        /// trained its own.
+        /// </summary>
+        internal static string OwnModelsProteinCompactMessage()
+        {
+            return string.Format(
+                OspreyTasksResources.PerFileRescoreTask_CreatePass2Worker_Protein_compact_second_pass_FDR_needs_one_first_pass_model_for_the_analysis__but_each_run_trained_its_own___0____Unset__1__,
+                @"OSPREY_PER_FILE_FDR=" + OspreyEnvironment.PER_FILE_FDR_FILE,
+                @"OSPREY_PASS2_QVALUE=" + OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT);
         }
 
         /// <summary>
@@ -1974,7 +2027,18 @@ namespace pwiz.Osprey.Tasks
         private bool IsFileRescored(string inputFile, string reconciledPath, string validityKey, OspreyConfig config)
         {
             return PerFileResumeDriver.IsCurrent(reconciledPath, Name, validityKey) &&
+                   ReconciledFeaturesCurrent(inputFile, validityKey, config) &&
                    Pass2FdrSidecar.HasWorkerStamp(inputFile, config);
+        }
+
+        /// <summary>
+        /// Whether the run's second-pass features file is current, when this run writes one
+        /// (<see cref="WriteRunModelReconciled"/>); true when it does not.
+        /// </summary>
+        private bool ReconciledFeaturesCurrent(string inputFile, string validityKey, OspreyConfig config)
+        {
+            return !PerFileScoringTask.WritesFeaturesCheckpoint(config) ||
+                   PerFileResumeDriver.IsCurrent(ParquetScoreCache.GetReconciledFeaturesPath(inputFile), Name, validityKey);
         }
 
         /// <summary>
@@ -2164,9 +2228,11 @@ namespace pwiz.Osprey.Tasks
 
             string reconciledOutPath = ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath);
             // The parquet embeds this task's stamp in its footer, in the same commit as its rows.
-            bool wrote = ReconciledParquetWriter.Write(parquetPath, reconciledOutPath, fdrEntries, fileName,
-                inputs.LibraryById, config, inputs.JoinFileStems,
-                OspreyVersion.Stamp(Name, inputs.TaskValidityKey), ctx.LogInfo, ctx.LogWarning);
+            bool wrote = PerFileScoringTask.TrainsOwnFirstPassModel
+                ? WriteRunModelReconciled(fileName, inputFile, parquetPath, reconciledOutPath, fdrEntries, inputs, ctx)
+                : ReconciledParquetWriter.Write(parquetPath, reconciledOutPath, fdrEntries, fileName,
+                    inputs.LibraryById, config, inputs.JoinFileStems,
+                    OspreyVersion.Stamp(Name, inputs.TaskValidityKey), ctx.LogInfo, ctx.LogWarning);
             if (wrote)
                 return true;
 
@@ -2184,6 +2250,72 @@ namespace pwiz.Osprey.Tasks
                     reconciledOutPath, ex.Message));
             }
             return false;
+        }
+
+        /// <summary>
+        /// The reconciled write under per-run first-pass models (<c>OSPREY_PER_FILE_FDR=file</c>).
+        /// Every row the rescore re-scored holds its features in memory; each is scored with the
+        /// run's own frozen model and calibrated (<see cref="RunModelScorer"/>), and the reconciled
+        /// parquet is written in the stub layout from the run's stub: scalars, each row's score
+        /// and run q-values, and the protein-best column, with no feature beyond the coelution
+        /// sum. An unmoved row carries its first-pass score from the stub. The moved rows'
+        /// features are kept only with feature writing on, in
+        /// <c>&lt;stem&gt;.features-reconciled.parquet</c>, which takes every unmoved row's
+        /// features from the run's <c>&lt;stem&gt;.features.parquet</c>; it is written first, and
+        /// the gap-fill rows' ordinals it assigns are cleared so the stub write numbers them the
+        /// same way. Returns whether every file was written.
+        /// </summary>
+        private bool WriteRunModelReconciled(string fileName, string inputFile, string scoresPath,
+            string reconciledOutPath, List<FdrEntry> fdrEntries, RescorePassInputs inputs, PipelineContext ctx)
+        {
+            var config = inputs.Config;
+            var runScorer = RunModelScorer.Load(FirstPassModelIO.RunModelPathFor(inputFile), scoresPath,
+                PinFeatureMask.For(config));
+            runScorer.ScoreRescoredRows(fdrEntries);
+            var stamp = OspreyVersion.Stamp(Name, inputs.TaskValidityKey);
+            if (PerFileScoringTask.WritesFeaturesCheckpoint(config))
+            {
+                var gapFill = fdrEntries.Where(e => !e.ParquetIndex.HasValue).ToList();
+                string featuresOutPath = ParquetScoreCache.GetReconciledFeaturesPath(inputFile);
+                bool wroteFeatures = ReconciledParquetWriter.Write(ParquetScoreCache.GetFeaturesPath(inputFile),
+                    featuresOutPath, fdrEntries, fileName, inputs.LibraryById, config, inputs.JoinFileStems, stamp,
+                    ctx.LogInfo, ctx.LogWarning);
+                foreach (var entry in gapFill)
+                    entry.ParquetIndex = null;
+                if (!wroteFeatures)
+                {
+                    FileEx.SafeDelete(featuresOutPath);
+                    return false;
+                }
+            }
+            return ReconciledParquetWriter.Write(scoresPath, reconciledOutPath, fdrEntries, fileName,
+                inputs.LibraryById, config, inputs.JoinFileStems, stamp, ctx.LogInfo, ctx.LogWarning,
+                true, runScorer.ProteinBestOf);
+        }
+
+        /// <summary>
+        /// Whether every run has the first-pass features checkpoint the second pass's features
+        /// need (<see cref="WriteRunModelReconciled"/>); true whenever they are not saved. A run
+        /// without one stops the task, naming the file and how to write it.
+        /// </summary>
+        private static bool RequireFeaturesCheckpoints(PipelineContext ctx)
+        {
+            var config = ctx.Config;
+            if (!PerFileScoringTask.WritesFeaturesCheckpoint(config) || config.InputFiles == null)
+                return true;
+            foreach (string input in config.InputFiles)
+            {
+                string featuresPath = ParquetScoreCache.GetFeaturesPath(input);
+                if (File.Exists(featuresPath))
+                    continue;
+                ctx.LogError(string.Format(
+                    OspreyTasksResources.PerFileRescoreTask_RequireFeaturesCheckpoints_Saving_second_pass_features_needs_each_run_s_first_pass_features__but__0__is_missing__Run__1__with_feature_writing_on___2___,
+                    featuresPath, OspreyArgNames.TaskText(PerFileScoringTask.TASK_NAME),
+                    @"OSPREY_PER_FILE_FDR_KEEP_PARQUET=1"));
+                ctx.ExitCode = 1;
+                return false;
+            }
+            return true;
         }
 
         /// <summary>
@@ -2225,7 +2357,8 @@ namespace pwiz.Osprey.Tasks
             // re-run landed in a later second (#4729).
             if (inputs.ParquetPaths.TryGetValue(fileName, out string parquetPath) &&
                 PerFileResumeDriver.IsCurrent(ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath),
-                    Name, inputs.TaskValidityKey))
+                    Name, inputs.TaskValidityKey) &&
+                ReconciledFeaturesCurrent(inputFile, inputs.TaskValidityKey, inputs.Config))
             {
                 return inputFile;
             }
@@ -2332,7 +2465,8 @@ namespace pwiz.Osprey.Tasks
                 // per file (LoadJoinOnlyScoresForFile), one run at a time.
                 return RescoreHydration.HydrateOneRun(parquetPath, retainedBaseIds,
                     experimentRecords,
-                    (name, path) => ParquetScoreCache.LoadFdrStubsFromParquet(path, null, sequencePool));
+                    (name, path) => ParquetScoreCache.LoadFdrStubsFromParquet(path, null, sequencePool,
+                        ScoringTaskShared.StubIdentityFor(ctx)));
             };
         }
 
@@ -2534,7 +2668,8 @@ namespace pwiz.Osprey.Tasks
                 }
                 RescoreHydration.RefillOneRunSurvivors(fileName, parquetPath, survivors,
                     retainedBaseIds,
-                    (name, path) => ParquetScoreCache.LoadFdrStubsFromParquet(path, null, sequencePool));
+                    (name, path) => ParquetScoreCache.LoadFdrStubsFromParquet(path, null, sequencePool,
+                        ScoringTaskShared.StubIdentityFor(ctx)));
             };
         }
 

@@ -42,6 +42,7 @@ using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
@@ -2373,9 +2374,21 @@ namespace pwiz.Osprey.Test
                 string stem = Path.Combine(dir, @"run1");
                 string pass1Path = stem + FdrScoresSidecar.EXT_FIRST_PASS;
                 string scoresPath = stem + ParquetScoreCache.EXT_SCORES;
+                // The run's protein-best column: one value per entry_id, the floor for the rest.
+                var proteinBest = new ProteinBestRunValues(new uint[] { 100, 102 }, new[] { 0.25, -0.5 }, -1.0);
                 ParquetScoreCache.WriteScoresParquet(scoresPath, entries, metadata, libraryById,
-                    @"run1", false, PinFeatureMask.Hram.StubColumnsOnly(), true);
+                    @"run1", false, PinFeatureMask.Hram.StubColumnsOnly(), true, proteinBest.ValueFor);
                 Assert.IsTrue(ParquetScoreCache.HasFirstPassScores(scoresPath));
+                var proteinBestRows = new List<(uint EntryId, double Value)>();
+                Assert.IsTrue(ParquetScoreCache.ReadProteinBestRows(scoresPath, (id, v) => proteinBestRows.Add((id, v))));
+                Assert.AreEqual(entries.Count, proteinBestRows.Count);
+                foreach (var row in proteinBestRows)
+                    Assert.AreEqual(proteinBest.ValueFor(row.EntryId), row.Value);
+                var readBack = ProteinBestRunValues.FromRows(proteinBestRows.Select(r => r.EntryId).ToList(),
+                    proteinBestRows.Select(r => r.Value).ToList(), proteinBest.Floor);
+                Assert.AreEqual(0.25, readBack.ValueFor(100));
+                Assert.AreEqual(-1.0, readBack.ValueFor(100 | LibraryEntry.DECOY_ID_BIT));
+                Assert.AreEqual(-1.0, readBack.ValueFor(999), @"an entry the run had no row for reads the floor");
                 Assert.IsFalse(FdrScoresSidecar.Pass1Available(pass1Path), @"outside the mode a stub is not a score file");
                 Assert.IsFalse(FdrScoresSidecar.ReadRecords(pass1Path, FdrScoresSidecar.Pass.FirstPass, r => { }));
                 var records = new List<FdrScoreRecord>();
@@ -2390,11 +2403,58 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(entry.RunPeptideQvalue, record.RunPeptideQvalue);
                     Assert.AreEqual(entry.ApexRt, record.ApexRt);
                 }
+                AssertStubReconciledRoundTrip(scoresPath, stem + ParquetScoreCache.EXT_SCORES_RECONCILED,
+                    entries, libraryById, proteinBest);
             }
             finally
             {
                 Directory.Delete(dir, true);
             }
+        }
+
+        /// <summary>
+        /// A reconciled parquet streamed from a stub keeps the stub layout: the stub marker, the
+        /// scores and run q-values, the protein-best column, no peptide or feature column but the
+        /// coelution sum. An unmoved row carries its stub score; a moved row and a gap-fill row
+        /// carry the score their caller computed, and the gap-fill row reads the run's floor.
+        /// </summary>
+        private static void AssertStubReconciledRoundTrip(string stubPath, string reconciledPath,
+            List<FdrEntry> entries, Dictionary<uint, LibraryEntry> libraryById, ProteinBestRunValues proteinBest)
+        {
+            var stubScores = ParquetScoreCache.LoadScoresByScoreIndex(stubPath);
+            Assert.IsNotNull(stubScores);
+            Assert.AreEqual(entries.Count, stubScores.Count);
+            // Row 1 moved: its features in memory, its new score set by the caller.
+            var row1 = entries.Single(e => e.ParquetIndex == 1);
+            var moved = new FdrEntry
+            {
+                EntryId = row1.EntryId, IsDecoy = row1.IsDecoy, Charge = row1.Charge,
+                ScanNumber = row1.ScanNumber, ParquetIndex = 1, ApexRt = 7.0, StartRt = 6.5, EndRt = 7.5,
+                Features = new double[ParquetScoreCache.NUM_PIN_FEATURES], Score = 3.25,
+            };
+            var gapFill = new FdrEntry
+            {
+                EntryId = 104, Charge = 2, ScanNumber = 2000, ApexRt = 9.0, StartRt = 8.5, EndRt = 9.5,
+                Features = new double[ParquetScoreCache.NUM_PIN_FEATURES], Score = -0.75,
+            };
+            ParquetScoreCache.StreamReconciledScoresParquet(stubPath, reconciledPath,
+                new Dictionary<uint, FdrEntry> { { 1, moved } }, new List<FdrEntry> { gapFill },
+                new Dictionary<string, string>(), libraryById, @"run1", null, @"PerFileRescoring", null, null,
+                false, PinFeatureMask.Hram, proteinBest.ValueFor, true);
+            Assert.IsTrue(ParquetScoreCache.IsStubScoresParquet(reconciledPath));
+            foreach (string absent in new[] { @"modified_sequence", @"xcorr" })
+                Assert.IsFalse(ParquetScoreCache.HasColumn(reconciledPath, absent), absent);
+            var reconciledScores = ParquetScoreCache.LoadScoresByScoreIndex(reconciledPath);
+            Assert.IsNotNull(reconciledScores);
+            Assert.AreEqual(entries.Count + 1, reconciledScores.Count);
+            Assert.AreEqual(stubScores[0], reconciledScores[0], @"an unmoved row keeps its first-pass score");
+            Assert.AreEqual(stubScores[2], reconciledScores[2]);
+            Assert.AreEqual(3.25, reconciledScores[1], @"a moved row carries its new score");
+            Assert.AreEqual(-0.75, reconciledScores[(uint)entries.Count], @"gap-fill is numbered past the source rows");
+            var reconciledProteinBest = new Dictionary<uint, double>();
+            Assert.IsTrue(ParquetScoreCache.ReadProteinBestRows(reconciledPath, (id, v) => reconciledProteinBest[id] = v));
+            Assert.AreEqual(proteinBest.Floor, reconciledProteinBest[104]);
+            Assert.AreEqual(0.25, reconciledProteinBest[100]);
         }
 
         /// <summary>

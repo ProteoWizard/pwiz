@@ -141,6 +141,22 @@ namespace pwiz.Osprey.Tasks
 
         // Report file stem = the output blib without its extension, else null (caller skips).
         // Path.ChangeExtension(x, null) drops the extension.
+        /// <summary>
+        /// The reports <see cref="WriteReports"/> writes for <paramref name="config"/>: none unless
+        /// OSPREY_DIANN_REPORTS is set, then the protein-group and summary reports it asks for,
+        /// beside the output blib.
+        /// </summary>
+        internal static IEnumerable<string> ReportPaths(OspreyConfig config)
+        {
+            string stem = ReportStem(config);
+            if (stem == null || !OspreyEnvironment.DiannReports || config.DiagnosticsOnly)
+                yield break;
+            if (config.WriteProteinReport)
+                yield return stem + EXT_PROTEIN_GROUPS;
+            if (config.WriteSummaryReport)
+                yield return stem + EXT_STATS;
+        }
+
         private static string ReportStem(OspreyConfig config)
         {
             return string.IsNullOrEmpty(config.OutputBlib) ? null : Path.ChangeExtension(config.OutputBlib, null);

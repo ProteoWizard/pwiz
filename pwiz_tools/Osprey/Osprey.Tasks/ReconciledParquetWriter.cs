@@ -66,7 +66,7 @@ namespace pwiz.Osprey.Tasks
             OspreyConfig config,
             IReadOnlyList<string> joinFileStems,
             ArtifactStamp stamp,
-            Action<string> logInfo, Action<string> logWarning)
+            Action<string> logInfo, Action<string> logWarning, bool stub = false, Func<uint, double> stubProteinBestOf = null)
         {
             // 1. Split the re-scored entries into the small resident overlay map
             //    (keyed by original ParquetIndex) + the gap-fill list. No whole-file
@@ -114,7 +114,7 @@ namespace pwiz.Osprey.Tasks
                     originalPath, reconciledPath, overlayByIndex, gapFill,
                     metadata, libraryById, fileName, keepIdentities, PerFileRescoreTask.TASK_NAME,
                     TextUtil.GetIndentation(1), logWarning, ParquetScoreCache.WritesReferenceXic(config),
-                    PinFeatureMask.For(config));
+                    PinFeatureMask.For(config), stubProteinBestOf, stub);
                 nReplaced = result.NReplaced;
                 nAppended = result.NAppended;
                 origRowCount = result.OrigRowCount;

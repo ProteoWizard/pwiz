@@ -267,6 +267,15 @@ namespace pwiz.Osprey.Tasks
             if (!string.IsNullOrEmpty(retainedPath))
                 yield return retainedPath;
 
+            // The analysis-wide protein-compact stratum, which this task writes under
+            // OSPREY_PASS2_QVALUE=protein-compact (BuildAndPublishProteinCompactStratum).
+            if (ctx.Config.Pass2ProteinCompact)
+            {
+                string stratumPath = FirstPassModelIO.StratumPathFor(ctx.Config);
+                if (!string.IsNullOrEmpty(stratumPath))
+                    yield return stratumPath;
+            }
+
             // The pass-1 diagnostics product, when --model-diagnostics is on. Declaring it is
             // what puts the report inside the resume driver's forward scan instead of beside
             // it: a cohort that completed its first pass without the flag has every other
@@ -1811,17 +1820,21 @@ namespace pwiz.Osprey.Tasks
                         ? OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Resuming__first_pass_intermediate_files_for_all__0__files_are_up_to_date__skipping_first_
                         : OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Resuming__first_pass_intermediate_files_for_all__0__files_are_up_to_date__skipping_first_pass_scoring_and_protein_FDR,
                     projections.PerFile.Count));
-                ctx.Publish(new FirstPassPercolatorModel
+                // Nothing to publish under per-run first-pass models, which keep no analysis-wide one.
+                if (resumeSidecar != null)
                 {
-                    Results = resumeSidecar.Model,
-                    Stamp = resumeSidecar.Stamp
-                });
+                    ctx.Publish(new FirstPassPercolatorModel
+                    {
+                        Results = resumeSidecar.Model,
+                        Stamp = resumeSidecar.Stamp
+                    });
+                }
                 // Gated on the MODE, matching the canEnterAtGate clause above. The stratum file
                 // is not a declared Output, so nothing invalidates or removes it when a later
                 // run uses a different pass-2 arm - and the compaction gate applies whatever it
                 // is handed, so an ungated adoption would silently widen the survivor set of an
                 // arm that never computes a stratum at all.
-                if (config.Pass2ProteinCompact && resumeSidecar.StratumBaseIds != null)
+                if (config.Pass2ProteinCompact && resumeSidecar?.StratumBaseIds != null)
                 {
                     _proteinCompactStratum = resumeSidecar.StratumBaseIds;
                     ctx.Publish(new ProteinCompactStratum(_proteinCompactStratum));
@@ -2152,6 +2165,12 @@ namespace pwiz.Osprey.Tasks
             }
             else if (!PerFileResumeDriver.IsCurrent(experimentPath, Name, validityKey))
                 refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_the_whole_experiment_first_pass_intermediate_file_is_not_up_to_date___0_, experimentPath));
+            // Per-run first-pass models: this task trains nothing and writes no model, so the
+            // gate is the runs' own models and stubs (checked with each run's scores, by
+            // PerFileScoringTask.OwnScoresCurrent) and the experiment sidecar above.
+            modelSidecar = null;
+            if (PerFileScoringTask.TrainsOwnFirstPassModel)
+                return refusals;
             modelSidecar = FirstPassModelIO.LoadForAnalysis(config);
             if (modelSidecar == null)
             {

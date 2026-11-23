@@ -158,8 +158,10 @@ namespace pwiz.Osprey.Tasks
             // The frozen 1st-pass model and its stratum, under protein-compact only: that fold
             // re-competes each run's records inside the stratum and refuses to run without both
             // (ComputePass2FrozenCompetition). The transfer carries pass-1 values forward and
-            // needs neither: it reloads a model it finds, and nothing on its path reads it.
-            if (ctx.Config.Pass2ProteinCompact)
+            // needs neither: it reloads a model it finds, and nothing on its path reads it. Under
+            // per-run first-pass models there is no analysis-wide model, and protein-compact is
+            // refused (PerFileRescoreTask.CreatePass2Worker).
+            if (ctx.Config.Pass2ProteinCompact && !PerFileScoringTask.TrainsOwnFirstPassModel)
             {
                 string modelPath = FirstPassModelIO.PathFor(ctx.Config);
                 if (!string.IsNullOrEmpty(modelPath))
@@ -269,6 +271,11 @@ namespace pwiz.Osprey.Tasks
                 FdrScoresSidecar.Pass.SecondPass);
             if (!string.IsNullOrEmpty(experimentPath))
                 yield return experimentPath;
+
+            // The DIA-NN-shaped reports, written only under OSPREY_DIANN_REPORTS. They carry no
+            // stamp, so with the variable set this task is never skipped as already done.
+            foreach (string report in OspreyReportWriter.ReportPaths(ctx.Config))
+                yield return report;
         }
 
         public override string ValidityKey(PipelineContext ctx)

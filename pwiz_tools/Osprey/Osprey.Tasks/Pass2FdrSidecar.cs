@@ -1008,7 +1008,7 @@ namespace pwiz.Osprey.Tasks
                                     q = 1.0;
                                 byEntryId[entryId] = q;
                             },
-                            StubColumns.Core);
+                            StubColumns.Core, ScoringTaskShared.StubIdentityFor(ctx));
                     }
                     catch (Exception ex)
                     {
@@ -2274,7 +2274,29 @@ namespace pwiz.Osprey.Tasks
             Action<string> logWarning, ref TransferTally tally)
         {
             int nFeatures = scorer.InputFeatures;
+            TransferOneFileByScore(fileName, pass1Path, survivors,
+                // No reconciled features resolved (a stub/parquet mismatch the reload already
+                // warned about): the entry is skipped and keeps its q as-is.
+                entry => entry.Features == null || entry.Features.Length != nFeatures
+                    ? null
+                    : scorer.Score(entry.Features, entry.EntryId, proteinBest),
+                globalExperiment, logWarning, ref tally);
+        }
 
+        /// <summary>
+        /// <see cref="TransferOneFile"/>
+        /// with each survivor's second-pass score from <paramref name="scoreOf"/>, null for a
+        /// survivor that has none and keeps its q-values. Under per-run first-pass models a
+        /// survivor's score is the one its reconciled parquet carries: the first-pass score of a
+        /// row that did not move, which then matches its first-pass record bit for bit, and the
+        /// run's own frozen model's calibrated score of a row that did.
+        /// </summary>
+        internal static void TransferOneFileByScore(
+            string fileName, string pass1Path, List<FdrEntry> survivors,
+            Func<FdrEntry, double?> scoreOf,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> globalExperiment,
+            Action<string> logWarning, ref TransferTally tally)
+        {
             // Build this file's per-run tables + record map from its own 1st-pass sidecar.
             var firstPassByEntryId = new Dictionary<uint, FdrScoreRecord>();
             var precScores = new List<double>();
@@ -2307,17 +2329,17 @@ namespace pwiz.Osprey.Tasks
 
             foreach (var entry in survivors)
             {
-                if (entry.Features == null || entry.Features.Length != nFeatures)
+                double? scored = scoreOf(entry);
+                if (!scored.HasValue)
                 {
-                    // No reconciled features resolved (a stub/parquet mismatch the reload
-                    // already warned about). Leave this ENTRY's q as-is rather than guess, and
-                    // go on to the next one - a `return` here would abandon the rest of the
+                    // No second-pass score resolved. Leave this ENTRY's q as-is rather than guess,
+                    // and go on to the next one - a `return` here would abandon the rest of the
                     // file's survivors at their Stage-6 q AND skip the FilesDone count below,
                     // which is a whole run silently dropped for one entry's missing features.
                     tally.Skipped++;
                     continue;
                 }
-                double newScore = scorer.Score(entry.Features, entry.EntryId, proteinBest);
+                double newScore = scored.Value;
 
                 FdrScoreRecord? rec1 = null;
                 if (firstPassByEntryId.TryGetValue(entry.EntryId, out FdrScoreRecord recFound))
