@@ -40,7 +40,8 @@ namespace pwiz.Osprey.Test
         };
 
         /// <summary>
-        /// With OSPREY_FEATURE_MASK=none, the scores parquets hold the HRAM-only families at HRAM and not at unit
+        /// With OSPREY_FEATURE_MASK=none, the features parquets (kept with <c>--keep-scores-parquet</c>; the
+        /// stub scores parquets hold no feature columns) hold the HRAM-only families at HRAM and not at unit
         /// resolution, where the configuration carries the resolved mode to <see cref="PinFeatureMask.For(OspreyConfig)"/>.
         /// OspreyEnvironment reads the mask once per process, so these run Osprey.exe rather than in-process
         /// like the other legs. The unit run also asks for <c>--feature-set core</c>, which the mask overrides:
@@ -57,7 +58,8 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_LIBRARY.ArgumentText, Path.Combine(_dataDir, LIBRARY_FILE),
                 OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(unitDir, BLIB_FILE),
                 OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, unitDir
-            }).Concat(CommonArgs()).Concat(FeatureSetArgs(OspreyFeatureSet.core)), OspreyEnvironment.FEATURE_MASK_NONE);
+            }).Concat(CommonArgs()).Concat(FeatureSetArgs(OspreyFeatureSet.core)).Concat(KeepScoresParquetArgs()),
+                OspreyEnvironment.FEATURE_MASK_NONE);
             AssertHramOnlyColumns(unitDir, false);
             AssertAllAvailableColumns(unitDir, ResolutionMode.UnitResolution);
 
@@ -81,12 +83,12 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_LIBRARY.ArgumentText, Path.Combine(astralDir, ASTRAL_LIBRARY_FILE),
                 OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(workDir, BLIB_FILE),
                 OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, workDir
-            }).Concat(CommonArgs(@"hram"));
+            }).Concat(CommonArgs(@"hram")).Concat(KeepScoresParquetArgs());
         }
 
         private static void AssertHramOnlyColumns(string workDir, bool expected)
         {
-            foreach (string parquet in ScoresParquets(workDir))
+            foreach (string parquet in FeaturesParquets(workDir))
             {
                 Assert.IsTrue(ParquetScoreCache.HasColumn(parquet, @"tc_clean_sum6"), parquet);
                 foreach (string column in HRAM_ONLY_COLUMNS)
@@ -94,13 +96,13 @@ namespace pwiz.Osprey.Test
             }
         }
 
-        // Every scores parquet holds a column for each PIN feature the resolution can use: all 109 at HRAM.
+        // Every features parquet holds a column for each PIN feature the resolution can use: all 109 at HRAM.
         private static void AssertAllAvailableColumns(string workDir, ResolutionMode mode)
         {
             var names = ParquetScoreCache.PIN_FEATURE_NAMES;
             Assert.AreEqual(mode == ResolutionMode.HRAM ? names.Length : names.Length - HRAM_ONLY_COLUMNS.Length,
                 Enumerable.Range(0, names.Length).Count(f => PinFeatureMask.IsAvailable(f, mode)));
-            foreach (string parquet in ScoresParquets(workDir))
+            foreach (string parquet in FeaturesParquets(workDir))
             {
                 for (int f = 0; f < names.Length; f++)
                 {
@@ -110,10 +112,10 @@ namespace pwiz.Osprey.Test
             }
         }
 
-        private static string[] ScoresParquets(string workDir)
+        private static string[] FeaturesParquets(string workDir)
         {
-            var parquets = Directory.GetFiles(workDir, @"*" + ParquetScoreCache.EXT_SCORES)
-                .Concat(Directory.GetFiles(workDir, @"*" + ParquetScoreCache.EXT_SCORES_RECONCILED)).ToArray();
+            var parquets = Directory.GetFiles(workDir, @"*" + ParquetScoreCache.EXT_FEATURES)
+                .Concat(Directory.GetFiles(workDir, @"*" + ParquetScoreCache.EXT_FEATURES_RECONCILED)).ToArray();
             Assert.AreNotEqual(0, parquets.Length, workDir);
             return parquets;
         }

@@ -911,6 +911,16 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} of {1} runs have no first-pass scores from their own model ({2}). Run {3} with the same settings first..
+        /// </summary>
+        public static string FirstPassFdrTask_RunFirstPassProjection__0__of__1__runs_have_no_first_pass_scores_from_their_own_model___2____Run__3__with_the_same_settings_first_ {
+            get {
+                return ResourceManager.GetString("FirstPassFdrTask_RunFirstPassProjection__0__of__1__runs_have_no_first_pass_score" +
+                        "s_from_their_own_model___2____Run__3__with_the_same_settings_first_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to up to date: {0}.
         /// </summary>
         public static string FirstPassFdrTask_RunFirstPassProjection___up_to_date___0_ {
@@ -2266,16 +2276,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Protein-compact second-pass FDR needs one first-pass model for the analysis, but each run trained its own ({0}). Unset {1}..
-        /// </summary>
-        public static string PerFileRescoreTask_CreatePass2Worker_Protein_compact_second_pass_FDR_needs_one_first_pass_model_for_the_analysis__but_each_run_trained_its_own___0____Unset__1__ {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_CreatePass2Worker_Protein_compact_second_pass_FDR_needs_one_f" +
-                        "irst_pass_model_for_the_analysis__but_each_run_trained_its_own___0____Unset__1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Second-pass FDR cannot run: the saved first-pass model was trained with {0}, but this run has {1}. Run {2} again with {1}..
         /// </summary>
         public static string PerFileRescoreTask_CreatePass2Worker_Second_pass_FDR_cannot_run__the_saved_first_pass_model_was_trained_with__0___but_this_run_has__1___Run__2__again_with__1__ {
@@ -2349,6 +2349,17 @@ namespace pwiz.Osprey.Tasks {
         public static string PerFileRescoreTask_private___Re_scored__0__of__1__peaks___2_s_ {
             get {
                 return ResourceManager.GetString("PerFileRescoreTask_private___Re_scored__0__of__1__peaks___2_s_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein-compact second-pass FDR needs one first-pass model for the analysis, but each run trains its own. Unset {0}..
+        /// </summary>
+        public static string PerFileRescoreTask_OwnModelsProteinCompactMessage_Protein_compact_second_pass_FDR_needs_one_first_pass_model_for_the_analysis__but_each_run_trains_its_own__Unset__0__ {
+            get {
+                return ResourceManager.GetString("PerFileRescoreTask_OwnModelsProteinCompactMessage_Protein_compact_second_pass_FD" +
+                        "R_needs_one_first_pass_model_for_the_analysis__but_each_run_trains_its_own__Unse" +
+                        "t__0__", resourceCulture);
             }
         }
         

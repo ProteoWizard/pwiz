@@ -402,6 +402,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Also write each run&apos;s features, every feature column, to {0} in the first pass and {1} in the second, beside the {2} that holds only the run&apos;s scores, so a later run can train the run&apos;s model again without scoring the run again.
+        /// </summary>
+        public static string _keep_scores_parquet {
+            get {
+                return ResourceManager.GetString("_keep_scores_parquet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Write all output to this file instead of stderr.
         /// </summary>
         public static string _log_file {

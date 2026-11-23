@@ -680,7 +680,7 @@ namespace pwiz.Osprey.Test
                 OspreyArgNames.TASK_FILES, @"timestamp", @"memstamp", @"diskstamp", @"log-file", @"help", @"help-env", @"version", @"culture",
                 // Developer options and outputs a user of a host's settings page has no use for
                 OspreyArgNames.DECOY_PAIRING_MANIFEST, OspreyArgNames.TRAINING_EXPORT, @"training-export-claimant-q",
-                @"training-export-xics", @"perf-stats",
+                @"training-export-xics", @"perf-stats", OspreyArgNames.KEEP_SCORES_PARQUET,
                 // CarafeSharp's, hosted: the training seed
                 CarafeCommandLine.ARG_SEED.Name,
             };

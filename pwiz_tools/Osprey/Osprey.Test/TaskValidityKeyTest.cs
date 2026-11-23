@@ -280,7 +280,7 @@ namespace pwiz.Osprey.Test
                 string current = RunKey(runA);
                 foreach (string artifact in new[]
                          {
-                             ParquetScoreCache.GetReconciledScoresPath(runA),
+                             ParquetScoreCache.GetReconciledFeaturesPath(runA),
                              FdrScoresSidecar.Pass1Path(runA),
                              CalibrationIO.CalibrationPathForInput(runA, ArtifactPaths.ResolveOutputDir(runA)),
                              SpectraCache.GetCachePath(runA),

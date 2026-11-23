@@ -27,14 +27,12 @@ using pwiz.Osprey.Core;
 namespace pwiz.Osprey.FDR
 {
     /// <summary>
-    /// The per-file first-pass model of the <c>OSPREY_PER_FILE_FDR</c> study: one model trained on
-    /// one file's own rows, the way DIA-NN trains one model per run, and that file's rows scored
-    /// with it. Experiment code, reached only through the environment switch.
+    /// The per-run first-pass model: one model trained on one file's own rows, the way DIA-NN
+    /// trains one model per run, and that file's rows scored with it.
     ///
     /// <para>The training rows are the file's best candidate peak per precursor, subsampled by
-    /// peptide group to <see cref="PercolatorConfig.MaxTrainSize"/> as the global training does.
-    /// With <c>OSPREY_PER_FILE_FDR_ROUNDS=2</c> the file trains as the global model
-    /// does, through <see cref="PercolatorTrainer.TrainWithScorePrefilter"/>: round 1 on that subsample,
+    /// peptide group to <see cref="PercolatorConfig.MaxTrainSize"/>. The file trains in two rounds
+    /// through <see cref="PercolatorTrainer.TrainWithScorePrefilter"/>: round 1 on that subsample,
     /// round 2 on the peptide groups round 1 scores best, started from round 1's scores.
     /// At SEA-AD scale that subset covers most of the file's precursors, so the score pass is OUT
     /// OF FOLD: every row is scored by the one fold model that held its peptide group out, and only
@@ -43,7 +41,8 @@ namespace pwiz.Osprey.FDR
     /// <para>The scores are then calibrated per file (Granholm et al. 2012, the map
     /// <c>CalibrateScoresBetweenFolds</c> applies between folds): the lowest target score passing
     /// the run's precursor q at <see cref="PercolatorConfig.TestFdr"/> maps to 0 and the median of the
-    /// run's best decoy per entry to -1. Without it the experiment competition, which ranks each
+    /// run's best decoy per entry to -1, or, when no target passes, the run's highest-scoring decoy
+    /// to 0 (see <see cref="Calibrate"/>). Without it the experiment competition, which ranks each
     /// precursor by its best score over runs, would compare scores from unrelated models.</para>
     ///
     /// <para>One instance serves every file of a pass and is safe to call from several lanes at
@@ -55,10 +54,9 @@ namespace pwiz.Osprey.FDR
         private readonly int _threads;
         private readonly IOspreyLog _log;
         private readonly string _passLabel;
-        // Round 2's row count when each file trains in two rounds (OSPREY_PER_FILE_FDR_ROUNDS=2),
-        // as the global model does; 0 for one round.
+        // Round 2's row count; 0 for one round (OSPREY_GBT_PREFILTER_SIZE=0).
         private readonly int _round2Size;
-        // OSPREY_PER_FILE_FDR=file: the protein-best column each file computes from its OWN round-1
+        // --protein-boost best: the protein-best column each file computes from its OWN round-1
         // model and appends for round 2 and the score pass; null otherwise.
         private readonly ProteinBestRequest _ownProteinBest;
         private long _files;
@@ -66,7 +64,12 @@ namespace pwiz.Osprey.FDR
         private long _scoreTicks;
         private long _calibrateTicks;
         private long _trainRows;
-        private long _uncalibrated;
+        private long _bestDecoyAnchored;
+        private long _excluded;
+
+        // How far below 0, in units of the run's own score range, an excluded run's scores are
+        // moved: below any calibrated run's scores, so its rows never win an entry another run has.
+        private const double EXCLUDED_OFFSET = 1e6;
 
         /// <param name="percConfig">The pass's config, whose classifier and settings each file's
         /// model is trained with.</param>
@@ -78,25 +81,24 @@ namespace pwiz.Osprey.FDR
         {
             _log = log;
             _passLabel = passLabel;
-            // The file's own column reaches its model only through round 2, so that arm always
-            // trains two rounds.
-            _ownProteinBest = string.Equals(OspreyEnvironment.PerFileFdr, OspreyEnvironment.PER_FILE_FDR_FILE, StringComparison.Ordinal)
-                ? percConfig.ProteinBest
-                : null;
+            // The file's own column, when the search asks for one, reaches its model only through
+            // round 2.
+            _ownProteinBest = percConfig.ProteinBest;
             _threads = Math.Max(1, percConfig.NThreads / Math.Max(1, lanes));
             _trainConfig = percConfig.CloneForTrainOnly();
-            // OSPREY_PER_FILE_FDR_TRAIN_SIZE: round 1's rows, and two thirds of them for round 2
-            // unless OSPREY_PER_FILE_FDR_ROUND2_SIZE names round 2's own size.
-            int? trainSize = OspreyEnvironment.PerFileFdrTrainSize;
+            // OSPREY_FIRST_PASS_TRAIN_SIZE: round 1's rows, and two thirds of them for round 2
+            // unless OSPREY_FIRST_PASS_ROUND2_SIZE names round 2's own size.
+            int? trainSize = OspreyEnvironment.FirstPassTrainSize;
             if (trainSize.HasValue)
                 _trainConfig.MaxTrainSize = trainSize.Value;
             int round2Size = OspreyEnvironment.PrefilterSizeFor(true);
             if (trainSize.HasValue)
                 round2Size = Math.Min(round2Size, trainSize.Value * 2 / 3);
             // The override never turns on a round 2 that OSPREY_GBT_PREFILTER_SIZE=0 turned off.
-            if (OspreyEnvironment.PerFileFdrRound2Size.HasValue && round2Size > 0)
-                round2Size = OspreyEnvironment.PerFileFdrRound2Size.Value;
-            _round2Size = OspreyEnvironment.PerFileFdrTwoRound || _ownProteinBest != null ? round2Size : 0;
+            if (OspreyEnvironment.FirstPassRound2Size.HasValue && round2Size > 0)
+                round2Size = OspreyEnvironment.FirstPassRound2Size.Value;
+            // Two rounds, as the first-pass model always trained.
+            _round2Size = round2Size;
             _trainConfig.NThreads = _threads;
             _trainConfig.ReportTrainEntryFolds = true;
             // A file's training-set analysis would be a report nobody reads, at minutes per file.
@@ -240,17 +242,21 @@ namespace pwiz.Osprey.FDR
             t = Accumulate(ref _scoreTicks, t);
 
             double scoreSeconds = Seconds(t - trainEnd);
-            if (!Calibrate(scores, labels, ids, seqs, _trainConfig.TestFdr, out double threshold, out double denominator))
+            var anchor = Calibrate(scores, labels, ids, seqs, _trainConfig.TestFdr, out double threshold, out double denominator);
+            if (anchor == CalibrationAnchor.BEST_DECOY)
             {
-                threshold = 0.0;
-                denominator = 1.0;
-                // Its scores stay on the model's own scale, so its precursors meet the other runs'
-                // calibrated scores in the experiment competition unadjusted.
-                Interlocked.Increment(ref _uncalibrated);
-                _log.LogInfo(LogTag.COUNT, string.Format(
-                    @"{0}: the run's first-pass model passed no target at q {1}, so its scores could not be calibrated against the other runs.",
+                Interlocked.Increment(ref _bestDecoyAnchored);
+            }
+            else if (anchor == CalibrationAnchor.EXCLUDED)
+            {
+                Interlocked.Increment(ref _excluded);
+                // Log text for developers, not displayed in the default output
+                _log.LogInfo(string.Format(
+                    @"Warning: {0}: the run's first-pass model passed no target at q {1} and has no decoy above its median best decoy, so its scores could not be calibrated against the other runs and its precursors are left out of the experiment competition.",
                     fileName, _trainConfig.TestFdr));
             }
+            _log.LogInfo(LogTag.COUNT, @"{0} per-file model [{1}]: calibration anchor {2}", _passLabel, fileName,
+                anchor.Name);
             Accumulate(ref _calibrateTicks, t);
             _log.LogInfo(LogTag.TIMING,
                 @"{0} per-file model [{1}]: {2:F1}s wall at {3} thread(s); {4} rows, {5} best-per-precursor, {6} final training rows; train {7:F1}s (protein-best column {8:F1}s), out-of-fold scoring {9:F1}s",
@@ -265,10 +271,11 @@ namespace pwiz.Osprey.FDR
         public void LogTiming(IOspreyLog log, string passLabel, string where)
         {
             log.LogInfo(LogTag.TIMING,
-                @"{0} per-file models ({1}): {2} file(s), {3} training rows; lanes (summed) train {4:F1}s, score {5:F1}s, calibrate {6:F1}s; {7} thread(s) per file; {8} file(s) left uncalibrated",
+                @"{0} per-file models ({1}): {2} file(s), {3} training rows; lanes (summed) train {4:F1}s, score {5:F1}s, calibrate {6:F1}s; {7} thread(s) per file; {8} file(s) anchored on the best decoy, {9} file(s) excluded from the experiment competition",
                 passLabel, where, Interlocked.Read(ref _files), Interlocked.Read(ref _trainRows),
                 Seconds(Interlocked.Read(ref _trainTicks)), Seconds(Interlocked.Read(ref _scoreTicks)),
-                Seconds(Interlocked.Read(ref _calibrateTicks)), _threads, Interlocked.Read(ref _uncalibrated));
+                Seconds(Interlocked.Read(ref _calibrateTicks)), _threads, Interlocked.Read(ref _bestDecoyAnchored),
+                Interlocked.Read(ref _excluded));
         }
 
         /// <summary>
@@ -365,42 +372,91 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Maps the file's scores in place so the lowest target passing the run's precursor q at
-        /// <paramref name="testFdr"/> sits at 0 and the median best decoy per entry at -1, the map
-        /// <c>(score - threshold) / denominator</c>. Returns false, leaving the scores as they are,
-        /// when no target passes or the two coincide.
+        /// Maps the file's scores in place, <c>(score - threshold) / denominator</c>, with the
+        /// median best decoy per entry at -1 and 0 at the first anchor that is above it:
+        /// <list type="number">
+        /// <item>the lowest target passing the run's precursor q at <paramref name="testFdr"/>;</item>
+        /// <item>when no target passes, the run's highest-scoring decoy, the boundary between
+        /// q = 0 and q &gt; 0. A small run's q has a floor of 1 / (targets above its first decoy),
+        /// so with fewer than 1 / <paramref name="testFdr"/> targets there no target can pass, and
+        /// its scores left on the model's own scale would meet the other runs' calibrated scores
+        /// in the experiment competition unadjusted.</item>
+        /// </list>
+        /// With neither (no decoy, or no decoy above the median), the run is excluded: its scores
+        /// keep their order, so its run q-values are unchanged, but move far below any calibrated
+        /// score, so its rows win no entry another run has.
         /// </summary>
-        private static bool Calibrate(double[] scores, bool[] labels, uint[] ids, string[] seqs, double testFdr,
-            out double threshold, out double denom)
+        private static CalibrationAnchor Calibrate(double[] scores, bool[] labels, uint[] ids, string[] seqs,
+            double testFdr, out double threshold, out double denom)
         {
             int count = scores.Length;
             PercolatorQValues.ComputePerFileRunQvalues(scores, labels, ids, seqs, 0, count,
                 out double[] runPrecursorQ, out _);
-            threshold = double.MaxValue;
-            denom = 0;
+            double passingTarget = double.MaxValue;
+            double topDecoy = double.MinValue;
+            double minScore = double.MaxValue;
+            double maxScore = double.MinValue;
             var bestDecoy = new Dictionary<uint, double>();
             for (int r = 0; r < count; r++)
             {
+                minScore = Math.Min(minScore, scores[r]);
+                maxScore = Math.Max(maxScore, scores[r]);
                 if (labels[r])
                 {
                     if (!bestDecoy.TryGetValue(ids[r], out double best) || scores[r] > best)
                         bestDecoy[ids[r]] = scores[r];
+                    topDecoy = Math.Max(topDecoy, scores[r]);
                 }
-                else if (runPrecursorQ[r] <= testFdr && scores[r] < threshold)
+                else if (runPrecursorQ[r] <= testFdr && scores[r] < passingTarget)
                 {
-                    threshold = scores[r];
+                    passingTarget = scores[r];
                 }
             }
-            if (threshold == double.MaxValue || bestDecoy.Count == 0)
-                return false;
-            var decoys = new List<double>(bestDecoy.Values);
-            decoys.Sort(); // Array.Sort OK: median of single primitive list, no parallel data; tie order irrelevant
-            denom = threshold - decoys[decoys.Count / 2];
-            if (denom <= 0.0)
-                return false;
+            var anchor = CalibrationAnchor.EXCLUDED;
+            threshold = 0;
+            denom = 0;
+            if (bestDecoy.Count > 0)
+            {
+                var decoys = new List<double>(bestDecoy.Values);
+                decoys.Sort(); // Array.Sort OK: median of single primitive list, no parallel data; tie order irrelevant
+                double medianDecoy = decoys[decoys.Count / 2];
+                if (passingTarget != double.MaxValue && passingTarget > medianDecoy)
+                {
+                    anchor = CalibrationAnchor.PASSING_TARGET;
+                    threshold = passingTarget;
+                }
+                else if (topDecoy > medianDecoy)
+                {
+                    anchor = CalibrationAnchor.BEST_DECOY;
+                    threshold = topDecoy;
+                }
+                denom = threshold - medianDecoy;
+            }
+            if (anchor == CalibrationAnchor.EXCLUDED)
+            {
+                // The run's own score range is the unit, so the map keeps its order.
+                denom = maxScore > minScore ? maxScore - minScore : 1.0;
+                threshold = maxScore + EXCLUDED_OFFSET * denom;
+            }
             for (int r = 0; r < count; r++)
                 scores[r] = (scores[r] - threshold) / denom;
-            return true;
+            return anchor;
+        }
+
+        /// <summary>Which score a run's calibration maps to 0 (<see cref="Calibrate"/>).</summary>
+        private sealed class CalibrationAnchor
+        {
+            public static readonly CalibrationAnchor PASSING_TARGET = new CalibrationAnchor(@"passing-target");
+            public static readonly CalibrationAnchor BEST_DECOY = new CalibrationAnchor(@"best-decoy");
+            public static readonly CalibrationAnchor EXCLUDED = new CalibrationAnchor(@"excluded");
+
+            private CalibrationAnchor(string name)
+            {
+                Name = name;
+            }
+
+            /// <summary>The spelling of the [COUNT] line.</summary>
+            public string Name { get; }
         }
 
         private static long Accumulate(ref long ticks, long start)

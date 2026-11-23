@@ -236,13 +236,6 @@ namespace pwiz.Osprey.Tasks
                 + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config);
         }
 
-        /// <summary>
-        /// Whether each run trains its own first-pass model here (<c>OSPREY_PER_FILE_FDR=file</c>),
-        /// so <c>FirstPassFDR</c> reduces the runs' scores rather than training one model on all of
-        /// them.
-        /// </summary>
-        public static bool TrainsOwnFirstPassModel =>
-            string.Equals(OspreyEnvironment.PerFileFdr, OspreyEnvironment.PER_FILE_FDR_FILE, StringComparison.Ordinal);
 
         /// <summary>
         /// The key of a run's own first-pass scores: this task's key, which covers the features,
@@ -286,10 +279,10 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public override string OutputValidityKey(PipelineContext ctx, string taskKey, string output)
         {
-            if (TrainsOwnFirstPassModel && output.EndsWith(ParquetScoreCache.EXT_SCORES, StringComparison.Ordinal))
+            if (output.EndsWith(ParquetScoreCache.EXT_SCORES, StringComparison.Ordinal))
                 return taskKey + ModelKeyTerms(ctx.Config) + STUB_PARQUET_KEY_TERM;
             // The run's own model file holds what the model settings trained.
-            if (TrainsOwnFirstPassModel && output.EndsWith(FirstPassModelIO.EXT_MODEL, StringComparison.Ordinal))
+            if (output.EndsWith(FirstPassModelIO.EXT_MODEL, StringComparison.Ordinal))
                 return taskKey + ModelKeyTerms(ctx.Config);
             return taskKey;
         }
@@ -310,15 +303,13 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Whether this run writes each run's features checkpoint (<c>&lt;stem&gt;.features.parquet</c>),
-        /// and PerFileRescoring its second-pass counterpart: under the own-model arm with
-        /// <c>OSPREY_PER_FILE_FDR_KEEP_PARQUET=1</c>, the diagnostic and development setting that
-        /// lets <c>--task FirstPass</c> train the models again from it, without scoring the runs
+        /// and PerFileRescoring its second-pass counterpart: with <c>--keep-scores-parquet</c>, which
+        /// lets <c>--task FirstPass</c> train the models again from it without scoring the runs
         /// again, and with the training export, which reads its rows from the features files.
         /// </summary>
         public static bool WritesFeaturesCheckpoint(OspreyConfig config)
         {
-            return TrainsOwnFirstPassModel && (OspreyEnvironment.PerFileFdrKeepParquet ||
-                                               (config.TrainingExport.Enabled && !config.DiagnosticsOnly));
+            return config.KeepScoresParquet || (config.TrainingExport.Enabled && !config.DiagnosticsOnly);
         }
 
         /// <summary>The outputs this task writes for one input file.</summary>
@@ -327,8 +318,7 @@ namespace pwiz.Osprey.Tasks
             yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
             yield return ParquetScoreCache.GetScoresPath(input);
             // The run's own first-pass model, which its second pass scores moved rows with.
-            if (TrainsOwnFirstPassModel)
-                yield return FirstPassModelIO.RunModelPathFor(input);
+            yield return FirstPassModelIO.RunModelPathFor(input);
             if (WritesFeaturesCheckpoint(config))
                 yield return ParquetScoreCache.GetFeaturesPath(input);
         }
@@ -343,11 +333,10 @@ namespace pwiz.Osprey.Tasks
             // ctx.Demand, which routes to Rehydrate.
             var config = ctx.Config;
 
-            // OSPREY_PER_FILE_FDR=file: the protein-compact second pass needs one first-pass model
-            // for the analysis, which this mode keeps none of, so a run that goes on to it is
-            // refused before any run is scored rather than hours later in PerFileRescoring.
-            if (TrainsOwnFirstPassModel && config.Pass2ProteinCompact &&
-                ScoringTaskShared.Includes<PerFileRescoreTask>(config))
+            // The protein-compact second pass needs one first-pass model for the analysis, and
+            // each run trains its own, so a run that goes on to it is refused before any run is
+            // scored rather than hours later in PerFileRescoring.
+            if (config.Pass2ProteinCompact && ScoringTaskShared.Includes<PerFileRescoreTask>(config))
             {
                 ctx.LogError(PerFileRescoreTask.OwnModelsProteinCompactMessage());
                 ctx.ExitCode = 1;
@@ -405,13 +394,10 @@ namespace pwiz.Osprey.Tasks
                 { ParquetScoreCache.META_RECONCILED, @"false" },
                 { ParquetScoreCache.META_XIC_FRAGMENTS, ParquetScoreCache.XicFragmentsText(config.Scoring.XicFragments) },
             }, _outputStamp);
-            if (TrainsOwnFirstPassModel)
-            {
-                _ownModelKey = OwnModelValidityKey(ctx);
-                _ownModelStamp = OspreyVersion.Stamp(Name, _ownModelKey);
-                _ownModelProteinBest = new Lazy<ProteinBestRequest>(
-                    () => FirstPassFdrTask.BuildProteinBestRequest(config, fullLibrary, null));
-            }
+            _ownModelKey = OwnModelValidityKey(ctx);
+            _ownModelStamp = OspreyVersion.Stamp(Name, _ownModelKey);
+            _ownModelProteinBest = new Lazy<ProteinBestRequest>(
+                () => FirstPassFdrTask.BuildProteinBestRequest(config, fullLibrary, null));
 
             // Resolve how many input files score concurrently for this invocation
             // (--parallel-files-scoring, else --parallel-files, the OSPREY_MAX_PARALLEL_FILES
@@ -1155,8 +1141,10 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(LogTag.COUNT, @"Library targets loaded: {0}", nLibraryTargets);
 
             List<LibraryEntry> decoys;
-            // ORDER MATTERS. A library that supplies its own decoys is handled FIRST,
-            // before the SecondPassFDR skip, because that arm is not only about decoys:
+            // Every task builds the decoys, SecondPassFDR included: its runs' reconciled stubs
+            // carry no peptide column, so a decoy row's peptide comes from its library entry.
+            // A library that supplies its own decoys is its own arm, because that arm is not only
+            // about decoys:
             // TryPairSuppliedDecoys is the sole caller of DecoyPairingManifest.ApplyToLibrary,
             // which rewrites ProteinIds from the manifest's clean accessions. Testing
             // ExpectReconciledInput first made this arm unreachable in SecondPassFDR - the one
@@ -1171,25 +1159,6 @@ namespace pwiz.Osprey.Tasks
                 // Nothing to do: the loader marked and paired these, and applied the manifest's
                 // accessions, before it wrote the cache. Kept as an explicit arm so the three
                 // decoy shapes still read as three arms rather than two and a fall-through.
-                decoys = new List<LibraryEntry>();
-            }
-            else if (config.ExpectReconciledInput)
-            {
-                // --task SecondPassFDR: decoy LibraryEntries are unused
-                // downstream. The reconciled parquet already carries
-                // both target and decoy FDR rows with their stage-1-4
-                // scores; Stage 5 is skipped, Stage 6 is skipped, and
-                // the protein-parsimony / blib write paths both filter
-                // on `entry.IsDecoy` (only target LibraryEntries get
-                // looked up by entry_id). Skipping the rebuild saves
-                // ~45s on Astral 1-file (BuildDecoyFromSequence +
-                // RecalculateFragments dominated the Stage 7+blib
-                // hotspot list). dotTrace OWN-time on Astral 1-file
-                // Stage 7 cs run before this fix:
-                //   BuildDecoyFromSequence  total=45665 ms (89% wall)
-                //   GenerateDecoys.<>b__0   total=46792 ms
-                // The ~45s saved is DecoyGenerator work, done only by the generated-decoy
-                // arm below, so ordering the supplied-decoy arm ahead of this costs nothing.
                 decoys = new List<LibraryEntry>();
             }
             else
@@ -2318,44 +2287,29 @@ namespace pwiz.Osprey.Tasks
             MultiProgressReporter.Current?.BeginSegment();
             if (parquetFooterMetadata != null)
             {
-                string parquetPath = ParquetScoreCache.GetScoresPath(inputFile);
                 // Reuse the entry-id -> LibraryEntry map Run() built once
                 // before the per-file fan-out (WriteScoresParquet needs
                 // it to pull sequence / precursor_mz / protein_ids from
                 // the library since FdrEntry doesn't carry these).
                 var featureMask = PinFeatureMask.For(config);
-                if (_ownModelStamp == null)
+                // The features checkpoint first, when it is kept - everything Stages 1-4
+                // produced, before the run's own model - then the model, on the rows the stub
+                // will hold, then the stub that carries its scores.
+                if (WritesFeaturesCheckpoint(config))
                 {
-                    var swParquet = Stopwatch.StartNew();
-                    ParquetScoreCache.WriteScoresParquet(
-                        parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName,
-                        ParquetScoreCache.WritesReferenceXic(config), featureMask);
-                    swParquet.Stop();
+                    string featuresPath = ParquetScoreCache.GetFeaturesPath(inputFile);
+                    var swFeatures = Stopwatch.StartNew();
+                    ParquetScoreCache.WriteScoresParquet(featuresPath, scoredEntries, parquetFooterMetadata,
+                        _libraryById, fileName, ParquetScoreCache.WritesReferenceXic(config), featureMask);
                     ctx.LogInfo(string.Format(
                         OspreyTasksResources.PerFileScoringTask_ProcessFile_Wrote__0__precursor_candidate_peaks_to__1____2_s_,
-                        scoredEntries.Count, parquetPath, swParquet.Elapsed.TotalSeconds));
+                        scoredEntries.Count, featuresPath, swFeatures.Elapsed.TotalSeconds));
                 }
-                else
-                {
-                    // OSPREY_PER_FILE_FDR=file: the features checkpoint first, when it is kept -
-                    // everything Stages 1-4 produced, before the run's own model - then the model,
-                    // on the rows the stub will hold, then the stub that carries its scores.
-                    if (WritesFeaturesCheckpoint(config))
-                    {
-                        string featuresPath = ParquetScoreCache.GetFeaturesPath(inputFile);
-                        var swFeatures = Stopwatch.StartNew();
-                        ParquetScoreCache.WriteScoresParquet(featuresPath, scoredEntries, parquetFooterMetadata,
-                            _libraryById, fileName, ParquetScoreCache.WritesReferenceXic(config), featureMask);
-                        ctx.LogInfo(string.Format(
-                            OspreyTasksResources.PerFileScoringTask_ProcessFile_Wrote__0__precursor_candidate_peaks_to__1____2_s_,
-                            scoredEntries.Count, featuresPath, swFeatures.Elapsed.TotalSeconds));
-                    }
-                    int[] rowOrder = ParquetScoreCache.RowOrder(scoredEntries);
-                    for (int row = 0; row < rowOrder.Length; row++)
-                        scoredEntries[rowOrder[row]].ParquetIndex = (uint)row;
-                    var proteinBest = TrainOwnModelFromEntries(scoredEntries, inputFile, fileName, featureMask, ctx);
-                    WriteStubScores(scoredEntries, inputFile, fileName, parquetFooterMetadata, featureMask, proteinBest, ctx);
-                }
+                int[] rowOrder = ParquetScoreCache.RowOrder(scoredEntries);
+                for (int row = 0; row < rowOrder.Length; row++)
+                    scoredEntries[rowOrder[row]].ParquetIndex = (uint)row;
+                var proteinBest = TrainOwnModelFromEntries(scoredEntries, inputFile, fileName, featureMask, ctx);
+                WriteStubScores(scoredEntries, inputFile, fileName, parquetFooterMetadata, featureMask, proteinBest, ctx);
 
                 // Phase 1 (issue #4355): the heavy per-entry arrays are now persisted in
                 // the parquet above and are reloadable by ParquetIndex, so drop them from

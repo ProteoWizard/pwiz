@@ -54,11 +54,12 @@ namespace pwiz.Osprey.FDR
         public PercolatorResults Model { get; }
 
         /// <summary>The raw score the calibration maps to 0: the lowest target passing the run's
-        /// precursor q; 0 when the run was left uncalibrated.</summary>
+        /// precursor q, or the run's best decoy when no target passes; far above every raw score
+        /// when the run was excluded from the experiment competition.</summary>
         public double CalibrationThreshold { get; }
 
-        /// <summary>The threshold less the median best decoy per entry; 1 when the run was left
-        /// uncalibrated.</summary>
+        /// <summary>The threshold less the median best decoy per entry; the run's score range
+        /// when the run was excluded.</summary>
         public double CalibrationDenominator { get; }
 
         /// <summary>The run's protein-best value per row, in row order, or null.</summary>

@@ -157,6 +157,9 @@
   <data name="_library" xml:space="preserve">
     <value>Spectral library to search: a {0} (as {4} and CarafeSharp write it, or one from Skyline or BiblioSpec), or, for comparing with DIA-NN, a library in the {1} format DIA-NN imports, such as Java Carafe writes for it, or a DIA-NN 2.x library {5}: a search's report-lib{5}, or a predicted library DIA-NN has converted from its {6} (a {6} is refused, with the DIA-NN command that converts it). Without {2}, Osprey generates a reversed decoy for every target, and a library that holds decoys is refused. With {2}, the library's own decoys are used: a {0} pairs them from its own table, and a {1} or {5} marks them by its Decoy column or a decoy accession prefix and pairs them by {3} (an FDRBench pairing manifest) or by composition.</value>
   </data>
+  <data name="_keep_scores_parquet" xml:space="preserve">
+    <value>Also write each run's features, every feature column, to {0} in the first pass and {1} in the second, beside the {2} that holds only the run's scores, so a later run can train the run's model again without scoring the run again</value>
+  </data>
   <data name="_log_file" xml:space="preserve">
     <value>Write all output to this file instead of the console</value>
   </data>

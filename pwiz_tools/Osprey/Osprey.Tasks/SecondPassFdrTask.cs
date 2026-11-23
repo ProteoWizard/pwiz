@@ -133,9 +133,7 @@ namespace pwiz.Osprey.Tasks
 
             foreach (var input in ctx.Config.InputFiles)
             {
-                // Under per-run first-pass models the reconciled stub, declared above, holds them.
-                if (!PerFileScoringTask.TrainsOwnFirstPassModel)
-                    yield return FdrScoresSidecar.Pass2Path(input);
+                // Each run's second-pass records are in its reconciled stub, declared above.
                 // The decoy side of that file's competition - the null this stage folds. Also an
                 // input, for the same reason and from the same producer, where there is a
                 // competition: the transfer competes nothing.
@@ -163,15 +161,6 @@ namespace pwiz.Osprey.Tasks
             // needs neither: it reloads a model it finds, and nothing on its path reads it. Under
             // per-run first-pass models there is no analysis-wide model, and protein-compact is
             // refused (PerFileRescoreTask.CreatePass2Worker).
-            if (ctx.Config.Pass2ProteinCompact && !PerFileScoringTask.TrainsOwnFirstPassModel)
-            {
-                string modelPath = FirstPassModelIO.PathFor(ctx.Config);
-                if (!string.IsNullOrEmpty(modelPath))
-                    yield return modelPath;
-                string stratumPath = FirstPassModelIO.StratumPathFor(ctx.Config);
-                if (!string.IsNullOrEmpty(stratumPath))
-                    yield return stratumPath;
-            }
 
             // The pass-1 half of the --model-diagnostics report, which FirstPassFDR wrote because
             // the pass-1 pool is gone by now: this task renders one page with both passes.

@@ -2354,9 +2354,8 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// A stub that carries the run's first-pass scores returns its records - score, both run
-        /// q-values and apex RT intact. The score file's readers take them in place of a missing
-        /// <c>.1st-pass.fdr_scores.bin</c> only under <c>OSPREY_PER_FILE_FDR=file</c>, which a
-        /// test process does not set: outside the mode a stub left on disk is not a score file.
+        /// q-values and apex RT intact, and the score file's readers take them in place of the
+        /// <c>.1st-pass.fdr_scores.bin</c> no run writes any more.
         /// </summary>
         private static void AssertStubCarriesFirstPassScores(List<FdrEntry> entries,
             Dictionary<string, string> metadata, Dictionary<uint, LibraryEntry> libraryById)
@@ -2389,8 +2388,10 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(0.25, readBack.ValueFor(100));
                 Assert.AreEqual(-1.0, readBack.ValueFor(100 | LibraryEntry.DECOY_ID_BIT));
                 Assert.AreEqual(-1.0, readBack.ValueFor(999), @"an entry the run had no row for reads the floor");
-                Assert.IsFalse(FdrScoresSidecar.Pass1Available(pass1Path), @"outside the mode a stub is not a score file");
-                Assert.IsFalse(FdrScoresSidecar.ReadRecords(pass1Path, FdrScoresSidecar.Pass.FirstPass, r => { }));
+                Assert.IsTrue(FdrScoresSidecar.Pass1Available(pass1Path), @"the stub is the run's first-pass score file");
+                var viaSidecar = new List<FdrScoreRecord>();
+                Assert.IsTrue(FdrScoresSidecar.ReadRecords(pass1Path, FdrScoresSidecar.Pass.FirstPass, viaSidecar.Add));
+                Assert.AreEqual(entries.Count, viaSidecar.Count);
                 var records = new List<FdrScoreRecord>();
                 Assert.IsTrue(ParquetScoreCache.ReadScoreRecords(scoresPath, records.Add));
                 Assert.AreEqual(entries.Count, records.Count);

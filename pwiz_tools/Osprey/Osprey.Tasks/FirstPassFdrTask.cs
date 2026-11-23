@@ -219,19 +219,8 @@ namespace pwiz.Osprey.Tasks
         public override IEnumerable<string> Outputs(PipelineContext ctx)
         {
             if (ctx.Config.InputFiles == null) yield break;
-            // OSPREY_PER_FILE_FDR=file: PerFileScoring writes each run's first-pass scores, and
-            // this task, a join, writes no per-run file (doc 00, P3).
-            bool ownModels = PerFileScoringTask.TrainsOwnFirstPassModel;
-            foreach (var input in ctx.Config.InputFiles)
-            {
-                if (ownModels)
-                    continue;
-                yield return FdrScoresSidecar.Pass1Path(input);
-                // --protein-boost best: the column each run was scored with, which the second
-                // pass scores that run's rescored rows with and cannot recompute.
-                if (ctx.Config.ProteinBest)
-                    yield return ProteinBestSidecar.PathFor(input);
-            }
+            // PerFileScoring writes each run's first-pass scores, and this task, a join, writes no
+            // per-run file (doc 00, P3).
 
             // The analysis-wide cross-run consensus every run's Stage 6 plan reads. Each run's
             // .reconciliation.json is PerFileRescoring's output now: that task plans the run
@@ -384,7 +373,8 @@ namespace pwiz.Osprey.Tasks
                         ScoringTaskShared.FeedModelDiagnostics(accumulator, fileIdx, rows),
                     experimentRecords,
                     retainedBaseIds,
-                    ctx);
+                    ctx,
+                    StubIdentity(ctx));
             }
 
             // Reuses the accumulator's classification, which took minutes to compute over 6.2M
@@ -827,7 +817,10 @@ namespace pwiz.Osprey.Tasks
 
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
             _survivorLoader = new FirstPassSurvivorLoader(
-                perFileParquetPaths, ctx.Config, retainedBaseIds, ctx.Get<SequencePool>().Value);
+                perFileParquetPaths, ctx.Config, retainedBaseIds, ctx.Get<SequencePool>().Value)
+            {
+                Identity = StubIdentity(ctx)
+            };
             _firstPassBaseIds = retainedBaseIds;
 
             // No cross-run gap-fill or refined-calibration map is built here: the per-run hydrate
@@ -1678,40 +1671,25 @@ namespace pwiz.Osprey.Tasks
             // taken over the sorted input file stems). Drop 82 more files into a directory and
             // every existing sidecar stops being current, which is exactly right.
             var resumableFiles = new HashSet<string>(StringComparer.Ordinal);
-            // OSPREY_PER_FILE_FDR=file: every run's scores come from its own model, written by
-            // PerFileScoring under that task's model key, which names no cohort. Nothing here can
-            // score a run without them, so every run must have them.
-            bool ownModels = PerFileScoringTask.TrainsOwnFirstPassModel;
-            var scoringTask = ownModels ? new PerFileScoringTask() : null;
+            // Every run's scores come from its own model, written by PerFileScoring under that
+            // task's model key, which names no cohort. Nothing here can score a run without them,
+            // so every run must have them.
+            var scoringTask = new PerFileScoringTask();
             foreach (var kv in projections.PerFile)
             {
                 string resumeBase = ScoringTaskShared.ResolveSidecarBasePath(
                     kv.Key, perFileParquetPaths, config);
                 if (string.IsNullOrEmpty(resumeBase))
                     continue;
-                if (ownModels)
-                {
-                    // In their own file or in the run's stub scores parquet.
-                    if (scoringTask.OwnScoresCurrent(resumeBase, ctx))
-                        resumableFiles.Add(kv.Key);
-                    continue;
-                }
-                // Under --protein-boost best a file is resumable only beside a current column: the
-                // score pass writes the column only for the files it scores.
-                if (PerFileResumeDriver.IsCurrent(
-                        FdrScoresSidecar.Pass1Path(resumeBase), Name, sidecarValidityKey) &&
-                    (!config.ProteinBest ||
-                     PerFileResumeDriver.IsCurrent(ProteinBestSidecar.PathFor(resumeBase), Name, sidecarValidityKey)))
-                {
+                // In the run's stub scores parquet, with the run's own model.
+                if (scoringTask.OwnScoresCurrent(resumeBase, ctx))
                     resumableFiles.Add(kv.Key);
-                }
             }
-            if (ownModels && resumableFiles.Count < projections.PerFile.Count)
+            if (resumableFiles.Count < projections.PerFile.Count)
             {
                 var missing = projections.PerFile.Select(kv => kv.Key).Where(f => !resumableFiles.Contains(f)).ToList();
-                // Experiment-only refusal, not displayed outside OSPREY_PER_FILE_FDR runs
                 ctx.LogError(string.Format(
-                    @"OSPREY_PER_FILE_FDR=file: {0} of {1} files have no first-pass scores from their own model ({2}). Run {3} with the same settings first.",
+                    OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection__0__of__1__runs_have_no_first_pass_scores_from_their_own_model___2____Run__3__with_the_same_settings_first_,
                     missing.Count, projections.PerFile.Count, string.Join(@", ", missing.Take(5)),
                     OspreyArgNames.TaskText(PerFileScoringTask.TASK_NAME)));
                 ctx.ExitCode = 1;
@@ -1732,49 +1710,6 @@ namespace pwiz.Osprey.Tasks
                         ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection___up_to_date___0_, kv.Key));
                 }
             }
-
-            // Training is the one phase whose product does not depend on how far the run got:
-            // the model is a function of the cohort, the library, the arm, the classifier and the
-            // seed, all of which the validity key covers. So a CURRENT .1st-pass.model.json is
-            // reusable however many files were scored - which is the whole point of writing it
-            // when training ends rather than at the end of the task. It saves 21 minutes of
-            // training-subset feature loading at 446 files. Only the counts-only first pass
-            // adopts it; the resident projection path always trains.
-            //
-            // The marker is what makes partial reuse safe. The all-sidecars-current gate below
-            // corroborates cohort identity through the sidecars themselves; here there is no such
-            // corroboration, so an unstamped model file - one written before this artifact was
-            // stamped - is not adopted.
-            //
-            // Requires at least one file to actually be resumable. The model file is not a
-            // declared Output, so deleting the declared ones - the standard way to force a clean
-            // re-score - leaves it behind, and adopting it then would score every file with the
-            // previous arm's discriminant while the log says only that a model was reused. With
-            // one sidecar adopted there is already an on-disk score that model produced, so
-            // reusing it is the consistent choice rather than a surprising one.
-            var reloadedModel = LoadCurrentModelSidecar(config, sidecarValidityKey);
-            PercolatorResults adoptedModel = !ownModels && resumableFiles.Count > 0
-                ? reloadedModel?.Model
-                : null;
-
-            // OSPREY_PASS2_QVALUE=transfer / transfer-compete / protein-compact: publish the
-            // trained (frozen) 1st-pass model so the SecondPassFDR 2nd pass can re-score the
-            // reconciled features with it instead of retraining (transfer-compete / protein-compact
-            // then recompute q/PEP by a fresh target-decoy competition). The projection first pass
-            // (this method) is the SAME lean path the default percolator mode takes, so the model
-            // must be captured HERE. Null (a pure
-            // no-op in the engine) on the default path, so scoring stays byte-identical. Streaming
-            // only, so no full-population pool is held resident (avoids the entrapment-library OOM).
-            //
-            // The model is also PERSISTED here, the moment training returns it, whenever it was
-            // trained rather than adopted (PublishFirstPassModel). It used to be written at the
-            // end of PlanStage6 instead, which on a 446-file cohort is 228 minutes after it was
-            // computed - so a run killed anywhere in the score passes, protein FDR or the survivor
-            // reload left its finished model nowhere on disk and had to retrain from scratch.
-            // Training is the first phase, so persisting its product when it ends is what makes
-            // every later phase resumable.
-            Action<PercolatorResults> captureModel = results => PublishFirstPassModel(
-                results, reloadedModel, adoptedModel, sidecarValidityKey, ctx);
 
             // FORWARD SCAN: with every file's sidecar current AND the analysis-wide experiment
             // sidecar current, everything from here to the compaction gate has already been done
@@ -1906,19 +1841,6 @@ namespace pwiz.Osprey.Tasks
                     throw new IOException(string.Format(
                         OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Could_not_write_the_first_pass_intermediate_file_for___0____and_the_analysis_cannot_, fileName));
                 };
-            // --protein-boost best: each scored run's column, beside its first-pass scores and
-            // under the same stamp. Fatal on failure, for the reason the scores write is.
-            void PersistProteinBest(string fileName, ProteinBestRunValues column)
-            {
-                string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
-                if (string.IsNullOrEmpty(sidecarBase))
-                {
-                    throw new IOException(string.Format(
-                        OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Cannot_write_the_first_pass_intermediate_file_for___0____no_location_could_be_derived_, fileName));
-                }
-                ProteinBestSidecar.Write(ProteinBestSidecar.PathFor(sidecarBase), column.EntryIds, column.Values,
-                    column.Floor, sidecarStamp);
-            }
             var featureInfos = ScoringTaskShared.FdrFeatureInfos(config);
             var swFdr = Stopwatch.StartNew();
             bool aborted;
@@ -1972,30 +1894,12 @@ namespace pwiz.Osprey.Tasks
                 string doneBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
                 return string.IsNullOrEmpty(doneBase) ? null : FdrScoresSidecar.ReadFeatureSums(FdrScoresSidecar.Pass1Path(doneBase));
             };
-            // The adopted model is reused rather than skipped: the scorer still publishes it
-            // through captureModel, so a second pass that needs the frozen first-pass model
-            // gets the SAME model the scores on disk were produced by. Synthesising a stub to
-            // satisfy the arithmetic would publish a meaningless model and corrupt pass 2
-            // silently. See adoptedModel above for when a model is adopted.
-            PercolatorResults pretrainedModel = adoptedModel;
-            if (pretrainedModel != null)
-            {
-                ctx.LogInfo(CountText.Format(resumableFiles.Count,
-                    OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Resuming__reusing_the_saved_first_pass_model_instead_of_training_again__1_of__1__files_,
-                    OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Resuming__reusing_the_saved_first_pass_model_instead_of_training_again___0__of__1__files_,
-                    projections.PerFile.Count));
-            }
-            else if (reloadedModel?.Model != null)
-            {
-                ctx.LogInfo(
-                    OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Resuming__a_saved_first_pass_model_exists_but_no_file_has_saved_scores__so_the_model_is_);
-            }
             aborted = PercolatorEngine.RunFirstPassStreaming(
                 projections.PerFile.ConvertAll(kv => kv.Key), streamFileRows, loadFileFeatures,
                 config, featureInfos, ctx, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
-                @"First-pass", captureContributions, captureModel, tryStreamCompletedScores,
-                pretrainedModel, flushFileRunScope, ctx.RunPlan.FirstPassFdrLanes, tryLoadFeatureSums,
-                ownModels ? null : BuildProteinBestRequest(config, fullLibrary, PersistProteinBest), ownModels);
+                @"First-pass", captureContributions, null, tryStreamCompletedScores,
+                null, flushFileRunScope, ctx.RunPlan.FirstPassFdrLanes, tryLoadFeatureSums,
+                null, true);
             // How many files' 1st-pass sidecars are on disk after the score pass - written by it
             // or adopted from an earlier run. flushFileRunScope is the only writer of these files
             // on this path, so a shortfall here is a file the compaction gate will fail to read.
@@ -2169,103 +2073,7 @@ namespace pwiz.Osprey.Tasks
             // gate is the runs' own models and stubs (checked with each run's scores, by
             // PerFileScoringTask.OwnScoresCurrent) and the experiment sidecar above.
             modelSidecar = null;
-            if (PerFileScoringTask.TrainsOwnFirstPassModel)
-                return refusals;
-            modelSidecar = FirstPassModelIO.LoadForAnalysis(config);
-            if (modelSidecar == null)
-            {
-                refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file_was_found_at__0_,
-                    FirstPassModelIO.PathFor(config)));
-            }
-            else if (modelSidecar.Model == null)
-            {
-                refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___1st_pass_model_json__holds_no_model,
-                    FirstPassModelIO.EXT_MODEL));
-            }
-            else if (modelSidecar.Stamp == null || !modelSidecar.Stamp.IsCurrent(Name, validityKey))
-            {
-                // A model left by an earlier run under another key - this run's own model write
-                // failed - must not be published as this run's first pass.
-                refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___0___is_not_up_to_date,
-                    FirstPassModelIO.EXT_MODEL));
-            }
-            else
-            {
-                bool runUsesTrees = config.FdrClassifier == FdrClassifier.Gbdt;
-                if (modelSidecar.Model.IsGradientBoostedTrees != runUsesTrees)
-                {
-                    refusals.Add(string.Format(@".1st-pass.model.json holds {0} and this run uses {1}",
-                        PercolatorResults.ClassifierName(modelSidecar.Model.IsGradientBoostedTrees),
-                        PercolatorResults.ClassifierName(runUsesTrees)));
-                }
-                if (config.Pass2ProteinCompact && modelSidecar.StratumBaseIds == null)
-                {
-                    refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides_was_found_at__0_,
-                        FirstPassModelIO.StratumPathFor(config)));
-                }
-            }
             return refusals;
-        }
-
-        /// <summary>
-        /// The persisted 1st-pass model, but only when a marker attests it was written by this
-        /// build for THIS cohort and arm - otherwise null, and the caller trains as it always
-        /// did.
-        ///
-        /// <para>Marker-checked here, where <see cref="CompactionGateRefusals"/> checks the stamp
-        /// after loading. That gate is only reached once every per-file sidecar has already
-        /// matched this validity key, so the cohort is established by the time it runs. A model
-        /// reused on a PARTIAL resume has no such corroboration: nothing else in the directory
-        /// would contradict a model trained on a different cohort, and adopting one would
-        /// silently score the run with the wrong discriminant.</para>
-        /// </summary>
-        private FirstPassModelIO.Sidecar LoadCurrentModelSidecar(OspreyConfig config, string validityKey)
-        {
-            string path = FirstPassModelIO.PathFor(config);
-            if (path == null || !PerFileResumeDriver.IsCurrent(path, Name, validityKey))
-                return null;
-            var sidecar = FirstPassModelIO.Load(path, PinFeatureMask.For(config));
-            return sidecar?.Model != null ? sidecar : null;
-        }
-
-        /// <summary>
-        /// The first pass's hand-off of the model its scorer settled on: publish it for a frozen
-        /// second pass, and persist it unless it is the model this run adopted off disk.
-        ///
-        /// <para>Persisted whenever it was TRAINED, whatever is on disk already. A current model
-        /// file does not mean the run used it: the scorer adopts one only when some file's scores
-        /// are resumable, and retrains otherwise. Stage 6 and a distributed SecondPassFDR read
-        /// the analysis's model file (<see cref="FirstPassModelIO.LoadForAnalysis"/>),
-        /// so skipping the write left them scoring with the stale model - of the other classifier,
-        /// after a switch of <c>OSPREY_FDR_MODEL</c> - while the first-pass scores came from the new
-        /// one. Only the adopted model is not written: it IS that file, already stamped, and
-        /// rewriting it would replace an artifact a marker attests with a copy the marker no
-        /// longer describes.</para>
-        /// </summary>
-        /// <param name="results">The model the scorer trained or adopted.</param>
-        /// <param name="reloadedModel">The current model sidecar found on disk, or null.</param>
-        /// <param name="adoptedModel">The model the scorer was handed instead of training, or null
-        ///   when it trains.</param>
-        /// <param name="validityKey">The key the written model is stamped with.</param>
-        /// <param name="ctx">The pipeline context the model is published on.</param>
-        internal void PublishFirstPassModel(PercolatorResults results,
-            FirstPassModelIO.Sidecar reloadedModel, PercolatorResults adoptedModel,
-            string validityKey, PipelineContext ctx)
-        {
-            bool adopted = adoptedModel != null && ReferenceEquals(results, adoptedModel);
-            if ((ctx.Config.Pass2TransferQ || ctx.Config.Pass2ProteinCompact) &&
-                !ctx.TryGet<FirstPassPercolatorModel>(out _))
-            {
-                ctx.Publish(new FirstPassPercolatorModel
-                {
-                    Results = results,
-                    // The stamp this pass writes the model and the protein-best columns with, or
-                    // for an adopted model the one recorded beside it.
-                    Stamp = adopted ? reloadedModel?.Stamp : OspreyVersion.Stamp(Name, validityKey)
-                });
-            }
-            if (!adopted)
-                PersistFirstPassModel(results, validityKey, ctx);
         }
 
         /// <summary>

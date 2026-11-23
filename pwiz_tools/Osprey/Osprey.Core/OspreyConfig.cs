@@ -326,6 +326,15 @@ namespace pwiz.Osprey.Core
         public bool ModelDiagnostics { get; set; }
 
         /// <summary>
+        /// --keep-scores-parquet: also write each run's features - every scalar and feature
+        /// column - beside its stub scores parquet, <c>&lt;stem&gt;.features.parquet</c> from the
+        /// first pass and <c>&lt;stem&gt;.features-reconciled.parquet</c> from the second, so a
+        /// later run can train the run's model again without scoring it again. Not part of any
+        /// identity hash: it adds files and changes none.
+        /// </summary>
+        public bool KeepScoresParquet { get; set; }
+
+        /// <summary>
         /// Leave the entrapment peptides, and the protein groups made only of entrapment
         /// proteins, out of the result (<c>--strip-entrapment</c>): the .blib and the reports.
         /// They still run through every stage as targets and are read by the FDRBench input and

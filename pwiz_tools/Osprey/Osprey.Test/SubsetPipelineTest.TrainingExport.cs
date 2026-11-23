@@ -153,11 +153,12 @@ namespace pwiz.Osprey.Test
             foreach (bool withDataFile in new[] { true, false })
             {
                 string nodeDir = CreateDir(withDataFile ? @"rescore-node" : @"rescore-node-no-data");
-                ShipFiles(straightName, nodeDir, run + SPECTRA_CACHE_EXTENSION, run + @".scores.parquet",
-                    run + @".calibration.json", run + @".1st-pass.fdr_scores.bin",
-                    @"output.1st-pass.retained_base_ids.bin", @"output.1st-pass.model.json",
-                    @"output.1st-pass.consensus.json");
-                ShipFilesIfPresent(straightName, nodeDir, @"output.1st-pass.stratum.json",
+                // The run's stub scores parquet and own first-pass model, and the features
+                // checkpoint the export reads, which the export keeps.
+                ShipFiles(straightName, nodeDir, run + SPECTRA_CACHE_EXTENSION, run + ParquetScoreCache.EXT_SCORES,
+                    run + ParquetScoreCache.EXT_FEATURES, run + @".calibration.json", run + FirstPassModelIO.EXT_MODEL,
+                    @"output.1st-pass.retained_base_ids.bin", @"output.1st-pass.consensus.json");
+                ShipFilesIfPresent(straightName, nodeDir,
                     @"output.1st-pass.fdr_experiment.bin", @"output.1st-pass.model-diagnostics.json");
                 if (withDataFile)
                     File.Copy(Path.Combine(_dataDir, run + MZML_EXTENSION), Path.Combine(nodeDir, run + MZML_EXTENSION));
@@ -207,67 +208,51 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// A one-run analysis, which re-scores nothing in Stage 6 - no multi-charge consensus,
-        /// no cross-run reconciliation, no gap-fill - under both pass-2 modes (#4729, #4665).
+        /// no cross-run reconciliation, no gap-fill (#4729, #4665).
         ///
         /// <para>Such an analysis used to fail in SecondPassFDR ("No second-pass experiment-scope
         /// records were published"): the run never reached the per-run second pass, because the
         /// worker answered only the runs it re-scored, and Stage 7 published nothing when nothing
         /// was re-scored anywhere. Now the worker answers every run, so the run's second pass
-        /// comes from PerFileRescoring like any other: the analysis finishes, the run's
-        /// .2nd-pass.fdr_scores.bin names PerFileRescoring as its producer, and the export, which
-        /// selects on the first-pass run q, is written beside it. Two more invocations of the same
-        /// command skip every task and leave the export as it is.</para>
+        /// comes from PerFileRescoring like any other: the analysis finishes, the run's reconciled
+        /// stub, which carries its second-pass answer, names PerFileRescoring as its producer, and
+        /// the export, which selects on the first-pass run q, is written beside it. Two more
+        /// invocations of the same command skip every task and leave the export as it is.</para>
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetTrainingExportSingleRun()
         {
             string run = RUN_NAMES[0];
             var inputs = DataInputs().Take(1).ToArray();
-            foreach (string mode in new[] { OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT, OspreyEnvironment.PASS2_QVALUE_TRANSFER })
+            string workDir = CreateDir(@"export-single-run");
+            RunSingleRunExport(workDir, inputs);
+            // The no-work path, asserted rather than assumed: a run Stage 6 re-scored would
+            // reach the worker the ordinary way and test nothing new.
+            string reconciled = Path.Combine(workDir, run + ParquetScoreCache.EXT_SCORES_RECONCILED);
+            Assert.AreEqual(@"0", ParquetScoreCache.LoadFooterMetadata(reconciled)[@"osprey.rescored"],
+                @"Stage 6 re-scored this run, so the no-work path was not taken");
+            Assert.IsTrue(ParquetScoreCache.HasScores(reconciled), @"the run's reconciled stub carries no second-pass answer");
+            Assert.AreEqual(PerFileRescoreTask.TASK_NAME, ParquetScoreCache.ReadStamp(reconciled)?.Task,
+                @"the run's second-pass answer was not written by re-scoring");
+            Assert.IsTrue(BlibComparer.CountRows(Path.Combine(workDir, BLIB_FILE), @"RefSpectra") > 0,
+                @"the one-run analysis reported no precursors");
+            var hashes = AssertExports(workDir, new[] { run }, RUN_Q_PASS_FIRST);
+
+            for (int invocation = 2; invocation <= 3; invocation++)
             {
-                string workDir = CreateDir(@"export-single-run-" + mode);
-                RunSingleRunExport(workDir, inputs, mode);
-                // The no-work path, asserted rather than assumed: a run Stage 6 re-scored would
-                // reach the worker the ordinary way and test nothing new.
-                Assert.AreEqual(@"0", ParquetScoreCache.LoadFooterMetadata(Path.Combine(workDir,
-                        run + ParquetScoreCache.EXT_SCORES_RECONCILED))[@"osprey.rescored"],
-                    mode + @": Stage 6 re-scored this run, so the no-work path was not taken");
-                string pass2Path = Path.Combine(workDir,
-                    PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, FdrScoresSidecar.EXT));
-                Assert.AreEqual(PerFileRescoreTask.TASK_NAME,
-                    FdrScoresSidecar.ReadStamp(pass2Path, FdrScoresSidecar.Pass.SecondPass)?.Task,
-                    mode + @": the run's second-pass sidecar was not written by re-scoring");
-                Assert.IsTrue(BlibComparer.CountRows(Path.Combine(workDir, BLIB_FILE), @"RefSpectra") > 0,
-                    mode + @": the one-run analysis reported no precursors");
-                var hashes = AssertExports(workDir, new[] { run }, RUN_Q_PASS_FIRST);
-
-                for (int invocation = 2; invocation <= 3; invocation++)
-                {
-                    string log = RunSingleRunExport(workDir, inputs, mode);
-                    Assert.IsFalse(HasLine(log, ExportLine(run)),
-                        string.Format(@"{0}: invocation {1} of the same command wrote the export again", mode, invocation) +
-                        Environment.NewLine + log);
-                    // The run with no Stage 6 work has every PerFileRescoring output, so the task
-                    // counts as finished; it once re-ran on every invocation (#4732).
-                    AssertTasks(log, ALL_TASKS, Array.Empty<string>());
-                    AssertExportsEqual(hashes, workDir);
-                }
+                string log = RunSingleRunExport(workDir, inputs);
+                Assert.IsFalse(HasLine(log, ExportLine(run)),
+                    string.Format(@"invocation {0} of the same command wrote the export again", invocation) +
+                    Environment.NewLine + log);
+                // The run with no Stage 6 work has every PerFileRescoring output, so the task
+                // counts as finished; it once re-ran on every invocation (#4732).
+                AssertTasks(log, ALL_TASKS, Array.Empty<string>());
+                AssertExportsEqual(hashes, workDir);
             }
-
-            // The protein-compact directory re-run under the other pass-2 mode, a parameter both
-            // second-pass halves are keyed on, must report what a clean run of that mode does: a
-            // per-run answer left by the first mode must be replaced, never folded (#4729).
-            string rerunDir = Path.Combine(_testDir, @"export-single-run-" + OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT);
-            RunSingleRunExport(rerunDir, inputs, OspreyEnvironment.PASS2_QVALUE_TRANSFER);
-            AssertBlibsEqual(Path.Combine(_testDir, @"export-single-run-" + OspreyEnvironment.PASS2_QVALUE_TRANSFER, BLIB_FILE),
-                Path.Combine(rerunDir, BLIB_FILE));
         }
 
-        /// <summary>
-        /// The export command for a one-run analysis under <paramref name="pass2Mode"/>, which
-        /// must finish.
-        /// </summary>
-        private string RunSingleRunExport(string workDir, IEnumerable<string> inputs, string pass2Mode)
+        /// <summary>The export command for a one-run analysis, which must finish.</summary>
+        private string RunSingleRunExport(string workDir, IEnumerable<string> inputs)
         {
             var args = InputArgs(inputs).Concat(new[]
             {
@@ -275,15 +260,13 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(workDir, BLIB_FILE),
                 OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, workDir
             }).Concat(CommonArgs()).Concat(ExportArgs()).ToArray();
-            var variables = Verifier(false).ToDictionary(kv => kv.Key, kv => kv.Value);
-            variables[@"OSPREY_PASS2_QVALUE"] = pass2Mode;
             string output;
             int exitCode;
-            using (EnvVar.OverrideVariables(variables))
+            using (EnvVar.OverrideVariables(Verifier(false)))
             {
                 exitCode = InProcessOsprey.Run(args, out output);
             }
-            Assert.AreEqual(Program.EXIT_CODE_SUCCESS, exitCode, pass2Mode + Environment.NewLine + output);
+            Assert.AreEqual(Program.EXIT_CODE_SUCCESS, exitCode, output);
             return output;
         }
 
@@ -338,17 +321,18 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// Whether each run's scores and reconciled parquets carry the reference XIC: only when
-        /// the export was requested.
+        /// Whether each run's features parquets, first and second pass, carry the reference XIC:
+        /// only when the export was requested, which is also what keeps them beside the stubs.
         /// </summary>
         private static void AssertReferenceXicWritten(string workDir, IEnumerable<string> runs, bool expected)
         {
             foreach (string run in runs)
             {
-                foreach (string ext in new[] { ParquetScoreCache.EXT_SCORES, ParquetScoreCache.EXT_SCORES_RECONCILED })
+                foreach (string ext in new[] { ParquetScoreCache.EXT_FEATURES, ParquetScoreCache.EXT_FEATURES_RECONCILED })
                 {
                     string path = Path.Combine(workDir, run + ext);
-                    Assert.AreEqual(expected, ParquetScoreCache.HasColumn(path, @"reference_xic_rts"),
+                    // Without the export the features parquets are not kept at all.
+                    Assert.AreEqual(expected, File.Exists(path) && ParquetScoreCache.HasColumn(path, @"reference_xic_rts"),
                         path + (expected ? @" has no reference XIC" : @" has a reference XIC"));
                 }
             }
@@ -380,17 +364,21 @@ namespace pwiz.Osprey.Test
         /// Each run's export: rows written and the footer's count of them, every row a target at
         /// run q within the threshold, the run q from <paramref name="runQPass"/>, the scored median
         /// polish cosine reproduced for every fitted row, and the data file read for the source
-        /// footer. Returns each run's file hash.
+        /// footer. Returns each run's file hash. Some run must export a precursor, not every run:
+        /// each run's own first-pass model on a seven-minute window of the Stellar subset can pass
+        /// none at run q 1% (run _22: 64 targets rank above its first decoy, under the 100 a 1%
+        /// run q needs).
         /// </summary>
         private static Dictionary<string, byte[]> AssertExports(string workDir, IEnumerable<string> runs, string runQPass,
             double maxQ = EXPORT_MAX_Q)
         {
             var hashes = new Dictionary<string, byte[]>();
+            int exported = 0;
             foreach (string run in runs)
             {
                 string path = ExportPath(workDir, run);
                 var records = TrainingExportParquet.Read(path, out var footer);
-                Assert.IsTrue(records.Count > 0, run + @" exported no precursors");
+                exported += records.Count;
                 Assert.AreEqual(records.Count.ToString(CultureInfo.InvariantCulture), footer[@"osprey.training_export.rows"]);
                 Assert.AreEqual(run, footer[@"osprey.file_name"]);
                 Assert.AreEqual(runQPass, footer[TrainingExportKeys.RUN_Q_PASS], run);
@@ -404,6 +392,7 @@ namespace pwiz.Osprey.Test
                 AssertMassAnalyzers(footer, run);
                 hashes[run] = HashArtifactContent(path);
             }
+            Assert.AreNotEqual(0, exported, @"no run exported a precursor");
             return hashes;
         }
 

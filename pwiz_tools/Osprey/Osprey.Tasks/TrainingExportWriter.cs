@@ -380,8 +380,9 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// The identities of the per-run artifacts one run's export reads - its reconciled
-        /// parquet, the q-value sidecar it selects on, calibration and spectra cache (name, size,
+        /// The identities of the per-run artifacts one run's export reads - its second-pass
+        /// features, the run q-values it selects on (the run's stub scores parquet, or a sidecar
+        /// an earlier build wrote), calibration and spectra cache (name, size,
         /// mtime; <c>absent</c> for a missing file) - so a rewritten input redoes that run's
         /// export and no other. Only the sidecar the export reads: for a run with no Stage 6
         /// work, or when PerFileRescoring had no readable saved first-pass model, SecondPassFDR
@@ -392,23 +393,21 @@ namespace pwiz.Osprey.Tasks
         {
             string runQPath = RunQPath(input, out var pass);
             return @";recon=" + IdentityOrAbsent(ReconciledRowsPath(input))
-                + @";runq=" + (pass == FdrScoresSidecar.Pass.SecondPass ? @"2:" : @"1:") + IdentityOrAbsent(runQPath)
+                + @";runq=" + (pass == FdrScoresSidecar.Pass.SecondPass ? @"2:" : @"1:")
+                + IdentityOrAbsent(FdrScoresSidecar.ReadablePath(runQPath, pass))
                 + @";calib=" + IdentityOrAbsent(CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input)))
                 + @";spectra=" + IdentityOrAbsent(SpectraCache.GetCachePath(input))
                 + DemuxSpectraIdentity(input);
         }
 
         /// <summary>
-        /// The reconciled file one run's export reads its rows from: the reconciled scores parquet,
-        /// or under per-run first-pass models (<c>OSPREY_PER_FILE_FDR=file</c>), whose reconciled
-        /// scores parquet is a stub with no features, the second-pass features file beside it,
-        /// which the export makes PerFileRescoring write.
+        /// The reconciled file one run's export reads its rows from: the second-pass features
+        /// parquet beside the run's reconciled stub, which has no features, and which the export
+        /// makes PerFileRescoring write.
         /// </summary>
         private static string ReconciledRowsPath(string input)
         {
-            return PerFileScoringTask.TrainsOwnFirstPassModel
-                ? ParquetScoreCache.GetReconciledFeaturesPath(input)
-                : ParquetScoreCache.GetReconciledScoresPath(input);
+            return ParquetScoreCache.GetReconciledFeaturesPath(input);
         }
 
         /// <summary>

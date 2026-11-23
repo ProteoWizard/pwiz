@@ -80,8 +80,6 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static LibraryIdentity StubIdentityFor(PipelineContext ctx)
         {
-            if (!PerFileScoringTask.TrainsOwnFirstPassModel)
-                return null;
             return STUB_IDENTITIES.GetValue(ctx.Get<FullLibrary>().Value, library => new LibraryIdentity(library));
         }
 

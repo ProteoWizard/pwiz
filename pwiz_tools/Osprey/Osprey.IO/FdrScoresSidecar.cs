@@ -1116,6 +1116,16 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// The file a reader of <paramref name="path"/>'s records of <paramref name="expectedPass"/>
+        /// reads them from: the stub layout parquet that holds them in its place, when there is one,
+        /// else <paramref name="path"/> itself. What a key that follows the records names.
+        /// </summary>
+        public static string ReadablePath(string path, Pass expectedPass)
+        {
+            return StubScoresPathFor(path, expectedPass) ?? path;
+        }
+
+        /// <summary>
         /// The stub layout parquet that holds a run's records of <paramref name="expectedPass"/>
         /// in place of <paramref name="path"/>, or null: for a first-pass path with no file, or any
         /// second-pass path, beside a parquet that carries scores - the run's <c>.scores.parquet</c>
@@ -1125,13 +1135,10 @@ namespace pwiz.Osprey.IO
         /// </summary>
         private static string StubScoresPathFor(string path, Pass expectedPass)
         {
-            // Only a run under OSPREY_PER_FILE_FDR=file writes scores into its stubs; any other
-            // run that finds a stub left by one reads the missing file as missing.
-            // The mode writes no second-pass sidecar, so one on disk is an earlier run's and the
-            // reconciled stub is preferred to it; the first pass removes its own (PerFileScoring).
+            // No second-pass sidecar is written any more, so one on disk is an earlier build's and
+            // the reconciled stub is preferred to it; the first pass removes its own (PerFileScoring).
             string ext = expectedPass == Pass.FirstPass ? EXT_FIRST_PASS : EXT_SECOND_PASS;
             if (path == null || (expectedPass == Pass.FirstPass && File.Exists(path)) ||
-                !string.Equals(OspreyEnvironment.PerFileFdr, OspreyEnvironment.PER_FILE_FDR_FILE, StringComparison.Ordinal) ||
                 !path.EndsWith(ext, StringComparison.Ordinal))
             {
                 return null;

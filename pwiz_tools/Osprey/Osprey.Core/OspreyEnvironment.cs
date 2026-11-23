@@ -1450,74 +1450,26 @@ namespace pwiz.Osprey.Core
         /// in-sample-vs-held-out A/B runs without a code revert. Tree-only.</summary>
         public static readonly int GbtInnerFolds = ParseIntOrNull(ENV_GBT_INNER_FOLDS) ?? 5;
 
-        /// <summary>The <see cref="PerFileFdr"/> value that trains one first-pass model per file.</summary>
-        public const string PER_FILE_FDR_MODEL = @"model";
-
-        /// <summary>The <see cref="PerFileFdr"/> value that stacks a global model on per-file scores.</summary>
-        public const string PER_FILE_FDR_STACKED = @"stacked";
-
-        /// <summary>The <see cref="PerFileFdr"/> value that trains each file's model with its own
-        /// protein-best column, from its own round-1 model, so no input crosses files.</summary>
-        public const string PER_FILE_FDR_FILE = @"file";
-
-        private static readonly EnvVar ENV_PER_FILE_FDR = new EnvVar(@"OSPREY_PER_FILE_FDR", EnvVarGroup.behavior,
-            @"Experiment, first pass only: 'model' scores each file with a model trained on that file's own rows " +
-            @"(out of fold, calibrated per file), after the global training supplies the protein-best column; " +
-            @"'stacked' trains the per-file models first, without the protein-best column, and trains the global " +
-            @"model on their calibrated scores alone. Changes the validity key. The saved model stays the " +
-            @"global one, so only the first-pass results are meaningful. 'file' is 'model' with each file's " +
-            @"protein-best column computed from that file's own round-1 model (two rounds always).")
-            { Values = new[] { PER_FILE_FDR_MODEL, PER_FILE_FDR_STACKED, PER_FILE_FDR_FILE } };
-
-        /// <summary>OSPREY_PER_FILE_FDR: the per-file first-pass model study (DIA-NN trains one
-        /// model per run). Null when unset, otherwise <see cref="PER_FILE_FDR_MODEL"/> or
-        /// <see cref="PER_FILE_FDR_STACKED"/>; any other value is refused at startup by the
-        /// catalog's listed values. Keyed into the first-pass validity key
-        /// (<c>PercolatorEngine.GbdtValidityKeySuffix</c>) so a rerun recomputes rather than adopt
-        /// another arm's sidecars.</summary>
-        public static readonly string PerFileFdr =
-            string.IsNullOrWhiteSpace(ENV_PER_FILE_FDR.Value) ? null : ENV_PER_FILE_FDR.Value.Trim().ToLowerInvariant();
-
-        private static readonly EnvVar ENV_PER_FILE_FDR_ROUNDS = new EnvVar(@"OSPREY_PER_FILE_FDR_ROUNDS", EnvVarGroup.behavior,
-            @"Experiment, with OSPREY_PER_FILE_FDR: 2 trains each per-file model in two rounds, as the global " +
-            @"model is trained; 1 (the default) in one. Changes the validity key.")
-            { Values = new[] { @"1", @"2" } };
-
-        /// <summary>OSPREY_PER_FILE_FDR_ROUNDS=2: each per-file model trains in two rounds, round 2
-        /// on the peptide groups round 1 scores best, as the global first-pass model does.</summary>
-        public static readonly bool PerFileFdrTwoRound = ParseIntOrNull(ENV_PER_FILE_FDR_ROUNDS) == 2;
-
-        private static readonly EnvVar ENV_PER_FILE_FDR_TRAIN_SIZE = new EnvVar(@"OSPREY_PER_FILE_FDR_TRAIN_SIZE", EnvVarGroup.behavior,
-            @"Experiment, with OSPREY_PER_FILE_FDR: the rows each per-file model's round 1 trains on; round 2 " +
-            @"takes two thirds of it, at most the global round-2 size, unless OSPREY_PER_FILE_FDR_ROUND2_SIZE " +
+        private static readonly EnvVar ENV_FIRST_PASS_TRAIN_SIZE = new EnvVar(@"OSPREY_FIRST_PASS_TRAIN_SIZE", EnvVarGroup.behavior,
+            @"The rows each run's own first-pass model trains its round 1 on; round 2 " +
+            @"takes two thirds of it, at most the global round-2 size, unless OSPREY_FIRST_PASS_ROUND2_SIZE " +
             @"is set. Changes the validity key.")
             { ValueExample = @"<N>", DefaultValue = @"300000" };
 
-        /// <summary>OSPREY_PER_FILE_FDR_TRAIN_SIZE: each per-file model's round-1 training rows (the
-        /// study's cost lever), or null for the global <c>MaxTrainSize</c>.</summary>
-        public static readonly int? PerFileFdrTrainSize =
-            ParseIntOrNull(ENV_PER_FILE_FDR_TRAIN_SIZE) is { } size && size > 0 ? size : null;
+        /// <summary>OSPREY_FIRST_PASS_TRAIN_SIZE: each run's own model's round-1 training rows (a
+        /// cost lever), or null for the default <c>MaxTrainSize</c>.</summary>
+        public static readonly int? FirstPassTrainSize =
+            ParseIntOrNull(ENV_FIRST_PASS_TRAIN_SIZE) is { } size && size > 0 ? size : null;
 
-        private static readonly EnvVar ENV_PER_FILE_FDR_ROUND2_SIZE = new EnvVar(@"OSPREY_PER_FILE_FDR_ROUND2_SIZE", EnvVarGroup.behavior,
-            @"Experiment, with OSPREY_PER_FILE_FDR: the rows each per-file model's round 2 trains on, in place " +
-            @"of the size OSPREY_PER_FILE_FDR_TRAIN_SIZE implies. Ignored when the per-file model trains one " +
-            @"round. Changes the validity key.")
-            { ValueExample = @"<N>", DefaultValue = @"the global round-2 size, or 2/3 of OSPREY_PER_FILE_FDR_TRAIN_SIZE" };
+        private static readonly EnvVar ENV_FIRST_PASS_ROUND2_SIZE = new EnvVar(@"OSPREY_FIRST_PASS_ROUND2_SIZE", EnvVarGroup.behavior,
+            @"The rows each run's own first-pass model trains its round 2 on, in place " +
+            @"of the size OSPREY_FIRST_PASS_TRAIN_SIZE implies. Changes the validity key.")
+            { ValueExample = @"<N>", DefaultValue = @"the global round-2 size, or 2/3 of OSPREY_FIRST_PASS_TRAIN_SIZE" };
 
-        /// <summary>OSPREY_PER_FILE_FDR_ROUND2_SIZE: each per-file model's round-2 training rows, or
-        /// null for the size <see cref="PerFileFdrTrainSize"/> implies.</summary>
-        public static readonly int? PerFileFdrRound2Size =
-            ParseIntOrNull(ENV_PER_FILE_FDR_ROUND2_SIZE) is { } size2 && size2 > 0 ? size2 : null;
-
-        private static readonly EnvVar ENV_PER_FILE_FDR_KEEP_PARQUET = new EnvVar(@"OSPREY_PER_FILE_FDR_KEEP_PARQUET", EnvVarGroup.behavior,
-            @"Experiment, with OSPREY_PER_FILE_FDR=file: 1 writes each run's full .scores.parquet, with every " +
-            @"feature column, so a later run can train its model again without scoring the run again; unset, " +
-            @"the run writes a stub parquet of the scalar columns only.")
-            { Values = new[] { @"1" } };
-
-        /// <summary>OSPREY_PER_FILE_FDR_KEEP_PARQUET=1: under <c>OSPREY_PER_FILE_FDR=file</c>, write the
-        /// full scores parquet rather than the stub. The flag this becomes is <c>--keep-scores-parquet</c>.</summary>
-        public static readonly bool PerFileFdrKeepParquet = ParseIntOrNull(ENV_PER_FILE_FDR_KEEP_PARQUET) == 1;
+        /// <summary>OSPREY_FIRST_PASS_ROUND2_SIZE: each run's own model's round-2 training rows, or
+        /// null for the size <see cref="FirstPassTrainSize"/> implies.</summary>
+        public static readonly int? FirstPassRound2Size =
+            ParseIntOrNull(ENV_FIRST_PASS_ROUND2_SIZE) is { } size2 && size2 > 0 ? size2 : null;
 
         private static readonly EnvVar ENV_GBT_PATIENCE = new EnvVar(@"OSPREY_GBT_PATIENCE", EnvVarGroup.behavior,
             @"Gradient-boosted trees: semi-supervised iterations without a held-out improvement before a fold " +

@@ -1351,7 +1351,10 @@
   <data name="PerFileRescoreTask_RequireFeaturesCheckpoints_Saving_second_pass_features_needs_each_run_s_first_pass_features__but__0__is_missing__Run__1__with_feature_writing_on___2___" xml:space="preserve">
     <value>Saving second-pass features needs each run's first-pass features, but {0} is missing. Run {1} with feature writing on ({2}).</value>
   </data>
-  <data name="PerFileRescoreTask_CreatePass2Worker_Protein_compact_second_pass_FDR_needs_one_first_pass_model_for_the_analysis__but_each_run_trained_its_own___0____Unset__1__" xml:space="preserve">
-    <value>Protein-compact second-pass FDR needs one first-pass model for the analysis, but each run trained its own ({0}). Unset {1}.</value>
+  <data name="PerFileRescoreTask_OwnModelsProteinCompactMessage_Protein_compact_second_pass_FDR_needs_one_first_pass_model_for_the_analysis__but_each_run_trains_its_own__Unset__0__" xml:space="preserve">
+    <value>Protein-compact second-pass FDR needs one first-pass model for the analysis, but each run trains its own. Unset {0}.</value>
+  </data>
+  <data name="FirstPassFdrTask_RunFirstPassProjection__0__of__1__runs_have_no_first_pass_scores_from_their_own_model___2____Run__3__with_the_same_settings_first_" xml:space="preserve">
+    <value>{0} of {1} runs have no first-pass scores from their own model ({2}). Run {3} with the same settings first.</value>
   </data>
 </root>
