@@ -150,8 +150,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     // see CancelScoreTypeDetection.
                     CancelScoreTypeDetection();
                     // Detect every file still without a score type, not only the ones just added: the
-                    // cancel above discards any result for files added earlier.
-                    var detectSet = Files.Where(f => f.ScoreType == null).Select(f => f.FilePath).ToHashSet();
+                    // cancel above discards any result for files added earlier. Files that already failed
+                    // detection are left out, since GridUpdateScoreInfo never clears their error and one
+                    // failing file could fail the whole batch.
+                    var detectSet = Files.Where(f => f.ScoreType == null && !f.HasScoreTypeError)
+                        .Select(f => f.FilePath).ToHashSet();
                     _scoreTypesCts = new CancellationTokenSource();
                     var token = _scoreTypesCts.Token;
                     _scoreTypesThread = new Thread(() =>
