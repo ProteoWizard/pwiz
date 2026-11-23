@@ -212,6 +212,10 @@ namespace pwiz.Osprey.Tasks
             foreach (var input in ctx.Config.InputFiles)
             {
                 yield return ParquetScoreCache.GetScoresPath(input);
+                // The run's own model: its stamp, read with the stub's, is how the reduce knows the
+                // run's first pass is complete (PerFileScoringTask.OwnScoresCurrent), so a node not
+                // given it refuses every run.
+                yield return FirstPassModelIO.RunModelPathFor(input);
                 yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
             }
         }
