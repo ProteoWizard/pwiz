@@ -180,6 +180,8 @@ namespace pwiz.Osprey.IO
         public const string EXT = @".fdr_scores.bin";
         /// <summary>File-name ending of the first-pass FDR scores file: <c>.1st-pass.fdr_scores.bin</c>.</summary>
         public const string EXT_FIRST_PASS = @"." + LABEL_FIRST_PASS + EXT;
+        /// <summary>File-name ending of the second-pass FDR scores file: <c>.2nd-pass.fdr_scores.bin</c>.</summary>
+        public const string EXT_SECOND_PASS = @"." + LABEL_SECOND_PASS + EXT;
         /// <summary>File pattern of every first-pass artifact, for a message that tells the user to delete them.</summary>
         public const string FIRST_PASS_FILE_PATTERN = @"*." + LABEL_FIRST_PASS + @".*";
 
@@ -228,6 +230,10 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static ArtifactStamp ReadStamp(string path, Pass expectedPass)
         {
+            // A run whose second-pass records live in its reconciled stub: that file's stamp.
+            string stubPath = expectedPass == Pass.SecondPass ? StubScoresPathFor(path, expectedPass) : null;
+            if (stubPath != null)
+                return ParquetScoreCache.ReadStamp(stubPath);
             return IsCurrentFormat(path, expectedPass) ? BinarySidecarStamp.TryRead(path, RecordLength) : null;
         }
 
@@ -260,6 +266,9 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static bool IsCurrentFormat(string path, Pass expectedPass)
         {
+            // A run whose second-pass records live in its reconciled stub reads them from there.
+            if (expectedPass == Pass.SecondPass && StubScoresPathFor(path, expectedPass) != null)
+                return true;
             try
             {
                 var info = new FileInfo(path);
@@ -1042,7 +1051,7 @@ namespace pwiz.Osprey.IO
             if (onRecord == null) throw new ArgumentNullException(nameof(onRecord));
             string stubPath = StubScoresPathFor(path, expectedPass);
             if (stubPath != null)
-                return ParquetScoreCache.ReadFirstPassScoreRecords(stubPath, onRecord);
+                return ParquetScoreCache.ReadScoreRecords(stubPath, onRecord);
 
             try
             {
@@ -1107,23 +1116,29 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// The stub scores parquet that holds a run's first-pass records in place of
-        /// <paramref name="path"/>, or null: only for a first-pass path with no file, beside a
-        /// parquet that carries scores. Every reader here asks it first, so each one serves a
-        /// run that writes one file as it serves a run that writes two.
+        /// The stub layout parquet that holds a run's records of <paramref name="expectedPass"/>
+        /// in place of <paramref name="path"/>, or null: for a first-pass path with no file, or any
+        /// second-pass path, beside a parquet that carries scores - the run's <c>.scores.parquet</c>
+        /// for the first pass, its
+        /// <c>.scores-reconciled.parquet</c> for the second. Every reader here asks it first, so
+        /// each one serves a run that writes one file per pass as it serves a run that writes two.
         /// </summary>
         private static string StubScoresPathFor(string path, Pass expectedPass)
         {
-            // Only a run under OSPREY_PER_FILE_FDR=file writes scores into its stub; any other
+            // Only a run under OSPREY_PER_FILE_FDR=file writes scores into its stubs; any other
             // run that finds a stub left by one reads the missing file as missing.
-            if (path == null || expectedPass != Pass.FirstPass || File.Exists(path) ||
+            // The mode writes no second-pass sidecar, so one on disk is an earlier run's and the
+            // reconciled stub is preferred to it; the first pass removes its own (PerFileScoring).
+            string ext = expectedPass == Pass.FirstPass ? EXT_FIRST_PASS : EXT_SECOND_PASS;
+            if (path == null || (expectedPass == Pass.FirstPass && File.Exists(path)) ||
                 !string.Equals(OspreyEnvironment.PerFileFdr, OspreyEnvironment.PER_FILE_FDR_FILE, StringComparison.Ordinal) ||
-                !path.EndsWith(EXT_FIRST_PASS, StringComparison.Ordinal))
+                !path.EndsWith(ext, StringComparison.Ordinal))
             {
                 return null;
             }
-            string scoresPath = path.Substring(0, path.Length - EXT_FIRST_PASS.Length) + ParquetScoreCache.EXT_SCORES;
-            return ParquetScoreCache.HasFirstPassScores(scoresPath) ? scoresPath : null;
+            string scoresPath = path.Substring(0, path.Length - ext.Length) +
+                                (expectedPass == Pass.FirstPass ? ParquetScoreCache.EXT_SCORES : ParquetScoreCache.EXT_SCORES_RECONCILED);
+            return ParquetScoreCache.HasScores(scoresPath) ? scoresPath : null;
         }
 
         /// <summary>
@@ -1138,7 +1153,7 @@ namespace pwiz.Osprey.IO
             var records = new List<FdrScoreRecord>();
             try
             {
-                if (!ParquetScoreCache.ReadFirstPassScoreRecords(stubPath, records.Add))
+                if (!ParquetScoreCache.ReadScoreRecords(stubPath, records.Add))
                     return false;
             }
             catch (Exception ex) when (!(ex is OutOfMemoryException))

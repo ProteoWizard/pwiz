@@ -427,9 +427,16 @@ run's scores where the full parquet used to go. The default run is unchanged.
 
 - **Scalars (10)**: `entry_id`, `is_decoy`, `charge`, `scan_number`, `apex_rt`, `start_rt`,
   `end_rt`, `bounds_area`, `bounds_snr`, and the one feature column `fragment_coelution_sum`.
-- **First-pass scores (3)**, last: `first_pass_score` (the run's calibrated out-of-fold
-  score: run precursor q 1% maps to 0, the median best decoy to -1), `run_precursor_q`,
-  `run_peptide_q` - the record a `.1st-pass.fdr_scores.bin` otherwise carries per run.
+- **Scores (3)**, then `protein_best`: `score` (the run's calibrated out-of-fold
+  first-pass score: run precursor q 1% maps to 0, the median best decoy to -1), `run_precursor_q`,
+  `run_peptide_q` - the record a `.1st-pass.fdr_scores.bin` otherwise carries per run - and,
+  under `--protein-boost best`, `protein_best`, the run's protein-best value of the row.
+- **`<stem>.scores-reconciled.parquet`** under the mode takes the same layout plus
+  `score_index`, holding the SECOND pass's values: each row's pass-2 `score` (the first-pass
+  score of an unmoved row, the run's frozen model's calibrated score of a moved one) and its
+  pass-2 run q-values - the record a `.2nd-pass.fdr_scores.bin` otherwise carries, which the
+  mode does not write. The column names are the same in both files; the file's pass says
+  which score it is.
 - **Absent**: every other feature column, and `sequence`, `modified_sequence`,
   `precursor_mz`, `protein_ids` and `file_name`. Readers take peptide, charge and decoy
   from the library by entry_id (`RequireLibraryForStub` refuses a read without one), and

@@ -936,7 +936,7 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
     <code>--task &lt;T&gt; --task-files</code> declares them, plus the
     analysis-wide files a task writes without declaring. Orange boxes and
     file names marked <em>planned</em> are this design's additions; dashed
-    orange ones are not built yet (pass 2 does not run under the design yet).
+    orange ones are not built yet.
     Optional products ride the task that already holds their inputs, never a
     stage of their own: <code>--model-diagnostics</code> adds
     <code>&lt;blib-stem&gt;.1st-pass/.2nd-pass.model-diagnostics.json</code> and the
@@ -1147,10 +1147,10 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
 <!-- ================================================================= -->
 <g transform="translate(0, 286)">
   <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
-  <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileScoring<tspan class="task-hdr-count">   &#183; out: 3 files/run, 4 with features saved<title>Per run: the stub .scores.parquet, .calibration.json and (planned) the run's own .1st-pass.model.json; .features.parquet with the features-saving flag. Plus caches outside the output directory: 1 .spectra.bin per run and, for a .tsv library, 1 derived .blib.</title></tspan></text>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileScoring<tspan class="task-hdr-count">   &#183; out: 3 files/run, 4 with features saved<title>Per run: the stub .scores.parquet, .calibration.json and the run's own .1st-pass.model.json; .features.parquet with the features-saving flag. Plus caches outside the output directory: 1 .spectra.bin per run and, for a .tsv library, 1 derived .blib.</title></tspan></text>
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">per-run fan-out &#183; trains the run's own model &#183; 1..N nodes</text>
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan>spectral library (.blib / DIA-NN TSV), DIA mzML / .raw file(s) via -i, or the run's <tspan class="sc-cache">.spectra.bin</tspan></text>
-  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan> (STUB), <tspan class="sc-run">&lt;stem&gt;.calibration.json</tspan>, <tspan class="sc-run">&lt;stem&gt;.1st-pass.model.json</tspan> <tspan class="pf-planned">(planned)</tspan></text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan> (STUB), <tspan class="sc-run">&lt;stem&gt;.calibration.json</tspan>, <tspan class="sc-run">&lt;stem&gt;.1st-pass.model.json</tspan></text>
   <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">opt&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.features.parquet</tspan>  (--keep-scores-parquet <tspan class="pf-planned">planned</tspan>; today OSPREY_PER_FILE_FDR_KEEP_PARQUET=1)</text>
   <text x="140" y="88" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-cache">&lt;stem&gt;.spectra.bin</tspan>, <tspan class="sc-cache">&lt;library-leaf&gt;.blib</tspan>  &#183;  caches, --work-dir</text>
   <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: each node needs only its own runs</text>
@@ -1330,12 +1330,12 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
   <rect class="pf-new" x="80" y="234" width="1040" height="62" rx="4"/>
   <text class="stage-title" x="600" y="254" text-anchor="middle">Write &lt;stem&gt;.scores.parquet as a STUB: scalar columns + the run's calibrated scores</text>
   <text class="stage-desc"  x="600" y="270" text-anchor="middle">entry_id, is_decoy, charge, scan_number, apex_rt, start_rt, end_rt, bounds_area, bounds_snr, fragment_coelution_sum</text>
-  <text class="stage-desc"  x="600" y="284" text-anchor="middle">+ first_pass_score, run_precursor_q, run_peptide_q, protein_best (planned)  &#183;  no features, no sequence / protein_ids / file_name (from the library by entry_id)</text>
+  <text class="stage-desc"  x="600" y="284" text-anchor="middle">+ score, run_precursor_q, run_peptide_q, protein_best  &#183;  no features, no sequence / protein_ids / file_name (from the library by entry_id)</text>
 
   <path class="flow" d="M 600 296 L 600 312" marker-end="url(#arrow)"/>
 
-  <rect class="pf-plan" x="80" y="314" width="1040" height="48" rx="4"/>
-  <text class="stage-title" x="600" y="334" text-anchor="middle">Write &lt;stem&gt;.1st-pass.model.json (planned): the run's frozen model for pass 2</text>
+  <rect class="pf-new" x="80" y="314" width="1040" height="48" rx="4"/>
+  <text class="stage-title" x="600" y="334" text-anchor="middle">Write &lt;stem&gt;.1st-pass.model.json: the run's frozen model for pass 2</text>
   <text class="stage-desc"  x="600" y="350" text-anchor="middle">trees / weights per fold + standardizer, its calibration map and its protein-best floor; replaces the analysis-wide &lt;blib-stem&gt;.1st-pass.model.json</text>
 
   <text class="stage-meta" x="80" y="386">SEA-AD: about 264 MB per run (stub) against 2,026 MB (full scores parquet) + 158 MB (.1st-pass.fdr_scores.bin) in the previous design; first-pass disk 20.8 GB vs about 179 GB at 82 runs</text>
@@ -1373,7 +1373,7 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
   <text class="phase-label" x="80" y="92" fill="#2e7d32">the reduce (no training)</text>
 
   <rect class="pf-new" x="80" y="102" width="1040" height="56" rx="4"/>
-  <text class="stage-title" x="600" y="122" text-anchor="middle">Experiment target-decoy competition over every run's calibrated first_pass_score</text>
+  <text class="stage-title" x="600" y="122" text-anchor="middle">Experiment target-decoy competition over every run's calibrated first-pass score</text>
   <text class="stage-desc"  x="600" y="138" text-anchor="middle">the runs' scores share one scale through each run's calibration (run precursor q 1% -&gt; 0, median best decoy -&gt; -1)</text>
   <text class="stage-desc"  x="600" y="152" text-anchor="middle">replaces the previous design's best-per-precursor subsampling + global SVM / gbdt training over every run's features</text>
 
@@ -1411,12 +1411,12 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
 
 <g transform="translate(0, 2116)">
   <rect class="task-hdr-bg" x="120" y="0" width="960" height="110" rx="8"/>
-  <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileRescoring<tspan class="task-hdr-count">   &#183; out: 3 files/run<title>Per run: .reconciliation.json (the run's plan), .scores-reconciled.parquet (planned: the stub layout) and .2nd-pass.fdr_scores.bin, plus .2nd-pass.fdr_decoys.bin under protein-compact. With the features-saving flag, .features-reconciled.parquet (planned, name provisional). --model-diagnostics adds .fragment-mass-errors.json, --training-export adds .training.parquet. Pass 2 does not run under the design yet.</title></tspan></text>
-  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">per-run fan-out &#183; <tspan class="pf-planned">planned: rescores with the run's own model</tspan></text>
-  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan> (stub), <tspan class="sc-run">.1st-pass.model.json</tspan> <tspan class="pf-planned">(planned)</tspan>, <tspan class="sc-run">.calibration.json</tspan>, <tspan class="sc-cache">.spectra.bin</tspan>, + <tspan class="sc-run">.features.parquet</tspan> (features saved: required)</text>
-  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.{fdr_experiment.bin, retained_base_ids.bin, consensus.json}</tspan>, + <tspan class="sc-exp">stratum.json</tspan> (protein-compact)</text>
-  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.reconciliation.json</tspan>, <tspan class="sc-run">.scores-reconciled.parquet</tspan> (stub layout, <tspan class="pf-planned">planned</tspan>), <tspan class="sc-run">.2nd-pass.fdr_scores.bin</tspan>, <tspan class="sc-run">.2nd-pass.fdr_decoys.bin</tspan> (protein-compact)</text>
-  <text x="140" y="88" class="task-hdr-io"><tspan class="task-hdr-key">opt&#160;</tspan><tspan class="sc-run">.features-reconciled.parquet</tspan> (features saved; <tspan class="pf-planned">name provisional</tspan>), <tspan class="sc-run">.fragment-mass-errors.json</tspan>, <tspan class="sc-run">.training.parquet</tspan> (implies features saved)</text>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileRescoring<tspan class="task-hdr-count">   &#183; out: 2 files/run<title>Per run: .reconciliation.json (the run's plan) and .scores-reconciled.parquet (the stub layout, carrying the run's second-pass scores and run q-values; no .2nd-pass.fdr_scores.bin). With the features-saving flag, .features-reconciled.parquet. --model-diagnostics adds .fragment-mass-errors.json, --training-export adds .training.parquet. Protein-compact is refused.</title></tspan></text>
+  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">per-run fan-out &#183; rescores with the run's own model</text>
+  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan> (stub), <tspan class="sc-run">.1st-pass.model.json</tspan>, <tspan class="sc-run">.calibration.json</tspan>, <tspan class="sc-cache">.spectra.bin</tspan>, + <tspan class="sc-run">.features.parquet</tspan> (features saved: required)</text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.{fdr_experiment.bin, retained_base_ids.bin, consensus.json}</tspan></text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.reconciliation.json</tspan>, <tspan class="sc-run">.scores-reconciled.parquet</tspan> (stub layout: the second-pass scores and run q-values)</text>
+  <text x="140" y="88" class="task-hdr-io"><tspan class="task-hdr-key">opt&#160;</tspan><tspan class="sc-run">.features-reconciled.parquet</tspan> (features saved), <tspan class="sc-run">.fragment-mass-errors.json</tspan>, <tspan class="sc-run">.training.parquet</tspan> (implies features saved)</text>
   <text x="1060" y="104" text-anchor="end" class="task-hdr-relay">relay: the run's own set + every experiment-wide file</text>
 </g>
 
@@ -1432,7 +1432,7 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
   <text class="phase-shape-fanout" x="1115" y="24" text-anchor="end">per-run fan-out - 1..N nodes</text>
   <text class="phase-note"  x="60" y="58">Second per-file fan-out. Each file plans its reconciliation from the cross-run consensus, reloads its spectra, re-scores at the planned boundaries,</text>
   <text class="phase-note"  x="60" y="72">runs the gap-fill two-pass for missing precursors, and writes a SEPARATE &lt;stem&gt;.scores-reconciled.parquet - never back over its input. No cross-run work.</text>
-  <text class="phase-note pf-planned"  x="60" y="86">Planned: moved rows rescored in memory with the run's own frozen model; unmoved rows keep their stub score; features written only when saved.</text>
+  <text class="phase-note"  x="60" y="86">Moved rows rescored in memory with the run's own frozen model; unmoved rows keep their stub score; features written only when saved.</text>
 
   <rect class="st-done" x="80" y="94" width="1040" height="38" rx="4"/>
   <text class="stage-title" x="600" y="110" text-anchor="middle">Per-run plan (refit, {Keep | UseCwtPeak | ForcedIntegration}, gap-fill targets), then rescore</text>
@@ -1444,7 +1444,7 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
 
   <rect class="st-done" x="80" y="206" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="226" text-anchor="middle">Reconciled parquet write-back (replace by ParquetIndex, append gap-fill, write reconciliation metadata)</text>
-  <text class="stage-desc"  x="600" y="240" text-anchor="middle">planned: the stub layout, as the first-pass .scores.parquet; final per-file parquet output of Phase C, feeds Stage 7 second-pass Percolator</text>
+  <text class="stage-desc"  x="600" y="240" text-anchor="middle">the stub layout, as the first-pass .scores.parquet, with the second-pass score and run q-values of every row; feeds Stage 7</text>
 
   <path class="flow" d="M 600 132 L 600 146" marker-end="url(#arrow)"/>
   <path class="flow" d="M 600 190 L 600 204" marker-end="url(#arrow)"/>
@@ -1457,11 +1457,11 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
 
 <g transform="translate(0, 2508)">
   <rect class="task-hdr-bg" x="120" y="0" width="960" height="112" rx="8"/>
-  <text x="140" y="22" class="task-hdr-name">&#9656; --task SecondPassFDR<tspan class="task-hdr-count">   &#183; out: <tspan class="sc-exp">2 files</tspan><title>Experiment-wide: the .blib and .2nd-pass.fdr_experiment.bin, plus .protein_groups.tsv and .stats.tsv when OSPREY_DIANN_REPORTS is set. No per-run file in any pass-2 mode. --model-diagnostics adds 2 (product and page), --fdrbench adds 2.</title></tspan></text>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task SecondPassFDR<tspan class="task-hdr-count">   &#183; out: <tspan class="sc-exp">2 files</tspan><title>Experiment-wide: the .blib and .2nd-pass.fdr_experiment.bin, plus .protein_groups.tsv and .stats.tsv when OSPREY_DIANN_REPORTS is set (derived reports, not declared). No per-run file in any pass-2 mode. --model-diagnostics adds 2 (product and page), --fdrbench adds 2.</title></tspan></text>
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">join &#183; 1 node &#183; final aggregation</text>
-  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores-reconciled.parquet</tspan> (every run - one parquet per run, no <tspan class="sc-run">.scores.parquet</tspan> fallback), <tspan class="sc-run">.2nd-pass.fdr_scores.bin</tspan> (worker)</text>
-  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.reconciliation.json</tspan>  &#183;  <tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.{fdr_experiment.bin, retained_base_ids.bin}</tspan>, + <tspan class="sc-exp">stratum.json</tspan> (protein-compact), the library</text>
-  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">&lt;output&gt;.blib</tspan>, <tspan class="sc-exp">&lt;blib-stem&gt;.2nd-pass.fdr_experiment.bin</tspan>  &#183;  if OSPREY_DIANN_REPORTS: <tspan class="sc-exp">.protein_groups.tsv</tspan>, <tspan class="sc-exp">.stats.tsv</tspan></text>
+  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores-reconciled.parquet</tspan> (every run - one parquet per run, no <tspan class="sc-run">.scores.parquet</tspan> fallback), which carries each run's second-pass records</text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.reconciliation.json</tspan>  &#183;  <tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.{fdr_experiment.bin, retained_base_ids.bin}</tspan>, the library</text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">&lt;output&gt;.blib</tspan>, <tspan class="sc-exp">&lt;blib-stem&gt;.2nd-pass.fdr_experiment.bin</tspan>  &#183;  derived, if OSPREY_DIANN_REPORTS: <tspan class="sc-exp">.protein_groups.tsv</tspan>, <tspan class="sc-exp">.stats.tsv</tspan></text>
   <text x="140" y="88" class="task-hdr-io"><tspan class="task-hdr-key">opt&#160;</tspan><tspan class="sc-exp">.2nd-pass.model-diagnostics.json</tspan>, <tspan class="sc-exp">.model-diagnostics.html</tspan>  (--model-diagnostics; reads <tspan class="sc-exp">.1st-pass.model-diagnostics.json</tspan>)</text>
   <text x="140" y="104" class="task-hdr-relay">holds O(distinct) &#183; folds the runs one at a time, rebuilding each from its own artifacts and dropping it</text>
   <text x="1060" y="104" text-anchor="end" class="task-hdr-relay">relay: every run's reconciled set, each file stamped</text>
@@ -1890,8 +1890,7 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
     design is being retired entirely: the per-run first-pass model drawn above becomes the only
     pipeline, for <code>--resolution hram</code> and <code>--resolution unit</code> alike. Today the
     first pass of this design runs under <code>OSPREY_PER_FILE_FDR=file</code>
-    (<code>OSPREY_PER_FILE_FDR_ROUNDS=2</code>); pass 2 does not run under it yet
-    (<code>PerFileScoringTask</code> refuses a pass-2 task in the mode) and is being built now.
+    (<code>OSPREY_PER_FILE_FDR_ROUNDS=2</code>), pass 2 included; protein-compact is refused under it.
     File names are the ones <code>Osprey --task &lt;T&gt; --task-files</code> declares on a SEA-AD
     command line with and without the mode, plus the analysis-wide files FirstPassFDR writes without
     declaring them (<code>docs/00-pipeline-architecture.md</code>, "The sidecar file contract").
@@ -1905,14 +1904,14 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
     <tbody>
       <tr><td><strong>removed</strong></td><td><code>&lt;stem&gt;.1st-pass.fdr_scores.bin</code></td>
         <td>written by FirstPassFDR, one per run; read by PerFileRescoring and by the report's Model tab (its <code>FeatureSums</code> share)</td>
-        <td>not written: its records (<code>first_pass_score</code>, run q-values) are columns of the stub; the <code>FdrScoresSidecar</code> readers fall back to them</td></tr>
+        <td>not written: its records (<code>score</code>, run q-values) are columns of the stub; the <code>FdrScoresSidecar</code> readers fall back to them</td></tr>
       <tr><td><strong>removed</strong></td><td><code>&lt;stem&gt;.1st-pass.protein_best.bin</code></td>
         <td>written by FirstPassFDR under <code>--protein-boost best</code> (the default here); read by PerFileRescoring</td>
-        <td>a <code>protein_best</code> column of the stub (planned)</td></tr>
+        <td>a <code>protein_best</code> column of the stub</td></tr>
       <tr><td><strong>removed</strong></td><td><code>&lt;blib-stem&gt;.1st-pass.model.json</code></td>
         <td>written (undeclared) by FirstPassFDR; read by PerFileRescoring, by SecondPassFDR under protein-compact, and by FirstPassFDR's resume</td>
-        <td>replaced by each run's own <code>&lt;stem&gt;.1st-pass.model.json</code> (planned)</td></tr>
-      <tr><td><strong>added</strong></td><td><code>&lt;stem&gt;.1st-pass.model.json</code> (planned)</td>
+        <td>replaced by each run's own <code>&lt;stem&gt;.1st-pass.model.json</code></td></tr>
+      <tr><td><strong>added</strong></td><td><code>&lt;stem&gt;.1st-pass.model.json</code></td>
         <td>-</td>
         <td>written by PerFileScoring: the run's model (trees or weights per fold, and the standardizer), its calibration map and its protein-best floor; read by PerFileRescoring</td></tr>
       <tr><td><strong>added</strong></td><td><code>&lt;stem&gt;.features.parquet</code> (optional)</td>
@@ -1920,28 +1919,31 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
         <td>written by PerFileScoring with <code>--keep-scores-parquet</code> (planned flag name; today <code>OSPREY_PER_FILE_FDR_KEEP_PARQUET=1</code>): the full former scores layout, a Stages 1-4 checkpoint; read by PerFileScoring, to re-train under <code>--task FirstPass</code>, and by PerFileRescoring when pass-2 features are saved (below)</td></tr>
       <tr><td><strong>changed</strong></td><td><code>&lt;stem&gt;.scores.parquet</code></td>
         <td>full layout: scalars, every feature column, sequence / modified_sequence / precursor_mz / protein_ids / file_name; about 2,026 MB per SEA-AD run</td>
-        <td>a STUB: entry_id, is_decoy, charge, scan_number, apex_rt, start_rt, end_rt, bounds_area, bounds_snr, fragment_coelution_sum + <code>first_pass_score</code>, <code>run_precursor_q</code>, <code>run_peptide_q</code> (+ <code>protein_best</code>, planned); footer <code>osprey.feature_columns=stub</code>; about 264 MB</td></tr>
+        <td>a STUB: entry_id, is_decoy, charge, scan_number, apex_rt, start_rt, end_rt, bounds_area, bounds_snr, fragment_coelution_sum + <code>score</code>, <code>run_precursor_q</code>, <code>run_peptide_q</code>, <code>protein_best</code>; footer <code>osprey.feature_columns=stub</code>; about 264 MB</td></tr>
       <tr><td><strong>changed</strong></td><td>PerFileScoring</td>
         <td>Stages 1-4; out: scores parquet, calibration</td>
-        <td>Stages 1-4 + the run's own model; out: stub, calibration, the run's model (planned), optional checkpoint</td></tr>
+        <td>Stages 1-4 + the run's own model; out: stub, calibration, the run's model, optional checkpoint</td></tr>
       <tr><td><strong>changed</strong></td><td>FirstPassFDR</td>
         <td>trains the global model from every run's features; writes 2 files per run + 5 analysis-wide</td>
         <td>a reduce: trains nothing, loads no features; reads every run's stub + calibration; writes no per-run file and no model</td></tr>
       <tr><td><strong>changed</strong></td><td>PerFileRescoring inputs</td>
         <td>the analysis-wide model + the run's <code>.1st-pass.fdr_scores.bin</code> and <code>.1st-pass.protein_best.bin</code></td>
-        <td>the run's own model + its stub (planned; today's declaration under the mode still names the removed files)</td></tr>
+        <td>the run's own model + its stub</td></tr>
       <tr><td><strong>changed</strong></td><td><code>&lt;stem&gt;.scores-reconciled.parquet</code></td>
         <td>the run's full scores parquet streamed through, re-scored rows replaced, gap-fill appended: every feature column</td>
-        <td>(planned) format parity with the stub <code>.scores.parquet</code>: scalars + scores + run q-values + <code>protein_best</code>, no feature columns. An unmoved row's first-pass score carries across from the stub; a moved row is rescored from features computed in memory with the run's frozen model, which are not kept</td></tr>
-      <tr><td><strong>added</strong></td><td><code>&lt;stem&gt;.features-reconciled.parquet</code> (optional; name provisional)</td>
+        <td>format parity with the stub <code>.scores.parquet</code>: scalars + <code>score</code> + run q-values + <code>protein_best</code>, no feature columns, and every value is the SECOND pass's. An unmoved row's first-pass score carries across from the stub; a moved row is rescored from features computed in memory with the run's frozen model, which are not kept; every row carries its second-pass run q-values</td></tr>
+      <tr><td><strong>removed</strong></td><td><code>&lt;stem&gt;.2nd-pass.fdr_scores.bin</code></td>
+        <td>written by PerFileRescoring, one per run; read by SecondPassFDR</td>
+        <td>not written: its records are the reconciled stub's <code>score</code> and run q-values, which the <code>FdrScoresSidecar</code> readers fall back to, as for the first pass. One scores file per run per pass</td></tr>
+      <tr><td><strong>added</strong></td><td><code>&lt;stem&gt;.features-reconciled.parquet</code> (optional)</td>
         <td>-</td>
-        <td>(planned) written by PerFileRescoring only with the features-saving flag: the second pass's features, the reconciled counterpart of <code>&lt;stem&gt;.features.parquet</code></td></tr>
+        <td>written by PerFileRescoring only with the features-saving flag: the second pass's features, the reconciled counterpart of <code>&lt;stem&gt;.features.parquet</code></td></tr>
       <tr><td><strong>changed</strong></td><td><code>&lt;stem&gt;.features.parquet</code> as a pass-2 input</td>
         <td>-</td>
-        <td>(planned) with the features-saving flag, a declared INPUT of PerFileRescoring and required: the pass-2 checkpoint takes the unmoved rows' features from it. Without the flag it is not read at all</td></tr>
+        <td>with the features-saving flag, a declared INPUT of PerFileRescoring and required: the pass-2 checkpoint takes the unmoved rows' features from it. Without the flag it is not read at all</td></tr>
       <tr><td><strong>changed</strong></td><td>SecondPassFDR inputs</td>
         <td>under protein-compact: the analysis-wide model + stratum</td>
-        <td>the stratum, without the analysis-wide model (decision 6: protein-compact is to be removed)</td></tr>
+        <td>neither: protein-compact is refused under this design (decision 6: it is to be removed), and every resolution's default pass-2 mode is the transfer</td></tr>
     </tbody>
   </table>
   <p>

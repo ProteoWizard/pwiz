@@ -253,14 +253,11 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// How the second pass assigns reported q-values: <see cref="OspreyEnvironment.PASS2_QVALUE_TRANSFER"/>
-        /// or <see cref="OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT"/>. Not a choice of its own: it follows
-        /// <see cref="ProteinBoost"/>, protein-compact under <see cref="ProteinBoost.compact"/> and the transfer
-        /// otherwise. The developer variable OSPREY_PASS2_QVALUE overrides it.
+        /// or <see cref="OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT"/>. Not a choice of its own: the transfer,
+        /// for every <see cref="ProteinBoost"/> and resolution. The developer variable OSPREY_PASS2_QVALUE
+        /// overrides it.
         /// </summary>
-        public string Pass2QValue => OspreyEnvironment.Pass2QValueOverride ??
-                                     (ProteinBoost == ProteinBoost.compact
-                                         ? OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT
-                                         : OspreyEnvironment.PASS2_QVALUE_TRANSFER);
+        public string Pass2QValue => OspreyEnvironment.Pass2QValueOverride ?? OspreyEnvironment.PASS2_QVALUE_TRANSFER;
 
         /// <summary>True when <see cref="Pass2QValue"/> is the frozen-model confidence transfer.</summary>
         public bool Pass2TransferQ =>

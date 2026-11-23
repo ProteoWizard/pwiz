@@ -124,7 +124,7 @@ namespace pwiz.Osprey.Tasks
             return scored;
         }
 
-        private static string MissingMessage(string path)
+        internal static string MissingMessage(string path)
         {
             return string.Format(
                 OspreyTasksResources.RunModelScorer_Load_The_run_s_first_pass_model_could_not_be_read_from__0___Run__1__again_,

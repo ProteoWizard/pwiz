@@ -1625,12 +1625,11 @@ namespace pwiz.Osprey.Core
             string.IsNullOrWhiteSpace(Pass2QValueSetting) ? null : NormalizePass2QValue(Pass2QValueSetting);
 
         private static readonly EnvVar ENV_PASS2_QVALUE = new EnvVar(@"OSPREY_PASS2_QVALUE", EnvVarGroup.behavior,
-            @"How the second pass assigns reported q-values, in place of the one " + OspreyArgNames.PREFIX +
-            OspreyArgNames.PROTEIN_BOOST + @" implies: transfer carries the first-pass q through and re-scores " +
-            @"only moved peaks; protein-compact constrains the competition to detected proteins.")
+            @"How the second pass assigns reported q-values: transfer (the default) carries the first-pass q through and " +
+            @"re-scores only moved peaks; protein-compact constrains the competition to detected proteins.")
             {
                 Values = new[] { @"transfer", @"protein-compact" },
-                DefaultValue = @"protein-compact with " + OspreyArgNames.PREFIX + OspreyArgNames.PROTEIN_BOOST + @" compact, transfer otherwise"
+                DefaultValue = @"transfer"
             };
 
         /// <summary>OSPREY_PASS2_QVALUE exactly as set, for a message that must quote what the

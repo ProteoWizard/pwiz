@@ -87,16 +87,16 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(unitConfig.Scoring.GbtOutOfFold);
             Assert.AreEqual(0.5, unitConfig.RtCalibration.MinRtTolerance);
             Assert.AreEqual(0.3, unitConfig.RtCalibration.LoessBandwidth);
-            // The second pass credits protein evidence once: protein-compact without the protein-best
-            // column, the transfer with it, whichever way protein-best was chosen.
-            Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT, unitConfig.Pass2QValue);
+            // The second pass is the transfer at every resolution, with or without the protein-best
+            // column; protein-compact is chosen only through OSPREY_PASS2_QVALUE.
+            Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, unitConfig.Pass2QValue);
             Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, hramConfig.Pass2QValue);
             var unitProteinBest = new OspreyConfig { ProteinBoost = ProteinBoost.best, ProteinBoostGiven = true };
             unitProteinBest.ApplyResolutionMode(ResolutionMode.UnitResolution);
             Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, unitProteinBest.Pass2QValue);
             var hramNoProteinBest = new OspreyConfig { ProteinBoost = ProteinBoost.compact, ProteinBoostGiven = true };
             hramNoProteinBest.ApplyResolutionMode(ResolutionMode.HRAM);
-            Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT, hramNoProteinBest.Pass2QValue);
+            Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, hramNoProteinBest.Pass2QValue);
             using (OspreyEnvironment.OverrideVariables(new Dictionary<string, string>
                    {
                        { @"OSPREY_PASS2_QVALUE", OspreyEnvironment.PASS2_QVALUE_TRANSFER }
@@ -1139,8 +1139,8 @@ namespace pwiz.Osprey.Test
             var proteinBestConfig = new OspreyConfig { ProteinBoost = ProteinBoost.best };
             Assert.AreEqual(string.Empty, OspreyEnvironment.Pass2StrataValidityKeySuffix(proteinBestConfig),
                 @"the transfer, the default with protein-best, does not compete a complement, so its outputs keep their key");
-            Assert.AreEqual(OspreyEnvironment.PASS2_STRATA_TERM, OspreyEnvironment.Pass2StrataValidityKeySuffix(new OspreyConfig()),
-                @"protein-compact, the default without protein-best, carries the complement term");
+            Assert.AreEqual(string.Empty, OspreyEnvironment.Pass2StrataValidityKeySuffix(new OspreyConfig()),
+                @"the transfer, the default without protein-best too, does not compete a complement");
             using (OspreyEnvironment.OverrideVariables(new Dictionary<string, string>
                    {
                        { @"OSPREY_PASS2_QVALUE", OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT }

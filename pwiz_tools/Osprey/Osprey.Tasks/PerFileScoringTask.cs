@@ -85,8 +85,9 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public const string TASK_NAME = OspreyTaskNames.PER_FILE_SCORING;
 
-        // The key term of a stub scores parquet (OSPREY_PER_FILE_FDR=file without the full parquet).
-        private const string STUB_PARQUET_KEY_TERM = @";parquet=stubscores";
+        // The key term of a stub scores parquet (OSPREY_PER_FILE_FDR=file without the full parquet),
+        // with its layout version: 2 names the score column "score" and adds protein_best.
+        private const string STUB_PARQUET_KEY_TERM = @";parquet=stubscores2";
 
         /// <summary>
         /// The largest share of generated decoys that may have no fragment of their own before
@@ -303,7 +304,7 @@ namespace pwiz.Osprey.Tasks
             string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
             string modelKey = OwnModelValidityKey(ctx);
             return ArtifactValidity.IsCurrent(scoresPath, Name, modelKey + STUB_PARQUET_KEY_TERM) &&
-                   ParquetScoreCache.HasFirstPassScores(scoresPath) &&
+                   ParquetScoreCache.HasScores(scoresPath) &&
                    ArtifactValidity.IsCurrent(FirstPassModelIO.RunModelPathFor(inputFile), Name, modelKey);
         }
 
@@ -1843,7 +1844,7 @@ namespace pwiz.Osprey.Tasks
         {
             if (!ParquetScoreCache.IsStubScoresParquet(scoresPath))
                 return true;
-            bool serves = _ownModelStamp != null && ParquetScoreCache.HasFirstPassScores(scoresPath);
+            bool serves = _ownModelStamp != null && ParquetScoreCache.HasScores(scoresPath);
             if (!serves)
             {
                 // Log text for developers, not displayed in the default output

@@ -133,7 +133,9 @@ namespace pwiz.Osprey.Tasks
 
             foreach (var input in ctx.Config.InputFiles)
             {
-                yield return FdrScoresSidecar.Pass2Path(input);
+                // Under per-run first-pass models the reconciled stub, declared above, holds them.
+                if (!PerFileScoringTask.TrainsOwnFirstPassModel)
+                    yield return FdrScoresSidecar.Pass2Path(input);
                 // The decoy side of that file's competition - the null this stage folds. Also an
                 // input, for the same reason and from the same producer, where there is a
                 // competition: the transfer competes nothing.
@@ -272,10 +274,9 @@ namespace pwiz.Osprey.Tasks
             if (!string.IsNullOrEmpty(experimentPath))
                 yield return experimentPath;
 
-            // The DIA-NN-shaped reports, written only under OSPREY_DIANN_REPORTS. They carry no
-            // stamp, so with the variable set this task is never skipped as already done.
-            foreach (string report in OspreyReportWriter.ReportPaths(ctx.Config))
-                yield return report;
+            // NOT the DIA-NN-shaped reports of OSPREY_DIANN_REPORTS: they are derived reports
+            // (doc 00, P16) that carry no stamp, and declaring them would leave this task never
+            // skippable as done whenever the variable is set.
         }
 
         public override string ValidityKey(PipelineContext ctx)

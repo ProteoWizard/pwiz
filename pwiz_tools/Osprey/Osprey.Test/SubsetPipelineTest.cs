@@ -1455,9 +1455,8 @@ namespace pwiz.Osprey.Test
         {
             AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
             AssertHasLine(log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
-            // Unit resolution runs without the protein-best column, so its default second pass is
-            // protein-compact; the HPC chain legs check its fold (AssertCompetitionFoldSplit).
-            AssertHasLine(log, PathLine(LogKey.ROUTE_PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
+            // The transfer is the default second pass at every resolution.
+            AssertHasLine(log, PathLine(LogKey.ROUTE_PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_TRANSFER));
             // The library-fragment release ran at both of its points (issue #4532).
             foreach (string scope in new[] { LogKey.SCOPE_RESCORE_GAP_FILL, LogKey.SCOPE_RETAINED_SUMMARY })
             {
@@ -2171,9 +2170,9 @@ namespace pwiz.Osprey.Test
         private void AssertKeyChangeRecomputes(string workDir, string expectedBlib)
         {
             string log = RunAnalysis(workDir, DataInputs(),
-                WithVariable(Verifier(true), PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_TRANSFER));
+                WithVariable(Verifier(true), PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
             AssertTasks(log, new[] { PerFileScoringTask.TASK_NAME }, KEYED_TASKS);
-            AssertHasLine(log, PathLine(LogKey.ROUTE_PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_TRANSFER));
+            AssertHasLine(log, PathLine(LogKey.ROUTE_PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
             Assert.IsFalse(OtherBuildWarning(null, null, null).IsMatch(log), log);
 
             log = RunAnalysis(workDir, DataInputs(), Verifier(true));
@@ -2619,13 +2618,8 @@ namespace pwiz.Osprey.Test
             {
                 get
                 {
-                    if (Pass2Mode != null)
-                        return Pass2Mode;
-                    int i = Array.IndexOf(MoreArgs, OspreyCommandArgs.ARG_PROTEIN_BOOST.ArgumentText);
-                    bool compact = i >= 0
-                        ? MoreArgs[i + 1] == ProteinBoost.compact.ToString()
-                        : Resolution != OspreyCommandArgs.RESOLUTION_HRAM;
-                    return compact ? OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT : OspreyEnvironment.PASS2_QVALUE_TRANSFER;
+                    // The transfer is the default second pass whatever the boost.
+                    return Pass2Mode ?? OspreyEnvironment.PASS2_QVALUE_TRANSFER;
                 }
             }
 

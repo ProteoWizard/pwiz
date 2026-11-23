@@ -890,7 +890,7 @@ node running that task needs a copy, whatever batch it was handed.
 | `<stem>.demux.spectra.bin` | per-run cache, `--demux auto` on a multiplexed run only | `PerFileScoring` (Stage 2), or `--task SpectraCache`, read demultiplexed from the source | `PerFileScoring`, `PerFileRescoring`, which search it in place of `.spectra.bin` | with the run; it alone suffices while its descriptor matches, and it can be rebuilt only from the source, so keep the source to absorb a demux settings change |
 | `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileScoring`, `FirstPassFDR`, `PerFileRescoring` | with the run, to every leg before `SecondPassFDR` |
 | `<stem>.scores.parquet` | per-run product | `PerFileScoring` (Stage 4) | `FirstPassFDR`, `PerFileRescoring` | with the run |
-| `<stem>.scores.parquet`, stub (EXPERIMENTAL, `OSPREY_PER_FILE_FDR=file`; In flight, item 5) | per-run product, in place of the full parquet: scalar columns, `fragment_coelution_sum` and the run's own calibrated `first_pass_score`, `run_precursor_q`, `run_peptide_q`; footer `osprey.feature_columns=stub`; stamped with the model key | `PerFileScoring` (Stage 4, after the run's own model is trained) | `FirstPassFDR` (the reduce, which refuses a run without it); the first-pass score readers in place of the absent `.1st-pass.fdr_scores.bin` | with the run |
+| `<stem>.scores.parquet`, stub (EXPERIMENTAL, `OSPREY_PER_FILE_FDR=file`; In flight, item 5) | per-run product, in place of the full parquet: scalar columns, `fragment_coelution_sum` and the run's own calibrated `score`, `run_precursor_q`, `run_peptide_q`, `protein_best`; footer `osprey.feature_columns=stub`; stamped with the model key | `PerFileScoring` (Stage 4, after the run's own model is trained) | `FirstPassFDR` (the reduce, which refuses a run without it); the first-pass score readers in place of the absent `.1st-pass.fdr_scores.bin` | with the run |
 | `<stem>.features.parquet` (EXPERIMENTAL, `OSPREY_PER_FILE_FDR=file` with `OSPREY_PER_FILE_FDR_KEEP_PARQUET=1`; In flight, item 5) | per-run product: the full scores layout, every scalar and feature column, checkpointed before the model is trained; stamped with the feature key | `PerFileScoring` (Stage 4) | `PerFileScoring` itself, to re-train a run's model after a model-setting change without re-extracting (`--task FirstPass`); `PerFileRescoring`, for the unmoved rows of `<stem>.features-reconciled.parquet` when feature writing is on | only with feature writing on |
 | `<stem>.1st-pass.model.json`, per run (EXPERIMENTAL, `OSPREY_PER_FILE_FDR=file`; In flight, item 5) | per-run product: the run's own model, calibration map and protein-best floor; stamped with the model key | `PerFileScoring` (Stage 4) | `PerFileRescoring`, which scores the run's moved rows with it | with the run |
 | `<stem>.features-reconciled.parquet` (EXPERIMENTAL, `OSPREY_PER_FILE_FDR=file` with feature writing on; In flight, item 5) | per-run product: the full layout of the run's second-pass rows, the reconciled counterpart of `<stem>.features.parquet`; under the mode `<stem>.scores-reconciled.parquet` is a stub | `PerFileRescoring` (Stage 6) | the training export | not needed by `SecondPassFDR` |
@@ -904,7 +904,7 @@ node running that task needs a copy, whatever batch it was handed.
 | `<stem>.scores-reconciled.parquet` | per-run product, written for **every** run | `PerFileRescoring` (Stage 6) | `SecondPassFDR` - the join's only row source, one parquet per run; and `PerFileRescoring` itself on its per-run resume arm and for its training export | with the run |
 | `<stem>.2nd-pass.fdr_decoys.bin` | per-run product, protein-compact only | `PerFileRescoring` (pass-2 worker) | `SecondPassFDR` | with the run |
 | `<stem>.1st-pass.protein_best.bin` | per-run product, `--protein-boost best` only; not written under `OSPREY_PER_FILE_FDR=file` | `FirstPassFDR` (pass 1, beside the run's scores) | `PerFileRescoring` (pass-2 worker); `SecondPassFDR` only under `OSPREY_PASS2_VERIFY_WORKER` | with the run |
-| `<stem>.2nd-pass.fdr_scores.bin` | per-run product, written for **every** run | `PerFileRescoring` (pass-2 worker), in every pass-2 mode | `SecondPassFDR`; `PerFileRescoring`'s training export | with the run |
+| `<stem>.2nd-pass.fdr_scores.bin` | per-run product, written for **every** run (not under `OSPREY_PER_FILE_FDR=file`, where the reconciled stub carries its records; In flight, item 5) | `PerFileRescoring` (pass-2 worker), in every pass-2 mode | `SecondPassFDR`; `PerFileRescoring`'s training export | with the run |
 | `<stem>.training.parquet` | per-run product (`--training-export`) | `PerFileRescoring` (Stage 6), in flight or on its export-only arm | terminal: the consumer that trains on it (CarafeSharp) | n/a |
 | `<stem>.fragment-mass-errors.json` | per-run product (`--model-diagnostics`) | `PerFileRescoring` (Stage 6), in flight or on its optional-products arm | the report render (`SecondPassFDR`, `--task ModelDiagnostics`), when present and stamped for this analysis | **every node** rendering the report - the JSON alone |
 | `<blib-stem>.2nd-pass.fdr_experiment.bin` | experiment product | `SecondPassFDR` | `SecondPassFDR` on a resume | n/a |
@@ -1506,7 +1506,7 @@ the text says so rather than describing the current shape as though it were the 
      column) from the run's features in memory, after extraction, scores every row out of
      fold, and calibrates it (run precursor q at 1% maps to 0, the median best decoy to -1).
      It writes **one** scores file per run: `<stem>.scores.parquet` as a **stub** - the scalar
-     columns and `fragment_coelution_sum`, plus `first_pass_score`, `run_precursor_q` and
+     columns and `fragment_coelution_sum`, plus `score`, `run_precursor_q` and
      `run_peptide_q`, and no other feature column and no identity columns (readers take
      peptide, charge and decoy from the library by entry_id). Its footer carries
      `osprey.feature_columns=stub`, and it is stamped with the **model key**: the task key plus
@@ -1539,15 +1539,19 @@ the text says so rather than describing the current shape as though it were the 
      protein-best value (the floor for an entry the run had no row for), and puts the score
      through the run's calibration map; the features are not kept. An unmoved row carries its
      first-pass score from the stub. `<stem>.scores-reconciled.parquet` takes the stub layout
-     (scalars, score, run q-values, `protein_best`), and the transfer reads each survivor's
-     score from it, so an unmoved row matches its first-pass record bit for bit and keeps its
-     q-values, and a moved row is re-mapped through the run's own score-to-q table. With
+     (scalars, `score`, run q-values, `protein_best`) and carries the run's whole second-pass
+     answer: the transfer runs on the survivors in memory before the write - an unmoved row
+     matches its first-pass record bit for bit and keeps its q-values, a moved row is re-mapped
+     through the run's own score-to-q table - and every row is written with its pass-2 score
+     and run q-values. No `<stem>.2nd-pass.fdr_scores.bin` is written; its readers fall back to
+     the reconciled stub, as the first pass's fall back to the stub. With
      feature writing on (`OSPREY_PER_FILE_FDR_KEEP_PARQUET=1`, or `--training-export`, which
      implies it) the second pass's features go to `<stem>.features-reconciled.parquet`, streamed
      from `<stem>.features.parquet`, which is then a required input: `PerFileRescoring` stops
      at its start without it. The training export reads the features files.
-     `OSPREY_PASS2_QVALUE=protein-compact` (the default for `--protein-boost compact`, so for
-     `--resolution unit`) is refused at `PerFileScoring` start under the mode.
+     The transfer is the default pass-2 mode at every resolution; `OSPREY_PASS2_QVALUE=protein-compact`
+     is refused at `PerFileScoring` start under the mode. The DIA-NN reports of
+     `OSPREY_DIANN_REPORTS` are derived reports (P16) and are not declared outputs.
 
    Measured on SEA-AD (82 runs, three at a time on a 30-thread box), against the global model:
    98,280 precursors at true FDP 1% against 97,120; the first pass 15,455 s against 14,992 s,

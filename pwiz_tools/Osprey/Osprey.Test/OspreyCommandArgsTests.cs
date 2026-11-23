@@ -233,8 +233,8 @@ namespace pwiz.Osprey.Test
             Assert.IsFalse(offThenThreads.ProteinBest);
             Assert.AreEqual(8, offThenThreads.NThreads);
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"best").ProteinBest);
-            // The second pass follows the boost: protein-compact under compact, the transfer otherwise.
-            Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT, Parse(unitArg).Pass2QValue);
+            // The second pass is the transfer whatever the boost.
+            Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, Parse(unitArg).Pass2QValue);
             Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, Parse(hramArg).Pass2QValue);
             Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, offThenThreads.Pass2QValue);
             Assert.ThrowsException<ValueInvalidException>(() => OspreyCommandArgs.ARG_PROTEIN_BOOST + @"max");

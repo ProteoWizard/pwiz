@@ -102,6 +102,15 @@ namespace pwiz.Osprey.Tasks
             var keepIdentities = new HashSet<(uint, byte, uint)>(fdrEntries.Count);
             foreach (var entry in fdrEntries)
                 keepIdentities.Add((entry.EntryId, entry.Charge, entry.ScanNumber));
+            // A stub reconciled file is the run's second-pass answer: every row carries the score
+            // and run q-values its entry holds, not only the re-scored rows.
+            Dictionary<(uint, byte, uint), FdrEntry> stubValues = null;
+            if (stub)
+            {
+                stubValues = new Dictionary<(uint, byte, uint), FdrEntry>(fdrEntries.Count);
+                foreach (var entry in fdrEntries)
+                    stubValues[(entry.EntryId, entry.Charge, entry.ScanNumber)] = entry;
+            }
 
             // 5. Stream the reconciled transfer group-by-group: read the original,
             //    overlay re-scored rows, drop the compacted-away rows, merge gap-fill into
@@ -114,7 +123,7 @@ namespace pwiz.Osprey.Tasks
                     originalPath, reconciledPath, overlayByIndex, gapFill,
                     metadata, libraryById, fileName, keepIdentities, PerFileRescoreTask.TASK_NAME,
                     TextUtil.GetIndentation(1), logWarning, ParquetScoreCache.WritesReferenceXic(config),
-                    PinFeatureMask.For(config), stubProteinBestOf, stub);
+                    PinFeatureMask.For(config), stubProteinBestOf, stub, stubValues);
                 nReplaced = result.NReplaced;
                 nAppended = result.NAppended;
                 origRowCount = result.OrigRowCount;

@@ -260,9 +260,11 @@ namespace pwiz.Osprey.IO
         // and as one of the 21 PIN features). Not added to the write
         // schema -- it's already there via the PIN feature fields.
         private const string COLUMN_COELUTION_SUM = @"fragment_coelution_sum";
-        // A stub's first-pass scores (OSPREY_PER_FILE_FDR=file): the run's own calibrated score and
-        // the two run q-values it implies, the record FdrScoresSidecar otherwise writes per run.
-        private const string COLUMN_FIRST_PASS_SCORE = @"first_pass_score";
+        // A stub's scores (OSPREY_PER_FILE_FDR=file): each row's score and the two run q-values, of
+        // the pass the file belongs to - the run's own calibrated first-pass score in .scores.parquet,
+        // the second pass's in .scores-reconciled.parquet. The records FdrScoresSidecar otherwise
+        // writes per run and per pass.
+        private const string COLUMN_SCORE = @"score";
         private const string COLUMN_RUN_PRECURSOR_Q = @"run_precursor_q";
         private const string COLUMN_RUN_PEPTIDE_Q = @"run_peptide_q";
         // A stub's protein-best value per row (--protein-boost best): what the row's siblings
@@ -315,7 +317,7 @@ namespace pwiz.Osprey.IO
                 }
                 else
                 {
-                    FirstPassScore = new DataField<double>(COLUMN_FIRST_PASS_SCORE);
+                    Score = new DataField<double>(COLUMN_SCORE);
                     RunPrecursorQ = new DataField<double>(COLUMN_RUN_PRECURSOR_Q);
                     RunPeptideQ = new DataField<double>(COLUMN_RUN_PEPTIDE_Q);
                     if (proteinBest)
@@ -365,8 +367,8 @@ namespace pwiz.Osprey.IO
                     fields.Add(ScoreIndex);
                 fields.AddRange(Features.Where(field => field != null));
                 // A stub's scores, last, where BuildFdrEntryColumns appends their columns.
-                if (FirstPassScore != null)
-                    fields.AddRange(new[] { FirstPassScore, RunPrecursorQ, RunPeptideQ });
+                if (Score != null)
+                    fields.AddRange(new[] { Score, RunPrecursorQ, RunPeptideQ });
                 if (ProteinBest != null)
                     fields.Add(ProteinBest);
                 Schema = new ParquetSchema(fields.ToArray());
@@ -395,7 +397,7 @@ namespace pwiz.Osprey.IO
             /// <summary>Per PIN feature, its field, or null for a feature that is not recorded (<see cref="PinFeatureSelection.IsRecorded"/>).</summary>
             public DataField[] Features { get; }
             /// <summary>Null, with the two run q-value fields, unless the write is a stub.</summary>
-            public DataField FirstPassScore { get; }
+            public DataField Score { get; }
             public DataField RunPrecursorQ { get; }
             public DataField RunPeptideQ { get; }
             /// <summary>Null unless the write is a stub carrying the run's protein-best column.</summary>
@@ -992,8 +994,8 @@ namespace pwiz.Osprey.IO
                 precursorMzs, proteinIds, scanNumbers, apexRts, startRts, endRts,
                 boundsAreas, boundsSnrs, fileNames, refXicRts, refXicIntensities,
                 fields, featureArrays, scoreIndices);
-            // A stub's first-pass scores, last, matching the WriteFields schema order.
-            if (fields.FirstPassScore != null)
+            // A stub's scores, last, matching the WriteFields schema order.
+            if (fields.Score != null)
             {
                 var scores = new double[count];
                 var runPrecursorQs = new double[count];
@@ -1004,7 +1006,7 @@ namespace pwiz.Osprey.IO
                     runPrecursorQs[j] = entries[j].RunPrecursorQvalue;
                     runPeptideQs[j] = entries[j].RunPeptideQvalue;
                 }
-                columns.Add(Column(fields.FirstPassScore, scores));
+                columns.Add(Column(fields.Score, scores));
                 columns.Add(Column(fields.RunPrecursorQ, runPrecursorQs));
                 columns.Add(Column(fields.RunPeptideQ, runPeptideQs));
             }
@@ -1037,12 +1039,12 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Streams a stub scores parquet's first-pass records - entry_id, the run's own score, the
+        /// Streams a stub layout parquet's score records - entry_id, the run's own score, the
         /// two run q-values and apex RT - in row order, the records <c>FdrScoresSidecar</c> holds
         /// for a run whose scores live in its stub. False, with nothing handed over, when the file
         /// is missing or carries no scores.
         /// </summary>
-        public static bool ReadFirstPassScoreRecords(string path, Action<FdrScoreRecord> onRecord)
+        public static bool ReadScoreRecords(string path, Action<FdrScoreRecord> onRecord)
         {
             if (onRecord == null)
                 throw new ArgumentNullException(nameof(onRecord));
@@ -1052,14 +1054,14 @@ namespace pwiz.Osprey.IO
             using (var reader = OpenReader(stream))
             {
                 var fieldsByName = BuildFieldLookup(reader);
-                if (!fieldsByName.ContainsKey(COLUMN_FIRST_PASS_SCORE))
+                if (!fieldsByName.ContainsKey(COLUMN_SCORE))
                     return false;
                 for (int g = 0; g < reader.RowGroupCount; g++)
                 {
                     using (var groupReader = reader.OpenRowGroupReader(g))
                     {
                         var entryIds = ReadColumnByName<uint>(groupReader, fieldsByName, COLUMN_ENTRY_ID);
-                        var scores = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_FIRST_PASS_SCORE);
+                        var scores = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_SCORE);
                         var runPrecursorQs = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_RUN_PRECURSOR_Q);
                         var runPeptideQs = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_RUN_PEPTIDE_Q);
                         var apexRts = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_APEX_RT);
@@ -1108,22 +1110,37 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static Dictionary<uint, double> LoadScoresByScoreIndex(string path)
         {
+            return LoadScoresByScoreIndex(path, null);
+        }
+
+        /// <summary>
+        /// <see cref="LoadScoresByScoreIndex(string)"/>, keeping only the rows whose score_index
+        /// <paramref name="keepScoreIndex"/> accepts; null keeps every row.
+        /// </summary>
+        public static Dictionary<uint, double> LoadScoresByScoreIndex(string path, Func<uint, bool> keepScoreIndex)
+        {
             using (var stream = BlockReadStream.OpenRead(path))
             using (var reader = OpenReader(stream))
             {
                 var fieldsByName = BuildFieldLookup(reader);
-                if (!fieldsByName.ContainsKey(COLUMN_FIRST_PASS_SCORE))
+                if (!fieldsByName.ContainsKey(COLUMN_SCORE))
                     return null;
-                var scores = new Dictionary<uint, double>(checked((int)(reader.Metadata?.NumRows ?? 0L)));
+                var scores = keepScoreIndex == null
+                    ? new Dictionary<uint, double>(checked((int)(reader.Metadata?.NumRows ?? 0L)))
+                    : new Dictionary<uint, double>();
                 int position = 0;
                 for (int g = 0; g < reader.RowGroupCount; g++)
                 {
                     using (var groupReader = reader.OpenRowGroupReader(g))
                     {
                         var scoreIndexCol = ReadColumnByName<uint>(groupReader, fieldsByName, COLUMN_SCORE_INDEX);
-                        var scoreCol = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_FIRST_PASS_SCORE);
+                        var scoreCol = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_SCORE);
                         for (int row = 0; row < scoreCol.Length; row++)
-                            scores[scoreIndexCol != null ? scoreIndexCol[row] : (uint)(position + row)] = scoreCol[row];
+                        {
+                            uint scoreIndex = scoreIndexCol != null ? scoreIndexCol[row] : (uint)(position + row);
+                            if (keepScoreIndex == null || keepScoreIndex(scoreIndex))
+                                scores[scoreIndex] = scoreCol[row];
+                        }
                         position += scoreCol.Length;
                     }
                 }
@@ -1131,10 +1148,10 @@ namespace pwiz.Osprey.IO
             }
         }
 
-        /// <summary>True when the scores parquet at <paramref name="path"/> carries first-pass scores (a stub's).</summary>
-        public static bool HasFirstPassScores(string path)
+        /// <summary>True when the scores parquet at <paramref name="path"/> carries scores (a stub layout file).</summary>
+        public static bool HasScores(string path)
         {
-            return File.Exists(path) && HasColumn(path, COLUMN_FIRST_PASS_SCORE);
+            return File.Exists(path) && HasColumn(path, COLUMN_SCORE);
         }
 
         /// <summary>
@@ -2209,7 +2226,8 @@ namespace pwiz.Osprey.IO
             IReadOnlyDictionary<uint, LibraryEntry> libraryById, string fileName,
             ISet<(uint, byte, uint)> keepIdentities, string taskName, string progressIndent,
             Action<string> logWarning, bool writeReferenceXic, PinFeatureSelection features,
-            Func<uint, double> stubProteinBestOf = null, bool stub = false)
+            Func<uint, double> stubProteinBestOf = null, bool stub = false,
+            IReadOnlyDictionary<(uint, byte, uint), FdrEntry> stubValuesByIdentity = null)
         {
             if (originalPath == null)
                 throw new ArgumentNullException(nameof(originalPath));
@@ -2385,6 +2403,16 @@ namespace pwiz.Osprey.IO
                             }
                             if (replaced)
                                 nReplaced++;
+                            // A stub reconciled file carries every row's second-pass score and run
+                            // q-values, which the caller computed in memory for the rows it did not
+                            // re-score as well.
+                            else if (stubValuesByIdentity != null &&
+                                     stubValuesByIdentity.TryGetValue((row.EntryId, row.Charge, row.ScanNumber), out FdrEntry values))
+                            {
+                                row.Score = values.Score;
+                                row.RunPrecursorQvalue = values.RunPrecursorQvalue;
+                                row.RunPeptideQvalue = values.RunPeptideQvalue;
+                            }
                             // Emit gap-fill rows that sort strictly before this original
                             // row; a key tie keeps the original first (stable-sort order).
                             // Still correct when rows are skipped above: a skipped row only
@@ -2499,7 +2527,7 @@ namespace pwiz.Osprey.IO
                 var boundsSnrCol = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_BOUNDS_SNR);
                 // A stub's scores: the row's score and run q-values, which a stub reconciled write
                 // carries across for a row it does not replace.
-                var scoreCol = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_FIRST_PASS_SCORE);
+                var scoreCol = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_SCORE);
                 var runPrecursorQCol = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_RUN_PRECURSOR_Q);
                 var runPeptideQCol = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_RUN_PEPTIDE_Q);
                 // The heavy columns: read only when the caller wants the payload.

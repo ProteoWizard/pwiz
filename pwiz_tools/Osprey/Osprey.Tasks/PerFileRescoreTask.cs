@@ -169,6 +169,9 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public const string TASK_NAME = OspreyTaskNames.PER_FILE_RESCORING;
 
+        // The key term of a reconciled stub (OSPREY_PER_FILE_FDR=file), with its layout version.
+        private const string RECONCILED_STUB_KEY_TERM = @";reconciled=stub1";
+
         public override string Name => TASK_NAME;
 
         /// <summary>
@@ -344,7 +347,10 @@ namespace pwiz.Osprey.Tasks
             // other, so there is no run whose sidecar some other task owes.
             foreach (var input in ctx.Config.InputFiles)
             {
-                yield return FdrScoresSidecar.Pass2Path(input);
+                // Under per-run first-pass models the reconciled stub holds the second-pass
+                // records, declared above.
+                if (!PerFileScoringTask.TrainsOwnFirstPassModel)
+                    yield return FdrScoresSidecar.Pass2Path(input);
                 // The decoy side of this file's competition, written by the same worker in the
                 // same call (#4486). Declared for the same reason the sidecar is: it is an
                 // output of THIS task, its validity is this task's validity, and a resume that
@@ -390,7 +396,10 @@ namespace pwiz.Osprey.Tasks
                 // model, so the classifier that trained it keys this task too (empty for the SVM).
                 + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config)
                 // The reconciled parquet carries the reference XIC only for the training export.
-                + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config);
+                + ParquetScoreCache.ReferenceXicValidityKeySuffix(ctx.Config)
+                // Under per-run first-pass models the reconciled parquet is a stub that carries the
+                // second-pass answer, in place of the per-run second-pass sidecar.
+                + (PerFileScoringTask.TrainsOwnFirstPassModel ? RECONCILED_STUB_KEY_TERM : string.Empty);
                 // Planning recomputes Stage 4's CWT peak candidates (#5024); the settings that
                 // change them are in the base key already (search hash, pick, fcorr, refxic,
                 // rtlocal, xic).
@@ -1944,6 +1953,10 @@ namespace pwiz.Osprey.Tasks
         private static void WritePass2Answer(string fileName, string inputFile,
             List<FdrEntry> fdrEntries, RescorePassInputs inputs)
         {
+            // Under per-run first-pass models the answer is in the reconciled stub, computed
+            // before it was written (WriteRunModelReconciled).
+            if (PerFileScoringTask.TrainsOwnFirstPassModel)
+                return;
             string parquetPath = inputs.ParquetPaths != null &&
                                  inputs.ParquetPaths.TryGetValue(fileName, out string p)
                 ? p
@@ -2272,6 +2285,30 @@ namespace pwiz.Osprey.Tasks
             var runScorer = RunModelScorer.Load(FirstPassModelIO.RunModelPathFor(inputFile), scoresPath,
                 PinFeatureMask.For(config));
             runScorer.ScoreRescoredRows(fdrEntries);
+            // Every other row keeps its first-pass score, from the stub row it streams from.
+            var unmovedRows = new HashSet<uint>();
+            foreach (var entry in fdrEntries)
+            {
+                if (entry.Features == null && entry.ParquetIndex.HasValue)
+                    unmovedRows.Add(entry.ParquetIndex.Value);
+            }
+            var stubScores = ParquetScoreCache.LoadScoresByScoreIndex(scoresPath, unmovedRows.Contains);
+            if (stubScores == null)
+                throw new InvalidDataException(RunModelScorer.MissingMessage(scoresPath));
+            foreach (var entry in fdrEntries)
+            {
+                if (entry.Features == null && entry.ParquetIndex.HasValue &&
+                    stubScores.TryGetValue(entry.ParquetIndex.Value, out double score))
+                {
+                    entry.Score = score;
+                }
+            }
+            // The run's second-pass answer, computed before the write so the reconciled stub
+            // carries it: there is no per-run second-pass sidecar under the mode.
+            inputs.Pass2Worker.TransferInMemory(fileName, FdrScoresSidecar.Pass1Path(inputFile), fdrEntries);
+            // A second-pass sidecar an earlier run left beside it is removed first: its readers
+            // prefer it to the reconciled stub.
+            FileEx.SafeDelete(FdrScoresSidecar.Pass2Path(inputFile));
             var stamp = OspreyVersion.Stamp(Name, inputs.TaskValidityKey);
             if (PerFileScoringTask.WritesFeaturesCheckpoint(config))
             {
