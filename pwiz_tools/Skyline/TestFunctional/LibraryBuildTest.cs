@@ -212,6 +212,7 @@ namespace pwiz.SkylineTestFunctional
             string libraryARedundant = _libraryName + BiblioSpecLiteSpec.EXT_REDUNDANT;
             BuildLibraryValid("CPTAC_Set4_725_091509.pep.XML", true, false, false, 1);
             BuildLibraryValid("CPTAC_Set4_610_080509.pep.XML", true, false, true, 2);
+            TestScoreTypesForFilesAddedInTurn("CPTAC_Set4_725_091509.pep.XML", "CPTAC_Set4_610_080509.pep.XML");
             _libraryName = libraryBaseName + "b";
             string libraryB = _libraryName + BiblioSpecLiteSpec.EXT;
             BuildLibraryValid("CPTAC_Set4_624_072409.pep.XML", false, false, false, 6);
@@ -601,6 +602,27 @@ namespace pwiz.SkylineTestFunctional
         {
             BuildLibraryValid(TestFilesDir.GetTestPath("library_valid"), new[] { inputFile },
                 keepRedundant, filterPeptides, append, expectedSpectra, 0, false);
+        }
+
+        /// <summary>
+        /// Adding an input file while score-type detection still runs on an earlier one cancels that detection.
+        /// The earlier file must still get its score type, not "Score type not found".
+        /// </summary>
+        private void TestScoreTypesForFilesAddedInTurn(string firstFile, string secondFile)
+        {
+            EnsurePeptideSettings();
+            var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(PeptideSettingsUI.ShowBuildLibraryDlg);
+            RunUI(() =>
+            {
+                buildLibraryDlg.LibraryName = _libraryName;
+                buildLibraryDlg.OkWizardPage();
+                buildLibraryDlg.AddInputFiles(new[] { TestFilesDir.GetTestPath("library_valid\\" + firstFile) });
+                buildLibraryDlg.AddInputFiles(new[] { TestFilesDir.GetTestPath("library_valid\\" + secondFile) });
+            });
+            WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded || buildLibraryDlg.Grid.Files.Any(f => f.HasScoreTypeError));
+            RunUI(() => AssertEx.IsTrue(buildLibraryDlg.Grid.ScoreTypesLoaded,
+                string.Join(System.Environment.NewLine, buildLibraryDlg.Grid.Files.Select(f => f.FilePath + @": " + f.ScoreTypeError))));
+            OkDialog(buildLibraryDlg, buildLibraryDlg.CancelDialog);
         }
 
         private void BuildLibraryValid(string inputDir, IEnumerable<string> inputFiles,
