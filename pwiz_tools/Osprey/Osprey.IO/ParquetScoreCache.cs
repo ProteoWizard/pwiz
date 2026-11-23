@@ -1155,6 +1155,117 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// One row of a stub layout scores parquet (a run's stub, or its reconciled stub): the row's
+        /// identity, its score and run q-values, and the scalars that place its peak.
+        /// </summary>
+        public readonly struct StubScoreRow
+        {
+            public StubScoreRow(uint entryId, uint scoreIndex, double score, double runPrecursorQvalue,
+                double runPeptideQvalue, uint scanNumber, double apexRt, double startRt, double endRt,
+                double boundsArea, double boundsSnr, double coelutionSum)
+            {
+                EntryId = entryId;
+                ScoreIndex = scoreIndex;
+                Score = score;
+                RunPrecursorQvalue = runPrecursorQvalue;
+                RunPeptideQvalue = runPeptideQvalue;
+                ScanNumber = scanNumber;
+                ApexRt = apexRt;
+                StartRt = startRt;
+                EndRt = endRt;
+                BoundsArea = boundsArea;
+                BoundsSnr = boundsSnr;
+                CoelutionSum = coelutionSum;
+            }
+
+            public uint EntryId { get; }
+            /// <summary>The stored ordinal where the file has the column, the row's position where it does not.</summary>
+            public uint ScoreIndex { get; }
+            public double Score { get; }
+            public double RunPrecursorQvalue { get; }
+            public double RunPeptideQvalue { get; }
+            public uint ScanNumber { get; }
+            public double ApexRt { get; }
+            public double StartRt { get; }
+            public double EndRt { get; }
+            public double BoundsArea { get; }
+            public double BoundsSnr { get; }
+            public double CoelutionSum { get; }
+
+            /// <summary>
+            /// Whether <paramref name="other"/> places the same peak, bit for bit: the scan, the
+            /// three retention times, the area, the signal-to-noise and the coelution sum. A row
+            /// the second pass did not re-score is copied from its stub row verbatim.
+            /// </summary>
+            public bool SamePeakAs(StubScoreRow other)
+            {
+                return ScanNumber == other.ScanNumber && SameBits(ApexRt, other.ApexRt) &&
+                       SameBits(StartRt, other.StartRt) && SameBits(EndRt, other.EndRt) &&
+                       SameBits(BoundsArea, other.BoundsArea) && SameBits(BoundsSnr, other.BoundsSnr) &&
+                       SameBits(CoelutionSum, other.CoelutionSum);
+            }
+
+            private static bool SameBits(double a, double b)
+            {
+                return BitConverter.DoubleToInt64Bits(a) == BitConverter.DoubleToInt64Bits(b);
+            }
+        }
+
+        /// <summary>
+        /// Streams a stub layout scores parquet's rows (<see cref="StubScoreRow"/>) in row order,
+        /// keeping only those whose score_index <paramref name="keepScoreIndex"/> accepts (null keeps
+        /// every row). <paramref name="rowCount"/> receives the number of rows in the file. False,
+        /// with nothing handed over, when the file is missing or carries no scores.
+        /// </summary>
+        public static bool ReadStubScoreRows(string path, Func<uint, bool> keepScoreIndex,
+            Action<StubScoreRow> onRow, out int rowCount)
+        {
+            if (onRow == null)
+                throw new ArgumentNullException(nameof(onRow));
+            rowCount = 0;
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+                return false;
+            using (var stream = BlockReadStream.OpenRead(path))
+            using (var reader = OpenReader(stream))
+            {
+                var fieldsByName = BuildFieldLookup(reader);
+                if (!fieldsByName.ContainsKey(COLUMN_SCORE))
+                    return false;
+                int position = 0;
+                for (int g = 0; g < reader.RowGroupCount; g++)
+                {
+                    using (var groupReader = reader.OpenRowGroupReader(g))
+                    {
+                        var entryIds = ReadColumnByName<uint>(groupReader, fieldsByName, COLUMN_ENTRY_ID);
+                        var scoreIndexCol = ReadColumnByName<uint>(groupReader, fieldsByName, COLUMN_SCORE_INDEX);
+                        var scores = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_SCORE);
+                        var runPrecursorQs = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_RUN_PRECURSOR_Q);
+                        var runPeptideQs = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_RUN_PEPTIDE_Q);
+                        var scans = ReadColumnByName<uint>(groupReader, fieldsByName, COLUMN_SCAN_NUMBER);
+                        var apexRts = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_APEX_RT);
+                        var startRts = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_START_RT);
+                        var endRts = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_END_RT);
+                        var areas = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_BOUNDS_AREA);
+                        var snrs = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_BOUNDS_SNR);
+                        var coelutions = ReadColumnByName<double>(groupReader, fieldsByName, COLUMN_COELUTION_SUM);
+                        for (int row = 0; row < scores.Length; row++)
+                        {
+                            uint scoreIndex = scoreIndexCol != null ? scoreIndexCol[row] : (uint)(position + row);
+                            if (keepScoreIndex != null && !keepScoreIndex(scoreIndex))
+                                continue;
+                            onRow(new StubScoreRow(entryIds[row], scoreIndex, scores[row], runPrecursorQs[row],
+                                runPeptideQs[row], scans?[row] ?? 0u, apexRts?[row] ?? 0.0, startRts?[row] ?? 0.0,
+                                endRts?[row] ?? 0.0, areas?[row] ?? 0.0, snrs?[row] ?? 0.0, coelutions?[row] ?? 0.0));
+                        }
+                        position += scores.Length;
+                    }
+                }
+                rowCount = position;
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Assemble one row group's columns in the exact physical order
         /// both <see cref="WriteScoresParquet(string,List{CoelutionScoredEntry},Dictionary{string,string},PinFeatureSelection)"/>
         /// overloads write -- the fixed columns followed by the 21 PIN feature columns. The 14

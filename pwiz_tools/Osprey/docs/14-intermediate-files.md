@@ -462,6 +462,13 @@ and a feature change re-extracts. `--task FirstPass` over a directory holding on
 `.calibration.json` and `.features.parquet` re-trains every model from the checkpoints and
 reduces them (00, "In flight", item 5).
 
+Its second-pass counterpart `<stem>.features-reconciled.parquet` (the full layout of the
+reconciled stub's rows) is read by the training export and by the
+`OSPREY_PASS2_VERIFY_WORKER` test instrument, which re-scores the rows PerFileRescoring moved
+from it with the run's `<stem>.1st-pass.model.json` and asserts the reconciled stub's score
+and run q-values (00, the `SecondPassFDR` inputs). That is why the instrument is refused
+without `--keep-scores-parquet`.
+
 On SEA-AD a run's scores now take about 264 MB in one file, against about 2,184 MB (the
 2,026 MB full parquet plus the 158 MB first-pass binary) under the retired pooled model.
 

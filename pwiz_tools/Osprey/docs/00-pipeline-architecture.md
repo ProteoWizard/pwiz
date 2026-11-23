@@ -1378,6 +1378,15 @@ Not needed: any run's first-pass records (its `<stem>.scores.parquet`). Establis
 what issues #4486 and #4665 were for - an orchestrator hands a `SecondPassFDR` node the
 per-run second-pass artifacts and the analysis-wide experiment sidecar, and nothing per-run
 from the first pass. The one exception is `OSPREY_PASS2_VERIFY_WORKER`, a test instrument.
+Under the q-value transfer it recomputes each run's answer, one run at a time, from what the
+worker computed it from - the run's `<stem>.1st-pass.model.json`, its
+`<stem>.features-reconciled.parquet` and its stub `<stem>.scores.parquet` - and asserts the
+reconciled stub against it bit for bit: every re-scored row (a gap-fill, whose score_index
+lies past the stub's rows, or a row whose peak differs from its stub row) must carry the run
+model's calibrated score of its features, every other row its first-pass score, and every row
+the run q-values the transfer gives those scores (`Pass2FdrSidecar.VerifyTransferFile`).
+`SecondPassFdrTask.Inputs` declares those three files only while it is on, and a run that asks
+for it without `--keep-scores-parquet`, the only writer of the features, is refused at startup.
 `OSPREY_PASS2_QVALUE=transfer` used to be a second: it built each run's score-to-run-q table
 here, from every run's copy, and it now does that in the rescore worker.
 

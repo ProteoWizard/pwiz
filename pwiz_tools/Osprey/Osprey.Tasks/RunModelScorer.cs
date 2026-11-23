@@ -118,10 +118,21 @@ namespace pwiz.Osprey.Tasks
                     double v = entry.Features[_fdrIndices[i]];
                     fdrFeatures[i] = double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
                 }
-                entry.Score = _runModel.Calibrate(_scorer.Score(fdrFeatures, entry.EntryId, _proteinBest));
+                entry.Score = Score(entry.EntryId, fdrFeatures);
                 scored++;
             }
             return scored;
+        }
+
+        /// <summary>
+        /// One row's calibrated score from its FDR feature vector - the search's unmasked features
+        /// in PIN order, non-finite values already zero, as
+        /// <see cref="ParquetScoreCache.LoadPinFeaturesFromParquet"/> reads them. The score
+        /// <see cref="ScoreRescoredRows"/> gives a row holding those features.
+        /// </summary>
+        public double Score(uint entryId, double[] fdrFeatures)
+        {
+            return _runModel.Calibrate(_scorer.Score(fdrFeatures, entryId, _proteinBest));
         }
 
         internal static string MissingMessage(string path)

@@ -380,7 +380,10 @@ $ospreyExe    = Join-Path $ospreyBinDir 'Osprey.exe'
 $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 
 # Turn ON the per-file second-pass verifier for this gate (issue #4486). Stage 7 recomputes each
-# file's competition and asserts it against the answer PerFileRescoring wrote.
+# file's answer and asserts it against the one PerFileRescoring wrote: under the q-value transfer
+# it re-scores each run's moved rows with the run's own first-pass model, checks every unmoved
+# row kept its first-pass score, and re-runs the transfer to check the run q-values. That reads
+# the second-pass features, so Invoke-OspreyRun passes --keep-scores-parquet with it.
 #
 # COSTS THIS GATE NOTHING. The recompute used to be unconditional, so switching it on here is
 # exactly today's behaviour; what changed is that it is now OFF by default, which is what lets a
@@ -917,6 +920,12 @@ function Invoke-OspreyRun {
     $cliArgs += @('-l', $Library, '-o', 'output.blib') + (Get-ResolutionArgs $Resolution) +
                 @('--protein-fdr', '0.01', '--threads', $Threads.ToString(), '--work-dir', $WorkDir)
     $cliArgs += Get-DatasetCliArgs -Spec $Spec -Manifest $Manifest
+    # The second-pass worker verifier (OSPREY_PASS2_VERIFY_WORKER, on for these legs - see where it
+    # is set) re-scores each run's moved rows from their saved second-pass features, which only
+    # --keep-scores-parquet writes, and Osprey refuses the verifier without them. The straight,
+    # warm and resume legs share one work dir and one command, so all three carry it; the HPC
+    # chain does not, as a cohort run would not.
+    $cliArgs += '--keep-scores-parquet'
     $cliArgs += $memStampArgs
     if ($FdrBench) { $cliArgs += @('--fdrbench', 'bench.tsv', '--fdrbench-pass', 'both') }
     if ($DumpProteinFdr) { $env:OSPREY_DUMP_STAGE7_PROTEIN_FDR = '1' }
@@ -1995,9 +2004,10 @@ function Invoke-HpcChain {
           [string]$CacheSource)
     # THE SHIPPED PATH RUNS HERE, and this is the whole of what it costs to gate it.
     #
-    # The straight leg runs with OSPREY_PASS2_VERIFY_WORKER=1, so Stage 7 recomputes and asserts.
-    # This chain runs with it OFF, which is the configuration a real cohort run uses: Stage 7
-    # folds the worker's written answer and never opens a run's first-pass records. Mode 3 then compares
+    # The straight leg runs with OSPREY_PASS2_VERIFY_WORKER=1 (and --keep-scores-parquet, which it
+    # needs), so Stage 7 recomputes and asserts. This chain runs with both OFF, which is the
+    # configuration a real cohort run uses: Stage 7 folds the worker's written answer and never
+    # opens a run's first-pass records, model or features. Mode 3 then compares
     # this chain's output against the straight leg's - a comparison it already made - so the
     # verified and unverified paths are proven to agree at ZERO added run time.
     #
@@ -2510,14 +2520,12 @@ foreach ($name in $selected) {
         # second-pass records are its reconciled stub, stamped by the task that wrote it.
         $chainSidecars = @(Get-ChildItem -File -Path $chainDir -Filter '*.scores-reconciled.parquet' -ErrorAction SilentlyContinue)
         $chainWorkerSidecars = @($chainSidecars | Where-Object { [OspreyFdrStubReader]::ProducedBy($_.FullName) -eq 'PerFileRescoring' })
-        # The fold line is the competition's (it carries the verifier state); the transfer fold
-        # emits none, so it is demanded only where the straight leg emitted one too.
+        # The fold line carries the verifier state. Both second-pass folds write it (the
+        # competition and the q-value transfer), so it is demanded unconditionally.
         $chainFolded = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
             -Pattern ([regex]::Escape($secondPassFoldMarker) + 'verify=\w+ runs=\d+\b') -Quiet
-        $foldLineExpected = Select-String -Path (Join-Path $straightDir 'straight.log') `
-            -Pattern $secondPassFoldMarker -SimpleMatch -Quiet
         if ($chainSidecars.Count -eq 0 -or $chainWorkerSidecars.Count -ne $chainSidecars.Count -or
-            ($foldLineExpected -and -not $chainFolded)) {
+            -not $chainFolded) {
             $overallFail = $true
             Write-Problem-Tc ("$name mode3 (shipped fold): FAIL - $($chainWorkerSidecars.Count) of " +
                 "$($chainSidecars.Count) reconciled stubs were written by PerFileRescoring, and phase 4 " +
@@ -2557,15 +2565,11 @@ foreach ($name in $selected) {
             $summaryLines.Add("$name mode3 (streamed join): PASS (per-run fold, no all-runs pool)")
         }
 
-        # Scoped to the competition: the verifier only exists on the competition fold, so the
-        # default q-value transfer emits NEITHER fold line and there is no split to assert.
-        # Detected from the straight leg having emitted a fold line at all, rather than from the
-        # mode flag.
-        $straightUsedFrozenPath = Select-String -Path (Join-Path $straightDir 'straight.log') `
-            -Pattern $secondPassFoldMarker -SimpleMatch -Quiet
-        if (-not $straightUsedFrozenPath) {
-            $summaryLines.Add("$name mode3 (verifier split): SKIP (mode has no per-file half)")
-        } elseif (-not $straightFold -or $chainFold) {
+        # Demanded in every pass-2 mode: both second-pass folds verify and write the fold line -
+        # the competition re-competes each file, the q-value transfer re-scores and re-transfers
+        # it. It used to SKIP when the straight leg wrote no fold line, which was every transfer
+        # run until the transfer gained its verifier; a straight leg without one is now a FAIL.
+        if (-not $straightFold -or $chainFold) {
             $overallFail = $true
             Write-Problem-Tc ("$name mode3 (verifier split): FAIL - straight leg verified=" +
                 "$([bool]$straightFold) (expected True), HPC chain verified=$([bool]$chainFold) " +

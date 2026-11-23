@@ -1597,13 +1597,24 @@ namespace pwiz.Osprey.Core
         public static bool Pass2QValueUnrecognized => IsUnrecognizedPass2QValue(Pass2QValueSetting);
 
         private static readonly EnvVar ENV_PASS2_VERIFY_WORKER = new EnvVar(@"OSPREY_PASS2_VERIFY_WORKER", EnvVarGroup.diagnostic,
-            @"Re-run the per-file second-pass competition in SecondPassFDR and assert it against the " +
-            @"rescore worker's answer. A test instrument: it re-reads every first-pass file.");
+            @"Recompute each run's second-pass answer in SecondPassFDR and assert it against the " +
+            @"rescore worker's. A test instrument: it re-reads every run's model, features and " +
+            @"first-pass scores, and needs the features a run saves only on request.");
 
         /// <summary>
-        /// OSPREY_PASS2_VERIFY_WORKER: re-run the per-file second-pass competition inside Stage 7
-        /// and assert it against the answer the rescore worker wrote (issue #4486). A TEST
+        /// OSPREY_PASS2_VERIFY_WORKER: recompute each run's second-pass answer inside Stage 7 and
+        /// assert it against the answer the rescore worker wrote (issue #4486). A TEST
         /// INSTRUMENT, off by default.
+        ///
+        /// <para><b>Under the q-value transfer</b> (the default and, with per-run first-pass
+        /// models, the only second pass) it re-scores each run's moved, gap-filled and CWT rows
+        /// from <c>&lt;stem&gt;.features-reconciled.parquet</c> with the run's own
+        /// <c>&lt;stem&gt;.1st-pass.model.json</c>, checks every other row kept its first-pass
+        /// score from the run's stub, re-runs the transfer through the run's first-pass table,
+        /// and asserts score and both run q-values bit for bit
+        /// (<c>Pass2FdrSidecar.VerifyTransferFile</c>). The features are written only with
+        /// <c>--keep-scores-parquet</c>, so the variable without it is refused at startup. The
+        /// paragraphs below describe it on the protein-compact competition.</para>
         ///
         /// <para><b>Why it is not always on.</b> The recompute re-reads each file's 1st-pass
         /// sidecar and re-runs the frozen rescore - measured at 82 files as 9.2 GB of re-reads

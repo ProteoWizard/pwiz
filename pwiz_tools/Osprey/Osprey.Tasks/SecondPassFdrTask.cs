@@ -96,12 +96,24 @@ namespace pwiz.Osprey.Tasks
             // wrongly: an undeclared dependency cannot be checked by anyone.
             //
             // They become a real input only when OSPREY_PASS2_VERIFY_WORKER asks this stage to
-            // recompute each file's competition and assert the worker's answer against it. That
-            // is a test instrument, so the dependency is the instrument's, not the task's.
+            // recompute each file's answer and assert the worker's against it. That is a test
+            // instrument, so the dependency is the instrument's, not the task's. Under the
+            // transfer the recompute reads what the worker computed the answer from: the run's
+            // own first-pass model, the features of its second pass, and its stub, which holds
+            // its first-pass scores and records (Pass2FdrSidecar.VerifyTransferFile).
             if (OspreyEnvironment.Pass2VerifyWorker)
             {
                 foreach (var input in ctx.Config.InputFiles)
-                    yield return FdrScoresSidecar.Pass1Path(input);
+                {
+                    if (ctx.Config.Pass2ProteinCompact)
+                    {
+                        yield return FdrScoresSidecar.Pass1Path(input);
+                        continue;
+                    }
+                    yield return FirstPassModelIO.RunModelPathFor(input);
+                    yield return ParquetScoreCache.GetReconciledFeaturesPath(input);
+                    yield return ParquetScoreCache.GetScoresPath(input);
+                }
             }
 
             // The ANALYSIS-WIDE 1st-pass experiment sidecar IS an input, on every path: it is
