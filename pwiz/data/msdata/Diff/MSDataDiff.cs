@@ -513,7 +513,7 @@ public static class MSDataDiff
     }
 
     private static List<(double Mz, double Intensity, double Mobility)> SortedTriples(
-        List<double> mz, List<double> intensity, List<double> mobility)
+        DetachableCollection<double> mz, DetachableCollection<double> intensity, DetachableCollection<double> mobility)
     {
         var triples = new List<(double, double, double)>(mz.Count);
         for (int i = 0; i < mz.Count; i++)
@@ -744,8 +744,8 @@ public static class MSDataDiff
     /// which case the caller should compare them as they are - a length difference is itself the
     /// finding.
     /// </summary>
-    private static bool TryPairPeaks(List<double> aMz, List<double> aIntensity,
-                                     List<double> bMz, List<double> bIntensity,
+    private static bool TryPairPeaks(DetachableCollection<double> aMz, DetachableCollection<double> aIntensity,
+                                     DetachableCollection<double> bMz, DetachableCollection<double> bIntensity,
                                      double precision,
                                      out List<int> aPaired, out List<int> bPaired)
     {
@@ -797,7 +797,7 @@ public static class MSDataDiff
     /// deterministic. The tie-break matters: a combined ion mobility spectrum holds the same m/z
     /// once per mobility bin, and pairing those by intensity is what lines the two sides up.
     /// </summary>
-    private static int[] StableOrderBy(List<double> values, List<double>? tieBreak = null)
+    private static int[] StableOrderBy(DetachableCollection<double> values, DetachableCollection<double>? tieBreak = null)
     {
         var order = new int[values.Count];
         for (int i = 0; i < order.Length; i++)

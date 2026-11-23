@@ -935,7 +935,7 @@ public sealed class MzmlWriter
             cfg.Prediction = BinaryPrediction.None;
         }
         var encoder = new BinaryDataEncoder(cfg);
-        string base64 = encoder.Encode(CollectionsMarshal.AsSpan(arr.Data), out _, out var actualNumpress);
+        string base64 = encoder.Encode(arr.Data.AsSpan(), out _, out var actualNumpress);
 
         // If numpress was dropped due to error tolerance, reflect that in the CV params.
         if (actualNumpress != cfg.Numpress)
@@ -1118,7 +1118,7 @@ public sealed class MzmlWriter
         if (cfg.Compression.IsValueWise())
             throw new NotSupportedException($"{cfg.Compression} compression is not supported in mzMLb.");
         CVID typeCv = ArrayTypeCvid(arr);
-        var data = CollectionsMarshal.AsSpan(arr.Data);
+        var data = arr.Data.AsSpan();
 
         string suffix;
         long offset;

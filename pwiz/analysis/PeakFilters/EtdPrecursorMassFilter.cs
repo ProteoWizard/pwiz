@@ -207,7 +207,7 @@ public sealed class EtdPrecursorMassFilter : ISpectrumDataFilter
     }
 
     private static void Compact(Spectrum spectrum, bool[] keep, int n,
-        List<double> mz, List<double> inten, BinaryDataArray intArr)
+        DetachableCollection<double> mz, DetachableCollection<double> inten, BinaryDataArray intArr)
     {
         int kept = 0;
         for (int i = 0; i < n; i++) if (keep[i]) kept++;

@@ -90,20 +90,50 @@ public class MSDataSmokeTest
         Assert.AreEqual(200.0, pairs[1].Mz, 1e-9);
         Assert.AreEqual(2500.0, pairs[1].Intensity, 1e-9);
 
-        // DetachData hands over the list's own buffer, longer than the values when the list has
+        // Detach hands over the buffer's own storage, longer than the values when the buffer has
         // spare capacity, and leaves the array empty and still usable.
         var mzArray = spec.GetMZArray()!;
         mzArray.Data.Capacity = 10;
-        var buffer = mzArray.DetachData(out int count);
+        var buffer = mzArray.Data.Detach(out int count);
         Assert.AreEqual(3, count);
-        Assert.AreEqual(10, buffer.Length, "the backing array itself, not a trimmed copy");
+        Assert.AreEqual(10, buffer.Length, "the storage itself, not a trimmed copy");
         CollectionAssert.AreEqual(new[] { 100.0, 200.0, 300.0 }, buffer.Take(count).ToArray());
         Assert.AreEqual(0, mzArray.Data.Count);
         mzArray.Data.Add(1.0);
-        Assert.AreEqual(100.0, buffer[0], "a later write to the array must not reach the detached buffer");
+        Assert.AreEqual(100.0, buffer[0], "a later write to the array must not reach the detached storage");
         mzArray.Data.Clear();
-        Assert.AreEqual(0, mzArray.DetachData(out count).Length);
+        Assert.AreEqual(0, mzArray.Data.Detach(out count).Length);
         Assert.AreEqual(0, count);
+
+        // The rest of the DetachableCollection surface the readers and filters use
+        var data = new DetachableCollection<double>();
+        data.AddRange(new[] { 1.0, 2.0 });
+        data.AddRange(new List<double> { 3.0 });
+        data.AddRange(Enumerable.Range(4, 2).Select(i => (double)i));
+        CollectionAssert.AreEqual(new[] { 1.0, 2.0, 3.0, 4.0, 5.0 }, data.ToArray());
+        var attached = new DetachableCollection<double>();
+        var storage = new[] { 7.0, 8.0, 0.0 };
+        attached.Attach(storage, 2);
+        attached.AddRange(new System.Collections.ObjectModel.ReadOnlyCollection<double>(new[] { 9.0 }));
+        CollectionAssert.AreEqual(new[] { 7.0, 8.0, 9.0 }, attached.ToArray());
+        Assert.AreSame(storage, attached.Detach(out count), "Attach takes the array as storage, not a copy");
+        data.Insert(0, 0.5);
+        data.RemoveAt(3);
+        CollectionAssert.AreEqual(new[] { 0.5, 1.0, 2.0, 4.0, 5.0 }, data);
+        Assert.AreEqual(3, data.IndexOf(4.0));
+        Assert.IsTrue(data.Remove(0.5));
+        Assert.IsFalse(data.Contains(0.5));
+        data.AsSpan()[0] = 9.0;
+        Assert.AreEqual(9.0, data[0], "AsSpan writes through to the buffer");
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => data[data.Count]);
+        data.SetCount(2);
+        data.SetCount(4);
+        CollectionAssert.AreEqual(new[] { 9.0, 2.0, 0.0, 0.0 }, data.ToArray(), "growing the count zeroes the new values");
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => data.Capacity = 3);
+        double sum = 0;
+        foreach (double value in data)
+            sum += value;
+        Assert.AreEqual(11.0, sum);
     }
 
     [TestMethod]

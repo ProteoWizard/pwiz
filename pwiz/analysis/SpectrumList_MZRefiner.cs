@@ -413,7 +413,7 @@ public sealed class SpectrumList_MZRefiner : SpectrumListWrapper
         return pep;
     }
 
-    private static void TryMatchAndPush(double ion, List<double> mzData,
+    private static void TryMatchAndPush(double ion, DetachableCollection<double> mzData,
         List<FragmentShiftDatum> ms2Data, double scanStartTime)
     {
         if (ion <= 0) return;
@@ -447,7 +447,7 @@ public sealed class SpectrumList_MZRefiner : SpectrumListWrapper
         });
     }
 
-    private static int LowerBound(List<double> values, double target)
+    private static int LowerBound(DetachableCollection<double> values, double target)
     {
         int lo = 0, hi = values.Count;
         while (lo < hi)

@@ -454,8 +454,8 @@ public sealed class SpectrumList_ChargeFromIsotope : SpectrumListWrapper
                 // CWT-pick the parent around the isolation window so we have centroided peaks.
                 var picker = InstantiatePeakPickerForWindowFromCached(cached, targetIsoMz, lowerIsoWidth, upperIsoWidth + UpperLimitPadding);
                 var sPicked = picker.GetSpectrum(0, true);
-                var mzArr = sPicked.GetMZArray()?.Data ?? new List<double>();
-                var intArr = sPicked.GetIntensityArray()?.Data ?? new List<double>();
+                var mzArr = sPicked.GetMZArray()?.Data ?? new DetachableCollection<double>();
+                var intArr = sPicked.GetIntensityArray()?.Data ?? new DetachableCollection<double>();
                 var (mz, inten) = FilterByMinIntensity(mzArr, intArr);
                 (peakMzs, peakInt) = TrimByMin(mz, inten, MaxNumberPeaks);
             }
@@ -478,7 +478,7 @@ public sealed class SpectrumList_ChargeFromIsotope : SpectrumListWrapper
         return (mzOut.ToArray(), intOut.ToArray());
     }
 
-    private static (double[] mz, double[] inten) FilterByMinIntensity(List<double> mzArr, List<double> intArr)
+    private static (double[] mz, double[] inten) FilterByMinIntensity(DetachableCollection<double> mzArr, DetachableCollection<double> intArr)
     {
         // cpp removes peaks whose intensity is < 5% of max or equals the running min.
         if (intArr.Count == 0) return (System.Array.Empty<double>(), System.Array.Empty<double>());

@@ -132,7 +132,7 @@ namespace pwiz.ProteowizardWrapper
         private static double[] TakeData(BinaryDataArray binaryDataArray, bool detach, out int count)
         {
             if (detach)
-                return binaryDataArray.DetachData(out count);
+                return binaryDataArray.Data.Detach(out count);
             var data = binaryDataArray.Data.ToArray();
             count = data.Length;
             return data;
