@@ -695,7 +695,16 @@ namespace pwiz.Skyline.ToolsUI {
                 return ResourceManager.GetString("RInstaller_InstallR_Downloading_R", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Timed out after {0} seconds..
+        /// </summary>
+        public static string RUtil_CheckForInternetConnection_Timed_out_after__0__seconds_ {
+            get {
+                return ResourceManager.GetString("RUtil_CheckForInternetConnection_Timed_out_after__0__seconds_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to SkylineProcessRunner timed-out after {0} milliseconds.
         /// </summary>

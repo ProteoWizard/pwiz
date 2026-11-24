@@ -379,6 +379,31 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <p class="note" id="fdpNote"></p>
     <div class="print-only" id="fdpPrintAll"></div>
   </div>
+  <div class="card" id="placementCard">
+    <h2>Entrapment FDP by protein placement</h2>
+    <p class="desc">The same combined estimate, split by where the entrapment sits: on <b>target proteins</b> (an
+      entrapment peptide that can receive the protein evidence a false target would) against on <b>entrapment
+      proteins of its own</b> (the standard design, which no protein-aware step can boost). Each half is scaled by
+      its own entrapment-to-target ratio. A step that uses no protein information gives the same curve for both;
+      a protein-aware step that is not calibrated shows as the target-protein half rising above the other.
+      The expected count is what a calibrated q would let through at that threshold, with a Poisson
+      interval, so a thin entrapment arm's noise reads as noise.</p>
+    <div class="kpis" id="placementKpis"></div>
+    <div class="legend" id="placementLegend"></div>
+    <div class="chartbox" id="placementChart"></div>
+    <p class="note" id="placementNote"></p>
+  </div>
+  <div class="card" id="proteinEntrapCard">
+    <h2>Protein-group FDP from entrapment proteins</h2>
+    <p class="desc">The reported protein groups against the groups made only of entrapment proteins, on the
+      experiment-level picked-protein q. The combined estimate uses the library's entrapment-protein to
+      target-protein ratio. Entrapment placed on target proteins is not counted here: it belongs to a target
+      protein's group by design, and is read at the precursor level above.</p>
+    <div class="kpis" id="proteinEntrapKpis"></div>
+    <div class="legend" id="proteinEntrapLegend"></div>
+    <div class="chartbox" id="proteinEntrapChart"></div>
+    <p class="note" id="proteinEntrapNote"></p>
+  </div>
   <div class="card" id="yieldCard">
     <h2>Identification yield</h2>
     <p class="desc">Accepted real-target precursors as the reported q-value threshold sweeps, at the scope
@@ -651,9 +676,25 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
         <b style="color:var(--warn)">amber</b>. A row in <b style="color:var(--bad)">red</b> did not calibrate;
         an amber <b style="color:var(--warn)">⚠</b> after a file name marks a file that calibrated successfully but
         whose anchor-scoring model reduced to a single feature (hover it for details).
-        <b>Click a row</b> to open that file's calibration Model page — the full distributions live on the
-        Model / FDR / Reproducibility tabs.</p>
+        <b>Click a row</b> to plot that file's fragment mass error below; click the file name to open its
+        calibration Model page &mdash; the full distributions live on the Model / FDR / Reproducibility tabs.</p>
       <div id="calSummaryTable"></div>
+    </div>
+    <div class="card" id="calMassErrCard">
+      <div class="calpick" id="calSummaryPick"></div>
+      <div class="cal-single">
+        <h2 id="calMassErrHdr">MS2 fragment mass error</h2>
+        <p class="desc">The m/z error of the peak closest to each of the 6 most intense library fragments of every
+          target the first pass accepted (apex scan and the scan either side), looked for in a window wider than
+          the search tolerance, so the peaks the search never extracted are visible: a distribution with real mass
+          beyond the red lines means the search tolerance is too narrow.
+          Errors are before the calibration correction, so the table's MS2 mean is the center; the flat floor is
+          the nearest unrelated peak. The SDs in the legend are measured over this wide window on accepted targets,
+          by observed-intensity tercile; they differ from the table's SD, which comes from the calibration matches.</p>
+        <div class="legend" id="calMassErrLegend"></div>
+        <div class="chartbox" id="calMassErrChart"></div>
+      </div>
+      <div class="print-only" id="calMassErrPrintAll"></div>
     </div>
   </div>
 </section>
@@ -769,7 +810,8 @@ function passBundle(p){
     features:D.model||[],modelDegenerate:D.modelDegenerate,scores:D.scores,trainingSet:D.trainingSet||null,
     densityRatio:D.densityRatio,winFraction:D.winFraction,
     fdpViews:D.fdpViews,idYield:D.idYield,crossRun:D.crossRun,perFile:D.perFile,
-    coAssignment:D.coAssignment,equalChance:D.equalChance?D.equalChance.pass1:null};
+    coAssignment:D.coAssignment,equalChance:D.equalChance?D.equalChance.pass1:null,
+    proteinEntrapment:null};
   const m=D.pass2.model;   // null under confidence-transfer mode
   return {pass:2,label:"2nd pass",desc:"post-reconciliation reported pool",
     hasStructural:!!m,
@@ -777,7 +819,8 @@ function passBundle(p){
     trainingSet:m?(m.trainingSet||null):null,
     densityRatio:D.pass2.densityRatio,winFraction:D.pass2.winFraction,
     fdpViews:D.pass2.fdpViews,idYield:D.pass2.idYield,crossRun:D.pass2.crossRun,perFile:D.pass2.perFile,
-    coAssignment:D.pass2.coAssignment,equalChance:D.equalChance?D.equalChance.pass2:null};
+    coAssignment:D.pass2.coAssignment,equalChance:D.equalChance?D.equalChance.pass2:null,
+    proteinEntrapment:D.pass2.proteinEntrapment||null};
 }
 const PASSES=[passBundle(1)];
 if(D.pass2)PASSES.push(passBundle(2));
@@ -1445,7 +1488,75 @@ function renderFdrTab(b){
     const btn=H(ssel,"button",{class:"vbtn"+(k===fdrScope?" on":"")},sc[1]);
     btn.onclick=()=>{if(fdrScope===k)return;fdrScope=k;renderFdrTab(B());};});
   drawFdpCard(b);
+  drawPlacementCard(b);
+  drawProteinEntrapmentCard(b);
   drawYield(b);
+}
+
+// The entrapment FDP split by protein placement, for the active pass + scope. Hidden unless
+// the library carries entrapment on target proteins (the protein-aware audit design).
+const PLACEMENT_SERIES=[{k:"combined",name:"combined FDP (all entrapment)",color:COL.target,key:"combined"},
+                        {k:"onTargets",name:"on target proteins",color:COL.ptarget,key:"combinedOnTargetProteins"},
+                        {k:"own",name:"on entrapment proteins",color:COL.pdecoy,key:"combinedOnEntrapmentProteins"}];
+const placementOff={combined:false,onTargets:false,own:false};
+function expectedText(n,e){
+  const half=1.96*Math.sqrt(Math.max(e,0));
+  return fmt(n,0)+" (expected "+fmt(e,1)+" &plusmn; "+fmt(half,1)+")";
+}
+function drawPlacementCard(b){
+  const card=document.getElementById("placementCard");
+  const views=b.fdpViews||[];
+  const f=views.find(v=>v.scope===fdrScopeKey())||null;
+  if(!f||!f.hasPlacementSplit||!f.combinedOnTargetProteins){card.style.display="none";return;}
+  card.style.display="";
+  const host=document.getElementById("placementChart");host.innerHTML="";
+  const wrap=H(host,"div",{style:"display:flex;gap:14px;flex-wrap:wrap"});
+  const maxq=f.q[f.q.length-1]||1;
+  drawFdpPanel(H(wrap,"div",{}),f,0.02,"zoom  q in [0, 2%]",PLACEMENT_SERIES,placementOff);
+  drawFdpPanel(H(wrap,"div",{}),f,Math.max(0.02,maxq),"full extent",PLACEMENT_SERIES,placementOff);
+  const i1=opIdx(f,0.01);const kp=document.getElementById("placementKpis");kp.innerHTML="";
+  kpi(kp,"discoveries @1% q",fmt(f.nTargetAccepted[i1],0),"");
+  const kpE=H(kp,"div",{class:"kpi"});
+  H(kpE,"div",{class:"v",html:expectedText(f.nEntrapmentAccepted[i1],f.expectedEntrapment[i1])});
+  H(kpE,"div",{class:"k"},"entrapment @1% q, all");
+  kpi(kp,"on target proteins @1% q",fmt(f.nEntrapmentOnTargetProteins[i1],0)+" / FDP "+pct(f.combinedOnTargetProteins[i1],2),cls(f.combinedOnTargetProteins[i1],0.01));
+  kpi(kp,"on entrapment proteins @1% q",fmt(f.nEntrapmentOnEntrapmentProteins[i1],0)+" / FDP "+pct(f.combinedOnEntrapmentProteins[i1],2),cls(f.combinedOnEntrapmentProteins[i1],0.01));
+  const ratio=(f.combinedOnEntrapmentProteins[i1]>0)?f.combinedOnTargetProteins[i1]/f.combinedOnEntrapmentProteins[i1]:NaN;
+  kpi(kp,"target-protein / own-protein FDP @1% q",isNaN(ratio)?"-":fmt(ratio,2)+"x",isNaN(ratio)?"":(ratio<=1.25?"good":ratio<=2?"warn":"bad"));
+  document.getElementById("placementNote").innerHTML=
+    "Library ratios: on target proteins r = "+fmt(f.ratioOnTargetProteins,3)+", on entrapment proteins r = "+fmt(f.ratioOnEntrapmentProteins,3)+
+    " (total r = "+fmt(f.entrapmentRatio,3)+"). "+
+    "Inside detected proteins the entrapment shares the protein with every absent target peptide, so the target-protein half is read as a lower bound there; "+
+    "the two halves diverging is the signal, not either value alone (<a href='https://github.com/ProteoWizard/pwiz/blob/master/pwiz_tools/Osprey/docs/protein-shuffled-entrapment.md' target='_blank' rel='noopener'>the audit design</a>).";
+  legend(document.getElementById("placementLegend"),PLACEMENT_SERIES.filter(se=>f[se.key]).map(se=>({name:se.name,color:se.color,toggle:o=>{placementOff[se.k]=o;drawPlacementCard(B());}})));
+}
+
+// Protein-group FDP from the entrapment-only groups, pass 2 only (the reported protein q).
+const PROTEIN_ENTRAP_SERIES=[{k:"combined",name:"combined protein-group FDP",color:COL.target,key:"combined"}];
+const proteinEntrapOff={combined:false};
+function drawProteinEntrapmentCard(b){
+  const card=document.getElementById("proteinEntrapCard");
+  const pe=b.proteinEntrapment;
+  if(!pe||!pe.q||!pe.q.length){card.style.display="none";return;}
+  card.style.display="";
+  // The precursor panel's shape, so the same drawing serves: q, accepted targets, the series.
+  const f={q:pe.q,nTargetAccepted:pe.nTargetGroups,combined:pe.combined};
+  const host=document.getElementById("proteinEntrapChart");host.innerHTML="";
+  const wrap=H(host,"div",{style:"display:flex;gap:14px;flex-wrap:wrap"});
+  const maxq=pe.q[pe.q.length-1]||1;
+  drawFdpPanel(H(wrap,"div",{}),f,0.02,"zoom  protein q in [0, 2%]",PROTEIN_ENTRAP_SERIES,proteinEntrapOff);
+  drawFdpPanel(H(wrap,"div",{}),f,Math.max(0.02,maxq),"full extent",PROTEIN_ENTRAP_SERIES,proteinEntrapOff);
+  const i1=opIdx(f,0.01);const kp=document.getElementById("proteinEntrapKpis");kp.innerHTML="";
+  kpi(kp,"protein groups @1% protein q",fmt(pe.nTargetGroups[i1],0),"");
+  const kpE=H(kp,"div",{class:"kpi"});
+  H(kpE,"div",{class:"v",html:expectedText(pe.nEntrapmentGroups[i1],pe.expectedEntrapment[i1])});
+  H(kpE,"div",{class:"k"},"entrapment groups @1% protein q");
+  kpi(kp,"combined protein-group FDP @1% q",pct(pe.combined[i1],2),cls(pe.combined[i1],0.01));
+  kpi(kp,"max protein q",pct(maxq,1),"");
+  document.getElementById("proteinEntrapNote").innerHTML=
+    "Library: "+fmt(pe.nLibraryEntrapmentProteins,0)+" entrapment proteins against "+fmt(pe.nLibraryTargetProteins,0)+
+    " target proteins, r = "+fmt(pe.entrapmentRatio,3)+". Groups with no picked-protein q (decoy winners) are not counted.";
+  legend(document.getElementById("proteinEntrapLegend"),PROTEIN_ENTRAP_SERIES.map(se=>({name:se.name,color:se.color,toggle:o=>{proteinEntrapOff[se.k]=o;drawProteinEntrapmentCard(B());}})));
 }
 
 // The entrapment "q vs true FDP" calibration card for the active pass + scope. Hidden
@@ -2415,6 +2526,7 @@ function renderCal(){
   renderCalFdr();
   renderCalRepro();
   renderCalSummary();
+  renderCalMassError();
   // Density + Competition CAL boxes are static n/a markup -- nothing to render.
 }
 
@@ -2423,7 +2535,7 @@ function renderCal(){
 // a re-entry reflects the current index.
 function buildCalPickers(){
   const last=CAL.files.length-1;
-  [["calModelPick","Model"],["calFdrPick","FDR"]].forEach(([host])=>{
+  [["calModelPick","Model"],["calFdrPick","FDR"],["calSummaryPick","Summary"]].forEach(([host])=>{
     const p=document.getElementById(host);if(!p)return;p.innerHTML="";
     H(p,"label",{for:host+"Sel"},"File");
     // Prev stepper: move the shared index back one file (clamped at the first file).
@@ -2457,6 +2569,7 @@ function setCalFile(i){
   buildCalPickers();
   renderCalModel();
   renderCalFdr();
+  renderCalMassError();
   highlightCalSelection();
 }
 
@@ -2673,8 +2786,9 @@ function renderCalSummary(){
   // Mark a cell as an outlier: bold + amber so a bad file pops out of the scan.
   const mark=(td,bad)=>{if(bad){td.style.color="var(--warn)";td.style.fontWeight="700";}};
   files.forEach((f,i)=>{const failed=calNotCalibrated(f), degen=calDegenerate(f);
-    const tr=H(tb,"tr",{class:"clk callink"+(failed?" neg":"")});
-    const fileTd=H(tr,"td",{class:"l"},(i+1)+". "+calFileName(i)+(failed?"  ⚠":""));
+    const tr=H(tb,"tr",{class:"clk"+(failed?" neg":"")});
+    const fileTd=H(tr,"td",{class:"l"});
+    wireJump(H(fileTd,"span",{class:"callink"},(i+1)+". "+calFileName(i)+(failed?"  ⚠":"")),i);
     // Degenerate-but-calibrated: a compact amber warning glyph with a fly-over (title) so it
     // does not wrap and inflate the row; the red failure row is reserved for a genuine no-fit.
     if(degen)H(fileTd,"span",{style:"margin-left:5px;color:var(--warn);cursor:help",
@@ -2689,9 +2803,77 @@ function renderCalSummary(){
     const t2=H(tr,"td",{class:"num"},meanSd(f.ms2Mean,f.ms2Sd));mark(t2,out(bMs2,num(f.ms2Mean)));
     const tr2=H(tr,"td",{class:"num"},fmt(f.rtRSquared,3));mark(tr2,out(bR2,num(f.rtRSquared)));
     const tw=H(tr,"td",{class:"num"},fmt(f.rtToleranceMin,2));mark(tw,out(bWin,num(f.rtToleranceMin)));
-    wireJump(tr,i);   // click-to-jump, but a drag (text selection) does not navigate
+    tr.addEventListener("click",e=>{if(!e.target.closest(".callink"))setCalFile(i);});
   });
+  highlightCalSelection();
   if(!files.length)H(host,"p",{class:"note"},"No per-file calibration data.");
+}
+
+// ---------- CAL Summary tab: the selected file's fragment mass-error histogram ----------
+// D.fragmentMassErrors.files: one fixed-bin histogram per file (classes low / mid / high / all),
+// errors AFTER the calibration shift. Drawn before the shift (x + the file's MS2 mean), so the
+// table's mean is the center, the search window is mean +/- the tolerance the search used, and
+// the configured window is +/- the configured tolerance about zero.
+const CAL_ME_CLASSES=[{k:"low",name:"low intensity",color:COL.pdecoy},{k:"mid",name:"mid intensity",color:COL.ptarget},
+                      {k:"high",name:"high intensity",color:COL.target}];
+const stemOf=n=>String(n||"").replace(/\.[^.\\/]+$/,"");
+function calMassErrorOf(i){
+  const m=D.fragmentMassErrors,f=CAL.files[i];if(!m||!m.files||!f)return null;
+  return m.files.find(r=>r.file===f.file||r.file===stemOf(f.file))||null;
+}
+function renderCalMassError(){
+  const card=document.getElementById("calMassErrCard");if(!card)return;
+  card.style.display=CAL.files.length?"":"none";
+  if(!CAL.files.length)return;
+  // No summary at all: say so in the card rather than hide it, so a page rendered where the
+  // per-run summaries were not shipped does not read as one that never had the view.
+  const any=!!(D.fragmentMassErrors&&D.fragmentMassErrors.files&&D.fragmentMassErrors.files.length);
+  const r=calMassErrorOf(CAL.sel);
+  document.getElementById("calMassErrHdr").textContent="MS2 fragment mass error \u2014 "+calFileName(CAL.sel);
+  if(!any)naChart("calMassErrChart","calMassErrLegend","No fragment mass-error summary was on disk for any file when this report was rendered.");
+  else if(!r)naChart("calMassErrChart","calMassErrLegend","No fragment mass-error summary for this file.");
+  else drawCalMassError(document.getElementById("calMassErrChart"),document.getElementById("calMassErrLegend"),r,CAL.files[CAL.sel]);
+  // Print-only: every file's histogram (the dropdown shows one on screen).
+  const pall=document.getElementById("calMassErrPrintAll");if(pall){pall.innerHTML="";
+    CAL.files.forEach((cf,i)=>{const ri=calMassErrorOf(i);if(!ri)return;
+      const cell=H(pall,"div",{class:"calfilecell"});
+      H(cell,"h3",{style:"font-size:12.5px;margin:6px 0 2px;font-weight:600"},(i+1)+". "+calFileName(i));
+      const leg=H(cell,"div",{class:"legend"});
+      drawCalMassError(H(cell,"div",{class:"chartbox"}),leg,ri,cf);});
+  }
+}
+function drawCalMassError(host,legHost,r,f){
+  host.innerHTML="";
+  const W=760,Hh=300,box={l:64,t:14,w:W-84,h:Hh-58};
+  const s=svg(W,Hh);host.appendChild(s);
+  const n=r.binCount,hw=r.halfWidth,bw=2*hw/n,num=v=>(v==null||isNaN(v))?NaN:Number(v);
+  const mean=!isNaN(num(f&&f.ms2Mean))?num(f.ms2Mean):(!isNaN(num(r.calibrationMean))?num(r.calibrationMean):0);
+  const lo=mean-hw,hi=mean+hw;
+  const series=CAL_ME_CLASSES.map(c=>({c:c,cl:(r.classes||[]).find(x=>x.name===c.k)})).filter(x=>x.cl);
+  // Each class as a fraction of its own peaks, so the three widths compare at a glance.
+  const frac=series.map(x=>x.cl.counts.map(v=>x.cl.total>0?v/x.cl.total:0));
+  const ymax=Math.max(1e-6,...frac.map(a=>Math.max(...a)))*1.1;
+  const sc=axes(s,box,[lo,hi],[0,ymax],{xlab:"fragment m/z error before calibration ("+CAL.unit+")",
+    ylab:"fraction of peaks",yfmt:v=>pct(v,1)});
+  const vline=(v,color,dash,w)=>{if(isNaN(v)||v<lo||v>hi)return;
+    E(s,"line",{x1:sc.x(v),x2:sc.x(v),y1:box.t,y2:box.t+box.h,stroke:color,"stroke-width":w||1.5,"stroke-dasharray":dash||""});};
+  const tol=num(r.searchTolerance),cfg=num(r.configuredTolerance);
+  vline(mean,COL.muted,"",1);
+  [1,-1].forEach(sg=>{vline(mean+sg*tol,COL.decoy,"",2);vline(sg*cfg,COL.muted,"2 3",1.5);});
+  series.forEach((x,j)=>{let d="";frac[j].forEach((v,i)=>{const x0=sc.x(mean-hw+i*bw),x1=sc.x(mean-hw+(i+1)*bw),y=sc.y(v);
+      d+=(i?"L":"M")+x0.toFixed(1)+" "+y.toFixed(1)+" L"+x1.toFixed(1)+" "+y.toFixed(1)+" ";});
+    E(s,"path",{d:d,fill:"none",stroke:x.c.color,"stroke-width":1.6});});
+  legend(legHost,series.map(x=>({name:x.c.name+" (SD "+fmt(x.cl.sd,2)+")",color:x.c.color,line:true}))
+    .concat([{name:"MS2 mean "+fmt(mean,2),color:COL.muted,line:true},
+             {name:"search tolerance mean \u00b1 "+fmt(tol,2),color:COL.decoy,line:true},
+             {name:"configured \u00b1 "+fmt(cfg,2),color:COL.muted,line:true}]));
+  const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
+  ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();
+    const v=((ev.clientX-rb.left)/rb.width*W-box.l)/box.w*2*hw-hw;
+    const i=Math.max(0,Math.min(n-1,Math.floor((v+hw)/bw)));
+    showTip(ev,"<b>"+fmt(mean-hw+i*bw,2)+" to "+fmt(mean-hw+(i+1)*bw,2)+" "+esc(CAL.unit)+"</b><br>"+
+      series.map((x,j)=>esc(x.c.name)+": "+fmt(x.cl.counts[i],0)+" ("+pct(frac[j][i],2)+")").join("<br>"));});
+  ov.addEventListener("mouseleave",hideTip);
 }
 
 // Refresh only the selection highlight in the Summary table (cheap; called on cal-file

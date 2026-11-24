@@ -1,0 +1,32 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Chain link: two interlocked rounded-rectangle rings side by side in muted blue-purple, with
+       white and pale green highlights along their upper and lower edges and a dark navy bar where
+       they overlap. -->
+  <Rectangle Canvas.Left="2.5" Canvas.Top="9.5" Width="15" Height="12" RadiusX="5.5" RadiusY="5.5" StrokeThickness="3.5">
+    <Rectangle.Stroke>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#8E8EC8" Offset="0"/>
+        <GradientStop Color="#5A5AA8" Offset="0.5"/>
+        <GradientStop Color="#3A3A8C" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Stroke>
+  </Rectangle>
+  <Rectangle Canvas.Left="14.5" Canvas.Top="9.5" Width="15" Height="12" RadiusX="5.5" RadiusY="5.5" StrokeThickness="3.5">
+    <Rectangle.Stroke>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#8E8EC8" Offset="0"/>
+        <GradientStop Color="#5A5AA8" Offset="0.5"/>
+        <GradientStop Color="#3A3A8C" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Stroke>
+  </Rectangle>
+  <!-- Highlights -->
+  <Path Data="M 4.5,13 Q 4.5,10.5 7.5,10.5 L 12,10.5" Stroke="#FFFFFF" StrokeThickness="1.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0.9"/>
+  <Path Data="M 16.5,13 Q 16.5,10.5 19.5,10.5 L 24,10.5" Stroke="#FFFFFF" StrokeThickness="1.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0.9"/>
+  <Path Data="M 6,12 L 6,14.5" Stroke="#C8EAD6" StrokeThickness="1.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+  <Path Data="M 18,12 L 18,14.5" Stroke="#C8EAD6" StrokeThickness="1.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+  <Path Data="M 6.5,19.5 Q 8,20.5 12,20.5" Stroke="#A8D8C0" StrokeThickness="1.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+  <Path Data="M 18.5,19.5 Q 20,20.5 24,20.5" Stroke="#A8D8C0" StrokeThickness="1.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+  <!-- Overlap bar -->
+  <Rectangle Canvas.Left="11" Canvas.Top="14" Width="10" Height="2.5" Fill="#1E2A7A"/>
+</Canvas>

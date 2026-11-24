@@ -40,11 +40,27 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         private TransitionIonMobilityFiltering _ionMobilityFiltering { get; set; }
         private bool ShowPeakWidthTypeControl { get; set; } // False when offering only resolving power settings, as in peptide import wizard
 
+        private readonly int _groupBoxRightGap;
+        private bool _groupBoxWidthSetByHost;
+
         public IonMobilityFilteringUserControl()
         {
             ShowPeakWidthTypeControl = true;
             InitializeComponent();
+            // Record the gap right of the group box now, while this control and the group box
+            // still agree, so OnLoad can restore it (see the comment there).
+            _groupBoxRightGap = ClientSize.Width - groupBoxIonMobilityFiltering.Width;
             UpdateIonMobilityFilterWindowWidthControls();
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            // A host lays this control out at its 96-DPI designer size after the control has
+            // already auto-scaled itself, which shrinks the anchored group box; the host's own
+            // auto-scaling then grows the control but not the group box (issue #4599).
+            if (!_groupBoxWidthSetByHost)
+                groupBoxIonMobilityFiltering.Width = Math.Max(1, ClientSize.Width - _groupBoxRightGap);
         }
 
         public IonMobilityWindowWidthCalculator IonMobilityWindowWidthCalculator => _ionMobilityFiltering.FilterWindowWidthCalculator;
@@ -93,6 +109,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         // For use in import search wizard, where we want to show a very simple interface
         public void ShowOnlyResolvingPowerControls(int groupBoxWidth)
         {
+            _groupBoxWidthSetByHost = true;     // Sizes the group box itself, below
+
             // Assume that we want to use IM information in spectral libraries
             cbUseSpectralLibraryIonMobilities.Checked = true;
             // Assume that resolving power is the proper choice of window width calculation

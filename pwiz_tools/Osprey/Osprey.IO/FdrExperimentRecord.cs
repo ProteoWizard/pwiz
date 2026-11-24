@@ -61,15 +61,12 @@ namespace pwiz.Osprey.IO
         /// (issue #4522). <see cref="FdrScoreRecord.Score"/> is the per-ROW SVM discriminant,
         /// which is the quantity the RUN-scope q-values compete on; the experiment scope instead
         /// competes on a per-entry roll-up across runs, and without it persisted no consumer can
-        /// re-gate at experiment scope - it has to rebuild the roll-up itself and branch on
-        /// <c>OSPREY_EXPERIMENT_AGG</c>, which silently gives the wrong answer on exactly the
-        /// arms where the aggregation is under study.
+        /// re-gate at experiment scope without rebuilding the roll-up itself.
         ///
-        /// <para>Under the default aggregation this is the max over the entry's rows across all
-        /// runs; under mean-best-N it is <c>TargetDecoyCompetition.ComputeBaseIdMeanBestN</c>'s
-        /// value for the entry. Every row of an entry carried the same value in both modes even
-        /// when it was stored per row, which is what makes one record per entry_id lossless.
-        /// See <c>PercolatorQValues.ComputeExperimentAggregateScoreMap</c>.</para>
+        /// <para>This is the max over the entry's rows across all runs. Every row of an entry
+        /// carried the same value even when it was stored per row, which is what makes one record
+        /// per entry_id lossless. See
+        /// <c>PercolatorQValues.ComputeExperimentAggregateScoreMap</c>.</para>
         ///
         /// <para>Not a general q-to-score inverse: the best-of-runs clamp
         /// (<c>ClampExperimentQToBestRunFlat</c>, issue #4390) floors an experiment q up to a RUN
@@ -104,11 +101,21 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public readonly double Pep;
 
+        /// <summary>
+        /// Posterior error probability for this entry's PEPTIDE: <c>PepEstimator.PosteriorError</c>
+        /// of the score its peptide won the experiment-wide peptide-level target/decoy
+        /// competition on, fitted over that competition's winners. The same on every charge
+        /// state of the peptide, and 1.0 on the side that lost - the peptide-level counterpart
+        /// of <see cref="Pep"/>, from the competition that also gives
+        /// <see cref="ExperimentPeptideQvalue"/>.
+        /// </summary>
+        public readonly double PeptidePep;
+
         public FdrExperimentRecord(
             uint entryId,
             double experimentPrecursorQvalue, double experimentPeptideQvalue,
             double experimentProteinQvalue, double experimentAggregateScore,
-            double pep)
+            double pep, double peptidePep)
         {
             EntryId = entryId;
             ExperimentPrecursorQvalue = experimentPrecursorQvalue;
@@ -116,6 +123,21 @@ namespace pwiz.Osprey.IO
             ExperimentProteinQvalue = experimentProteinQvalue;
             ExperimentAggregateScore = experimentAggregateScore;
             Pep = pep;
+            PeptidePep = peptidePep;
+        }
+
+        /// <summary>This record with its protein q-value replaced and every other field kept.</summary>
+        public FdrExperimentRecord WithProteinQvalue(double experimentProteinQvalue)
+        {
+            return new FdrExperimentRecord(EntryId, ExperimentPrecursorQvalue, ExperimentPeptideQvalue,
+                experimentProteinQvalue, ExperimentAggregateScore, Pep, PeptidePep);
+        }
+
+        /// <summary>This record with its two experiment q-values replaced and every other field kept.</summary>
+        public FdrExperimentRecord WithQvalues(double experimentPrecursorQvalue, double experimentPeptideQvalue)
+        {
+            return new FdrExperimentRecord(EntryId, experimentPrecursorQvalue, experimentPeptideQvalue,
+                ExperimentProteinQvalue, ExperimentAggregateScore, Pep, PeptidePep);
         }
 
         /// <summary>True for a decoy entry: the decoy bit is set in the entry_id.</summary>

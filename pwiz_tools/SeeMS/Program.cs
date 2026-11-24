@@ -52,6 +52,9 @@ namespace Pwiz.SeeMS
 		[SecurityPermission(SecurityAction.Demand, Flags = SecurityPermissionFlag.ControlAppDomain)]
 		public static int Main( string[] args )
 		{
+		    // Before a file dialog can load a shell extension that brings its own older msvcp140.
+		    Pwiz.Util.Misc.AppLocalCrt.Pin();
+
 		    // Hook the vendor SDK on-demand resolver before any Reader_* is touched.
 		    // Without this, opening a Thermo / Bruker / Waters / etc. file fails with
 		    // TypeLoadException because the SDK DLLs aren't shipped in the installer
@@ -81,6 +84,7 @@ namespace Pwiz.SeeMS
 
             // Start a fresh log file each run (overwrite). Keeps it small and focused on the
             // current session for easy paste-back.
+            // ReSharper disable once EmptyGeneralCatchClause
             try { File.WriteAllText(LogFilePath, string.Empty); } catch { }
             Log(string.Format(System.Globalization.CultureInfo.InvariantCulture,
                 "seems-sharp starting; args=[{0}]; pid={1}; cwd={2}",

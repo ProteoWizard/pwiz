@@ -125,9 +125,8 @@ namespace pwiz.Osprey.IO
                 var errors = new DiannTsvLoader.LibraryLineErrors();
                 // Progress over the file's rows, one report per row group: a human library is
                 // tens of millions of fragment rows in a handful of groups.
-                using (var readProgress = new ProgressReporter(
-                    string.Format(OspreyIOResources.DiannTsvLoader_Load_Parsing__0_, Path.GetFileName(path)), reader.RowCount,
-                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                ProgressReporter.Run(
+                    string.Format(OspreyIOResources.DiannTsvLoader_Load_Parsing__0_, Path.GetFileName(path)), reader.RowCount, readProgress =>
                 {
                     long rowsRead = 0;
                     // Every row group, none taken as representative: DIA-NN 2.7 writes an empty one
@@ -140,8 +139,7 @@ namespace pwiz.Osprey.IO
                         rowsRead += group.RowCount;
                         readProgress.Report(rowsRead);
                     }
-                    readProgress.Complete();
-                }
+                }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
 
                 // A library with any invalid row is refused whole, as a .tsv with an invalid line is.
                 if (errors.Any)

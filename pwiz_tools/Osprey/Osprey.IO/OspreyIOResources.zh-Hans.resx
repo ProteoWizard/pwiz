@@ -225,10 +225,6 @@
     <value>{0} 由当前构建版本无法识别的 Osprey 构建版本写入（{1}；当前为 {2}），因此无法重用。请使用此构建版本重新对该文件评分（{3}）。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="ParquetScoreCache_LoadCwtCandidatesFromParquet__0___the_stored_peak_candidates_in_row_group__1__have_an_unexpected_type___2____The_file_is_damaged_or_was_written_by_a_different_version_of_Osprey_" xml:space="preserve">
-    <value>{0}：行组 {1} 中存储的候选峰类型异常（{2}）。该文件已损坏，或由其他版本的 Osprey 写入。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="ParquetScoreCache_RequireCharge__0__is_corrupt__row__1___entry_id__2___has_a_charge_of_0__which_is_not_a_possible_" xml:space="preserve">
     <value>{0} 已损坏：行组 {5} 的第 {1} 行（{3} {2}）的电荷为 0，这不是可能的母离子电荷。请删除该文件并重新运行“{4}”以重写该文件。</value>
     <comment>Needs Review:New resource</comment>

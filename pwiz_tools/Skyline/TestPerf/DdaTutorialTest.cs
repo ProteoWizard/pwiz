@@ -292,7 +292,7 @@ namespace TestPerf
                 // Filter time related messages
                 RunUI(() => importPeptideSearchDlg.SearchControl.ProgressLock = new FilterTimeMessageLock());
                 // Resize the form before running or the output will not appear scrolled to the end
-                RunUI(() => importPeptideSearchDlg.Size = new Size(404, 578));  // minimum height
+                RunUI(() => importPeptideSearchDlg.Size = ScaledSize(importPeptideSearchDlg, 404, 578));  // minimum height
             }
             else if (IsPauseForScreenShots)
             {
@@ -379,7 +379,7 @@ namespace TestPerf
             RestoreViewOnScreen(17);
             RunUI(() =>
             {
-                SkylineWindow.Size = new Size(1137, 714);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 1137, 714);
                 // Set horizontal scroll position
             });
             WaitForGraphs();

@@ -1,0 +1,61 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Molecule list window: the EmptyList window with its right half holding a pastel pink panel
+       and a fluorene (two benzene rings joined by a five-membered ring, its CH2 apex toward the
+       list on the left), drawn ball-and-stick in the Molecule icon's style (gray bonds, shaded red
+       atoms). -->
+  <Canvas.Resources>
+    <RadialGradientBrush x:Key="Atom" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" GradientOrigin="0.3,0.3" Center="0.5,0.5" RadiusX="0.65" RadiusY="0.65">
+      <GradientStop Color="#F4A8A8" Offset="0"/>
+      <GradientStop Color="#E35F5F" Offset="0.5"/>
+      <GradientStop Color="#B82020" Offset="1"/>
+    </RadialGradientBrush>
+  </Canvas.Resources>
+  <Rectangle Canvas.Left="0" Canvas.Top="8" Width="20" Height="24" Fill="#FFFFFF"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="0" Width="16" Height="32">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFE7F7" Offset="0"/>
+        <GradientStop Color="#FFD6DE" Offset="0.5"/>
+        <GradientStop Color="#F7E7FF" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <Rectangle Canvas.Left="0" Canvas.Top="0" Width="20" Height="8">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#A5CEDE" Offset="0"/>
+        <GradientStop Color="#94BDCE" Offset="0.25"/>
+        <GradientStop Color="#4A9CC6" Offset="0.26"/>
+        <GradientStop Color="#3184AD" Offset="0.55"/>
+        <GradientStop Color="#217BAD" Offset="0.8"/>
+        <GradientStop Color="#2984B5" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <Rectangle Canvas.Left="2" Canvas.Top="12" Width="2" Height="2" Fill="#73524A"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="12" Width="10" Height="2" Fill="#5A3931"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="16" Width="2" Height="2" Fill="#A5315A"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="16" Width="10" Height="2" Fill="#4A4A4A"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="20" Width="2" Height="2" Fill="#CE1852"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="20" Width="10" Height="2" Fill="#4A5252"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="24" Width="2" Height="2" Fill="#CE104A"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="24" Width="10" Height="2" Fill="#4A524A"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="28" Width="2" Height="2" Fill="#AD2152"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="28" Width="10" Height="2" Fill="#525252"/>
+  <!-- Bonds: fluorene rings with bond length 5.2 mirrored to point left, centered at 23.05,16 -->
+  <Path Data="M 18.63,16.00 L 21.68,20.21 L 26.63,18.60 L 26.63,13.40 L 21.68,11.79 Z M 21.68,20.21 L 20.60,25.29 L 24.47,28.77 L 29.41,27.17 L 30.49,22.08 L 26.63,18.60 Z M 26.63,13.40 L 30.49,9.92 L 29.41,4.83 L 24.47,3.23 L 20.60,6.71 L 21.68,11.79 Z" Stroke="#7B7B7B" StrokeThickness="1.8" StrokeLineJoin="Round"/>
+  <!-- Atoms at the thirteen ring vertices -->
+  <Ellipse Canvas.Left="16.93" Canvas.Top="14.30" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="19.98" Canvas.Top="18.51" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="24.93" Canvas.Top="16.90" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="24.93" Canvas.Top="11.70" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="19.98" Canvas.Top="10.09" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="18.90" Canvas.Top="23.59" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="22.77" Canvas.Top="27.07" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="27.71" Canvas.Top="25.47" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="28.79" Canvas.Top="20.38" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="28.79" Canvas.Top="8.22" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="27.71" Canvas.Top="3.13" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="22.77" Canvas.Top="1.53" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="18.90" Canvas.Top="5.01" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+</Canvas>

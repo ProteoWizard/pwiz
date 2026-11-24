@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient.Properties;
@@ -46,6 +47,7 @@ namespace pwiz.PanoramaClient
         public PanoramaFilePicker(List<PanoramaServer> servers, string stateString, bool showWebDav = false, string selectedPath = null)
         {
             InitializeComponent();
+            PrepareForDpi();
 
             _servers = servers;
             _treeState = stateString;
@@ -510,7 +512,7 @@ namespace pwiz.PanoramaClient
             {
                 listView.Columns[3].Width = 0;
                 listView.Columns[4].Width = -2;
-                listView.Columns[2].Width = !versions ? 0 : 60;
+                listView.Columns[2].Width = !versions ? 0 : DpiScale.Scale(this, 60);
             }
             else 
             {
@@ -711,11 +713,33 @@ namespace pwiz.PanoramaClient
             }
         }
 
+        /// <summary>
+        /// Sizes the file list and the window icon for the display DPI (issue #4599). Above 100%
+        /// the Skyline document entry is drawn from the full document icon, as the Targets dock
+        /// tab draws it, and the window icon from the vector drawing of the menu item that opens
+        /// this form.
+        /// </summary>
+        private void PrepareForDpi()
+        {
+            ImageListScaler.ScaleToDpi(this, fileIcons);   // 16x16 icons are a 96-DPI design
+            DpiScale.ScaleColumnWidths(this, listView);   // ColumnHeader widths are not autoscaled
+            if (!DpiScale.IsScaled(this))
+                return;
+            using (var skylineDoc = Resources.SkylineDoc)
+            using (var image = DpiFormIcons.GetFrameImage(skylineDoc, fileIcons.ImageSize.Width))
+            {
+                fileIcons.Images[0] = image;
+            }
+            Icon = DpiFormIcons.GetIcon(this, Icon, @"PanoramaDownload",
+                size => DpiIcons.LoadIcon(@"PanoramaDownload", 16, size));
+        }
+
         #region Test Support
 
         public PanoramaFilePicker(PanoramaServer server, JToken folderJson, JToken fileJson, JToken sizeJson)
         {
             InitializeComponent();
+            PrepareForDpi();
 
             _restoring = true;
             versionOptions.Text = RECENT_VER;

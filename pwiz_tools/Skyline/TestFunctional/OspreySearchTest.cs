@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -139,6 +140,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.IsFalse(searchDlg.UseExistingLibrary);
                 searchDlg.ImportFastaControl.SetFastaContent(fastaFilepath);
             });
+            VerifyEntrapmentChoice(searchDlg);
             AdvanceToSearchSettings(searchDlg);
             SetAdditionalSettings(searchDlg, true);
             SaveAndReapplyPreset(searchDlg);
@@ -205,6 +207,46 @@ namespace pwiz.SkylineTestFunctional
             });
             return searchDlg;
         }
+
+        /// <summary>
+        /// The FASTA page's entrapment choice: off to begin with, and the percentages it reveals at
+        /// the user's last values, 10% and 10% to begin with. A percentage out of range, or a total
+        /// below what CarafeSharp builds, is refused and keeps the page; the search goes on with the
+        /// starting values, which <see cref="VerifyCommandLine"/> finds on the command line.
+        /// </summary>
+        private static void VerifyEntrapmentChoice(OspreySearchDlg searchDlg)
+        {
+            RunUI(() =>
+            {
+                AssertEx.IsFalse(searchDlg.AddEntrapment);
+                searchDlg.AddEntrapment = true;
+                AssertEx.AreEqual(ENTRAPMENT_PERCENT, searchDlg.EntrapmentPercent);
+                AssertEx.AreEqual(ENTRAPMENT_PERCENT, searchDlg.EntrapmentInTargetsPercent);
+                searchDlg.EntrapmentPercent = EntrapmentPercentControls.MAX_PERCENT + 50;
+            });
+            // Out of range: the box refuses it, and the page stays
+            var refusal = ShowDialog<MessageDlg>(searchDlg.NextPage);
+            OkDialog(refusal, refusal.OkDialog);
+            RunUI(() =>
+            {
+                AssertEx.AreEqual(OspreySearchDlg.Pages.fasta_page, searchDlg.CurrentPage);
+                searchDlg.EntrapmentPercent = EntrapmentPercentControls.MIN_TOTAL_PERCENT / 2;
+                searchDlg.EntrapmentInTargetsPercent = 0;
+            });
+            // Together below the floor: refused as a pair
+            refusal = ShowDialog<MessageDlg>(searchDlg.NextPage);
+            AssertEx.AreEqual(string.Format(SettingsUIResources.EntrapmentPercentControls_Validate_The_entrapment_percentages_together_must_be_at_least__0___and_at_most__1___,
+                EntrapmentPercentControls.MIN_TOTAL_PERCENT, EntrapmentPercentControls.MAX_PERCENT), refusal.Message);
+            OkDialog(refusal, refusal.OkDialog);
+            RunUI(() =>
+            {
+                AssertEx.AreEqual(OspreySearchDlg.Pages.fasta_page, searchDlg.CurrentPage);
+                searchDlg.EntrapmentPercent = searchDlg.EntrapmentInTargetsPercent = ENTRAPMENT_PERCENT;
+            });
+        }
+
+        /// <summary>The percentage of the targets each kind of entrapment is added for: the starting value of both boxes.</summary>
+        private const double ENTRAPMENT_PERCENT = 10;
 
         /// <summary>
         /// From the FASTA page (or the library model page, which a predicted library gets after it
@@ -387,7 +429,8 @@ namespace pwiz.SkylineTestFunctional
         /// from the FASTA with the document's digest settings, or from
         /// <paramref name="existingLibraryPath"/> with no library-build options at all, and the
         /// document library as the output either way; the additional settings after the pages',
-        /// the prediction's only with a predicted library.
+        /// the prediction's only with a predicted library, and the entrapment ratios
+        /// (<see cref="VerifyEntrapmentChoice"/>) only with a predicted library too.
         /// </summary>
         private void VerifyCommandLine(OspreySearchDlg searchDlg, string fastaFilepath, string[] diaFilePaths, string existingLibraryPath)
         {
@@ -397,8 +440,13 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.Contains(commandLine, OspreyHelpers.ARG_PREFIX + ADDITIONAL_FLAG + @" ");
             AssertEx.AreEqual(existingLibraryPath == null,
                 commandLine.Contains(OspreyHelpers.ARG_PREFIX + ADDITIONAL_NCE + @" " + ADDITIONAL_NCE_VALUE + @" "));
+            string entrapmentRatio = (ENTRAPMENT_PERCENT / 100).ToString(CultureInfo.InvariantCulture);
+            AssertEx.AreEqual(existingLibraryPath == null, commandLine.Contains(OspreyHelpers.ARG_ENTRAPMENT + @" " + entrapmentRatio + @" "));
+            AssertEx.AreEqual(existingLibraryPath == null, commandLine.Contains(OspreyHelpers.ARG_ENTRAPMENT_IN_TARGETS + @" " + entrapmentRatio + @" "));
             if (existingLibraryPath == null)
             {
+                AssertEx.AreEqual(ENTRAPMENT_PERCENT / 100, config.EntrapmentRatio);
+                AssertEx.AreEqual(ENTRAPMENT_PERCENT / 100, config.EntrapmentInTargetsRatio);
                 AssertEx.Contains(commandLine, OspreyHelpers.ARG_FASTA + @" " + fastaFilepath.Quote());
                 // A test's Tools folder has no CUDA runtime, so Use GPU starts unchecked
                 AssertEx.Contains(commandLine, OspreyHelpers.ARG_DEVICE + @" " + OspreyHelpers.DEVICE_CPU);

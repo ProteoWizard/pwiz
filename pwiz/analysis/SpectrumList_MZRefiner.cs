@@ -403,6 +403,7 @@ public sealed class SpectrumList_MZRefiner : SpectrumListWrapper
             int offset = m.Location switch
             {
                 0 => Pwiz.Util.Proteome.ModificationMap.NTerminus,
+                // ReSharper disable once PatternAlwaysMatches
                 int loc when loc == pep.Sequence.Length + 1 => Pwiz.Util.Proteome.ModificationMap.CTerminus,
                 _ => m.Location - 1,
             };
@@ -412,7 +413,7 @@ public sealed class SpectrumList_MZRefiner : SpectrumListWrapper
         return pep;
     }
 
-    private static void TryMatchAndPush(double ion, List<double> mzData,
+    private static void TryMatchAndPush(double ion, DetachableList<double> mzData,
         List<FragmentShiftDatum> ms2Data, double scanStartTime)
     {
         if (ion <= 0) return;
@@ -446,7 +447,7 @@ public sealed class SpectrumList_MZRefiner : SpectrumListWrapper
         });
     }
 
-    private static int LowerBound(List<double> values, double target)
+    private static int LowerBound(DetachableList<double> values, double target)
     {
         int lo = 0, hi = values.Count;
         while (lo < hi)

@@ -65,8 +65,8 @@ public class ZstdTests
         AssertOnlyEncoding(zstd.BinaryDataArrays[2], CVID.MS_byte_shuffled_zstd_compression);
         AssertOnlyEncoding(zstd.GetIntensityArray()!, CVID.MS_MS_Numpress_short_logged_float_compression_followed_by_zstd_compression);
         AssertOnlyEncoding(zstd.IntegerDataArrays[0], CVID.MS_zstd_compression);
-        CollectionAssert.AreEqual(expected.Mz, zstd.GetMZArray()!.Data, "dictionary-encoded m/z is lossless");
-        CollectionAssert.AreEqual(expected.Mobility, zstd.BinaryDataArrays[2].Data, "byte-shuffled ion mobility is lossless");
+        CollectionAssert.AreEqual(expected.Mz, zstd.GetMZArray()!.Data.ToArray(), "dictionary-encoded m/z is lossless");
+        CollectionAssert.AreEqual(expected.Mobility, zstd.BinaryDataArrays[2].Data.ToArray(), "byte-shuffled ion mobility is lossless");
         CollectionAssert.AreEqual(expected.Charge, zstd.IntegerDataArrays[0].Data, "zstd charge is lossless");
         for (int i = 0; i < expected.Intensity.Count; i++)
             Assert.AreEqual(expected.Intensity[i], zstd.GetIntensityArray()!.Data[i], Math.Max(1, expected.Intensity[i]) * 2e-4, "numpress slof + zstd");
@@ -77,7 +77,7 @@ public class ZstdTests
         AssertOnlyEncoding(zlib.GetMZArray()!, CVID.MS_zlib_compression);
         AssertOnlyEncoding(zlib.GetIntensityArray()!, CVID.MS_zlib_compression);
         AssertOnlyEncoding(zlib.IntegerDataArrays[0], CVID.MS_zlib_compression);
-        CollectionAssert.AreEqual(expected.Mz, zlib.GetMZArray()!.Data, "zstd m/z re-written as zlib");
+        CollectionAssert.AreEqual(expected.Mz, zlib.GetMZArray()!.Data.ToArray(), "zstd m/z re-written as zlib");
     }
 
     /// <summary>
@@ -176,7 +176,7 @@ public class ZstdTests
 
         var spectrum = new MzmlReader().Read(xml).Run.SpectrumList!.GetSpectrum(0);
         AssertOnlyEncoding(spectrum.GetMZArray()!, CVID.MS_byte_shuffled_zstd_compression);
-        CollectionAssert.AreEqual(expectedMz, spectrum.GetMZArray()!.Data, "m/z written with a prediction override");
+        CollectionAssert.AreEqual(expectedMz, spectrum.GetMZArray()!.Data.ToArray(), "m/z written with a prediction override");
 
         // A prediction cvParam next to an explicit zstd one, as an mzMLb source carries it.
         string predicted = xml.Replace(

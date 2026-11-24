@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
@@ -60,24 +61,16 @@ namespace pwiz.Osprey.FDR
         /// q-values take the single-file shortcut (clone the per-run arrays) exactly
         /// as the direct path does.</item>
         /// </list>
-        /// The five outputs are returned as parallel arrays (index-aligned to the
+        /// The six outputs are returned as parallel arrays (index-aligned to the
         /// inputs); the caller either packs them into <see cref="PercolatorResult"/>s
         /// or writes them straight onto the projection rows.
-        ///
-        /// <paramref name="applyExperimentAgg"/> is false on the 2nd pass, mirroring the
-        /// projection score pass
-        /// (<see cref="PercolatorScorer.ScoreProjectionAndComputeFdrInPlace"/>); see
-        /// <see cref="PercolatorQValues.ComputeExperimentPrecursorQMap"/> for why
-        /// OSPREY_EXPERIMENT_AGG is a first-pass score by definition. The two score passes are
-        /// each other's byte-identity oracle, so this flag must be threaded from the same
-        /// pass label on both.
         /// </summary>
         internal static void ComputeStreamingCompetitionQvalues(
             double[] finalScores, bool[] labels, uint[] entryIds,
             string[] peptides, string[] fileNames,
             out double[] peps, out double[] runPrecursorQvalues,
             out double[] runPeptideQvalues, out double[] expPrecursorQvalues,
-            out double[] expPeptideQvalues, bool applyExperimentAgg = true)
+            out double[] expPeptideQvalues, out double[] peptidePeps)
         {
             int n = finalScores.Length;
 
@@ -103,7 +96,10 @@ namespace pwiz.Osprey.FDR
                 finalScores, labels, entryIds, fileNames, peptides);
 
             // Experiment-level q-values: single-file shortcut matches
-            // direct-path semantics.
+            // direct-path semantics. The peptide PEP comes from the experiment peptide
+            // competition either way: with one file that competition is the run's own.
+            var expPeptideCompetitionQvalues = PercolatorQValues.ComputeExperimentPeptideQvalues(
+                finalScores, labels, entryIds, peptides, out peptidePeps);
             var uniqueFiles = new HashSet<string>(fileNames);
             bool isSingleFile = uniqueFiles.Count <= 1;
             if (isSingleFile)
@@ -114,9 +110,8 @@ namespace pwiz.Osprey.FDR
             else
             {
                 expPrecursorQvalues = PercolatorQValues.ComputeExperimentPrecursorQvalues(
-                    finalScores, labels, entryIds, applyExperimentAgg);
-                expPeptideQvalues = PercolatorQValues.ComputeExperimentPeptideQvalues(
-                    finalScores, labels, entryIds, peptides, applyExperimentAgg);
+                    finalScores, labels, entryIds);
+                expPeptideQvalues = expPeptideCompetitionQvalues;
             }
 
             // Best-of-runs monotonicity (issue #4390 clamp, memory-bounded flat form): floor
@@ -164,8 +159,9 @@ namespace pwiz.Osprey.FDR
         ///   as that file's competition finishes, for the survivor entry_ids that won in it. The
         ///   map is the caller's to consume and is not retained here; an entry the caller holds
         ///   for this file that is absent from it won no competition and takes run q 1.0.</param>
-        /// <param name="stratumBaseIds">Null for the full-population competition; non-null restricts
-        ///   the competition to these base_ids (protein-compact).</param>
+        /// <param name="stratumBaseIds">Null for the full-population competition; non-null
+        ///   stratifies it (protein-compact): these base_ids and their complement compete
+        ///   separately, each against its own paired decoys.</param>
         /// <param name="authoritativeContribution">TEMPORARY (#4486). Supplies the per-file
         ///   competition the RESCORE WORKER already computed and wrote to that file's per-run
         ///   2nd-pass sidecar. When it returns non-null, that answer is what gets folded and the
@@ -188,6 +184,10 @@ namespace pwiz.Osprey.FDR
         ///   <paramref name="readFile"/> because that one also reads the file's whole 1st-pass
         ///   population and re-runs the frozen rescore, which only a recomputation needs. Fusing
         ///   the two is what made the shipped path pay for verification it was not doing.</param>
+        /// <param name="complementExperimentQ">protein-compact only: the experiment q of the
+        ///   stratum's complement, from <see cref="ComputeComplementExperimentQ"/>, merged into
+        ///   the state so <see cref="StreamedCompetitionState.ExperimentQ"/> answers for both
+        ///   halves. Null leaves complement entries at experiment q 1.0.</param>
         public static StreamedCompetitionState ComputeFullPopulationPrecursorFdrStreaming(
             IReadOnlyList<string> fileKeys,
             Func<string, (uint[] entryIds, double[] scores,
@@ -198,14 +198,16 @@ namespace pwiz.Osprey.FDR
             HashSet<uint> stratumBaseIds = null,
             Func<string, FileCompetition> authoritativeContribution = null,
             bool verifyAgainstRecompute = false,
-            Action<string> beginFile = null)
+            Action<string> beginFile = null,
+            IReadOnlyDictionary<uint, double> complementExperimentQ = null)
         {
             // stratumBaseIds == null -> full-population competition (transfer-compete).
-            // non-null -> STRATIFIED competition (protein-compact): only observations whose
-            // base_id is in the stratum participate in the run/experiment competitions, so
-            // off-stratum decoys leave the null (reduced multiple testing). The per-base_id
-            // maps hold only stratum members, so peak memory stays flat in file count -- it
-            // only shrinks relative to the full-population path.
+            // non-null -> STRATIFIED competition (protein-compact): the stratum and its
+            // complement compete separately, each against its own paired decoys, so the
+            // stratum's q gains from reduced multiple testing while the complement's decoys
+            // still count against the complement's targets (issue #4581). The per-base_id
+            // maps hold only stratum members, so peak memory stays flat in file count; the
+            // complement's experiment q arrives precomputed in complementExperimentQ.
             var survivorIds = survivorEntryIds as HashSet<uint> ?? new HashSet<uint>(survivorEntryIds);
 
             // Experiment-level per-base_id best target/decoy observation (score + locator),
@@ -375,9 +377,7 @@ namespace pwiz.Osprey.FDR
             //
             // bestTarget / bestDecoy already carry exactly what is needed: each is the max over
             // that entry's observations across every file, which is the same max-over-rows
-            // reduction the 1st-pass producer performs. The mean-best-N branch is deliberately
-            // absent because the experiment aggregation is 1st-pass only (see
-            // ComputeExperimentPrecursorQMap), so effScores == scores here.
+            // reduction the 1st-pass producer performs.
             var aggByEntryId = new Dictionary<uint, double>(w * 2);
             int wi2 = 0;
             foreach (uint bid in baseIds)
@@ -396,6 +396,92 @@ namespace pwiz.Osprey.FDR
                 wi2++;
             }
 
+            var expQByWinnerId = WinnerQByEntryId(expScore, expIsDecoy, expBaseId);
+            // protein-compact: the stratum's complement competed separately (issue #4581). Its
+            // base_ids are disjoint from the stratum's, so the two maps never share a key.
+            if (complementExperimentQ != null)
+            {
+                foreach (var kv in complementExperimentQ)
+                    expQByWinnerId.Add(kv.Key, kv.Value);
+            }
+
+            var pepEstimator = PepEstimator.FitDefault(expScore, expIsDecoy);
+
+            // The per-survivor loop that used to live here - one iteration per (file, entry_id),
+            // filling three whole-run dictionaries - is now the caller's per-file emit pass. Every
+            // value it produced is a function of the bounded state below plus the survivor's own
+            // run q, so handing that state back costs O(distinct) instead of O(files x entries).
+            return new StreamedCompetitionState(
+                expQByWinnerId, minRunQ, winnerLoc, aggByEntryId, pepEstimator, fileKeys, fileKeys.Count > 1);
+        }
+
+        /// <summary>
+        /// The experiment q of the stratum's COMPLEMENT under protein-compact (issue #4581):
+        /// one target/decoy competition per base_id over every base_id NOT in
+        /// <paramref name="stratumBaseIds"/>, on the per-entry experiment aggregate score the
+        /// 1st pass ranked it on, with the same tie rule, sort and conservative q as the
+        /// stratum's own experiment competition. Keyed by the WINNER's full entry_id; a loser
+        /// is absent and reads as 1.0.
+        ///
+        /// <para>The stratum holds the base_ids of proteins with 2 or more detected TARGET
+        /// peptides, so it takes most of the high-scoring targets and only the base rate of
+        /// the high-scoring decoys. The complement is therefore decoy-rich, and the pass-1
+        /// experiment q its targets used to keep was earned against a null diluted by the
+        /// stratum's true targets. Competing the complement against its own decoys makes the
+        /// two halves each calibrated, and so the reported union.</para>
+        /// </summary>
+        /// <param name="aggregateScores">Every analysis-wide 1st-pass experiment record as
+        /// (entry_id, experiment aggregate score), targets and decoys alike. Order does not
+        /// matter: the competition is a per-base_id reduction followed by a total sort.</param>
+        /// <param name="stratumBaseIds">The protein stratum; its members are excluded.</param>
+        public static Dictionary<uint, double> ComputeComplementExperimentQ(
+            IEnumerable<KeyValuePair<uint, double>> aggregateScores, HashSet<uint> stratumBaseIds)
+        {
+            if (aggregateScores == null)
+                throw new ArgumentNullException(nameof(aggregateScores));
+            if (stratumBaseIds == null)
+                throw new ArgumentNullException(nameof(stratumBaseIds));
+            var bestTarget = new Dictionary<uint, double>();
+            var bestDecoy = new Dictionary<uint, double>();
+            foreach (var kv in aggregateScores)
+            {
+                uint bid = kv.Key & PercolatorEntry.BASE_ID_MASK;
+                if (stratumBaseIds.Contains(bid))
+                    continue;
+                var best = (kv.Key & ~PercolatorEntry.BASE_ID_MASK) != 0u ? bestDecoy : bestTarget;
+                if (!best.TryGetValue(bid, out double cur) || kv.Value > cur)
+                    best[bid] = kv.Value;
+            }
+            var baseIds = new HashSet<uint>(bestTarget.Keys);
+            baseIds.UnionWith(bestDecoy.Keys);
+            int w = baseIds.Count;
+            var expScore = new double[w];
+            var expIsDecoy = new bool[w];
+            var expBaseId = new uint[w];
+            int wi = 0;
+            foreach (uint bid in baseIds)
+            {
+                bool hasT = bestTarget.TryGetValue(bid, out double t);
+                bool hasD = bestDecoy.TryGetValue(bid, out double d);
+                // The stratum's rule: target wins strictly (tScore > dScore); ties go to the decoy.
+                bool decoyWins = hasT && hasD ? !(t > d) : !hasT;
+                expScore[wi] = decoyWins ? d : t;
+                expIsDecoy[wi] = decoyWins;
+                expBaseId[wi] = bid;
+                wi++;
+            }
+            return WinnerQByEntryId(expScore, expIsDecoy, expBaseId);
+        }
+
+        /// <summary>
+        /// Conservative experiment q for one winner per base_id, keyed by the WINNER's full
+        /// entry_id. Shared by the stratum's competition and its complement's so the two halves
+        /// rank, break ties and estimate q identically.
+        /// </summary>
+        private static Dictionary<uint, double> WinnerQByEntryId(
+            double[] expScore, bool[] expIsDecoy, uint[] expBaseId)
+        {
+            int w = expScore.Length;
             // Sort winners by score desc, base_id asc (unique base_id => total order).
             var perm = new int[w];
             for (int i = 0; i < w; i++) perm[i] = i;
@@ -429,14 +515,7 @@ namespace pwiz.Osprey.FDR
                 expQByWinnerId[winnerId] = qExp[i];
             }
 
-            var pepEstimator = PepEstimator.FitDefault(expScore, expIsDecoy);
-
-            // The per-survivor loop that used to live here - one iteration per (file, entry_id),
-            // filling three whole-run dictionaries - is now the caller's per-file emit pass. Every
-            // value it produced is a function of the bounded state below plus the survivor's own
-            // run q, so handing that state back costs O(distinct) instead of O(files x entries).
-            return new StreamedCompetitionState(
-                expQByWinnerId, minRunQ, winnerLoc, aggByEntryId, pepEstimator, fileKeys, fileKeys.Count > 1);
+            return expQByWinnerId;
         }
 
         /// <summary>
@@ -578,7 +657,8 @@ namespace pwiz.Osprey.FDR
         /// caller now enforces the equivalence with a throw rather than relying on it. Taking
         /// the local set is what lets this run in a per-file worker (#4486).</param>
         /// <param name="stratumBaseIds">Null for the full-population competition; otherwise the
-        /// protein stratum, which constrains both competitions - see the remarks.</param>
+        /// protein stratum. The run competition is split into the stratum and its complement,
+        /// and the per-base_id bests are reduced over the stratum only.</param>
         /// <param name="fileKey">This file's stem, for the scope-violation message only.</param>
         public static FileCompetition CompeteOneFile(
             uint[] entryIds, double[] scores,
@@ -588,123 +668,65 @@ namespace pwiz.Osprey.FDR
         {
             int m = entryIds.Length;
             var labels = new bool[m];
-            // Non-null only when stratified: the base_ids whose observations Stage 6 actually
-            // CHANGED. Filled in the scoring pass below rather than recorded positionally in a
-            // parallel bool[m] and re-read afterwards. Two reasons beyond the saved pass: the
-            // bool[] and this set used to be live at the same time, so dropping it lowers the
-            // peak; and a base_id-keyed set needs no materialized per-entry array, which is
-            // the shape that survives if this ever streams entries instead of reading them
-            // into arrays. See the admission rationale below for what "changed" means here.
-            var changedBaseIds = stratumBaseIds != null ? new HashSet<uint>() : null;
             for (int i = 0; i < m; i++)
             {
                 uint eid = entryIds[i];
                 labels[i] = (eid & ~PercolatorEntry.BASE_ID_MASK) != 0u; // decoy high bit set
                 if (survivorScores.TryGetValue(eid, out double ov))
-                {
-                    // BIT-EXACT inequality is the "changed" discriminator, the same one
-                    // Pass2FdrSidecar.AssignPerRunQ uses to separate Moved from Unchanged: an
-                    // unchanged survivor's reconciled features ARE its original Stage-4
-                    // features (ReconciledParquetWriter streams unchanged rows through
-                    // untouched) and the sidecar score came from those same features under
-                    // this same averaged model, so the recomputation reproduces it exactly.
-                    // A moved peak carries rescored features, so its score differs.
-                    if (changedBaseIds != null && ov != scores[i])
-                        changedBaseIds.Add(eid & PercolatorEntry.BASE_ID_MASK);
                     scores[i] = ov; // swap in the reconciled survivor's frozen-model score
-                }
             }
 
-            // protein-compact: a peak Stage 6 CHANGED (reconciliation moved it, or gap-fill
-            // created it) carries a NEW composite score and no longer has a valid pass-1
-            // run q - the old q described a peak that no longer exists, and
-            // PerFileRescoreTask's post-rescore overlay zeroes it precisely to say so. Such
-            // a peak must EARN a fresh run q here, exactly the way on-stratum members do;
-            // neither inheriting the prior q nor keeping the q=1 sentinel is a calibrated
-            // answer for it. The "changed" signal is a frozen-model score that DIFFERS from
-            // the entry's 1st-pass sidecar score, computed above - NOT mere presence in
-            // survivorScoreOverride. That map holds every post-reconciliation survivor whose
-            // identity resolves in the effective parquet, including files Stage 6 never
-            // touched (the effective path falls back to the ORIGINAL parquet), so keying on
-            // presence admitted most of the survivor pool and quietly widened the very
-            // stratum this mode exists to enforce.
+            // Run-level: compete within this file, conservative q on the winners. Stratified
+            // (protein-compact), the file splits in TWO by base_id - the stratum and its
+            // complement - and each half competes against its OWN paired decoys. Both halves
+            // are reported, so both need a calibrated q (issue #4581).
             //
-            // The score comparison is keyed by entry_id, so it means the same thing
-            // in-process and on a distributed SecondPassFDR node (an index-keyed source does NOT -
-            // see #4484), and it needs no extra plumbing: both scores are already in hand.
+            // The complement is not optional. The stratum is chosen by TARGET evidence (proteins
+            // with 2 or more detected target peptides), so it takes most of the high-scoring
+            // targets and only the base rate of the high-scoring decoys; the decoys it leaves
+            // behind are concentrated in the complement. When the complement's targets kept the
+            // q they earned against the whole population, those decoys counted against no one:
+            // measured on one SEA-AD file, the off-stratum survivors at a 1% q held 1,302
+            // targets and 478 decoy winners. Competing the complement against its own decoys is
+            // what gives every decoy the same protein evidence as its paired target - each
+            // counts in the half its target is in.
             //
-            // Admitted BY BASE_ID so a target and its paired decoy always enter together.
-            // Admitting a lone target would let it auto-win its competition and inflate the
-            // null, the cross-validation grouping invariant this file depends on. The set is
-            // complete before this point: it is filled by the scoring pass above, and every
-            // entry of this file has been through that pass. That ordering matters, because a
-            // base_id changed at a LATER entry still admits an earlier one.
-
-            // Called only from the stratified branch below, where both sets are non-null -
-            // the unstratified path builds allIdx directly and never asks. The null guards
-            // this started with were therefore dead, and ReSharper reported them as such.
-            bool Admit(uint baseId)
-            {
-                return stratumBaseIds.Contains(baseId) || changedBaseIds.Contains(baseId);
-            }
-
-            // Run-level: compete within this file (stratum members plus changed peaks when
-            // stratified), conservative q on the winners.
-            int[] allIdx;
+            // A peak Stage 6 changed (reconciliation moved it, or gap-fill created it) competes
+            // on its new score in whichever half its base_id belongs to. Membership is protein
+            // evidence alone, decided before Stage 6, and a moved peak does not change it.
+            // Base_id keeps a target and its paired decoy in the same half always.
+            var fileRunQ = new Dictionary<uint, double>();
             if (stratumBaseIds == null)
             {
-                allIdx = new int[m];
+                var allIdx = new int[m];
                 for (int i = 0; i < m; i++) allIdx[i] = i;
+                CompeteRunQ(scores, labels, entryIds, allIdx, survivorIds, fileRunQ);
             }
             else
             {
-                var idxList = new List<int>(m);
+                var inIdx = new List<int>(m);
+                var offIdx = new List<int>(m);
                 for (int i = 0; i < m; i++)
                 {
-                    if (Admit(entryIds[i] & PercolatorEntry.BASE_ID_MASK))
-                        idxList.Add(i);
+                    if (stratumBaseIds.Contains(entryIds[i] & PercolatorEntry.BASE_ID_MASK))
+                        inIdx.Add(i);
+                    else
+                        offIdx.Add(i);
                 }
-                allIdx = idxList.ToArray();
-            }
-            TargetDecoyCompetition.CompeteFromIndices(scores, labels, entryIds, allIdx,
-                out int[] wi, out double[] ws, out bool[] wd);
-            var q = new double[wi.Length];
-            PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
-            // This file's run q, handed to the caller at the end of the iteration and then
-            // dropped. Sized by the survivors that won a competition HERE, not by the survivor
-            // set across all files, which is what makes the phase flat in file count. The
-            // caller filters to the survivors it actually holds for this file, so the old
-            // (fileKey, entryId) membership test is now the caller's own per-file list.
-            //
-            // Filtered on the GLOBAL survivor set, not this file's own. A file can win a
-            // competition for an entry_id that is not one of ITS survivors but is a survivor
-            // in another file, and that win still has to reach the cross-file minimum the
-            // experiment q floors on. Substituting the local list would silently drop those
-            // contributions and lower experiment q for exactly the precursors seen in many runs.
-            var fileRunQ = new Dictionary<uint, double>();
-            for (int rank = 0; rank < wi.Length; rank++)
-            {
-                uint eid = entryIds[wi[rank]];
-                if (!survivorIds.Contains(eid))
-                    continue;
-                fileRunQ[eid] = q[rank];
+                CompeteRunQ(scores, labels, entryIds, inIdx.ToArray(), survivorIds, fileRunQ);
+                CompeteRunQ(scores, labels, entryIds, offIdx.ToArray(), survivorIds, fileRunQ);
             }
 
             // Experiment-level: reduce every observation to the per-base_id bests. When
-            // stratified this is the STRATUM ONLY - deliberately NOT the run-level admitted
-            // set, which also carries the changed off-stratum peaks.
+            // stratified this is the STRATUM ONLY. The complement's experiment q is competed
+            // from the analysis-wide 1st-pass experiment records instead (see
+            // ComputeComplementExperimentQ), which hold every base_id the complement needs -
+            // its non-survivors included - without a per-file best for each of them.
             //
-            // Two reasons an off-stratum peak must not enter a cross-file maximum here.
-            // First, it would be admitted only in the files that CHANGED it, so its best
-            // would be a max over that subset while every stratum member maxes over all
-            // files - and because reconciliation anchors on the best-scoring peak and
-            // corrects the others toward it, a changed peak is never the one that supplied
-            // the maximum. Maxing over changed observations alone is therefore GUARANTEED to
-            // understate the precursor's experiment-wide score, not merely to skew it.
-            // Second, the correct value is already known: the pass-1 experiment q, which by
-            // that same anchor argument reconciliation cannot have invalidated. The caller
-            // carries it through rather than recomputing it, which is what keeps the
-            // re-scoping additive - see Pass2FdrSidecar's map-back.
+            // A pass-1 aggregate is the right score for the complement because
+            // reconciliation anchors on the best-scoring peak and corrects the others toward
+            // it, so a changed peak is never the one that supplied the maximum. Maxing here
+            // over a complement that holds only survivor rows would understate it instead.
             //
             // Strictly-greater, so the FIRST observation at the maximum wins. The fold across
             // files applies the same rule, which is what makes the two-stage reduction give
@@ -763,6 +785,29 @@ namespace pwiz.Osprey.FDR
             }
 
             return new FileCompetition(fileRunQ, bestTarget, bestDecoy);
+        }
+
+        /// <summary>
+        /// Compete one half of a file (or the whole file) and record the conservative run q of
+        /// every SURVIVOR that won a competition in it.
+        ///
+        /// <para>Filtered on the survivor set, which the caller enforces is the same as the
+        /// global union for this file's rows. An entry absent from the map won no competition
+        /// in this file, and the caller takes 1.0 for it.</para>
+        /// </summary>
+        private static void CompeteRunQ(double[] scores, bool[] labels, uint[] entryIds,
+            int[] indices, HashSet<uint> survivorIds, Dictionary<uint, double> fileRunQ)
+        {
+            TargetDecoyCompetition.CompeteFromIndices(scores, labels, entryIds, indices,
+                out int[] wi, out double[] ws, out bool[] wd);
+            var q = new double[wi.Length];
+            PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
+            for (int rank = 0; rank < wi.Length; rank++)
+            {
+                uint eid = entryIds[wi[rank]];
+                if (survivorIds.Contains(eid))
+                    fileRunQ[eid] = q[rank];
+            }
         }
 
         /// <summary>
@@ -854,9 +899,9 @@ namespace pwiz.Osprey.FDR
             /// <summary>
             /// The experiment aggregate score this competition ranked <paramref name="entryId"/>
             /// on (sidecar v4, issue #4522), or <c>null</c> when the entry took no part in the
-            /// experiment fold - which under protein-compact means an OFF-STRATUM entry, whose
-            /// pass-1 aggregate the caller carries through untouched beside the pass-1
-            /// experiment q it also carries.
+            /// experiment fold - which under protein-compact means an OFF-STRATUM entry. Its
+            /// experiment q comes from the complement's own competition, which ranked it on its
+            /// pass-1 aggregate, so the caller carries that aggregate instead.
             ///
             /// <para><b>Nullable, not an in-band sentinel.</b> The score is a signed
             /// discriminant, so 0.0 is an ordinary mid-distribution value: returning it for "not
@@ -913,6 +958,110 @@ namespace pwiz.Osprey.FDR
                     return 1.0;
                 return _pepEstimator.PosteriorError(loc.score);
             }
+
+            /// <summary>
+            /// The experiment-level PEPTIDE competition over the same per-entry aggregates the
+            /// precursor competition ranked, grouped by peptide. The first pass computes it in
+            /// <see cref="PercolatorQValues.ComputeExperimentPeptideQMap"/>;
+            /// this is the same computation over the second pass's scores: each peptide's best
+            /// target and best decoy precursor, competed by base_id, conservative q, and a PEP
+            /// fitted on the winners. Before it existed the second pass gave each entry its
+            /// precursor q as its peptide q, so the charge states of one peptide could disagree.
+            ///
+            /// <para><paramref name="peptideForBaseId"/> names the TARGET peptide of a base_id, so
+            /// a decoy precursor groups with the other decoys of the same peptide, as the first
+            /// pass's decoy sequence groups them. It comes from the survivor entries rather than
+            /// the library, because a <c>--task SecondPassFDR</c> node has no generated decoys in
+            /// its library (see <see cref="ExperimentQFloors.ObserveIdentities"/>). A base_id it
+            /// cannot name is a peptide of its own.</para>
+            /// </summary>
+            public PeptideCompetition CompetePeptides(Func<uint, string> peptideForBaseId)
+            {
+                // Each peptide's best precursor per side; on a tied score the lower base_id, so
+                // the choice does not depend on dictionary order.
+                var bestByPeptide = new Dictionary<(string Peptide, bool IsDecoy), (double Score, uint BaseId)>();
+                foreach (var kvp in _aggByEntryId)
+                {
+                    uint baseId = kvp.Key & PercolatorEntry.BASE_ID_MASK;
+                    var key = (PeptideKey(peptideForBaseId, baseId), kvp.Key != baseId);
+                    if (!bestByPeptide.TryGetValue(key, out var cur) || kvp.Value > cur.Score ||
+                        (kvp.Value == cur.Score && baseId < cur.BaseId))
+                    {
+                        bestByPeptide[key] = (kvp.Value, baseId);
+                    }
+                }
+
+                var peptideKeys = new List<(string Peptide, bool IsDecoy)>(bestByPeptide.Count);
+                var targets = new Dictionary<uint, KeyValuePair<int, double>>();
+                var decoys = new Dictionary<uint, KeyValuePair<int, double>>();
+                foreach (var kvp in bestByPeptide)
+                {
+                    var side = kvp.Key.IsDecoy ? decoys : targets;
+                    side[kvp.Value.BaseId] = new KeyValuePair<int, double>(peptideKeys.Count, kvp.Value.Score);
+                    peptideKeys.Add(kvp.Key);
+                }
+                TargetDecoyCompetition.CompeteFromDicts(targets, decoys,
+                    out int[] wi, out double[] ws, out bool[] wd, out uint[] wb);
+                var q = new double[ws.Length];
+                PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
+                var peps = PercolatorQValues.ComputeWinnerPeps(ws, wd, wb);
+
+                var winners = new Dictionary<(string Peptide, bool IsDecoy), (double QValue, double Pep)>(wi.Length);
+                for (int rank = 0; rank < wi.Length; rank++)
+                    winners[peptideKeys[wi[rank]]] = (q[rank], peps[rank]);
+                return new PeptideCompetition(winners, peptideForBaseId);
+            }
+
+            private static string PeptideKey(Func<uint, string> peptideForBaseId, uint baseId)
+            {
+                // A character no modified sequence contains, so an unnamed base_id cannot
+                // collide with a real peptide.
+                return peptideForBaseId(baseId) ?? @"#" + baseId.ToString(CultureInfo.InvariantCulture);
+            }
+
+            /// <summary>
+            /// The result of <see cref="CompetePeptides"/>: one q-value and PEP per peptide and
+            /// side, read by entry_id. Every precursor of a peptide reads the same values, which
+            /// is what makes this a peptide-level answer.
+            /// </summary>
+            public sealed class PeptideCompetition
+            {
+                private readonly Dictionary<(string Peptide, bool IsDecoy), (double QValue, double Pep)> _winners;
+                private readonly Func<uint, string> _peptideForBaseId;
+
+                internal PeptideCompetition(
+                    Dictionary<(string Peptide, bool IsDecoy), (double QValue, double Pep)> winners,
+                    Func<uint, string> peptideForBaseId)
+                {
+                    _winners = winners;
+                    _peptideForBaseId = peptideForBaseId;
+                }
+
+                /// <summary>
+                /// The experiment peptide q-value of this entry's peptide, or 1.0 when its side
+                /// lost the peptide competition.
+                /// </summary>
+                public double QValue(uint entryId)
+                {
+                    return Lookup(entryId).QValue;
+                }
+
+                /// <summary>
+                /// The experiment peptide PEP of this entry's peptide, or 1.0 when its side lost
+                /// the peptide competition.
+                /// </summary>
+                public double Pep(uint entryId)
+                {
+                    return Lookup(entryId).Pep;
+                }
+
+                private (double QValue, double Pep) Lookup(uint entryId)
+                {
+                    uint baseId = entryId & PercolatorEntry.BASE_ID_MASK;
+                    var key = (PeptideKey(_peptideForBaseId, baseId), entryId != baseId);
+                    return _winners.TryGetValue(key, out var v) ? v : (1.0, 1.0);
+                }
+            }
         }
 
         /// <summary>
@@ -942,78 +1091,19 @@ namespace pwiz.Osprey.FDR
             private readonly Dictionary<string, PeptideBest> _peptBest =
                 new Dictionary<string, PeptideBest>();
 
-            // Reproducibility mean(best-N) mode (OSPREY_EXPERIMENT_AGG=mean-best-<N>): per-base_id
-            // top-N accumulators, targets and decoys kept apart exactly like the resident
-            // TargetDecoyCompetition.ComputeBaseIdMeanBestN pair of dicts, plus a bounded decoy-score
-            // floor. Allocated only in mean-best-N mode (_meanBestN >= 2); the default max path leaves
-            // them null, feeds only the raw bests above, and stays byte-identical to the committed
-            // golden.
-            private readonly int _meanBestN;
-            private readonly Dictionary<uint, Mb2Entry> _mb2Targets;
-            private readonly Dictionary<uint, Mb2Entry> _mb2Decoys;
-            private readonly StreamingDecoyFloor _floor;
-
-            public StreamingFirstPassQ() : this(0)
-            {
-            }
-
-            public StreamingFirstPassQ(int meanBestN)
-            {
-                _meanBestN = meanBestN;
-                if (meanBestN < 2)
-                    return;
-                _mb2Targets = new Dictionary<uint, Mb2Entry>();
-                _mb2Decoys = new Dictionary<uint, Mb2Entry>();
-                _floor = new StreamingDecoyFloor();
-            }
-
             /// <summary>Fold one scored row (in flat (file,row) order) into the bounded bests.</summary>
             public void Add(int g, double score, uint entryId, bool isDecoy, string peptide)
             {
                 uint baseId = entryId & PercolatorEntry.BASE_ID_MASK;
                 ReduceBest(isDecoy ? _precDecoys : _precTargets, baseId, g, score);
-
-                if (_meanBestN >= 2)
-                {
-                    // Experiment precursor/peptide q use the mean(best-N) score: accumulate the
-                    // top-N per (base_id, side) and, from decoys, the missing-run floor. The raw
-                    // _precTargets/_precDecoys bests above still feed PEP - matching the resident
-                    // ComputeStreamingCompetitionQvalues, where PEP reads finalScores while the
-                    // experiment q reads ComputeBaseIdMeanBestN. The per-peptide raw max (_peptBest)
-                    // is not needed here (the roll-up is derived from the top-N accumulators).
-                    var mb2 = isDecoy ? _mb2Decoys : _mb2Targets;
-                    if (mb2.TryGetValue(baseId, out Mb2Entry e))
-                    {
-                        e.Acc.Add(score, _meanBestN);
-                        mb2[baseId] = e;
-                    }
-                    else
-                    {
-                        mb2[baseId] = new Mb2Entry(
-                            TargetDecoyCompetition.MeanBestNAcc.First(score, _meanBestN), g, peptide);
-                    }
-                    if (isDecoy)
-                        _floor.Add(score);
-                    return;
-                }
-
                 ReducePeptide(_peptBest, new PeptideBest(g, score, isDecoy, entryId, peptide));
             }
 
-            /// <summary>
-            /// Whether the competition can be reduced a file at a time (<see cref="FileReduction"/>):
-            /// true in the default max mode, where every reduction <see cref="Add"/> makes is a
-            /// first-seen maximum. Mean-best-N also sums a floating-point decoy floor, which only
-            /// <see cref="Add"/> row by row, in order, reproduces.
-            /// </summary>
-            public bool ReducesByFile => _meanBestN < 2;
-
             /// <summary>A reduction for one file's rows, buildable on a file lane; merge it with
-            /// <see cref="MergeFile"/> in file order.</summary>
+            /// <see cref="MergeFile"/> in file order. Possible because every reduction
+            /// <see cref="Add"/> makes is a first-seen maximum.</summary>
             public FileReduction BeginFile()
             {
-                if (!ReducesByFile)
-                    throw new InvalidOperationException(@"A mean-best-N competition is reduced row by row, not by file.");
                 return new FileReduction();
             }
 
@@ -1078,8 +1168,7 @@ namespace pwiz.Osprey.FDR
             /// </summary>
             public Dictionary<uint, double> BuildExperimentPrecursorQMap()
             {
-                ResolveExperimentBests(out var targets, out var decoys);
-                TargetDecoyCompetition.CompeteFromDicts(targets, decoys,
+                TargetDecoyCompetition.CompeteFromDicts(_precTargets, _precDecoys,
                     out _, out double[] ws, out bool[] wd, out uint[] wb);
                 var q = new double[ws.Length];
                 PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
@@ -1097,10 +1186,8 @@ namespace pwiz.Osprey.FDR
             /// <see cref="PercolatorQValues.ComputeExperimentAggregateScoreMap"/> (sidecar v4,
             /// issue #4522): <c>entry_id -&gt; the score the experiment competitions ranked that
             /// entry on</c>. Reads the SAME per-(base_id, side) bests
-            /// <see cref="BuildExperimentPrecursorQMap"/> competes, via the shared
-            /// <see cref="ResolveExperimentBests"/>, so the score reported beside an experiment
-            /// q is by construction the one that q was computed from - on the default max path
-            /// and the mean-best-N path alike.
+            /// <see cref="BuildExperimentPrecursorQMap"/> competes, so the score reported beside
+            /// an experiment q is by construction the one that q was computed from.
             ///
             /// <para>Keyed by FULL entry_id: the two dictionaries are split by side, and a
             /// base_id plus its side is exactly the entry_id
@@ -1108,6 +1195,16 @@ namespace pwiz.Osprey.FDR
             /// re-attaching the bit here recovers the per-entry key the sidecar record uses
             /// without the caller having to mask anything.</para>
             /// </summary>
+            public Dictionary<uint, double> BuildExperimentAggregateScoreMap()
+            {
+                var map = new Dictionary<uint, double>(_precTargets.Count + _precDecoys.Count);
+                foreach (var kvp in _precTargets)
+                    map[kvp.Key] = kvp.Value.Value;
+                foreach (var kvp in _precDecoys)
+                    map[kvp.Key | LibraryEntry.DECOY_ID_BIT] = kvp.Value.Value;
+                return map;
+            }
+
             /// <summary>
             /// Drops the per-precursor and per-peptide bests once every map has been built from
             /// them; each Build method returns a new map, so nothing built depends on them. The
@@ -1122,86 +1219,21 @@ namespace pwiz.Osprey.FDR
                 _precDecoys.TrimExcess();
                 _peptBest.Clear();
                 _peptBest.TrimExcess();
-                _mb2Targets?.Clear();
-                _mb2Targets?.TrimExcess();
-                _mb2Decoys?.Clear();
-                _mb2Decoys?.TrimExcess();
-            }
-
-            public Dictionary<uint, double> BuildExperimentAggregateScoreMap()
-            {
-                ResolveExperimentBests(out var targets, out var decoys);
-                var map = new Dictionary<uint, double>(targets.Count + decoys.Count);
-                foreach (var kvp in targets)
-                    map[kvp.Key] = kvp.Value.Value;
-                foreach (var kvp in decoys)
-                    map[kvp.Key | LibraryEntry.DECOY_ID_BIT] = kvp.Value.Value;
-                return map;
-            }
-
-            /// <summary>
-            /// The per-(base_id, side) best scores the experiment-scope competitions run on:
-            /// the raw streamed maxima on the default path, or each top-N accumulator reduced
-            /// to its mean(best-N) score (missing runs at the decoy floor) under
-            /// OSPREY_EXPERIMENT_AGG. The reduced maps are what the resident
-            /// <c>ComputeBaseIdMeanBestN</c> -&gt; <c>CompeteAll</c> path builds; every row of a
-            /// base_id shares that score there, so the resident max-per-base_id reduction is a
-            /// no-op and the two paths agree (modulo the streaming floor).
-            /// </summary>
-            private void ResolveExperimentBests(
-                out Dictionary<uint, KeyValuePair<int, double>> targets,
-                out Dictionary<uint, KeyValuePair<int, double>> decoys)
-            {
-                if (_meanBestN >= 2)
-                {
-                    double floor = _floor.ComputeFloor();
-                    targets = ReduceMeanBestN(_mb2Targets, floor, _meanBestN);
-                    decoys = ReduceMeanBestN(_mb2Decoys, floor, _meanBestN);
-                }
-                else
-                {
-                    targets = _precTargets;
-                    decoys = _precDecoys;
-                }
             }
 
             /// <summary>
             /// Experiment-peptide <c>peptide -&gt; q</c>: materialize the best-per-peptide set
             /// sorted by ordinal (matching <see cref="PercolatorSampling.BestPrecursorPerPeptide"/>'s sort), compete
-            /// by base_id, conservative-q, keyed by the winner's peptide -- byte-identical to
+            /// by base_id, conservative-q, keyed by the winner's peptide, with each winning
+            /// peptide's PEP in <paramref name="pepByPeptide"/> -- byte-identical to
             /// <see cref="PercolatorQValues.ComputeExperimentPeptideQMap"/>.
             /// </summary>
-            public Dictionary<string, double> BuildExperimentPeptideQMap()
+            public Dictionary<string, double> BuildExperimentPeptideQMap(
+                out Dictionary<string, double> pepByPeptide)
             {
-                if (_meanBestN >= 2)
-                    return BuildMeanBestNPeptideQMap();
                 var best = new List<PeptideBest>(_peptBest.Values);
                 best.Sort((a, b) => a.G.CompareTo(b.G)); // Array.Sort OK: G is the unique streaming ordinal of each peptide's best row, so the comparator never ties -- reproduces BestPrecursorPerPeptide's result.Sort() on ascending global index
-                var targets = new Dictionary<uint, KeyValuePair<int, double>>();
-                var decoys = new Dictionary<uint, KeyValuePair<int, double>>();
-                for (int i = 0; i < best.Count; i++)
-                {
-                    uint baseId = best[i].EntryId & PercolatorEntry.BASE_ID_MASK;
-                    var dict = best[i].IsDecoy ? decoys : targets;
-                    KeyValuePair<int, double> existing;
-                    if (dict.TryGetValue(baseId, out existing))
-                    {
-                        if (best[i].Score > existing.Value)
-                            dict[baseId] = new KeyValuePair<int, double>(i, best[i].Score);
-                    }
-                    else
-                    {
-                        dict[baseId] = new KeyValuePair<int, double>(i, best[i].Score);
-                    }
-                }
-                TargetDecoyCompetition.CompeteFromDicts(targets, decoys,
-                    out int[] wi, out double[] ws, out bool[] wd, out _);
-                var q = new double[ws.Length];
-                PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
-                var map = new Dictionary<string, double>(wi.Length);
-                for (int rank = 0; rank < wi.Length; rank++)
-                    map[best[wi[rank]].Peptide] = q[rank];
-                return map;
+                return CompetePeptideBests(best, out pepByPeptide);
             }
 
             /// <summary>
@@ -1239,60 +1271,13 @@ namespace pwiz.Osprey.FDR
                 return map;
             }
 
-            /// <summary>The missing-run floor this builder would apply, or 0 outside mean(best-N)
-            /// mode. Exposed so the parity test can hold the bounded histogram estimator directly
-            /// against the resident sorted-quantile one
-            /// (<see cref="TargetDecoyCompetition.ComputeFloorFromDecoyScores"/>): they are
-            /// deliberately different estimators of the same statistic, agreeing only to about the
-            /// histogram bin width, and that bound is not observable through the q-values (q comes
-            /// from the competition RANKING, which a sub-bin shift normally leaves untouched).
-            /// </summary>
-            internal double ComputeDecoyFloor()
-            {
-                return _floor?.ComputeFloor() ?? 0.0;
-            }
-
-            /// <summary>The bin width of the streaming floor histogram - the bound within which
-            /// <see cref="ComputeDecoyFloor"/> is expected to track the resident estimator, and the
-            /// documented magnitude of this approximation.</summary>
-            internal static double FloorBinWidth
-            {
-                get { return StreamingDecoyFloor.BIN_WIDTH; }
-            }
-
-            /// <summary>Reduce a per-base_id top-N accumulator dict to the <c>base_id -&gt;
-            /// (min-ordinal, mean(best-N) score)</c> best map the target/decoy competition consumes.
-            /// The stored ordinal is each base_id's earliest row (MinG), matching the resident
-            /// <see cref="TargetDecoyCompetition.CompeteFromIndices"/> first-seen-max index over the
-            /// per-row aggregate array (all rows of a base_id share the aggregate).</summary>
-            private static Dictionary<uint, KeyValuePair<int, double>> ReduceMeanBestN(
-                Dictionary<uint, Mb2Entry> src, double floor, int n)
-            {
-                var dict = new Dictionary<uint, KeyValuePair<int, double>>(src.Count);
-                foreach (var kv in src)
-                    dict[kv.Key] = new KeyValuePair<int, double>(
-                        kv.Value.MinG, kv.Value.Acc.AggregateScore(floor, n));
-                return dict;
-            }
-
             /// <summary>
-            /// Experiment-peptide <c>peptide -&gt; q</c> for mean(best-N): the peptide score is the
-            /// MAX over its base_ids of each base_id's mean(best-N) precursor score, then the
-            /// per-peptide winners compete by base_id - byte-identical (modulo the streaming floor)
-            /// to the resident <see cref="PercolatorQValues.ComputeExperimentPeptideQMap"/> with
-            /// OSPREY_EXPERIMENT_AGG=mean-best-N, whose
-            /// <see cref="PercolatorSampling.BestPrecursorPerPeptide"/> over the per-row aggregate
-            /// array reduces to exactly this per-peptide max.
+            /// Compete the per-peptide bests (already sorted by ordinal) by base_id and return
+            /// the winning peptides' q-values, and in <paramref name="pepByPeptide"/> their PEPs.
             /// </summary>
-            private Dictionary<string, double> BuildMeanBestNPeptideQMap()
+            private static Dictionary<string, double> CompetePeptideBests(
+                List<PeptideBest> best, out Dictionary<string, double> pepByPeptide)
             {
-                double floor = _floor.ComputeFloor();
-                var repByPeptide = new Dictionary<string, PeptideBest>();
-                AccumulatePeptideReps(repByPeptide, _mb2Targets, floor, false, _meanBestN);
-                AccumulatePeptideReps(repByPeptide, _mb2Decoys, floor, true, _meanBestN);
-
-                var best = new List<PeptideBest>(repByPeptide.Values);
-                best.Sort((a, b) => a.G.CompareTo(b.G)); // Array.Sort OK: G is each winning base_id's unique min ordinal, so the comparator never ties -- reproduces BestPrecursorPerPeptide's ascending-global-index sort
                 var targets = new Dictionary<uint, KeyValuePair<int, double>>();
                 var decoys = new Dictionary<uint, KeyValuePair<int, double>>();
                 for (int i = 0; i < best.Count; i++)
@@ -1311,195 +1296,18 @@ namespace pwiz.Osprey.FDR
                     }
                 }
                 TargetDecoyCompetition.CompeteFromDicts(targets, decoys,
-                    out int[] wi, out double[] ws, out bool[] wd, out _);
+                    out int[] wi, out double[] ws, out bool[] wd, out uint[] wb);
                 var q = new double[ws.Length];
                 PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
+                var peps = PercolatorQValues.ComputeWinnerPeps(ws, wd, wb);
                 var map = new Dictionary<string, double>(wi.Length);
+                pepByPeptide = new Dictionary<string, double>(wi.Length);
                 for (int rank = 0; rank < wi.Length; rank++)
+                {
                     map[best[wi[rank]].Peptide] = q[rank];
+                    pepByPeptide[best[wi[rank]].Peptide] = peps[rank];
+                }
                 return map;
-            }
-
-            /// <summary>Fold one side's per-base_id mean(best-2) scores into per-peptide winners:
-            /// each peptide keeps the base_id with the strictly greatest aggregate, ties broken by
-            /// the earliest row (min ordinal) - reproducing the first-seen strict '&gt;' that
-            /// <see cref="PercolatorSampling.BestPrecursorPerPeptide"/> applies over the
-            /// ascending-ordinal per-row aggregate array. The stored ordinal (<c>G = MinG</c>) is the
-            /// winning base_id's earliest row, which is the global index
-            /// <see cref="PercolatorSampling.BestPrecursorPerPeptide"/> returns.</summary>
-            private static void AccumulatePeptideReps(
-                Dictionary<string, PeptideBest> repByPeptide,
-                Dictionary<uint, Mb2Entry> src, double floor, bool isDecoy, int n)
-            {
-                foreach (var kv in src)
-                {
-                    uint baseId = kv.Key;
-                    Mb2Entry e = kv.Value;
-                    double agg = e.Acc.AggregateScore(floor, n);
-                    PeptideBest cur;
-                    if (repByPeptide.TryGetValue(e.Peptide, out cur) &&
-                        !(agg > cur.Score || (agg == cur.Score && e.MinG < cur.G)))
-                    {
-                        continue;
-                    }
-                    repByPeptide[e.Peptide] = new PeptideBest(e.MinG, agg, isDecoy, baseId, e.Peptide);
-                }
-            }
-
-            /// <summary>Per-base_id top-2 accumulator plus the metadata the peptide roll-up needs:
-            /// the earliest row ordinal (<see cref="MinG"/>) and the peptide string (constant for a
-            /// (base_id, side)). Value type; callers copy back after mutating <see cref="Acc"/>.</summary>
-            private struct Mb2Entry
-            {
-                internal TargetDecoyCompetition.MeanBestNAcc Acc;
-                internal readonly int MinG;
-                internal readonly string Peptide;
-
-                internal Mb2Entry(TargetDecoyCompetition.MeanBestNAcc acc, int minG, string peptide)
-                {
-                    Acc = acc;
-                    MinG = minG;
-                    Peptide = peptide;
-                }
-            }
-
-            /// <summary>Bounded (O(bins)) streaming estimator of the missing-run decoy floor,
-            /// mirroring <c>TargetDecoyCompetition.ComputeFloorFromDecoyScores</c> without holding
-            /// every decoy score. The mean (OSPREY_MEANBEST2_FLOOR_MEAN) is an exact running sum; the
-            /// median (default) and low-percentile (OSPREY_MEANBEST2_FLOOR_PCT) use a fixed-width
-            /// histogram over a wide fixed range with out-of-range counts tracked, so a central
-            /// quantile stays accurate to the bin width (0.001). The floor is one global scalar
-            /// applied to single-run precursors only, so this quantile approximation is negligible;
-            /// the resident==streaming N=20 cross-check bounds it.</summary>
-            private sealed class StreamingDecoyFloor
-            {
-                private const double RANGE_MIN = -100.0;
-                private const double RANGE_MAX = 100.0;
-                private const int BIN_COUNT = 200000; // Bin width 0.001 over [-100, 100].
-                internal const double BIN_WIDTH = (RANGE_MAX - RANGE_MIN) / BIN_COUNT;
-
-                private readonly long[] _bins = new long[BIN_COUNT];
-                private long _underflow;
-                private long _count;
-                private double _sum;
-                // Smallest / largest ADMITTED score. The resident twin's PercentileOfSorted
-                // answers every out-of-histogram case with sorted[0] or sorted[Count-1] - always
-                // a real observed score. Keeping the two extremes lets this estimator return the
-                // same kind of value instead of a range constant, which is what makes the two
-                // paths agree in the tails (see PercentileFromHistogram).
-                private double _min = double.MaxValue;
-                private double _max = double.MinValue;
-
-                public void Add(double score)
-                {
-                    // Reject non-finite BEFORE _count/_sum, matching the resident floor sample.
-                    // NaN: every NaN comparison below is false, so it would reach the cast and
-                    // produce int.MinValue on net472 (throwing on _bins[-2147483648] mid-Stage 5)
-                    // or 0 on net8.0 (silently counting it as a score of RANGE_MIN). Infinity:
-                    // the range checks below would route it to the overflow bucket correctly, but
-                    // it would already have entered _sum - and the MEAN branch of ComputeFloor
-                    // returns _sum / _count, so a single infinite decoy score makes the floor
-                    // infinite. AggregateScore's (n - _len) * floor is then 0 * Infinity == NaN for
-                    // even a FULLY detected group, poisoning every base_id through the shared
-                    // floor. Counting it and excluding it from the histogram would also make the
-                    // quantile rank disagree with the bins.
-                    if (!TargetDecoyCompetition.MeanBestNAcc.IsUsable(score))
-                        return;
-                    _count++;
-                    _sum += score;
-                    if (score < _min)
-                        _min = score;
-                    if (score > _max)
-                        _max = score;
-                    if (score < RANGE_MIN)
-                    {
-                        _underflow++;
-                        return;
-                    }
-                    if (score >= RANGE_MAX)
-                    {
-                        // Counted (in _count and _max above), not binned. It MUST still be counted,
-                        // because the quantile rank is taken over _count: dropping it silently
-                        // shifted every quantile toward the low end. A quantile that lands in this
-                        // region makes the bin walk fall off the end, which PercentileFromHistogram
-                        // answers with _max - a real observed score.
-                        return;
-                    }
-                    int bin = (int)((score - RANGE_MIN) / BIN_WIDTH);
-                    if (bin < 0)
-                        bin = 0;
-                    if (bin >= BIN_COUNT)
-                        bin = BIN_COUNT - 1;
-                    _bins[bin]++;
-                }
-
-                public double ComputeFloor()
-                {
-                    if (_count == 0)
-                        return 0.0;
-                    if (OspreyEnvironment.MeanBest2FloorMean)
-                        return _sum / _count;
-                    double pct = OspreyEnvironment.MeanBest2FloorPercentile ?? 50.0;
-                    return PercentileFromHistogram(pct);
-                }
-
-                // Linear-interpolated quantile at rank = pct/100 * (count - 1), matching
-                // PercentileOfSorted's rank convention but computed from bin cumulative counts
-                // (uniform interpolation within the straddling bin).
-                //
-                // Every degenerate case MIRRORS the resident TargetDecoyCompetition.
-                // PercentileOfSorted rather than diverging from it, because the two estimators are
-                // supposed to be the same statistic computed two ways. Two rules follow, and both
-                // were previously broken:
-                //
-                //  * The answer is always a real OBSERVED score, never a range constant. The
-                //    earlier pct >= 100 arm returned RANGE_MAX (+100), a floor ABOVE every real
-                //    score, which inverts the feature: under-detected units would be PROMOTED
-                //    instead of demoted. _max cannot do that, and it is exactly what
-                //    PercentileOfSorted's sorted[Count-1] returns.
-                //  * Nothing here throws. The resident twin clamps or short-circuits in each of
-                //    these cases (its Count == 1 early return, its two boundary returns), so a
-                //    throw would abort a multi-hour run at the very end of Stage 5 on input the
-                //    other path handles - and would still leave the two paths disagreeing.
-                //
-                // The percentile RANGE itself is validated once at startup
-                // (OspreyEnvironment.ValidateExperimentAggSettings), which is where an operator
-                // error belongs; by the time execution reaches here pct is known to be in [0,100].
-                // Tail answers are coarser than the resident interpolation between two neighbours,
-                // which is the same deliberate bin-width approximation this estimator already
-                // documents - bounded by the observed range, and never sign-inverting.
-                private double PercentileFromHistogram(double pct)
-                {
-                    // Count == 1 short-circuits FIRST, mirroring PercentileOfSorted: with one
-                    // observation every percentile is that observation (and rank below is 0).
-                    if (_count == 1 || pct <= 0.0)
-                        return _min;
-                    if (pct >= 100.0)
-                        return _max;
-                    double rank = pct / 100.0 * (_count - 1);
-                    double cum = _underflow;
-                    // The quantile lies among the scores below RANGE_MIN, which the histogram
-                    // counted but did not bin. _min is the smallest of them - the same end of the
-                    // distribution PercentileOfSorted would return from its sorted[0] side.
-                    if (rank < cum)
-                        return _min;
-                    for (int b = 0; b < BIN_COUNT; b++)
-                    {
-                        long c = _bins[b];
-                        if (c == 0)
-                            continue;
-                        if (rank < cum + c)
-                        {
-                            double within = (rank - cum) / c;
-                            return RANGE_MIN + (b + within) * BIN_WIDTH;
-                        }
-                        cum += c;
-                    }
-                    // Falling off the end means the quantile lies in the overflow region (scores
-                    // at or above RANGE_MAX, counted but unbinned). _max is the largest observed
-                    // decoy score, so the floor stays inside the data.
-                    return _max;
-                }
             }
 
             private readonly struct PeptideBest

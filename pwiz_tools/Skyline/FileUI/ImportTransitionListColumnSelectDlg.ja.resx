@@ -211,7 +211,7 @@
     <value>4</value>
   </data>
   <data name="comboPanelInner.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
+    <value>Top, Left</value>
   </data>
   <data name="comboPanelInner.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 23</value>

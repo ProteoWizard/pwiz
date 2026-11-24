@@ -623,7 +623,17 @@ namespace pwiz.PanoramaClient.Properties {
                 return ResourceManager.GetString("ServerStateErrors_Error_The_server__0__is_not_a_Panorama_server_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        public static System.Drawing.Icon SkylineDoc {
+            get {
+                object obj = ResourceManager.GetObject("SkylineDoc", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to The username and password could not be authenticated with the panorama server..
         /// </summary>

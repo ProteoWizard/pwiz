@@ -1,0 +1,6 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Maximum: a bar along the top with a stem down the middle (magenta is the run-time key).
+       Traced from the native pixels: each rectangle is a run of one color on the 2-unit grid. -->
+  <Rectangle Canvas.Left="0" Canvas.Top="0" Width="32" Height="4" Fill="#000000"/>
+  <Rectangle Canvas.Left="14" Canvas.Top="4" Width="4" Height="28" Fill="#000000"/>
+</Canvas>

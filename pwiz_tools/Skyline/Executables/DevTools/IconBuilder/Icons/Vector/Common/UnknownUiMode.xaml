@@ -1,0 +1,5 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Unknown UI mode: a bold black question mark. -->
+  <Path Data="M 10.5,10 L 10.5,8.5 C 10.5,5 13.5,3.5 17.5,3.5 C 21.5,3.5 23.5,5.5 23.5,8.5 C 23.5,11.5 21.5,13 19.5,14.5 C 17.5,16 17,17 17,20" Stroke="#000000" StrokeThickness="4.5" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+  <Rectangle Canvas.Left="14" Canvas.Top="22" Width="6" Height="6" RadiusX="1" RadiusY="1" Fill="#000000"/>
+</Canvas>

@@ -470,7 +470,7 @@ namespace TestPerf
             if (IsCoverShotMode)
             {
                 // Resize the form before running or the output will not appear scrolled to the end
-                RunUI(() => importPeptideSearchDlg.Size = new Size(404, 578));  // minimum height
+                RunUI(() => importPeptideSearchDlg.Size = ScaledSize(importPeptideSearchDlg, 404, 578));  // minimum height
             }
 
             SkylineWindow.BeginInvoke(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
@@ -549,7 +549,7 @@ namespace TestPerf
 
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 SkylineWindow.ShowRTReplicateGraph();
-                SkylineWindow.Size = new Size(1226, 900);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 1226, 900);
             });
             //RestoreViewOnScreenNoSelChange(18);
             WaitForGraphs();

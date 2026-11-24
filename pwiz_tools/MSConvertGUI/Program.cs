@@ -45,6 +45,9 @@ namespace MSConvertGUI
         [STAThread]
         static void Main(string[] args)
         {
+            // Before a file dialog can load a shell extension that brings its own older msvcp140.
+            Pwiz.Util.Misc.AppLocalCrt.Pin();
+
             // Hook the vendor SDK assembly resolver before any Reader_* type is touched.
             // Without this, opening a Thermo / Bruker / Waters file fails with TypeLoadException
             // because the SDK DLLs aren't shipped in the installer — they get downloaded into

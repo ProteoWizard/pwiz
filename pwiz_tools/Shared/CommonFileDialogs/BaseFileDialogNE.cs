@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using System.IO;
 using System.Security.Authentication;
 using pwiz.Common.Collections;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.CommonMsData.RemoteApi;
@@ -91,12 +92,27 @@ namespace pwiz.CommonFileDialogs
             refreshButton.ToolTipText = CommonFileDialogResources.BaseFileDialogNE_Refresh;
 
             // Create a new image list for the list view that is the default size (16x16)
+            // Copied with their keys, which ImageListScaler uses to find the per-DPI files
             ImageList imageList = new ImageList{ColorDepth = ColorDepth.Depth32Bit};
-            imageList.Images.AddRange(lookInImageList.Images.Cast<Image>().ToArray());
+            for (int i = 0; i < lookInImageList.Images.Count; i++)
+                imageList.Images.Add(lookInImageList.Images.Keys[i], lookInImageList.Images[i]);
             listView.SmallImageList = imageList;
             listView.LargeImageList = imageList;
+            // Both lists are 96-DPI designs: the copy above feeds the file list, lookInImageList
+            // the places-bar buttons on the left (issue #4599).
+            ImageListScaler.ScaleToDpi(this, imageList);
+            ImageListScaler.ScaleToDpi(this, lookInImageList);
+            // The owner-drawn Look in list draws these at their size and sizes its rows to them
+            ImageListScaler.ScaleToDpi(this, lookInImageListSmall);
+            // Details columns and tiles are not controls, so autoscaling left their 96-DPI sizes
+            DpiScale.ScaleColumnWidths(this, listView);
+            listView.TileSize = DpiScale.ScaleSize(this, listView.TileSize);
 
-            TreeView tv = new TreeView { Indent = 8 };
+            // The system renderer draws a light line along the strip's bottom edge, which shows
+            // as a stray white line beside the Look in list
+            navToolStrip.Renderer = new BorderlessToolStripRenderer();
+
+            TreeView tv = new TreeView { Indent = DpiScale.Scale(this, 8) };
             _remoteIndex = lookInComboBox.Items.Count;
             TreeNode remoteNode = tv.Nodes.Add(@"Remote",
                 CommonFileDialogResources.OpenDataSourceDialog_OpenDataSourceDialog_Remote_Accounts, (int) ImageIndex.MyNetworkPlaces,
@@ -1000,7 +1016,7 @@ namespace pwiz.CommonFileDialogs
                 }
             }
 
-            lookInComboBox.DropDownHeight = lookInComboBox.Items.Count * 18 + 2;
+            lookInComboBox.DropDownHeight = lookInComboBox.Items.Count * (LookInItemHeight + 2) + 2;
 
             lookInComboBox.ResumeLayout();
         }
@@ -1313,7 +1329,7 @@ namespace pwiz.CommonFileDialogs
                 if (view == View.Details)
                 {
                     populateListViewFromDirectory(_currentDirectory);
-                    listView.Columns[0].Width = 200;
+                    listView.Columns[0].Width = DpiScale.Scale(this, 200);
                 }
                 else
                 {
@@ -1504,12 +1520,13 @@ namespace pwiz.CommonFileDialogs
 
             var node = (TreeNode) lookInComboBox.Items[e.Index];
             var textSize = TextRenderer.MeasureText(node.Text, lookInComboBox.Font);
+            var iconSize = lookInImageListSmall.ImageSize;
 
             int x, indent;
-            int y = e.Bounds.Y + (e.Bounds.Height - 16) / 2;
+            int y = e.Bounds.Y + (e.Bounds.Height - iconSize.Height) / 2;
             if ( ( e.State & DrawItemState.ComboBoxEdit ) == DrawItemState.ComboBoxEdit )
             {
-                x = 3;  // Any less and the image gets clipped
+                x = DpiScale.Scale(this, 3);  // Any less and the image gets clipped
                 indent = 0;
             }
             else
@@ -1521,10 +1538,16 @@ namespace pwiz.CommonFileDialogs
                 indent = node.TreeView.Indent * node.Level;
             }
 
-            var image = lookInImageListSmall.Images[node.ImageIndex];
-            e.Graphics.DrawImage( image, x + indent, y, 16, 16 );
+            // ImageList.Images[i] returns a new bitmap on every read
+            using (var image = lookInImageListSmall.Images[node.ImageIndex])
+            {
+                e.Graphics.DrawImage(image, x + indent, y, iconSize.Width, iconSize.Height);
+            }
+            // GDI text, as the list view and the combo's edit box draw it: GDI+ DrawString is not
+            // grid-fitted the same way and reads lighter and thinner beside them
             int textY = e.Bounds.Y + (e.Bounds.Height - textSize.Height) / 2;   // Vertically center the text
-            e.Graphics.DrawString( node.Text, lookInComboBox.Font, new SolidBrush(lookInComboBox.ForeColor), x + indent + 16, textY );
+            TextRenderer.DrawText(e.Graphics, node.Text, lookInComboBox.Font,
+                new Point(x + indent + iconSize.Width, textY), e.ForeColor, TextFormatFlags.NoPrefix);
         }
 
         private void lookInComboBox_MeasureItem( object sender, MeasureItemEventArgs e )
@@ -1535,8 +1558,27 @@ namespace pwiz.CommonFileDialogs
             TreeNode node = (TreeNode) lookInComboBox.Items[e.Index];
             int x = node.TreeView.Indent / 2;
             int indent = node.TreeView.Indent * node.Level;
-            e.ItemHeight = 16;
-            e.ItemWidth = x + indent + 16 + (int) e.Graphics.MeasureString( node.Text, lookInComboBox.Font ).Width;
+            e.ItemHeight = LookInItemHeight;
+            e.ItemWidth = x + indent + lookInImageListSmall.ImageSize.Width +
+                          TextRenderer.MeasureText(e.Graphics, node.Text, lookInComboBox.Font, Size.Empty, TextFormatFlags.NoPrefix).Width;
+        }
+
+        /// <summary>
+        /// Height of a Look in list row: its icon (16 px at 96 DPI) or its text, whichever is taller.
+        /// </summary>
+        private int LookInItemHeight
+        {
+            get { return Math.Max(lookInImageListSmall.ImageSize.Height, lookInComboBox.Font.Height); }
+        }
+
+        /// <summary>
+        /// The system tool strip renderer without the border it draws along the strip's edge.
+        /// </summary>
+        private sealed class BorderlessToolStripRenderer : ToolStripSystemRenderer
+        {
+            protected override void OnRenderToolStripBorder(ToolStripRenderEventArgs e)
+            {
+            }
         }
 
         private void lookInComboBox_SelectionChangeCommitted( object sender, EventArgs e )

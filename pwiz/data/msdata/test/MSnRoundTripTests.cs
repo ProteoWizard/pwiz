@@ -98,7 +98,7 @@ public class MSnRoundTripTests
             Assert.AreEqual(s.Id, d.Id, $"spectrum {i} id");
             Assert.AreEqual(1, d.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0), "ms level");
             Assert.AreEqual(0, d.Precursors.Count, "MS1 should have no precursor");
-            CollectionAssert.AreEqual(s.GetMZArray()!.Data, d.GetMZArray()!.Data, $"spectrum {i} mz");
+            CollectionAssert.AreEqual(s.GetMZArray()!.Data.ToArray(), d.GetMZArray()!.Data.ToArray(), $"spectrum {i} mz");
             // Intensities are float on the binary wire; allow a tiny tolerance.
             var sInt = s.GetIntensityArray()!.Data;
             var dInt = d.GetIntensityArray()!.Data;
@@ -131,7 +131,7 @@ public class MSnRoundTripTests
                 : dsi.CvParam(CVID.MS_possible_charge_state).ValueAs<int>();
             Assert.AreEqual(2, dz, $"spectrum {i} charge state");
 
-            CollectionAssert.AreEqual(s.GetMZArray()!.Data, d.GetMZArray()!.Data, $"spectrum {i} mz");
+            CollectionAssert.AreEqual(s.GetMZArray()!.Data.ToArray(), d.GetMZArray()!.Data.ToArray(), $"spectrum {i} mz");
             var sInt = s.GetIntensityArray()!.Data;
             var dInt = d.GetIntensityArray()!.Data;
             Assert.AreEqual(sInt.Count, dInt.Count);

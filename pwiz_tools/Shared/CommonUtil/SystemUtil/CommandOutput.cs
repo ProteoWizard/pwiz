@@ -79,7 +79,7 @@ namespace pwiz.Common.SystemUtil
         /// <summary>
         /// Redirect <see cref="Out"/> to <paramref name="writer"/> for the current async flow
         /// (and any work it spawns) until the returned cookie is disposed. Used by
-        /// <see cref="MultiProgressReporter.BeginFile"/> to buffer one file's narrative, and by
+        /// <see cref="MultiProgressReporter.BeginFile(int,int[])"/> to buffer one file's narrative, and by
         /// tests to capture output without touching the process writer; nesting restores the
         /// prior writer on dispose.
         /// </summary>

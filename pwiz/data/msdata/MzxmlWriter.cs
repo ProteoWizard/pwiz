@@ -385,8 +385,8 @@ public sealed class MzxmlWriter
         var precursors = GetPrecursorInfo(spec, GetDefaultNativeIdFormatFromSpec(spec));
 
         // Pull peak arrays (already loaded with getBinaryData=true).
-        var mzArray = spec.GetMZArray()?.Data ?? new List<double>();
-        var intArray = spec.GetIntensityArray()?.Data ?? new List<double>();
+        var mzArray = spec.GetMZArray()?.Data ?? new DetachableList<double>();
+        var intArray = spec.GetIntensityArray()?.Data ?? new DetachableList<double>();
         int peaksCount = Math.Min(mzArray.Count, intArray.Count);
 
         w.WriteStartElement("scan");
@@ -446,7 +446,7 @@ public sealed class MzxmlWriter
         }
     }
 
-    private void WritePeaks(XmlWriter w, List<double> mz, List<double> intensity, int n)
+    private void WritePeaks(XmlWriter w, DetachableList<double> mz, DetachableList<double> intensity, int n)
     {
         w.WriteStartElement("peaks");
 

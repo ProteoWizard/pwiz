@@ -69,7 +69,10 @@ namespace pwiz.CarafeSharp.Models
             // torch.CUDA initializes the CUDA backend, which throws on a CPU-only build, so it
             // is only touched once CUDA is known to be there.
             if (IsCudaAvailable())
+            {
+                DisableTf32();
                 return torch.CUDA;
+            }
             fallbackMessage = @"No CUDA device is available to this build; running on the CPU.";
             return CPU_DEVICE;
         }
@@ -105,6 +108,73 @@ namespace pwiz.CarafeSharp.Models
             }
             if (CrtEnvironment.Set(CUDA_ALLOC_CONF_VARIABLE, CUDA_ALLOC_CONF))
                 Environment.SetEnvironmentVariable(CUDA_ALLOC_CONF_VARIABLE, null);
+        }
+
+        /// <summary>
+        /// Turns TF32 off for CUDA matrix multiplications and cuDNN convolutions and LSTMs, so the GPU predicts in
+        /// float32 as the CPU does: the equivalent of <c>torch.backends.cuda.matmul.allow_tf32 = False</c> and
+        /// <c>torch.backends.cudnn.allow_tf32 = False</c>. Fine-tuning is in float32 too, with deterministic cuDNN
+        /// (<see cref="DeterministicCuDnn"/>).
+        /// </summary>
+        /// <remarks>
+        /// libtorch uses TF32, a 10-bit mantissa, for cuDNN convolutions and LSTMs on Ampere and later GPUs by default.
+        /// With it, GPU retention times differed from Carafe's references far beyond the limits the CPU meets (Stellar
+        /// 1.0e-4 rt_norm against 2e-6, library RT up to 0.77 min against 0.011); without it they are about the CPU's
+        /// (docs/04-testing.md, "GPU parity"), and CarafeSharp aims to give the same library on the CPU and the GPU. It
+        /// is free: on an RTX 4000 Ada (2026-11-04), the full-size parity comparisons with TF32 off took 0.98 to 1.06
+        /// times their TF32 wall time, and library prediction 0.99 to 1.00 (two runs each; 0.91 to 1.05 in an earlier
+        /// A/B), within run-to-run noise. Setting <c>NVIDIA_TF32_OVERRIDE=0</c> is no longer needed for this. Both flags
+        /// are process-wide libtorch settings; CarafeSharp never turns TF32 on.
+        /// </remarks>
+        internal static void DisableTf32()
+        {
+            backends.cuda.matmul.allow_tf32 = false;
+            backends.cudnn.allow_tf32 = false;
+        }
+
+        /// <summary>
+        /// Makes cuDNN use deterministic convolution algorithms (<c>torch.backends.cudnn.deterministic = True</c>) while
+        /// fine-tuning on <paramref name="device"/>, and restores the previous setting when disposed; null on the CPU, and
+        /// null with a warning to <paramref name="log"/> when this libtorch lacks the setting.
+        /// </summary>
+        /// <remarks>
+        /// With TF32 off, cuDNN picks among float32 algorithms, and the one it chose for a convolution's gradient added in
+        /// another order on every run: two GPU fine-tunes of the same data gave different RT models
+        /// (RegressionTest.TestRegressionSubsetRepeatsOnGpu failed 4 of 4 times on an RTX 4000 Ada). The deterministic
+        /// setting leaves those algorithms out, so training is in float32, as prediction is, and repeats byte for byte.
+        /// TorchSharp 0.106 has no setter for it, so it is set in libtorch's own context (<see cref="LibTorchContext"/>).
+        /// </remarks>
+        public static IDisposable DeterministicCuDnn(Device device, Action<string> log)
+        {
+            if (device.type != DeviceType.CUDA)
+                return null;
+            // Resolve turned TF32 off already; a CUDA device made elsewhere would otherwise train with libtorch's TF32.
+            DisableTf32();
+            var context = LibTorchContext.TryOpen(out string problem);
+            if (context == null)
+            {
+                log?.Invoke(@"Warning: cuDNN cannot be made deterministic, so GPU fine-tuning may not repeat: " + problem);
+                return null;
+            }
+            return new DeterministicCuDnnScope(context);
+        }
+
+        private sealed class DeterministicCuDnnScope : IDisposable
+        {
+            private readonly LibTorchContext _context;
+            private readonly bool _previous;
+
+            public DeterministicCuDnnScope(LibTorchContext context)
+            {
+                _context = context;
+                _previous = context.DeterministicCuDnn;
+                context.DeterministicCuDnn = true;
+            }
+
+            public void Dispose()
+            {
+                _context.DeterministicCuDnn = _previous;
+            }
         }
 
         private static bool IsCudaAvailable()

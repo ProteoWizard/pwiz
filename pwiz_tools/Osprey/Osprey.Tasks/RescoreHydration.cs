@@ -89,6 +89,13 @@ namespace pwiz.Osprey.Tasks
         /// <summary>This run's refined RT calibration; null when its refit failed.</summary>
         public RTCalibration RefinedCalibration { get; set; }
 
+        /// <summary>
+        /// This run's plan while its moved survivors still await their new peaks, which the
+        /// rescore chooses from the run's spectra and then saves with the plan; null when the plan
+        /// moved no survivor and was saved as planned.
+        /// </summary>
+        internal RescorePlan Plan { get; set; }
+
         /// <summary>This run's PRE-compaction tally, reduced while its full pool was resident.</summary>
         public PreCompactionTally Tally { get; set; }
     }
@@ -140,8 +147,8 @@ namespace pwiz.Osprey.Tasks
                 throw new ArgumentNullException(nameof(retainedBaseIds));
 
             var rows = new FirstPassFoldRows();
-            using (var progress = new ProgressReporter(
-                       OspreyTasksResources.RescoreHydration_FoldPreCompactionPerRun_Reading_first_pass_results_for_the_model_diagnostics_report, parquetPaths.Count))
+            ProgressReporter.Run(
+                OspreyTasksResources.RescoreHydration_FoldPreCompactionPerRun_Reading_first_pass_results_for_the_model_diagnostics_report, parquetPaths.Count, progress =>
             {
                 for (int i = 0; i < parquetPaths.Count; i++)
                 {
@@ -181,8 +188,7 @@ namespace pwiz.Osprey.Tasks
                         string.Format(@"(post-GC, diagnostics fold, run {0} of {1})",
                             i + 1, parquetPaths.Count));
                 }
-                progress.Complete();
-            }
+            });
         }
 
         /// <summary>

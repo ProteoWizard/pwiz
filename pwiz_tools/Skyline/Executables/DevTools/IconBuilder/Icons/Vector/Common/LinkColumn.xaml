@@ -1,0 +1,9 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Link column: two black chain links joined on a diagonal. -->
+  <Rectangle Width="11.5" Height="7" RadiusX="3.5" RadiusY="3.5" Stroke="#000000" StrokeThickness="2.6">
+    <Rectangle.RenderTransform><TransformGroup><TranslateTransform X="-5.75" Y="-3.5"/><RotateTransform Angle="-45"/><TranslateTransform X="20" Y="11.5"/></TransformGroup></Rectangle.RenderTransform>
+  </Rectangle>
+  <Rectangle Width="11.5" Height="7" RadiusX="3.5" RadiusY="3.5" Stroke="#000000" StrokeThickness="2.6">
+    <Rectangle.RenderTransform><TransformGroup><TranslateTransform X="-5.75" Y="-3.5"/><RotateTransform Angle="-45"/><TranslateTransform X="12" Y="19.5"/></TransformGroup></Rectangle.RenderTransform>
+  </Rectangle>
+</Canvas>

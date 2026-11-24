@@ -112,73 +112,115 @@ namespace CommonTest
         }
 
         /// <summary>
-        /// Success is declared, not inferred (#4583): Dispose runs the same way whether a scope
-        /// finished, threw or returned early, so only <see cref="ProgressReporter.Complete"/>
-        /// closes a step with 100%. A step that fails after showing a percent must not log
-        /// completion on its way out.
+        /// Success is decided by how the body ended (#4583, #4979): the Run wrappers close a step
+        /// with 100% only when its body returns - including an early return - and never when it
+        /// throws, or when a <see cref="ProgressReporter.TryRun"/> body reports failure by
+        /// returning false. A step that fails after showing a percent must not log completion on
+        /// its way out.
         /// </summary>
         private static void TestOnlySuccessCompletes()
         {
             // Past MinPercentTime with no percent shown: the same case that closes with 100% when
-            // completed (above) ends at its heading when the scope is left without Complete.
+            // completed (above) ends at its heading when the body reports failure.
             var abandoned = CaptureLines(total: 100, intervalSeconds: 60.0, heartbeatSeconds: 60.0,
                 act: p => p.Report(50), minPercentSeconds: 0.0, complete: false);
-            AssertEx.AreEqual(1, abandoned.Count, "a step left without Complete prints no completion line");
+            AssertEx.AreEqual(1, abandoned.Count, "a step whose body fails prints no completion line");
             AssertEx.Contains(abandoned[0], Heading("phase"));
 
-            // A step that showed 50% and then threw: the exception passes through the using, and
-            // the last line is still the 50%.
-            var writer = new StringWriter();
-            AssertEx.ThrowsException<InvalidOperationException>(() => FailHalfway(writer));
-            var failed = writer.ToString()
-                .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
-                .ToList();
+            // A step that showed 50% and then threw: the exception passes through the wrapper
+            // unchanged, and the last line is still the 50%.
+            var failed = Capture(() => AssertEx.ThrowsException<InvalidOperationException>(() =>
+                ProgressReporter.Run("phase", 100, p =>
+                {
+                    p.Report(50);
+                    throw new InvalidOperationException();
+                }, string.Empty, 0.0, 60.0, 0.0)));
             AssertEx.Contains(failed[failed.Count - 1], "50%");
             AssertEx.IsFalse(failed.Any(line => line.Contains("100%")),
                 "a step that threw must not log completion");
 
-            // Complete is idempotent: a second call does not print a second 100%.
-            var twice = CaptureLines(total: 100, intervalSeconds: 60.0, heartbeatSeconds: 60.0,
-                act: p => p.Complete(), minPercentSeconds: 0.0);
-            AssertEx.AreEqual(1, twice.Count(line => line.Contains("100%")),
-                "Complete called twice should close the step once");
-        }
-
-        /// <summary>
-        /// A step that shows 50% and then throws out of its <c>using</c>, writing to
-        /// <paramref name="writer"/>.
-        /// </summary>
-        private static void FailHalfway(TextWriter writer)
-        {
-            using (CommandOutput.PushScopedOut(writer))
-            using (var reporter = new ProgressReporter("phase", 100, string.Empty, 0.0, 60.0, 0.0))
+            // A body that returns early completed its work: it closes with 100%, and Run<T> hands
+            // back what the body returned.
+            int returned = 0;
+            var early = Capture(() => returned = ProgressReporter.Run("phase", 100, p =>
             {
-                reporter.Report(50);
-                throw new InvalidOperationException();
-            }
+                for (int done = 10; done <= 100; done += 10)
+                {
+                    p.Report(done);
+                    if (done == 50)
+                        return done;    // Stops early, at 50%
+                }
+                return -1;
+            }, string.Empty, 60.0, 60.0, 0.0));
+            AssertEx.AreEqual(50, returned);
+            AssertEx.Contains(early[early.Count - 1], "100%");
+
+            // TryRun returns what its body returned, and closes the step when that was true.
+            bool succeeded = false;
+            var tried = Capture(() => succeeded = ProgressReporter.TryRun("phase", 100, p => true,
+                string.Empty, 60.0, 60.0, 0.0));
+            AssertEx.IsTrue(succeeded);
+            AssertEx.Contains(tried[tried.Count - 1], "100%");
+
+            // A success flag passed to Run<T> would be ignored, so Run<bool> refuses it.
+            AssertEx.ThrowsException<InvalidOperationException>(() =>
+                ProgressReporter.Run("phase", 100, p => true));
+
+            // Begin, for an iterator that yields inside its step: disposing the scope closes the
+            // step only when MarkComplete was called, so an exception or an abandoned walk ends
+            // at the last percent shown.
+            var marked = Capture(() =>
+            {
+                var scope = ProgressReporter.Begin("phase", 100, string.Empty, 60.0, 60.0, 0.0);
+                scope.Report(50);
+                scope.MarkComplete();
+                scope.Dispose();
+                // A second Dispose does not close the step twice.
+                scope.Dispose();
+            });
+            AssertEx.Contains(marked[0], Heading("phase"));
+            AssertEx.AreEqual(1, marked.Count(line => line.Contains("100%")),
+                "a marked scope should close the step exactly once");
+            var unmarked = Capture(() =>
+            {
+                using (var scope = ProgressReporter.Begin("phase", 100, string.Empty, 0.0, 60.0, 0.0))
+                    scope.Report(50);
+            });
+            AssertEx.Contains(unmarked[unmarked.Count - 1], "50%");
+            AssertEx.IsFalse(unmarked.Any(line => line.Contains("100%")),
+                "a scope disposed without MarkComplete must not log completion");
         }
 
         /// <summary>
-        /// Run <paramref name="act"/> against a <see cref="ProgressReporter"/> whose output is
-        /// captured through a scoped writer (AsyncLocal, so no cross-test static leak) and
-        /// return the non-empty output lines. The step is declared successful afterwards unless
-        /// <paramref name="complete"/> is false, which stands for a scope left early.
+        /// Run <paramref name="act"/> as the body of a <see cref="ProgressReporter.Run(string, long, Action{ProgressReporter}, string, double, double, double)"/>
+        /// step whose output is captured, and return the non-empty output lines. The body
+        /// succeeds unless <paramref name="complete"/> is false, which stands for a
+        /// <see cref="ProgressReporter.TryRun"/> body that reports failure.
         /// </summary>
         private static List<string> CaptureLines(long total, double intervalSeconds,
             double heartbeatSeconds, Action<ProgressReporter> act,
             double minPercentSeconds = 0.0, bool complete = true)
         {
-            var writer = new StringWriter();
-            using (CommandOutput.PushScopedOut(writer))
             // minPercent defaults to 0 here so the display tests keep exercising the format at
             // millisecond durations, the same reason they already inject a 0.05 s heartbeat. The
             // suppression behaviour it governs has its own test above.
-            using (var reporter = new ProgressReporter("phase", total, string.Empty,
-                intervalSeconds, heartbeatSeconds, minPercentSeconds))
+            return Capture(() => ProgressReporter.TryRun("phase", total, reporter =>
             {
                 act(reporter);
-                if (complete)
-                    reporter.Complete();
+                return complete;
+            }, string.Empty, intervalSeconds, heartbeatSeconds, minPercentSeconds));
+        }
+
+        /// <summary>
+        /// Run <paramref name="action"/> with the command output captured through a scoped writer
+        /// (AsyncLocal, so no cross-test static leak) and return the non-empty output lines.
+        /// </summary>
+        private static List<string> Capture(Action action)
+        {
+            var writer = new StringWriter();
+            using (CommandOutput.PushScopedOut(writer))
+            {
+                action();
             }
             return writer.ToString()
                 .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)

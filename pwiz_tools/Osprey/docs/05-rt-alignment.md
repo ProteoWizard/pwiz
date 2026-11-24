@@ -108,7 +108,7 @@ This produces a tighter calibration because all points are high-confidence FDR-c
 
 ## Step 5 — Predicting expected measured RT and the reconciliation tolerance
 
-Reconciliation planning (`ReconciliationPlanner.FilePlanner.PlanFile`, `Osprey.FDR/Reconciliation/ReconciliationPlanner.cs`, called one run at a time from `RunReconciliationPlanner.PlanRun`) uses the consensus RTs and refined calibrations to decide, per (file, entry), whether to keep the current peak, switch to a stored CWT candidate, or force an integration window.
+Reconciliation planning (`ReconciliationPlanner.FilePlanner.PlanFile`, `Osprey.FDR/Reconciliation/ReconciliationPlanner.cs`, called one run at a time from `RunReconciliationPlanner.PlanRun`) uses the consensus RTs and refined calibrations to decide, per (file, entry), whether to keep the current peak, switch to one of its first-pass CWT candidates, or force an integration window.
 
 ### Expected measured RT
 
@@ -129,7 +129,7 @@ Rationale (from the Rust docstring the C# comments cite): after cross-run alignm
 `ReconciliationPlanner.DetermineAction` (`ReconciliationPlanner.cs:248`), a port of Rust `determine_reconcile_action`, uses **apex proximity** (not boundary containment):
 
 - If `|apexRt - expectedMeasuredRt| <= rtTolerance` -> `ReconcileAction.Keep` (implicit; not stored).
-- Else pick the stored CWT candidate whose apex is closest to `expectedMeasuredRt` and within tolerance -> `ReconcileAction.UseCwtPeak` (`ReconciliationPlanner.cs:280`).
+- Else pick the CWT candidate whose apex is closest to `expectedMeasuredRt` and within tolerance -> `ReconcileAction.UseCwtPeak`. The candidates are computed only for the entries that reach this step (`ReconciliationPlanner.IsAtExpectedRt` decides Keep first; see 10-cross-run-reconciliation.md).
 - Else -> `ReconcileAction.ForcedIntegration(expectedRt, halfWidth)` where `halfWidth = consensusEntry.MedianPeakWidth / 2.0` (`ReconciliationPlanner.cs:225`,`288`).
 
 ## Step 6 — Peak width for imputation
@@ -151,7 +151,7 @@ The per-run steps used to run in FirstPassFDR as a second pass over every run. S
 |------------------------|---------|----------------------|
 | `ReconciliationConfig.ConsensusFdr` (config field) | `0.01` (`ReconciliationConfig.cs:39`) | FDR threshold for selecting consensus peptides (Step 3) and for the refit experiment-FDR gate (Step 4). Not exposed as a dedicated CLI flag; uses the default. |
 | `ReconciliationConfig.Enabled` | `true` (`ReconciliationConfig.cs:33`) | Enables inter-replicate reconciliation for multi-file runs. |
-| `ReconciliationConfig.TopNPeaks` | `5` (`ReconciliationConfig.cs:36`) | CWT candidate peaks stored per precursor for reconciliation planning. |
+| `ReconciliationConfig.TopNPeaks` | `5` (`ReconciliationConfig.cs:36`) | CWT candidate peaks computed per consulted precursor for reconciliation planning. |
 | `--protein-fdr <t>` -> `OspreyConfig.EffectiveProteinFdr` | `0.01` (default threshold; machinery always runs) | When passed as `proteinFdrThreshold` to the `ConsensusRts.Accumulator` (`Stage6Planner.ScanFiles`), enables protein-FDR rescue of borderline peptide-level detections in consensus selection. |
 | `--experiment-fdr <t>` | `0.01` | Sets the experiment-level FDR threshold; passing precursors (any q-level) are the ones reconciliation includes per file. |
 | `RTCalibrationConfig.LoessBandwidth` | `0.3` (`RTCalibrationConfig.cs:38`) | LOESS bandwidth for both initial and refined RT calibration. |

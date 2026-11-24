@@ -114,8 +114,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// systems and is therefore the right bar for neither (issue #4573).
             /// </summary>
             public double ExperimentCutoffInStratum { get; set; }
-            /// <summary>The boundary for entries carrying pass-1 q and aggregate forward, or NaN
-            /// outside protein-compact.</summary>
+            /// <summary>The boundary for the stratum's complement, whose q comes from its own
+            /// competition on the pass-1 aggregate (issue #4581), or NaN outside protein-compact.</summary>
             public double ExperimentCutoffOffStratum { get; set; }
             /// <summary>Accepted precursors behind <see cref="ExperimentCutoffInStratum"/>.</summary>
             public int AcceptedInStratum { get; set; }
@@ -791,12 +791,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
             // The experiment boundary, split by q SYSTEM (issue #4573). Under protein-compact the
             // reported pool carries TWO: in-stratum entries had q and aggregate recomputed by the
-            // pass-2 stratified competition, off-stratum entries carry both forward from pass 1
-            // untouched. A decoy has no q of its own and is admitted on score, so it must be
-            // compared against the boundary of the system it BELONGS to; a single pooled minimum
-            // is a pass-1 quantity for in-stratum decoys or a pass-2 quantity for off-stratum
-            // ones, and which it is depends only on which side happened to produce the lower
-            // score. NaN while the corresponding side has no accepted entry, which correctly
+            // pass-2 stratum competition, off-stratum entries took q from the complement's own
+            // competition on their pass-1 aggregate (issue #4581). A decoy has no q of its own and
+            // is admitted on score, so it must be compared against the boundary of the system it
+            // BELONGS to; a single pooled minimum mixes the two score orderings, and which one
+            // it reflects depends only on which side happened to produce the lower score. NaN while the corresponding side has no accepted entry, which correctly
             // admits no decoy from that side.
             private double _experimentCutoffInStratum = double.NaN;
             private double _experimentCutoffOffStratum = double.NaN;
@@ -811,11 +810,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // ObserveCutoff rather than rebuilt here. Comparing a decoy's per-run row score
             // against an experiment-scope cutoff mixes two different rankings and is simply wrong.
             //
-            // Rebuilding the aggregate locally would be a max over rows, which is right ONLY for
-            // the default aggregation; under OSPREY_EXPERIMENT_AGG mean-best-N the competition
-            // ranks on the mean of the best N per-run scores and a max-based cutoff is silently
-            // wrong on exactly the arms where the aggregation is being studied. Reading the
-            // persisted value removes that whole class of error.
+            // Reading the persisted value, rather than rebuilding it here as a max over rows,
+            // keeps this cutoff on whatever the competition ranked, by construction.
             //
             // Recorded for EVERY class, not just accepted rows: a decoy needs its own aggregate to
             // compare against the cutoff and has no q to pre-filter on. Bounded by the number of
@@ -1154,11 +1150,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     if (double.IsNaN(_experimentCutoff) || v < _experimentCutoff)
                         _experimentCutoff = v;
                     // The same minimum, split by which q SYSTEM the entry belongs to. Under
-                    // protein-compact, an in-stratum entry's q AND aggregate were recomputed by
-                    // the pass-2 competition, while an off-stratum entry carries both forward
-                    // from pass 1 - so one minimum over the union is a bar derived from two
-                    // incompatible score orderings, and which system produced it is an accident
-                    // of the data. See ExperimentCutoffInStratum for what this fixes.
+                    // protein-compact the stratum and its complement are separate competitions:
+                    // an in-stratum entry's q and aggregate come from the pass-2 stratum fold, an
+                    // off-stratum entry's q from the complement's own competition on its pass-1
+                    // aggregate - so one minimum over the union is a bar derived from two
+                    // separate score orderings, and which system produced it is an accident of
+                    // the data. See ExperimentCutoffInStratum for what this fixes.
                     if (_stratumBaseIds == null)
                         continue;
                     if (_stratumBaseIds.Contains(id & BASE_ID_MASK))
@@ -1200,15 +1197,14 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// <summary>
             /// The acceptance boundary for entries whose q the pass-2 stratified competition
             /// RECOMPUTED (protein-compact in-stratum), or NaN outside that mode. On a healthy
-            /// stratum this is the boundary MOST reported peptides are admitted on, which is why
-            /// the pooled minimum being a pass-1 quantity mattered.
+            /// stratum this is the boundary MOST reported peptides are admitted on.
             /// </summary>
             public double ExperimentCutoffInStratum => _experimentCutoffInStratum;
 
             /// <summary>
-            /// The acceptance boundary for entries that carried pass-1 q and aggregate forward
-            /// untouched, or NaN outside protein-compact. A pass-1 quantity, and CORRECTLY so -
-            /// these entries never entered the pass-2 competition.
+            /// The acceptance boundary for the stratum's complement, or NaN outside protein-compact.
+            /// A pass-1 aggregate, and CORRECTLY so - the complement's competition ranks on it
+            /// (issue #4581). NaN when the complement accepted nothing.
             /// </summary>
             public double ExperimentCutoffOffStratum => _experimentCutoffOffStratum;
 
@@ -1370,8 +1366,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             ///
             /// <para>Without a stratum there is one system and one boundary, which is the pass-1
             /// case and every non-protein-compact second pass. With one, an in-stratum decoy is
-            /// compared against the boundary the pass-2 stratified competition produced and an
-            /// off-stratum decoy against the pass-1 boundary it actually carries. Comparing
+            /// compared against the boundary the pass-2 stratum competition produced and an
+            /// off-stratum decoy against the complement's boundary. Comparing
             /// either against the pooled minimum admits or excludes it on a threshold derived
             /// from the OTHER population's score ordering.</para>
             /// </summary>
@@ -1857,7 +1853,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 // absDeltaRt > SCAN_RT_WINDOW skip - so the cast still runs. (int)NaN is
                 // int.MinValue on net472/x64 (this project targets net472 and net8.0), which
                 // indexes out of bounds and would abort a whole search from a diagnostics-only
-                // panel. StreamingDecoyFloor.Add clamps both ends for this same reason.
+                // panel.
                 int bin = (int)(absDeltaRt / SCAN_RT_WINDOW * DELTA_RT_BINS);
                 if (bin >= DELTA_RT_BINS)
                     bin = DELTA_RT_BINS - 1;

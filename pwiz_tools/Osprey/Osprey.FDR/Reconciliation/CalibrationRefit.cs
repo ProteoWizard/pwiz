@@ -38,6 +38,9 @@ namespace pwiz.Osprey.FDR.Reconciliation
         /// <summary>Minimum consensus points required before attempting a refit.</summary>
         public const int MIN_CONSENSUS_POINTS = 20;
 
+        /// <summary>LOESS span used when the caller gives none; the default first-pass calibration span.</summary>
+        public const double DEFAULT_BANDWIDTH = 0.3;
+
         /// <summary>
         /// Builds (consensus_library_rt, measured_apex_rt) pairs for target
         /// peptides in this run that pass the experiment-level FDR at
@@ -45,10 +48,16 @@ namespace pwiz.Osprey.FDR.Reconciliation
         /// Returns null when fewer than <see cref="MIN_CONSENSUS_POINTS"/>
         /// pairs are available or the fit fails.
         /// </summary>
+        /// <param name="consensus">The cross-run consensus library RTs.</param>
+        /// <param name="entries">This run's first-pass entries.</param>
+        /// <param name="consensusFdr">Experiment-level q a target must pass to contribute a pair.</param>
+        /// <param name="bandwidth">LOESS span. The caller passes the first-pass calibration's span, so a
+        /// gradient end that first pass needed a narrow span to follow is not smoothed over here.</param>
         public static RTCalibration Refit(
             IReadOnlyList<PeptideConsensusRT> consensus,
             IReadOnlyList<FdrEntry> entries,
-            double consensusFdr)
+            double consensusFdr,
+            double bandwidth = DEFAULT_BANDWIDTH)
         {
             if (consensus == null)
                 throw new ArgumentNullException(nameof(consensus));
@@ -86,7 +95,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
             // robustness iterations still downweight any stragglers.
             var config = new RTCalibratorConfig
             {
-                Bandwidth = 0.3,
+                Bandwidth = bandwidth,
                 OutlierRetention = 1.0,
                 MinPoints = MIN_CONSENSUS_POINTS,
             };

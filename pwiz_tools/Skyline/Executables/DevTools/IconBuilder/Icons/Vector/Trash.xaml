@@ -1,0 +1,11 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Near-black line-art trash can traced from the native 1-pixel drawing at twice its size:
+       a handle, a wide lid bar, an open-outline body (narrower than the lid) and three thin bars.
+       The interior is transparent as in the original. -->
+  <Path Data="M 11,7 L 11,3 L 19,3 L 19,7" Stroke="#212121" StrokeThickness="2" StrokeLineJoin="Miter"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="6" Width="26" Height="2" Fill="#212121"/>
+  <Path Data="M 5,8 L 5,29 L 25,29 L 25,8" Stroke="#212121" StrokeThickness="2" StrokeLineJoin="Miter"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="12" Width="2" Height="12" Fill="#212121"/>
+  <Rectangle Canvas.Left="14" Canvas.Top="12" Width="2" Height="12" Fill="#212121"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="12" Width="2" Height="12" Fill="#212121"/>
+</Canvas>

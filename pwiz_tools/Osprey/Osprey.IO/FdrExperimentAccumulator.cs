@@ -72,10 +72,11 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public void Add(uint entryId, double experimentPrecursorQvalue,
             double experimentPeptideQvalue, double experimentProteinQvalue,
-            double experimentAggregateScore, double pep)
+            double experimentAggregateScore, double pep, double peptidePep)
         {
             var incoming = new FdrExperimentRecord(entryId, experimentPrecursorQvalue,
-                experimentPeptideQvalue, experimentProteinQvalue, experimentAggregateScore, pep);
+                experimentPeptideQvalue, experimentProteinQvalue, experimentAggregateScore, pep,
+                peptidePep);
             if (!_byEntryId.TryGetValue(entryId, out var existing))
             {
                 _byEntryId[entryId] = incoming;
@@ -88,14 +89,15 @@ namespace pwiz.Osprey.IO
                 existing.ExperimentPeptideQvalue.Equals(incoming.ExperimentPeptideQvalue) &&
                 existing.ExperimentProteinQvalue.Equals(incoming.ExperimentProteinQvalue) &&
                 existing.ExperimentAggregateScore.Equals(incoming.ExperimentAggregateScore) &&
-                existing.Pep.Equals(incoming.Pep))
+                existing.Pep.Equals(incoming.Pep) &&
+                existing.PeptidePep.Equals(incoming.PeptidePep))
             {
                 return;
             }
             throw new InvalidOperationException(string.Format(
                 @"Experiment-scope values disagree across observations of entry_id {0}: " +
                 @"precursor_q {1} vs {2}, peptide_q {3} vs {4}, protein_q {5} vs {6}, " +
-                @"aggregate_score {7} vs {8}, pep {9} vs {10}. " +
+                @"aggregate_score {7} vs {8}, pep {9} vs {10}, peptide_pep {11} vs {12}. " +
                 @"These columns are written once per entry_id " +
                 @"because they are experiment-scope; a disagreement means they are not.",
                 entryId,
@@ -103,7 +105,8 @@ namespace pwiz.Osprey.IO
                 existing.ExperimentPeptideQvalue, incoming.ExperimentPeptideQvalue,
                 existing.ExperimentProteinQvalue, incoming.ExperimentProteinQvalue,
                 existing.ExperimentAggregateScore, incoming.ExperimentAggregateScore,
-                existing.Pep, incoming.Pep));
+                existing.Pep, incoming.Pep,
+                existing.PeptidePep, incoming.PeptidePep));
         }
 
         /// <summary>
@@ -125,14 +128,10 @@ namespace pwiz.Osprey.IO
         {
             if (!_byEntryId.TryGetValue(entryId, out var r))
                 return;
-            // EVERY other column carried through, PEP included. This method replaces ONE field
-            // of an existing record; omitting another lets the constructor's default silently
-            // overwrite a value that was already correct. That is not hypothetical - PEP was
-            // dropped here on its first day in this record, and the cross-impl gate caught it
+            // EVERY other column carried through, which WithProteinQvalue guarantees. Rebuilding
+            // the record here field by field once dropped PEP, and the cross-impl gate caught it
             // as 79,957 winners reporting 1.0 against Rust's real values (issue #4486).
-            _byEntryId[entryId] = new FdrExperimentRecord(r.EntryId,
-                r.ExperimentPrecursorQvalue, r.ExperimentPeptideQvalue,
-                proteinQvalue, r.ExperimentAggregateScore, r.Pep);
+            _byEntryId[entryId] = r.WithProteinQvalue(proteinQvalue);
         }
 
         /// <summary>
@@ -188,9 +187,7 @@ namespace pwiz.Osprey.IO
                     continue;
                 }
                 precursorsRaised++;
-                _byEntryId[entryId] = new FdrExperimentRecord(r.EntryId,
-                    precursorQ, peptideQ,
-                    r.ExperimentProteinQvalue, r.ExperimentAggregateScore, r.Pep);
+                _byEntryId[entryId] = r.WithQvalues(precursorQ, peptideQ);
             }
             return precursorsRaised;
         }

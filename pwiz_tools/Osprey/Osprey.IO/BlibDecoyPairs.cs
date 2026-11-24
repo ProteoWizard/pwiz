@@ -89,6 +89,24 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// Flags every entry whose row says it is entrapment (<see cref="LibraryEntry.IsEntrapment"/>),
+        /// whichever way the library's decoys come. The row is the only record of the class for
+        /// entrapment placed on a real target protein, whose accessions carry no marker.
+        /// </summary>
+        public static int MarkEntrapment(IReadOnlyDictionary<LibraryEntry, BlibDecoyPair> pairs)
+        {
+            int marked = 0;
+            foreach (var kv in pairs)
+            {
+                if (!kv.Value.IsEntrapment || kv.Key.IsEntrapment)
+                    continue;
+                kv.Key.IsEntrapment = true;
+                marked++;
+            }
+            return marked;
+        }
+
+        /// <summary>
         /// Marks and pairs <paramref name="library"/> from its table: a row's side is
         /// authoritative over the accession prefixes (<paramref name="newlyMarked"/> counts the
         /// entries it changed, each given or stripped of the decoy bit as the marker would), and

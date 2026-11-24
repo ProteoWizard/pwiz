@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using TestRunnerLib;
 using ZedGraph;
@@ -392,6 +393,12 @@ namespace SkylineTester
 
         public void AddTestRunner(string args)
         {
+            // Screenshot modes (pause=-1 manual, -2 cover shot, -3 auto) run system-DPI-aware, like
+            // shipping Skyline, so screenshots at a display scale above 100% are rendered at that
+            // scale instead of stretched from 96 DPI
+            if (Regex.IsMatch(args, @"\bpause=-\d") && !args.Contains("dpiaware="))
+                args += " dpiaware=on";
+
             // Running tests needs a build directory that contains TestRunner.exe. Nothing is staged
             // after a clean build, so fall back to the directory the staging step below will create
             // rather than refusing: demanding a staged directory in order to stage one is a deadlock

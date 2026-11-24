@@ -1,0 +1,41 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="24" Height="24">
+  <!-- Panorama hinted for 24 px (150%), one unit per pixel: Panorama.xaml times 0.75 with the
+       straight edges (ground, buildings, Space Needle core) moved to whole pixels so they do not
+       blur across two columns. The ring and the Needle's saucer and spire are curves and keep
+       their scaled positions. -->
+  <Ellipse Canvas.Left="0" Canvas.Top="2.625" Width="26.25" Height="26.25" Fill="#FFFFFF" Stroke="#FBE39A" StrokeThickness="1.5"/>
+  <Ellipse Canvas.Left="1.5" Canvas.Top="4.125" Width="23.25" Height="23.25" Stroke="#F7CB55" StrokeThickness="1.5"/>
+  <!-- Ground -->
+  <Rectangle Canvas.Left="0" Canvas.Top="16" Width="24" Height="8">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#1A579F" Offset="0"/>
+        <GradientStop Color="#4D83CE" Offset="0.45"/>
+        <GradientStop Color="#99BDF8" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <!-- Buildings -->
+  <Rectangle Canvas.Left="9" Canvas.Top="9" Width="3" Height="9" Fill="#86A5C9"/>
+  <Rectangle Canvas.Left="9" Canvas.Top="9" Width="3" Height="1" Fill="#AFC5DE"/>
+  <Rectangle Canvas.Left="13" Canvas.Top="7" Width="1" Height="11" Fill="#8CABCF"/>
+  <Rectangle Canvas.Left="14" Canvas.Top="7" Width="3" Height="11" Fill="#0D4B93"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="11" Width="1" Height="7" Fill="#2B65AF"/>
+  <Rectangle Canvas.Left="19" Canvas.Top="11" Width="3" Height="7" Fill="#7CA4DD"/>
+  <Rectangle Canvas.Left="19" Canvas.Top="11" Width="3" Height="1" Fill="#A9C2E6"/>
+  <!-- Space Needle: core on whole pixels, saucer and spire as Panorama.xaml scaled by 0.75 -->
+  <Rectangle Canvas.Left="3" Canvas.Top="7" Width="2" Height="10" Fill="#1A579F"/>
+  <Canvas>
+    <Canvas.RenderTransform>
+      <TransformGroup>
+        <ScaleTransform ScaleX="0.5625" ScaleY="0.5625"/>
+        <TranslateTransform X="-0.75" Y="0.45"/>
+      </TransformGroup>
+    </Canvas.RenderTransform>
+    <Path Data="M 2.5,8.5 L 15.5,8.5 L 11,11.5 L 7,11.5 Z" Fill="#2B65AF"/>
+    <Rectangle Canvas.Left="1.5" Canvas.Top="6.5" Width="15" Height="2.5" RadiusX="1.25" RadiusY="1.25" Fill="#1A579F"/>
+    <Path Data="M 3.5,6.5 Q 9,1.5 14.5,6.5 Z" Fill="#2A63AB"/>
+    <Path Data="M 6,6.5 Q 9,3.6 12,6.5 Z" Fill="#5F8EC8"/>
+    <Rectangle Canvas.Left="8.3" Canvas.Top="0.5" Width="1.4" Height="4" Fill="#1A579F"/>
+  </Canvas>
+</Canvas>
