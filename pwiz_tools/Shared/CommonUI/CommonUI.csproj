@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- CommonUI - the WinForms half of pwiz.Common: the data-grid view context and editors
+       (DataBinding/Controls), shared controls, graph helpers and the toolbar images.
+       Split out so that Common itself is plain net10.0 and can be referenced by SkylineCore,
+       which must run on Linux.
+
+       Namespaces are DELIBERATELY unchanged (pwiz.Common.DataBinding.Controls,
+       pwiz.Common.Controls, ...), so moving types between Common and CommonUI costs only
+       project references, not call sites.
+
+       Properties/Resources is the one PUBLIC pwiz.Common.Properties.Resources: it holds the
+       images and the strings this assembly uses. Common keeps an INTERNAL class of the same
+       name for its own strings, so a project referencing both sees only this one. -->
+  <PropertyGroup>
+    <ProjectGuid>{566B41D7-047C-4D68-86A4-36491A6A957D}</ProjectGuid>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Platforms>AnyCPU;x64</Platforms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>pwiz.Common</RootNamespace>
+    <AssemblyName>pwiz.CommonUI</AssemblyName>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Company>University of Washington</Company>
+    <Product>CommonUI</Product>
+    <AssemblyTitle>CommonUI</AssemblyTitle>
+    <Copyright>Copyright (c) University of Washington 2026</Copyright>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.864.35" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\CommonUtil\CommonUtil.csproj" />
+    <ProjectReference Include="..\CommonBaseUI\CommonBaseUI.csproj" />
+    <ProjectReference Include="..\MSGraph\MSGraph.csproj" />
+    <ProjectReference Include="..\zedgraph\ZedGraph.csproj" />
+  </ItemGroup>
+
+  <!-- Per-DPI icon sizes (Name.Size.png) generated from common.manifest by
+       pwiz_tools/Skyline/Executables/DevTools/IconBuilder; loaded by name and size at run time
+       from the assembly of the Resources class that holds the 16 px natives. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Icons\*.png" />
+  </ItemGroup>
+
+</Project>

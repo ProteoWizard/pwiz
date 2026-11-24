@@ -2,17 +2,18 @@
 
   <!-- BiblioSpecUtil: the wrapper Skyline runs the BiblioSpec executables through. Tiny wrapper
        that shells out to BlibBuild.exe / BlibFilter.exe; depends on Common. The .blib schema and
-       writer are the sibling BiblioSpec.IO project, which has no process wrapper. -->
+       writer are the sibling BiblioSpec.IO project, which has no process wrapper.
+       PLAIN net10.0 (no -windows, no WinForms): SkylineCore references it, and SkylineCore
+       must run on Linux. -->
   <PropertyGroup>
     <ProjectGuid>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</ProjectGuid>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>pwiz.BiblioSpec</RootNamespace>
     <AssemblyName>BiblioSpecUtil</AssemblyName>
-    <UseWindowsForms>true</UseWindowsForms>
     <Company>University of Washington</Company>
     <Product>BiblioSpec</Product>
     <AssemblyTitle>BiblioSpecUtil</AssemblyTitle>

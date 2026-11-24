@@ -214,10 +214,12 @@
     <ProjectReference Include="..\Shared\CommonFileDialogs\CommonFileDialogs.csproj" />
     <ProjectReference Include="..\Shared\CommonMsData\CommonMsData.csproj" />
     <ProjectReference Include="..\Shared\Common\Common.csproj" />
+    <ProjectReference Include="..\Shared\CommonUI\CommonUI.csproj" />
     <ProjectReference Include="..\Shared\CommonUtil\CommonUtil.csproj" />
     <ProjectReference Include="..\Shared\CommonBaseUI\CommonBaseUI.csproj" />
     <ProjectReference Include="..\Shared\MSGraph\MSGraph.csproj" />
     <ProjectReference Include="..\Shared\PanoramaClient\PanoramaClient.csproj" />
+    <ProjectReference Include="..\Shared\PanoramaClientUI\PanoramaClientUI.csproj" />
     <ProjectReference Include="..\Shared\ProteomeDb\ProteomeDb.csproj" />
     <ProjectReference Include="..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj" />
     <ProjectReference Include="..\Shared\zedgraph\ZedGraph.csproj" />

@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="PanoramaFolderBrowser_InitializeServers_Requesting_remote_server_folders" xml:space="preserve">
+    <value>リモートサーバーフォルダをリクエスト中</value>
+  </data>
   <data name="PanoramaUtil_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_" xml:space="preserve">
     <value>サーバーは有効なJSON応答を返しませんでした。{0}はPanoramaサーバーではありません。</value>
   </data>
@@ -125,10 +128,6 @@
   </data>
   <data name="PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder" xml:space="preserve">
     <value>{0}はPanoramaフォルダではありません</value>
-  </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="Folder" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Folder.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_" xml:space="preserve">
     <value>サーバーからの予期しないJSON応答：{0}</value>
@@ -141,9 +140,6 @@
   </data>
   <data name="ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__" xml:space="preserve">
     <value>サーバー{0}に接続できません。</value>
-  </data>
-  <data name="ChromLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\ChromLib.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ServerState_GetErrorMessage_The_server__0__does_not_exist_" xml:space="preserve">
     <value>サーバー{0}が存在していません。</value>
@@ -160,47 +156,17 @@
   <data name="WebPanoramaClient_DownloadFile_Downloading__0_" xml:space="preserve">
     <value>{0}のダウンロード中</value>
   </data>
-  <data name="Icojam_Blueberry_Basic_Arrow_up" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Icojam-Blueberry-Basic-Arrow-up2.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_" xml:space="preserve">
     <value>ユーザー{0}には、Panoramaフォルダ{1}にアップロードする権限がありません</value>
   </data>
-  <data name="Copy" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Copy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="PanoramaFilePicker_Open_Click_You_must_select_a_file_first_" xml:space="preserve">
-    <value>最初にファイルを選択してください。</value>
-  </data>
   <data name="PanoramaFolderBrowser_InitializeServers_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password" xml:space="preserve">
     <value>[ツール] - [オプション] - [Panorama] タブへ移動し、ユーザー名とパスワードを更新してください</value>
-  </data>
-  <data name="PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers_" xml:space="preserve">
-    <value>以下のサーバーから情報を取得しようとした際に失敗しました：</value>
-  </data>
-  <data name="PanoramaFolderBrowser_InitializeServers_Requesting_remote_server_folders" xml:space="preserve">
-    <value>リモートサーバーフォルダをリクエスト中</value>
   </data>
   <data name="PanoramaFolderBrowser_InitializeServers_Retrieving_folder_information" xml:space="preserve">
     <value>フォルダ情報を取得中</value>
   </data>
   <data name="PanoramaDirectoryPicker_DirectoryPicker_Load_Open" xml:space="preserve">
     <value>開</value>
-  </data>
-  <data name="WebDavBrowser_AddWebDavFolders_Failed_attempting_to_retrieve_information_from_the_following_folders_" xml:space="preserve">
-    <value>以下のフォルダからの情報の取得に失敗しました</value>
-  </data>
-  <data name="PanoramaFilePicker_ShowFiles_There_are_no_files_in_this_folder" xml:space="preserve">
-    <value>このフォルダにファイルはありません</value>
-  </data>
-  <data name="PanoramaFilePicker_ShowFiles_There_are_no_Skyline_files_in_this_folder" xml:space="preserve">
-    <value>このフォルダにSkylineファイルはありません</value>
-  </data>
-  <data name="PanoramaFilePicker_ALL_VER_All" xml:space="preserve">
-    <value>すべて</value>
-  </data>
-  <data name="PanoramaFilePicker_RECENT_VER_Most_recent" xml:space="preserve">
-    <value>最近</value>
   </data>
   <data name="LabKeyError_ToString_Response_status___0_" xml:space="preserve">
     <value>応答ステータス：{0}</value>

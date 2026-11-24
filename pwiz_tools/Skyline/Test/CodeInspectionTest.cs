@@ -1276,6 +1276,7 @@ namespace pwiz.SkylineTest
                 filenames.AddRange(Directory.GetFiles(Path.Combine(root, @"..", @"Shared", @"Common"), fileMask, SearchOption.AllDirectories));
                 filenames.AddRange(Directory.GetFiles(Path.Combine(root, @"..", @"Shared", @"CommonUtil"), fileMask, SearchOption.AllDirectories));
                 filenames.AddRange(Directory.GetFiles(Path.Combine(root, @"..", @"Shared", @"CommonBaseUI"), fileMask, SearchOption.AllDirectories));
+                filenames.AddRange(Directory.GetFiles(Path.Combine(root, @"..", @"Shared", @"CommonUI"), fileMask, SearchOption.AllDirectories));
 
                 foreach (var filename in filenames)
                 {

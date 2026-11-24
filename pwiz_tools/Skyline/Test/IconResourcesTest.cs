@@ -38,8 +38,8 @@ namespace pwiz.SkylineTest
     /// Executables/DevTools/IconBuilder embedded next to it (Resources/Icons/Name.Size.png),
     /// each decoding to the size its name claims. A missing or misnamed file would otherwise
     /// make the DPI-aware loader fall back silently to a blurry resample of the 16 px bitmap.
-    /// The same holds for pwiz.Common's Resources.resx, whose icons IconBuilder writes from
-    /// common.manifest into Shared/Common/Resources/Icons. The size lists and resource naming
+    /// The same holds for CommonUI's Resources.resx, whose icons IconBuilder writes from
+    /// common.manifest into Shared/CommonUI/Resources/Icons. The size lists and resource naming
     /// here mirror the loader's (DpiUtil.GetIcon).
     /// </summary>
     [TestClass]

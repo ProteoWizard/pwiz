@@ -56,6 +56,46 @@ namespace pwiz.Common.DataBinding.Controls
             MaximumColumnCount = 2000;
         }
 
+        /// <summary>
+        /// The columns of this grid that hold values of the given type.
+        /// </summary>
+        public RowItemValues GetRowItemValues(Type propertyType)
+        {
+            var bindingSource = DataSource as BindingListSource;
+            if (bindingSource == null)
+            {
+                return RowItemValues.Empty(propertyType);
+            }
+
+            return RowItemValues.FromItemProperties(propertyType, bindingSource.ItemProperties);
+        }
+
+        /// <summary>
+        /// The row items of the selected rows, or of the current row when no row is selected.
+        /// </summary>
+        public IEnumerable<RowItem> GetSelectedRowItems()
+        {
+            var bindingSource = DataSource as BindingListSource;
+            if (bindingSource == null)
+            {
+                return Array.Empty<RowItem>();
+            }
+
+            if (SelectedRows.Count == 0)
+            {
+                var currentRow = bindingSource.Current as RowItem;
+                if (currentRow == null)
+                {
+                    return Array.Empty<RowItem>();
+                }
+
+                return new[] {currentRow};
+            }
+
+            return SelectedRows.Cast<DataGridViewRow>()
+                .Select(row => (RowItem) bindingSource[row.Index]);
+        }
+
         protected override void OnDataBindingComplete(DataGridViewBindingCompleteEventArgs e)
         {
             var bindingListSource = DataSource as BindingListSource;

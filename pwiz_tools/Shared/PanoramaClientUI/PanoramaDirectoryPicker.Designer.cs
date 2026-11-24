@@ -90,7 +90,7 @@ namespace pwiz.PanoramaClient
             // 
             // up
             // 
-            this.up.Image = global::pwiz.PanoramaClient.Properties.Resources.Icojam_Blueberry_Basic_Arrow_up;
+            this.up.Image = global::pwiz.PanoramaClientUI.Properties.Resources.Icojam_Blueberry_Basic_Arrow_up;
             this.up.Name = "up";
             resources.ApplyResources(this.up, "up");
             this.up.Click += new System.EventHandler(this.Up_Click);

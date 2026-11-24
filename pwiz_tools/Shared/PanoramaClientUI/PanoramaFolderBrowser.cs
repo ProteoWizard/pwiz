@@ -28,7 +28,8 @@ using Newtonsoft.Json.Linq;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
-using pwiz.PanoramaClient.Properties;
+using pwiz.PanoramaClientUI.Properties;
+using PanoramaClientResources = pwiz.PanoramaClient.Properties.Resources;
 
 namespace pwiz.PanoramaClient
 {
@@ -475,7 +476,7 @@ public class LKContainerBrowser : PanoramaFolderBrowser
         }
 
         var listErrorServers = new List<Tuple<PanoramaServer, string>>();
-        IProgressStatus progressStatus = new ProgressStatus(Resources.PanoramaFolderBrowser_InitializeServers_Requesting_remote_server_folders);
+        IProgressStatus progressStatus = new ProgressStatus(PanoramaClientResources.PanoramaFolderBrowser_InitializeServers_Requesting_remote_server_folders);
         
         for (int i = 0; i < ServerList.Count; i++)
         {

@@ -24,7 +24,7 @@ using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding.Internal
 {
-    internal class RowSourceWrapper
+    public class RowSourceWrapper
     {
         private HashSet<Action> _eventHandlers;
         private IList<RowItem> _rowItems;

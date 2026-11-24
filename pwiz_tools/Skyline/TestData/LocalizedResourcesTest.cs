@@ -124,6 +124,10 @@ namespace pwiz.SkylineTestData
                          typeof(ProteomeDatabase.API.ProteomeDb).Assembly,
                          typeof(CommonFormEx).Assembly, // CommonBaseUI
                          typeof(Assume).Assembly, // CommonUtil - CommonFormEx moved out of it
+                         typeof(pwiz.Common.DataBinding.RowItem).Assembly,
+                         typeof(pwiz.Common.DataBinding.Controls.BoundDataGridView).Assembly,
+                         typeof(pwiz.PanoramaClient.PanoramaUtil).Assembly,
+                         typeof(pwiz.PanoramaClient.PanoramaFilePicker).Assembly,
                          typeof(MSGraph.MSGraphPane).Assembly,
                          typeof(ProteowizardWrapper.MsDataFileImpl).Assembly
                      })
@@ -179,6 +183,12 @@ namespace pwiz.SkylineTestData
             // CommonUtil needs its own sentinel: CommonFormEx moved to CommonBaseUI in the
             // WinForms split, which silently dropped CommonUtil from this list.
             yield return typeof(Assume).Assembly;
+            // Common and PanoramaClient were split into plain net10.0 and WinForms halves, with
+            // their resources divided between them; each half needs its own sentinel
+            yield return typeof(pwiz.Common.DataBinding.RowItem).Assembly; // Common
+            yield return typeof(pwiz.Common.DataBinding.Controls.BoundDataGridView).Assembly; // CommonUI
+            yield return typeof(pwiz.PanoramaClient.PanoramaUtil).Assembly; // PanoramaClient
+            yield return typeof(pwiz.PanoramaClient.PanoramaFilePicker).Assembly; // PanoramaClientUI
             yield return typeof(MSGraph.MSGraphPane).Assembly;
             yield return typeof(ProteowizardWrapper.MsDataFileImpl).Assembly;
             yield return Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(skylineAssembly.Location)!, "ZedGraph.dll"));

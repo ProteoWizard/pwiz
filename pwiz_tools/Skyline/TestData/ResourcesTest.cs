@@ -23,6 +23,7 @@ using System.Linq;
 using System.Reflection;
 using System.Resources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
@@ -53,8 +54,10 @@ namespace pwiz.SkylineTestData
                          typeof(ProteomeDb).Assembly, // ProteomeDb
                          typeof(FormUtil).Assembly, // CommonBaseUI
                          typeof(Assume).Assembly, // CommonUtil
-                         typeof(ViewEditor).Assembly, // Common
+                         typeof(RowItem).Assembly, // Common
+                         typeof(ViewEditor).Assembly, // CommonUI
                          typeof(PanoramaClient.AbstractPanoramaClient).Assembly, // PanoramaClient
+                         typeof(PanoramaClient.PanoramaFilePicker).Assembly, // PanoramaClientUI
                          typeof(MsDataFileImpl).Assembly, // ProteowizardWrapper
                          typeof(MSGraphPane).Assembly, // MSGraph
                          typeof(BiblioSpec.BlibBuild).Assembly // BiblioSpec

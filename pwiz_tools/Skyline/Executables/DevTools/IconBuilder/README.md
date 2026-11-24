@@ -38,7 +38,7 @@ AllIonsStatusButton        vector  18,21,28
 
 Change an icon's source kind by editing its line; nothing else references the kind.
 
-`common.manifest` lists pwiz.Common's icons (`Shared/Common/Resources`) in the same format. It
+`common.manifest` lists pwiz.Common's icons (`Shared/CommonUI/Resources`) in the same format. It
 starts with directives, relative to the manifest's folder, that say where its sources live and
 where its outputs go; `icons.manifest` uses the defaults (`Icons/Vector`, `Icons/Raster`,
 `pwiz_tools/Skyline/Resources/Icons`):
@@ -46,7 +46,7 @@ where its outputs go; `icons.manifest` uses the defaults (`Icons/Vector`, `Icons
 ```
 @vector Icons\Vector\Common
 @raster Icons\Raster\Common
-@output ..\..\..\..\Shared\Common\Resources\Icons
+@output ..\..\..\..\Shared\CommonUI\Resources\Icons
 ```
 
 ## Usage

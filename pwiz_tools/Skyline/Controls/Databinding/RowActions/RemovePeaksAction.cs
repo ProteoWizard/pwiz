@@ -198,8 +198,8 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
 
             public override IEnumerable<Result> GetSelectedResults(BoundDataGridView dataGridView)
             {
-                var rowItemValues = RowItemValues.FromDataGridView(typeof(PeptideResult), dataGridView);
-                foreach (var rowItem in rowItemValues.GetSelectedRowItems(dataGridView))
+                var rowItemValues = dataGridView.GetRowItemValues(typeof(PeptideResult));
+                foreach (var rowItem in dataGridView.GetSelectedRowItems())
                 {
                     foreach (var result in rowItemValues.GetRowValues(rowItem).Cast<Result>())
                     {
@@ -267,8 +267,8 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
 
             public override IEnumerable<Result> GetSelectedResults(BoundDataGridView dataGridView)
             {
-                var rowItemValues = RowItemValues.FromDataGridView(typeof(TransitionResult), dataGridView);
-                foreach (var rowItem in rowItemValues.GetSelectedRowItems(dataGridView))
+                var rowItemValues = dataGridView.GetRowItemValues(typeof(TransitionResult));
+                foreach (var rowItem in dataGridView.GetSelectedRowItems())
                 {
                     foreach (var result in rowItemValues.GetRowValues(rowItem).Cast<Result>())
                     {
@@ -320,8 +320,8 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
 
             public override IEnumerable<Result> GetSelectedResults(BoundDataGridView dataGridView)
             {
-                var rowItemValues = RowItemValues.FromDataGridView(typeof(PrecursorResult), dataGridView);
-                foreach (var rowItem in rowItemValues.GetSelectedRowItems(dataGridView))
+                var rowItemValues = dataGridView.GetRowItemValues(typeof(PrecursorResult));
+                foreach (var rowItem in dataGridView.GetSelectedRowItems())
                 {
                     foreach (var result in rowItemValues.GetRowValues(rowItem).Cast<Result>())
                     {

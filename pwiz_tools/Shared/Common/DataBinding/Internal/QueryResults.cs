@@ -25,7 +25,7 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Internal
 {
-    internal class QueryResults : Immutable
+    public class QueryResults : Immutable
     {
         public static readonly QueryResults Empty = new QueryResults();
         private QueryResults()
@@ -88,7 +88,7 @@ namespace pwiz.Common.DataBinding.Internal
         }
     }
 
-    internal class QueryParameters : Immutable
+    public class QueryParameters : Immutable
     {
         public static readonly QueryParameters Empty = new QueryParameters();
         private QueryParameters()

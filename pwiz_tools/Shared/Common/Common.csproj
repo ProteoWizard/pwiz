@@ -1,45 +1,33 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Common — multi-target net472 + net10.0-windows. The biggest mid-tier
-       Shared library. Depends on CommonUtil + MSGraph + ZedGraph (all already
-       multi-targeted) and a handful of HintPath legacy DLLs that have NuGet
-       equivalents on net8. -->
+  <!-- Common - the biggest mid-tier Shared library: data binding and reporting, data
+       analysis, NHibernate session handling, peak finding.
+       PLAIN net10.0 (no -windows, no WinForms): SkylineCore references it, and SkylineCore
+       must run on Linux. The WinForms half (grid view context and editors, controls, graph
+       helpers, toolbar images) is CommonUI, with the same namespaces. -->
   <PropertyGroup>
     <ProjectGuid>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</ProjectGuid>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>pwiz.Common</RootNamespace>
     <AssemblyName>pwiz.Common</AssemblyName>
-    <UseWindowsForms>true</UseWindowsForms>
     <RuntimeIdentifiers>win;win-x64;win-x86</RuntimeIdentifiers>
-    <!-- net472 keeps using Properties/AssemblyInfo.cs (legacy parity); net8 lets the
-         SDK generate the company/product/title/copyright attributes from project
-         metadata. AssemblyInfo.cs gates those lines with #if NET472. -->
     <Company>University of Washington</Company>
     <Product>Common</Product>
     <AssemblyTitle>Common</AssemblyTitle>
     <Copyright>Copyright © University of Washington 2009-2011</Copyright>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
-    <!-- Old NETStandard.Library 1.6 (transitive via NHibernate→Antlr3.Runtime) requests
+    <!-- Old NETStandard.Library 1.6 (transitive via NHibernate -> Antlr3.Runtime) requests
          old versions of System.* meta-packages that net8 supersedes at runtime; the
-         NU1605 "downgrade" is benign here. Suppress only on net8 — net472 doesn't hit
-         the issue because it has its own BCL story. -->
+         NU1605 "downgrade" is benign here. -->
     <NoWarn>$(NoWarn);NU1605</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- WebView2 was already a PackageReference in the legacy csproj; safe on both targets. -->
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.864.35" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\CommonUtil\CommonUtil.csproj" />
-    <ProjectReference Include="..\CommonBaseUI\CommonBaseUI.csproj" />
-    <ProjectReference Include="..\MSGraph\MSGraph.csproj" />
-    <ProjectReference Include="..\zedgraph\ZedGraph.csproj" />
   </ItemGroup>
 
   <!-- DocumentationGenerator.GetStyleSheetHtml() loads this stylesheet via
@@ -49,17 +37,7 @@
     <EmbeddedResource Include="DataBinding\Documentation\DocumentationGenerator.css" />
   </ItemGroup>
 
-  <!-- Per-DPI icon sizes (Name.Size.png) generated from common.manifest by
-       pwiz_tools/Skyline/Executables/DevTools/IconBuilder; loaded by name and size at run time. -->
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Icons\*.png" />
-  </ItemGroup>
-
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <!-- net8 replacements. NHibernate 5.5+ supports net6+. log4net 2.x is net6+
-         compatible. MathNet, Sprache, System.Data.SQLite.Core all multi-target
-         to net6+. -->
     <!-- NHibernate 5.5's transitive Antlr3.Runtime 3.5.1 pulls in NETStandard.Library 1.6
          which forces NU1605 package downgrades on net8. Use the modern 5.5.x line that
          drops the Antlr3.Runtime dep, OR upgrade Antlr to a net-compatible version. -->

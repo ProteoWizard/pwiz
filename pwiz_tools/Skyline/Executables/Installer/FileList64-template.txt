@@ -113,6 +113,7 @@ ja\pwiz.CommonFileDialogs.resources.dll
 ja\pwiz.CommonMsData.resources.dll
 ja\pwiz.CommonUtil.resources.dll
 ja\pwiz.CommonBaseUI.resources.dll
+ja\pwiz.CommonUI.resources.dll
 ja\SkylineCmd.resources.dll
 ja\Skyline-daily.resources.dll
 ja\ZedGraph.resources.dll
@@ -254,9 +255,13 @@ pwiz.CommonUtil.dll
 pwiz.CommonUtil.pdb
 pwiz.CommonBaseUI.dll
 pwiz.CommonBaseUI.pdb
+pwiz.CommonUI.dll
+pwiz.CommonUI.pdb
 pwiz_data_cli.dll
 PanoramaClient.dll
 PanoramaClient.pdb
+PanoramaClientUI.dll
+PanoramaClientUI.pdb
 Parquet.dll
 QTFLDebugLog.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 QTFLProtoCS.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
@@ -313,6 +318,7 @@ zh-CHS\ProteomeDb.resources.dll
 zh-CHS\pwiz.Common.resources.dll
 zh-CHS\pwiz.CommonFileDialogs.resources.dll
 zh-CHS\pwiz.CommonMsData.resources.dll
+zh-CHS\pwiz.CommonUI.resources.dll
 zh-CHS\SkylineCmd.resources.dll
 zh-CHS\Skyline-daily.resources.dll
 zh-CHS\ZedGraph.resources.dll
