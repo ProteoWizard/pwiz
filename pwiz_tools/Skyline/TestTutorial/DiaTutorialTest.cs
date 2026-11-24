@@ -280,7 +280,7 @@ namespace pwiz.SkylineTestTutorial
 
             if (IsPauseForScreenShots)
             {
-                RunUI(() => SkylineWindow.Size = new Size(1330, 700));
+                RunUI(() => SkylineWindow.Size = ScaledSize(SkylineWindow, 1330, 700));
 
                 PauseForTargetsScreenShot("Targets view clipped - scrolled left and before fully imported");
 
@@ -294,7 +294,7 @@ namespace pwiz.SkylineTestTutorial
                 });
                 var allChrom = FindOpenForm<AllChromatogramsGraph>();
                 if (allChrom != null)
-                    RunUI(() => allChrom.Left = SkylineWindow.Right + 20);
+                    RunUI(() => allChrom.Left = SkylineWindow.Right + Scaled(20));
             }
             WaitForDocumentLoaded(10 * 60 * 1000);    // 10 minutes
 
@@ -335,7 +335,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ArrangeGraphs(DisplayGraphsType.Row);
                 // CONSIDER: SkylineWindow should probably have a function for this
                 Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
-                SkylineWindow.Width = 1250;
+                SkylineWindow.Width = ScaledWidth(SkylineWindow, 1250);
             });
 
             RestoreViewOnScreen(27);
@@ -376,7 +376,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.ShowChromatogramLegends(true);
-                SkylineWindow.Height = 735;
+                SkylineWindow.Height = ScaledHeight(SkylineWindow, 735);
             });
             RestoreViewOnScreen(31);
             SelectNode(SrmDocument.Level.Molecules, 1);  // 2nd peptide
@@ -386,7 +386,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.ShowChromatogramLegends(false);
-                SkylineWindow.Height = 700;
+                SkylineWindow.Height = ScaledHeight(SkylineWindow, 700);
             });
             SelectNode(SrmDocument.Level.TransitionGroups, 1);  // 2nd peptide - first precursor
             WaitForGraphs();
@@ -398,7 +398,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.ShowProductTransitions();
-                SkylineWindow.Height = 463;
+                SkylineWindow.Height = ScaledHeight(SkylineWindow, 463);
             });
 
             PauseForGraphScreenShot("Product ion chromatogram graph metafile 1", SkylineWindow.GetGraphChrom("Pit01"));
@@ -407,7 +407,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.ShowAllTransitions();
-                SkylineWindow.Height = 700;
+                SkylineWindow.Height = ScaledHeight(SkylineWindow, 700);
             });
             RestoreViewOnScreen(34);
             FindNode("NYGLLYCFR");
@@ -449,22 +449,22 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     transitionSettingsUI.Top = SkylineWindow.Top;
-                    transitionSettingsUI.Left = SkylineWindow.Left - transitionSettingsUI.Width - 20;
+                    transitionSettingsUI.Left = SkylineWindow.Left - transitionSettingsUI.Width - Scaled(20);
                 });
                 var isolationSchemeForm = ShowDialog<EditIsolationSchemeDlg>(transitionSettingsUI.EditCurrentIsolationScheme);
                 RunUI(() =>
                 {
-                    isolationSchemeForm.Top = SkylineWindow.Bottom - isolationSchemeForm.Height - 34;
-                    isolationSchemeForm.Left = SkylineWindow.Left + 40;
-                    isolationSchemeForm.Width = 400;
+                    isolationSchemeForm.Top = SkylineWindow.Bottom - isolationSchemeForm.Height - Scaled(34);
+                    isolationSchemeForm.Left = SkylineWindow.Left + Scaled(40);
+                    isolationSchemeForm.Width = ScaledWidth(isolationSchemeForm, 400);
                 });
                 var isolationSchemeGraph = ShowDialog<DiaIsolationWindowsGraphForm>(isolationSchemeForm.OpenGraph);
                 RunUI(() =>
                 {
-                    isolationSchemeGraph.Height -= 58;
+                    isolationSchemeGraph.Height -= Scaled(58);
                     isolationSchemeGraph.Top = SkylineWindow.Bottom - isolationSchemeGraph.Height;
                     isolationSchemeGraph.Left = SkylineWindow.Left;
-                    isolationSchemeGraph.Width = 480;
+                    isolationSchemeGraph.Width = ScaledWidth(isolationSchemeGraph, 480);
                 });
                 TakeCoverShot(isolationSchemeGraph);
                 OkDialog(isolationSchemeGraph, isolationSchemeGraph.CloseButton);
@@ -499,7 +499,7 @@ namespace pwiz.SkylineTestTutorial
                     scale.Min = 504;
                     scale.Max = 506;
                     graphControl.Invalidate();
-                    SkylineWindow.GraphFullScan.Parent.Parent.Height -= 15;    // Not quite as tall to fit 3 into one page
+                    SkylineWindow.GraphFullScan.Parent.Parent.Height -= Scaled(15);    // Not quite as tall to fit 3 into one page
                 });
                 PauseForGraphScreenShot("Full-Scan MS1 spectrum metafile (1/3)", SkylineWindow.GraphFullScan);
 

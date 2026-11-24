@@ -348,11 +348,12 @@ internal sealed class CompassXtractData : IBrukerData
     /// <paramref name="entry"/>. Port of the non-TDF path of
     /// <c>SpectrumList_Bruker::spectrum</c> (<c>SpectrumList_Bruker.cpp:225-540</c>).
     /// </summary>
-    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, bool getBinaryData,
+    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, DetailLevel detailLevel,
         bool preferCentroid, bool sortAndJitter, bool includeIsolationArrays)
     {
         ArgumentNullException.ThrowIfNull(spec);
         ArgumentNullException.ThrowIfNull(entry);
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
         ObjectDisposedException.ThrowIf(_disposed, this);
         _ = sortAndJitter;          // TDF combined-frame only
         _ = includeIsolationArrays; // TDF diaPASEF whole-frame only

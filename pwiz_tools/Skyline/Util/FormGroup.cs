@@ -84,8 +84,8 @@ namespace pwiz.Skyline.Util
             rectFloat = dockPanel.RectangleToScreen(rectFloat);
             rectFloat.X += rectFloat.Width / 4;
             rectFloat.Y += rectFloat.Height / 3;
-            rectFloat.Width = Math.Max(600, rectFloat.Width / 2);
-            rectFloat.Height = Math.Max(440, rectFloat.Height / 2);
+            rectFloat.Width = Math.Max(DpiUtil.Scale(dockPanel, 600), rectFloat.Width / 2);
+            rectFloat.Height = Math.Max(DpiUtil.Scale(dockPanel, 440), rectFloat.Height / 2);
             if (Program.SkylineOffscreen)
             {
                 var offscreenPoint = FormEx.GetOffscreenPoint();

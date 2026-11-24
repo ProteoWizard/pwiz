@@ -1,0 +1,35 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- New document: slate-outlined portrait page (9 by 12 cells in the native) with a folded
+       top-right corner, white fill shading to light blue at the lower right, and a yellow
+       sparkle burst over the top-left corner. -->
+  <Path Data="M 9,6 L 21,6 L 27,12 L 27,28 L 9,28 Z" Stroke="#566881" StrokeThickness="2" StrokeLineJoin="Miter">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFFFFF" Offset="0"/>
+        <GradientStop Color="#FFFFFF" Offset="0.4"/>
+        <GradientStop Color="#D3DCE8" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Path Data="M 21,6 L 21,12 L 27,12 Z" Fill="#8A9BB0" Stroke="#566881" StrokeThickness="2" StrokeLineJoin="Miter"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="24" Width="4" Height="3" Fill="#C8D2E0" Opacity="0.8"/>
+  <!-- Sparkle: eight soft rays around a pale center, over the page's top-left corner -->
+  <Canvas>
+    <Canvas.RenderTransform>
+      <TransformGroup>
+        <ScaleTransform ScaleX="0.85" ScaleY="0.85" CenterX="8" CenterY="8"/>
+        <TranslateTransform X="0" Y="-1.5"/>
+      </TransformGroup>
+    </Canvas.RenderTransform>
+    <Path Data="M 8,0 L 10,5 L 15,2 L 11,7 L 16,8 L 11,9 L 15,14 L 10,11 L 8,16 L 6,11 L 1,14 L 5,9 L 0,8 L 5,7 L 1,2 L 6,5 Z">
+      <Path.Fill>
+        <RadialGradientBrush Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
+          <GradientStop Color="#FFFBD8" Offset="0"/>
+          <GradientStop Color="#F5DC6A" Offset="0.45"/>
+          <GradientStop Color="#E2B423" Offset="1"/>
+        </RadialGradientBrush>
+      </Path.Fill>
+    </Path>
+    <Ellipse Canvas.Left="5" Canvas.Top="5" Width="6" Height="6" Fill="#FFF3B8" Opacity="0.9"/>
+  </Canvas>
+</Canvas>

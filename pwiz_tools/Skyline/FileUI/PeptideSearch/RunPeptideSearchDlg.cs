@@ -64,12 +64,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             : base(skylineWindow, libraryManager, true, workflowType)
         {
             ConverterSettingsControl = new ConverterSettingsControl(this, ImportPeptideSearch, () => FullScanSettingsControl);
-            AddPageControl(ConverterSettingsControl, converterSettingsPage, 18, 50);
+            WizardPages.AddPageControl(ConverterSettingsControl, converterSettingsPage, 18, 50);
 
             var isFeatureDetection = workflowType is Workflow.feature_detection;
 
             SearchSettingsControl = new SearchSettingsControl(this, ImportPeptideSearch);
-            AddPageControl(SearchSettingsControl, ddaSearchSettingsPage, 18, isFeatureDetection ? buildSpectralLibraryTitlePanel.Bottom : 50);
+            // The title panel is already scaled, so pass its bottom back in 96-DPI pixels
+            WizardPages.AddPageControl(SearchSettingsControl, ddaSearchSettingsPage, 18,
+                isFeatureDetection ? DpiUtil.ScaleToLogical(this, buildSpectralLibraryTitlePanel.Bottom) : 50);
 
             if (isFeatureDetection)
             {
@@ -79,7 +81,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 SearchControl = new DDASearchControl(ImportPeptideSearch);
             }
-            AddPageControl(SearchControl, ddaSearchPage, isFeatureDetection ? 3 : 18, 50);
+            WizardPages.AddPageControl(SearchControl, ddaSearchPage, isFeatureDetection ? 3 : 18, 50);
             if (isFeatureDetection)
             {
                 SearchControl.SetProgressBarDisplayStyle(ProgressBarDisplayText.CustomText);

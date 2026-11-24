@@ -116,6 +116,10 @@ namespace pwiz.Skyline.Model.Koina
             progressStatus = progressStatus.NextSegment();
 
             var specMzInfo = ms.Spectra.Select(m => m.SpecMzInfo).ToList();
+            // The proteins of each predicted spectrum's peptide, for the library's Proteins table
+            var peptideProteins = new LibraryPeptideProteins(_document, EntrapmentProteinIds);
+            foreach (var spectrum in ms.Spectra.Where(s => s.PeptidePrecursorNCE.NodePep != null))
+                spectrum.SpecMzInfo.Protein = peptideProteins.GetProteinId(spectrum.PeptidePrecursorNCE.NodePep);
 
             // Predict iRTs for peptides
             var distinctModifiedSequences = new HashSet<string>();
@@ -189,6 +193,12 @@ namespace pwiz.Skyline.Model.Koina
 
         /// <summary>The entrapment peptides among the document's, flagged as such in the DecoyPairs table; null for none.</summary>
         public ICollection<Target> EntrapmentTargets { get; set; }
+
+        /// <summary>
+        /// The protein label CarafeSharp gave each generated entrapment peptide (sequence to label),
+        /// for the library's Proteins table with the document's proteins (<see cref="LibraryPeptideProteins"/>); null for none.
+        /// </summary>
+        public IReadOnlyDictionary<string, string> EntrapmentProteinIds { get; set; }
 
         public static List<KoinaIntensityModel.PeptidePrecursorNCE> ReadStandardPeptides(IrtStandard standard, int? nce)
         {

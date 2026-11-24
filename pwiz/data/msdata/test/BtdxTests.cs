@@ -83,8 +83,8 @@ public class BtdxTests
             Assert.AreEqual(12.5, rt1.ValueAs<double>(), 1e-9);
             Assert.AreEqual(CVID.UO_minute, rt1.Units);
 
-            CollectionAssert.AreEqual(new[] { 100.1, 200.2, 300.3 }, s1.GetMZArray()!.Data);
-            CollectionAssert.AreEqual(new[] { 500.0, 1000.0, 250.0 }, s1.GetIntensityArray()!.Data);
+            CollectionAssert.AreEqual(new[] { 100.1, 200.2, 300.3 }, s1.GetMZArray()!.Data.ToArray());
+            CollectionAssert.AreEqual(new[] { 500.0, 1000.0, 250.0 }, s1.GetIntensityArray()!.Data.ToArray());
             Assert.AreEqual(1750.0, s1.Params.CvParam(CVID.MS_total_ion_current).ValueAs<double>(), 1e-9);
             Assert.AreEqual(200.2, s1.Params.CvParam(CVID.MS_base_peak_m_z).ValueAs<double>(), 1e-9);
             Assert.AreEqual(1000.0, s1.Params.CvParam(CVID.MS_base_peak_intensity).ValueAs<double>(), 1e-9);
@@ -102,8 +102,8 @@ public class BtdxTests
             Assert.AreEqual(30.0, rt2.ValueAs<double>(), 1e-9);
             Assert.AreEqual(CVID.UO_second, rt2.Units);
 
-            CollectionAssert.AreEqual(new[] { 150.5, 450.7 }, s2.GetMZArray()!.Data);
-            CollectionAssert.AreEqual(new[] { 20.0, 800.0 }, s2.GetIntensityArray()!.Data);
+            CollectionAssert.AreEqual(new[] { 150.5, 450.7 }, s2.GetMZArray()!.Data.ToArray());
+            CollectionAssert.AreEqual(new[] { 20.0, 800.0 }, s2.GetIntensityArray()!.Data.ToArray());
 
             // File content flags from BTDX reader.
             Assert.IsTrue(msd.FileDescription.FileContent.HasCVParam(CVID.MS_MSn_spectrum));

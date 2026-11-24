@@ -347,7 +347,11 @@ namespace TestPerf
                 () => $@"FoldChangeGrid still empty after wait. IsComplete={foldChangeGrid.DataboundGridControl.IsComplete}, RowCount={foldChangeGrid.DataboundGridControl.RowCount}");
 
             var volcanoPlot = ShowDialog<FoldChangeVolcanoPlot>(foldChangeGrid.ShowVolcanoPlot);
-            RunUI(() => volcanoPlot.Parent.Parent.Size = new Size(900, 600));
+            RunUI(() =>
+            {
+                var volcanoFloatingWindow = volcanoPlot.Parent.Parent;
+                volcanoFloatingWindow.Size = ScaledSize(volcanoFloatingWindow, 900, 600);
+            });
 
             // Color rules are already baked into GroupComparisonDef.ColorRows (see step 1),
             // so the volcano plot picks them up automatically — no dialog walk required.

@@ -38,6 +38,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Xml;
 
 namespace pwiz.SkylineTest
 {
@@ -186,6 +188,9 @@ namespace pwiz.SkylineTest
                 ReportToCsv(reportSpec, docNew, peakBoundaryExport, LocalizationHelper.CurrentCulture);
                 var docRoundTrip = ImportFileToDoc(docNew, ref peakBoundaryExport);
                 Assert.AreSame(docNew, docRoundTrip);
+
+                // Test that a line matching more than one molecule is applied to all of them
+                TestDuplicateMolecules(docResults, docNew, peakBoundaryFileTsv);
 
 
                 // 1. Empty file - 
@@ -657,6 +662,70 @@ namespace pwiz.SkylineTest
                     Assert.AreEqual(annotations.ListAnnotations().Length, 0); 
                 ++j;
             }
+        }
+
+        /// <summary>
+        /// A line of the peak boundaries file whose modified sequence matches more than one molecule in the
+        /// document has to be applied to every one of them. Builds a document in which every molecule appears
+        /// twice, by importing the document into itself, and checks that both copies get the boundaries that
+        /// importing the same file into the original document produced.
+        /// </summary>
+        private void TestDuplicateMolecules(SrmDocument docResults, SrmDocument docExpected, string importFile)
+        {
+            var docDuplicated = ImportDocumentIntoItself(docResults);
+            var groupsExpected = docExpected.MoleculeTransitionGroups.ToArray();
+            int countGroups = groupsExpected.Length;
+            AssertEx.AreEqual(docResults.MoleculeCount * 2, docDuplicated.MoleculeCount);
+            AssertEx.AreEqual(countGroups * 2, docDuplicated.MoleculeTransitionGroups.Count());
+
+            var docNew = ImportFileToDoc(docDuplicated, ref importFile);
+            var groups = docNew.MoleculeTransitionGroups.ToArray();
+            AssertEx.AreEqual(countGroups * 2, groups.Length);
+            for (int i = 0; i < countGroups; i++)
+            {
+                // The copies were appended after the originals, so they are countGroups apart
+                var groupOriginal = groups[i];
+                var groupCopy = groups[i + countGroups];
+                AssertEx.AreEqual(groupOriginal.TransitionGroup.Peptide.Target, groupCopy.TransitionGroup.Peptide.Target);
+                Assert.AreNotSame(groupOriginal.Id, groupCopy.Id);
+                AssertSameBoundaries(groupsExpected[i], groupOriginal);
+                AssertSameBoundaries(groupsExpected[i], groupCopy);
+            }
+        }
+
+        private void AssertSameBoundaries(TransitionGroupDocNode groupExpected, TransitionGroupDocNode groupActual)
+        {
+            var chromInfosExpected = groupExpected.ChromInfos.ToList();
+            var chromInfosActual = groupActual.ChromInfos.ToList();
+            AssertEx.AreEqual(chromInfosExpected.Count, chromInfosActual.Count);
+            for (int i = 0; i < chromInfosExpected.Count; i++)
+            {
+                var expected = chromInfosExpected[i];
+                var actual = chromInfosActual[i];
+                AssertEx.IsTrue(ApproxEqualNullable(expected.StartRetentionTime, actual.StartRetentionTime, RT_TOLERANCE),
+                    string.Format("Start time {0} on {1} in file {2} does not match {3}", actual.StartRetentionTime,
+                        groupActual.TransitionGroup.Peptide, i, expected.StartRetentionTime));
+                AssertEx.IsTrue(ApproxEqualNullable(expected.EndRetentionTime, actual.EndRetentionTime, RT_TOLERANCE),
+                    string.Format("End time {0} on {1} in file {2} does not match {3}", actual.EndRetentionTime,
+                        groupActual.TransitionGroup.Peptide, i, expected.EndRetentionTime));
+            }
+        }
+
+        /// <summary>
+        /// Returns a document with every molecule in it twice, the copies having new identities but the
+        /// same results, by merging the document into itself the way Edit > Paste of document nodes does.
+        /// </summary>
+        private static SrmDocument ImportDocumentIntoItself(SrmDocument doc)
+        {
+            var sb = new StringBuilder();
+            using (var writer = new XmlTextWriter(new StringWriter(sb)))
+            {
+                doc.Serialize(writer, null, SkylineVersion.CURRENT, null);
+            }
+            using var reader = new StringReader(sb.ToString());
+            return doc.ImportDocumentXml(reader, null, MeasuredResults.MergeAction.merge_names, false,
+                null, Settings.Default.StaticModList, Settings.Default.HeavyModList, null,
+                out _, out _, false);
         }
 
         private PeakBoundaryImporter DoImport(SrmDocument docResults, string importText,

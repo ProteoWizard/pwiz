@@ -178,11 +178,11 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // it is scoped to the per-file pass AFTER this one, so it did not cover the
             // expensive half.
             log.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_COASSIGN_PHASE, @"scan files={0}", fileNames.Count));
-            using (var scanProgress = new ProgressReporter(
+            bool scanned = ProgressReporter.TryRun(
                 fileNames.Count == 1
                     ? OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__reading_first_pass_results_for_1_file
                     : string.Format(OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__reading_first_pass_results_for__0__files, fileNames.Count),
-                fileNames.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                fileNames.Count, scanProgress =>
             {
                 for (int f = 0; f < fileNames.Count; f++)
                 {
@@ -223,7 +223,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                         log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
                             OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__the_first_pass_results_for__0__could_not_be_read_in_full__so_the_,
                             fileNames[f]));
-                        return null;
+                        return false;
                     }
                     // Reduce this file's per-precursor bests to its run cutoff and the decoys
                     // clearing it, then let them go. Holding every file's bests to the end was
@@ -231,8 +231,10 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     // library, i.e. ~79 GB at the 500-file target.
                     builder.SealRunCutoff(fileIdx);
                 }
-                scanProgress.Complete();
-            }
+                return true;
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
+            if (!scanned)
+                return null;
             // Also reported: SealCutoffs walks the whole experiment population in score order to
             // find where this pass's own count reaches the target FDR, which is the other half of
             // the silence the 138 s gap covered.
@@ -268,11 +270,11 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             var tally = OspreyEnvironment.LogCoAssignmentAllocation ? new AllocationTally() : null;
             ProfilerHooks.CaptureRetentionSnapshot(@"coassign-join-start");
             log.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_COASSIGN_PHASE, @"join files={0}", fileNames.Count));
-            using (var progress = new ProgressReporter(
+            bool joined = ProgressReporter.TryRun(
                 fileNames.Count == 1
                     ? OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__reading_apex_retention_times_for_1_file
                     : string.Format(OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__reading_apex_retention_times_for__0__files, fileNames.Count),
-                fileNames.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                fileNames.Count, progress =>
             {
                 for (int f = 0; f < fileNames.Count; f++)
                 {
@@ -287,13 +289,15 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     {
                         log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
                             OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment_is_unavailable___0____so_the_panel_is_left_out_of_the_report_, reason));
-                        return null;
+                        return false;
                     }
                     totalDetected += detected;
                     builder.FlushFile(f);
                 }
-                progress.Complete();
-            }
+                return true;
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
+            if (!joined)
+                return null;
             ProfilerHooks.CaptureRetentionSnapshot(@"coassign-join-end");
             if (tally != null)
             {

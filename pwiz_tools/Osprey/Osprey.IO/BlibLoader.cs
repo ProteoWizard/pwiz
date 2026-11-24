@@ -324,9 +324,8 @@ namespace pwiz.Osprey.IO
 
             _scan.Start();
             // A 6.2M-precursor library takes seconds here with nothing else on the console.
-            using (var progress = new ProgressReporter(
-                       string.Format(OspreyIOResources.BlibLoader_LoadSpectra_Reading__0_N0__library_spectra, count), count,
-                       string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(
+                string.Format(OspreyIOResources.BlibLoader_LoadSpectra_Reading__0_N0__library_spectra, count), count, progress =>
             {
                 long done = 0;
                 var options = new ParallelOptions { MaxDegreeOfParallelism = _partitionCount };
@@ -343,8 +342,7 @@ namespace pwiz.Osprey.IO
                     // reported as the file problem it is, as a one-thread read reported it.
                     ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
                 }
-                progress.Complete();
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             _scan.Stop();
 
             _merge.Start();

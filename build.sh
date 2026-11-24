@@ -141,9 +141,9 @@ TEST_TARGET=(
 # the load fails with "libMassLynxRaw.so: cannot open shared object file", which is dlopen
 # reporting an unmet dependency rather than a missing file. Ubuntu 22.04 satisfies both.
 [ "$IAGREE" = 1 ] && TEST_TARGET+=("pwiz/data/vendor_readers/Waters/test/Waters.Tests.csproj")
-# Bruker likewise: Bruker's tdf-sdk 2.21 ships linux64/libtimsdata.so, and baf2sql has a
+# Bruker likewise: Bruker's TDF-SDK 5.0.4 ships linux64/libtimsdata.so, and baf2sql has a
 # matching .so, so TDF/TSF and BAF all read off-Windows. Both are far less demanding than
-# the Waters .so -- libtimsdata.so needs only GLIBC_2.14 and links no libstdc++ at all.
+# the Waters .so -- libtimsdata.so needs only GLIBC_2.17 and links no libstdc++ at all.
 [ "$IAGREE" = 1 ] && TEST_TARGET+=("pwiz/data/vendor_readers/Bruker/test/Bruker.Tests.csproj")
 
 # The native-Windows vendors, run for what they CAN prove off-Windows: that the

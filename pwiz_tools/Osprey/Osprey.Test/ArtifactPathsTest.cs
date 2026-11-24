@@ -21,11 +21,13 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
+using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
 {
@@ -38,11 +40,14 @@ namespace pwiz.Osprey.Test
     [TestClass]
     public class ArtifactPathsTest
     {
+        // A '/'-rooted directory, a 'C:\'-rooted one, and a Windows one typed with '/'.
+        private static readonly string[] PATH_STYLE_DIRS = { @"/runs/plate1", @"C:\runs\plate1", @"D:/runs/plate1" };
+
         // Helper: run an action with ArtifactPaths overrides set, always resetting
         // the process-wide statics afterward so other tests see the default
         // (null = each input file's own directory). Shared with other tests that
         // depend on where artifacts resolve.
-        internal static void WithArtifactDirs(string outputDir, string cacheDir, System.Action body)
+        internal static void WithArtifactDirs(string outputDir, string cacheDir, Action body)
         {
             string savedOutput = ArtifactPaths.OutputDir;
             string savedCache = ArtifactPaths.CacheDir;
@@ -212,6 +217,130 @@ namespace pwiz.Osprey.Test
             {
                 Directory.Delete(dir, true);
             }
+        }
+
+        /// <summary>
+        /// The paths Osprey derives from the ones it is given come out the same way from a
+        /// '/'-rooted path, a 'C:\'-rooted one and a 'D:/'-rooted one, on Windows and on Linux:
+        /// every per-run artifact, and every artifact named for the output blib, is the input's
+        /// (or blib's) name with the artifact's suffix, in the directory the input names, with no
+        /// mixed separators; the library format comes from the extension whatever the
+        /// directory looks like; and a file's identity hash ignores its directory. On Linux a
+        /// backslash is an ordinary file-name character, so 'C:\runs\plate1\sample.mzML' is one
+        /// file name in the working directory - the assertions below hold for that reading too,
+        /// and the Linux-only pins say so explicitly.
+        /// </summary>
+        [TestMethod]
+        public void TestPathDerivationsAcrossPathStyles()
+        {
+            WithArtifactDirs(null, null, () =>
+            {
+                foreach (string dir in PATH_STYLE_DIRS)
+                {
+                    string input = StylePath(dir, @"sample.mzML");
+                    AssertArtifactPath(input, ParquetScoreCache.GetScoresPath(input), ParquetScoreCache.EXT_SCORES);
+                    AssertArtifactPath(input, ParquetScoreCache.GetReconciledScoresPath(input), ParquetScoreCache.EXT_SCORES_RECONCILED);
+                    AssertArtifactPath(input, SpectraCache.GetCachePath(input), @".spectra.bin");
+                    AssertArtifactPath(input, FdrScoresSidecar.Pass1Path(input), @".1st-pass.fdr_scores.bin");
+                    AssertArtifactPath(input, ReconciliationFile.PathForInput(input), @".reconciliation.json");
+
+                    // Artifacts named for the blib land in the input's directory, whichever
+                    // style the blib path was typed in.
+                    foreach (string blibDir in PATH_STYLE_DIRS)
+                    {
+                        var config = new OspreyConfig
+                        {
+                            InputFiles = new List<string> { input },
+                            OutputBlib = StylePath(blibDir, @"out.blib")
+                        };
+                        AssertBlibArtifactPath(input, config, FirstPassModelIO.PathFor(config));
+                        AssertBlibArtifactPath(input, config, Stage6ConsensusFile.PathFor(config));
+                        AssertBlibArtifactPath(input, config, RetainedBaseIdSidecar.PathFor(config.OutputBlib, input));
+                        AssertBlibArtifactPath(input, config,
+                            FdrExperimentSidecar.PathFor(config.OutputBlib, input, FdrScoresSidecar.Pass.FirstPass));
+                    }
+
+                    AssertLibraryFormat(StylePath(dir, @"lib.blib"), LibraryFormat.Blib);
+                    AssertLibraryFormat(StylePath(dir, @"lib.tsv"), LibraryFormat.DiannTsv);
+                    AssertLibraryFormat(StylePath(dir, @"lib.sky"), LibraryFormat.SkylineDocument);
+                }
+
+                // The mixed-separator case: a Windows path typed with forward slashes gets the
+                // platform separator; on Linux the forward-slash path is already native.
+                if (OperatingSystem.IsWindows())
+                {
+                    Assert.AreEqual(@"D:\runs\plate1\sample.scores.parquet",
+                        ParquetScoreCache.GetScoresPath(@"D:/runs/plate1/sample.mzML"));
+                }
+                else
+                {
+                    Assert.AreEqual(@"/runs/plate1/sample.scores.parquet",
+                        ParquetScoreCache.GetScoresPath(@"/runs/plate1/sample.mzML"));
+                    Assert.AreEqual(@"C:\runs\plate1\sample.scores.parquet",
+                        ParquetScoreCache.GetScoresPath(@"C:\runs\plate1\sample.mzML"));
+                }
+            });
+
+            // A file's identity is its name, size and mtime, never its directory, so one library
+            // identifies the same from any directory a forward-slash path names, on either
+            // platform. A backslash path names the same file only where backslash separates. The
+            // directories are fresh names, so no file exists to add a size and mtime to one side.
+            string absent = @"osprey_absent_" + Guid.NewGuid().ToString(@"N");
+            string identity = SearchIdentity.FileIdentityTerm(@"/" + absent + @"/lib.tsv");
+            Assert.AreEqual(identity, SearchIdentity.FileIdentityTerm(@"D:/" + absent + @"/data/lib.tsv"));
+            Assert.AreEqual(identity, SearchIdentity.FileIdentityTerm(absent + @"/lib.tsv"));
+            Assert.AreEqual(OperatingSystem.IsWindows(),
+                identity == SearchIdentity.FileIdentityTerm(@"C:\" + absent + @"\lib.tsv"));
+
+            // Two paths name one file as the file system compares names: case matters on Linux
+            // only, and the relative parts resolve first everywhere.
+            Assert.AreEqual(!OperatingSystem.IsLinux(), PathComparison.IsSamePath(@"/runs/A.mzML", @"/runs/a.mzML"));
+            Assert.AreEqual(!OperatingSystem.IsLinux(), PathComparison.Comparer.Equals(@"Run1", @"run1"));
+            Assert.IsTrue(PathComparison.IsSamePath(@"/runs/x/../A.mzML", @"/runs/A.mzML"));
+        }
+
+        /// <summary>
+        /// <paramref name="fileName"/> in <paramref name="dir"/>, joined with the separator the
+        /// directory itself uses - as a user would type it - rather than the platform's.
+        /// </summary>
+        private static string StylePath(string dir, string fileName)
+        {
+            return dir + (dir.IndexOf('\\') >= 0 ? @"\" : @"/") + fileName;
+        }
+
+        /// <summary>
+        /// <paramref name="derived"/> is <paramref name="input"/>'s name without its extension
+        /// plus <paramref name="suffix"/>, in the directory <paramref name="input"/> names.
+        /// </summary>
+        private static void AssertArtifactPath(string input, string derived, string suffix)
+        {
+            AssertDerivedPath(input, Path.GetFileNameWithoutExtension(input) + suffix, derived);
+        }
+
+        /// <summary>
+        /// <paramref name="derived"/> is named for the configuration's output blib and lies in
+        /// the directory <paramref name="input"/> names, not the blib's.
+        /// </summary>
+        private static void AssertBlibArtifactPath(string input, OspreyConfig config, string derived)
+        {
+            Assert.IsNotNull(derived, config.OutputBlib);
+            StringAssert.StartsWith(Path.GetFileName(derived), Path.GetFileNameWithoutExtension(config.OutputBlib) + @".", derived);
+            AssertDerivedPath(input, Path.GetFileName(derived), derived);
+        }
+
+        private static void AssertDerivedPath(string input, string expectedName, string derived)
+        {
+            Assert.AreEqual(expectedName, Path.GetFileName(derived), input);
+            Assert.AreEqual(Path.GetDirectoryName(Path.GetFullPath(input)), Path.GetDirectoryName(Path.GetFullPath(derived)), input);
+            if (Path.DirectorySeparatorChar != Path.AltDirectorySeparatorChar)
+                Assert.AreEqual(-1, derived.IndexOf(Path.AltDirectorySeparatorChar), derived);
+        }
+
+        private static void AssertLibraryFormat(string path, LibraryFormat expected)
+        {
+            var source = LibrarySource.FromPath(path);
+            Assert.AreEqual(expected, source.Format, path);
+            Assert.AreEqual(path, source.Path);
         }
     }
 }

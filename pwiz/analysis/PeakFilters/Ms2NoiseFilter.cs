@@ -133,7 +133,7 @@ public sealed class Ms2NoiseFilter : ISpectrumDataFilter
     }
 
     private static void Compact(Spectrum spectrum, bool[] keep, int n,
-        List<double> mz, List<double> inten, BinaryDataArray intArr)
+        DetachableList<double> mz, DetachableList<double> inten, BinaryDataArray intArr)
     {
         int kept = 0;
         for (int i = 0; i < n; i++) if (keep[i]) kept++;

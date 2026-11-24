@@ -264,7 +264,7 @@ namespace TestPerf
                 // Filter time related messages
                 RunUI(() => importPeptideSearchDlg.SearchControl.ProgressLock = new FilterTimeMessageLock());
                 // Resize the form before running or the output will not appear scrolled to the end
-                RunUI(() => importPeptideSearchDlg.Size = new Size(404, 578));  // minimum height
+                RunUI(() => importPeptideSearchDlg.Size = ScaledSize(importPeptideSearchDlg, 404, 578));  // minimum height
             }
             else if (IsPauseForScreenShots)
             {
@@ -341,7 +341,7 @@ namespace TestPerf
             else
             {
                 var ambiguousDlg = ShowDialog<MessageDlg>(() => importPeptideSearchDlg.ClickNextButton());
-                RunUIForScreenShot(() => ambiguousDlg.Height = 448);
+                RunUIForScreenShot(() => ambiguousDlg.Height = ScaledHeight(ambiguousDlg, 448));
                 PauseForScreenShot<MessageDlg>("Import Peptide Search - Ambiguous Peptides dialog");
                 RunUI(() => AssertEx.Contains(ambiguousDlg.Message,
                     Resources.BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_));
@@ -416,7 +416,7 @@ namespace TestPerf
             RestoreViewOnScreen(17);
             RunUI(() =>
             {
-                SkylineWindow.Size = new Size(1137, 714);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 1137, 714);
                 // Set horizontal scroll position
             });
             WaitForGraphs();

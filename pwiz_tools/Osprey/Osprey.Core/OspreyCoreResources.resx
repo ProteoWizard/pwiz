@@ -131,10 +131,10 @@
     <value>precursor and peptide</value>
   </data>
   <data name="FileParallelismResolver_ResolveAuto_File_parallelism___0___auto__CPU_bound___1__cores___2__files__memory_estimate_unavailable_" xml:space="preserve">
-    <value>File parallelism: {0} (auto {3}, CPU-bound: {1} cores, {2} files; memory estimate unavailable)</value>
+    <value>File parallelism: {0} (auto {3}, CPU-bound: {1} threads at {4}+ per file, {2} files; memory estimate unavailable)</value>
   </data>
   <data name="FileParallelismResolver_ResolveAuto_File_parallelism___0___auto___1__GB_free_x__2______3__GB_est_per_file_____4__by_RAM__" xml:space="preserve">
-    <value>File parallelism: {0} (auto {7}: {1:F1} GB free x {2:P0} / ~{3:F1} GB est per file -&gt; {4} by RAM, capped to {5} cores / {6} files)</value>
+    <value>File parallelism: {0} (auto {7}: {1:F1} GB free x {2:P0} / ~{3:F1} GB est per file -&gt; {4} by RAM, capped to {5} by {8} threads at {9}+ per file, {6} files)</value>
   </data>
   <data name="FileParallelismResolver_Resolve_File_parallelism__1__sequential_default__pass__1__to_run__0__files_at_once_" xml:space="preserve">
     <value>File parallelism: 1 (sequential default; pass {1} to run {0} files at once)</value>
@@ -169,9 +169,6 @@
   <data name="LibraryStringInterner_LogSummary_Unique_library_strings___0_____1__total___2___reduced_" xml:space="preserve">
     <value>Unique library strings: {0:N0} / {1:N0} total ({2:F1}% reduced)</value>
   </data>
-  <data name="OspreyEnvironment_DescribeExperimentAgg_Experiment_aggregation___0___default___best_observation_per_unit_" xml:space="preserve">
-    <value>Experiment aggregation: {0} (default - best observation per unit)</value>
-  </data>
   <data name="ResolutionModeExtension_LOCALIZED_VALUES_HRAM" xml:space="preserve">
     <value>HRAM</value>
   </data>
@@ -183,5 +180,11 @@
   </data>
   <data name="ToleranceUnitExtension_LOCALIZED_VALUES_ppm" xml:space="preserve">
     <value>ppm</value>
+  </data>
+  <data name="OspreyEnvironment_ParseSingleValueSwitch__0__must_be___1___or_unset__not___2___" xml:space="preserve">
+    <value>{0} must be '{1}' or unset, not '{2}'.</value>
+  </data>
+  <data name="OspreyEnvironment_ParseXicFragments__0__must_be_a_whole_number_from__1__to__2___not___3___" xml:space="preserve">
+    <value>{0} must be a whole number from {1} to {2}, not '{3}'.</value>
   </data>
 </root>

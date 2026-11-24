@@ -31,6 +31,38 @@ public class ReaderBrukerTests
         return null;
     }
 
+    /// <summary>
+    /// Skyline asks each spectrum for its ms level and start time at instant metadata before it
+    /// reads the data. cpp returns before the peaks below full metadata (SpectrumList_Bruker.cpp:282);
+    /// BAF and TSF decoded them for every such question, so a profile import read each spectrum
+    /// several times. What the early return reports must still agree with a full read, including
+    /// the representation that keeps vendor peak picking from raising the request.
+    /// </summary>
+    [TestMethod]
+    public void Reader_Bruker_InstantMetadata_AgreesWithFullRead()
+    {
+        string? root = FindTestDataRoot();
+        if (root is null) { Assert.Inconclusive("Bruker test data tree not found."); return; }
+        int compared = 0;
+        foreach (var name in new[] { "CsI_Pos_0_G1_000003.d", "timsTOF_autoMSMS_Urine_50s_neg.d", "20percLaser_100fold_1_0_H6_MS.d" })
+        {
+            string d = Path.Combine(root, name);
+            if (!Directory.Exists(d))
+                continue;
+            compared++;
+            IReadOnlyList<string> problems;
+            try { problems = DetailLevelChecks.InstantMetadataMismatches(new Reader_Bruker(), d, 50); }
+            catch (Pwiz.Data.MsData.Readers.VendorSupportNotEnabledException)
+            {
+                Assert.Inconclusive("Bruker SDK not compiled into this build.");
+                return;
+            }
+            Assert.AreEqual(0, problems.Count, name + ":\n" + string.Join("\n", problems.Take(10)));
+        }
+        if (compared == 0)
+            Assert.Inconclusive("None of the instant-metadata fixtures are present.");
+    }
+
     [TestMethod]
     public void Reader_Bruker_20percLaser_100fold_1_0_H6_MS()
     {

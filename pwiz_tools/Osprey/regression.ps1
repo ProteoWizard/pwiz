@@ -209,7 +209,13 @@
     race the same first-time extraction; everything staged is skip-if-present after.
 
 .PARAMETER NoBuild
-    Skip the Osprey build step (use the existing Release binary).
+    Skip the Osprey build step (use the existing binary of the chosen -Configuration).
+
+.PARAMETER Configuration
+    The build configuration to build (unless -NoBuild) and run the legs from: Release
+    (the default, what TeamCity runs) or Debug, for a session whose Release output is
+    in use by a long run. The goldens are configuration-independent: Debug and Release
+    produce the same bytes.
 
 .PARAMETER KeepRunDirs
     How many COMPLETED TestResults\regression-* run dirs the startup prune leaves in
@@ -295,6 +301,8 @@ param(
     [int]$Threads = 16,
     [switch]$TeamCity,
     [switch]$NoBuild,
+    [ValidateSet('Release', 'Debug')]
+    [string]$Configuration = 'Release',
     [switch]$StageOnly,
     [ValidateRange(0, [int]::MaxValue)]
     [int]$KeepRunDirs = 1,
@@ -359,7 +367,7 @@ if (-not $retainOutput -and -not $PSBoundParameters.ContainsKey('KeepRunDirs')) 
 $scriptRoot   = Split-Path -Parent $PSCommandPath
 $regressionDir = Join-Path $scriptRoot 'Regression'
 $goldenRoot   = Join-Path $scriptRoot 'osprey-regression.data'
-$ospreyBinDir = Join-Path $scriptRoot 'Osprey\bin\x64\Release\net10.0'
+$ospreyBinDir = Join-Path $scriptRoot "Osprey\bin\x64\$Configuration\net10.0"
 $ospreyExe    = Join-Path $ospreyBinDir 'Osprey.exe'
 
 # Bit-parity version pin. The build stamps a daily Skyline-scheme version
@@ -622,21 +630,22 @@ if ($dupGolden.Count -gt 0) {
     exit 1
 }
 
-# OSPREY_FDR_MODEL selects the first-pass classifier from the environment (#4543), so a shell
-# exported for gbdt work would train trees in every leg. The goldens are the linear SVM's:
-# capturing them under trees would bless tree output as the SVM baseline, and SearchParameterHash
-# does not tell the two apart. A compare run is left to proceed (an A/B is a legitimate use),
-# but says why mode 1 will diverge.
+# OSPREY_FDR_MODEL overrides the first-pass classifier from the environment (#4543), so a shell
+# exported for classifier work would train that classifier in every leg. The goldens are the
+# build's defaults (gradient-boosted trees for HRAM data, the linear SVM at unit resolution):
+# capturing them under an override would bless its output as the default baseline, and
+# SearchParameterHash does not tell the two apart. A compare run is left to proceed (an A/B is a
+# legitimate use), but says why mode 1 will diverge.
 $fdrModel = if ($env:OSPREY_FDR_MODEL) { $env:OSPREY_FDR_MODEL.Trim().ToLowerInvariant() } else { '' }
-if ($fdrModel -ne '' -and $fdrModel -ne 'svm') {
+if ($fdrModel -ne '') {
     if ($CreateGolden) {
         # Extra parens: -f binds TIGHTER than +.
-        Write-Problem-Tc (("OSPREY_FDR_MODEL='{0}' is set; the goldens are the linear SVM's. " +
-            "Unset it before -CreateGolden.") -f $env:OSPREY_FDR_MODEL)
+        Write-Problem-Tc (("OSPREY_FDR_MODEL='{0}' is set; the goldens are the default classifier's " +
+            "(gbdt for HRAM, svm at unit resolution). Unset it before -CreateGolden.") -f $env:OSPREY_FDR_MODEL)
         exit 1
     }
     Write-Host (("OSPREY_FDR_MODEL='{0}' is set: every leg trains that classifier, so mode 1 " +
-        "will diverge from the linear-SVM goldens.") -f $env:OSPREY_FDR_MODEL) -ForegroundColor Yellow
+        "will diverge from the goldens of whichever resolution it is not the default for.") -f $env:OSPREY_FDR_MODEL) -ForegroundColor Yellow
 }
 
 # --- Reclaim disk: prune earlier TestResults run dirs --------------------------
@@ -805,13 +814,13 @@ if (-not $NoBuild) {
             "NO_VENDOR_SUPPORT mode and every .raw throws.")
         exit 2
     }
-    Write-Progress-Tc 'Building Osprey (Release, net10.0)'
+    Write-Progress-Tc "Building Osprey ($Configuration, net10.0)"
     $buildPs1 = Join-Path $scriptRoot 'build.ps1'
     if ($IAgreeToVendorLicenses) {
-        & $buildPs1 -Configuration Release -NoTests -IAgreeToVendorLicenses
+        & $buildPs1 -Configuration $Configuration -NoTests -IAgreeToVendorLicenses
     }
     else {
-        & $buildPs1 -Configuration Release -NoTests
+        & $buildPs1 -Configuration $Configuration -NoTests
     }
     if ($LASTEXITCODE -ne 0) { Write-Problem-Tc "Osprey build failed (exit $LASTEXITCODE)"; exit $LASTEXITCODE }
 }

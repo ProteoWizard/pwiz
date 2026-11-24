@@ -52,6 +52,9 @@ namespace pwiz.Skyline.Controls.FilesTree
         public FilesTreeForm()
         {
             InitializeComponent();
+
+            // The designer icon is a single 16 px folder; the tab draws the vector Folder above 100%
+            Icon = DpiUtil.GetFormIcon(this, nameof(Resources.Folder), Icon);
         }
 
         public FilesTreeForm(SkylineWindow skylineWindow) : this()
@@ -68,7 +71,9 @@ namespace pwiz.Skyline.Controls.FilesTree
             _nodeTip = new NodeTip(this) { Parent = TopLevelControl };
 
             // FilesTree => trash can drop target that appears when dragging tree nodes
-            _dropTargetRemove = CreateDropTarget(FilesTreeResources.Trash, DockStyle.None);
+            // Trash is a FilesTreeResources bitmap, which PrepareIcons cannot match by pixels
+            // against Properties.Resources, so its per-DPI file is loaded by name here
+            _dropTargetRemove = CreateDropTarget(DpiUtil.GetIcon(this, @"Trash", FilesTreeResources.Trash), DockStyle.None);
             _dropTargetRemove.Visible = false;
             _dropTargetRemove.AllowDrop = true;
 
@@ -1000,7 +1005,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 if (!_dropTargetRemove.Visible)
                 {
                     // Vertically center the drop target on the SelectNode's midline
-                    var x = FilesTree.Bounds.X + FilesTree.ClientSize.Width - _dropTargetRemove.Width - 10 /* extra padding */;
+                    var x = FilesTree.Bounds.X + FilesTree.ClientSize.Width - _dropTargetRemove.Width - DpiUtil.Scale(this, 10) /* extra padding */;
                     var y = FilesTree.SelectedNode.Bounds.Y + FilesTree.SelectedNode.Bounds.Height / 2 - _dropTargetRemove.Height / 2;
             
                     _dropTargetRemove.Location = new Point(x, y);
@@ -1226,13 +1231,15 @@ namespace pwiz.Skyline.Controls.FilesTree
             return confirmDlg.ShowAndDispose(this);
         }
 
-        private static Panel CreateDropTarget(Image icon, DockStyle dockStyle)
+        private Panel CreateDropTarget(Image icon, DockStyle dockStyle)
         {
+            // Created after the form's autoscaling, so the 96-DPI sizes are scaled here
+            var size = DpiUtil.Scale(this, 30);
             var dropTarget = new Panel
             {
                 Dock = dockStyle,
-                Padding = new Padding(2),
-                Size = new Size { Height = 30, Width = 30 },
+                Padding = new Padding(DpiUtil.Scale(this, 2)),
+                Size = new Size { Height = size, Width = size },
                 BorderStyle = BorderStyle.FixedSingle
             };
 

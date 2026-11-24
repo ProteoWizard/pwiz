@@ -172,10 +172,15 @@ public sealed class TsfMetadata : IDisposable
         return QueryScalar<long>($"SELECT COUNT(*) FROM {tableName}") > 0;
     }
 
+    /// <summary>
+    /// True if <paramref name="tableName"/> exists as a table or a view. TSF schema v5 turned
+    /// several MS/MS tables into backward-compatible views over the new <c>Fragmentation*</c>
+    /// tables.
+    /// </summary>
     private bool TableExists(string tableName)
     {
         using var cmd = _conn.CreateCommand();
-        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name=$name";
+        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type IN ('table', 'view') AND name=$name";
         cmd.Parameters.AddWithValue("$name", tableName);
         return cmd.ExecuteScalar() is not null;
     }

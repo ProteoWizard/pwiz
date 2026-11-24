@@ -57,15 +57,17 @@ namespace pwiz.Common.Controls
             FlatAppearance.MouseOverBackColor = _backColorActive = SystemColors.GradientInactiveCaption; // Very light system color
             FlatAppearance.BorderColor = SystemColors.ControlDark;
             FlatAppearance.BorderSize = 1;
-            // Show a dropdown hint down arrow in the same color as the text
+            // Show a dropdown hint down arrow in the same color as the text, with transparent space on its
+            // left so that the text, laid out before the image, always ends short of the arrow
             var scrBitmap = Resources.DropImageNoBackground;
-            var newBitmap = new Bitmap(scrBitmap.Width, scrBitmap.Height);
+            const int textGap = 4;
+            var newBitmap = new Bitmap(scrBitmap.Width + textGap, scrBitmap.Height);
             for (var i = 0; i < scrBitmap.Width; i++)
             {
                 for (var j = 0; j < scrBitmap.Height; j++)
                 {
                     var pixel = scrBitmap.GetPixel(i, j);
-                    newBitmap.SetPixel(i, j, pixel.A != 0 ? base.ForeColor : pixel); // Leave 0-alpha pixels alone
+                    newBitmap.SetPixel(i + textGap, j, pixel.A != 0 ? base.ForeColor : pixel); // Leave 0-alpha pixels alone
                 }
             }
             Image = newBitmap;
@@ -122,8 +124,35 @@ namespace pwiz.Common.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public override string Text
         {
-            get => base.Text;
+            get => _paintingButton ? string.Empty : base.Text;
             set => SelectedIndex = FindStringExact(value);
+        }
+
+        private bool _paintingButton;
+
+        /// <summary>
+        /// Paints the button without its text, which it would lay out across the arrow, then draws the
+        /// text in the space left of the arrow, with an ellipsis if it does not fit there.
+        /// </summary>
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            _paintingButton = true;
+            try
+            {
+                base.OnPaint(e);
+            }
+            finally
+            {
+                _paintingButton = false;
+            }
+
+            int border = FlatAppearance.BorderSize;
+            int textRight = Width - border - (Image?.Width ?? 0);
+            var textRect = new Rectangle(border, border, Math.Max(0, textRight - border), Height - 2 * border);
+            var color = Enabled ? ForeColor : SystemColors.GrayText;
+            TextRenderer.DrawText(e.Graphics, base.Text, Font, textRect, color,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine |
+                TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix);
         }
 
         public int FindStringExact(string str)

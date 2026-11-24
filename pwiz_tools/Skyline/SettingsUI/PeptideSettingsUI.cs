@@ -1881,7 +1881,7 @@ namespace pwiz.Skyline.SettingsUI
                             ComboIS.Visible = true;
                             ListBoxIS.Visible = false;
                             ComboIS.Parent.Parent.Parent.Height +=
-                                ComboIS.Bottom + BORDER_BOTTOM_HEIGHT - ComboIS.Parent.Height;
+                                ComboIS.Bottom + DpiUtil.Scale(ComboIS, BORDER_BOTTOM_HEIGHT) - ComboIS.Parent.Height;
                         }
                         else
                         {
@@ -1895,7 +1895,7 @@ namespace pwiz.Skyline.SettingsUI
                             {
                                 ComboIS.Visible = false;
                                 ListBoxIS.Parent.Parent.Parent.Height +=
-                                    ListBoxIS.Bottom + BORDER_BOTTOM_HEIGHT - ComboIS.Parent.Height;
+                                    ListBoxIS.Bottom + DpiUtil.Scale(ListBoxIS, BORDER_BOTTOM_HEIGHT) - ComboIS.Parent.Height;
                             }
                         }
                     }

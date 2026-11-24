@@ -381,7 +381,7 @@ namespace TestPerf
 
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 SkylineWindow.ShowRTReplicateGraph();
-                SkylineWindow.Size = new Size(1226, 900);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 1226, 900);
             });
             //RestoreViewOnScreenNoSelChange(18);
             WaitForGraphs();

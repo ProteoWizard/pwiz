@@ -23,7 +23,7 @@ writes, or keeps.** It has no Rust counterpart and no "Divergences" section: it 
 architecture the C# pipeline is built to, rather than porting a Rust source doc. **21** is
 exempt the same way: it is a C#-only review checklist for the log's vocabulary, with no
 Rust counterpart and no "Divergences" section. So is **22**, the schema of the training
-export, a C#-only file, and **23**, demultiplexing, an Osprey-only option.
+export, a C#-only file, **23**, demultiplexing, an Osprey-only option, and **25**, the opt-in DIA-NN-gap settings.
 
 Three documents divide the file-and-orchestration subject, and none repeats another: **00**
 owns scope, contract, principles and relay (which file, whose, when, who may read it);
@@ -39,7 +39,7 @@ owns operations (CLI flags, how a task names its runs and in what order, orchest
 | 04 | [calibration](04-calibration.md) | Per-file RT + MS1 + MS2 calibration: quick unit-resolution XCorr pass, LDA scoring, LOESS fit, mass-error stats, calibration-JSON caching. |
 | 05 | [rt-alignment](05-rt-alignment.md) | LOESS calibration + inverse prediction, weighted-median consensus library RT, peak imputation — the RT machinery shared by calibration and reconciliation. |
 | 06 | [peak-detection](06-peak-detection.md) | CWT consensus peak detection (Mexican Hat wavelet, pointwise median, ±2σ boundaries with valley guard), the product-form pick, and the opt-in learned linear pick model. |
-| 07 | [fdr-control](07-fdr-control.md) | First-pass two-level FDR (run + experiment): native Percolator SVM, the experimental C#-only GBDT classifier (`OSPREY_FDR_MODEL`), dual precursor+peptide q-values, PEP, and the opt-in mean(best-N) experiment-wide aggregation (`OSPREY_EXPERIMENT_AGG`). |
+| 07 | [fdr-control](07-fdr-control.md) | First-pass two-level FDR (run + experiment): native Percolator SVM, the experimental C#-only GBDT classifier (`OSPREY_FDR_MODEL`), dual precursor+peptide q-values and PEP. |
 | 08 | [protein-parsimony](08-protein-parsimony.md) | Protein parsimony (bipartite graph, identical-set merging, subset elimination, razor) and picked-protein FDR; the first pass builds the **protein-compact stratum** used by second-pass FDR. |
 | 09 | [multi-charge-consensus](09-multi-charge-consensus.md) | Post-FDR sharing of peak boundaries across charge states; the best passing charge leads (lowest-charge tie-break), disagreeing charges re-scored at consensus boundaries. |
 | 10 | [cross-run-reconciliation](10-cross-run-reconciliation.md) | Consensus RT, per-file LOESS refit, and the per-entry reconciliation plan (Keep / UseCwtPeak / ForcedIntegration). |
@@ -57,6 +57,7 @@ owns operations (CLI flags, how a task names its runs and in what order, orchest
 | 22 | [training-export](22-training-export.md) | The `--training-export` product of `PerFileRescoring` and the schema of `<stem>.training.parquet` - the contract CarafeSharp reads: every identified target's full b/y ladder with per-ion interference evidence from Osprey's own boundaries, median polish and shared-peak logic. |
 | 23 | [demultiplexing](23-demultiplexing.md) | `--demux auto`: overlapping-window (staggered) DIA read through ProteoWizard's demultiplexer straight from the vendor file into `<stem>.demux.spectra.bin` - detection, settings descriptor, rescoring and staging rules, performance, and what was ported from #4710. |
 | 24 | [library-contract](24-library-contract.md) | What a correct Osprey spectral library is - one row per precursor, clean accessions, decoys and entrapment marked, the pairing manifest authoritative, pairs whole - checked by one validator (`LibraryContract` in CarafeSharp.Contracts) that CarafeSharp runs in `--library_contract` mode before it keeps a library and Osprey runs at load on a library that claims it, failing with every violation by class. |
+| 25 | [diann-gap-settings](25-diann-gap-settings.md) | The opt-in settings that bring Osprey within ~5% of DIA-NN on SEA-AD Astral (GBDT) and ahead of DIA-NN `--no-nn` (SVM), each with its default, and their measured detections, time and disk. The defaults stay master's analysis. |
 
 ## Supplementary
 
@@ -66,6 +67,7 @@ owns operations (CLI flags, how a task names its runs and in what order, orchest
 | [peak-model-training.md](peak-model-training.md) | Retraining the opt-in learned peak-pick model (06): feature capture → train → promote, with the score equations. |
 | [fractional-entrapment.md](fractional-entrapment.md) | Entrapment-based FDR-accuracy diagnostics (`--model-diagnostics`): why a fractional entrapment ratio still yields a valid FDP estimate, and the decoy-based per-run-count FDP that needs no entrapment. |
 | [equal-chance-diagnostics.md](equal-chance-diagnostics.md) | The `--model-diagnostics` equal-chance alarms: decoy-independent mixture null, q-band balance, paired coin, decoy support; definitions and thresholds. |
+| [protein-shuffled-entrapment.md](protein-shuffled-entrapment.md) | Auditing protein-aware FDR: why standard entrapment (on its own proteins) cannot see protein-aware inflation, the protein-shuffled design that can, how to build the shuffled library, and what it found in `protein-compact`. |
 
 ## Cross-implementation status
 

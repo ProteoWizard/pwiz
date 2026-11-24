@@ -1,0 +1,23 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Open: a page with light slate left and top edges, dark slate right and bottom edges, white
+       shading to light blue at the lower right and a folded top-right corner. A thin slate arrow
+       starts above the page, left of the corner, curls clockwise around where the unfolded corner
+       would be and ends pointing straight down beside the page's right edge, as in the original. -->
+  <Path Data="M 3,7 L 15,7 L 21,13 L 21,31 L 3,31 Z">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFFFFF" Offset="0"/>
+        <GradientStop Color="#FFFFFF" Offset="0.4"/>
+        <GradientStop Color="#C9D5E5" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Path Data="M 15,7 L 15,13 L 21,13 Z" Fill="#C5CCD0" Stroke="#96A4B6" StrokeThickness="1" StrokeLineJoin="Miter"/>
+  <Path Data="M 3,31 L 3,7 L 15,7" Stroke="#96A4B6" StrokeThickness="2"/>
+  <Path Data="M 15,7 L 21,13 L 21,31 L 3,31" Stroke="#354963" StrokeThickness="2" StrokeLineJoin="Miter"/>
+  <!-- Arrow stem: a slate arc with a pale edge along the inside of the curve -->
+  <Path Data="M 12.5,4.5 C 13,0.5 21.5,-0.5 23.5,3" Stroke="#5F7494" StrokeThickness="2.5" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+  <Path Data="M 13.5,4.5 C 14,1.5 21,0.5 22.8,2.6" Stroke="#D8DACF" StrokeThickness="1" Opacity="0.9" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+  <!-- Arrowhead pointing down -->
+  <Path Data="M 20.5,2.5 L 26.5,2.5 L 23.5,8.5 Z" Fill="#4F6990"/>
+</Canvas>

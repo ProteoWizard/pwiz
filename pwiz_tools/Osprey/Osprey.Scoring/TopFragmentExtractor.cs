@@ -105,11 +105,12 @@ namespace pwiz.Osprey.Scoring
             //   3. Always include all selected fragments, even all-zero XICs
             //      (dropping all-zero fragments biases decoys to higher R^2)
             int rangeLen = endScan - startScan + 1;
-            Span<double> mzs = stackalloc double[CAL_TOP_N_FRAGMENTS];
-            Span<double> lowers = stackalloc double[CAL_TOP_N_FRAGMENTS];
-            Span<double> uppers = stackalloc double[CAL_TOP_N_FRAGMENTS];
+            int xicFragments = config.Scoring.XicFragments;
+            Span<double> mzs = stackalloc double[xicFragments];
+            Span<double> lowers = stackalloc double[xicFragments];
+            Span<double> uppers = stackalloc double[xicFragments];
             var xics = CreateFragmentXics(candidate, windowRts, startScan, endScan,
-                config.FragmentTolerance, mzs, lowers, uppers);
+                config.FragmentTolerance, xicFragments, mzs, lowers, uppers);
 
             for (int t = 0; t < xics.Count; t++)
             {
@@ -130,7 +131,7 @@ namespace pwiz.Osprey.Scoring
         /// The per-candidate setup of a fragment XIC extraction, shared by
         /// <see cref="ExtractFragmentXics"/> and the scan-major
         /// <c>PeakDataExtractor.ExtractXicsScanMajor</c>: the candidate's top
-        /// <see cref="CAL_TOP_N_FRAGMENTS"/> fragments by relative intensity, each with a zeroed
+        /// <paramref name="xicFragments"/> fragments by relative intensity, each with a zeroed
         /// XIC over [<paramref name="startScan"/>, <paramref name="endScan"/>] on one shared RT
         /// array, and its m/z and tolerance window written to <paramref name="mzs"/>,
         /// <paramref name="lowers"/> and <paramref name="uppers"/> at the XIC's index. Empty for a
@@ -141,12 +142,13 @@ namespace pwiz.Osprey.Scoring
             double[] windowRts,
             int startScan, int endScan,
             FragmentToleranceConfig fragmentTolerance,
+            int xicFragments,
             Span<double> mzs, Span<double> lowers, Span<double> uppers)
         {
             if (candidate.Fragments == null || candidate.Fragments.Count == 0)
                 return new List<XicData>();
 
-            int[] topIndices = SelectTopFragmentIndices(candidate.Fragments, CAL_TOP_N_FRAGMENTS);
+            int[] topIndices = SelectTopFragmentIndices(candidate.Fragments, xicFragments);
 
             // Build shared RT array for this range
             int rangeLen = endScan - startScan + 1;
@@ -249,6 +251,40 @@ namespace pwiz.Osprey.Scoring
             if (mzs == null || mzs.Length == 0)
                 return -1;
             return ClosestPeakFrom(mzs, spectrum.MzLowerBound(lower), targetMz, upper);
+        }
+
+        /// <summary>
+        /// <see cref="FindClosestPeakInWindow(Spectrum, double, double, double)"/> for one target
+        /// m/z in two windows at once, the search window [<paramref name="lower"/>,
+        /// <paramref name="upper"/>] and a wider one [<paramref name="wideLower"/>,
+        /// <paramref name="wideUpper"/>], each returning what the single-window call would. When
+        /// the wide window starts at or below the narrow one, every peak before the wide lower
+        /// bound is below the narrow one too, so the narrow lower bound is found by stepping
+        /// forward from the wide one - the same index, for one bucket lookup instead of two.
+        /// </summary>
+        public static int FindClosestPeakInWindows(Spectrum spectrum, double targetMz,
+            double lower, double upper, double wideLower, double wideUpper, out int wideBest)
+        {
+            var mzs = spectrum.Mzs;
+            if (mzs == null || mzs.Length == 0)
+            {
+                wideBest = -1;
+                return -1;
+            }
+            int wideLo = spectrum.MzLowerBound(wideLower);
+            int lo;
+            if (wideLower <= lower)
+            {
+                lo = wideLo;
+                while (lo < mzs.Length && mzs[lo] < lower)
+                    lo++;
+            }
+            else
+            {
+                lo = spectrum.MzLowerBound(lower);
+            }
+            wideBest = ClosestPeakFrom(mzs, wideLo, targetMz, wideUpper);
+            return ClosestPeakFrom(mzs, lo, targetMz, upper);
         }
 
         private static int ClosestPeakFrom(double[] mzs, int lo, double targetMz, double upper)

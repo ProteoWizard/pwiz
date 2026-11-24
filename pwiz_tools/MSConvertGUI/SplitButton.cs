@@ -59,6 +59,7 @@ namespace MSConvertGUI
                 int lineX = ClientRectangle.Width - this.SplitWidth;
                 int lineYFrom = arrowY - 4;
                 int lineYTo = arrowY + 8;
+                // ReSharper disable once UsingStatementResourceInitialization
                 using (var separatorPen = new Pen(Brushes.DarkGray) { DashStyle = DashStyle.Dot })
                 {
                     pevent.Graphics.DrawLine(separatorPen, lineX, lineYFrom, lineX, lineYTo);

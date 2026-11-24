@@ -167,18 +167,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             buildLibraryPanel.Controls.Add(BuildPepSearchLibControl);
 
             ImportFastaControl = new ImportFastaControl(this, SkylineWindow.SequenceTree);
-            AddPageControl(ImportFastaControl, importFastaPage, 2, 60);
+            WizardPages.AddPageControl(ImportFastaControl, importFastaPage, 2, 60);
 
             MatchModificationsControl = new MatchModificationsControl(this, ImportPeptideSearch);
-            AddPageControl(MatchModificationsControl, matchModificationsPage, 2, 60);
+            WizardPages.AddPageControl(MatchModificationsControl, matchModificationsPage, 2, 60);
 
             TransitionSettingsControl = new TransitionSettingsControl(this);
-            AddPageControl(TransitionSettingsControl, transitionSettingsUiPage, 18, 60);
+            WizardPages.AddPageControl(TransitionSettingsControl, transitionSettingsUiPage, 18, 60);
 
             MakeFullScanSettingsControl(workflowType);
 
             ImportResultsDDAControl = new ImportResultsControl(ImportPeptideSearch, DocumentFilePath);
-            AddPageControl(ImportResultsDDAControl, getChromatogramsPage, 2, 60);
+            WizardPages.AddPageControl(ImportResultsDDAControl, getChromatogramsPage, 2, 60);
             ImportResultsControl = ImportResultsDDAControl;
         }
 
@@ -843,19 +843,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var isFeatureDetection = workflowType is Workflow.feature_detection;
             FullScanSettingsControl = new FullScanSettingsControl(this,
                 isFeatureDetection ? ImportPeptideSearch.eFeatureDetectionPhase.fullscan_settings : ImportPeptideSearch.eFeatureDetectionPhase.none);
-            AddPageControl(FullScanSettingsControl, ms1FullScanSettingsPage, isFeatureDetection ? 0 : 18, isFeatureDetection ? 43 : 50);
+            WizardPages.AddPageControl(FullScanSettingsControl, ms1FullScanSettingsPage, isFeatureDetection ? 0 : 18, isFeatureDetection ? 43 : 50);
 
             FullScanSettingsControl.FullScanEnabledChanged += OnFullScanEnabledChanged; // Adjusts ion settings when full scan settings change
-        }
-
-        protected static void AddPageControl<TControl>(TControl pageControl, TabPage tabPage, int border, int header)
-            where TControl : UserControl
-        {
-            pageControl.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            pageControl.Location = new Point(border, header);
-            pageControl.Width = tabPage.Width - border * 2;
-            pageControl.Height = tabPage.Height - header - border;
-            tabPage.Controls.Add(pageControl);
         }
 
         private bool UpdateTransitionSettings()

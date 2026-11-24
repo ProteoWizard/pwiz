@@ -38,6 +38,7 @@ using Parquet;
 using pwiz.Common;
 using pwiz.ProteowizardWrapper;
 using pwiz.Common.Collections;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Startup;
@@ -46,6 +47,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using ZedGraph;
 
 // Once-per-assembly initialization to perform logging with log4net.
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "SkylineLog4Net.config", Watch = true)]
@@ -210,7 +212,20 @@ namespace pwiz.Skyline
         [STAThread]
         public static int Main(string[] args = null)
         {
+            // Before anything can load a shell extension that brings its own older msvcp140.
+            Pwiz.Util.Misc.AppLocalCrt.Pin();
+
+            // System-DPI awareness has to be the first thing WinForms hears: on .NET the manifest
+            // is not embedded, and WinForms fixes its scaling at first use (SetDefaultFont below
+            // is one), after which SetHighDpiMode changes the process but not the auto-scaling.
+            // The test host stays DPI-unaware so screenshot and layout baselines remain 96-DPI
+            // on scaled developer displays (issue #4599).
+            if (!UnitTest && !FunctionalTest)
+                Application.SetHighDpiMode(HighDpiMode.SystemAware);
             SetDefaultFont();
+            // Forms that set no icon show the executable's; give them the same icon with
+            // frames at the scaled title bar sizes.
+            DpiFormIcons.ApplicationIcon = Resources.Skyline;
 
             if (String.IsNullOrEmpty(Settings.Default.InstallationId)) // Each instance to have GUID
                 Settings.Default.InstallationId = Guid.NewGuid().ToString();
@@ -656,6 +671,10 @@ namespace pwiz.Skyline
                 CommonActionUtil.ExceptionReporter = ReportException;
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
+
+                // ZedGraph sizes its fonts, symbols and pens in pixels, so without this every
+                // graph draws at 96-DPI size while the window chrome around it scales up.
+                PaneBase.DpiScaleFactor = DpiUtil.GetFactor(null);
                 InitUiThreadExceptionHandling();
 
                 // Add handler for non-UI thread exceptions. 

@@ -69,6 +69,10 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
     private readonly bool _ignoreZeroIntensityPoints;
     private readonly bool _acceptZeroLengthSpectra;
     private readonly List<IndexEntry> _index = new();
+    // Point count of the last IM-combined frame read at each MS level (index 1 and 2), used to
+    // pre-size the next frame's arrays. Only a sizing hint: a stale or racing value costs at
+    // most one list regrowth, never a wrong result.
+    private readonly int[] _imsCombinedPointCounts = new int[3];
 
     /// <summary>DataProcessing emitted as the document's <c>defaultDataProcessingRef</c>.</summary>
     public DataProcessing? Dp { get; set; }
@@ -299,24 +303,41 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
     /// matching cpp setting canCentroid=false for them.
     /// </remarks>
     public Spectrum GetCentroidSpectrum(int index, bool getBinaryData, IntegerSet msLevelsToCentroid)
-        => GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid);
+        => GetSpectrumImpl(index, ToDetailLevel(getBinaryData), msLevelsToCentroid);
+
+    /// <inheritdoc/>
+    public Spectrum GetCentroidSpectrum(int index, DetailLevel detailLevel, IntegerSet msLevelsToCentroid)
+        => GetSpectrumImpl(index, detailLevel, msLevelsToCentroid);
 
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
-        => GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid: null);
+        => GetSpectrumImpl(index, ToDetailLevel(getBinaryData), msLevelsToCentroid: null);
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Overridden, as cpp's is, so a request below <see cref="DetailLevel.FullMetadata"/> does not
+    /// decode an ion mobility frame. Skyline asks for the ms level, retention time and precursors
+    /// of every spectrum it then decides whether to read.
+    /// </remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel)
+        => GetSpectrumImpl(index, detailLevel, msLevelsToCentroid: null);
+
+    private static DetailLevel ToDetailLevel(bool getBinaryData)
+        => getBinaryData ? DetailLevel.FullData : DetailLevel.FullMetadata;
 
     /// <summary>MHDAC only centroids TOF-family devices; cpp SpectrumList_Agilent.cpp:313-315.</summary>
     private bool CanVendorCentroid =>
         _raw.DeviceType != DeviceType.Quadrupole && _raw.DeviceType != DeviceType.TandemQuadrupole;
 
-    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, IntegerSet? msLevelsToCentroid)
+    private Spectrum GetSpectrumImpl(int index, DetailLevel detailLevel, IntegerSet? msLevelsToCentroid)
     {
         if (index < 0 || index >= _index.Count)
             throw new ArgumentOutOfRangeException(nameof(index));
         var ie = _index[index];
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
 
         if (ie.IsNonMs) return BuildNonMsSpectrum(index, ie, getBinaryData);
-        if (ie.IsImsCombined) return BuildImsCombinedSpectrum(index, ie, getBinaryData);
+        if (ie.IsImsCombined) return BuildImsCombinedSpectrum(index, ie, detailLevel);
         if (ie.IsImsDrift) return BuildImsDriftSpectrum(index, ie, getBinaryData);
 
         var rec = _raw.GetScanRecord(ie.RowNumber);
@@ -420,6 +441,21 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
 
         spec.Params.Set(CVID.MS_ms_level, msLevel);
         spec.Params.Set(spectrumType);
+
+        // Past this point the SDK spectrum is required, and fetching it decompresses and
+        // mass-calibrates the whole scan. cpp returns here for anything short of full metadata
+        // (SpectrumList_Agilent.cpp:289); Skyline asks for ms level, retention time and
+        // precursors at InstantMetadata before it reads each spectrum's data.
+        // The all-ions and neutral loss/gain precursor gets its isolation window from the SDK
+        // spectrum's mass range, so it is incomplete here. cpp returns it anyway, but Skyline takes
+        // any non-empty precursor list as final and would never ask again; without one it raises
+        // its precursor request to full metadata, while ms level and start time stay instant.
+        if (detailLevel < DetailLevel.FullMetadata)
+        {
+            if (reportMs2ForAllIons || isNeutralLossOrGain)
+                spec.Precursors.Clear();
+            return spec;
+        }
 
         // cpp SpectrumList_Agilent.cpp:313 - `canCentroid && msLevelsToCentroid.contains(msLevel)`,
         // evaluated against the PROMOTED msLevel (cpp promotes at :270, gates at :313), which is
@@ -624,6 +660,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
         // already-MS2 — frame acquired with a non-zero collision energy becomes an MSn spectrum
         // with one precursor spanning the whole scan range.
         bool reportMs2ForAllIons = false;
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
         if ((msLevel == 1 || msLevel == 2) && collisionEnergy > 0)
         {
             msLevel = 2;
@@ -735,8 +772,9 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
     /// the frame info, and a 3-array binary payload (m/z + intensity + raw ion mobility)
     /// built by walking the frame's non-empty drift bins via MIDAC <c>FrameMs</c>.
     /// </summary>
-    private Spectrum BuildImsCombinedSpectrum(int index, IndexEntry ie, bool getBinaryData)
+    private Spectrum BuildImsCombinedSpectrum(int index, IndexEntry ie, DetailLevel detailLevel)
     {
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
         var spec = new Spectrum
         {
             Index = index,
@@ -777,6 +815,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
                 msLevel = level == 2 ? 2 : 1;
                 int scanTypeInt = (int)(object)details.MsScanType!;
                 specType = TranslateAsSpectrumType((AgScanType)scanTypeInt);
+                // ReSharper disable once EmptyGeneralCatchClause
                 try { collisionEnergy = details.FragmentationEnergyRange?.Max ?? 0; } catch { }
             }
         }
@@ -816,6 +855,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
             double rt = frameInfo.AcqTimeRange?.Min ?? 0;
             scan.Set(CVID.MS_scan_start_time, rt, CVID.UO_minute);
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         catch { }
 
         // Drift-time midpoint, in milliseconds. cpp SpectrumList_Agilent.cpp:300.
@@ -828,6 +868,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
                 scan.Set(CVID.MS_ion_mobility_drift_time, mid, CVID.UO_millisecond);
             }
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         catch { }
 
         // Frame-level TIC from the frame info; cpp does the same in :299. Note that for empty
@@ -836,6 +877,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
         // drift bins yield data (handled at end of method).
         double frameTic = double.NaN;
         try { frameTic = frameInfo.Tic; }
+        // ReSharper disable once EmptyGeneralCatchClause
         catch { }
 
         // Scan window from the frame's m/z range. cpp Reader_Agilent_Detail.cpp:175 emits
@@ -846,6 +888,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
             if (mz is not null)
                 scan.ScanWindows.Add(new ScanWindow(mz.Min, mz.Max, CVID.MS_m_z));
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         catch { }
 
         // For all-ions MSn frames cpp emits a synthetic precursor with a broad isolation
@@ -870,11 +913,24 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
                     precursor.SelectedIons.Add(sentinel);
                 }
             }
+            // ReSharper disable once EmptyGeneralCatchClause
             catch { }
             precursor.Activation.Set(CVID.MS_CID);
             if (collisionEnergy > 0)
                 precursor.Activation.Set(CVID.MS_collision_energy, collisionEnergy, CVID.UO_electronvolt);
             spec.Precursors.Add(precursor);
+        }
+
+        // Everything below needs the frame's drift bins decoded, which costs as much as reading
+        // the spectrum. cpp returns before opening the frame for anything short of full metadata
+        // (SpectrumList_Agilent.cpp:289); the frame info above is already in hand, so its TIC is
+        // still reported.
+        if (detailLevel < DetailLevel.FullMetadata)
+        {
+            if (!double.IsNaN(frameTic))
+                spec.Params.Set(CVID.MS_total_ion_current, frameTic, CVID.MS_number_of_detector_counts);
+            spec.Params.Set(CVID.MS_profile_spectrum);
+            return spec;
         }
 
         // Combined spectrum payload. cpp MidacData.cpp:515-576 walks each non-empty drift bin
@@ -892,9 +948,23 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
         var specFormat = _ignoreZeroIntensityPoints
             ? MidacSpecFormat.ZeroTrimmed
             : MidacSpecFormat.ZeroBounded;
-        var allMz = new List<double>();
-        var allIntensity = new List<double>();
-        var allDriftTimes = new List<double>();
+        // Points are appended straight into the spectrum's own arrays, pre-sized from the last
+        // frame of the same MS level, rather than into growing lists that are copied afterwards.
+        // A combined frame can hold a million or more points, so each avoided copy and regrowth
+        // saves large-object-heap allocations and the full GCs they cause. Without binary data
+        // only the summary values below are needed, so the points are not kept at all.
+        // With binary data, all three arrays are always emitted - cpp does so even for empty
+        // frames so consumers see a consistent structure (defaultArrayLength=0, three empty arrays).
+        DetachableList<double>? mzData = null, intensityData = null, driftTimeData = null;
+        if (getBinaryData)
+        {
+            int capacity = GetImsCombinedCapacityHint(msLevel);
+            mzData = AddBinaryDataArray(spec, CVID.MS_m_z_array, CVID.MS_m_z, capacity);
+            intensityData = AddBinaryDataArray(spec, CVID.MS_intensity_array, CVID.MS_number_of_detector_counts, capacity);
+            driftTimeData = AddBinaryDataArray(spec, CVID.MS_raw_ion_mobility_array, CVID.UO_millisecond, capacity);
+        }
+        int pointCount = 0;
+        double lastMz = 0, previousMz = 0;  // The last two m/z values emitted, for the bin sentinel
         double minMz = double.MaxValue, maxMz = 0;
         double computedTic = 0;
         double basePeakIntensity = 0;
@@ -902,6 +972,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
         try
         {
             short[]? bins = null;
+            // ReSharper disable once EmptyGeneralCatchClause
             try { bins = reader.NonEmptyDriftBins(ie.FrameNumber); } catch { }
             if (bins is not null)
             {
@@ -917,24 +988,33 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
                     int n = Math.Min(x.Length, y.Length);
                     if (n == 0) continue;
                     double driftTime = 0;
+                    // ReSharper disable once EmptyGeneralCatchClause
                     try { driftTime = specData.DriftTimeRanges?[0]?.Min ?? 0; } catch { }
                     for (int i = 0; i < n; i++)
                     {
                         // cpp MidacData.cpp:558-560 — "ZeroTrimmed may actually have some zeros
                         // in it", so the explicit skip is still required.
                         if (_ignoreZeroIntensityPoints && y[i] == 0) continue;
-                        allMz.Add(x[i]);
-                        allIntensity.Add(y[i]);
-                        allDriftTimes.Add(driftTime);
-                        if (y[i] > 0)
+                        double mz = x[i];
+                        double intensity = y[i];
+                        if (mzData is not null)
                         {
-                            computedTic += y[i];
-                            if (x[i] < minMz) minMz = x[i];
-                            if (x[i] > maxMz) maxMz = x[i];
-                            if (y[i] > basePeakIntensity)
+                            mzData.Add(mz);
+                            intensityData!.Add(intensity);
+                            driftTimeData!.Add(driftTime);
+                        }
+                        previousMz = lastMz;
+                        lastMz = mz;
+                        pointCount++;
+                        if (intensity > 0)
+                        {
+                            computedTic += intensity;
+                            if (mz < minMz) minMz = mz;
+                            if (mz > maxMz) maxMz = mz;
+                            if (intensity > basePeakIntensity)
                             {
-                                basePeakIntensity = y[i];
-                                basePeakMz = x[i];
+                                basePeakIntensity = intensity;
+                                basePeakMz = mz;
                             }
                         }
                     }
@@ -943,13 +1023,18 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
                     // final trailing zero. m/z extrapolated by the last bin-internal delta;
                     // intensity 0; drift time = same as the bin we just emitted. cpp gates the
                     // whole block on !ignoreZeroIntensityPoints (MidacData.cpp:567).
-                    int count = allMz.Count;
-                    if (!_ignoreZeroIntensityPoints && count >= 2)
+                    if (!_ignoreZeroIntensityPoints && pointCount >= 2)
                     {
-                        double lastMzDelta = allMz[count - 1] - allMz[count - 2];
-                        allMz.Add(allMz[count - 1] + lastMzDelta);
-                        allIntensity.Add(0);
-                        allDriftTimes.Add(driftTime);
+                        double sentinelMz = lastMz + (lastMz - previousMz);
+                        if (mzData is not null)
+                        {
+                            mzData.Add(sentinelMz);
+                            intensityData!.Add(0);
+                            driftTimeData!.Add(driftTime);
+                        }
+                        previousMz = lastMz;
+                        lastMz = sentinelMz;
+                        pointCount++;
                     }
                 }
             }
@@ -962,8 +1047,10 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
         double ticOut = !double.IsNaN(frameTic) ? frameTic : computedTic;
         spec.Params.Set(CVID.MS_total_ion_current, ticOut, CVID.MS_number_of_detector_counts);
 
-        spec.DefaultArrayLength = allMz.Count;
-        if (allMz.Count > 0 && minMz != double.MaxValue)
+        spec.DefaultArrayLength = pointCount;
+        if (getBinaryData)
+            SetImsCombinedCapacityHint(msLevel, pointCount);
+        if (pointCount > 0 && minMz != double.MaxValue)
         {
             spec.Params.Set(CVID.MS_lowest_observed_m_z, minMz, CVID.MS_m_z);
             spec.Params.Set(CVID.MS_highest_observed_m_z, maxMz, CVID.MS_m_z);
@@ -973,21 +1060,40 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
             spec.Params.Set(CVID.MS_base_peak_m_z, basePeakMz, CVID.MS_m_z);
             spec.Params.Set(CVID.MS_base_peak_intensity, basePeakIntensity, CVID.MS_number_of_detector_counts);
         }
-        if (getBinaryData)
-        {
-            // Always emit the three arrays — cpp does so even for empty frames so consumers
-            // see a consistent structure (defaultArrayLength=0 with three empty arrays).
-            spec.SetMZIntensityArrays(allMz, allIntensity, CVID.MS_number_of_detector_counts);
-            var ionMobArr = new BinaryDataArray();
-            ionMobArr.Set(CVID.MS_raw_ion_mobility_array, "", CVID.UO_millisecond);
-            ionMobArr.Data.AddRange(allDriftTimes);
-            spec.BinaryDataArrays.Add(ionMobArr);
-        }
         // Spectrum representation: cpp marks IM combined frames as profile (MidacData.cpp
         // forces MSStorageMode_ProfileSpectrum at line 348).
         spec.Params.Set(CVID.MS_profile_spectrum);
 
         return spec;
+    }
+
+    /// <summary>
+    /// Adds an empty binary data array to <paramref name="spec"/>, tagged the way
+    /// <see cref="Spectrum.SetMZIntensityArrays"/> tags its arrays, and returns its data buffer
+    /// pre-sized to <paramref name="capacity"/>.
+    /// </summary>
+    private static DetachableList<double> AddBinaryDataArray(Spectrum spec, CVID arrayType, CVID units, int capacity)
+    {
+        var array = new BinaryDataArray();
+        array.Set(arrayType, "", units);
+        array.Data.Capacity = capacity;
+        spec.BinaryDataArrays.Add(array);
+        return array.Data;
+    }
+
+    /// <summary>
+    /// Expected point count for the next IM-combined frame at <paramref name="msLevel"/>: the
+    /// last one seen plus 1/8 headroom, so a slightly larger frame does not force a regrowth.
+    /// </summary>
+    private int GetImsCombinedCapacityHint(int msLevel)
+    {
+        int lastCount = _imsCombinedPointCounts[msLevel == 2 ? 2 : 1];
+        return lastCount + lastCount / 8;
+    }
+
+    private void SetImsCombinedCapacityHint(int msLevel, int pointCount)
+    {
+        _imsCombinedPointCounts[msLevel == 2 ? 2 : 1] = pointCount;
     }
 
     /// <summary>

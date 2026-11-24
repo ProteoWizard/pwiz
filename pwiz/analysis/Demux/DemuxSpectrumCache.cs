@@ -122,6 +122,8 @@ internal sealed class DemuxSpectrumCache : SpectrumListWrapper, IMsLevelProvider
                 return cached;
 
             var spec = Inner.GetSpectrum(index, getBinaryData: true);
+            // Later reads return this same instance, including MS1 spectra the demultiplexer passes through
+            spec.RetainedByList = true;
             _byIndex[index] = spec;
             _readOrder.Enqueue(new KeyValuePair<int, Spectrum>(index, spec));
             while (_readOrder.Count > _capacity)

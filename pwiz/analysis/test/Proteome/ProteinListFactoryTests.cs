@@ -113,6 +113,7 @@ public class ProteinListFactoryTests
             Assert.AreEqual("Pro1", pd.ProteinList.GetProtein(0).Id, "id.file: [0]");
             Assert.AreEqual("Pro3", pd.ProteinList.GetProtein(1).Id, "id.file: [1]");
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         finally { try { File.Delete(path); } catch { } }
     }
 

@@ -84,6 +84,7 @@ code { font-family: Consolas,'Courier New',monospace; }
 <tr><td><nobr>--decoy-seed</nobr>&nbsp;&lt;n&gt;</td><td>The seed of the decoy generation (default 24).</td></tr>
 <tr><td><nobr>--entrapment-db</nobr>&nbsp;path/to/file.fasta</td><td>A FASTA of a foreign species whose peptides are the entrapment, in place of shuffled targets.</td></tr>
 <tr><td><nobr>--entrapment-ratio</nobr>&nbsp;&lt;ratio&gt;</td><td>Entrapment peptides per target, 0.1 to 1.0 (default 1.0).</td></tr>
+<tr><td><nobr>--entrapment-in-targets</nobr>&nbsp;&lt;ratio&gt;</td><td>With <nobr>--entrapment</nobr>: also add, for this fraction of the targets (up to 1.0), an entrapment peptide placed on a random target protein, so the protein evidence a <nobr>protein-aware</nobr> step gives false targets reaches entrapment too; only the manifest&#39;s peptide_type marks these as entrapment. Added to the entrapment of <nobr>--entrapment-ratio</nobr> (0.1 and 0.1 is 20% entrapment); together at most 1.0 and at least 0.1.</td></tr>
 <tr><td><nobr>--no-similarity-gate</nobr></td><td>Keep the entrapment peptides that are <nobr>near-copies</nobr> of their own targets. For audit comparison only: the resulting library should not be searched.</td></tr>
 <tr><td><nobr>--ignore-pairing-errors</nobr></td><td>Write the pairing manifest even when it fails its integrity checks.</td></tr>
 </table>

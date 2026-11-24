@@ -1,0 +1,35 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Wrench lying from bottom-left to top-right: gray gradient handle, dark open-ended head. -->
+  <Path Data="M 7,25 L 18,14" StrokeThickness="6" StrokeStartLineCap="Round" StrokeEndLineCap="Flat">
+    <Path.Stroke>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#D4D8E0" Offset="0"/>
+        <GradientStop Color="#A7ADB8" Offset="0.6"/>
+        <GradientStop Color="#7E8592" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Stroke>
+  </Path>
+  <Path>
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#4A505C" Offset="0"/>
+        <GradientStop Color="#23262D" Offset="0.6"/>
+        <GradientStop Color="#15171B" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+    <Path.Data>
+      <CombinedGeometry GeometryCombineMode="Exclude">
+        <CombinedGeometry.Geometry1>
+          <EllipseGeometry Center="19,11.5" RadiusX="7.5" RadiusY="7.5"/>
+        </CombinedGeometry.Geometry1>
+        <CombinedGeometry.Geometry2>
+          <RectangleGeometry Rect="19,8.5,14,6">
+            <RectangleGeometry.Transform>
+              <RotateTransform CenterX="19" CenterY="11.5" Angle="-45"/>
+            </RectangleGeometry.Transform>
+          </RectangleGeometry>
+        </CombinedGeometry.Geometry2>
+      </CombinedGeometry>
+    </Path.Data>
+  </Path>
+</Canvas>

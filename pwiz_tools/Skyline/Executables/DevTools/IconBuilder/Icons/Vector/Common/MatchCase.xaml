@@ -1,0 +1,16 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="30" Height="30">
+  <!-- Match case: a black serif capital A (flat-topped apex serif, two slanted legs, a crossbar
+       and two feet) with a lowercase a above its right shoulder. -->
+  <Canvas>
+    <Canvas.Clip><RectangleGeometry Rect="0,11,30,17"/></Canvas.Clip>
+    <Path Data="M 9.4,10 L 3.2,29 M 10.6,10 L 16.6,29" Stroke="#000000" StrokeThickness="4.2" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+  </Canvas>
+  <Rectangle Canvas.Left="4" Canvas.Top="10" Width="7.5" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="5.5" Canvas.Top="21.5" Width="9" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="0" Canvas.Top="28" Width="8" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="28" Width="8" Height="2" Fill="#000000"/>
+  <Path Data="M 16,3 L 22.5,3 C 25,3 26,4.2 26,6.5" Stroke="#000000" StrokeThickness="2" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="5.5" Width="4" Height="10.5" Fill="#000000"/>
+  <Rectangle Canvas.Left="28" Canvas.Top="14" Width="2" Height="2" Fill="#000000"/>
+  <Path Data="F0 M 26,6 L 19,6 C 15.2,6 14,8.5 14,11 C 14,13.5 15.2,16 19,16 L 26,16 Z M 26,8 L 19.6,8 C 18.2,8 17.8,9.6 17.8,11 C 17.8,12.4 18.2,14 19.6,14 L 26,14 Z" Fill="#000000"/>
+</Canvas>

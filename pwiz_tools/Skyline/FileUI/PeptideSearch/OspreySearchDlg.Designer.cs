@@ -30,6 +30,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(OspreySearchDlg));
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnBack = new System.Windows.Forms.Button();
@@ -44,6 +45,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.cbUseExistingLibrary = new System.Windows.Forms.CheckBox();
             this.tbxLibraryPath = new System.Windows.Forms.TextBox();
             this.btnBrowseLibrary = new System.Windows.Forms.Button();
+            this.cbAddEntrapment = new System.Windows.Forms.CheckBox();
+            this.labelEntrapmentPercent = new System.Windows.Forms.Label();
+            this.textEntrapmentPercent = new System.Windows.Forms.TextBox();
+            this.labelEntrapmentInTargetsPercent = new System.Windows.Forms.Label();
+            this.textEntrapmentInTargetsPercent = new System.Windows.Forms.TextBox();
+            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.libraryModelPage = new System.Windows.Forms.TabPage();
             this.lblLibraryModel = new System.Windows.Forms.Label();
             this.modificationsPage = new System.Windows.Forms.TabPage();
@@ -124,6 +131,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.fastaPage.Controls.Add(this.tbxLibraryPath);
             this.fastaPage.Controls.Add(this.cbUseExistingLibrary);
             this.fastaPage.Controls.Add(this.lblFasta);
+            this.fastaPage.Controls.Add(this.cbAddEntrapment);
+            this.fastaPage.Controls.Add(this.labelEntrapmentPercent);
+            this.fastaPage.Controls.Add(this.textEntrapmentPercent);
+            this.fastaPage.Controls.Add(this.labelEntrapmentInTargetsPercent);
+            this.fastaPage.Controls.Add(this.textEntrapmentInTargetsPercent);
             resources.ApplyResources(this.fastaPage, "fastaPage");
             this.fastaPage.Name = "fastaPage";
             this.fastaPage.UseVisualStyleBackColor = true;
@@ -151,6 +163,39 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnBrowseLibrary.Name = "btnBrowseLibrary";
             this.btnBrowseLibrary.UseVisualStyleBackColor = true;
             this.btnBrowseLibrary.Click += new System.EventHandler(this.btnBrowseLibrary_Click);
+            //
+            // cbAddEntrapment
+            //
+            resources.ApplyResources(this.cbAddEntrapment, "cbAddEntrapment");
+            this.cbAddEntrapment.Name = "cbAddEntrapment";
+            this.cbAddEntrapment.UseVisualStyleBackColor = true;
+            this.cbAddEntrapment.CheckedChanged += new System.EventHandler(this.cbAddEntrapment_CheckedChanged);
+            //
+            // labelEntrapmentPercent
+            //
+            resources.ApplyResources(this.labelEntrapmentPercent, "labelEntrapmentPercent");
+            this.labelEntrapmentPercent.Name = "labelEntrapmentPercent";
+            //
+            // textEntrapmentPercent
+            //
+            resources.ApplyResources(this.textEntrapmentPercent, "textEntrapmentPercent");
+            this.textEntrapmentPercent.Name = "textEntrapmentPercent";
+            //
+            // labelEntrapmentInTargetsPercent
+            //
+            resources.ApplyResources(this.labelEntrapmentInTargetsPercent, "labelEntrapmentInTargetsPercent");
+            this.labelEntrapmentInTargetsPercent.Name = "labelEntrapmentInTargetsPercent";
+            //
+            // textEntrapmentInTargetsPercent
+            //
+            resources.ApplyResources(this.textEntrapmentInTargetsPercent, "textEntrapmentInTargetsPercent");
+            this.textEntrapmentInTargetsPercent.Name = "textEntrapmentInTargetsPercent";
+            //
+            // helpTip
+            //
+            this.helpTip.AutoPopDelay = 32767;
+            this.helpTip.InitialDelay = 500;
+            this.helpTip.ReshowDelay = 100;
             //
             // libraryModelPage
             //
@@ -237,6 +282,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.CheckBox cbUseExistingLibrary;
         private System.Windows.Forms.TextBox tbxLibraryPath;
         private System.Windows.Forms.Button btnBrowseLibrary;
+        private System.Windows.Forms.CheckBox cbAddEntrapment;
+        private System.Windows.Forms.Label labelEntrapmentPercent;
+        private System.Windows.Forms.TextBox textEntrapmentPercent;
+        private System.Windows.Forms.Label labelEntrapmentInTargetsPercent;
+        private System.Windows.Forms.TextBox textEntrapmentInTargetsPercent;
+        private System.Windows.Forms.ToolTip helpTip;
         private System.Windows.Forms.TabPage libraryModelPage;
         private System.Windows.Forms.Label lblLibraryModel;
         private System.Windows.Forms.TabPage modificationsPage;

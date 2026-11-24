@@ -124,6 +124,10 @@ public sealed class MsConvertConfig
     /// <summary>Continue even when a vendor reader can't identify the instrument model.</summary>
     public bool IgnoreUnknownInstrumentError { get; set; }
 
+    /// <summary>Never download a CV version to resolve a term the built-in CVs don't define;
+    /// such a term reads as unknown.</summary>
+    public bool NoCvUpdate { get; set; }
+
     /// <summary>Strip the file:// location from every sourceFile on output (repro-friendly).</summary>
     public bool StripLocationFromSourceFiles { get; set; }
 

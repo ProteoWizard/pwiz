@@ -150,6 +150,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Write a {0} line with the change in used space, since the run started, on the volume holding the run&apos;s per-file outputs (the output directory, else the first input file&apos;s folder), and the volume&apos;s free space: at the start, every {1} seconds, at each task boundary and at the end, for monitoring disk use during long runs.
+        /// </summary>
+        public static string _diskstamp {
+            get {
+                return ResourceManager.GetString("_diskstamp", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to With {0}: add an entrapment peptide to every target (or to this fraction of the targets, {1} to 1 [rest of string was truncated]";.
         /// </summary>
         public static string _entrapment {
@@ -166,7 +175,16 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("_entrapment_fasta", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to With {0}: also add, for this fraction of the targets (up to 1), an entrapment peptide placed on a random target protein, so the protein evidence a protein-aware step gives false targets reaches entrapment too; only the pairing manifest&apos;s peptide_type marks these as entrapment. Added to the entrapment of {0} ({0} 0.1 {1} 0.1 is 20% entrapment); together at most 1 and at least {2}..
+        /// </summary>
+        public static string _entrapment_in_targets {
+            get {
+                return ResourceManager.GetString("_entrapment_in_targets", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Experiment-level FDR threshold (default: 0.01).
         /// </summary>
@@ -275,6 +293,24 @@ namespace pwiz.Osprey {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to The PIN features the FDR classifier trains on, each set within the next: {0} (the original 21 core features), {5} (the core and fewer family features: fewer feature columns for a small detection cost), {1} (the closest to {2} at HRAM) [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _feature_set {
+            get {
+                return ResourceManager.GetString("_feature_set", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to FDR feature set.
+        /// </summary>
+        public static string _feature_set_property {
+            get {
+                return ResourceManager.GetString("_feature_set_property", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Fragment m/z tolerance (default: 10).
         /// </summary>
@@ -525,6 +561,24 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to How a detection is boosted by the other detections of its protein: {0} trains the first pass with a protein-aware column (for each candidate, the best first-round score among the other peptides of its protein in the same run, which turns on the two-round first-pass training); {1} competes the precursors of the proteins the first pass detected apart from the rest in the second pass, and will be removed; {2} boosts nothing. The default is {0} for {3} data and {1} at {4} resolution.
+        /// </summary>
+        public static string _protein_boost {
+            get {
+                return ResourceManager.GetString("_protein_boost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein boost.
+        /// </summary>
+        public static string _protein_boost_property {
+            get {
+                return ResourceManager.GetString("_protein_boost_property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Protein-level FDR threshold (optional).
         /// </summary>
         public static string _protein_fdr {
@@ -613,7 +667,25 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("_shared_peptides_property", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Leave the entrapment peptides and the protein groups made only of them out of the result (the {0} and the reports); the {1} report still measures them. Default: they are reported like targets..
+        /// </summary>
+        public static string _strip_entrapment {
+            get {
+                return ResourceManager.GetString("_strip_entrapment", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Leave entrapment out of the result.
+        /// </summary>
+        public static string _strip_entrapment_property {
+            get {
+                return ResourceManager.GetString("_strip_entrapment_property", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline. {0} stages the {1} caches; {4} writes the {5} parquets, and on a COMPLETED run only the missing ones; {2} regenerates only the {3} report for a COMPLETED run, writing no other output..
         /// </summary>
