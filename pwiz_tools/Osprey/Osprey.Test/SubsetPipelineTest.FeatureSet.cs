@@ -33,11 +33,12 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// <c>--feature-set</c> on the Stellar subset (unit resolution), with <c>--keep-scores-parquet</c>
         /// so each run keeps its features parquets beside its stub scores parquet. Without the option
-        /// the search uses the core set and the features parquets hold the core columns alone. The same
-        /// directory searched with the default set must score again, because per-file scoring keys the
-        /// recorded columns, and its features parquets then hold exactly the default set's columns the
-        /// resolution can use - not the rest of the families it computes. Searched again, every task is
-        /// cached. Last, the efficient set scores again and records its own, smaller set of columns.
+        /// the search uses the default set, and its features parquets hold exactly the default set's
+        /// columns the resolution can use - not the rest of the families it computes. The same
+        /// directory searched with the core set must score again, because per-file scoring keys the
+        /// recorded columns, and the features parquets then hold the core columns alone. Searched
+        /// again, every task is cached. Last, the efficient set scores again and records its own set
+        /// of columns.
         /// A first-pass FDR alone reads no features (each run's own model scored the run in
         /// PerFileScoring), so it has no columns to refuse.
         /// </summary>
@@ -46,16 +47,16 @@ namespace pwiz.Osprey.Test
         {
             string workDir = CreateDir(@"feature-sets");
             string log = RunAnalysis(workDir, DataInputs(), Verifier(false), KeepScoresParquetArgs());
-            AssertFeatureSetRun(workDir, log, null, OspreyFeatureSet.core);
+            AssertFeatureSetRun(workDir, log, null, OspreyFeatureSet.@default);
             AssertNoZeroApexUnderArea(workDir);
-            AssertBlibFeatureSet(workDir, null);
-
-            log = RunAnalysis(workDir, DataInputs(), Verifier(false), FeatureSetArgs(OspreyFeatureSet.@default).Concat(KeepScoresParquetArgs()).ToArray());
-            AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
-            AssertFeatureSetRun(workDir, log, OspreyFeatureSet.@default, OspreyFeatureSet.@default);
             AssertBlibFeatureSet(workDir, OspreyFeatureSet.@default.ToString());
 
-            log = RunAnalysis(workDir, DataInputs(), Verifier(false), FeatureSetArgs(OspreyFeatureSet.@default).Concat(KeepScoresParquetArgs()).ToArray());
+            log = RunAnalysis(workDir, DataInputs(), Verifier(false), FeatureSetArgs(OspreyFeatureSet.core).Concat(KeepScoresParquetArgs()).ToArray());
+            AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
+            AssertFeatureSetRun(workDir, log, OspreyFeatureSet.core, OspreyFeatureSet.core);
+            AssertBlibFeatureSet(workDir, null);
+
+            log = RunAnalysis(workDir, DataInputs(), Verifier(false), FeatureSetArgs(OspreyFeatureSet.core).Concat(KeepScoresParquetArgs()).ToArray());
             AssertTasks(log, ALL_TASKS, Array.Empty<string>());
             AssertNoRecompute(log);
 

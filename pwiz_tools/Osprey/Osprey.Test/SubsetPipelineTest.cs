@@ -476,7 +476,7 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText,
                 OspreyCommandArgs.ARG_FDRBENCH.ArgumentText, bench,
                 OspreyCommandArgs.ARG_FDRBENCH_PASS.ArgumentText, @"both"
-            };
+            }.Concat(EntrapmentPassesArgs()).ToArray();
             RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, WithDiannReports(Verifier(false)), args);
             string blib = Path.Combine(workDir, BLIB_FILE);
             Assert.IsTrue(BlibComparer.CountRows(blib, @"RefSpectra") >= MIN_LIBDECOY_PRECURSORS);
@@ -485,6 +485,9 @@ namespace pwiz.Osprey.Test
             // evidence through the protein gate: no entrapment-only protein group passes, so the
             // entrapment accession never reaches the library's Proteins table either way.
             Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"Proteins", @"accession LIKE 'decoy_%'"));
+            // Decoy proteins win units of this library's competition, so the group PEPs are fitted and
+            // reach the library: not all at the 1.0 a PEP that never reached the row would leave.
+            Assert.IsTrue(BlibComparer.CountWhere(blib, @"Proteins", @"Pep < 1") > 0, @"no protein group PEP below 1");
             Assert.IsTrue(CountEntrapmentPrecursors(blib, entrapmentSequences) > 0, @"no entrapment precursor in the library");
             string proteinGroups = Path.Combine(workDir, OutputArtifact(OspreyReportWriter.EXT_PROTEIN_GROUPS));
             CountEntrapmentGroups(proteinGroups, entrapmentSequences, out int reportedEntrapmentPeptides);
@@ -531,10 +534,12 @@ namespace pwiz.Osprey.Test
             // or protein in the library, whichever protein it sits on, and no entrapment peptide
             // or entrapment-only group in the reports, while the targets are reported as before.
             string stripDir = CreateDir(@"libdecoy-strip");
-            RunAnalysis(stripDir, DataInputs(), LIBDECOY_FILE, WithDiannReports(Verifier(false)),
+            RunAnalysis(stripDir, DataInputs(), LIBDECOY_FILE, WithDiannReports(Verifier(false)), new[]
+            {
                 OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY.ArgumentText,
                 OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, manifest,
-                OspreyCommandArgs.ARG_STRIP_ENTRAPMENT.ArgumentText);
+                OspreyCommandArgs.ARG_STRIP_ENTRAPMENT.ArgumentText
+            }.Concat(EntrapmentPassesArgs()).ToArray());
             string strippedBlib = Path.Combine(stripDir, BLIB_FILE);
             var targetKeys = ReadPrecursorKeys(blib).Where(key => !entrapmentSequences.Contains(key.Split('|')[0])).ToList();
             CollectionAssert.AreEquivalent(targetKeys, ReadPrecursorKeys(strippedBlib).ToList(), @"the targets reported differ");
@@ -544,6 +549,17 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0, CountEntrapmentGroups(strippedGroups, entrapmentSequences, out int strippedPeptides));
             Assert.AreEqual(0, strippedPeptides, @"entrapment peptides listed in the protein-group report");
             AssertHasRows(Path.Combine(stripDir, OutputArtifact(OspreyReportWriter.EXT_STATS)));
+        }
+
+        /// <summary>
+        /// The feature set under which an entrapment precursor passes on the library-decoy subset, for
+        /// the legs that check how entrapment is reported. A few hundred precursors at 1% FDR pass
+        /// zero or one entrapment precursor; under the default set none passes, under the core set one
+        /// does, so these legs pin the set rather than depend on that count.
+        /// </summary>
+        private static string[] EntrapmentPassesArgs()
+        {
+            return FeatureSetArgs(OspreyFeatureSet.core);
         }
 
         /// <summary>RefSpectra rows of <paramref name="blib"/> whose sequence is one of <paramref name="entrapmentSequences"/>.</summary>
@@ -1220,9 +1236,11 @@ namespace pwiz.Osprey.Test
 
             // The protein-compact second pass needs one first-pass model for the analysis, and each
             // run trains its own, so it is refused before any run is scored. It is retired in a
-            // follow-up change.
+            // follow-up change. The compact boost keeps the protein-best column, which is refused with
+            // protein-compact for another reason, out of the way.
             string compactDir = CreateDir(@"protein-compact-refused");
-            string compactLog = RunOspreyExpecting(SearchArgs(compactDir, library),
+            string compactLog = RunOspreyExpecting(SearchArgs(compactDir, library,
+                    OspreyCommandArgs.ARG_PROTEIN_BOOST.ArgumentText, ProteinBoost.compact.ToString()),
                 WithVariable(Verifier(false), PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT), Program.EXIT_CODE_FAILURE_TO_START);
             StringAssert.Contains(compactLog, PerFileRescoreTask.OwnModelsProteinCompactMessage());
             Assert.IsFalse(compactLog.Contains(TaskLine(FirstPassFdrTask.TASK_NAME, @"starting")), compactLog);
@@ -1563,7 +1581,9 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"Proteins", @"QValue IS NULL"));
             Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"Proteins", @"Pep IS NULL"));
             Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"Proteins", @"Pep < 0 OR Pep > 1"));
-            Assert.IsTrue(BlibComparer.CountWhere(blib, @"Proteins", @"Pep < 1") > 0);
+            // That a group PEP reaches the library is checked on the library-decoy subset: here every one
+            // of the subset's protein units is won by its target, and with no decoy winner the PEP
+            // fit is 1.0 everywhere.
             // Every protein group row is linked to a spectrum.
             Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"Proteins",
                 @"id NOT IN (SELECT ProteinID FROM RefSpectraProteins)"));

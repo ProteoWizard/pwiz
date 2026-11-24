@@ -849,7 +849,7 @@ only when the classifier uses one of its features - and which columns are record
 the features the classifier uses, column by column, not the rest of a computed family. The
 recorded columns are keyed instead (`PinFeatureMask.RecordedFeaturesValidityKeySuffix`) on
 PerFileScoring and PerFileRescoring, whose outputs hold the feature columns: empty for the core
-alone (the `core` set, the unit-resolution default), `;featrec=all` for every feature the
+alone (the `core` set), `;featrec=all` for every feature the
 resolution can use, else `;featcols=` and the recorded columns beyond the core. Arms that differ
 only in the set or mask share their per-file scores whenever they record the same columns.
 `OSPREY_RECORD_ALL_FEATURES=1`, a developer and research switch, records every feature

@@ -54,7 +54,7 @@ namespace pwiz.Osprey.IO
         public OspreyFeatureSet? FeatureSetGiven { get; }
 
         /// <summary>The feature set in effect: <see cref="PinFeatureMask.FeatureSetFor"/> of the search's settings.</summary>
-        public OspreyFeatureSet FeatureSet => PinFeatureMask.FeatureSetFor(FeatureSetGiven, Mode);
+        public OspreyFeatureSet FeatureSet => PinFeatureMask.FeatureSetFor(FeatureSetGiven);
 
         /// <summary>True when the PIN feature at <paramref name="featureIndex"/> is masked.</summary>
         public bool IsMasked(int featureIndex)

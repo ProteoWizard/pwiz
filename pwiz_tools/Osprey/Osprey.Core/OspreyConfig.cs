@@ -280,9 +280,8 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// The PIN features the FDR classifier trains on (<c>--feature-set</c>): the 21 core features,
-        /// the chosen default set, or every feature. Null when the command line did not say, and the
-        /// resolution chooses: <see cref="OspreyFeatureSet.@default"/> for HRAM data and
-        /// <see cref="OspreyFeatureSet.core"/> at unit resolution (<c>PinFeatureMask.FeatureSetFor</c>).
+        /// the chosen default set, or every feature. Null when the command line did not say, which means
+        /// <see cref="OspreyFeatureSet.@default"/> at either resolution (<c>PinFeatureMask.FeatureSetFor</c>).
         /// OSPREY_FEATURE_MASK, when set, overrides it.
         /// </summary>
         public OspreyFeatureSet? FeatureSet { get; set; }
@@ -799,10 +798,10 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public enum ProteinBoost
     {
-        /// <summary>The protein-best training column in the first pass, with the transfer second pass. The HRAM default.</summary>
+        /// <summary>The protein-best training column in the first pass, with the transfer second pass. The default at both resolutions.</summary>
         best,
         /// <summary>The protein-compact second pass, which competes the proteins the first pass detected apart from the rest.
-        /// The unit-resolution default until Stellar data is measured on a larger cohort; to be removed.</summary>
+        /// The legacy default, kept by a configuration that never learns its resolution; to be removed.</summary>
         compact,
         /// <summary>No protein boost: the transfer second pass alone.</summary>
         off

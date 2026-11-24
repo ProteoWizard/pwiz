@@ -2894,13 +2894,14 @@ namespace pwiz.Osprey.Test
                 }
             }
 
-            // Without --feature-set the resolution chooses: default for HRAM, core at unit resolution.
+            // Without --feature-set both resolutions use the default set.
             Assert.AreEqual(OspreyFeatureSet.@default, PinFeatureMask.For(ResolutionMode.HRAM, null).FeatureSet);
             var unit = PinFeatureMask.For(ResolutionMode.UnitResolution, null);
-            Assert.AreEqual(OspreyFeatureSet.core, unit.FeatureSet);
+            Assert.AreEqual(OspreyFeatureSet.@default, unit.FeatureSet);
             // The core set keeps the keys the core-only default had, so no core output is invalidated.
-            Assert.AreEqual(@";featmask=default;fdrcols=unmasked", unit.ValidityKeySuffix());
-            Assert.AreEqual(string.Empty, unit.RecordedFeaturesValidityKeySuffix(),
+            var unitCore = PinFeatureMask.For(ResolutionMode.UnitResolution, OspreyFeatureSet.core);
+            Assert.AreEqual(@";featmask=default;fdrcols=unmasked", unitCore.ValidityKeySuffix());
+            Assert.AreEqual(string.Empty, unitCore.RecordedFeaturesValidityKeySuffix(),
                 "the core set records the core features only, so its keys must not change");
             // A search's selection is its own: one at another resolution in the same process leaves it alone.
             Assert.AreSame(unit, PinFeatureMask.For(new OspreyConfig { ResolutionMode = ResolutionMode.UnitResolution }));

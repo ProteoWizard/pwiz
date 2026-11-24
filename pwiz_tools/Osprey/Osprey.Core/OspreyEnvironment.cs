@@ -516,7 +516,7 @@ namespace pwiz.Osprey.Core
                 string.Join(@", ", off));
         }
 
-        /// <summary>The <see cref="FdrModel"/> spelling of the linear SVM, the unit-resolution default. Accepted so a
+        /// <summary>The <see cref="FdrModel"/> spelling of the linear SVM, the legacy default. Accepted so a
         /// sweep script can name both arms explicitly rather than unsetting the variable for
         /// one of them.</summary>
         public const string FDR_MODEL_SVM = @"svm";
@@ -526,11 +526,11 @@ namespace pwiz.Osprey.Core
 
         private static readonly EnvVar ENV_FDR_MODEL = new EnvVar(@"OSPREY_FDR_MODEL", EnvVarGroup.behavior,
             @"The first-pass classifier: the linear SVM, or gradient-boosted trees (C# only).")
-            { Values = new[] { @"svm", @"gbdt" }, DefaultValue = @"gbdt for HRAM data, svm at unit resolution" };
+            { Values = new[] { @"svm", @"gbdt" }, DefaultValue = @"gbdt" };
 
         /// <summary>
         /// OSPREY_FDR_MODEL: the classifier first-pass Percolator trains, in place of the
-        /// resolution's default (gbdt for HRAM data, the SVM at unit resolution).
+        /// resolution's default (gbdt at both resolutions).
         /// <see cref="FDR_MODEL_SVM"/> selects the linear SVM;
         /// <see cref="FDR_MODEL_GBDT"/> selects gradient-boosted trees. Case-insensitive and
         /// trimmed, like the other OSPREY_* selectors. An unrecognized value is a startup ERROR
@@ -538,7 +538,9 @@ namespace pwiz.Osprey.Core
         /// silently trained the SVM is the #4491 failure over again.
         ///
         /// <para>GBDT is the HRAM default since the #4950 features, some of which a linear SVM
-        /// cannot use well: with them it found more precursors on SEA-AD Astral than the SVM.</para>
+        /// cannot use well: with them it found more precursors on SEA-AD Astral than the SVM. It is
+        /// the unit-resolution default too since the regression Stellar entrapment data showed the
+        /// same, with protein-best and the default feature set.</para>
         ///
         /// <para>An environment variable rather than a command-line argument because it is a
         /// developer lever, not a product setting: it replaced <c>--fdr-method</c>, which was
@@ -592,8 +594,8 @@ namespace pwiz.Osprey.Core
                 return null;
             return string.Format(
                 @"OSPREY_FDR_MODEL='{0}' is not a recognized classifier. Recognized: '{1}' (the " +
-                @"linear SVM, the default at unit resolution) and '{2}' (gradient-boosted trees, " +
-                @"the default for HRAM data). Unset it for the resolution's default.",
+                @"linear SVM) and '{2}' (gradient-boosted trees, " +
+                @"the default). Unset it for the default.",
                 raw, FDR_MODEL_SVM, FDR_MODEL_GBDT);
         }
 
@@ -840,7 +842,7 @@ namespace pwiz.Osprey.Core
             @"Research switch: the PIN features hidden from the FDR classifier, as comma-separated " +
             @"feature names, or none to mask nothing. Set, it overrides " +
             OspreyArgNames.Text(OspreyArgNames.FEATURE_SET) + @"; unset, the " +
-            @"feature set decides (default for HRAM data, core at unit resolution). An unknown name " +
+            @"feature set decides (default unless the command line chose another). An unknown name " +
             @"stops the search at startup.")
             { ValueExample = @"none|<name>,<name>..." };
 

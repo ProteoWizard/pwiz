@@ -190,11 +190,13 @@ namespace pwiz.Osprey.Test
         public void TestSubsetTrainingExportLibraryDecoysAndEntrapment()
         {
             string workDir = CreateDir(@"export-libdecoy");
-            RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, Verifier(false),
+            RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, Verifier(false), new[]
+            {
                 OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY.ArgumentText,
                 OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, Path.Combine(_dataDir, LIBDECOY_PAIRING_FILE),
                 OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText,
-                OspreyCommandArgs.ARG_TRAINING_EXPORT_MAX_Q.ArgumentText, @"1");
+                OspreyCommandArgs.ARG_TRAINING_EXPORT_MAX_Q.ArgumentText, @"1"
+            }.Concat(EntrapmentPassesArgs()).ToArray());
             AssertExports(workDir, RUN_NAMES, RUN_Q_PASS_FIRST, 1.0);
             var records = RUN_NAMES.SelectMany(run => TrainingExportParquet.Read(ExportPath(workDir, run), out _)).ToList();
             Assert.IsTrue(records.Any(r => r.IsEntrapment), @"no entrapment precursor was exported");

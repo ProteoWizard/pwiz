@@ -42,7 +42,7 @@ namespace pwiz.Osprey.Test
         private const string RETIRED_PROTEIN_BEST = @"OSPREY_PROTEIN_BEST";
 
         /// <summary>
-        /// The protein-best column (<c>--protein-boost best</c>, off by default) through the whole pipeline
+        /// The protein-best column (<c>--protein-boost best</c>, the default) through the whole pipeline
         /// on the subset, where each run computes its own column from its own round-1 model: on
         /// trains two rounds at the default size; a run with it completes both passes and writes
         /// FDRBench for both passes and a library; every arm moves the scores; and a rerun, another
@@ -58,6 +58,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 AssertPrefilterSizeDefault();
+                OspreyEnvironment.FdrModel = FdrClassifier.LinearSvm;
                 AssertProteinBestRefusals(FdrClassifier.LinearSvm);
                 AssertLinearProteinBestAnalysis();
                 OspreyEnvironment.FdrModel = FdrClassifier.Gbdt;
@@ -97,13 +98,13 @@ namespace pwiz.Osprey.Test
 
         private void AssertProteinBestArms()
         {
-            // Off by default, two-round: no run model carries the column.
+            // Off, two-round: no run model carries the column.
             string offDir = CreateDir(@"protein-best-off");
-            string log = RunAnalysis(offDir, DataInputs(), ProteinBestVariables(), BenchArgs(offDir));
+            string log = RunAnalysis(offDir, DataInputs(), ProteinBestVariables(), BenchArgs(offDir).Concat(ProteinBestArgs(false)).ToArray());
             AssertProteinBestLogged(log, false, ProteinBestVariables());
             var offScores = FirstPassScores(offDir);
             Assert.IsFalse(RunModels(offDir).Any(model => model.ScoresProteinBest), @"off trains no run model with the column");
-            // Spelled out, off is the default: every output stands.
+            // A rerun: every output stands.
             log = RunAnalysis(offDir, DataInputs(), ProteinBestVariables(), BenchArgs(offDir).Concat(ProteinBestArgs(false)).ToArray());
             AssertNoRecompute(log);
             AssertScoresIdentical(offScores, FirstPassScores(offDir), @"off rerun");
@@ -125,8 +126,8 @@ namespace pwiz.Osprey.Test
             string expectedBlib = Path.Combine(_testDir, @"protein-best-on.blib");
             File.Copy(onBlib, expectedBlib);
 
-            // A rerun: every output stands.
-            log = RunAnalysis(onDir, DataInputs(), ProteinBestVariables(), OnArgs(onDir));
+            // A rerun without --protein-boost, whose default is best: every output stands.
+            log = RunAnalysis(onDir, DataInputs(), ProteinBestVariables(), BenchArgs(onDir));
             AssertNoRecompute(log);
             AssertScoresIdentical(onScores, FirstPassScores(onDir), @"rerun");
             AssertBlibsEqual(expectedBlib, onBlib);
@@ -148,9 +149,9 @@ namespace pwiz.Osprey.Test
             AssertTasks(log, new[] { FirstPassFdrTask.TASK_NAME }, new[] { PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME });
             AssertBlibsEqual(expectedBlib, onBlib);
 
-            // A resume with the column at its default, off, retrains each run's model rather than
-            // adopting the on arm's scores.
-            log = RunAnalysis(onDir, DataInputs(), ProteinBestVariables(), BenchArgs(onDir));
+            // A resume with the column off retrains each run's model rather than adopting the on
+            // arm's scores.
+            log = RunAnalysis(onDir, DataInputs(), ProteinBestVariables(), BenchArgs(onDir).Concat(ProteinBestArgs(false)).ToArray());
             AssertTasks(log, Array.Empty<string>(), new[] { PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME });
             AssertScoresIdentical(offScores, FirstPassScores(onDir), @"off over on");
 
@@ -184,10 +185,10 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The linear SVM (the default classifier) with nothing asked for but the column
+        /// The linear SVM (OSPREY_FDR_MODEL=svm) with nothing else asked for but the column
         /// (<c>--protein-boost best</c>): the two-round training at its default size, a complete analysis
         /// whose run models are linear and score with the column, and whose first-pass scores differ
-        /// from the default analysis, with the column off.
+        /// from the analysis with the column off.
         /// </summary>
         private void AssertLinearProteinBestAnalysis()
         {
@@ -197,14 +198,14 @@ namespace pwiz.Osprey.Test
                 [PROTEIN_BEST_SHUFFLE] = string.Empty
             };
             string offDir = CreateDir(@"protein-best-svm-off");
-            RunAnalysis(offDir, DataInputs(), defaults);
+            RunAnalysis(offDir, DataInputs(), defaults, ProteinBestArgs(false));
             string onDir = CreateDir(@"protein-best-svm-on");
             string log = RunAnalysis(onDir, DataInputs(), defaults, OnArgs(onDir));
             AssertProteinBestLogged(log, true, defaults);
             StringAssert.Contains(log, OspreyEnvironment.PROTEIN_BEST_PREFILTER_SIZE.ToString(CultureInfo.InvariantCulture));
             AssertProteinBestAnalysis(onDir);
             foreach (var saved in RunModels(onDir))
-                Assert.IsFalse(saved.Model.IsGradientBoostedTrees, @"the default classifier trains the linear SVM");
+                Assert.IsFalse(saved.Model.IsGradientBoostedTrees, @"OSPREY_FDR_MODEL=svm trains the linear SVM");
             var offScores = FirstPassScores(offDir);
             var onScores = FirstPassScores(onDir);
             Assert.AreEqual(offScores.Count, onScores.Count, @"every row is scored");

@@ -210,7 +210,7 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(SharedPeptideMode.Razor, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES + @"razor").SharedPeptides);
             Assert.AreEqual(SharedPeptideMode.All, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES, @"bogus").SharedPeptides); // warn -> default
             // --protein-boost: best, compact and off are its values. Absent, the resolution chooses (best
-            // for HRAM, compact at unit resolution), so it declares no single default and is compact until
+            // at both resolutions), so it declares no single default and is the legacy compact until
             // a resolution is applied; given, it stands whatever the resolution. The classifier
             // follows the resolution the same way when OSPREY_FDR_MODEL is unset.
             Assert.AreEqual(ProteinBoost.compact, io.ProteinBoost, @"the boost is compact until a resolution is applied");
@@ -218,15 +218,18 @@ namespace pwiz.Osprey.Test
             string hramArg = OspreyCommandArgs.ARG_RESOLUTION + OspreyCommandArgs.RESOLUTION_HRAM;
             string unitArg = OspreyCommandArgs.ARG_RESOLUTION + OspreyCommandArgs.RESOLUTION_UNIT;
             Assert.AreEqual(ProteinBoost.best, Parse(hramArg).ProteinBoost);
-            Assert.AreEqual(ProteinBoost.compact, Parse(unitArg).ProteinBoost);
+            Assert.AreEqual(ProteinBoost.best, Parse(unitArg).ProteinBoost);
             Assert.AreEqual(ProteinBoost.off, Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"off", hramArg).ProteinBoost);
             Assert.AreEqual(ProteinBoost.compact, Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"compact", hramArg).ProteinBoost);
-            Assert.AreEqual(ProteinBoost.best, Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"best", unitArg).ProteinBoost);
+            Assert.AreEqual(ProteinBoost.off, Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"off", unitArg).ProteinBoost);
             Assert.AreEqual(FdrClassifier.Gbdt, OspreyCommandArgs.ParseArgs(ArgTokens.Split(hramArg), null).FdrClassifier);
-            Assert.AreEqual(FdrClassifier.LinearSvm, OspreyCommandArgs.ParseArgs(ArgTokens.Split(unitArg), null).FdrClassifier);
+            Assert.AreEqual(FdrClassifier.Gbdt, OspreyCommandArgs.ParseArgs(ArgTokens.Split(unitArg), null).FdrClassifier);
             Assert.AreEqual(FdrClassifier.LinearSvm,
                 OspreyCommandArgs.ParseArgs(ArgTokens.Split(hramArg), FdrClassifier.LinearSvm).FdrClassifier,
                 @"OSPREY_FDR_MODEL=svm stands at HRAM");
+            Assert.AreEqual(FdrClassifier.LinearSvm,
+                OspreyCommandArgs.ParseArgs(ArgTokens.Split(unitArg), FdrClassifier.LinearSvm).FdrClassifier,
+                @"OSPREY_FDR_MODEL=svm stands at unit resolution");
             Assert.AreEqual(ProteinBoost.off, Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"OFF").ProteinBoost);
             // Off must not end the parse: the arguments after it still apply.
             var offThenThreads = Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"off", OspreyCommandArgs.ARG_THREADS + 8);
