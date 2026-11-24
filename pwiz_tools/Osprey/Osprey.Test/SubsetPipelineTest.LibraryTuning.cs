@@ -575,13 +575,23 @@ namespace pwiz.Osprey.Test
                 .Concat(tuningRuns);
         }
 
-        /// <summary>A fine-tune of an epoch or two, in seconds on the CPU, for the length of the scope.</summary>
-        private static IDisposable ShortFineTune(double learningRate = 1e-3)
+        /// <summary>
+        /// A fine-tune of an epoch or two, in seconds on the CPU, for the length of the scope, at the
+        /// production learning rate unless <paramref name="learningRate"/> is given. At ten times that
+        /// rate with no warmup, two epochs took the RT model from R2 0.84 to anywhere between 0.89 and
+        /// -1.9 on the held-out forms, as the fine-tune seed or the CPU's Torch arithmetic varied, and
+        /// the library predicted with it put a run either side of the 100-target floor of a 1%
+        /// conservative q, failing every tuned test on TeamCity Linux (build 4279041) and, on another
+        /// machine, for fine-tune seeds 2 and 3.
+        /// </summary>
+        private static IDisposable ShortFineTune(double? learningRate = null)
         {
             LibraryBuildWorkflow.ConfigureFineTuneForTests = options =>
             {
-                options.Ms2 = new FineTuneSettings { Epochs = 1, WarmupEpochs = 0, BatchSize = 64, LearningRate = learningRate, AdjustBatchSize = false };
-                options.Rt = new FineTuneSettings { Epochs = 2, WarmupEpochs = 0, BatchSize = 64, LearningRate = learningRate, AdjustBatchSize = false };
+                options.Ms2 = new FineTuneSettings { Epochs = 1, WarmupEpochs = 0, BatchSize = 64,
+                    LearningRate = learningRate ?? FineTuneSettings.Ms2Defaults().LearningRate, AdjustBatchSize = false };
+                options.Rt = new FineTuneSettings { Epochs = 2, WarmupEpochs = 0, BatchSize = 64,
+                    LearningRate = learningRate ?? FineTuneSettings.RtDefaults().LearningRate, AdjustBatchSize = false };
             };
             return new ScopedAction(() => LibraryBuildWorkflow.ConfigureFineTuneForTests = null);
         }
