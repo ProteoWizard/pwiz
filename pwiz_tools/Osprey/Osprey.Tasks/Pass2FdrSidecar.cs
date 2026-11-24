@@ -1714,8 +1714,9 @@ namespace pwiz.Osprey.Tasks
                         @"Second-pass worker verification: '{0}' is not among this run's inputs.", fileName));
                 }
                 var verified = VerifyTransferFile(fileName, inputFile, features, pass1Experiment, ctx.LogWarning);
-                ctx.LogInfo(LogTag.COUNT, string.Format(@"Second-pass worker verified for {0}: {1} rows, {2} re-scored",
-                    fileName, verified.Rows, verified.Rescored));
+                ctx.LogInfo(LogTag.COUNT, string.Format(
+                    @"Second-pass worker verified for {0}: {1} rows, {2} re-scored ({3} at their first-pass peak)",
+                    fileName, verified.Rows, verified.Rescored, verified.RescoredInPlace));
             }
         }
 
@@ -1730,14 +1731,18 @@ namespace pwiz.Osprey.Tasks
         /// <para>Which rows were re-scored is read from the files, since the worker's in-memory mark
         /// (a feature vector on the entry) is not written down. A gap-fill row has a score_index past
         /// the stub's rows. A row the rescore did not touch is the stub's row copied verbatim, so
-        /// one whose peak differs from its stub row in any bit was re-scored at new boundaries;
-        /// a re-scored row that lands on its stub row's peak bit for bit is counted as unmoved and
-        /// fails on its score.</para>
+        /// one whose peak differs from its stub row in any bit was re-scored at new boundaries. A
+        /// row whose peak matches its stub row's bit for bit is either unmoved or a rescore target
+        /// whose new peak is its first-pass peak - measured on the StellarLibDecoy and Astral
+        /// regression data, with the same features too - so it must carry one of the two scores
+        /// those give: its first-pass score, or the run model's score of its features. Every other
+        /// row has exactly one right answer.</para>
         ///
         /// <para>Throws <see cref="InvalidOperationException"/> naming the file, the first entry_id
-        /// that differs, and both values. Returns the rows verified and how many were re-scored.</para>
+        /// that differs, and both values. Returns the rows verified, how many were re-scored, and
+        /// how many of those were re-scored at their first-pass peak.</para>
         /// </summary>
-        internal static (int Rows, int Rescored) VerifyTransferFile(string fileName, string inputFile, PinFeatureSelection features,
+        internal static (int Rows, int Rescored, int RescoredInPlace) VerifyTransferFile(string fileName, string inputFile, PinFeatureSelection features,
             IReadOnlyDictionary<uint, FdrExperimentRecord> pass1Experiment, Action<string> logWarning)
         {
             string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
@@ -1763,19 +1768,27 @@ namespace pwiz.Osprey.Tasks
             var runScorer = RunModelScorer.Load(FirstPassModelIO.RunModelPathFor(inputFile), scoresPath, features);
 
             var recomputed = new List<FdrEntry>(answers.Count);
-            int rescoredRows = 0;
+            int rescoredRows = 0, rescoredInPlace = 0;
             foreach (var answer in answers)
             {
                 double score;
-                if (answer.ScoreIndex < firstPassRowCount &&
-                    firstPassRows.TryGetValue(answer.ScoreIndex, out var firstPass) && answer.SamePeakAs(firstPass))
+                var firstPass = default(ParquetScoreCache.StubScoreRow);
+                bool samePeak = answer.ScoreIndex < firstPassRowCount &&
+                                firstPassRows.TryGetValue(answer.ScoreIndex, out firstPass) &&
+                                answer.SamePeakAs(firstPass);
+                if (samePeak && SameBits(firstPass.Score, answer.Score))
                 {
                     score = firstPass.Score;
                 }
                 else if (featuresByScoreIndex.TryGetValue(answer.ScoreIndex, out double[] rowFeatures))
                 {
+                    // Re-scored at new boundaries - or at its own: a rescore target whose new peak is
+                    // its first-pass peak bit for bit, which the files cannot tell from an unmoved
+                    // row, and whose score is then the run model's rather than the first pass's.
                     score = runScorer.Score(answer.EntryId, rowFeatures);
                     rescoredRows++;
+                    if (samePeak)
+                        rescoredInPlace++;
                 }
                 else
                 {
@@ -1801,7 +1814,12 @@ namespace pwiz.Osprey.Tasks
                 AssertVerifiedValue(fileName, reconciledPath, answers[i], @"run peptide q-value",
                     recomputed[i].RunPeptideQvalue, answers[i].RunPeptideQvalue);
             }
-            return (answers.Count, rescoredRows);
+            return (answers.Count, rescoredRows, rescoredInPlace);
+        }
+
+        private static bool SameBits(double a, double b)
+        {
+            return BitConverter.DoubleToInt64Bits(a) == BitConverter.DoubleToInt64Bits(b);
         }
 
         private static InvalidOperationException VerifyInputMissing(string fileName, string path)
@@ -1815,7 +1833,7 @@ namespace pwiz.Osprey.Tasks
         private static void AssertVerifiedValue(string fileName, string reconciledPath,
             ParquetScoreCache.StubScoreRow answer, string what, double recomputed, double written)
         {
-            if (BitConverter.DoubleToInt64Bits(recomputed) == BitConverter.DoubleToInt64Bits(written))
+            if (SameBits(recomputed, written))
                 return;
             // Exception text for internal diagnostics, not displayed to user
             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture,
