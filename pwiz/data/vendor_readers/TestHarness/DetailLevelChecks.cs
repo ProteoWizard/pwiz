@@ -46,9 +46,9 @@ public static class DetailLevelChecks
     /// </summary>
     /// <remarks>
     /// The peak picker falls back to local maxima where the vendor cannot centroid (Agilent
-    /// quadrupoles). Only the plain list must leave the arrays out: when the reader reports no
-    /// representation, the picker raises the request until one appears, as cpp's does, and may
-    /// then pick from the data it read.
+    /// quadrupoles). Only the plain list must leave the arrays out; the picker may read peaks for
+    /// a list that keeps its spectra in memory. Non-MS spectra (UV, DAD and PDA traces) have no
+    /// ms level and are skipped.
     /// </remarks>
     public static IReadOnlyList<string> InstantMetadataMismatches(ISpectrumList list, int count)
     {
@@ -58,10 +58,13 @@ public static class DetailLevelChecks
         count = Math.Min(count, list.Count);
         for (int i = 0; i < count; i++)
         {
+            var plainFull = list.GetSpectrum(i, DetailLevel.FullData);
+            if (!plainFull.Params.HasCVParam(CVID.MS_ms_level))
+                continue;
             var plainInstant = list.GetSpectrum(i, DetailLevel.InstantMetadata);
             if (plainInstant.BinaryDataArrays.Count != 0)
                 problems.Add($"plain {plainInstant.Id}: instant metadata carries {plainInstant.BinaryDataArrays.Count} arrays");
-            Compare(plainInstant, list.GetSpectrum(i, DetailLevel.FullData), "plain", problems);
+            Compare(plainInstant, plainFull, "plain", problems);
             Compare(centroided.GetSpectrum(i, DetailLevel.InstantMetadata), centroided.GetSpectrum(i, DetailLevel.FullData), "centroided", problems);
         }
         return problems;

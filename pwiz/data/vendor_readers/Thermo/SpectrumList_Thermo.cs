@@ -423,7 +423,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
     /// </summary>
     private Spectrum GetPdaSpectrum(int index, IndexEntry ie, DetailLevel detailLevel)
     {
-        bool getBinaryData = detailLevel == DetailLevel.FullData;
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
         var raw = _raw.Raw;
         try
         {
