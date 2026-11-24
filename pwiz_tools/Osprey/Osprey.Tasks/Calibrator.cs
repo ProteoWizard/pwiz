@@ -2546,7 +2546,7 @@ namespace pwiz.Osprey.Tasks
         /// (<see cref="Ms2OffsetCurve.Widths.CollectionHalfWidth"/>), as offsets in the fragment
         /// tolerance's unit (Th, or ppm of the fragment m/z), for the MS2 m/z offset curve.
         /// </summary>
-        private static Ms2FragmentPeaks[] CollectMs2FragmentPeaks(LibraryEntry entry, Spectrum apexSpectrum,
+        internal static Ms2FragmentPeaks[] CollectMs2FragmentPeaks(LibraryEntry entry, Spectrum apexSpectrum,
             OspreyConfig config)
         {
             bool ppm = config.FragmentTolerance.Unit == ToleranceUnit.Ppm;
