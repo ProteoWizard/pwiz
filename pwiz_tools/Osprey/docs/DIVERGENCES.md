@@ -46,6 +46,13 @@ The 6 `major` items are: the sparse-library calibration retry omission (doc 04),
 > maccoss/osprey#57) and are off the default parity-gated path. The one **PORT-ERROR**
 > below (P1, Razor rollup order) is tracked as ProteoWizard/pwiz#4441.
 >
+> **Second-pass FDR changes made in C# and ported to Rust.** The protein-compact complement
+> competing against its own decoys (#4993), and the second-pass picked-protein FDR over every
+> library protein scored from the first pass, with the stratum's peptide-level experiment q
+> (#4823), are in Rust too (`compute_complement_experiment_q`, `compute_library_picked_protein_fdr`,
+> `compete_experiment_peptides`), so they are not divergences. The peptide and protein-group
+> PEPs #4823 added are C#-only (the doc 07 and doc 08 tables).
+>
 > **Library reading, C# ahead of Rust.** C# reads UniMod ids, titles and masses from
 > `pwiz/data/common/unimod.obo` (`Osprey.Core/UniMod.cs` over pwiz-sharp's `Pwiz.Data.Common`),
 > so it knows every UniMod id; Rust's `unimod_id_to_mass` (osprey-io `output/blib.rs`) still maps
@@ -53,6 +60,17 @@ The 6 `major` items are: the sparse-library calibration retry omission (doc 04),
 > SILAC labels and every other id outside its 17 entries. A .blib library's peaks are typed from m/z and its
 > modifications matched at their printed precision in C# only ([13](13-blib-output-schema.md)).
 > Neither reaches the parity datasets, whose DIA-NN libraries use only UniMod:4.
+>
+> **CWT candidates computed, not stored (#5024).** Rust writes every scored row's top-N CWT
+> peak candidates into a `cwt_candidates` column of its scores parquet, and its
+> reconciliation planner reads them back for the precursors whose apex is away from the
+> consensus RT - under 1% of rows. C# writes no such column: PerFileRescoring computes those
+> rows' candidates from the run's spectra when it plans the run, re-running first-pass
+> detection with the run's first-pass calibration (`CwtCandidateRecompute`,
+> [10](10-cross-run-reconciliation.md)). The lists are bit-identical to what C# stored before,
+> so the reconciliation actions and every output are unchanged; the cost moved from Stage 4
+> disk to Stage 6 compute, and a C#-written scores parquet no longer carries a column Rust's
+> planner would read.
 
 ---
 
@@ -111,8 +129,8 @@ This is the section a maintainer should read first. It lists the **single PORT-E
 #### U6. Six per-row blob columns written null/zero in the reconciled parquet — RESOLVED
 - **Doc:** [11-boundary-overrides.md](11-boundary-overrides.md)
 - **Rust says:** The reconciled cache carries fragment/XIC/bounds blob columns.
-- **C# does:** All six (`fragment_mzs`, `fragment_intensities`, `reference_xic_rts`, `reference_xic_intensities`, `bounds_area`, `bounds_snr`) are populated on the reconciled write path since PR #4188 (`40340dada3`, 2026-05): `PerFileRescoreTask` -> `ReconciledParquetWriter` -> `ParquetScoreCache.StreamReconciledScoresParquet` -> `BuildFdrEntryColumns`.
-- **C# evidence:** `Osprey.IO/ParquetScoreCache.cs` (`BuildFdrEntryColumns`, the `boundsAreas[j]` / `fragmentMzs[j] = EncodeF64Blob(...)` assignments); `IOTest.TestStreamReconciledTransferMatchesLoadAllOverlay` asserts them.
+- **C# does:** `reference_xic_rts`, `reference_xic_intensities`, `bounds_area` and `bounds_snr` are populated on the reconciled write path since PR #4188 (`40340dada3`, 2026-05): `PerFileRescoreTask` -> `ReconciledParquetWriter` -> `ParquetScoreCache.StreamReconciledScoresParquet` -> `BuildFdrEntryColumns`. `fragment_mzs` and `fragment_intensities` are no longer written to either scores parquet (#5023): nothing reads them there. Nor is `cwt_candidates` (#5024): planning computes the few rows it reads.
+- **C# evidence:** `Osprey.IO/ParquetScoreCache.cs` (`WriteFields`, `BuildFdrEntryColumns`); `IOTest.TestStreamReconciledTransferMatchesLoadAllOverlay` asserts them.
 - **Recommended action:** None. The item stood on a class summary in the since-removed `Osprey/RescoreWorker.cs` that predated #4188 and was never updated; it is kept here so the U-numbering stays stable.
 
 #### U7. Python calibration report tooling (`evaluate_calibration.py`) has no verified C# equivalent — info
@@ -221,6 +239,7 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 | STALE | No gbdt/FastTree method in either impl | Lab memory mentions Rust `--fdr-method gbdt` | At generation, no gbdt symbol anywhere. Since then C# gained the experimental gbdt classifier (`OSPREY_FDR_MODEL=gbdt`, a C#-only addition); Rust still has none | `OspreyConfig.cs` (`FdrClassifier`) | info |
 | UNVER | Simple scores on coelution_sum, not ROC-AUC best feature (**U4**) | Best single feature by ROC AUC | Resolved: Simple was deleted (#4543) | - | minor |
 | INTENT | Streaming-only Percolator (matches Rust v26.7.0) | Direct path removed v26.7.0 | `DispatchSvm` always streams; former direct branch removed for parity | `PercolatorEngine.cs:336` | info |
+| INTENT | Experiment peptide PEP | One experiment precursor PEP per base_id | Also a peptide-level PEP from the experiment peptide competition, both passes (`FdrExperimentRecord.PeptidePep`, experiment sidecar v4), written to the blib as `RefSpectra.PeptidePep` | `PercolatorQValues.ComputeWinnerPeps`; `StreamedCompetitionState.CompetePeptides` | minor |
 
 ### [08-protein-parsimony.md](08-protein-parsimony.md) — **diverges**
 
@@ -230,6 +249,7 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 | INTENT | No `--fdr-level protein` / protein-level output filtering | `experiment_protein_qvalue` feeds protein filtering | Enum {Precursor,Peptide,Both}; CLI rejects protein; q computed/propagated but no filter path | `OspreyConfig.cs:411-416`; `OspreyCommandArgs.cs:138-157`; `ProteinFdrEngine.cs:165-170` | minor |
 | UNVER | No production protein report writer (**U5**, resolved: writer exists) | `write_protein_report()` → `*.proteins.csv` | `OspreyReportWriter` emits `<output>.protein_groups.tsv` + `<output>.stats.tsv` (DIA-NN shape) from Stage 7, default on, no CLI off switch | `OspreyReportWriter.cs`; `SecondPassFdrTask.cs` (`RunProteinFdr`); `OspreyConfig.cs:201,212` | minor |
 | STALE | Second-pass detected set gates on `config.fdr_level` | Gates on second-pass PEPTIDE FDR | Gates `EffectiveExperimentQvalue(FdrLevel)≤fdr` (precursor default); mirrors Rust `pipeline.rs`; doc stale | `ProteinFdrEngine.cs:171-183` | info |
+| INTENT | Protein-group PEP | No protein-level PEP | `ProteinFdrResult.GroupPeps`: a `PepEstimator` fitted over all the second-pass library competition's winners, evaluated at each target winner's score; written to the blib as `Proteins.Pep` | `ProteinFdr.ComputeLibraryGroupPeps` | minor |
 
 ### [10-cross-run-reconciliation.md](10-cross-run-reconciliation.md) — matches-with-notes
 

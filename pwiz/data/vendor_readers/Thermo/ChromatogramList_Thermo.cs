@@ -89,6 +89,7 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
             BuildNonMsDeviceIndex();
 
             // Restore MS selection so subsequent spectrum/chromatogram reads see the MS device.
+            // ReSharper disable once EmptyGeneralCatchClause
             try { _raw.Raw.SelectInstrument(Device.MS, 1); } catch { }
         });
         HasSimChromatograms = hasSim;
@@ -100,6 +101,7 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
         foreach (var device in new[] { Device.Analog, Device.UV, Device.Pda, Device.MSAnalog })
         {
             int count = 0;
+            // ReSharper disable once EmptyGeneralCatchClause
             try { count = _raw.Raw.GetInstrumentCountOfType(device); } catch { }
             for (int n = 1; n <= count; n++)
             {
@@ -421,6 +423,7 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
         finally
         {
             // Always restore the MS instrument so subsequent spectrum reads work.
+            // ReSharper disable once EmptyGeneralCatchClause
             try { _raw.Raw.SelectInstrument(Device.MS, 1); } catch { }
         }
         return chrom;

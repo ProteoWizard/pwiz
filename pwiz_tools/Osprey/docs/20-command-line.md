@@ -128,8 +128,8 @@ Osprey -i *.mzML -l lib.tsv -o out.blib --resolution hram --protein-fdr 0.01 --s
 # Trust decoys already in the library instead of generating reverse decoys
 Osprey -i *.mzML -l lib_with_decoys.tsv -o out.blib --resolution hram --decoys-in-library
 
-# Timestamped, memory-stamped log to a file (for perf visualization)
-Osprey -i *.mzML -l lib.tsv -o out.blib --resolution hram --timestamp --memstamp --log-file run.log
+# Timestamped, memory- and disk-stamped log to a file (for perf visualization)
+Osprey -i *.mzML -l lib.tsv -o out.blib --resolution hram --timestamp --memstamp --diskstamp --log-file run.log
 ```
 
 ---
@@ -188,6 +188,7 @@ precursors, so the one download of Osprey serves both the wizard and the dialog.
 | `--install-cuda-runtime` | | Download the NVIDIA CUDA runtime from nuget.org (about 3 GB on Windows and 4 GB on Linux, more once installed; every package checked against the SHA-512 this build was tested with) into the `--torch-runtimes` folder and exit. Needs nothing else on the command line; a computer that cannot use the GPU still installs, with a note, so a cluster's login node can download for its GPU nodes. |
 | `--entrapment` | `[<ratio>]` | Add an entrapment peptide to every target (or to this fraction of them, 0.1 to 1), shuffled from the target or, with `--entrapment-fasta`, drawn mass-matched from a foreign proteome, each with a decoy of its own. The pairing manifest FDRBench reads is written beside the working files. |
 | `--entrapment-fasta` | `path/to/file.fasta` | With `--entrapment`: the foreign-species proteome to draw from. |
+| `--entrapment-in-targets` | `<ratio>` | With `--entrapment`: also add, for this fraction of the targets, an entrapment peptide placed on a random target protein (its label, no `_p_target` suffix; only the manifest's `peptide_type` and the `.blib`'s `DecoyPairs.IsEntrapment` mark it), so the protein evidence a protein-aware step gives false targets reaches entrapment too. Added to `--entrapment`'s ratio: `--entrapment 0.1 --entrapment-in-targets 0.1` is 20% entrapment; together at most 1 and at least 0.1. Seeded on its own (20261101), so a build without it is unchanged. See `protein-shuffled-entrapment.md`. |
 
 **The library-build parameters are CarafeSharp's.** The digest (`--enzyme`, `--miss-c`,
 `--min-length`, `--max-length`, `--clip-n-m`, `--i2l`), the modifications (`--fix-mod`,
@@ -270,6 +271,7 @@ Each is also a `--task` of its own on a cluster (see "The library build on a clu
 | `--reconciliation-compaction-fdr` | `<threshold>` | `0.01` | Peptide q-value gate for first-pass compaction; loosen (e.g. `0.05`) to broaden the reconciliation pool. See [10-cross-run-reconciliation.md](10-cross-run-reconciliation.md). |
 | `--protein-fdr` | `<threshold>` | off → 0.01 gate | Enable protein-level FDR at this threshold (parsimony always runs regardless). See [08-protein-parsimony.md](08-protein-parsimony.md). |
 | `--fdr-level` | `precursor \| peptide \| both` | `precursor` | Which q-value gates the reported output. (`protein` is not a valid value.) |
+| `--protein-boost` | `best \| compact \| off` | `best`; `compact` at `unit` | How a detection is boosted by the other detections of its protein. `best` trains the first pass with each candidate's best first-round score among the other peptides of its protein in the run; `compact` competes the precursors of the proteins the first pass detected apart from the rest in the second pass, and will be removed once Stellar data is measured on a larger cohort; `off` boosts nothing. See [12](12-second-pass-fdr.md). |
 | `--shared-peptides` | `all \| razor \| unique` | `all` | Shared-peptide handling for protein inference. See [08-protein-parsimony.md](08-protein-parsimony.md). |
 | `--fdrbench` | `path/to/file.tsv` | off | Write an FDRBench-compatible input TSV (every reported target with the raw SVM score) for entrapment true-FDR. Level follows `--fdr-level`. See [fractional-entrapment.md](fractional-entrapment.md). |
 | `--fdrbench-per-run` | — | off | With `--fdrbench`: one row per (precursor, run) using run-level q-values. |
@@ -281,6 +283,7 @@ Each is also a `--task` of its own on a cluster (see "The library build on a clu
 |--------|-------|--------|
 | `--decoys-in-library` | — | Trust decoys already in the library instead of generating reverse decoys (hard error if none recognised). See [01-decoy-generation.md](01-decoy-generation.md). |
 | `--decoy-pairing-manifest` | `path/to/file.tsv` | FDRBench 5-column pairing manifest, used with `--decoys-in-library`. |
+| `--strip-entrapment` | — | Leave the entrapment peptides, and the protein groups made only of them, out of the result (the `.blib` and the reports); the `--model-diagnostics` report still measures them. Default: they are reported like targets. |
 
 ### Training Export
 
@@ -320,6 +323,7 @@ None of these counts enters a validity key or changes an output byte; one lane i
 |--------|--------|
 | `--timestamp` | Prefix each output line with `[yyyy/MM/dd HH:mm:ss]`. |
 | `--memstamp` | Prefix each line with managed and process private bytes in MB, for monitoring memory use during long runs. |
+| `--diskstamp` | Write a `[DISK]` line with the change in used space, since the run started, on the volume holding the run's per-file outputs (`--output-dir`, else the first input file's folder), and the volume's free space: at the start, every 5 minutes, at each `[TASK]` done and at the end. See [Log format](#log-format). |
 | `--log-file <path>` | Write all output to a file instead of stderr. |
 | `--perf-stats` | Emit the machine-channel lines (`[COUNT]`, `[TIMING]`, `[BENCH]`, `[STAGE-WALL]`, `[PATH]`, `[TRAIN]`); see [Log format](#log-format). |
 | `--verbose` | Show implementer-grade detail (e.g. per-fold Percolator iterations). |
@@ -350,6 +354,7 @@ translated, and it is the only part of the log a script or test may read.
 | `[PATH]` | `--perf-stats` | which code route the run took, e.g. `[PATH] second-pass-join: per-run runs=3` |
 | `[TIMING]`, `[STAGE-WALL]`, `[BENCH]` | `--perf-stats` | timings the perf tools read |
 | `[TRAIN]` | `--perf-stats` | which population a model trained on |
+| `[DISK]` | `--diskstamp` | `[DISK] used: +12.34 GB since start, 812.50 GB free on D:` - the used-space change (signed) and free space in GB (1024^3 bytes, two decimals; used + free is the volume size) on the volume holding the run's per-file outputs - `--output-dir`, else the first input file's folder; with no inputs, `--output-dir` or `-o`'s folder. The volume is the mount point the path is under (`/mnt/data`, not `/`) and comes last on the line, since it may contain spaces. Measured on the whole volume, so another process writing there shows up too, and a run whose outputs span several volumes is measured on the first. A probe that fails writes no line. |
 | `[MEM <label>]` | `OSPREY_LOG_MEMORY` | a memory probe |
 
 Prose that the user asked for with an option (`--model-diagnostics`, `--training-export`,
@@ -506,7 +511,7 @@ and *diagnostics* (extra files or log lines). The list cannot drift from the cod
   names the closest catalogued name (`OSPREY_PASS2_QVALUES` ... did you mean
   `OSPREY_PASS2_QVALUE`?). Osprey claims the `OSPREY_` prefix.
 - A switch that lists its values refuses any other value at startup (`OSPREY_PASS2_QVALUE`,
-  `OSPREY_FDR_MODEL`, `OSPREY_EXPERIMENT_AGG`, `OSPREY_DETERMINISTIC_MATH`,
+  `OSPREY_FDR_MODEL`, `OSPREY_DETERMINISTIC_MATH`,
   `OSPREY_SERIAL_READ_SCOPE`, `OSPREY_STUB_IDENTITY`): a value typo would otherwise run the
   default arm under the name of the one asked for. A retired arm is refused the same way:
   `OSPREY_STUB_IDENTITY` lists only `1|2`, and `OSPREY_BLOCK_READ_MB` accepts only a positive
@@ -523,12 +528,10 @@ The catalog text is developer text and is not translated. The ones most likely t
 | `OSPREY_TRAIN_PICK_RUN` | First-pass training selection, **on by default**: each precursor is represented by one uniformly drawn run's best candidate peak. `OSPREY_TRAIN_PICK_RUN=0` restores the pre-26.1 cross-run maximum. C#-only — Rust still takes the maximum | [07](07-fdr-control.md) |
 | `OSPREY_MAX_TRAIN_SIZE` | Cap on training rows (default 300000). Unchanged by the 26.1 selection flip: at matched FDP, 300K and 1M are indistinguishable | [07](07-fdr-control.md) |
 | `OSPREY_SVM_C_TOLERANCE` | First-pass SVM C selection: keep the most regularized C within this fraction of the best inner-CV count (default 0.01, in [0, 1); anything else is a startup ERROR). 0 is the strict maximum, the pre-#4703 rule; Rust uses the 1% default with no opt-out, so leave it unset for cross-implementation comparisons. Set the same value on every node of a relay chain | [07](07-fdr-control.md) |
-| `OSPREY_PASS2_QVALUE` | Second-pass q-value mode: `protein-compact` (**default**) / `transfer`. An unrecognized value is a startup ERROR - `percolator` and `transfer-compete` were removed | [12](12-second-pass-fdr.md) |
+| `OSPREY_PASS2_QVALUE` | Second-pass q-value mode, overriding the one `--protein-boost` implies: `transfer` / `protein-compact`. An unrecognized value is a startup ERROR - `percolator` and `transfer-compete` were removed | [12](12-second-pass-fdr.md) |
 | `OSPREY_FDR_MODEL` | First-pass classifier: unset / `svm` = linear SVM (**default**), `gbdt` = **experimental** gradient-boosted trees (C#-only). An unrecognized value is a startup ERROR. Replaced the removed `--fdr-method` | [07](07-fdr-control.md) |
 | `OSPREY_GBT_*` | GBDT hyperparameters; apply only under `OSPREY_FDR_MODEL=gbdt` | [07](07-fdr-control.md) |
 | `OSPREY_DETERMINISTIC_MATH` | Exp/Log in GBDT training: unset / `1` = managed fdlibm port, bit-identical on Windows and Linux (**default**); `0` = `System.Math`, which calls the OS C library and can differ in the last bit between OSes (an A/B arm for timing and for reproducing pre-switch models; keys the gbdt tasks). Anything else is a startup ERROR | [07](07-fdr-control.md) |
-| `OSPREY_EXPERIMENT_AGG` | Experimental first-pass experiment-wide aggregation (`max` / `mean-best-<N>`) | [07](07-fdr-control.md) |
-| `OSPREY_MEANBEST2_FLOOR_MEAN` / `OSPREY_MEANBEST2_FLOOR_PCT` | Missing-run floor arm for `mean-best-<N>` (decoy mean / decoy percentile instead of the default median) | [07](07-fdr-control.md) |
 | `OSPREY_MS2_CAL_MEAN` | Calibrate MS2 m/z by one mean offset, as Rust does: no unit-resolution offset curve, and overrides `OSPREY_MS2_CAL_CURVE_PPM`. For cross-implementation parity runs | [04](04-calibration.md#ms2-mz-offset-curve-ms2offsetcurvecs) |
 | `OSPREY_MS2_CAL_CURVE_PPM` | **Experimental, opt-in**: calibrate MS2 m/z of ppm searches by an m/z-dependent offset curve instead of the mean (+5.7% precursors on one ZenoTOF 8600 ZT Scan run). C#-only | [04](04-calibration.md#the-ppm-curve-experimental-osprey_ms2_cal_curve_ppm1) |
 | `OSPREY_DIAGNOSTICS` | Turns on the bundle of cross-impl bisection dumps (was the `-d` / `--diagnostics` argument) | [18](18-peptide-trace.md) |

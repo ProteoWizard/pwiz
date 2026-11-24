@@ -61,6 +61,9 @@ namespace pwiz.Osprey.Tasks
         // Calibration entries of a window whose candidate spectra are found scan-major at once,
         // bounding the candidate lists alive per concurrently scored window.
         private const int CAL_PREFILTER_BLOCK_SIZE = 512;
+
+        // The share of a file's calibration progress given to scoring pass 1; pass 2 has the rest.
+        private const int CAL_PASS1_PROGRESS_PERCENT = 70;
         private const double CAL_FDR_THRESHOLD = 0.01;
         // Hard floor for LOESS refit in the two-pass calibration
         // refinement. Matches Rust's ABSOLUTE_MIN_CALIBRATION_POINTS
@@ -270,10 +273,6 @@ namespace pwiz.Osprey.Tasks
             initialRtTolerance = 0.0;
             _ctx.LogInfo(OspreyTasksResources.Calibrator_RunCalibration_Running_RT_calibration___);
 
-            // Calculate library and mzML RT ranges
-            double libMinRt = double.MaxValue, libMaxRt = double.MinValue;
-            double mzmlMinRt = double.MaxValue, mzmlMaxRt = double.MinValue;
-
             // Target count drives the retry ladder's max_attempts derivation below
             // (Rust pipeline.rs:708-714).
             int nTotalTargets = 0;
@@ -289,12 +288,8 @@ namespace pwiz.Osprey.Tasks
                 {
                     nTotalTargets++;
                     _libTargetSideCount++;
-                    if (EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds))
+                    if (EntrapmentLibraryClassifier.IsEntrapment(entry))
                         _libEntrapmentCount++;
-                    if (entry.RetentionTime < libMinRt)
-                        libMinRt = entry.RetentionTime;
-                    if (entry.RetentionTime > libMaxRt)
-                        libMaxRt = entry.RetentionTime;
                 }
             }
             if (_libEntrapmentCount > 0)
@@ -306,33 +301,23 @@ namespace pwiz.Osprey.Tasks
                     _libTargetSideCount, realTargets, _libEntrapmentCount, rLib));
             }
 
-            // MS2 RT range, from the streaming index (every MS2 record's RT in file order).
-            foreach (double rt in windowIndex.AllMs2Rts)
-            {
-                if (rt < mzmlMinRt)
-                    mzmlMinRt = rt;
-                if (rt > mzmlMaxRt)
-                    mzmlMaxRt = rt;
-            }
-
-            double libRtRange = libMaxRt - libMinRt;
-            double mzmlRtRange = mzmlMaxRt - mzmlMinRt;
+            // The library and mzML RT ranges, and the linear mapping between them when the
+            // two scales differ significantly. Stage 6 measures the same to rebuild the
+            // fallback map below for a run whose calibration failed.
+            var rtRanges = RtRangeMapping.Measure(library, windowIndex.AllMs2Rts);
+            double libMinRt = rtRanges.LibMinRt, libMaxRt = rtRanges.LibMaxRt;
+            double mzmlMinRt = rtRanges.MzmlMinRt, mzmlMaxRt = rtRanges.MzmlMaxRt;
+            double mzmlRtRange = rtRanges.MzmlRtRange;
 
             _ctx.LogVerbose(string.Format(
                 OspreyTasksResources.Calibrator_RunCalibration_Library_RT_range___0___1___mzML_RT_range___2___3__min,
                 libMinRt, libMaxRt, mzmlMinRt, mzmlMaxRt));
 
-            // Linear RT mapping when library and mzML scales differ significantly.
-            bool rangesSimilar = libRtRange > 0 && mzmlRtRange > 0 &&
-                Math.Max(libRtRange / mzmlRtRange, mzmlRtRange / libRtRange) < 2.0 &&
-                Math.Abs(libMinRt - mzmlMinRt) < libRtRange * 0.5;
-
-            double rtSlope = 1.0;
-            double rtIntercept = 0.0;
-            if (!rangesSimilar && libRtRange > 0)
+            bool rangesSimilar = rtRanges.RangesSimilar;
+            double rtSlope = rtRanges.Slope;
+            double rtIntercept = rtRanges.Intercept;
+            if (rtRanges.IsMapped)
             {
-                rtSlope = mzmlRtRange / libRtRange;
-                rtIntercept = mzmlMinRt - rtSlope * libMinRt;
                 _ctx.LogInfo(string.Format(OspreyTasksResources.Calibrator_RunCalibration_RT_mapping__slope__0___intercept__1_,
                     rtSlope, rtIntercept));
             }
@@ -347,8 +332,7 @@ namespace pwiz.Osprey.Tasks
             // up uncalibrated still centres its search window on the library/mzML range
             // mapping rather than the raw library RT (issue #4401). Identity, hence a
             // no-op, when the two RT scales already agree.
-            context.FallbackRtMap = RTCalibration.FromLinearMapping(
-                libMinRt, libMaxRt, rtSlope, rtIntercept);
+            context.FallbackRtMap = rtRanges.FallbackRtMap();
 
             // Score each pass by streaming each isolation window's spectra from the on-disk
             // cache -- load, RT-sort, preprocess, score, release -- so the full ~6 GB MS2 is
@@ -1581,6 +1565,13 @@ namespace pwiz.Osprey.Tasks
             // across an 82-file run.
             int windowsDone = 0;
             bool serialReads = OspreyEnvironment.SerialWindowReads;
+            // Pass 1 takes ~70% of calibration's scoring time and pass 2 the rest. Without
+            // a sub-range each, pass 1 filled the file's calibration segment and pass 2 ran
+            // with no visible progress. A retried pass-1 attempt still shows none: the line
+            // never moves back.
+            using var passProgress = MultiProgressReporter.Current?.BeginSubrange(
+                passNumber == 1 ? 0 : CAL_PASS1_PROGRESS_PERCENT,
+                passNumber == 1 ? CAL_PASS1_PROGRESS_PERCENT : 100);
             ProgressReporter.Run(OspreyTasksResources.Calibrator_private_Scoring_calibration_windows, entriesByWindow.Count, progress =>
             {
                 Parallel.ForEach(entriesByWindow, new ParallelOptions
@@ -2239,7 +2230,7 @@ namespace pwiz.Osprey.Tasks
                 // marker). Pure diagnostic tag for the --verbose anchor-purity report and the CAL
                 // view's entrapment-FDP curve, which every run records; unused by scoring/selection,
                 // so output is unchanged.
-                IsEntrapment = EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds),
+                IsEntrapment = EntrapmentLibraryClassifier.IsEntrapment(entry),
                 Sequence = entry.Sequence,
                 ScanNumber = apexSpectrum.ScanNumber,
                 CorrelationScore = bestCorrSum,

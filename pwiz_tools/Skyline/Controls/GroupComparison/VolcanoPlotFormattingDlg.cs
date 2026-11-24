@@ -103,7 +103,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             createExpressionBtn.Resizable = DataGridViewTriState.False;
             createExpressionBtn.Text = @"...";
             createExpressionBtn.UseColumnTextForButtonValue = true;
-            createExpressionBtn.Width = createExpressionBtn.MinimumWidth = 20;
+            createExpressionBtn.Width = createExpressionBtn.MinimumWidth = 20;    // 96-DPI; the grid scales it with its handle
             _createExprButtonIndex = 1;
             regexColorRowGrid1.Columns.Insert(_createExprButtonIndex, createExpressionBtn);
 

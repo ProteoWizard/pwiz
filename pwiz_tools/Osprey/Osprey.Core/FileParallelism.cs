@@ -132,6 +132,21 @@ namespace pwiz.Osprey.Core
         private const double RAM_BUDGET_FRACTION = 0.8;
 
         /// <summary>
+        /// The fewest threads auto mode gives each concurrent scoring or re-scoring file.
+        /// Free RAM says how many files FIT, not how many are FAST: past the point where
+        /// every core is busy, another file only splits the same cores thinner and adds its
+        /// working set. Measured on SEA-AD scoring: the 32-thread i9 was fastest at 3 files
+        /// (~10 threads each) and slower at 4; MACS2 (72 threads) gave 327 s at 4 files and
+        /// 318 s at 8 (9 threads each), the plateau. Without this floor MACS2 chose 19 files
+        /// x ~4 threads on SEA-AD (6.4% slower overall than 4 / 8 by hand) and 27 x 2 on CHS,
+        /// where ~50 of 72 cores stayed busy, scoring took ~20% longer per file than SEA-AD's
+        /// 4-file ratio predicts, and memory peaked at 213 GB.
+        /// 72 / 8 = 9 and 30 / 8 = 3 land on both measured optima. Caching is exempt: its
+        /// vendor decode is single-threaded, so one file per core is what it can use.
+        /// </summary>
+        public const int MIN_THREADS_PER_FILE = 8;
+
+        /// <summary>
         /// Resolve the effective concurrent-file count. <paramref name="availableBytesProbe"/>
         /// and <paramref name="perFileBytesEstimate"/> are only invoked in auto
         /// mode, so the common (sequential / explicit) paths do no I/O or system
@@ -139,19 +154,23 @@ namespace pwiz.Osprey.Core
         /// of the chosen N and the reason; pass null where the count is resolved without
         /// the stage's per-file work running. <paramref name="argName"/> is the argument the
         /// request came from - a stage's own flag or the shared <c>--parallel-files</c> - so
-        /// the summary says which one decided.
+        /// the summary says which one decided. Auto runs at most
+        /// <paramref name="threads"/> / <paramref name="minThreadsPerFile"/> files at once
+        /// (see <see cref="MIN_THREADS_PER_FILE"/>); an explicit count is not capped by it.
         /// </summary>
         public static int Resolve(
-            FileParallelism request, int nFiles, int envCap, int processorCount,
+            FileParallelism request, int nFiles, int envCap, int threads,
             Func<long> availableBytesProbe, Func<long> perFileBytesEstimate,
-            Action<string> log = null, string argName = OspreyArgNames.PARALLEL_FILES)
+            Action<string> log = null, string argName = OspreyArgNames.PARALLEL_FILES,
+            int minThreadsPerFile = 1)
         {
             string argText = OspreyArgNames.Text(argName);
             if (nFiles <= 1)
                 return 1;
 
-            int cores = Math.Max(1, processorCount);
-            int cpuCap = Math.Min(nFiles, cores);
+            threads = Math.Max(1, threads);
+            minThreadsPerFile = Math.Max(1, minThreadsPerFile);
+            int cpuCap = Math.Min(nFiles, Math.Max(1, threads / minThreadsPerFile));
 
             switch (request.Mode)
             {
@@ -167,7 +186,7 @@ namespace pwiz.Osprey.Core
                     return explicitN;
 
                 case FileParallelismMode.Auto:
-                    return ResolveAuto(nFiles, cores, cpuCap,
+                    return ResolveAuto(nFiles, threads, minThreadsPerFile, cpuCap,
                         availableBytesProbe, perFileBytesEstimate, log, argText);
 
                 default:
@@ -226,7 +245,7 @@ namespace pwiz.Osprey.Core
         }
 
         private static int ResolveAuto(
-            int nFiles, int cores, int cpuCap,
+            int nFiles, int threads, int minThreadsPerFile, int cpuCap,
             Func<long> availableBytesProbe, Func<long> perFileBytesEstimate,
             Action<string> log, string argText)
         {
@@ -239,7 +258,7 @@ namespace pwiz.Osprey.Core
                 // guessing. Still safer than the old unbounded default.
                 log?.Invoke(string.Format(
                     OspreyCoreResources.FileParallelismResolver_ResolveAuto_File_parallelism___0___auto__CPU_bound___1__cores___2__files__memory_estimate_unavailable_,
-                    cpuCap, cores, nFiles, argText));
+                    cpuCap, threads, nFiles, argText, minThreadsPerFile));
                 return cpuCap;
             }
 
@@ -252,7 +271,7 @@ namespace pwiz.Osprey.Core
             log?.Invoke(string.Format(
                 OspreyCoreResources.FileParallelismResolver_ResolveAuto_File_parallelism___0___auto___1__GB_free_x__2______3__GB_est_per_file_____4__by_RAM__,
                 chosen, availableBytes / (double)BYTES_PER_GB, RAM_BUDGET_FRACTION,
-                perFileBytes / (double)BYTES_PER_GB, memFit, cores, nFiles, argText));
+                perFileBytes / (double)BYTES_PER_GB, memFit, cpuCap, nFiles, argText, threads, minThreadsPerFile));
             return chosen;
         }
 
@@ -285,11 +304,17 @@ namespace pwiz.Osprey.Core
             }
         }
 
-        // Through a handle, so a symbolic link reports the size of its target:
-        // FileInfo.Length measures the link itself (0 on Windows, the length of the
-        // stored target path on Unix). A dangling link throws, which reads as 0.
+        // The length the file's metadata reports, unless the path is a reparse point such as a
+        // symbolic link: FileInfo.Length measures a link itself (0 on Windows, the length of
+        // the stored target path on Unix), so only a reparse point is opened, to measure what
+        // it points at. A dangling link throws, which reads as 0. Regular files are never
+        // opened: a read-access open of a multi-GB input can cost far more than its stat, and
+        // this runs on every input before auto mode logs its decision.
         private static long TargetLength(string path)
         {
+            var info = new FileInfo(path);
+            if ((info.Attributes & FileAttributes.ReparsePoint) == 0)
+                return info.Length;
             using (var handle = File.OpenHandle(path, FileMode.Open, FileAccess.Read,
                        FileShare.ReadWrite | FileShare.Delete))
             {

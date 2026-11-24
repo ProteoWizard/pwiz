@@ -45,41 +45,6 @@ namespace pwiz.Osprey.Test
     [TestClass]
     public class FdrTest
     {
-        private bool _savedFloorMean;
-        private double? _savedFloorPercentile;
-        private int _savedMeanBestN;
-
-        /// <summary>
-        /// Pin the whole OSPREY_EXPERIMENT_AGG family to its defaults for every test in this class.
-        /// Many tests here assert exact q-values against a raw-max oracle, and these settings are
-        /// seeded from the process environment - so on the machine actually running a mean(best-N)
-        /// or floor A/B sweep the suite failed for reasons that had nothing to do with the code
-        /// under test. Mirrors <c>MeanBestNAggregationTest.PinFloorToMedian</c>.
-        ///
-        /// This class previously had no <c>[TestInitialize]</c> at all, which is why it inherited
-        /// the ambient sweep. Pinning the aggregation itself is possible because
-        /// <see cref="OspreyEnvironment.MeanBestN"/> is now the single settable source of truth
-        /// that <c>ExperimentAgg</c> / <c>ExperimentAggMeanBest</c> are computed from.
-        /// </summary>
-        [TestInitialize]
-        public void PinExperimentAggToDefault()
-        {
-            _savedFloorMean = OspreyEnvironment.MeanBest2FloorMean;
-            _savedFloorPercentile = OspreyEnvironment.MeanBest2FloorPercentile;
-            _savedMeanBestN = OspreyEnvironment.MeanBestN;
-            OspreyEnvironment.MeanBest2FloorMean = false;
-            OspreyEnvironment.MeanBest2FloorPercentile = null;
-            OspreyEnvironment.MeanBestN = 0;
-        }
-
-        [TestCleanup]
-        public void RestoreExperimentAgg()
-        {
-            OspreyEnvironment.MeanBest2FloorMean = _savedFloorMean;
-            OspreyEnvironment.MeanBest2FloorPercentile = _savedFloorPercentile;
-            OspreyEnvironment.MeanBestN = _savedMeanBestN;
-        }
-
         // ============================================================
         // FdrController: CompeteAndFilter tests
         // ============================================================
@@ -576,7 +541,7 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// One scorer serves every per-file second-pass worker of a --parallel-files run, so
-        /// concurrent <see cref="FrozenModelScorer.Score"/> calls must each score their own
+        /// concurrent <see cref="FrozenModelScorer.Score(double[])"/> calls must each score their own
         /// features. A shared standardization buffer once let one file's entries be scored with
         /// another's features, silently changing the second-pass answer.
         /// </summary>
@@ -999,8 +964,8 @@ namespace pwiz.Osprey.Test
             private (int File, int Row) _last = (-1, -1);
             // The streaming first pass's two granularities, joined in Finish.
             private readonly List<FdrRunScopeRows> _runScope = new List<FdrRunScopeRows>();
-            private readonly Dictionary<uint, (double Aggregate, double PrecursorQ, double PeptideQ, double Pep)> _experiment =
-                new Dictionary<uint, (double, double, double, double)>();
+            private readonly Dictionary<uint, (double Aggregate, double PrecursorQ, double PeptideQ, double Pep, double PeptidePep)> _experiment =
+                new Dictionary<uint, (double, double, double, double, double)>();
             private readonly List<FdrFileRows> _rowFolds = new List<FdrFileRows>();
             private uint? _lastEntryId;
 
@@ -1052,14 +1017,14 @@ namespace pwiz.Osprey.Test
             }
 
             public void AcceptExperimentEntry(uint entryId, string peptide, double experimentAggregateScore,
-                double experimentPrecursorQvalue, double experimentPeptideQvalue, double pep)
+                double experimentPrecursorQvalue, double experimentPeptideQvalue, double pep, double peptidePep)
             {
                 // Once per entry, ascending: the order the experiment sidecar is written in.
                 if (_lastEntryId.HasValue && entryId <= _lastEntryId.Value)
                     OrderViolations++;
                 _lastEntryId = entryId;
                 _experiment[entryId] = (experimentAggregateScore, experimentPrecursorQvalue,
-                    experimentPeptideQvalue, pep);
+                    experimentPeptideQvalue, pep, peptidePep);
             }
 
             public bool FoldsRowExperimentValues { get; }
@@ -1091,7 +1056,7 @@ namespace pwiz.Osprey.Test
                         Accept(f, r, rows.EntryIds[r], rows.IsDecoys[r], rows.Charges[r], rows.Peptides[r],
                             rows.Scores[r], exp.Aggregate, rows.ApexRts[r],
                             new FdrQValues(rows.RunPrecursorQvalues[r], rows.RunPeptideQvalues[r],
-                                exp.PrecursorQ, exp.PeptideQ, exp.Pep));
+                                exp.PrecursorQ, exp.PeptideQ, exp.Pep, exp.PeptidePep));
                     }
                 }
                 // The diagnostics walk derives every row's values again, from the rows themselves;
@@ -1633,10 +1598,240 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(anyDiffers, "the round-2 model must replace the round-1 model");
 
             AssertOutOfFoldConfigAndResume(MakeConfig(100, 4), featureInfos, fixture, RunArm);
+            AssertProteinBestColumnTrains(threads => MakeConfig(100, threads), fixture, sinkPrefilter, prefilterModel, RunArm);
+            AssertRound2OverRound1RowsIsRound1(MakeConfig, fixture, RunArm);
+        }
+
+        /// <summary>
+        /// The two-round training and the protein-best column under the linear SVM, by the path the
+        /// trees take (<see cref="TestGbdtPrefilterTraining"/>): round 1's fold models score every
+        /// candidate, round 2 trains a linear model on the best-scoring groups and replaces round 1,
+        /// at any thread count. <c>OSPREY_GBT_OOF</c>'s held-out folds do not reach the linear score
+        /// pass, which scores every row with the averaged weights. With the column the model trains
+        /// on one more weight, and <see cref="FrozenModelScorer"/>, the second pass's view of it,
+        /// scores every row with its run's persisted column to the same bits the first pass did.
+        /// </summary>
+        [TestMethod]
+        public void TestSvmPrefilterTraining()
+        {
+            var featureInfos = new[]
+            {
+                new OspreyFeatureInfo("feat_monotone", "Monotone feature", false),
+                new OspreyFeatureInfo("feat_nonmonotone", "Non-monotone feature", false)
+            };
+            PercolatorConfig MakeConfig(int prefilterSize, int threads)
+            {
+                return new PercolatorConfig
+                {
+                    MaxIterations = 3,
+                    FeatureInfos = featureInfos,
+                    MaxTrainSize = 120,
+                    PrefilterTrainSize = prefilterSize,
+                    NThreads = threads
+                };
+            }
+
+            var fixture = BuildNonMonotoneFirstPassFixture(out var features);
+            var fileNames = fixture.ConvertAll(kv => kv.Key);
+            var streamRows = StreamRowsFrom(fixture);
+            CapturingSink RunArm(PercolatorConfig config, IOspreyLog log, out PercolatorResults model,
+                PercolatorResults pretrained = null)
+            {
+                PercolatorResults captured = null;
+                var sink = new CapturingSink();
+                Assert.IsFalse(PercolatorEngine.RunStreamingFirstPass(
+                    fileNames, streamRows, f => features[f], config, log, "First-pass",
+                    sink, captureModel: m => captured = m, pretrainedModel: pretrained));
+                model = captured;
+                return sink;
+            }
+            int totalRows = fixture.Sum(kv => kv.Value.Count);
+
+            var log = new CapturingLog();
+            var sinkPrefilter = RunArm(MakeConfig(100, 4), log, out var prefilterModel);
+            AssertLinearModel(prefilterModel, 3);
+            AssertScoresVary(fixture, sinkPrefilter);
+            StringAssert.Contains(log.Text,
+                "First-pass Percolator prefilter subsample (round 2): 100 precursors (50 targets, 50 decoys) from 300 candidates");
+            StringAssert.Contains(log.Text, "First-pass Percolator prefilter round 2 initial score: round-1 model");
+            StringAssert.Contains(log.Text,
+                "First-pass Percolator prefilter candidates: loading features for all 300 best-per-precursor precursors");
+            Assert.IsNull(prefilterModel.TrainEntryFolds);
+
+            // Thread-count invariant, and round 2 replaced round 1.
+            Assert.AreEqual(totalRows, AssertSinksIdentical(fixture, sinkPrefilter, RunArm(MakeConfig(100, 1), OspreyLog.None, out _)));
+            var sinkSingle = RunArm(MakeConfig(0, 4), OspreyLog.None, out var singleModel);
+            AssertLinearModel(singleModel, 3);
+            bool anyDiffers = false;
+            for (int f = 0; f < fixture.Count; f++)
+            {
+                for (int r = 0; r < fixture[f].Value.Count; r++)
+                    anyDiffers |= sinkSingle.ScoreAt(f, r) != sinkPrefilter.ScoreAt(f, r);
+            }
+            Assert.IsTrue(anyDiffers, "the round-2 model must replace the round-1 model");
+
+            // The held-out folds stay tree-only: reported, but the linear score pass ignores them.
+            var oofConfig = MakeConfig(100, 4);
+            oofConfig.ReportTrainEntryFolds = true;
+            var oofLog = new CapturingLog();
+            var sinkOof = RunArm(oofConfig, oofLog, out var oofModel);
+            Assert.IsNotNull(oofModel.TrainEntryFolds);
+            Assert.IsFalse(oofLog.Text.Contains("out-of-fold tree scoring"), "the linear score pass has no held-out scoring");
+            Assert.AreEqual(totalRows, AssertSinksIdentical(fixture, sinkPrefilter, sinkOof));
+
+            // The column: the shared assertions the trees pass, then the second pass's scorer.
+            AssertProteinBestColumnTrains(threads => MakeConfig(100, threads), fixture, sinkPrefilter, prefilterModel, RunArm);
+            AssertFrozenLinearScorerReadsColumn(MakeConfig(100, 4), fixture, features, RunArm);
+            AssertRound2OverRound1RowsIsRound1(MakeConfig, fixture, RunArm);
+        }
+
+        /// <summary>
+        /// A linear model trained with the protein-best column, frozen as the second pass freezes it,
+        /// scores each first-pass row - its raw features plus its run's persisted column value - to
+        /// exactly the first pass's score: both apply the one averaged-weights model.
+        /// </summary>
+        private static void AssertFrozenLinearScorerReadsColumn(PercolatorConfig config,
+            List<KeyValuePair<string, List<FdrEntry>>> fixture, Dictionary<string, List<double[]>> features,
+            FirstPassArm runArm)
+        {
+            var precursors = fixture[0].Value.Where(entry => !entry.IsDecoy).Select(entry =>
+                new ProteinBestMembership.Precursor(entry.EntryId, entry.ModifiedSequence,
+                    new[] { string.Format("PROT{0}", (entry.EntryId & 0x7FFFFFFFu) % 10) })).ToArray();
+            var columns = new Dictionary<string, ProteinBestRunValues>();
+            config.ProteinBest = new ProteinBestRequest(ProteinBestMembership.Build(precursors), 2,
+                (fileName, values) =>
+                {
+                    lock (columns)
+                        columns[fileName] = values;
+                });
+            var sink = runArm(config, OspreyLog.None, out var model);
+            AssertLinearModel(model, 3);
+            Assert.AreEqual(features[fixture[0].Key][0].Length + 1, model.FoldWeights[0].Length);
+            Assert.AreEqual(fixture.Count, columns.Count, "every run's column is persisted");
+
+            var scorer = FrozenModelScorer.TryCreate(model);
+            Assert.IsNotNull(scorer);
+            Assert.IsFalse(scorer.IsGradientBoostedTrees);
+            Assert.IsTrue(scorer.ScoresProteinBest);
+            Assert.AreEqual(features[fixture[0].Key][0].Length, scorer.InputFeatures);
+            for (int f = 0; f < fixture.Count; f++)
+            {
+                string fileName = fixture[f].Key;
+                var rows = fixture[f].Value;
+                for (int r = 0; r < rows.Count; r++)
+                {
+                    Assert.AreEqual(sink.ScoreAt(f, r), scorer.Score(features[fileName][r], rows[r].EntryId, columns[fileName]),
+                        0.0, "row {0} of {1}", r, fileName);
+                }
+            }
         }
 
         private delegate CapturingSink FirstPassArm(PercolatorConfig config, IOspreyLog log,
             out PercolatorResults model, PercolatorResults pretrained = null);
+
+        /// <summary>
+        /// A library small enough that every best-per-precursor candidate fits both the round-1
+        /// subsample and the round-2 cap: round 2's rows are then round 1's own, not a selection, and
+        /// every one of them carries an out-of-fold round-1 score, each from a different fold model.
+        /// Round 2 starts from a single feature, as round 1 did, rather than from that pooled mix of
+        /// fold scales (which cost one small-library run every first-pass target and left the second
+        /// pass none), so without the protein-best column it is round 1's training again, to the bit.
+        /// The same holds when every candidate fits round 1 but not the round-2 cap: round 2 still
+        /// takes every candidate rather than a selection by those pooled scores.
+        /// </summary>
+        private static void AssertRound2OverRound1RowsIsRound1(Func<int, int, PercolatorConfig> makeConfig,
+            List<KeyValuePair<string, List<FdrEntry>>> fixture, FirstPassArm runArm)
+        {
+            // 300 candidates, under both caps.
+            PercolatorConfig MakeWhole(int prefilterSize, int threads)
+            {
+                var config = makeConfig(prefilterSize, threads);
+                config.MaxTrainSize = 1000;
+                return config;
+            }
+            var log = new CapturingLog();
+            var sinkWhole = runArm(MakeWhole(1000, 4), log, out _);
+            int totalRows = fixture.Sum(kv => kv.Value.Count);
+            Assert.AreEqual(totalRows, AssertSinksIdentical(fixture, runArm(MakeWhole(0, 4), OspreyLog.None, out _), sinkWhole));
+            Assert.AreEqual(totalRows, AssertSinksIdentical(fixture, sinkWhole, runArm(MakeWhole(1000, 1), OspreyLog.None, out _)));
+            StringAssert.Contains(log.Text,
+                "First-pass Percolator prefilter subsample (round 2): 300 precursors (150 targets, 150 decoys) from 300 candidates");
+            StringAssert.Contains(log.Text, "First-pass Percolator prefilter round 2 initial score: a single feature, as round 1 (round 2 holds round 1's 300 rows)");
+            Assert.IsFalse(log.Text.Contains("round 2 initial score: round-1 model"), "round 2 over round 1's rows must not start from the pooled fold scores");
+
+            // Every candidate fits round 1 but not the round-2 cap (MaxTrainSize >= candidates >
+            // PrefilterTrainSize): the round-1 scores are still all out of fold, so they neither
+            // select round 2 nor start it. Round 2 takes every candidate, exactly as above.
+            var logCapped = new CapturingLog();
+            var sinkCapped = runArm(MakeWhole(200, 4), logCapped, out _);
+            Assert.AreEqual(totalRows, AssertSinksIdentical(fixture, sinkWhole, sinkCapped));
+            Assert.AreEqual(totalRows, AssertSinksIdentical(fixture, sinkCapped, runArm(MakeWhole(200, 1), OspreyLog.None, out _)));
+            StringAssert.Contains(logCapped.Text,
+                "First-pass Percolator prefilter subsample (round 2): 300 precursors (150 targets, 150 decoys) from 300 candidates (all of them");
+            StringAssert.Contains(logCapped.Text, "First-pass Percolator prefilter round 2 initial score: a single feature, as round 1 (round 2 holds round 1's 300 rows)");
+            Assert.IsFalse(logCapped.Text.Contains("round 2 initial score: round-1 model"),
+                "a round 1 over every candidate must not select or start round 2 by its pooled fold scores");
+        }
+
+        /// <summary>
+        /// <c>--protein-boost best</c> through the streamed first pass: the model trains on one more
+        /// feature and names it, the scores move, they are the same bits at any thread count and with
+        /// <c>OSPREY_GBT_OOF</c>'s held-out final scoring they still score at the model's width. A saved
+        /// model is retrained around, not adopted, whatever its width, and the two-round training is required.
+        /// </summary>
+        private static void AssertProteinBestColumnTrains(Func<int, PercolatorConfig> makeConfig,
+            List<KeyValuePair<string, List<FdrEntry>>> fixture, CapturingSink sinkOff, PercolatorResults modelOff,
+            FirstPassArm runArm)
+        {
+            // Ten proteins over the population, a precursor's protein decided by its base_id.
+            var precursors = fixture[0].Value.Where(entry => !entry.IsDecoy).Select(entry =>
+                new ProteinBestMembership.Precursor(entry.EntryId, entry.ModifiedSequence,
+                    new[] { string.Format("PROT{0}", (entry.EntryId & 0x7FFFFFFFu) % 10) })).ToArray();
+            var request = new ProteinBestRequest(ProteinBestMembership.Build(precursors), 2);
+            PercolatorConfig MakeOn(int threads)
+            {
+                var config = makeConfig(threads);
+                config.ProteinBest = request;
+                return config;
+            }
+
+            var log = new CapturingLog();
+            var sinkOn = runArm(MakeOn(4), log, out var modelOn);
+            Assert.AreEqual(modelOff.Standardizer.NumFeatures + 1, modelOn.Standardizer.NumFeatures);
+            Assert.AreEqual(ProteinBestFeature.FEATURE_NAME, modelOn.FeatureNames.Last());
+            StringAssert.Contains(log.Text, "protein-best column for 100 round-2 rows from 2 file(s)");
+            bool anyDiffers = false;
+            for (int f = 0; f < fixture.Count; f++)
+            {
+                for (int r = 0; r < fixture[f].Value.Count; r++)
+                    anyDiffers |= sinkOff.ScoreAt(f, r) != sinkOn.ScoreAt(f, r);
+            }
+            Assert.IsTrue(anyDiffers, "the column must move the scores");
+            Assert.AreEqual(fixture.Sum(kv => kv.Value.Count), AssertSinksIdentical(fixture, sinkOn, runArm(MakeOn(1), OspreyLog.None, out _)));
+
+            // Scoring the training rows out of fold, as OSPREY_GBT_OOF=1 does, at the model's width.
+            var oofConfig = MakeOn(4);
+            oofConfig.ReportTrainEntryFolds = true;
+            var sinkOof = runArm(oofConfig, OspreyLog.None, out _);
+            var oofSerial = MakeOn(1);
+            oofSerial.ReportTrainEntryFolds = true;
+            Assert.AreEqual(fixture.Sum(kv => kv.Value.Count), AssertSinksIdentical(fixture, sinkOof, runArm(oofSerial, OspreyLog.None, out _)));
+
+            // A saved model is not adopted, whether it is the off arm's raw width or this arm's own.
+            foreach (var saved in new[] { modelOff, modelOn })
+            {
+                var resumeLog = new CapturingLog();
+                var sinkResumed = runArm(MakeOn(4), resumeLog, out _, saved);
+                StringAssert.Contains(resumeLog.Text, OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.best.ToString()) + ": retraining the first-pass model");
+                Assert.AreEqual(fixture.Sum(kv => kv.Value.Count), AssertSinksIdentical(fixture, sinkOn, sinkResumed));
+            }
+
+            // Without two-round training the column has no way into the model.
+            var oneRound = makeConfig(4);
+            oneRound.PrefilterTrainSize = 0;
+            oneRound.ProteinBest = request;
+            Assert.ThrowsException<InvalidOperationException>(() => runArm(oneRound, OspreyLog.None, out _));
+        }
 
         /// <summary>
         /// <c>OSPREY_GBT_OOF</c> travels in the config, not the environment: the config build sets
@@ -1651,7 +1846,7 @@ namespace pwiz.Osprey.Test
         {
             var built = PercolatorEngine.BuildProjectionPercolatorConfig(
                 new OspreyConfig { FdrClassifier = FdrClassifier.Gbdt }, featureInfos, null);
-            Assert.AreEqual(OspreyEnvironment.GbtOutOfFold, built.ReportTrainEntryFolds);
+            Assert.AreEqual(new OspreyConfig().Scoring.GbtOutOfFold, built.ReportTrainEntryFolds);
             oofConfig.ReportTrainEntryFolds = true;
             Assert.IsTrue(oofConfig.CloneForTrainOnly().ReportTrainEntryFolds);
 
@@ -1698,6 +1893,180 @@ namespace pwiz.Osprey.Test
             // At or above the population: everything, in order.
             CollectionAssert.AreEqual(Enumerable.Range(0, 11).ToArray(),
                 PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 11));
+
+            // A score cut (OSPREY_GBT_PREFILTER_Q) keeps every group at or above it, whatever the cap.
+            CollectionAssert.AreEqual(new[] { 2, 3, 9, 10 },
+                PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 100, 0.85));
+            // The cut is inclusive: A and D tie at 0.5 and both are kept, so nothing is left out.
+            CollectionAssert.AreEqual(Enumerable.Range(0, 11).ToArray(),
+                PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 100, 0.5));
+            // The cap still binds under a cut: E fits in 3, B would pass it.
+            CollectionAssert.AreEqual(new[] { 9, 10 },
+                PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 3, 0.85));
+            // A cut above every group keeps the best group, so round 2 is never empty.
+            CollectionAssert.AreEqual(new[] { 9, 10 },
+                PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 100, 2.0));
+
+            // Sampling (OSPREY_GBT_PREFILTER_SAMPLE) changes nothing while the eligible groups fit the cap.
+            CollectionAssert.AreEqual(new[] { 2, 3, 9, 10 },
+                PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 100, 0.85, 42));
+            // Over the cap it draws whole groups from the eligible set only: cut 0.75 makes E, B and C
+            // (7 rows) eligible, cap 4. The best-scoring selection is always E + B; across seeds the
+            // sample must also reach C, and never A or D.
+            var eligibleGroups = new[] { new[] { 2, 3 }, new[] { 4, 5, 6 }, new[] { 9, 10 } };
+            CollectionAssert.AreEqual(new[] { 2, 3, 9, 10 },
+                PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 4, 0.75));
+            bool reachedC = false;
+            for (ulong seed = 1; seed <= 20; seed++)
+            {
+                var sampled = PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 4, 0.75, seed);
+                CollectionAssert.AreEqual(sampled,
+                    PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 4, 0.75, seed));
+                Assert.IsTrue(sampled.Length > 0 && sampled.Length <= 4);
+                foreach (var group in eligibleGroups)
+                {
+                    int inSample = group.Count(sampled.Contains);
+                    Assert.IsTrue(inSample == 0 || inSample == group.Length);
+                }
+                Assert.AreEqual(sampled.Length, eligibleGroups.Sum(g => g.Count(sampled.Contains)));
+                reachedC |= sampled.Contains(4);
+            }
+            Assert.IsTrue(reachedC);
+
+            AssertPrefilterScoreAtQ();
+        }
+
+        /// <summary>
+        /// <see cref="PercolatorTrainer.PrefilterScoreAtQ"/>: the score of the lowest winning target at
+        /// or below q after paired competition. Six pairs; pair 6's decoy (8.5) beats its target (5).
+        /// Winners 10 T, 9 T, 8.5 D, 8 T, 7 T, 6 T give q 0, 0, 0.2, 0.2, 0.2, 0.2 (monotone).
+        /// </summary>
+        private static void AssertPrefilterScoreAtQ()
+        {
+            var scores = new[] { 10.0, 0.0, 9.0, 0.0, 8.0, 0.0, 7.0, 0.0, 6.0, 0.0, 5.0, 8.5 };
+            var isDecoy = new bool[12];
+            var entryIds = new uint[12];
+            for (int p = 0; p < 6; p++)
+            {
+                entryIds[2 * p] = (uint)(p + 1);
+                entryIds[2 * p + 1] = (uint)(p + 1) | 0x80000000;
+                isDecoy[2 * p + 1] = true;
+            }
+
+            Assert.AreEqual(9.0, PercolatorTrainer.PrefilterScoreAtQ(scores, isDecoy, entryIds, 0.1, out int passing), 1e-12);
+            Assert.AreEqual(2, passing);
+            Assert.AreEqual(6.0, PercolatorTrainer.PrefilterScoreAtQ(scores, isDecoy, entryIds, 0.2, out passing), 1e-12);
+            Assert.AreEqual(5, passing);
+            // A decoy at the very top: no target passes, so the cut is off.
+            var decoyTop = (double[])scores.Clone();
+            decoyTop[1] = 20.0;
+            decoyTop[3] = 19.0;
+            Assert.IsTrue(double.IsNegativeInfinity(
+                PercolatorTrainer.PrefilterScoreAtQ(decoyTop, isDecoy, entryIds, 0.1, out passing)));
+            Assert.AreEqual(0, passing);
+
+            AssertPrefilterScoreAtLocalFdr();
+        }
+
+        /// <summary>
+        /// <see cref="PercolatorTrainer.PrefilterScoreAtLocalFdr"/>: 1,000 separated pairs (the target
+        /// wins) above 2,000 null pairs (target and decoy win in turn, local FDR 1). A cut of 0.5 stops
+        /// where the 1,000-winner window first holds a third decoys - past the separated block, well
+        /// before the end; a cut of 1 never trips in a 1:1 null, so every target passes; a decoy on top
+        /// of a decoy-only window turns the cut off.
+        /// </summary>
+        private static void AssertPrefilterScoreAtLocalFdr()
+        {
+            const int separated = 1000, nulls = 2000, pairs = separated + nulls;
+            var scores = new double[2 * pairs];
+            var isDecoy = new bool[2 * pairs];
+            var entryIds = new uint[2 * pairs];
+            for (int p = 0; p < pairs; p++)
+            {
+                int t = 2 * p, d = 2 * p + 1;
+                entryIds[t] = (uint)(p + 1);
+                entryIds[d] = (uint)(p + 1) | 0x80000000;
+                isDecoy[d] = true;
+                if (p < separated)
+                {
+                    scores[t] = 100 - p * 0.01;
+                    scores[d] = -100 - p;
+                }
+                else
+                {
+                    int j = p - separated;
+                    double winner = 10 - j * 0.001, loser = -50 - j;
+                    scores[t] = j % 2 == 0 ? winner : loser;
+                    scores[d] = j % 2 == 0 ? loser : winner;
+                }
+            }
+
+            PercolatorTrainer.PrefilterScoreAtLocalFdr(scores, isDecoy, entryIds, 0.5, out int passing, out double q);
+            Assert.IsTrue(passing > separated && passing < separated + nulls / 4,
+                string.Format("local FDR 0.5 should stop just past the separated block, passed {0}", passing));
+            Assert.IsTrue(q > 0 && q < 0.5, string.Format("q at the cut {0}", q));
+            // A looser cut reaches further into the null: 0.8 trips later than 0.5 (an exact 1:1 null sits
+            // at a ratio of 1, so a cut of 1 would stop wherever the window first tips over it).
+            PercolatorTrainer.PrefilterScoreAtLocalFdr(scores, isDecoy, entryIds, 0.8, out int passingLoose, out q);
+            Assert.IsTrue(passingLoose > passing,
+                string.Format("local FDR 0.8 passed {0}, not more than 0.5's {1}", passingLoose, passing));
+
+            var decoyTop = (double[])scores.Clone();
+            for (int p = 0; p < separated; p++)
+                decoyTop[2 * p + 1] = 200 - p * 0.01;
+            Assert.IsTrue(double.IsNegativeInfinity(
+                PercolatorTrainer.PrefilterScoreAtLocalFdr(decoyTop, isDecoy, entryIds, 0.5, out passing, out q)));
+            Assert.AreEqual(0, passing);
+
+            AssertLocalFdrWalkCrossesNoisyWindow();
+
+            // An empty cut caps round 2 at the round-1 size, not the (high) cap; otherwise the cap stands.
+            Assert.AreEqual(300000, PercolatorTrainer.Round2RowCap(5000000, 300000, true, double.NegativeInfinity));
+            Assert.AreEqual(200, PercolatorTrainer.Round2RowCap(200, 300000, true, double.NegativeInfinity));
+            Assert.AreEqual(5000000, PercolatorTrainer.Round2RowCap(5000000, 300000, true, 1.5));
+            Assert.AreEqual(5000000, PercolatorTrainer.Round2RowCap(5000000, 300000, false, double.NegativeInfinity));
+
+            // The round-2 switches need a size; with one, or with none set, startup goes ahead.
+            Assert.IsTrue(OspreyEnvironment.PrefilterSwitchesWithoutSize("0.9", null, false, 0));
+            Assert.IsTrue(OspreyEnvironment.PrefilterSwitchesWithoutSize(null, "0.2", false, 0));
+            Assert.IsTrue(OspreyEnvironment.PrefilterSwitchesWithoutSize(null, null, true, 0));
+            Assert.IsFalse(OspreyEnvironment.PrefilterSwitchesWithoutSize("0.9", null, true, 500000));
+            Assert.IsFalse(OspreyEnvironment.PrefilterSwitchesWithoutSize(null, null, false, 0));
+        }
+
+        /// <summary>
+        /// A short run of decoy winners inside a well-separated block lifts the windowed ratio over the
+        /// cut for fewer ranks than a window, so the walk resumes past it and stops only at the null:
+        /// 4,000 separated pairs with 150 decoy winners at ranks 400-549, then 2,000 null pairs. A cut of
+        /// 0.15 trips from the first rank (150 decoys in a 1,001-rank window is 0.18) to about rank 920,
+        /// which ended the walk with no target before; now the passing targets reach toward the 3,850.
+        /// </summary>
+        private static void AssertLocalFdrWalkCrossesNoisyWindow()
+        {
+            const int separated = 4000, nulls = 2000, pairs = separated + nulls;
+            const int pocketStart = 400, pocketEnd = 550;
+            var scores = new double[2 * pairs];
+            var isDecoy = new bool[2 * pairs];
+            var entryIds = new uint[2 * pairs];
+            for (int p = 0; p < pairs; p++)
+            {
+                int t = 2 * p, d = 2 * p + 1;
+                entryIds[t] = (uint)(p + 1);
+                entryIds[d] = (uint)(p + 1) | 0x80000000;
+                isDecoy[d] = true;
+                double winner, loser = -100 - p;
+                if (p < separated)
+                    winner = 100 - p * 0.01;
+                else
+                    winner = 10 - (p - separated) * 0.001;
+                bool decoyWins = p >= separated ? (p - separated) % 2 == 1 : p >= pocketStart && p < pocketEnd;
+                scores[t] = decoyWins ? loser : winner;
+                scores[d] = decoyWins ? winner : loser;
+            }
+
+            PercolatorTrainer.PrefilterScoreAtLocalFdr(scores, isDecoy, entryIds, 0.15, out int passing, out _);
+            Assert.IsTrue(passing > 3000 && passing <= separated - (pocketEnd - pocketStart) + nulls / 4,
+                string.Format("local FDR 0.15 should pass the noisy pocket and stop near the null, passed {0}", passing));
         }
 
         /// <summary>An <see cref="IOspreyLog"/> that keeps every line it is given.</summary>
@@ -1951,6 +2320,13 @@ namespace pwiz.Osprey.Test
                 "a gbdt first pass must train gradient-boosted trees, not the linear SVM");
             Assert.AreEqual(nFolds, model.FoldGbtModels.Count, "one tree ensemble per fold");
             Assert.AreEqual(0, model.FoldWeights.Count, "a tree model carries no linear weights");
+        }
+
+        private static void AssertLinearModel(PercolatorResults model, int nFolds)
+        {
+            Assert.IsNotNull(model, "the first pass must publish the model it trained");
+            Assert.IsFalse(model.IsGradientBoostedTrees, "the default first pass trains the linear SVM");
+            Assert.AreEqual(nFolds, model.FoldWeights.Count, "one weight vector per fold");
         }
 
         /// <summary>
@@ -2929,6 +3305,157 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void TestLibraryPickedProteinFdr()
+        {
+            // Decoys as a library supplies them: reversed sequences with their own accessions,
+            // paired with their targets only by base id.
+            var library = new List<LibraryEntry>
+            {
+                MakeLibEntry(1, "PEPTIDEA", new[] { "P1" }, false),
+                MakeLibEntry(2, "PEPTIDEB", new[] { "P2" }, false),
+                MakeLibEntry(3, "PEPTIDEC", new[] { "P3" }, false),
+                MakeLibEntry(1 | LibraryEntry.DECOY_ID_BIT, "AEDITPEP", new[] { "rev_P1" }, true),
+                MakeLibEntry(2 | LibraryEntry.DECOY_ID_BIT, "BEDITPEP", new[] { "rev_P2" }, true),
+                MakeLibEntry(3 | LibraryEntry.DECOY_ID_BIT, "CEDITPEP", new[] { "rev_P3" }, true)
+            };
+            // Nothing was detected from P3, so it is in no parsimony group.
+            var parsimony = ProteinFdr.BuildProteinParsimony(library, SharedPeptideMode.All,
+                new HashSet<string> { "PEPTIDEA", "PEPTIDEB" });
+
+            var scores = new LibraryProteinScores(library);
+            scores.Add(1, 5.0);
+            scores.Add(1 | LibraryEntry.DECOY_ID_BIT, 1.0);
+            scores.Add(2, 2.0);
+            scores.Add(2 | LibraryEntry.DECOY_ID_BIT, 1.0);
+            scores.Add(3, 0.5);
+            scores.Add(3 | LibraryEntry.DECOY_ID_BIT, 4.0);
+
+            var fdrResult = ProteinFdr.ComputeLibraryPickedProteinFdr(parsimony, scores.ByProtein());
+
+            // Winners by score: P1 target (5), P3 decoy (4), P2 target (2). P2 is the second
+            // target behind one decoy, so q = 1/2; competing only the detected groups would have
+            // given it 0.
+            var p1Group = parsimony.Groups.First(g => g.Accessions.Contains("P1"));
+            var p2Group = parsimony.Groups.First(g => g.Accessions.Contains("P2"));
+            Assert.AreEqual(2, parsimony.Groups.Count);
+            Assert.AreEqual(0.0, fdrResult.GroupQvalues[p1Group.Id], 1e-12);
+            Assert.AreEqual(0.5, fdrResult.GroupQvalues[p2Group.Id], 1e-12);
+            Assert.AreEqual(2.0, fdrResult.GroupScores[p2Group.Id], 1e-12);
+            Assert.AreEqual(0.5, fdrResult.PeptideQvalues["PEPTIDEB"], 1e-12);
+        }
+
+        /// <summary>
+        /// The protein-group PEP of the library picked competition: every target-winning group
+        /// gets one in [0, 1], a better-scoring group never gets a worse one, and only target
+        /// winners appear - the same population as the group q-values.
+        /// </summary>
+        [TestMethod]
+        public void TestLibraryProteinGroupPeps()
+        {
+            var library = new List<LibraryEntry>();
+            var detected = new HashSet<string>();
+            for (uint g = 1; g <= 40; g++)
+            {
+                string peptide = "PEPTIDE" + g;
+                library.Add(MakeLibEntry(g, peptide, new[] { "P" + g }, false));
+                library.Add(MakeLibEntry(g | LibraryEntry.DECOY_ID_BIT, "REV" + g, new[] { "rev_P" + g }, true));
+                detected.Add(peptide);
+            }
+            var parsimony = ProteinFdr.BuildProteinParsimony(library, SharedPeptideMode.All, detected);
+            var scores = new LibraryProteinScores(library);
+            for (uint g = 1; g <= 40; g++)
+            {
+                // The first 10 decoys outscore their targets, so the fit has both classes.
+                scores.Add(g, (g <= 10 ? 1.0 : 3.0) + g * 0.1);
+                scores.Add(g | LibraryEntry.DECOY_ID_BIT, (g <= 10 ? 2.5 : 0.5) + (g % 7) * 0.2);
+            }
+
+            var result = ProteinFdr.ComputeLibraryPickedProteinFdr(parsimony, scores.ByProtein());
+
+            CollectionAssert.AreEquivalent(result.GroupQvalues.Keys.ToList(), result.GroupPeps.Keys.ToList());
+            var byScore = result.GroupScores.OrderBy(kvp => kvp.Value).Select(kvp => result.GroupPeps[kvp.Key]).ToList();
+            for (int i = 0; i < byScore.Count; i++)
+            {
+                Assert.IsTrue(byScore[i] >= 0.0 && byScore[i] <= 1.0, "PEP out of range: " + byScore[i]);
+                if (i > 0)
+                    Assert.IsTrue(byScore[i] <= byScore[i - 1], "a better-scoring group got a worse PEP");
+            }
+            Assert.IsTrue(byScore.Any(pep => pep < 1.0), "a degenerate fit reports 1.0 everywhere and proves nothing");
+        }
+
+        /// <summary>
+        /// The second pass's peptide competition is the first pass's computation over the second
+        /// pass's per-entry bests: one q-value and PEP per peptide and side, the same on every
+        /// charge state, and bit-identical to <see cref="PercolatorQValues.ComputeExperimentPeptideQMap"/>
+        /// over those bests. Before this, the second pass copied each precursor's q into the
+        /// peptide field, so charge states of one peptide disagreed.
+        /// </summary>
+        [TestMethod]
+        public void TestSecondPassPeptideCompetition()
+        {
+            // 30 peptides with two charge states each (base_ids 2k+1, 2k+2), in two files. The
+            // first 8 peptides' decoys outscore their targets, so the PEP fit has both classes.
+            const int nPeptides = 30;
+            var ids = new List<uint>();
+            var scoresA = new List<double>();
+            var scoresB = new List<double>();
+            for (int k = 0; k < nPeptides; k++)
+            {
+                for (uint c = 1; c <= 2; c++)
+                {
+                    uint b = (uint)(2 * k) + c;
+                    bool decoyWins = k < 8;
+                    ids.Add(b);
+                    scoresA.Add((decoyWins ? 0.5 : 3.0) + k * 0.1 + c * 0.013);
+                    scoresB.Add((decoyWins ? 0.4 : 2.5) + k * 0.1 + c * 0.017);
+                    ids.Add(b | 0x80000000u);
+                    scoresA.Add((decoyWins ? 2.0 : 0.3) + k * 0.07 + c * 0.011);
+                    scoresB.Add((decoyWins ? 2.2 : 0.2) + k * 0.07 + c * 0.019);
+                }
+            }
+            var idArr = ids.ToArray();
+            var survivorIds = new HashSet<uint>(idArr.Where(id => (id & 0x80000000u) == 0));
+            (uint[] e, double[] s, IReadOnlyDictionary<uint, double> ov, HashSet<uint> own) Read(string key)
+                => ((uint[])idArr.Clone(), (key == "a" ? scoresA : scoresB).ToArray(),
+                    new Dictionary<uint, double>(), survivorIds);
+            var competition = StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
+                new[] { "a", "b" }, Read, survivorIds, (_, c) => { });
+            string PeptideOf(uint baseId) => "P" + ((baseId - 1) / 2);
+            var peptides = competition.CompetePeptides(PeptideOf);
+
+            // The oracle: one row per entry at its best score across the files, decoys under a
+            // distinct sequence as the first pass sees them.
+            var bestByEntry = new Dictionary<uint, double>();
+            for (int i = 0; i < idArr.Length; i++)
+                bestByEntry[idArr[i]] = Math.Max(scoresA[i], scoresB[i]);
+            var oIds = bestByEntry.Keys.ToArray();
+            var oScores = oIds.Select(id => bestByEntry[id]).ToArray();
+            var oLabels = oIds.Select(id => (id & 0x80000000u) != 0).ToArray();
+            var oPeptides = oIds.Select(id => ((id & 0x80000000u) != 0 ? "DECOY_" : string.Empty) +
+                PeptideOf(id & 0x7FFFFFFFu)).ToArray();
+            var expectedQ = PercolatorQValues.ComputeExperimentPeptideQMap(
+                oScores, oLabels, oIds, oPeptides, out var expectedPep);
+
+            int realPeps = 0;
+            foreach (uint id in idArr)
+            {
+                uint baseId = id & 0x7FFFFFFFu;
+                string key = ((id & 0x80000000u) != 0 ? "DECOY_" : string.Empty) + PeptideOf(baseId);
+                double q = expectedQ.TryGetValue(key, out double eq) ? eq : 1.0;
+                double pep = expectedPep.TryGetValue(key, out double ep) ? ep : 1.0;
+                Assert.AreEqual(q, peptides.QValue(id), 0.0, "peptide q of entry " + id);
+                Assert.AreEqual(pep, peptides.Pep(id), 0.0, "peptide PEP of entry " + id);
+                if (pep < 1.0)
+                    realPeps++;
+                // Both charge states of a peptide carry the same values.
+                uint sibling = (baseId % 2 == 1 ? baseId + 1 : baseId - 1) | (id & 0x80000000u);
+                Assert.AreEqual(peptides.QValue(id), peptides.QValue(sibling), 0.0);
+                Assert.AreEqual(peptides.Pep(id), peptides.Pep(sibling), 0.0);
+            }
+            Assert.IsTrue(realPeps > 0, "a degenerate fit reports 1.0 everywhere and proves nothing");
+        }
+
+        [TestMethod]
         public void TestDecoyEntriesExcludedFromParsimony()
         {
             var library = new List<LibraryEntry>
@@ -3044,19 +3571,18 @@ namespace pwiz.Osprey.Test
             var entryIdArr = entryIds.ToArray();
             var peptideArr = peptides.ToArray();
 
-            // applyExperimentAgg: false is REQUIRED, not decorative. The streaming builder here is
-            // the raw-max one (StreamingFirstPassQ() with no N), so the resident oracle must be
-            // raw-max too. The default (true) honors the ambient OSPREY_EXPERIMENT_AGG, which
-            // would compare a mean(best-N) map against a max map on any machine running an A/B
-            // sweep - a failure that says nothing about the code under test.
             AssertMapsEqual(
                 PercolatorQValues.ComputeExperimentPrecursorQMap(
-                    scoreArr, labelArr, entryIdArr, applyExperimentAgg: false),
+                    scoreArr, labelArr, entryIdArr),
                 streaming.BuildExperimentPrecursorQMap(), "exp-precursor");
-            AssertMapsEqual(
-                PercolatorQValues.ComputeExperimentPeptideQMap(
-                    scoreArr, labelArr, entryIdArr, peptideArr, applyExperimentAgg: false),
-                streaming.BuildExperimentPeptideQMap(), "exp-peptide");
+            var flatPeptideQ = PercolatorQValues.ComputeExperimentPeptideQMap(
+                scoreArr, labelArr, entryIdArr, peptideArr, out var flatPeptidePep);
+            var streamedPeptideQ = streaming.BuildExperimentPeptideQMap(out var streamedPeptidePep);
+            AssertMapsEqual(flatPeptideQ, streamedPeptideQ, "exp-peptide");
+            // The peptide PEP is fitted over the same winners on both paths.
+            AssertMapsEqual(flatPeptidePep, streamedPeptidePep, "exp-peptide-pep");
+            CollectionAssert.AreEquivalent(flatPeptideQ.Keys.ToList(), flatPeptidePep.Keys.ToList(),
+                "every peptide that won has a PEP, and only those");
             AssertMapsEqual(
                 PercolatorQValues.ComputePepWinnerMap(scoreArr, labelArr, entryIdArr),
                 streaming.BuildPepWinnerMap(), "pep-winner");
@@ -3066,10 +3592,10 @@ namespace pwiz.Osprey.Test
             // streaming one off the per-(base_id, side) bests it already keeps - so this is
             // the check that they cannot disagree about what the experiment scope competed on.
             var flatAgg = PercolatorQValues.ComputeExperimentAggregateScoreMap(
-                scoreArr, labelArr, entryIdArr, applyExperimentAgg: false);
+                scoreArr, entryIdArr);
             AssertMapsEqual(flatAgg, streaming.BuildExperimentAggregateScoreMap(), "exp-aggregate");
 
-            // Under the default aggregation the aggregate IS the max over the entry's rows.
+            // The aggregate IS the max over the entry's rows.
             // Computed here straight from the fixture rather than from either implementation,
             // so both are pinned to the definition instead of to each other.
             var expectedMax = new Dictionary<uint, double>();
@@ -3079,504 +3605,6 @@ namespace pwiz.Osprey.Test
                     expectedMax[entryIdArr[i]] = scoreArr[i];
             }
             AssertMapsEqual(expectedMax, flatAgg, "exp-aggregate-vs-definition");
-        }
-
-        /// <summary>
-        /// The mean(best-N) streaming builder (<c>StreamingFirstPassQ(meanBestN)</c>) must produce
-        /// experiment-precursor / experiment-peptide q maps identical to the resident mean(best-N)
-        /// path (<see cref="TargetDecoyCompetition.ComputeBaseIdMeanBestN"/> -&gt;
-        /// <see cref="TargetDecoyCompetition.CompeteFromIndices"/> /
-        /// <see cref="PercolatorSampling.BestPrecursorPerPeptide"/> -&gt; conservative-q) when fed the
-        /// same population in the same flat order. Each fixture gives every (base_id, side) &gt;= N
-        /// observations, so the missing-run floor is never used and the streaming histogram-median
-        /// floor cannot introduce any difference: the maps are then byte-identical. Peptides shared
-        /// across base_ids exercise the max roll-up. Run at N = 2, 3, 4 to validate the top-N
-        /// generalization.
-        /// </summary>
-        [TestMethod]
-        public void TestStreamingMeanBest2MatchesResident()
-        {
-            AssertStreamingMeanBestNMatchesResident(2);
-        }
-
-        [TestMethod]
-        public void TestStreamingMeanBest3MatchesResident()
-        {
-            AssertStreamingMeanBestNMatchesResident(3);
-        }
-
-        [TestMethod]
-        public void TestStreamingMeanBest4MatchesResident()
-        {
-            AssertStreamingMeanBestNMatchesResident(4);
-        }
-
-        private static void AssertStreamingMeanBestNMatchesResident(int n)
-        {
-            var rng = new Random(20260728 + n);
-            // nFiles MUST exceed the largest N under test. At nFiles == 4 the N=4 case computed
-            // nObs = 4 + rng.Next(1) == 4 for every group, so _len filled straight to N and the
-            // `score > _top[0]` eviction branch - the actual top-N algorithm - never executed:
-            // the test degenerated to "mean of all four observations" while appearing to cover N=4.
-            const int nFiles = 6;
-            const int nBaseIds = 50;
-            var perFile = new List<(uint EntryId, bool IsDecoy, double Score, string Peptide)>[nFiles];
-            for (int f = 0; f < nFiles; f++)
-                perFile[f] = new List<(uint, bool, double, string)>();
-
-            for (uint baseId = 1; baseId <= nBaseIds; baseId++)
-            {
-                string peptide = "PEP" + (baseId % 30); // Shared peptides span base_ids (charges).
-                foreach (bool isDecoy in new[] { false, true })
-                {
-                    uint entryId = isDecoy ? (baseId | 0x80000000u) : baseId;
-                    int nObs = n + rng.Next(nFiles - n + 1); // N..nFiles observations -> floor never used.
-                    var files = Enumerable.Range(0, nFiles).OrderBy(_ => rng.Next()).Take(nObs);
-                    foreach (int f in files)
-                    {
-                        double score = Math.Round(rng.NextDouble() * 8.0 - 2.0, 1); // 1 dp -> ties.
-                        perFile[f].Add((entryId, isDecoy, score, peptide));
-                    }
-                }
-            }
-
-            var scores = new List<double>();
-            var labels = new List<bool>();
-            var entryIds = new List<uint>();
-            var peptides = new List<string>();
-            var streaming = new StreamingFdr.StreamingFirstPassQ(n);
-            int g = 0;
-            for (int f = 0; f < nFiles; f++)
-            foreach (var row in perFile[f])
-            {
-                scores.Add(row.Score);
-                labels.Add(row.IsDecoy);
-                entryIds.Add(row.EntryId);
-                peptides.Add(row.Peptide);
-                streaming.Add(g, row.Score, row.EntryId, row.IsDecoy, row.Peptide);
-                g++;
-            }
-
-            var scoreArr = scores.ToArray();
-            var labelArr = labels.ToArray();
-            var entryIdArr = entryIds.ToArray();
-            var peptideArr = peptides.ToArray();
-
-            AssertMapsEqual(
-                ResidentMeanBestNPrecursorQMap(scoreArr, labelArr, entryIdArr, n),
-                streaming.BuildExperimentPrecursorQMap(), "mbN exp-precursor");
-            AssertMapsEqual(
-                ResidentMeanBestNPeptideQMap(scoreArr, labelArr, entryIdArr, peptideArr, n),
-                streaming.BuildExperimentPeptideQMap(), "mbN exp-peptide");
-
-            // The persisted aggregate (sidecar v4, issue #4522) must follow the aggregation
-            // too - under mean(best-N) it is the group's mean-best-N score, NOT the raw max.
-            // This is the case the whole format change exists for: a consumer that rebuilt the
-            // roll-up with max() would be wrong here and right everywhere else.
-            var residentAgg = new Dictionary<uint, double>();
-            var aggPerRow = TargetDecoyCompetition.ComputeBaseIdMeanBestN(
-                scoreArr, labelArr, entryIdArr, n);
-            for (int i = 0; i < aggPerRow.Length; i++)
-                residentAgg[entryIdArr[i]] = aggPerRow[i];
-            AssertMapsEqual(residentAgg, streaming.BuildExperimentAggregateScoreMap(), "mbN exp-aggregate");
-
-            // PEP must still be the RAW-max map, untouched by the aggregation. That invariant
-            // rests entirely on the mean-best-N block in Add() sitting AFTER the _precTargets /
-            // _precDecoys update and ending in an unconditional return - hoisting it would leave
-            // both dictionaries empty and silently give every row PEP = 1.0. Asserting it against
-            // the flat builder is what makes that a tested contract rather than a comment.
-            AssertMapsEqual(
-                PercolatorQValues.ComputePepWinnerMap(scoreArr, labelArr, entryIdArr),
-                streaming.BuildPepWinnerMap(), "mbN pep-winner (must stay raw-max)");
-        }
-
-        /// <summary>
-        /// The reproducibility demotion through the streaming path, including the single-run decoy
-        /// floor: two targets with the SAME peak (5.0) - one seen in two runs (keeps mean 5.0), one
-        /// in a single run (scores mean(5.0, decoy floor) ~ 1.5). With decoy mass placed between the
-        /// two aggregate scores, the one-run precursor's experiment q is strictly worse than the
-        /// two-run precursor's, proving the demotion happens on the bounded streaming path (the raw
-        /// max would have scored both identically). Deterministic (no RNG); a large robust-target
-        /// block keeps the q distribution non-degenerate.
-        /// </summary>
-        [TestMethod]
-        public void TestStreamingMeanBest2DemotesSingleRun()
-        {
-            var rows = new List<(int G, uint EntryId, bool IsDecoy, double Score, string Peptide)>();
-            int g = 0;
-
-            // A block of robust two-run targets well above the field so q is meaningful.
-            for (uint baseId = 1; baseId <= 30; baseId++)
-            {
-                rows.Add((g++, baseId, false, 6.0, "PEP" + baseId));
-                rows.Add((g++, baseId, false, 6.0, "PEP" + baseId));
-            }
-            // Control two-run target and single-run target, IDENTICAL peak 5.0.
-            const uint twoRunBase = 50u;
-            const uint oneRunBase = 51u;
-            rows.Add((g++, twoRunBase, false, 5.0, "PEPTWO"));
-            rows.Add((g++, twoRunBase, false, 5.0, "PEPTWO"));
-            rows.Add((g++, oneRunBase, false, 5.0, "PEPONE"));
-            // Mid decoys at mean 3.0: above the one-run aggregate (~1.5), below the 5.0 targets.
-            for (uint baseId = 300; baseId < 310; baseId++)
-            {
-                uint d = baseId | 0x80000000u;
-                rows.Add((g++, d, true, 3.0, "DECMID" + baseId));
-                rows.Add((g++, d, true, 3.0, "DECMID" + baseId));
-            }
-            // Bulk low decoys at -2.0: set the decoy-median floor to -2.0.
-            for (uint baseId = 400; baseId < 460; baseId++)
-            {
-                uint d = baseId | 0x80000000u;
-                rows.Add((g++, d, true, -2.0, "DECLOW" + baseId));
-                rows.Add((g++, d, true, -2.0, "DECLOW" + baseId));
-            }
-
-            var mb2 = new StreamingFdr.StreamingFirstPassQ(2);
-            foreach (var r in rows)
-                mb2.Add(r.G, r.Score, r.EntryId, r.IsDecoy, r.Peptide);
-            var map = mb2.BuildExperimentPrecursorQMap();
-
-            Assert.IsTrue(map.ContainsKey(twoRunBase) && map.ContainsKey(oneRunBase),
-                "both same-peak targets present");
-            foreach (double q in map.Values)
-                Assert.IsTrue(q >= 0.0 && q <= 1.0, "q in [0,1]");
-            Assert.IsTrue(map[oneRunBase] > map[twoRunBase],
-                string.Format("single-run demotion: one-run q ({0}) should exceed two-run q ({1}) at the same peak",
-                    map[oneRunBase], map[twoRunBase]));
-        }
-
-        /// <summary>
-        /// Floor-path parity: the ONE component of mean(best-N) that the three existing parity
-        /// fixtures structurally cannot reach. They give every (base_id, side) at least N
-        /// observations, so <c>_len == N</c> everywhere and <c>AggregateScore</c>'s
-        /// <c>(n - _len) * floor</c> term is multiplied by ZERO on both paths - the missing-run
-        /// floor, the single most divergence-prone piece (two different estimators of the same
-        /// statistic), contributed nothing to any assertion.
-        ///
-        /// Here the floor WEIGHTS <c>(N - _len)</c> differ across units - every decoy and most
-        /// targets are under-detected, while some targets are fully detected and carry weight 0.
-        /// Differing weights are the point: a floor that is uniform across every unit is a
-        /// monotonic transform and cannot move any ranking, so a fixture in which all units share
-        /// a weight tests nothing about the floor no matter how wrong the floor is. Two things are
-        /// then asserted:
-        ///
-        ///  1. The two FLOOR ESTIMATORS agree to within <c>bin width + local decoy spacing</c>.
-        ///     That bound is wider than the bin width alone, and deliberately so: the resident path
-        ///     interpolates BETWEEN the two observed decoy scores straddling the quantile, while the
-        ///     streaming path interpolates uniformly WITHIN one histogram bin. Where the decoys are
-        ///     sparser than the bins, the streaming estimator cannot reach across the gap to the
-        ///     next observation, so the disagreement is set by the DATA SPACING, not by the bin
-        ///     width. Asserting the bin width alone fails on this fixture by ~18x, which is how the
-        ///     property was found. Production decoy counts are in the millions over a narrow score
-        ///     range, so there the spacing term vanishes and the bound does collapse to the bin
-        ///     width - but the general statement is what a test should pin.
-        ///  2. The resulting q MAPS are exactly equal. Not a contradiction with (1): a q-value is
-        ///     determined by the competition RANKING and the running target/decoy counts, both
-        ///     discrete. A sub-bin-width shift applied to every unit's aggregate moves no unit
-        ///     past another as long as the aggregates are separated by much more than that shift -
-        ///     which the fixture enforces and then VERIFIES below, so the premise is tested, not
-        ///     trusted. Exact map equality is therefore the correct, strictest assertion here.
-        /// </summary>
-        [TestMethod]
-        public void TestStreamingMeanBestNFloorPathMatchesResident()
-        {
-            AssertFloorPathParity(2);
-            AssertFloorPathParity(3);
-            AssertFloorPathParity(4);
-        }
-
-        private static void AssertFloorPathParity(int n)
-        {
-            const int nTargetGroups = 20;
-            const int nDecoyGroups = 60;
-            var rows = new List<(int G, uint EntryId, bool IsDecoy, double Score, string Peptide)>();
-            int g = 0;
-
-            // Targets: group i is seen in (i % N) + 1 runs, so the floor WEIGHTS (n - _len) differ
-            // across units - 1..n-1 for the under-detected ones, 0 for the fully-detected ones.
-            //
-            // Differing weights, not merely a live floor term, are what give this test its power.
-            // The previous form ((i % (n-1)) + 1) kept every unit under-detected, which at n == 2
-            // collapses to _len == 1 for ALL of them: every aggregate is then (score + floor)/2,
-            // the uniform monotonic transform this feature's own docs call ranking-invariant, so
-            // the q-map equality below would have held for ANY floor, including one off by 1000x.
-            // n == 2 is the arm #4484 actually measures, so that was precisely the N whose floor
-            // path went untested. At n == 2 "every unit under-detected" and "weights differ" are
-            // mutually exclusive, so covering it REQUIRES mixing in fully-detected units.
-            //
-            // Be precise about what the mixed weights buy, because it is narrower than it looks.
-            // This is a PARITY test: assertion (2) compares the streaming map against the resident
-            // map, both built from their own floor. It therefore CANNOT detect an error shared by
-            // both estimators - verified by mutation, shifting both floors by +7.0 leaves this test
-            // green (what goes red is the value-oracle set in MeanBestNAggregationTest, which
-            // asserts exact aggregates against a known decoy median; that is where floor
-            // CORRECTNESS is pinned, and it covers n = 2).
-            //
-            // What the mixed weights fix is that assertion (2) was DEGENERATE at n == 2: with one
-            // uniform weight the aggregate is a monotonic transform, so a difference BETWEEN the
-            // two paths' floors could not change any ranking at any magnitude, and assertion (2)
-            // could not have reported a divergence even in principle. With weights differing it
-            // can. Scores stay 3.0 apart, ~3000x the real sub-bin difference, so the legitimate
-            // approximation still reorders nothing and exact equality remains the right assertion.
-            for (int i = 0; i < nTargetGroups; i++)
-            {
-                uint baseId = (uint)(i + 1);
-                int nObs = (i % n) + 1;
-                for (int k = 0; k < nObs; k++)
-                    rows.Add((g++, baseId, false, 5.0 + i * 3.0, "PEP" + i));
-            }
-
-            // Decoys: EXACTLY ONE observation each, deliberately. Every decoy then carries the
-            // same (N - 1) floor weight, so a change in the floor shifts every decoy aggregate by
-            // the SAME amount and their relative order is invariant - which is what lets the
-            // decoy scores be packed tightly enough to define a meaningful quantile without the
-            // two paths' floors reordering the null. (Giving decoys mixed observation counts
-            // instead puts two families of aggregate - (s + 2f)/3 and (2s + f)/3 - within
-            // 0.006 of each other, and the exact map equality below becomes a coin flip; the
-            // fixture self-check below caught precisely that.)
-            //
-            // The 0.0005 grid is FINER than the 0.001 bins, which is the production regime -
-            // millions of decoy scores over a narrow range, several per bin - so the two
-            // estimators land within a bin width of each other. On a grid COARSER than the bins
-            // they instead diverge by the data spacing (~18x the bin width at 0.037), which the
-            // bound asserted below covers and the summary explains; a coarse grid was tried here
-            // first and pushed the floor difference into the same order as the target aggregate
-            // gaps, which is a fixture problem, not a code one.
-            for (int i = 0; i < nDecoyGroups; i++)
-            {
-                uint baseId = (uint)(i + 1) | 0x80000000u;
-                rows.Add((g++, baseId, true, -3.0 + i * 0.0005, "DEC" + i));
-            }
-
-            var scores = new double[rows.Count];
-            var labels = new bool[rows.Count];
-            var entryIds = new uint[rows.Count];
-            var peptides = new string[rows.Count];
-            var streaming = new StreamingFdr.StreamingFirstPassQ(n);
-            for (int i = 0; i < rows.Count; i++)
-            {
-                scores[i] = rows[i].Score;
-                labels[i] = rows[i].IsDecoy;
-                entryIds[i] = rows[i].EntryId;
-                peptides[i] = rows[i].Peptide;
-                streaming.Add(rows[i].G, rows[i].Score, rows[i].EntryId, rows[i].IsDecoy, rows[i].Peptide);
-            }
-
-            // (1) The two floor estimators, compared directly.
-            var decoySample = new List<double>();
-            for (int i = 0; i < rows.Count; i++)
-            {
-                if (labels[i])
-                    decoySample.Add(scores[i]);
-            }
-            // ComputeFloorFromDecoyScores sorts in place, which is what the local-spacing
-            // measurement below needs, so read the straddling pair AFTER the call.
-            double residentFloor = TargetDecoyCompetition.ComputeFloorFromDecoyScores(decoySample);
-            double streamingFloor = streaming.ComputeDecoyFloor();
-            double binWidth = StreamingFdr.StreamingFirstPassQ.FloorBinWidth;
-
-            // The two observed decoy scores the resident median interpolates between. The
-            // streaming estimator interpolates inside ONE bin instead, so it cannot resolve a gap
-            // wider than a bin - the disagreement is bounded by bin width PLUS this spacing.
-            double medianRank = 0.5 * (decoySample.Count - 1);
-            int lo = (int)Math.Floor(medianRank);
-            int hi = Math.Min((int)Math.Ceiling(medianRank), decoySample.Count - 1);
-            double localSpacing = decoySample[hi] - decoySample[lo];
-
-            double floorDelta = Math.Abs(residentFloor - streamingFloor);
-            double floorBound = binWidth + localSpacing;
-            Assert.IsTrue(floorDelta <= floorBound, string.Format(
-                "N={0}: streaming floor {1:R} and resident floor {2:R} differ by {3:R}, above the " +
-                "{4:R} bound (bin width {5:R} + local decoy spacing {6:R}) this approximation is " +
-                "held to",
-                n, streamingFloor, residentFloor, floorDelta, floorBound, binWidth, localSpacing));
-
-            // The fixture's premise, VERIFIED rather than assumed: no unit can cross another when
-            // the floor moves by floorDelta. Only pairs with DIFFERENT floor weights can cross at
-            // all - same-weight units shift by the same amount and keep their order exactly - and
-            // in this fixture every decoy carries the same weight, so the pairs that matter are
-            // target-target and target-decoy. Decoy-decoy pairs are packed far tighter than
-            // floorDelta by design and are exempt for that reason.
-            var agg = TargetDecoyCompetition.ComputeBaseIdMeanBestN(scores, labels, entryIds, n);
-            var targetAggs = new List<double>();
-            var decoyAggs = new List<double>();
-            for (int i = 0; i < agg.Length; i++)
-                (labels[i] ? decoyAggs : targetAggs).Add(agg[i]);
-            double minCrossable = MinGapAcross(targetAggs, targetAggs);
-            minCrossable = Math.Min(minCrossable, MinGapAcross(targetAggs, decoyAggs));
-            Assert.IsTrue(minCrossable > 10 * floorDelta, string.Format(
-                "N={0}: the closest reorderable aggregate pair is only {1:R} apart against a " +
-                "{2:R} floor difference - the exact map equality asserted below would be testing " +
-                "luck rather than the floor path. Re-space the fixture scores.",
-                n, minCrossable, floorDelta));
-
-            // (2) End-to-end q maps, with the floor term live on every unit.
-            AssertMapsEqual(
-                ResidentMeanBestNPrecursorQMap(scores, labels, entryIds, n),
-                streaming.BuildExperimentPrecursorQMap(),
-                string.Format("mbN floor-path exp-precursor (N={0})", n));
-            AssertMapsEqual(
-                ResidentMeanBestNPeptideQMap(scores, labels, entryIds, peptides, n),
-                streaming.BuildExperimentPeptideQMap(),
-                string.Format("mbN floor-path exp-peptide (N={0})", n));
-        }
-
-        /// <summary>
-        /// The pass gate itself, end to end through the <see cref="FdrProjectionSet"/> overload
-        /// of <c>PercolatorEngine.RunPercolatorFdr</c>: a SECOND-pass run must produce exactly the
-        /// experiment q-values it would produce with the aggregation switched off entirely, and a
-        /// FIRST-pass run must not.
-        ///
-        /// This is the level BOTH regressions lived at, and nothing tested it. The bounded q maps
-        /// got the pass gate while the full-length wrappers did not even take the parameter, so the
-        /// resident 2nd pass kept re-aggregating; the map/wrapper test one level below cannot see
-        /// that, because it drives the parameter directly instead of deriving it from the pass
-        /// label. Here the label is the only input that changes.
-        ///
-        /// Value-free by construction: it compares three runs of the same fixture rather than
-        /// predicting any q, so it does not depend on the SVM's output - only on the gate. The
-        /// second assertion is what keeps the first honest; without it a gate that never engaged
-        /// would satisfy "second pass equals flag-off" trivially.
-        /// </summary>
-        [TestMethod]
-        public void TestSecondPassIgnoresExperimentAggregation()
-        {
-            const int nFeat = 3;
-            var featureInfos = new[]
-            {
-                new OspreyFeatureInfo("feat_a", "Feature A", false),
-                new OspreyFeatureInfo("feat_b", "Feature B", false),
-                new OspreyFeatureInfo("feat_c", "Feature C", false)
-            };
-
-            // MeanBestN is pinned to 0 by this class's [TestInitialize]; the cleanup restores it.
-            double[] flagOff = RunAndCollectExperimentQ(nFeat, featureInfos, 0, "First-pass");
-            double[] secondPass = RunAndCollectExperimentQ(nFeat, featureInfos, 3, "Second-pass");
-            double[] firstPass = RunAndCollectExperimentQ(nFeat, featureInfos, 3, "First-pass");
-
-            Assert.AreEqual(flagOff.Length, secondPass.Length, @"row count");
-            for (int i = 0; i < flagOff.Length; i++)
-            {
-                Assert.AreEqual(flagOff[i], secondPass[i], 0.0, string.Format(
-                    "row {0}: a Second-pass run must not aggregate, so its experiment q must equal " +
-                    "the aggregation-off value exactly", i));
-            }
-
-            bool firstPassDiffers = false;
-            for (int i = 0; i < flagOff.Length && !firstPassDiffers; i++)
-                firstPassDiffers = flagOff[i] != firstPass[i];
-            Assert.IsTrue(firstPassDiffers,
-                @"the First-pass run must actually aggregate on this fixture, or the gate is untested");
-        }
-
-        // One RunPercolatorFdr pass over a fresh fixture at the given aggregation and pass label,
-        // returning the experiment-precursor q of every row in buffer order. A fresh fixture per
-        // call because RunPercolatorFdr sorts and scores the projection IN PLACE.
-        private static double[] RunAndCollectExperimentQ(
-            int nFeat, OspreyFeatureInfo[] featureInfos, int meanBestN, string passLabel)
-        {
-            OspreyEnvironment.MeanBestN = meanBestN;
-            var stubs = BuildPassGateFixture(nFeat);
-            // The fixture's features stand in for each file's parquet rows, indexed by the
-            // ParquetIndex the fixture assigns.
-            var features = new Dictionary<string, IReadOnlyList<double[]>>();
-            foreach (var kvp in stubs)
-                features[kvp.Key] = kvp.Value.ConvertAll(e => e.Features);
-            var projSet = FdrProjectionSet.BuildFromEntries(stubs);
-            var sink = new CapturingSink();
-            PercolatorEngine.RunPercolatorFdr(
-                projSet, new OspreyConfig(), featureInfos, OspreyLog.None, sink, null, passLabel,
-                f => features[f], f => ApexRtsByParquetIndex(stubs, f));
-            var q = new List<double>();
-            for (int f = 0; f < projSet.PerFile.Count; f++)
-            {
-                for (int r = 0; r < projSet.PerFile[f].Value.Count; r++)
-                    q.Add(sink.QAt(f, r).ExperimentPrecursorQvalue);
-            }
-            return q.ToArray();
-        }
-
-        /// <summary>
-        /// A population where mean(best-N) provably changes the reported q, which the shared
-        /// multi-observation fixture does NOT: there every score is monotone in the same parameter,
-        /// so mean-best and max yield the identical target/decoy SEQUENCE down the ranked list -
-        /// and conservative q is a function of that sequence alone. Aggregating changed every score
-        /// and not one q-value.
-        ///
-        /// Here a target has to CROSS a decoy. Four populations arrange that:
-        /// robust targets (N observations, highest features) stay put; SPARSE targets have ONE
-        /// observation, so mean-best-3 replaces two thirds of their score with the decoy floor;
-        /// HIGH decoys sit just below the sparse targets with a full N observations, so they do not
-        /// move; and a bulk of LOW decoys drags the decoy median - the floor - far below both. The
-        /// sparse target then lands beneath the high decoy it outranked under max. The crossing
-        /// condition is <c>T - D &lt; (N - 1) * (D - floor)</c>, and this fixture leaves an order of
-        /// magnitude of slack in it, so it does not depend on exactly what the SVM produces.
-        /// Each row's ParquetIndex is its position in its file, so the caller can serve the
-        /// resident features back as that file's parquet rows.
-        /// </summary>
-        private static List<KeyValuePair<string, List<FdrEntry>>> BuildPassGateFixture(int nFeat)
-        {
-            var file0 = new List<FdrEntry>();
-            var file1 = new List<FdrEntry>();
-            uint scan = 0;
-
-            // Observations alternate between the two files so the experiment competition does not
-            // take its single-file shortcut.
-            void Add(uint entryId, bool isDecoy, string peptide, double level, int nObs)
-            {
-                for (int k = 0; k < nObs; k++)
-                {
-                    var feats = new double[nFeat];
-                    for (int j = 0; j < nFeat; j++)
-                        feats[j] = level + k * 0.01 + j * 0.05;
-                    var file = k % 2 == 0 ? file0 : file1;
-                    file.Add(new FdrEntry
-                    {
-                        EntryId = entryId,
-                        ModifiedSequence = peptide,
-                        Charge = 2,
-                        ScanNumber = ++scan,
-                        IsDecoy = isDecoy,
-                        CoelutionSum = feats[0],
-                        ParquetIndex = (uint)file.Count,
-                        Features = feats
-                    });
-                }
-            }
-
-            for (int p = 0; p < 20; p++)
-                Add((uint)(p + 1), false, "PEP" + p, 5.0 + p * 0.02, 3);          // robust targets
-            for (int p = 20; p < 26; p++)
-                Add((uint)(p + 1), false, "PEP" + p, 4.60 + (p - 20) * 0.02, 1);  // sparse targets
-            for (int p = 20; p < 26; p++)
-                Add((uint)(p + 1) | 0x80000000u, true, "DEC" + p, 4.40 + (p - 20) * 0.02, 3);
-            for (int p = 0; p < 20; p++)
-                Add((uint)(p + 1) | 0x80000000u, true, "DECLOW" + p, 0.5 + p * 0.02, 3);
-
-            return new List<KeyValuePair<string, List<FdrEntry>>>
-            {
-                new KeyValuePair<string, List<FdrEntry>>("file0", file0),
-                new KeyValuePair<string, List<FdrEntry>>("file1", file1)
-            };
-        }
-
-        // Smallest non-zero distance between a value in one list and a value in the other. Equal
-        // values are skipped: an exact tie is resolved identically on both paths (same
-        // comparator, same tie-break), so it is not a crossing risk.
-        private static double MinGapAcross(List<double> a, List<double> b)
-        {
-            double min = double.MaxValue;
-            foreach (double x in a)
-            {
-                foreach (double y in b)
-                {
-                    double d = Math.Abs(x - y);
-                    if (d > 0.0 && d < min)
-                        min = d;
-                }
-            }
-            return min;
         }
 
         private static void AssertMapsEqual<TKey>(
@@ -3595,59 +3623,6 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(kvp.Value, sv, 0.0,
                     string.Format("{0}: value differs at key {1}", which, kvp.Key));
             }
-        }
-
-        // Resident mean(best-N) experiment-precursor q map, reproduced from the primitives exactly
-        // as PercolatorQValues.ComputeExperimentPrecursorQMap does in its mean-best-N branch:
-        // per-row aggregate score -> global competition -> conservative q keyed by base_id.
-        private static Dictionary<uint, double> ResidentMeanBestNPrecursorQMap(
-            double[] scores, bool[] labels, uint[] entryIds, int n)
-        {
-            var agg = TargetDecoyCompetition.ComputeBaseIdMeanBestN(scores, labels, entryIds, n);
-            var allIndices = Enumerable.Range(0, scores.Length).ToArray();
-            TargetDecoyCompetition.CompeteFromIndices(agg, labels, entryIds, allIndices,
-                out int[] wi, out double[] ws, out bool[] wd);
-            var q = new double[wi.Length];
-            PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
-            var map = new Dictionary<uint, double>(wi.Length);
-            for (int rank = 0; rank < wi.Length; rank++)
-            {
-                // Keyed by the WINNER's full entry_id, decoy bit intact - mirroring
-                // PercolatorQValues.ComputeExperimentPrecursorQMap. On base_id the losing side of
-                // each competition inherited the winner's q, which is the defect this pins shut.
-                map[entryIds[wi[rank]]] = q[rank];
-            }
-            return map;
-        }
-
-        // Resident mean(best-N) experiment-peptide q map, reproduced from the primitives exactly as
-        // PercolatorQValues.ComputeExperimentPeptideQMap does in its mean-best-N branch: best
-        // precursor per peptide over the aggregate scores -> competition -> q keyed by peptide.
-        private static Dictionary<string, double> ResidentMeanBestNPeptideQMap(
-            double[] scores, bool[] labels, uint[] entryIds, string[] peptides, int n)
-        {
-            var agg = TargetDecoyCompetition.ComputeBaseIdMeanBestN(scores, labels, entryIds, n);
-            var allIndices = Enumerable.Range(0, scores.Length).ToArray();
-            var bestPerPeptide = PercolatorSampling.BestPrecursorPerPeptide(allIndices, agg, labels, peptides);
-            var peptScores = new double[bestPerPeptide.Length];
-            var peptLabels = new bool[bestPerPeptide.Length];
-            var peptEntryIds = new uint[bestPerPeptide.Length];
-            var allPeptIndices = new int[bestPerPeptide.Length];
-            for (int i = 0; i < bestPerPeptide.Length; i++)
-            {
-                peptScores[i] = agg[bestPerPeptide[i]];
-                peptLabels[i] = labels[bestPerPeptide[i]];
-                peptEntryIds[i] = entryIds[bestPerPeptide[i]];
-                allPeptIndices[i] = i;
-            }
-            TargetDecoyCompetition.CompeteFromIndices(peptScores, peptLabels, peptEntryIds, allPeptIndices,
-                out int[] wi, out double[] ws, out bool[] wd);
-            var q = new double[wi.Length];
-            PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
-            var map = new Dictionary<string, double>(wi.Length);
-            for (int rank = 0; rank < wi.Length; rank++)
-                map[peptides[bestPerPeptide[wi[rank]]]] = q[rank];
-            return map;
         }
 
         #endregion
@@ -3870,6 +3845,33 @@ namespace pwiz.Osprey.Test
             // Precursor floor is per-EntryId: each charge floored to its own run.
             Assert.AreEqual(0.5, z2.ExperimentPrecursorQvalue, 1e-12, "z2 precursor floored to its own run (0.5)");
             Assert.AreEqual(0.2, z3.ExperimentPrecursorQvalue, 1e-12, "z3 precursor floored to its own run (0.2)");
+        }
+
+        /// <summary>
+        /// The transfer second pass derives a peptide's floor from its REPORTED target charge
+        /// states only: an unreported charge state with a better run (here z3, re-scored at a
+        /// sibling's boundaries) does not lower the reported z2's peptide floor, which comes from
+        /// z2's own run. Decoys still contribute, and without the filter every charge does.
+        /// </summary>
+        [TestMethod]
+        public void TestPeptideFloorFromReportedChargeStatesOnly()
+        {
+            var floors = new ExperimentQFloors();
+            floors.ObserveIdentities(new[]
+            {
+                MakeEntry(1, "PEPTIDEA", runPrec: 1, runPept: 1, expPrec: 0.001, expPept: 0.001),
+                MakeEntry(2, "PEPTIDEA", runPrec: 1, runPept: 1, expPrec: 0.5, expPept: 0.001),
+            });
+            floors.Observe(1, 0.004, 0.003);   // reported z2: run-Both 0.004
+            floors.Observe(2, 0.0001, 0.0001); // unreported z3: run-Both 0.0001
+
+            floors.DerivePeptideFloors();
+            Assert.AreEqual(0.0001, floors.FloorsFor(1).Peptide, 1e-12, "every charge state sets the floor");
+
+            floors.DerivePeptideFloors(entryId => entryId == 1);
+            Assert.AreEqual(0.004, floors.FloorsFor(1).Peptide, 1e-12, "only the reported charge state sets it");
+            Assert.AreEqual(0.004, floors.FloorsFor(1).Entry, 1e-12);
+            Assert.AreEqual(0.0001, floors.FloorsFor(2).Entry, 1e-12, "entry floors are unchanged");
         }
 
         /// <summary>
@@ -4739,49 +4741,156 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The STRATIFIED branch, which the other cases do not reach and which is the half that
-        /// carries the real logic: only stratum members compete and fold, EXCEPT that a peak
-        /// Stage 6 changed - a frozen-model score that differs bit-exactly from the stored
-        /// 1st-pass score - is admitted to the RUN competition by base_id so a target and its
-        /// decoy enter together, while still being kept OUT of the experiment reduction.
+        /// The STRATIFIED branch (protein-compact) competes the stratum and its complement
+        /// SEPARATELY, each against its own paired decoys, at run scope and at experiment scope
+        /// (issue #4581). Every decoy counts in the half its paired target is in - the same
+        /// protein evidence as its target - so neither half's q is set by the other half's
+        /// population.
         ///
-        /// <para>That asymmetry is what a process boundary could silently break. If a changed
-        /// off-stratum peak leaked into the experiment fold, its maximum would be taken over
-        /// only the files that changed it, which UNDERSTATES the precursor rather than merely
-        /// perturbing it.</para>
+        /// <para>The data is the shape that made the old rule anti-conservative: the stratum is
+        /// all strong targets, and the complement holds strong targets AND the decoy winners
+        /// the stratum left behind. When the complement kept its pooled q, its targets were
+        /// accepted against a null diluted by the stratum's targets while those decoys counted
+        /// against no one.</para>
         /// </summary>
         [TestMethod]
-        public void TestStratifiedCompetitionAdmitsChangedPeaksToRunOnly()
+        public void TestStratifiedCompetitionCompetesComplementSeparately()
         {
-            // base_id 1 is in the stratum; base_id 2 is NOT, and the override CHANGES its score
-            // (0.40 stored -> 0.75 frozen), so it earns a run q but must not reach the
-            // experiment bests.
-            var stratum = new HashSet<uint> { 1u };
-            var survivors = new HashSet<uint> { 1u, DecoyOf(1u), 2u, DecoyOf(2u) };
-            var overrides = new Dictionary<uint, double> { { 2u, 0.75 }, { DecoyOf(2u), 0.70 } };
+            // Stratum: base_ids 1-10, targets 0.90-0.99, decoys weak. Complement: base_ids
+            // 101-110, targets 0.80-0.89 with weak decoys, then base_ids 111-114 whose DECOYS
+            // win at 0.855-0.885 - interleaved with the complement's targets, below every
+            // stratum target.
+            var ids = new List<uint>();
+            var scores = new List<double>();
+            var stratum = new HashSet<uint>();
+            var survivors = new HashSet<uint>();
+            void Pair(uint baseId, double target, double decoy)
+            {
+                ids.Add(baseId);
+                scores.Add(target);
+                ids.Add(DecoyOf(baseId));
+                scores.Add(decoy);
+                survivors.Add(baseId);
+            }
+            for (uint b = 1; b <= 10; b++)
+            {
+                Pair(b, 0.89 + b * 0.01, 0.10);
+                stratum.Add(b);
+            }
+            for (uint b = 101; b <= 110; b++)
+                Pair(b, 0.79 + (b - 100) * 0.01, 0.10);
+            for (uint b = 111; b <= 114; b++)
+                Pair(b, 0.20, 0.745 + (b - 100) * 0.01);
+            var entryIds = ids.ToArray();
 
             var c = StreamingFdr.CompeteOneFile(
-                new[] { 1u, DecoyOf(1u), 2u, DecoyOf(2u) },
-                new[] { 0.90, 0.20, 0.40, 0.30 },
-                overrides, survivors, stratum);
+                entryIds, scores.ToArray(), new Dictionary<uint, double>(), survivors, stratum);
 
-            Assert.IsTrue(c.BestTarget.ContainsKey(1u),
-                @"the stratum member must be reduced into the experiment bests");
-            Assert.IsFalse(c.BestTarget.ContainsKey(2u),
-                @"a changed OFF-stratum peak must not enter the experiment reduction");
-            Assert.IsFalse(c.BestDecoy.ContainsKey(2u),
-                @"nor may its paired decoy");
-            Assert.IsTrue(c.RunQ.ContainsKey(2u) || c.RunQ.ContainsKey(DecoyOf(2u)),
-                @"a changed off-stratum peak must earn a fresh run q");
+            // The stratum's weakest target (0.90) has no decoy above it IN ITS HALF: the
+            // complement's decoys at 0.85-0.88 do not count against it.
+            Assert.AreEqual(1.0 / 10, c.RunQ[1u], 1e-12,
+                @"a complement decoy must not count against a stratum target");
+            // The complement's target at 0.84 (base_id 105) takes the monotone q of the
+            // complement's bottom target: all 4 complement decoy winners lie above the 10
+            // complement targets' floor, so q = (4 + 1) / 10. Pooled with the stratum's 10
+            // targets it would be (4 + 1) / 20, the dilution the old rule reported.
+            Assert.AreEqual(5.0 / 10, c.RunQ[105u], 1e-12,
+                @"a complement target must compete against the complement's own decoys");
+            // Complement members never enter the experiment reduction; its experiment q comes
+            // from ComputeComplementExperimentQ instead.
+            Assert.IsFalse(c.BestTarget.ContainsKey(105u) || c.BestDecoy.ContainsKey(111u),
+                @"the complement must stay out of the stratum's experiment bests");
+
+            // A peak Stage 6 CHANGED in the complement competes there on its new score and does
+            // not join the stratum: the stratum's q is unchanged by it.
+            var moved = new Dictionary<uint, double> { { 105u, 0.995 } };
+            var cMoved = StreamingFdr.CompeteOneFile(
+                entryIds, scores.ToArray(), moved, survivors, stratum);
+            Assert.AreEqual(c.RunQ[1u], cMoved.RunQ[1u], 1e-12,
+                @"a changed complement peak must not join the stratum's competition");
+            Assert.AreEqual(5.0 / 10, cMoved.RunQ[105u], 1e-12,
+                @"a changed complement peak competes in the complement on its new score");
+
+            // Experiment scope: the same split, from the per-entry aggregate scores, keyed by
+            // the winner's entry_id. The losing target of a decoy-won pair has no entry.
+            var aggregates = new List<KeyValuePair<uint, double>>();
+            for (int i = 0; i < entryIds.Length; i++)
+                aggregates.Add(new KeyValuePair<uint, double>(entryIds[i], scores[i]));
+            var complementQ = StreamingFdr.ComputeComplementExperimentQ(aggregates, stratum);
+            Assert.AreEqual(c.RunQ[105u], complementQ[105u], 1e-12,
+                @"single-file complement experiment q must equal its run q");
+            Assert.IsFalse(complementQ.ContainsKey(1u),
+                @"stratum members must not be competed with the complement");
+            Assert.IsTrue(complementQ.ContainsKey(DecoyOf(111u)) && !complementQ.ContainsKey(111u),
+                @"a decoy-won complement pair is keyed by the winning decoy");
+
+            AssertComplementExperimentQAcrossFiles(entryIds, scores.ToArray(), survivors, stratum);
         }
 
         /// <summary>
-        /// The other half of the admission rule: an UNCHANGED off-stratum peak - frozen score
-        /// bit-equal to the stored one - stays out of BOTH competitions. This is the case that
-        /// silently widens the stratum if the discriminator is ever loosened from bit-exact
-        /// inequality to mere presence in the override map, which is a mistake this code has
-        /// already made once.
+        /// The complement's experiment q across MORE THAN ONE file, through the streamed fold:
+        /// <see cref="StreamingFdr.ComputeComplementExperimentQ"/>'s map is merged into the
+        /// competition state, and <see cref="StreamingFdr.StreamedCompetitionState.ExperimentQ"/>
+        /// floors it by the best run q the complement's own per-file competitions awarded. Fails
+        /// if the merge is dropped (a complement winner would read experiment q 1.0) or the floor
+        /// is taken from anything but the run q map.
         /// </summary>
+        private static void AssertComplementExperimentQAcrossFiles(
+            uint[] entryIds, double[] scores, HashSet<uint> survivors, HashSet<uint> stratum)
+        {
+            // Two files of the same precursors. Complement targets 101-105 are strong (above every
+            // complement decoy) in the first file only and 106-110 in the second only, so each
+            // file's complement competition sees 5 targets above its decoys - run q (0 + 1) / 5 -
+            // while the experiment competition, on the cross-file maximum, sees all 10 - q
+            // (0 + 1) / 10. The floor must raise the experiment q to the run q.
+            var files = new[] { @"a", @"b" };
+            var fileScores = new Dictionary<string, double[]>
+            {
+                { files[0], (double[])scores.Clone() },
+                { files[1], (double[])scores.Clone() }
+            };
+            for (int i = 0; i < entryIds.Length; i++)
+            {
+                uint id = entryIds[i];
+                if (id < 101u || id > 110u)
+                    continue;
+                bool firstHalf = id <= 105u;
+                fileScores[files[0]][i] += firstHalf ? 0.3 : -0.3;
+                fileScores[files[1]][i] += firstHalf ? -0.3 : 0.3;
+            }
+            (uint[] eids, double[] scs, IReadOnlyDictionary<uint, double> ov, HashSet<uint> own) Read(string file)
+                => ((uint[])entryIds.Clone(), (double[])fileScores[file].Clone(), new Dictionary<uint, double>(), survivors);
+            var minRunQ = new Dictionary<uint, double>();
+            void OnFileRunQ(string _, StreamingFdr.FileCompetition contribution)
+            {
+                foreach (var kv in contribution.RunQ)
+                    minRunQ[kv.Key] = minRunQ.TryGetValue(kv.Key, out double cur) ? Math.Min(cur, kv.Value) : kv.Value;
+            }
+            var aggregates = new Dictionary<uint, double>();
+            foreach (string file in files)
+            {
+                for (int i = 0; i < entryIds.Length; i++)
+                {
+                    double v = fileScores[file][i];
+                    aggregates[entryIds[i]] = aggregates.TryGetValue(entryIds[i], out double cur) ? Math.Max(cur, v) : v;
+                }
+            }
+            var complementQ = StreamingFdr.ComputeComplementExperimentQ(aggregates, stratum);
+            var competition = StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
+                files, Read, survivors, OnFileRunQ, stratum, complementExperimentQ: complementQ);
+
+            foreach (uint target in new[] { 101u, 105u, 106u, 110u })
+            {
+                Assert.AreEqual(1.0 / 10, complementQ[target], 1e-12,
+                    @"the complement's experiment competition ranks on the cross-file maximum");
+                Assert.AreEqual(1.0 / 5, minRunQ[target], 1e-12,
+                    @"each file's complement competition sees only its own 5 strong targets");
+                // 1.0 here means the merge was dropped; 0.1 means the floor was.
+                Assert.AreEqual(1.0 / 5, competition.ExperimentQ(target, minRunQ[target]), 1e-12,
+                    @"a complement winner takes its experiment q floored by its best run q");
+            }
+        }
+
         /// <summary>
         /// The per-file competition survives a round trip through the two artifacts the worker
         /// writes - the pool-image per-run 2nd-pass sidecar and the decoy side of the
@@ -4963,13 +5072,18 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(rebuilt.RunQ.ContainsKey(d2));
         }
 
+        /// <summary>
+        /// An UNCHANGED off-stratum survivor - frozen score bit-equal to the stored one - earns a
+        /// run q from the stratum's complement, rather than the 1.0 "did not compete" it took
+        /// when only the stratum and the peaks Stage 6 changed were competed (issue #4581). It
+        /// still stays out of the stratum's experiment reduction.
+        /// </summary>
         [TestMethod]
-        public void TestStratifiedCompetitionExcludesUnchangedOffStratumPeaks()
+        public void TestStratifiedCompetitionGivesUnchangedOffStratumPeaksComplementQ()
         {
             var stratum = new HashSet<uint> { 1u };
             var survivors = new HashSet<uint> { 1u, 2u };
-            // 2u IS in the override map, but its value equals the stored score, so it is
-            // unchanged and must not be admitted.
+            // 2u is in the override map with its stored score, so it is unchanged.
             var overrides = new Dictionary<uint, double> { { 2u, 0.40 } };
 
             var c = StreamingFdr.CompeteOneFile(
@@ -4977,10 +5091,10 @@ namespace pwiz.Osprey.Test
                 new[] { 0.90, 0.20, 0.40 },
                 overrides, survivors, stratum);
 
-            Assert.IsFalse(c.RunQ.ContainsKey(2u),
-                @"presence in the override map is not admission - only a CHANGED score is");
+            Assert.IsTrue(c.RunQ.ContainsKey(2u),
+                @"an unchanged off-stratum survivor competes in the stratum's complement");
             Assert.IsFalse(c.BestTarget.ContainsKey(2u),
-                @"and an unadmitted peak stays out of the experiment fold");
+                @"and stays out of the stratum's experiment fold");
         }
 
         /// <summary>The decoy entry id paired with a base_id: the high bit set.</summary>

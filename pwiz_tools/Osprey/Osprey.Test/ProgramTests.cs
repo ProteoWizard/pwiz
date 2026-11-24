@@ -48,29 +48,6 @@ namespace pwiz.Osprey.Test
     [TestClass]
     public class ProgramTests
     {
-        private int _savedMeanBestN;
-
-        /// <summary>
-        /// Pin the experiment-wide aggregation off for every test here. ValidateArgs now runs
-        /// OspreyEnvironment.ValidateExperimentAggSettings FIRST, before the --task switch, so on a
-        /// machine with OSPREY_EXPERIMENT_AGG=mean-best-N exported - the sweep this feature exists
-        /// to run - the happy-path cases would fail their Assert.IsNull (their 1-2 input scores are
-        /// fewer runs than N), and the negative cases would match the aggregation error instead of
-        /// the --task message they assert on. Same ambient-environment hole that FdrTest had.
-        /// </summary>
-        [TestInitialize]
-        public void PinExperimentAggToDefault()
-        {
-            _savedMeanBestN = OspreyEnvironment.MeanBestN;
-            OspreyEnvironment.MeanBestN = 0;
-        }
-
-        [TestCleanup]
-        public void RestoreExperimentAgg()
-        {
-            OspreyEnvironment.MeanBestN = _savedMeanBestN;
-        }
-
         /// <summary>
         /// The error-line and exit-code contract Osprey shares with Skyline's command line: the
         /// detector recognizes "Error:" in every shipped language, at the start of a line or after

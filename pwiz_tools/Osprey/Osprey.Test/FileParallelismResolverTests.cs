@@ -41,11 +41,12 @@ namespace pwiz.Osprey.Test
 
         // Inject fixed system inputs so the policy is the only thing under test.
         private static int Resolve(FileParallelism request, int nFiles,
-            int envCap = 0, int cores = 8, long availableBytes = 0, long perFileBytes = 0)
+            int envCap = 0, int cores = 8, long availableBytes = 0, long perFileBytes = 0,
+            int minThreadsPerFile = 1)
         {
             return FileParallelismResolver.Resolve(
                 request, nFiles, envCap, cores,
-                () => availableBytes, () => perFileBytes);
+                () => availableBytes, () => perFileBytes, minThreadsPerFile: minThreadsPerFile);
         }
 
         [TestMethod]
@@ -98,6 +99,26 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(1, Resolve(FileParallelism.Auto, 3, cores: 8, availableBytes: 0, perFileBytes: 6 * GB));
             // A tiny estimate against a large budget must not overflow the RAM fit.
             Assert.AreEqual(8, Resolve(FileParallelism.Auto, 10, cores: 8, availableBytes: 512 * GB, perFileBytes: 1));
+
+            // Auto keeps at least MIN_THREADS_PER_FILE threads per file: free RAM says how many
+            // files fit, not how many are fast. CHS on MACS2 fit 27 files by RAM (435 GB free,
+            // 12.5 GB per file) and ran them at 2 threads each; 72 / 8 caps it at 9, and the
+            // 30-thread i9 gets 3 - the fastest counts measured on each.
+            const int minThreads = FileParallelismResolver.MIN_THREADS_PER_FILE;
+            Assert.AreEqual(9, Resolve(FileParallelism.Auto, 446, cores: 72, availableBytes: 435 * GB,
+                perFileBytes: 12 * GB, minThreadsPerFile: minThreads));
+            Assert.AreEqual(3, Resolve(FileParallelism.Auto, 82, cores: 30, availableBytes: 100 * GB,
+                perFileBytes: 12 * GB, minThreadsPerFile: minThreads));
+            // Fewer threads than the floor still runs one file.
+            Assert.AreEqual(1, Resolve(FileParallelism.Auto, 10, cores: 6, availableBytes: 512 * GB,
+                perFileBytes: GB, minThreadsPerFile: minThreads));
+            // RAM still binds below the thread cap: 51.2 GB budget / 18 GB per file -> 2.
+            Assert.AreEqual(2, Resolve(FileParallelism.Auto, 82, cores: 72, availableBytes: 64 * GB,
+                perFileBytes: 18 * GB, minThreadsPerFile: minThreads));
+            // No memory estimate falls back to the same thread cap.
+            Assert.AreEqual(4, Resolve(FileParallelism.Auto, 82, cores: 32, minThreadsPerFile: minThreads));
+            // An explicit count is the user's call and is not capped by the floor.
+            Assert.AreEqual(27, Resolve(FileParallelism.Explicit(27), 446, cores: 72, minThreadsPerFile: minThreads));
 
             // Auto ignores the env cap entirely (the argument wins when both set).
             Assert.AreEqual(3, Resolve(FileParallelism.Auto, 3, envCap: 1, cores: 8, availableBytes: 512 * GB, perFileBytes: GB));

@@ -94,8 +94,8 @@ namespace pwiz.Skyline.Model.ElementLocators
                     {
                         return null;
                     }
-                    var siblingRef = NODEREFPROTOTYPES[identityPath.Length].ChangeParent(parentRef);
-                    siblings = siblingRef.ListChildrenOfParent(Document).Cast<NodeRef>().ToArray();
+                    var siblingRef = (NodeRef) NODEREFPROTOTYPES[identityPath.Length].ChangeParent(parentRef);
+                    siblings = siblingRef.ListChildrenOfParentNode(parentNode).ToArray();
                     _siblings.Add(parentIdentityPath, siblings);
                 }
                 var result = siblings[childIndex];

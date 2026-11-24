@@ -607,4 +607,7 @@
   <data name="OspreyTorchRuntimes_Load_Predicting_on_the_GPU___0___with_the_NVIDIA_CUDA_runtime_in__1_" xml:space="preserve">
     <value>Predicting on the GPU ({0}) with the NVIDIA CUDA runtime in {1}</value>
   </data>
+  <data name="Program_Run__0__names_an_unknown_feature___1____Use_PIN_feature_names_separated_by_commas__or___2___to_mask_nothing_" xml:space="preserve">
+    <value>{0} names an unknown feature: '{1}'. Use PIN feature names separated by commas, or '{2}' to mask nothing.</value>
+  </data>
 </root>

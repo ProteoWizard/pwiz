@@ -67,15 +67,29 @@ namespace pwiz.Osprey.Tasks
         internal static readonly SemaphoreSlim s_mzmlReadGate = new SemaphoreSlim(1, 1);
 
         /// <summary>
+        /// The metadata of the FDR classifier's features - the unmasked PIN features, in the order
+        /// <see cref="ParquetScoreCache.LoadPinFeaturesFromParquet"/> lays out each vector -
+        /// so the model, its diagnostics and the feature report name the columns it trained on.
+        /// </summary>
+        internal static OspreyFeatureInfo[] FdrFeatureInfos(OspreyConfig config)
+        {
+            return PinFeatureMask.For(config).SelectFdrFeatures(
+                OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES));
+        }
+
+        /// <summary>
         /// Build the <see cref="ScoringPipeline"/> the tasks score through, wired
-        /// to the run's log sink and (optional) diagnostics seam. Cheap: the
-        /// pipeline only carries those two references, so constructing one per
+        /// to the run's log sink and (optional) diagnostics seam, and computing only
+        /// the core features and the families of the PIN features the scores parquet records
+        /// (<see cref="PinFeatureSelection.IsComputed"/>); the writer drops the rest of each family.
+        /// Cheap: the pipeline only carries those references, so constructing one per
         /// scoring call matches the former per-call construction inside the base
         /// class forwarders exactly.
         /// </summary>
         internal static ScoringPipeline Pipeline(PipelineContext ctx)
         {
-            return new ScoringPipeline(ctx, ctx.Diagnostics as IScoringDiagnostics);
+            return new ScoringPipeline(ctx, ctx.Diagnostics as IScoringDiagnostics,
+                PinFeatureMask.For(ctx.Config).ComputedFeatureFlags());
         }
 
         /// <summary>
@@ -1095,7 +1109,8 @@ namespace pwiz.Osprey.Tasks
                 accumulator.Add(fileIdx, entry.ModifiedSequence, entry.Charge, entry.EntryId,
                     entry.IsDecoy, entry.Score,
                     new FdrQValues(entry.RunPrecursorQvalue, entry.RunPeptideQvalue,
-                        entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue, entry.Pep));
+                        entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue, entry.Pep,
+                        entry.ExperimentPeptidePep));
             }
         }
 
@@ -1114,7 +1129,7 @@ namespace pwiz.Osprey.Tasks
                 accumulator.Add(fileIdx, row.ModifiedSequence, row.Charge, row.EntryId,
                     row.IsDecoy, row.Score,
                     new FdrQValues(row.RunPrecursorQvalue, row.RunPeptideQvalue,
-                        row.ExperimentPrecursorQvalue, row.ExperimentPeptideQvalue, 1.0));
+                        row.ExperimentPrecursorQvalue, row.ExperimentPeptideQvalue, 1.0, 1.0));
             }
         }
 

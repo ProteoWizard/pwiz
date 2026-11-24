@@ -57,7 +57,7 @@ several), porting the Rust crate's inline tests. The correspondence is direct:
 | C# project | C# test file(s) | Rust crate (Rust 11-testing.md) |
 |---|---|---|
 | `Osprey.Core` | `CoreTypesTest.cs` (24), `IsotopeDistributionTest.cs` (11), `OspreyConfigTest.cs` (2) | `osprey-core` (28) |
-| `Osprey.IO` | `IOTest.cs` (64), `DiannDecoyColumnTest.cs`, `CwtCandidateCodecTest.cs` (9), `CwtCandidateLoaderTest.cs` | `osprey-io` (26) |
+| `Osprey.IO` | `IOTest.cs` (64), `DiannDecoyColumnTest.cs` | `osprey-io` (26) |
 | `Osprey.Chromatography` | `ChromatographyTest.cs` (13), `CalibrationTest.cs` (20), `PeakDetectorTest.cs` (9) | `osprey-chromatography` (66) |
 | `Osprey.Scoring` | `ScoringTest.cs` (40), `OspreyFeatureCalculatorsTest.cs` (9), `FragmentSelectionTest.cs` (11), `IsotopeDistributionTest.cs` | `osprey-scoring` (70) |
 | `Osprey.FDR` | `FdrTest.cs` (45), `FdrControllerTest.cs`, `ReconciliationTest.cs` (46), `MultiChargeConsensusTest.cs`, `Pass2FdrSidecarTest.cs`, `PercolatorFeatureFallbackTest.cs`, `ReconciledParquetWriterTest.cs`, `GapFillTargetIdentifierTest.cs`, `MedianPolishMetricsTest.cs` | `osprey-fdr` (41) |

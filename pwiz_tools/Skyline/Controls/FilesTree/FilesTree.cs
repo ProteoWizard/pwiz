@@ -22,11 +22,13 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 // ReSharper disable WrongIndentSize
 namespace pwiz.Skyline.Controls.FilesTree
@@ -74,30 +76,36 @@ namespace pwiz.Skyline.Controls.FilesTree
             _timerUpdate = new System.Windows.Forms.Timer { Interval = UPDATE_DELAY_MS };
             _timerUpdate.Tick += OnUpdateTimer;
 
-            // Icons size is 16x16
+            // The 16x16 icons are a 96-DPI design: each is added at the pixel size for
+            // this DPI by DpiUtil.GetIcon (issue #4599)
             ImageList = new ImageList
             {
                 TransparentColor = Color.Magenta,
-                ColorDepth = ColorDepth.Depth32Bit 
+                ColorDepth = ColorDepth.Depth32Bit
             };
+            ImageListScaler.PrepareForDpi(this, ImageList);
+            AddNodeImage(nameof(Resources.Blank), Resources.Blank);              // 1bpp
+            AddNodeImage(nameof(Resources.Folder), Resources.Folder);             // 32bpp
+            AddNodeImage(nameof(Resources.FolderMissing), Resources.FolderMissing);      // 32bpp
+            AddNodeImage(nameof(Resources.File), Resources.File);               // 8bpp
+            AddNodeImage(nameof(Resources.FileMissing), Resources.FileMissing);        // 32bpp
+            AddNodeImage(nameof(Resources.Replicate), Resources.Replicate);          // 24bpp
+            AddNodeImage(nameof(Resources.ReplicateMissing), Resources.ReplicateMissing);   // 24bpp // CONSIDER: improve icon?
+            AddNodeImage(nameof(Resources.DataProcessing), Resources.DataProcessing);     // 8bpp
+            AddNodeImage(nameof(Resources.PeptideLib), Resources.PeptideLib);         // 4bpp
+            AddNodeImage(nameof(Resources.Skyline_FilesTree), Resources.Skyline_FilesTree);  // 24bpp
+            AddNodeImage(nameof(Resources.AuditLog), Resources.AuditLog);           // 32bpp
+            AddNodeImage(nameof(Resources.CacheFile), Resources.CacheFile);          // 32bpp
+            AddNodeImage(nameof(Resources.ViewFile), Resources.ViewFile);           // 32bpp
+            AddNodeImage(nameof(Resources.ProtDB), Resources.ProtDB);             // 32bpp
+            AddNodeImage(nameof(Resources.ImsDB), Resources.ImsDB);              // 32bpp
+            AddNodeImage(nameof(Resources.OptDB), Resources.OptDB);              // 32bpp
+            AddNodeImage(nameof(Resources.IrtCalculator), Resources.IrtCalculator);      // 32bpp
+        }
 
-            ImageList.Images.Add(Resources.Blank);              // 1bpp
-            ImageList.Images.Add(Resources.Folder);             // 32bpp
-            ImageList.Images.Add(Resources.FolderMissing);      // 32bpp
-            ImageList.Images.Add(Resources.File);               // 8bpp
-            ImageList.Images.Add(Resources.FileMissing);        // 32bpp
-            ImageList.Images.Add(Resources.Replicate);          // 24bpp
-            ImageList.Images.Add(Resources.ReplicateMissing);   // 24bpp // CONSIDER: improve icon?
-            ImageList.Images.Add(Resources.DataProcessing);     // 8bpp
-            ImageList.Images.Add(Resources.PeptideLib);         // 4bpp
-            ImageList.Images.Add(Resources.Skyline_FilesTree);  // 24bpp
-            ImageList.Images.Add(Resources.AuditLog);           // 32bpp
-            ImageList.Images.Add(Resources.CacheFile);          // 32bpp
-            ImageList.Images.Add(Resources.ViewFile);           // 32bpp
-            ImageList.Images.Add(Resources.ProtDB);             // 32bpp
-            ImageList.Images.Add(Resources.ImsDB);              // 32bpp
-            ImageList.Images.Add(Resources.OptDB);              // 32bpp
-            ImageList.Images.Add(Resources.IrtCalculator);      // 32bpp
+        private void AddNodeImage(string name, Image image)
+        {
+            ImageList.Images.Add(DpiUtil.GetIcon(this, name, image, Color.Magenta));
         }
 
         [Browsable(false)]
@@ -590,11 +598,14 @@ namespace pwiz.Skyline.Controls.FilesTree
             var node = ((TreeNodeMS)SelectedNode).BoundsMS;
             _editTextBox.Location = new Point(Location.X + node.Location.X, Location.Y + node.Location.Y);
 
-            const int minWidth = 80;
+            // 96-DPI literals scaled for high DPI (issue #4599).
+            int minWidth = DpiUtil.Scale(this, 80);
             var maxWidth = Bounds.Width - 1 - node.Left;
 
-            var size = TextRenderer.MeasureText(_editTextBox.Text, _editTextBox.Font, new Size(_editTextBox.Height, maxWidth));
-            var dx = size.Width + 8;
+            // MeasureText's proposedSize is (width, height); the arguments were transposed,
+            // a latent bug even at 96 DPI (issue #4599).
+            var size = TextRenderer.MeasureText(_editTextBox.Text, _editTextBox.Font, new Size(maxWidth, _editTextBox.Height));
+            var dx = size.Width + DpiUtil.Scale(this, 8);
             dx = Math.Max(dx, minWidth);
             dx = Math.Min(dx, maxWidth);
 

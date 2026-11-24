@@ -194,7 +194,7 @@ the MS2 mean; see [MS2 m/z offset curve](#ms2-mz-offset-curve-ms2offsetcurvecs).
 `RunCalibrationScoringPass` builds an `RTCalibratorConfig` and calls
 `RTCalibrator.Fit` (`Calibrator.cs:501-519`; `RTCalibration.cs:100`):
 
-- `Bandwidth = config.RtCalibration.LoessBandwidth` (default 0.3)
+- `Bandwidth = config.RtCalibration.LoessBandwidth` (0.3 by default, 0.10 for HRAM data: `ResolutionDefaults`)
 - `Degree = 1` (local linear)
 - `MinPoints = min(20, n)`
 - `RobustnessIterations = 2`
@@ -489,11 +489,11 @@ console report the same window number (issue #4364).
 | Flag / config / env var | Default | Effect on this stage |
 |---|---|---|
 | `RtCalibration.Enabled` (config) | `true` | Master switch. When false, discovery is skipped and the main search uses `FallbackRtTolerance` with raw library RTs (`PerFileScoringTask.cs:1668`). No dedicated CLI flag. |
-| `RtCalibration.LoessBandwidth` | `0.3` | Fraction of points per local LOESS fit (`Calibrator.cs:503`). |
+| `RtCalibration.LoessBandwidth` | `0.3` (HRAM: `0.10`) | Fraction of points per local LOESS fit (`Calibrator.cs:503`). |
 | `RtCalibration.MinCalibrationPoints` | `200` | Pass-1 LOESS floor; below it, calibration fails to fallback (`Calibrator.cs:259, 479`). |
 | `RtCalibration.RtToleranceFactor` | `3.0` | Multiplier on the residual/MAD spread. Note: the search path multiplies `MAD·1.4826` by a hardcoded `3.0` in `SearchWindowHalfWidth`, not this config field. |
 | `RtCalibration.FallbackRtTolerance` | `2.0` min | RT tolerance when calibration is disabled or fails (`ScoringPipeline.cs:185`). |
-| `RtCalibration.MinRtTolerance` | `0.5` min | Lower clamp on the search RT window (`ScoringPipeline.cs:176`) and on the pass tolerances (`Calibrator.cs:291-293`). |
+| `RtCalibration.MinRtTolerance` | `0.5` min (HRAM: `1.0`) | Lower clamp on the search RT window (`ScoringPipeline.cs:176`) and on the pass tolerances (`Calibrator.cs:291-293`). |
 | `RtCalibration.MaxRtTolerance` | `3.0` min | Upper clamp (hard cap) on the search RT window. |
 | `RtCalibration.CalibrationSampleSize` | `100000` | Target sampled entries; `0` = use all (`Calibrator.cs:197, 759`). |
 | `RtCalibration.CalibrationRetryFactor` | `2.0` | Present on the config but **unused** by the C# `Calibrator` (see Divergences). |
@@ -503,7 +503,6 @@ console report the same window number (issue #4364).
 | `OSPREY_MS2_CAL_MEAN=1` (env) | off | Calibrate MS2 by the mean always, as Rust does: no offset curve at unit resolution, and overrides `OSPREY_MS2_CAL_CURVE_PPM`. For cross-implementation parity runs. Validity key `;ms2cal=mean`. See [MS2 m/z offset curve](#ms2-mz-offset-curve-ms2offsetcurvecs). |
 | `OSPREY_MS2_CAL_CURVE_PPM=1` (env) | off | **Experimental, opt-in.** Calibrate MS2 of ppm searches by the offset curve instead of the mean, at any shift. Validity key `;ms2cal=curveppm`. C#-only. |
 | `OSPREY_EXIT_AFTER_CALIBRATION` (env) | off | Exit after Stage 3, skipping the main search (`OspreyEnvironment.cs:79`). |
-| `OSPREY_LOAD_CALIBRATION=<path>` (env) | unset | Load a Rust-produced `.calibration.json` instead of computing; used for cross-impl bisection (`PerFileScoringTask.cs:1623-1667`). |
 
 ### Diagnostic env vars (shared with Rust; each has a `*_ONLY` abort variant)
 

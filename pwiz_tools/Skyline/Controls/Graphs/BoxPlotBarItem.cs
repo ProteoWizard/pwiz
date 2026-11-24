@@ -131,6 +131,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
             int count = sortedValues.Length;
             double median = GetMedian(sortedValues, 0, count);
+            // A single value has empty halves, which have no quartiles, and fences derived
+            // from them would exclude the value itself.
+            if (count == 1)
+                return new BoxPlotTag(median, median, median, median, median, Array.Empty<double>());
+
             double q1 = GetMedian(sortedValues, 0, count / 2);
             double q3 = GetMedian(sortedValues, (count + 1) / 2, count);
             double iqr = q3 - q1;

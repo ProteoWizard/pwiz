@@ -1,0 +1,4 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- FragmentDecoy: a red flat-topped hump on a full-width baseline. -->
+  <Path Data="M 0,21 L 8,21 C 10,21 11,11 14,11 L 18,11 C 21,11 22,21 24,21 L 32,21" Stroke="#C8201C" StrokeThickness="2" StrokeLineJoin="Round"/>
+</Canvas>

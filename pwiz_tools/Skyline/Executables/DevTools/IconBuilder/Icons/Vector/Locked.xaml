@@ -1,0 +1,23 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Closed padlock in warm gray: a four-unit shackle arc, darker on the left leg, over a
+       body whose left edge is shaded darker. -->
+  <Path Data="M 8,14 L 8,11 A 8,8 0 0 1 24,11 L 24,14" StrokeThickness="4" StrokeLineJoin="Round">
+    <Path.Stroke>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#7E7272" Offset="0"/>
+        <GradientStop Color="#9E9494" Offset="0.4"/>
+        <GradientStop Color="#ACA4A4" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Stroke>
+  </Path>
+  <Rectangle Canvas.Left="4" Canvas.Top="14" Width="24" Height="16" RadiusX="1" RadiusY="1">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#776B6B" Offset="0"/>
+        <GradientStop Color="#776B6B" Offset="0.17"/>
+        <GradientStop Color="#928989" Offset="0.2"/>
+        <GradientStop Color="#988C8C" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+</Canvas>

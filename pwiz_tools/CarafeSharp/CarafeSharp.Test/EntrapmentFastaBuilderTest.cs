@@ -244,6 +244,8 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsTrue(settings.FailOnPairingViolation);
             Assert.AreEqual(@"decoy_", settings.DecoyPrefix);
             Assert.AreEqual(42L, settings.EntrapmentSeed);
+            Assert.AreEqual(0.0, settings.EntrapmentInTargetsRatio);
+            Assert.AreEqual(EntrapmentFastaSettings.DEFAULT_ENTRAPMENT_PROTEIN_SEED, settings.EntrapmentProteinSeed);
 
             // First value of a repeated option wins, "-name=value" works, a negative number is a
             // value, the non-specific enzyme forces 100 missed cleavages, a charge range upside
@@ -253,6 +255,7 @@ namespace pwiz.CarafeSharp.Test
                 @"--build-entrapment-fasta", @"out.fasta", @"--db=in.fasta", @"--enzyme", @"0", @"--enzyme", @"2", @"--miss-c", @"1",
                 @"--entrapment-seed", @"-5", @"--min-pep-charge", @"3", @"--max-pep-charge", @"2", @"--entrapment", @"--no-similarity-gate",
                 @"--ignore-pairing-errors", @"--o", @"ignored", @"--i2l", @"stray", @"--entrapment-ratio", @" 0.5d ",
+                @"--entrapment-in-targets", @"0.25",
             }).BuildSettings;
             Assert.AreEqual(@"in.fasta", settings.InputFasta);
             Assert.AreEqual(0, settings.Digest.EnzymeIndex);
@@ -262,6 +265,11 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsFalse(settings.SimilarityGate);
             Assert.IsFalse(settings.FailOnPairingViolation);
             Assert.AreEqual(0.5, settings.EntrapmentRatio);
+            Assert.AreEqual(0.25, settings.EntrapmentInTargetsRatio);
+            // The floor on the ratio applies to the total of the two.
+            settings = CarafeCommandLine.Parse(new[] { @"--build-entrapment-fasta", @"o", @"--db", @"i", @"--entrapment", @"--entrapment-ratio", @"0.05", @"--entrapment-in-targets", @"0.05" }).BuildSettings;
+            Assert.AreEqual(0.05, settings.EntrapmentRatio);
+            Assert.AreEqual(0.05, settings.EntrapmentInTargetsRatio);
             Assert.AreEqual(18, CarafeCommandLine.Parse(new[] { @"--build-entrapment-fasta", @"o", @"--db", @"i", @"--enzyme", @"nocut" })
                 .BuildSettings.Digest.EnzymeIndex);
 
@@ -279,6 +287,13 @@ namespace pwiz.CarafeSharp.Test
             AssertCommandLineError(@"-build_entrapment_fasta o -db i -entrapment_db f");
             AssertCommandLineError(@"-build_entrapment_fasta o -db i -entrapment -entrapment_ratio 1.5");
             AssertCommandLineError(@"-build_entrapment_fasta o -db i -entrapment -entrapment_ratio 0.05");
+            // Entrapment on target proteins: needs entrapment, is above 0 and at most 1, and is
+            // added to the ratio, whose limits apply to the total (the default ratio is 1).
+            AssertCommandLineError(@"-build_entrapment_fasta o -db i -entrapment_in_targets 0.5");
+            AssertCommandLineError(@"-build_entrapment_fasta o -db i -entrapment -entrapment_in_targets 0");
+            AssertCommandLineError(@"-build_entrapment_fasta o -db i -entrapment -entrapment_in_targets 1.5");
+            AssertCommandLineError(@"-build_entrapment_fasta o -db i -entrapment -entrapment_in_targets 0.1");
+            AssertCommandLineError(@"-build_entrapment_fasta o -db i -entrapment -entrapment_ratio 0.04 -entrapment_in_targets 0.04");
             AssertCommandLineError(@"-build_entrapment_fasta o -db i -enzyme 19");
             // An enzyme name is accepted (CarafeSharp takes any name in the table, Carafe only NoCut);
             // one not in the table is refused.
@@ -291,7 +306,134 @@ namespace pwiz.CarafeSharp.Test
             Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"i" }));
         }
 
+        /// <summary>
+        /// Entrapment placed on target proteins: round((r1 + r2) * n) of the n targets carry
+        /// entrapment and round(r2 * n) of those sit on a target protein, by shuffle and by
+        /// foreign draw; each such p_target row carries exactly one unsuffixed label that is a
+        /// target row's, and its p_decoy the decoy prefix on that label; the rest keep the suffix;
+        /// the FASTA counters are coherent; the same seeds give the same files; and the in-process
+        /// route marks both halves of every entrapment pair. A build without the option is
+        /// unchanged, which the fixture hashes above prove.
+        /// </summary>
+        [TestMethod]
+        public void TestEntrapmentOnTargetProteins()
+        {
+            string folder = CreateTestFolder();
+            try
+            {
+                string targets = WriteLines(folder, @"targets.fasta", TARGET_FASTA);
+                string foreign = WriteLines(folder, @"foreign.fasta", FOREIGN_FASTA);
+                AssertEntrapmentOnTargetProteins(folder, @"shuffle", GUI + @" -entrapment -entrapment_ratio 0.4 -entrapment_in_targets 0.3",
+                    0.4, 0.3, targets, foreign);
+                AssertEntrapmentOnTargetProteins(folder, @"foreign", GUI + @" -entrapment -entrapment_db " + FOREIGN_PLACEHOLDER +
+                                                                   @" -entrapment_ratio 0.5 -entrapment_in_targets 0.5", 0.5, 0.5, targets, foreign);
+                // Every entrapment peptide on a target protein.
+                AssertEntrapmentOnTargetProteins(folder, @"all", GUI + @" -entrapment -entrapment_ratio 0 -entrapment_in_targets 1",
+                    0.0, 1.0, targets, foreign);
+            }
+            finally
+            {
+                Directory.Delete(folder, true);
+            }
+        }
+
+        private void AssertEntrapmentOnTargetProteins(string folder, string name, string arguments, double ratio, double inTargetsRatio,
+            string targets, string foreign)
+        {
+            string outputFolder = Path.Combine(folder, name);
+            var settings = BuildSettings(arguments, targets, foreign, outputFolder);
+            Assert.AreEqual(inTargetsRatio, settings.EntrapmentInTargetsRatio, name);
+            var result = new EntrapmentFastaBuilder(settings).Run();
+            int n = result.QuartetsBuilt;
+            Assert.AreEqual(JavaText.Round((ratio + inTargetsRatio) * n), n - result.EntrapmentNotSelected, name);
+            var kept = new EntrapmentFastaBuilder(settings).Build(new EntrapmentFastaResult(), out _);
+            int expectedOnTarget = (int)Math.Min(JavaText.Round(inTargetsRatio * n), kept.Count(q => q.PTarget != null));
+            Assert.IsTrue(expectedOnTarget > 0, name);
+            Assert.AreEqual(expectedOnTarget, result.EntrapmentOnTargetProteins, name);
+            Assert.AreEqual(expectedOnTarget, kept.Count(q => q.PTargetSources != null), name);
+
+            // The same seeds give the same files.
+            string fasta = Path.Combine(outputFolder, @"peptides.fasta");
+            string manifest = Path.Combine(outputFolder, @"pairing.tsv");
+            string again = Path.Combine(folder, name + @"-again");
+            new EntrapmentFastaBuilder(BuildSettings(arguments, targets, foreign, again)).Run();
+            Assert.AreEqual(Sha256File(fasta), Sha256File(Path.Combine(again, @"peptides.fasta")), name);
+            Assert.AreEqual(Sha256File(manifest), Sha256File(Path.Combine(again, @"pairing.tsv")), name);
+
+            var rows = ReadLfLines(manifest).Skip(1).Select(line => line.Split('\t')).ToList();
+            var targetLabels = new HashSet<string>(rows.Where(r => r[3] == PairingManifest.KIND_TARGET).SelectMany(r => r[2].Split(';')));
+            var pDecoyProteins = rows.Where(r => r[3] == PairingManifest.KIND_P_DECOY).ToDictionary(r => r[4], r => r[2]);
+            int onTarget = 0;
+            foreach (var row in rows.Where(r => r[3] == PairingManifest.KIND_P_TARGET))
+            {
+                string[] labels = row[2].Split(';');
+                if (labels.All(label => label.Contains(settings.EntrapmentSuffix)))
+                    continue;
+                onTarget++;
+                Assert.AreEqual(1, labels.Length, row[2]);
+                Assert.IsTrue(targetLabels.Contains(labels[0]), row[2]);
+                Assert.AreEqual(settings.DecoyPrefix + labels[0], pDecoyProteins[row[4]], row[2]);
+            }
+            Assert.AreEqual(expectedOnTarget, onTarget, name);
+            AssertCoherentCounters(fasta, settings);
+            AssertEntrapmentPairs(settings, expectedOnTarget);
+            TestContext.WriteLine(@"{0}: {1} targets, {2} with entrapment, {3} on target proteins", name, n, n - result.EntrapmentNotSelected, onTarget);
+        }
+
+        /// <summary>
+        /// Every target-side header label is unique, and so is every decoy-side one (a decoy
+        /// shares its target's counter by design): an entrapment peptide placed on a target
+        /// protein took a counter of that protein's own.
+        /// </summary>
+        private static void AssertCoherentCounters(string fasta, EntrapmentFastaSettings settings)
+        {
+            var targetSide = new HashSet<string>();
+            var decoySide = new HashSet<string>();
+            foreach (string header in ReadLfLines(fasta).Where(line => line.StartsWith(">")))
+            {
+                foreach (string label in header.Substring(1).Split(';'))
+                {
+                    Assert.IsTrue(LibraryContract.PEPTIDE_SUFFIX.IsMatch(label), label);
+                    var side = label.StartsWith(settings.DecoyPrefix) ? decoySide : targetSide;
+                    Assert.IsTrue(side.Add(label), @"Duplicate header label: " + label);
+                }
+            }
+        }
+
+        /// <summary>
+        /// The in-process route: the pairing marks both halves of every entrapment pair, and the
+        /// decoy of an entrapment peptide on a target protein carries that protein's label, prefixed.
+        /// </summary>
+        private static void AssertEntrapmentPairs(EntrapmentFastaSettings settings, int expectedOnTarget)
+        {
+            var peptides = LibraryPeptides.Build(settings, TextWriter.Null);
+            var ordered = peptides.Peptides.OrderBy(p => p, StringComparer.Ordinal).ToList();
+            var precursors = ordered.Select((sequence, i) => new DecoyPairPlanner.Precursor(i + 1, sequence, 2, string.Empty)).ToList();
+            var rows = DecoyPairPlanner.Plan(precursors, peptides.Pairing, out _);
+            var entrapment = rows.Where(r => r.IsEntrapment).ToList();
+            Assert.IsTrue(entrapment.Count > 0);
+            Assert.AreEqual(entrapment.Count(r => r.IsDecoy), entrapment.Count(r => !r.IsDecoy));
+            int onTarget = 0;
+            foreach (var row in entrapment.Where(r => r.IsDecoy))
+            {
+                Assert.IsTrue(row.TargetRefSpectraId.HasValue);
+                string targetProteins = peptides.PeptideToProteins[ordered[row.TargetRefSpectraId.Value - 1]];
+                string decoyProteins = peptides.PeptideToProteins[ordered[row.RefSpectraId - 1]];
+                if (targetProteins.Contains(settings.EntrapmentSuffix))
+                    continue;
+                onTarget++;
+                // A decoy generated twice carries both records' proteins.
+                CollectionAssert.Contains(decoyProteins.Split(';'), settings.DecoyPrefix + targetProteins, decoyProteins);
+            }
+            Assert.IsTrue(onTarget > 0 && onTarget <= expectedOnTarget, string.Format(@"{0} of {1} on target proteins", onTarget, expectedOnTarget));
+        }
+
         private static EntrapmentFastaResult Build(string arguments, string targets, string foreign, string outputFolder)
+        {
+            return new EntrapmentFastaBuilder(BuildSettings(arguments, targets, foreign, outputFolder)).Run();
+        }
+
+        private static EntrapmentFastaSettings BuildSettings(string arguments, string targets, string foreign, string outputFolder)
         {
             var args = new List<string>
             {
@@ -301,8 +443,7 @@ namespace pwiz.CarafeSharp.Test
             };
             // Substituted after splitting: the test folder's path can contain spaces.
             args.AddRange(arguments.Split(' ').Select(arg => arg == FOREIGN_PLACEHOLDER ? foreign : arg));
-            var settings = CarafeCommandLine.Parse(args).BuildSettings;
-            return new EntrapmentFastaBuilder(settings).Run();
+            return CarafeCommandLine.Parse(args).BuildSettings;
         }
 
         /// <summary>NoCut takes each record whole, so its output can be read in full.</summary>

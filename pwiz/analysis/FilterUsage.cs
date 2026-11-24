@@ -60,8 +60,9 @@ internal static class FilterUsageFormatter
     /// </summary>
     internal static string FormatSingle(IEnumerable<FilterUsage> filters, string filterName)
     {
+        var filterArray = filters.ToArray();
         var sb = new StringBuilder();
-        foreach (var filter in filters)
+        foreach (var filter in filterArray)
         {
             if (string.Equals(filter.Name, filterName, StringComparison.OrdinalIgnoreCase))
                 return sb.Append(filter.Name).Append(' ').Append(filter.Arguments).Append('\n')
@@ -69,7 +70,7 @@ internal static class FilterUsageFormatter
         }
 
         sb.Append("Invalid filter name: ").Append(filterName).Append("\n\n").Append("Supported filters are:\n");
-        foreach (var filter in filters)
+        foreach (var filter in filterArray)
             sb.Append(filter.Name).Append('\n');
         return sb.ToString();
     }

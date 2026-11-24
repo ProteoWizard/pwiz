@@ -209,7 +209,7 @@ namespace pwiz.Osprey
         /// training library, into a folder of their own, writing each run's training export. Not
         /// the one command's analysis, whose result was not searched with tuned models, so its
         /// library build is off; and what the user asked of the run's result (FDRBench input,
-        /// diagnostics) is the output's search's.
+        /// diagnostics, the experiment-level FDR it reports at) is the output's search's.
         /// </summary>
         private static OspreyConfig TrainingSearchConfig(OspreyConfig config)
         {
@@ -221,6 +221,10 @@ namespace pwiz.Osprey
             search.OutputBlib = Path.Combine(trainingDirectory, TRAINING_OUTPUT_FILE_NAME);
             search.OutputDir = trainingDirectory;
             search.OutputFdrBench = null;
+            // The output's reporting threshold is the output's too: under the transfer second pass the
+            // reported set is also what reconciliation re-scores, so --experiment-fdr would otherwise
+            // change the tuning runs' search, their exports and the tuned models.
+            search.ExperimentFdr = new OspreyConfig().ExperimentFdr;
             search.ModelDiagnostics = false;
             search.LibraryBuild = new LibraryBuildConfig();
             search.TrainingExport = new TrainingExportConfig
@@ -600,6 +604,7 @@ namespace pwiz.Osprey
                 MinMz = library.MinPrecursorMz,
                 MaxMz = library.MaxPrecursorMz,
                 EntrapmentRatio = build.EntrapmentRatio ?? 1.0,
+                EntrapmentInTargetsRatio = entrapment ? build.EntrapmentInTargetsRatio ?? 0.0 : 0.0,
                 EntrapmentSourceFasta = entrapment ? build.EntrapmentFastaPath : null,
                 DecoyPrefix = library.DecoyPrefix,
                 Digest = library.Digest,
@@ -645,6 +650,7 @@ namespace pwiz.Osprey
             protected override void OnDone(PipelineTask task, TaskContext ctx, TimeSpan elapsed)
             {
                 Program.LogInfo(LogTag.TASK, @"{0}:done ({1:F1}s)", task.Name, elapsed.TotalSeconds);
+                DiskStamper.SampleCurrent();
                 TaskBudget.TaskDone(task.Name, ctx.ExitCode);
             }
         }

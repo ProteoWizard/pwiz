@@ -1,0 +1,11 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Files tree window icon traced from the native pixels: a plain open folder in one brown,
+       opaque 2-unit outlines with a tabbed back panel tinted at 10% and a front flap leaning
+       right tinted at 25%. No arrow, no shadow, as in the original. -->
+  <!-- Back panel -->
+  <Path Data="M 0,4 L 12,4 L 14,6 L 28,6 L 28,26 L 0,26 Z" Fill="#996F00" Opacity="0.1"/>
+  <Path Data="M 1,25 L 1,5 L 11.5,5 L 13.5,7 L 27,7 L 27,11" Stroke="#996F00" StrokeThickness="2" StrokeLineJoin="Miter"/>
+  <!-- Front flap -->
+  <Path Data="M 16,11 L 31,11 L 27,25 L 1,25 L 3,13 L 15,13 Z" Fill="#996F00" Opacity="0.25"/>
+  <Path Data="M 16,11 L 31,11 L 27,25 L 1,25 L 3,13 L 15,13 Z" Stroke="#996F00" StrokeThickness="2" StrokeLineJoin="Miter"/>
+</Canvas>

@@ -20,6 +20,7 @@
 
 using System.Drawing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Controls;
 using pwiz.Common.GUI;
 using pwiz.SkylineTestUtil;
 
@@ -37,6 +38,13 @@ namespace CommonTest
         private const int WIDTH = 120;
         private const int HEIGHT = 90;
         private static readonly Color BORDER_COLOR = Color.FromArgb(0x70, 0x70, 0x70);
+        private static readonly Color HIGH_DPI_BORDER_COLOR = Color.FromArgb(0xB7, 0xB7, 0xB7);
+
+        /// <summary>
+        /// The color of a repainted window frame. In a DPI-aware process above 96 DPI the frame
+        /// is thicker and lighter, as Windows draws it; a one-pixel top line keeps the 96-DPI color.
+        /// </summary>
+        private static Color FrameColor => DpiScale.Factor(null) > 1 ? HIGH_DPI_BORDER_COLOR : BORDER_COLOR;
         private static readonly Color INTERIOR = Color.FromArgb(0xC8, 0xDC, 0xF0);
         private static readonly Color DIRT_EDGE = Color.FromArgb(0x10, 0x10, 0x10);
         private static readonly Color DIRT_CORNER = Color.FromArgb(0xE0, 0x20, 0x20);
@@ -99,7 +107,7 @@ namespace CommonTest
             using var oneColor = new Bitmap(WIDTH, HEIGHT);
             Fill(oneColor, INTERIOR, new Rectangle(0, 0, WIDTH, HEIGHT));
             AssertEx.IsTrue(ReferenceEquals(oneColor, oneColor.CleanupBorder()));
-            AssertEx.AreEqual(ScreenshotBorder.IsWindows11() ? INTERIOR : BORDER_COLOR, oneColor.GetPixel(0, 0));
+            AssertEx.AreEqual(ScreenshotBorder.IsWindows11() ? INTERIOR : FrameColor, oneColor.GetPixel(0, 0));
 
             using var graph = new Bitmap(WIDTH, HEIGHT);
             Fill(graph, Color.White, new Rectangle(0, 0, WIDTH, HEIGHT));
@@ -143,7 +151,7 @@ namespace CommonTest
                 var pixel = cleaned.GetPixel(WIDTH / 2, y);
                 AssertEx.AreNotEqual(DIRT_EDGE, pixel, @"the edge still shows the screen's frame color at y = " + y);
                 if (!ScreenshotBorder.IsWindows11())
-                    AssertEx.AreEqual(BORDER_COLOR, pixel);
+                    AssertEx.AreEqual(FrameColor, pixel);
             }
         }
 
@@ -152,7 +160,7 @@ namespace CommonTest
         {
             var corner = cleaned.GetPixel(0, 0);
             AssertEx.AreNotEqual(DIRT_CORNER, corner, @"the corner still shows what lay behind the window");
-            var expected = ScreenshotBorder.IsWindows11() ? Color.White : BORDER_COLOR;
+            var expected = ScreenshotBorder.IsWindows11() ? Color.White : FrameColor;
             AssertEx.AreEqual(expected.ToArgb(), corner.ToArgb());
         }
     }

@@ -41,6 +41,9 @@ namespace pwiz.Skyline.Controls
             {
                 listView.Items.Add(MakeListViewItem(findResult));
             }
+            // ListView column widths are not scaled by the form's font autoscale
+            colHdrLocation.Width = DpiUtil.Scale(this, colHdrLocation.Width);
+            colHdrType.Width = DpiUtil.Scale(this, colHdrType.Width);
             // Width=-1 means auto-adjust to the length of the longest item
             colHdrDisplayText.Width = -1;
         }
@@ -174,14 +177,17 @@ namespace pwiz.Skyline.Controls
             if (e.ColumnIndex == colHdrDisplayText.Index)
             {
                 var findResult = (FindResult) e.Item.Tag;
-                var textRendererHelper = new TextRendererHelper
-                                             {
-                                                 ForeColor = foreColor,
-                                                 BackColor = backColor,
-                                                 Font = e.Item.Font,
-                                                 HighlightFont = new Font(e.Item.Font, FontStyle.Bold),
-                                             };
-                textRendererHelper.DrawHighlightedText(e.Graphics, e.SubItem.Bounds, findResult.FindMatch);
+                using (var highlightFont = new Font(e.Item.Font, FontStyle.Bold))
+                {
+                    var textRendererHelper = new TextRendererHelper
+                                                 {
+                                                     ForeColor = foreColor,
+                                                     BackColor = backColor,
+                                                     Font = e.Item.Font,
+                                                     HighlightFont = highlightFont,
+                                                 };
+                    textRendererHelper.DrawHighlightedText(e.Graphics, e.SubItem.Bounds, findResult.FindMatch);
+                }
             }
             else
             {

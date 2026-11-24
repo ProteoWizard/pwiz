@@ -185,6 +185,7 @@ public sealed class HardklorReader : BuildParser
         }
 
         var columnIndexByName = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalse (harmless, and some ReSharper versions complain without it)
         if (rawHeader is not null)
         {
             var headerCols = SplitTabs(rawHeader);
@@ -214,6 +215,7 @@ public sealed class HardklorReader : BuildParser
                 activeColumns.Add((idx, kv.Value));
         }
 
+        // ReSharper disable once HeuristicUnreachableCode (HasHeader is const true - why?)
         var lineNumber = HasHeader ? 1 : 0;
         string? line;
         while ((line = reader.ReadLine()) != null)

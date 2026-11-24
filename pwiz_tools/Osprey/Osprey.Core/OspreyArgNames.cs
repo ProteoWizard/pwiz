@@ -43,6 +43,10 @@ namespace pwiz.Osprey.Core
         public const string EXPERIMENT_FDR = @"experiment-fdr";
         public const string RECONCILIATION_COMPACTION_FDR = @"reconciliation-compaction-fdr";
         public const string PROTEIN_FDR = @"protein-fdr";
+        public const string PROTEIN_BOOST = @"protein-boost";
+        public const string VALUE_ON = @"on";
+        public const string VALUE_OFF = @"off";
+        public const string FEATURE_SET = @"feature-set";
         public const string DECOY_PAIRING_MANIFEST = @"decoy-pairing-manifest";
         public const string TASK = @"task";
         public const string MODEL_DIAGNOSTICS = @"model-diagnostics";
@@ -65,6 +69,8 @@ namespace pwiz.Osprey.Core
         public const string INSTALL_CUDA_RUNTIME = @"install-cuda-runtime";
         public const string ENTRAPMENT = @"entrapment";
         public const string ENTRAPMENT_FASTA = @"entrapment-fasta";
+        public const string ENTRAPMENT_IN_TARGETS = @"entrapment-in-targets";
+        public const string STRIP_ENTRAPMENT = @"strip-entrapment";
 
         /// <summary>The argument as it is typed: <c>--name</c>.</summary>
         public static string Text(string name)
