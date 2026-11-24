@@ -83,6 +83,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public void AddPoint(int chromatogramIndex, float intensity, float? massError, BlockWriter writer)
         {
+            AssumeNotReleased();
             if (_ownsTimes && Intensities.Count >= Times.Count)
                 return;
             if (MassErrors != null)
@@ -99,6 +100,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public void FillZeroes(int chromatogramIndex, int count, BlockWriter writer)
         {
+            AssumeNotReleased();
             if (_ownsTimes)
                 return;
             if (MassErrors != null)
@@ -111,7 +113,18 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public void AddTime(int chromatogramIndex, float time, BlockWriter writer)
         {
+            AssumeNotReleased();
             Times.Add(chromatogramIndex, time, writer);
+        }
+
+        /// <summary>
+        /// Data added after <see cref="ReleaseChromatogram"/> would be lost (the release has already
+        /// copied the chromatogram out and dropped its lists), so fail loudly rather than with a
+        /// NullReferenceException or silently missing points.
+        /// </summary>
+        private void AssumeNotReleased()
+        {
+            Assume.IsTrue(Intensities != null, @"Chromatogram data added after the chromatogram was released");
         }
 
         public int Count { get { return Intensities.Count; } }
@@ -494,8 +507,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public void WriteBlock(int chromatogramIndex, IBlockedList blockedList)
         {
-            var fileStream = _chromGroups.GetFileStream(chromatogramIndex);
-            blockedList.WriteBlock(fileStream);
+            _chromGroups.WriteBlock(chromatogramIndex, blockedList);
         }
     }
 
@@ -623,12 +635,18 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Return (or possibly create) a spill file stream for the given group.
+        /// Write a finished block for the given chromatogram to its group's spill file. The extraction
+        /// thread writes while the reader thread releases (reads) spill files, so writes and release
+        /// reads of a spill file are serialized on that spill file.
         /// </summary>
-        public Stream GetFileStream(int chromIndex)
+        public void WriteBlock(int chromIndex, IBlockedList blockedList)
         {
             int groupIndex = GetGroupIndex(chromIndex);
-            return _spillFiles[groupIndex].CreateFileStream(_cachePath, groupIndex);
+            var spillFile = _spillFiles[groupIndex];
+            lock (spillFile)
+            {
+                blockedList.WriteBlock(spillFile.CreateFileStream(_cachePath, groupIndex));
+            }
         }
 
         /// <summary>
@@ -642,8 +660,13 @@ namespace pwiz.Skyline.Model.Results
             int groupIndex = GetGroupIndex(chromatogramIndex);
             var spillFile = _spillFiles[groupIndex];
 
-            // Not done reading yet.
-            if (retentionTime < spillFile.MaxTime || (collector != null && !collector.IsSetTimes))
+            // Not done reading yet. Extraction must be strictly past the spill file's MaxTime:
+            // several spectra can share one retention time (e.g. the spectra demultiplexed from a
+            // single overlapping-window DIA scan), so reaching MaxTime does not mean the last
+            // spectrum at MaxTime has been added. Releasing then would read the spill file while
+            // the extractor is still appending to it. float.MaxValue marks extraction complete.
+            if ((retentionTime < float.MaxValue && retentionTime <= spillFile.MaxTime) ||
+                (collector != null && !collector.IsSetTimes))
             {
                 timeIntensities = null;
                 return -1;
@@ -656,35 +679,40 @@ namespace pwiz.Skyline.Model.Results
                 return 0;
             }
 
-            if (ReferenceEquals(_cachedSpillFile, spillFile))
+            // Hold the spill file while snapshotting it and rebuilding this chromatogram, so a block
+            // the extraction thread is writing can never land between the two.
+            lock (spillFile)
             {
-                if (spillFile.Stream != null)
+                if (ReferenceEquals(_cachedSpillFile, spillFile))
                 {
-                    if (_bytesFromSpillFile == null || spillFile.Stream.Length != _bytesFromSpillFile.Length)
+                    if (spillFile.Stream != null)
                     {
-                        // Need to reread spill file if more bytes were written since the time it was cached.
-                        _cachedSpillFile = null;
+                        if (_bytesFromSpillFile == null || spillFile.Stream.Length != _bytesFromSpillFile.Length)
+                        {
+                            // Need to reread spill file if more bytes were written since the time it was cached.
+                            _cachedSpillFile = null;
+                        }
                     }
                 }
-            }
 
-            if (!ReferenceEquals(_cachedSpillFile, spillFile))
-            {
-                _cachedSpillFile = spillFile;
-                _bytesFromSpillFile = null;
-                var fileStream = spillFile.Stream;
-                if (fileStream != null)
+                if (!ReferenceEquals(_cachedSpillFile, spillFile))
                 {
-                    fileStream.Seek(0, SeekOrigin.Begin);
-                    _bytesFromSpillFile = new byte[fileStream.Length];
-                    int bytesRead = fileStream.Read(_bytesFromSpillFile, 0, _bytesFromSpillFile.Length);
-                    Assume.IsTrue(bytesRead == _bytesFromSpillFile.Length);
-                    // TODO: Would be nice to have something that releases spill files progressively, as they are
-                    //       no longer needed.
-                    // spillFile.CloseStream();
+                    _cachedSpillFile = spillFile;
+                    _bytesFromSpillFile = null;
+                    var fileStream = spillFile.Stream;
+                    if (fileStream != null)
+                    {
+                        fileStream.Seek(0, SeekOrigin.Begin);
+                        _bytesFromSpillFile = new byte[fileStream.Length];
+                        int bytesRead = fileStream.Read(_bytesFromSpillFile, 0, _bytesFromSpillFile.Length);
+                        Assume.IsTrue(bytesRead == _bytesFromSpillFile.Length);
+                        // TODO: Would be nice to have something that releases spill files progressively, as they are
+                        //       no longer needed.
+                        // spillFile.CloseStream();
+                    }
                 }
+                collector.ReleaseChromatogram(_bytesFromSpillFile, out timeIntensities);
             }
-            collector.ReleaseChromatogram(_bytesFromSpillFile, out timeIntensities);
                 
             return collector.StatusId;
         }
