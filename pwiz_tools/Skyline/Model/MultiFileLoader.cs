@@ -382,15 +382,19 @@ namespace pwiz.Skyline.Model
 
         public void Complete(ChromatogramCache cache, IProgressStatus status)
         {
-            var completedCount = Interlocked.Increment(ref _completedCount);
             var completion = new Completion(cache, status);
             if (_completionWorker == null)
                 _complete(new SingletonList<Completion>(completion));
             else
             {
+                // Queue before counting. DoneAdding queues the end marker the commit thread stops
+                // at, so the thread that counts the last file must know every other completion is
+                // already ahead of it. Counting first let a thread that counted earlier queue its
+                // completion behind the marker, where it was never consumed: the batch was never
+                // committed and the import waited forever for the document to load.
                 _completionWorker.Add(completion);
 
-                if (completedCount == _loadingCount)
+                if (Interlocked.Increment(ref _completedCount) == _loadingCount)
                     _completionWorker.DoneAdding();
             }
         }
