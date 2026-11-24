@@ -9,8 +9,11 @@ public sealed class BinaryDataArray : ParamContainer
     /// <summary>Data-processing step that produced this array.</summary>
     public DataProcessing? DataProcessing { get; set; }
 
-    /// <summary>The binary payload as doubles.</summary>
-    public List<double> Data { get; } = new();
+    /// <summary>
+    /// The binary payload as doubles. A consumer that keeps the values can take the storage with
+    /// <see cref="DetachableList{T}.Detach"/> instead of copying it.
+    /// </summary>
+    public DetachableList<double> Data { get; } = new();
 
     /// <inheritdoc/>
     public override bool IsEmpty => DataProcessing is null && Data.Count == 0 && base.IsEmpty;
