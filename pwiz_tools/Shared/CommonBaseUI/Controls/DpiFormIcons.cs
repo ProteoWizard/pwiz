@@ -129,6 +129,87 @@ namespace pwiz.Common.Controls
         }
 
         /// <summary>
+        /// One square image from a multi-size icon at a pixel size: its frame of that size, or
+        /// the smallest larger one resampled down, or the largest resampled up when none is
+        /// larger. This is how DigitalRune draws a form's icon on its dock tab, so an image list
+        /// entry made with it matches the tab. The caller owns the result.
+        /// </summary>
+        public static Bitmap GetFrameImage(Icon icon, int size)
+        {
+            byte[] data;
+            using (var stream = new MemoryStream())
+            {
+                icon.Save(stream);
+                data = stream.ToArray();
+            }
+            var frames = ReadFrames(data);
+            var frameSize = frames == null || frames.Count == 0
+                ? icon.Width
+                : (frames.Where(f => f.Width >= size).OrderBy(f => f.Width).FirstOrDefault()
+                   ?? frames.OrderByDescending(f => f.Width).First()).Width;
+            using (var frameIcon = new Icon(icon, frameSize, frameSize))
+            using (var frameBitmap = frameIcon.ToBitmap())
+            {
+                return frameBitmap.Width == size && frameBitmap.Height == size
+                    ? new Bitmap(frameBitmap)
+                    : DpiScale.Resample(frameBitmap, new Size(size, size));
+            }
+        }
+
+        /// <summary>
+        /// A form icon made from a small bitmap, for a form whose icon should match the menu or
+        /// toolbar image that opens it: the bitmap itself at its own size (with the transparent
+        /// key applied), and the 32 px Alt-Tab size plus the display's small and large icon
+        /// sizes from the loader (an IconBuilder drawing), or resampled from the bitmap where
+        /// the loader returns none. Cached by source name and shared, so callers must not
+        /// dispose the result.
+        /// </summary>
+        public static Icon CreateIcon(Control control, Bitmap native, Color? transparentKey,
+            string sourceName, Func<int, Image> loadFrame)
+        {
+            var sizes = new[] { native.Width, 32, SystemInformation.SmallIconSize.Width, SystemInformation.IconSize.Width }
+                .Distinct().OrderBy(size => size).ToArray();
+            var key = sourceName + @":" + string.Join(@",", sizes);
+            lock (LOCK)
+            {
+                if (_icons.TryGetValue(key, out var icon))
+                    return icon;
+                var frames = new List<IconFrame>();
+                using (var keyed = new Bitmap(native))
+                {
+                    if (transparentKey.HasValue)
+                        keyed.MakeTransparent(transparentKey.Value);
+                    foreach (var size in sizes)
+                    {
+                        if (size == keyed.Width)
+                        {
+                            using (var copy = new Bitmap(keyed.Width, keyed.Height, PixelFormat.Format32bppArgb))
+                            {
+                                using (var g = Graphics.FromImage(copy))
+                                    g.DrawImage(keyed, 0, 0, keyed.Width, keyed.Height);
+                                frames.Add(CreateFrame(copy));
+                            }
+                            continue;
+                        }
+                        using (var loaded = loadFrame?.Invoke(size))
+                        using (var bitmap = loaded != null
+                                   ? new Bitmap(loaded, size, size)
+                                   : DpiScale.Resample(keyed, new Size(size, size)))
+                        {
+                            frames.Add(CreateFrame(bitmap));
+                        }
+                    }
+                }
+                using (var stream = new MemoryStream(WriteIcon(frames)))
+                {
+                    icon = new Icon(stream);
+                }
+                _icons.Add(key, icon);
+                return icon;
+            }
+        }
+
+        /// <summary>
         /// The instance Form.Icon returns for every form without an icon of its own.
         /// </summary>
         private static Icon GetDefaultFormIcon()
