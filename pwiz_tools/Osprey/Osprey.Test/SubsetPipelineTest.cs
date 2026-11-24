@@ -555,7 +555,8 @@ namespace pwiz.Osprey.Test
         /// The feature set under which an entrapment precursor passes on the library-decoy subset, for
         /// the legs that check how entrapment is reported. A few hundred precursors at 1% FDR pass
         /// zero or one entrapment precursor; under the default set none passes, under the core set one
-        /// does, so these legs pin the set rather than depend on that count.
+        /// does, with the MS2 m/z offset curve as with the mean, so these legs pin the set rather than
+        /// depend on that count.
         /// </summary>
         private static string[] EntrapmentPassesArgs()
         {

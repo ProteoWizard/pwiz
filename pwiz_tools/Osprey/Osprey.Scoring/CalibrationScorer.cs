@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
@@ -61,6 +62,12 @@ namespace pwiz.Osprey.Scoring
         public double QValue { get; set; }
         /// <summary>MS2 fragment mass errors at apex spectrum (in config units).</summary>
         public double[] Ms2MassErrors { get; set; }
+        /// <summary>
+        /// The top fragments and every peak around each in the apex spectrum, for the
+        /// unit-resolution MS2 m/z calibration (<see cref="Ms2OffsetCurve"/>).
+        /// Null for ppm data (unless OSPREY_MS2_CAL_CURVE_PPM) and under OSPREY_MS2_CAL_MEAN.
+        /// </summary>
+        public Ms2FragmentPeaks[] Ms2FragmentPeaks { get; set; }
         /// <summary>
         /// MS1 precursor mass error at apex (M+0 observed - library precursor m/z, in
         /// config fragment tolerance units). Null if no MS1 scan found near apex or the
