@@ -380,7 +380,7 @@ public abstract class SpectrumListBase : ISpectrumList
     /// The permutation that sorting <paramref name="keys"/> would apply, without applying it.
     /// Ties break on the original index, which is what makes the sort stable.
     /// </summary>
-    private static int[] StableSortOrder(DetachableCollection<double> keys)
+    private static int[] StableSortOrder(DetachableList<double> keys)
     {
         var order = new int[keys.Count];
         for (int i = 0; i < order.Length; i++)

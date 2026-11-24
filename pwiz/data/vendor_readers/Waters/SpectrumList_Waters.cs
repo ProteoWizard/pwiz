@@ -638,7 +638,7 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
             // and regrowth saves large-object-heap allocations and the full GCs they cause.
             // For non-SONAR IMS we collect drift time per peak. For SONAR we collect the
             // quadrupole low/high bounds per peak (two arrays, after m/z and intensity).
-            DetachableCollection<double>? driftList = null, qLowList = null, qHighList = null;
+            DetachableList<double>? driftList = null, qLowList = null, qHighList = null;
             int capacity = GetCombinedCapacityHint(ie.Function);
             var mzList = AddBinaryDataArray(spec, CVID.MS_m_z_array, CVID.MS_m_z, capacity);
             var intList = AddBinaryDataArray(spec, CVID.MS_intensity_array, CVID.MS_number_of_detector_counts, capacity);
@@ -733,7 +733,7 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
     /// <see cref="Spectrum.SetMZIntensityArrays"/> tags its arrays, and returns its data buffer
     /// pre-sized to <paramref name="capacity"/>.
     /// </summary>
-    private static DetachableCollection<double> AddBinaryDataArray(Spectrum spec, CVID arrayType, CVID units, int capacity)
+    private static DetachableList<double> AddBinaryDataArray(Spectrum spec, CVID arrayType, CVID units, int capacity)
     {
         var array = new BinaryDataArray();
         array.Set(arrayType, "", units);

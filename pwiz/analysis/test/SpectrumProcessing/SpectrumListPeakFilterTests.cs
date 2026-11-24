@@ -150,8 +150,8 @@ public class SpectrumListPeakFilterTests
     {
         var expectedMzArr = ParseDoubles(expectedMz);
         var expectedIntArr = ParseDoubles(expectedIntensity);
-        var actualMz = actual.GetMZArray()?.Data ?? new DetachableCollection<double>();
-        var actualInt = actual.GetIntensityArray()?.Data ?? new DetachableCollection<double>();
+        var actualMz = actual.GetMZArray()?.Data ?? new DetachableList<double>();
+        var actualInt = actual.GetIntensityArray()?.Data ?? new DetachableList<double>();
 
         Assert.AreEqual(expectedMzArr.Length, actualMz.Count, $"[{label}] m/z length");
         Assert.AreEqual(expectedIntArr.Length, actualInt.Count, $"[{label}] intensity length");

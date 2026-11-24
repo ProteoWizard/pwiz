@@ -105,13 +105,13 @@ public class MSDataSmokeTest
         Assert.AreEqual(0, mzArray.Data.Detach(out count).Length);
         Assert.AreEqual(0, count);
 
-        // The rest of the DetachableCollection surface the readers and filters use
-        var data = new DetachableCollection<double>();
+        // The rest of the DetachableList surface the readers and filters use
+        var data = new DetachableList<double>();
         data.AddRange(new[] { 1.0, 2.0 });
         data.AddRange(new List<double> { 3.0 });
         data.AddRange(Enumerable.Range(4, 2).Select(i => (double)i));
         CollectionAssert.AreEqual(new[] { 1.0, 2.0, 3.0, 4.0, 5.0 }, data.ToArray());
-        var attached = new DetachableCollection<double>();
+        var attached = new DetachableList<double>();
         var storage = new[] { 7.0, 8.0, 0.0 };
         attached.Attach(storage, 2);
         attached.AddRange(new System.Collections.ObjectModel.ReadOnlyCollection<double>(new[] { 9.0 }));
@@ -119,7 +119,7 @@ public class MSDataSmokeTest
         Assert.AreSame(storage, attached.Detach(out count), "Attach takes the array as storage, not a copy");
         data.Insert(0, 0.5);
         data.RemoveAt(3);
-        CollectionAssert.AreEqual(new[] { 0.5, 1.0, 2.0, 4.0, 5.0 }, data);
+        CollectionAssert.AreEqual(new[] { 0.5, 1.0, 2.0, 4.0, 5.0 }, data.ToArray());
         Assert.AreEqual(3, data.IndexOf(4.0));
         Assert.IsTrue(data.Remove(0.5));
         Assert.IsFalse(data.Contains(0.5));

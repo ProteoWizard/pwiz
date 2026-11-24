@@ -955,7 +955,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
         // only the summary values below are needed, so the points are not kept at all.
         // With binary data, all three arrays are always emitted - cpp does so even for empty
         // frames so consumers see a consistent structure (defaultArrayLength=0, three empty arrays).
-        DetachableCollection<double>? mzData = null, intensityData = null, driftTimeData = null;
+        DetachableList<double>? mzData = null, intensityData = null, driftTimeData = null;
         if (getBinaryData)
         {
             int capacity = GetImsCombinedCapacityHint(msLevel);
@@ -1072,7 +1072,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
     /// <see cref="Spectrum.SetMZIntensityArrays"/> tags its arrays, and returns its data buffer
     /// pre-sized to <paramref name="capacity"/>.
     /// </summary>
-    private static DetachableCollection<double> AddBinaryDataArray(Spectrum spec, CVID arrayType, CVID units, int capacity)
+    private static DetachableList<double> AddBinaryDataArray(Spectrum spec, CVID arrayType, CVID units, int capacity)
     {
         var array = new BinaryDataArray();
         array.Set(arrayType, "", units);

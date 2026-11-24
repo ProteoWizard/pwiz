@@ -12,7 +12,7 @@ namespace Pwiz.Data.MsData.Spectra;
 /// but never gives up its storage, so a consumer that wants an array must copy it.
 /// <see cref="Detach"/> hands the storage over instead, together with the count of values in use.
 /// </remarks>
-public sealed class DetachableCollection<T> : IList<T>, IReadOnlyList<T>, ICollection
+public sealed class DetachableList<T> : IList<T>, IReadOnlyList<T>
 {
     private const int DefaultCapacity = 4;
 
@@ -64,12 +64,6 @@ public sealed class DetachableCollection<T> : IList<T>, IReadOnlyList<T>, IColle
 
     bool ICollection<T>.IsReadOnly => false;
 
-    bool ICollection.IsSynchronized => false;
-
-    object ICollection.SyncRoot => this;
-
-    void ICollection.CopyTo(Array array, int index) => Array.Copy(_items, 0, array, index, _count);
-
     /// <summary>The values in use, for reading or writing in place.</summary>
     /// <remarks>Invalidated by anything that grows the storage.</remarks>
     public Span<T> AsSpan() => _items.AsSpan(0, _count);
@@ -77,9 +71,28 @@ public sealed class DetachableCollection<T> : IList<T>, IReadOnlyList<T>, IColle
     /// <summary>Appends <paramref name="item"/>.</summary>
     public void Add(T item)
     {
-        if (_count == _items.Length)
-            Grow(_count + 1);
-        _items[_count++] = item;
+        // Same shape as List<T>.Add: locals and one unsigned compare let the JIT drop the
+        // bounds check and inline this into per-point loops; the resize stays out of line
+        var items = _items;
+        int count = _count;
+        if ((uint)count < (uint)items.Length)
+        {
+            _count = count + 1;
+            items[count] = item;
+        }
+        else
+        {
+            AddWithResize(item);
+        }
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private void AddWithResize(T item)
+    {
+        int count = _count;
+        Grow(count + 1);
+        _count = count + 1;
+        _items[count] = item;
     }
 
     /// <summary>Appends <paramref name="items"/>.</summary>
@@ -91,7 +104,7 @@ public sealed class DetachableCollection<T> : IList<T>, IReadOnlyList<T>, IColle
             case T[] array:
                 AddSpan(array);
                 break;
-            case DetachableCollection<T> buffer:
+            case DetachableList<T> buffer:
                 AddSpan(buffer.AsSpan());
                 break;
             case List<T> list:
@@ -236,13 +249,13 @@ public sealed class DetachableCollection<T> : IList<T>, IReadOnlyList<T>, IColle
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-    /// <summary>Enumerator over a <see cref="DetachableCollection{T}"/>.</summary>
+    /// <summary>Enumerator over a <see cref="DetachableList{T}"/>.</summary>
     public struct Enumerator : IEnumerator<T>
     {
-        private readonly DetachableCollection<T> _buffer;
+        private readonly DetachableList<T> _buffer;
         private int _index;
 
-        internal Enumerator(DetachableCollection<T> buffer)
+        internal Enumerator(DetachableList<T> buffer)
         {
             _buffer = buffer;
             _index = -1;

@@ -61,7 +61,7 @@ public class TruncationAndPredictionTests
             // well below the lossy-encoding regime this filter is used in.
             for (int i = 0; i < mz.Length; i++)
                 Assert.AreEqual(mz[i], got[i], 1e-12, $"m/z[{i}] outside round-trip tolerance");
-            CollectionAssert.AreEqual(inten, s.GetIntensityArray()!.Data, "intensity untouched");
+            CollectionAssert.AreEqual(inten, s.GetIntensityArray()!.Data.ToArray(), "intensity untouched");
         }
         // ReSharper disable once EmptyGeneralCatchClause
         finally { try { File.Delete(path); } catch { } }
@@ -88,7 +88,7 @@ public class TruncationAndPredictionTests
             for (int i = 0; i < mz.Length; i++)
                 Assert.AreEqual(mz[i], got[i], 1e-12,
                     $"m/z[{i}] outside linear-prediction round-trip tolerance");
-            CollectionAssert.AreEqual(inten, s.GetIntensityArray()!.Data,
+            CollectionAssert.AreEqual(inten, s.GetIntensityArray()!.Data.ToArray(),
                 "intensity untouched (no prediction override)");
         }
         // ReSharper disable once EmptyGeneralCatchClause
@@ -135,7 +135,7 @@ public class TruncationAndPredictionTests
         try
         {
             var s = ReadOneSpectrum(path);
-            CollectionAssert.AreEqual(new[] { 12.0, 18.0, 24.0 }, s.GetIntensityArray()!.Data,
+            CollectionAssert.AreEqual(new[] { 12.0, 18.0, 24.0 }, s.GetIntensityArray()!.Data.ToArray(),
                 "intensities should round to nearest integer (12.4→12, 17.6→18, 23.5→24)");
         }
         // ReSharper disable once EmptyGeneralCatchClause

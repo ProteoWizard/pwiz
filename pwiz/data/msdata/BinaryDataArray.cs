@@ -11,9 +11,9 @@ public sealed class BinaryDataArray : ParamContainer
 
     /// <summary>
     /// The binary payload as doubles. A consumer that keeps the values can take the storage with
-    /// <see cref="DetachableCollection{T}.Detach"/> instead of copying it.
+    /// <see cref="DetachableList{T}.Detach"/> instead of copying it.
     /// </summary>
-    public DetachableCollection<double> Data { get; } = new();
+    public DetachableList<double> Data { get; } = new();
 
     /// <inheritdoc/>
     public override bool IsEmpty => DataProcessing is null && Data.Count == 0 && base.IsEmpty;

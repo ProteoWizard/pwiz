@@ -57,7 +57,7 @@ public sealed class ChromatogramListSavitzkyGolaySmoother : ChromatogramListWrap
     // Quartic 9-point Savitzky-Golay smoother — hardcoded coefficients from cpp's
     // SavitzkyGolaySmoother.hpp:50-53. Edges (first and last 4 samples) are passed through
     // unchanged.
-    private static void Smooth(DetachableCollection<double> data)
+    private static void Smooth(DetachableList<double> data)
     {
         int n = data.Count;
         var smoothed = new double[n];
