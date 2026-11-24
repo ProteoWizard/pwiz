@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.ML;
 
 namespace pwiz.Osprey.FDR
 {
@@ -37,6 +38,13 @@ namespace pwiz.Osprey.FDR
     /// At SEA-AD scale that subset covers most of the file's precursors, so the score pass is OUT
     /// OF FOLD: every row is scored by the one fold model that held its peptide group out, and only
     /// a row whose peptide group no fold trained on gets the fold mean.</para>
+    ///
+    /// <para>A safeguard then checks the model against the run's best single feature, as Percolator
+    /// checks its learned direction against its best initial one: when that feature, used as the
+    /// score, passes more of the run's targets at its precursor q than the model's out-of-fold
+    /// scores do, the run is scored with the feature instead (<see cref="RunFirstPassModel.FallbackFeature"/>).
+    /// On the regression Stellar runs the model passes three times what its best feature does; the
+    /// check matters for a run of a few hundred precursors, whose conservative q passes nothing once one decoy ranks in its top hundred.</para>
     ///
     /// <para>The scores are then calibrated per file (Granholm et al. 2012, the map
     /// <c>CalibrateScoresBetweenFolds</c> applies between folds): the lowest target score passing
@@ -66,6 +74,7 @@ namespace pwiz.Osprey.FDR
         private long _trainRows;
         private long _bestDecoyAnchored;
         private long _excluded;
+        private long _fallbacks;
 
         // How far below 0, in units of the run's own score range, an excluded run's scores are
         // moved: below any calibrated run's scores, so its rows never win an entry another run has.
@@ -239,6 +248,12 @@ namespace pwiz.Osprey.FDR
                 scoreFeatures = nFeatures + 1;
             }
             PercolatorScorer.ScoreRowsWithModel(count, rowAt, model, scoreFeatures, scores, 0, _threads, heldOutFoldByRow);
+            int fallbackFeature = ChooseFallbackFeature(fileName, scores, labels, ids, featureRows, bestScores, nFeatures);
+            if (fallbackFeature != RunFirstPassModel.NO_FALLBACK)
+            {
+                for (int r = 0; r < count; r++)
+                    scores[r] = PercolatorScorer.ResolveFeatureRow(featureRows, (uint)r, bestScores[r], nFeatures)[fallbackFeature];
+            }
             t = Accumulate(ref _scoreTicks, t);
 
             double scoreSeconds = Seconds(t - trainEnd);
@@ -263,7 +278,7 @@ namespace pwiz.Osprey.FDR
                 _passLabel, fileName, Seconds(Stopwatch.GetTimestamp() - fileStart), _threads, count,
                 bestPerPrecursor.Length, entries.Count, trainSeconds, Seconds(columnTicks), scoreSeconds);
             Interlocked.Increment(ref _files);
-            trained = new RunFirstPassModel(model, threshold, denominator, column, columnFloor);
+            trained = new RunFirstPassModel(model, threshold, denominator, column, columnFloor, fallbackFeature);
             return scores;
         }
 
@@ -271,11 +286,56 @@ namespace pwiz.Osprey.FDR
         public void LogTiming(IOspreyLog log, string passLabel, string where)
         {
             log.LogInfo(LogTag.TIMING,
-                @"{0} per-file models ({1}): {2} file(s), {3} training rows; lanes (summed) train {4:F1}s, score {5:F1}s, calibrate {6:F1}s; {7} thread(s) per file; {8} file(s) anchored on the best decoy, {9} file(s) excluded from the experiment competition",
+                @"{0} per-file models ({1}): {2} file(s), {3} training rows; lanes (summed) train {4:F1}s, score {5:F1}s, calibrate {6:F1}s; {7} thread(s) per file; {8} file(s) anchored on the best decoy, {9} file(s) excluded from the experiment competition, {10} file(s) scored by their best single feature",
                 passLabel, where, Interlocked.Read(ref _files), Interlocked.Read(ref _trainRows),
                 Seconds(Interlocked.Read(ref _trainTicks)), Seconds(Interlocked.Read(ref _scoreTicks)),
                 Seconds(Interlocked.Read(ref _calibrateTicks)), _threads, Interlocked.Read(ref _bestDecoyAnchored),
-                Interlocked.Read(ref _excluded));
+                Interlocked.Read(ref _excluded), Interlocked.Read(ref _fallbacks));
+        }
+
+        /// <summary>
+        /// The safeguard on a run's model, as Percolator's on its learned direction: the targets
+        /// passing the run's precursor q at <see cref="PercolatorConfig.TestFdr"/> under the model's
+        /// out-of-fold <paramref name="modelScores"/>, against the most any single feature of the
+        /// run passes by the same competition and q
+        /// (<see cref="PercolatorTrainer.BestSingleFeature"/>, the rule that picks the folds'
+        /// initial direction). Returns that feature's index when it passes strictly more, so the
+        /// run is scored with it, otherwise <see cref="RunFirstPassModel.NO_FALLBACK"/>. A model
+        /// trained on a run of a few hundred precursors can lose to its own starting feature - one
+        /// decoy it ranks among the top hundred targets passes nothing at q 0.01 - and the run's
+        /// precursors would then be lost to the experiment for a model a single feature beats.
+        /// </summary>
+        private int ChooseFallbackFeature(string fileName, double[] modelScores, bool[] labels, uint[] ids,
+            IReadOnlyList<double[]> featureRows, double[] bestScores, int nFeatures)
+        {
+            double testFdr = _trainConfig.TestFdr;
+            int count = modelScores.Length;
+            int modelPassing = PercolatorQValues.CountPassingConservative(modelScores, labels, ids, testFdr);
+            var passing = new int[nFeatures];
+            OspreyParallel.For(0, nFeatures, _threads, feat =>
+            {
+                var featureScores = new double[count];
+                for (int r = 0; r < count; r++)
+                    featureScores[r] = PercolatorScorer.ResolveFeatureRow(featureRows, (uint)r, bestScores[r], nFeatures)[feat];
+                passing[feat] = PercolatorQValues.CountPassingConservative(featureScores, labels, ids, testFdr);
+            });
+            int bestFeature = PercolatorTrainer.BestSingleFeature(passing, out int bestPassing);
+            bool fallBack = bestPassing > modelPassing;
+            if (fallBack)
+                Interlocked.Increment(ref _fallbacks);
+            string featureName = FeatureName(bestFeature);
+            // Log text for developers, not displayed in the default output
+            _log.LogInfo(LogTag.COUNT,
+                @"{0} per-file model [{1}]: safeguard: model passes {2} target(s) at run q {3}, best single feature {4} passes {5}; {6}",
+                _passLabel, fileName, modelPassing, testFdr, featureName, bestPassing,
+                fallBack ? @"scored with " + featureName + @" in place of the model" : @"scored with the model");
+            return fallBack ? bestFeature : RunFirstPassModel.NO_FALLBACK;
+        }
+
+        private string FeatureName(int feature)
+        {
+            var infos = _trainConfig.FeatureInfos;
+            return infos != null && feature < infos.Length ? infos[feature].Name : string.Format(@"feature_{0}", feature);
         }
 
         /// <summary>

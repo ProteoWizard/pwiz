@@ -324,6 +324,9 @@ namespace pwiz.Osprey.Tasks
                 // remains. It was empty on the streamed default, so no existing output directory
                 // is invalidated by its removal. So is the library-fragment release term, for the
                 // same reason, with OSPREY_RELEASE_LIBRARY_FRAGMENTS (2026-11).
+                // The run model's safeguard, which can score a run with one feature in its place.
+                // Ahead of the classifier term, so a tree key is the linear key with it appended.
+                + PercolatorEngine.RUN_MODEL_SAFEGUARD_KEY_TERM
                 // The frozen first-pass model scores the second pass, so the classifier that
                 // trained it keys the .blib and 2nd-pass sidecars too (empty for the SVM).
                 + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);

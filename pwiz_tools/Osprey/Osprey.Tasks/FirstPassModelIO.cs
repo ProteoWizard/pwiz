@@ -146,6 +146,17 @@ namespace pwiz.Osprey.Tasks
             /// scores parquet.</summary>
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public double? ProteinBestFloor { get; set; }
+
+            /// <summary>A run's own model only, when its safeguard scored the run with its best
+            /// single feature in place of the model (<see cref="RunFirstPassModel.FallbackFeature"/>):
+            /// that feature's index in the FDR feature vector. Omitted for a run its model scores.</summary>
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public int? FallbackFeature { get; set; }
+
+            /// <summary>The name of <see cref="FallbackFeature"/>, which a load checks against the
+            /// model's feature names, so the index cannot name another column.</summary>
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public string FallbackFeatureName { get; set; }
         }
 
         /// <summary>Serializable form of the protein-compact stratum: the base ids of every
@@ -226,6 +237,11 @@ namespace pwiz.Osprey.Tasks
             dto.CalibrationDenominator = runModel.CalibrationDenominator;
             if (runModel.ScoresProteinBest)
                 dto.ProteinBestFloor = runModel.ProteinBestFloor;
+            if (runModel.UsesFallbackFeature)
+            {
+                dto.FallbackFeature = runModel.FallbackFeature;
+                dto.FallbackFeatureName = FeatureNameAt(runModel.Model.FeatureNames, runModel.FallbackFeature);
+            }
             WriteText(path, SerializeJson(dto));
             return true;
         }
@@ -243,8 +259,19 @@ namespace pwiz.Osprey.Tasks
                 return null;
             if (ProteinBestFeature.IsAppendedTo(model.FeatureNames) && !dto.ProteinBestFloor.HasValue)
                 return null;
+            int fallbackFeature = RunFirstPassModel.NO_FALLBACK;
+            if (dto.FallbackFeature.HasValue)
+            {
+                fallbackFeature = dto.FallbackFeature.Value;
+                // The index must name an FDR feature, and the same one the run was scored with.
+                if (fallbackFeature < 0 || fallbackFeature >= features.FdrFeatureIndices.Length ||
+                    !string.Equals(dto.FallbackFeatureName, FeatureNameAt(model.FeatureNames, fallbackFeature), StringComparison.Ordinal))
+                {
+                    return null;
+                }
+            }
             return new RunFirstPassModel(model, dto.CalibrationThreshold.Value, dto.CalibrationDenominator.Value,
-                null, dto.ProteinBestFloor ?? 0.0);
+                null, dto.ProteinBestFloor ?? 0.0, fallbackFeature);
         }
 
         /// <summary>
@@ -478,6 +505,12 @@ namespace pwiz.Osprey.Tasks
             {
                 return null;
             }
+        }
+
+        /// <summary>The name of feature <paramref name="index"/>, or null when the model records no names.</summary>
+        private static string FeatureNameAt(string[] featureNames, int index)
+        {
+            return featureNames != null && index < featureNames.Length ? featureNames[index] : null;
         }
 
         /// <summary>

@@ -392,6 +392,22 @@ namespace pwiz.Osprey.Test
             var written = JObject.Parse(File.ReadAllText(path));
             AssertRunModelLoadsNull(Edited(written, json => json[@"CalibrationDenominator"] = 0.0), @"zero denominator");
             AssertRunModelLoadsNull(Edited(written, json => json.Remove(@"CalibrationThreshold")), @"no threshold");
+            Assert.IsFalse(reloaded.UsesFallbackFeature);
+            Assert.IsNull(written[@"FallbackFeature"], @"a run its model scores records no fallback feature");
+
+            // A run the safeguard scored with one feature keeps that feature through the file.
+            const int fallbackFeature = 2;
+            Assert.IsTrue(FirstPassModelIO.SaveRunModel(path,
+                new RunFirstPassModel(model, 0.75, 2.5, null, -0.25, fallbackFeature), TestStamps.Any));
+            var fallback = FirstPassModelIO.LoadRunModel(path, PinFeatureMask.Hram);
+            Assert.IsNotNull(fallback, @"a run scored by its fallback feature should reload");
+            Assert.AreEqual(fallbackFeature, fallback.FallbackFeature);
+            Assert.IsTrue(fallback.UsesFallbackFeature);
+            var fallbackJson = JObject.Parse(File.ReadAllText(path));
+            AssertRunModelLoadsNull(Edited(fallbackJson, json => json[@"FallbackFeature"] = PinFeatureMask.Hram.FdrFeatureIndices.Length),
+                @"a fallback feature past the FDR features");
+            AssertRunModelLoadsNull(Edited(fallbackJson, json => json[@"FallbackFeatureName"] = @"not_a_feature"),
+                @"a fallback feature under another name");
         }
 
         private static void AssertRunModelLoadsNull(string json, string what)

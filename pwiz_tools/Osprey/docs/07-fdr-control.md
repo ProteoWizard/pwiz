@@ -464,6 +464,12 @@ Like 3f's held-out scoring, this runs only without `TrainOnly`. A production pas
 fold models before it (`PercolatorTrainer.cs:264-289`), so the scores every production path
 ranks, competes and reports are the uncalibrated fold averages of 3f, for either classifier.
 
+The per-run first-pass model (`PerFileFirstPassModel`) applies the same map per run, after a
+Percolator-style safeguard: a run whose best single FDR feature (chosen as the initial direction
+is, `PercolatorTrainer.BestSingleFeature`) passes more targets at run precursor q 1% than its
+model's out-of-fold scores is scored, calibrated and rescored with that feature instead. See
+"Per-run first-pass models" in [00-pipeline-architecture.md](00-pipeline-architecture.md).
+
 ### 3h. Posterior error probability (PEP)
 
 `PepEstimator.FitDefault` (`Osprey.ML/PepEstimator.cs:67`) fits PEP on the competition

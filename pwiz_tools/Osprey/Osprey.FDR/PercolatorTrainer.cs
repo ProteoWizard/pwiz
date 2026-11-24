@@ -1603,22 +1603,37 @@ namespace pwiz.Osprey.FDR
             out int bestIdx, out int bestPassing)
         {
             int n = features.Rows;
-            int p = features.Cols;
-            bestIdx = 0;
-            bestPassing = 0;
-
-            for (int feat = 0; feat < p; feat++)
+            var passing = new int[features.Cols];
+            for (int feat = 0; feat < passing.Length; feat++)
             {
                 var scores = new double[n];
                 for (int i = 0; i < n; i++)
                     scores[i] = features[i, feat];
-                int nPass = PercolatorQValues.CountPassing(scores, labels, entryIds, fdrThreshold);
-                if (nPass > bestPassing)
+                passing[feat] = PercolatorQValues.CountPassing(scores, labels, entryIds, fdrThreshold);
+            }
+            bestIdx = BestSingleFeature(passing, out bestPassing);
+        }
+
+        /// <summary>
+        /// The best single feature of <paramref name="passing"/>, each feature's count of targets
+        /// passing with its own value as the score: the feature with the most, higher-is-better
+        /// only, the lowest index on a tie, and feature 0 when none passes any. The rule that picks
+        /// the initial direction the folds train from, and the one the per-run first-pass model's
+        /// safeguard compares its model against (<see cref="PerFileFirstPassModel"/>).
+        /// </summary>
+        internal static int BestSingleFeature(int[] passing, out int bestPassing)
+        {
+            int bestIdx = 0;
+            bestPassing = 0;
+            for (int feat = 0; feat < passing.Length; feat++)
+            {
+                if (passing[feat] > bestPassing)
                 {
-                    bestPassing = nPass;
+                    bestPassing = passing[feat];
                     bestIdx = feat;
                 }
             }
+            return bestIdx;
         }
 
         // ============================================================

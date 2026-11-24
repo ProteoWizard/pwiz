@@ -56,6 +56,16 @@ namespace pwiz.Osprey.FDR
         /// repeated as a literal because <see cref="PassDisplayName"/> compares against it.</summary>
         public const string FIRST_PASS_LABEL = @"First-pass";
 
+        /// <summary>
+        /// The validity-key term of the per-run first-pass model's safeguard, which scores a run
+        /// with its best single feature when that feature beats the run's model
+        /// (<see cref="RunFirstPassModel.FallbackFeature"/>). Every task whose output a run's model
+        /// determines appends it, so a model file, stub or FDR output written before the safeguard
+        /// existed - which may hold a run's model scores where the safeguard now takes the feature's
+        /// - is not adopted. Bump the version if the safeguard's rule changes.
+        /// </summary>
+        public const string RUN_MODEL_SAFEGUARD_KEY_TERM = @";runsafeguard=1";
+
         // [PATH] cost buckets of RunStreamingFirstPass's two score passes. LANE buckets are timed
         // on the file lanes and summed over them; ORDER buckets on the in-order consumer.
         private const int LANE1_WALK = 0;

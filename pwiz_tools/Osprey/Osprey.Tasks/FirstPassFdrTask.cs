@@ -542,6 +542,9 @@ namespace pwiz.Osprey.Tasks
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
                 + PinFeatureMask.For(ctx.Config).ValidityKeySuffix()
                 + OspreyEnvironment.FdrExperimentValidityKeySuffix()
+                // The run model's safeguard, which can score a run with one feature in its place.
+                // Ahead of the classifier term, so a tree key is the linear key with it appended.
+                + PercolatorEngine.RUN_MODEL_SAFEGUARD_KEY_TERM
                 // The classifier this task trains, and its tree settings. Empty for the linear
                 // SVM, so no percolator directory is invalidated.
                 + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);

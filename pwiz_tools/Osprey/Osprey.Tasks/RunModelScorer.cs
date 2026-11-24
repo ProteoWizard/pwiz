@@ -35,7 +35,8 @@ namespace pwiz.Osprey.Tasks
     /// first-pass scores. The protein-best value of a row is its entry's first-pass value - what
     /// its siblings scored, which a move of its own peak does not change - and the run's floor for
     /// an entry the run had no first-pass row for, exactly as the analysis-wide model's second
-    /// pass appends the column.
+    /// pass appends the column. A run whose safeguard scored it with its best single feature
+    /// (<see cref="RunFirstPassModel.FallbackFeature"/>) scores a moved row with that feature.
     ///
     /// <para>Thread-safe: <see cref="FrozenModelScorer"/> keeps one buffer per thread, and the
     /// rest is read-only.</para>
@@ -132,7 +133,11 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public double Score(uint entryId, double[] fdrFeatures)
         {
-            return _runModel.Calibrate(_scorer.Score(fdrFeatures, entryId, _proteinBest));
+            // A run its safeguard scored with its best single feature scores its moved rows with it too.
+            double raw = _runModel.UsesFallbackFeature
+                ? fdrFeatures[_runModel.FallbackFeature]
+                : _scorer.Score(fdrFeatures, entryId, _proteinBest);
+            return _runModel.Calibrate(raw);
         }
 
         internal static string MissingMessage(string path)

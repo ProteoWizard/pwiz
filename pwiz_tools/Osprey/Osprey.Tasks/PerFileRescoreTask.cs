@@ -358,6 +358,9 @@ namespace pwiz.Osprey.Tasks
                 // The reconciled parquet is a stub that carries the second-pass answer. Ahead of
                 // the classifier term, so a tree key is the linear key with that term appended.
                 + RECONCILED_STUB_KEY_TERM
+                // The run model's safeguard, which can score a run with one feature in its place.
+                // Ahead of the classifier term, for the reason the stub term is.
+                + PercolatorEngine.RUN_MODEL_SAFEGUARD_KEY_TERM
                 // The Stage 6 competition and the 2nd-pass answer score with the first-pass
                 // model, so the classifier that trained it keys this task too (empty for the SVM).
                 + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config)

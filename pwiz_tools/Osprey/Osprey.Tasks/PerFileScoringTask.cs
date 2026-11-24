@@ -249,13 +249,15 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// The settings that change a run's own first-pass model, as the terms FirstPassFDR keys
-        /// the global model with: the training sample, the FDR features and the classifier. Not
+        /// the global model with: the training sample, the FDR features and the classifier, and the
+        /// safeguard that can score a run with a single feature in its model's place. Not
         /// the cohort or the second-pass terms, which the run's model does not depend on.
         /// </summary>
         private static string ModelKeyTerms(OspreyConfig config)
         {
             return OspreyEnvironment.TrainSampleValidityKeySuffix()
                    + PinFeatureMask.For(config).ValidityKeySuffix()
+                   + PercolatorEngine.RUN_MODEL_SAFEGUARD_KEY_TERM
                    + PercolatorEngine.GbdtValidityKeySuffix(config);
         }
 

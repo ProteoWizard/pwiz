@@ -891,7 +891,7 @@ node running that task needs a copy, whatever batch it was handed.
 | `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileScoring`, `FirstPassFDR`, `PerFileRescoring` | with the run, to every leg before `SecondPassFDR` |
 | `<stem>.scores.parquet`, stub | per-run product: scalar columns, `fragment_coelution_sum` and the run's own calibrated `score`, `run_precursor_q`, `run_peptide_q` and (`--protein-boost best`) `protein_best`, no identity or other feature columns; footer `osprey.feature_columns=stub`; stamped with the model key. The run's only first-pass scores file: its first-pass records, read by `FdrScoresSidecar.ReadRecords` / `TryRead` / `Pass1Available` | `PerFileScoring` (Stage 4, after the run's own model is trained) | `FirstPassFDR` (the reduce, which refuses a run without it); `PerFileRescoring` | with the run |
 | `<stem>.features.parquet` (`--keep-scores-parquet`, or `--training-export`, which implies it) | per-run product: the full scores layout, every scalar and feature column, checkpointed before the model is trained; stamped with the feature key | `PerFileScoring` (Stage 4) | `PerFileScoring` itself, to re-train a run's model after a model-setting change without re-extracting (`--task FirstPass`); `PerFileRescoring`, for the unmoved rows of `<stem>.features-reconciled.parquet` when feature writing is on | only with feature writing on |
-| `<stem>.1st-pass.model.json`, per run | per-run product: the run's own model, calibration map and protein-best floor; stamped with the model key | `PerFileScoring` (Stage 4) | `PerFileRescoring`, which scores the run's moved rows with it; `FirstPassFDR` (its stamp only, the run's completeness) | with the run |
+| `<stem>.1st-pass.model.json`, per run | per-run product: the run's own model, calibration map and protein-best floor, and the feature that scores the run when the model safeguard fell back; stamped with the model key | `PerFileScoring` (Stage 4) | `PerFileRescoring`, which scores the run's moved rows with it; `FirstPassFDR` (its stamp only, the run's completeness) | with the run |
 | `<stem>.features-reconciled.parquet` (feature writing on) | per-run product: the full layout of the run's second-pass rows, the reconciled counterpart of `<stem>.features.parquet` (`<stem>.scores-reconciled.parquet` is a stub) | `PerFileRescoring` (Stage 6) | the training export | not needed by `SecondPassFDR` |
 | `<stem>.reconciliation.json` | per-run product | `PerFileRescoring` (the run's Stage 6 plan, written just before it is rescored) | `SecondPassFDR` (gap-fill entry ids) | with the run, from the rescore node to `SecondPassFDR` |
 | `<blib-stem>.1st-pass.consensus.json` | experiment product | `FirstPassFDR` (end of the consensus pass) | `PerFileRescoring` (every run's plan) | **every node** running `PerFileRescoring` |
@@ -1518,6 +1518,24 @@ the text says so rather than describing the current shape as though it were the 
      `[COUNT] First-pass per-file model [<run>]: calibration anchor <name>`, an excluded run a
      warning, and the timing summary the counts of each. The fallback moves only the experiment
      competition, never a run's own q-values.
+   - **The model safeguard** (Percolator's check of its learned direction against its best
+     initial one). Before calibrating, each run counts its targets passing run precursor q 1%
+     under the model's out-of-fold scores and under each of its FDR features alone, by the same
+     competition and conservative q, choosing the best feature by the rule that picks the folds'
+     initial direction (`PercolatorTrainer.BestSingleFeature`: higher is better, lowest index on
+     a tie). When that feature passes strictly more, the run is scored with the feature instead,
+     calibrated the same way (including the `best-decoy` fallback), and its
+     `<stem>.1st-pass.model.json` records `FallbackFeature` (index) and `FallbackFeatureName`, so
+     `PerFileRescoring` (`RunModelScorer`) scores the run's moved rows with the same feature.
+     Each run logs `[COUNT] First-pass per-file model [<run>]: safeguard: model passes N
+     target(s) at run q 0.01, best single feature <name> passes M; scored with ...`, and the
+     timing summary counts the runs scored by a feature. It matters only for small runs: a run
+     of a few hundred detectable precursors passes nothing at q 1% once one out-of-fold decoy
+     ranks among its top ~100 targets, which zeroed whole runs of the shifted 3-run Stellar
+     subset; no run of the regression datasets falls back. The safeguard is keyed
+     (`PercolatorEngine.RUN_MODEL_SAFEGUARD_KEY_TERM`, `;runsafeguard=1`) on the model key and on
+     `FirstPassFDR`, `PerFileRescoring` and `SecondPassFDR`, so outputs written before it are not
+     adopted.
    - It writes **one** scores file per run: `<stem>.scores.parquet` as a **stub** - the scalar
      columns and `fragment_coelution_sum`, plus `score`, `run_precursor_q` and
      `run_peptide_q`, and no other feature column and no identity columns (readers take
