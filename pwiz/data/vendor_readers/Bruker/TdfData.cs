@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Runtime.InteropServices;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Spectra;
@@ -751,15 +750,15 @@ internal sealed class TdfData : IBrukerData
     /// <summary>
     /// Adds a binary data array of <paramref name="count"/> zeros to <paramref name="spec"/>,
     /// tagged the way <see cref="Spectrum.SetMZIntensityArrays"/> tags its arrays, and returns
-    /// its storage for filling in place. The span stays valid because nothing resizes the list.
+    /// its storage for filling in place. The span stays valid because nothing resizes the buffer.
     /// </summary>
-    private static Span<double> AddBinaryDataArray(Spectrum spec, CVID arrayType, CVID units, int count)
+    internal static Span<double> AddBinaryDataArray(Spectrum spec, CVID arrayType, CVID units, int count)
     {
         var array = new BinaryDataArray();
         array.Set(arrayType, "", units);
-        CollectionsMarshal.SetCount(array.Data, count);
+        array.Data.SetCount(count);
         spec.BinaryDataArrays.Add(array);
-        return CollectionsMarshal.AsSpan(array.Data);
+        return array.Data.AsSpan();
     }
 
     /// <summary>
@@ -788,13 +787,13 @@ internal sealed class TdfData : IBrukerData
         var scratch = new double[total];
         foreach (var array in spec.BinaryDataArrays)
         {
-            var data = CollectionsMarshal.AsSpan(array.Data);
+            var data = array.Data.AsSpan();
             for (int i = 0; i < total; i++)
                 scratch[i] = data[order[i]];
             scratch.CopyTo(data);
         }
 
-        var mz = CollectionsMarshal.AsSpan(mzData);
+        var mz = mzData.AsSpan();
         for (int i = 1; i < total; i++)
         {
             if (mz[i - 1] == mz[i])

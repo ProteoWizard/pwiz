@@ -19,6 +19,7 @@
  */
 
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
@@ -28,31 +29,40 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public class ShareListDlg<TItem> : FormEx where TItem : IKeyContainer<string>
+    public sealed class ShareListDlg<TItem> : FormEx where TItem : IKeyContainer<string>
     {
         private readonly CheckedListBox _checkedListBox;
 
         public ShareListDlg(IEnumerable<TItem> items, string title)
         {
+            // Laid out in 96-DPI pixels and auto-scaled the way a designer-built form is, so the
+            // literals below need no scaling of their own (issue #4599). Sizable, with the list
+            // and buttons anchored, like the other list dialogs.
+            SuspendLayout();
+            AutoScaleDimensions = new SizeF(6F, 13F);
+            AutoScaleMode = AutoScaleMode.Font;
             Text = title;
             Icon = Resources.Skyline;
-            FormBorderStyle = FormBorderStyle.FixedDialog;
+            FormBorderStyle = FormBorderStyle.Sizable;
             StartPosition = FormStartPosition.CenterParent;
             MaximizeBox = false;
             MinimizeBox = false;
             ShowInTaskbar = false;
-            Width = 350;
-            Height = 350;
+            ClientSize = new Size(334, 305);
+            MinimumSize = new Size(350, 344);   // The designed size, frame included; scaled with the form
 
             var label = new Label
             {
                 Left = 12, Top = 10, AutoSize = true,
+                Anchor = AnchorStyles.Top | AnchorStyles.Left,
                 Text = SettingsUIResources.ShareListDlg_Select_items_to_share
             };
 
             _checkedListBox = new CheckedListBox
             {
                 Left = 12, Top = 30, Width = 310, Height = 230,
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                IntegralHeight = false,
                 CheckOnClick = true
             };
 
@@ -61,18 +71,22 @@ namespace pwiz.Skyline.SettingsUI
 
             var btnOk = new Button
             {
-                Text = CommonAlertDlg.GetDefaultButtonText(DialogResult.OK), Width = 75, Top = 270, Left = 160,
+                Text = CommonAlertDlg.GetDefaultButtonText(DialogResult.OK), Width = 75, Top = 270, Left = 166,
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Right,
                 DialogResult = DialogResult.OK
             };
             var btnCancel = new Button
             {
-                Text = CommonAlertDlg.GetDefaultButtonText(DialogResult.Cancel), Width = 75, Top = 270, Left = 245,
+                Text = CommonAlertDlg.GetDefaultButtonText(DialogResult.Cancel), Width = 75, Top = 270, Left = 247,
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Right,
                 DialogResult = DialogResult.Cancel
             };
 
             Controls.AddRange(new Control[] { label, _checkedListBox, btnOk, btnCancel });
             AcceptButton = btnOk;
             CancelButton = btnCancel;
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         public IList<string> CheckedItemNames =>

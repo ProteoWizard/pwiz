@@ -109,6 +109,22 @@ namespace pwiz.Common.Controls
         }
 
         /// <summary>
+        /// Scales a list view's 96-DPI column widths to the control's DPI. Automatic scaling
+        /// leaves them alone because ColumnHeader is not a control. Widths of -1 and -2 (size to
+        /// content or to the header) are kept. Call once, after InitializeComponent.
+        /// </summary>
+        public static void ScaleColumnWidths(Control control, ListView listView)
+        {
+            if (!IsScaled(control))
+                return;
+            foreach (ColumnHeader column in listView.Columns)
+            {
+                if (column.Width > 0)
+                    column.Width = Scale(control, column.Width);
+            }
+        }
+
+        /// <summary>
         /// Bicubic resample into a 32-bit ARGB bitmap of the given size, noticeably better
         /// than the nearest-neighbor stretch ImageList applies on its own. The result is
         /// tagged 96-DPI so consumers that honor DPI metadata treat it as pixel-sized.

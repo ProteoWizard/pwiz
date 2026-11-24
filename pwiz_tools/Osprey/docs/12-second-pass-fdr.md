@@ -304,6 +304,8 @@ and not the stratum reaches this fail-fast under the default mode.
   machinery) were developed in the C# implementation first; the Rust reference is
   porting them back in maccoss/osprey#57. Both implementations have since removed
   the `percolator` mode and defaulted to `protein-compact` together, so the shipped
-  defaults agree. Parity for the frozen
+  defaults agree. The complement's own competition (#4993) and the stratum's peptide-level
+  experiment q (#4823) are ported too (`compute_complement_experiment_q`,
+  `compete_experiment_peptides`); the peptide PEP is C#-only. Parity for the frozen
   modes is therefore tracked **C# → Rust** rather than Rust → C#. Evidence:
   `Osprey.Tasks/Pass2FdrSidecar.cs`, `Osprey.FDR/FrozenModelScorer.cs`. Severity: info.

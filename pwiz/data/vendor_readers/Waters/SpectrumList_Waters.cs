@@ -646,6 +646,15 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
         if (detailLevel < DetailLevel.FullMetadata)
             return spec;
         bool combined = isMs && ie.Combined;
+        if (combined && !getBinaryData && willCentroid)
+        {
+            // The PeaksInScan block above is skipped when centroiding. cpp never centroids an IMS
+            // block (SpectrumList_Waters.cpp:229), so it always reports PeaksInScan here; without
+            // it the count stays 0 and defaultArrayLength filters drop every combined spectrum.
+            string peaks = _data.GetScanItem(ie.Function, ie.Block, WatersScanItem.PeaksInScan);
+            if (int.TryParse(peaks, NumberStyles.Integer, CultureInfo.InvariantCulture, out int peaksI))
+                spec.DefaultArrayLength = peaksI;
+        }
         if (combined && getBinaryData)
         {
             // Combine path: concatenate the peaks of all drift bins of the block.
@@ -656,7 +665,7 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
             // and regrowth saves large-object-heap allocations and the full GCs they cause.
             // For non-SONAR IMS we collect drift time per peak. For SONAR we collect the
             // quadrupole low/high bounds per peak (two arrays, after m/z and intensity).
-            List<double>? driftList = null, qLowList = null, qHighList = null;
+            DetachableList<double>? driftList = null, qLowList = null, qHighList = null;
             int capacity = GetCombinedCapacityHint(ie.Function);
             var mzList = AddBinaryDataArray(spec, CVID.MS_m_z_array, CVID.MS_m_z, capacity);
             var intList = AddBinaryDataArray(spec, CVID.MS_intensity_array, CVID.MS_number_of_detector_counts, capacity);
@@ -748,10 +757,10 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
 
     /// <summary>
     /// Adds an empty binary data array to <paramref name="spec"/>, tagged the way
-    /// <see cref="Spectrum.SetMZIntensityArrays"/> tags its arrays, and returns its data list
+    /// <see cref="Spectrum.SetMZIntensityArrays"/> tags its arrays, and returns its data buffer
     /// pre-sized to <paramref name="capacity"/>.
     /// </summary>
-    private static List<double> AddBinaryDataArray(Spectrum spec, CVID arrayType, CVID units, int capacity)
+    private static DetachableList<double> AddBinaryDataArray(Spectrum spec, CVID arrayType, CVID units, int capacity)
     {
         var array = new BinaryDataArray();
         array.Set(arrayType, "", units);

@@ -305,7 +305,7 @@ public abstract class SpectrumListBase : ISpectrumList
         if (mzs.Count != intensityArray.Data.Count) // Sanity check, flagged elsewhere if wrong
             return;
 
-        if (IsAscending(mzs))
+        if (IsAscending(mzs.AsSpan()))
         {
             // Seems fine - but a short list can be in order by chance, so it does not settle
             // anything.
@@ -324,16 +324,16 @@ public abstract class SpectrumListBase : ISpectrumList
         // array alongside m/z and intensity, and every one of them has to be permuted the same
         // way. Stable, so peaks sharing an m/z keep the order the writer gave them.
         var order = StableSortOrder(mzs);
-        ApplyPermutation(mzs, order);
+        ApplyPermutation(mzs.AsSpan(), order);
         foreach (var array in spectrum.BinaryDataArrays)
         {
             if (!ReferenceEquals(array, mzArray) && array.Data.Count == order.Length)
-                ApplyPermutation(array.Data, order);
+                ApplyPermutation(array.Data.AsSpan(), order);
         }
         foreach (var array in spectrum.IntegerDataArrays)
         {
             if (array.Data.Count == order.Length)
-                ApplyPermutation(array.Data, order);
+                ApplyPermutation(System.Runtime.InteropServices.CollectionsMarshal.AsSpan(array.Data), order);
         }
 
         if (isFirstFoundSpectrumOutOfOrder)
@@ -366,9 +366,9 @@ public abstract class SpectrumListBase : ISpectrumList
     }
 
     /// <summary>True iff <paramref name="values"/> never descends.</summary>
-    private static bool IsAscending(List<double> values)
+    private static bool IsAscending(ReadOnlySpan<double> values)
     {
-        for (int i = 1; i < values.Count; i++)
+        for (int i = 1; i < values.Length; i++)
         {
             if (values[i] < values[i - 1])
                 return false;
@@ -380,7 +380,7 @@ public abstract class SpectrumListBase : ISpectrumList
     /// The permutation that sorting <paramref name="keys"/> would apply, without applying it.
     /// Ties break on the original index, which is what makes the sort stable.
     /// </summary>
-    private static int[] StableSortOrder(List<double> keys)
+    private static int[] StableSortOrder(DetachableList<double> keys)
     {
         var order = new int[keys.Count];
         for (int i = 0; i < order.Length; i++)
@@ -398,7 +398,7 @@ public abstract class SpectrumListBase : ISpectrumList
     /// at <paramref name="order"/>[i]. Gathers into a temporary before writing any of it back,
     /// since a permutation applied in place would overwrite entries it still has to read.
     /// </summary>
-    private static void ApplyPermutation<T>(List<T> data, int[] order)
+    private static void ApplyPermutation<T>(Span<T> data, int[] order)
     {
         var reordered = new T[order.Length];
         for (int i = 0; i < order.Length; i++)

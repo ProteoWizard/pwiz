@@ -686,7 +686,7 @@ public class SpectrumListDemuxTests
 
     /// <summary>Builds a list of indices into <paramref name="originalMz"/> matching each entry
     /// in <paramref name="derivedMz"/> within 1e-5 m/z. Mirrors cpp's <c>DemuxTest::GetMask</c>.</summary>
-    private static void BuildMzMask(List<double> originalMz, List<double> derivedMz, List<int> mask)
+    private static void BuildMzMask(DetachableList<double> originalMz, DetachableList<double> derivedMz, List<int> mask)
     {
         mask.Clear();
         int origIdx = 0;
@@ -748,8 +748,8 @@ public class SpectrumListDemuxTests
             var spectrum = demuxList.GetSpectrum(i, getBinaryData: true);
             Assert.IsTrue(TryGetIdToken(spectrum.Id, "originalScan", out var scan));
             Assert.IsTrue(TryGetIdToken(spectrum.Id, "demux", out var demux));
-            var mzs = spectrum.GetMZArray()?.Data ?? new List<double>();
-            var intensities = spectrum.GetIntensityArray()?.Data ?? new List<double>();
+            var mzs = spectrum.GetMZArray()?.Data ?? new DetachableList<double>();
+            var intensities = spectrum.GetIntensityArray()?.Data ?? new DetachableList<double>();
             var actual = new List<(double Mz, double Intensity)>();
             notCompared.TryGetValue(scan, out double skipMz);
             for (int k = 0; k < mzs.Count; k++)

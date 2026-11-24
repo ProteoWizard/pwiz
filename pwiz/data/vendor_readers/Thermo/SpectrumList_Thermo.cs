@@ -258,6 +258,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         public MassAnalyzerType MassAnalyzer;
         public ScanModeType ScanMode;
         public PolarityType Polarity;
+        public bool IsProfile;
         public double IsolationMz;
 
         // Controller this scan belongs to. MS scans use Device.MS / 1; PDA-as-spectra entries
@@ -308,6 +309,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
                 MassAnalyzer = filter.MassAnalyzer,
                 ScanMode = filter.ScanMode,
                 Polarity = filter.Polarity,
+                IsProfile = filter.ScanData == ScanDataType.Profile,
             };
             if (entry.MsOrder > MSOrderType.Ms && filter.MassCount > 0)
             {
@@ -398,8 +400,9 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
     /// <inheritdoc/>
     /// <remarks>
     /// Overridden, as cpp's is, so a metadata request skips the peak reads cpp skips
-    /// (SpectrumList_Thermo.cpp:263, :645, :743): instant metadata is the ms level and start
-    /// time from the index; fast metadata adds the scan filter and the precursors; the precursor
+    /// (SpectrumList_Thermo.cpp:263, :645, :743): instant metadata is the ms level, start time,
+    /// polarity and profile/centroid term from the index; fast metadata adds the scan filter and
+    /// the precursors; the precursor
     /// intensity and the mass list, which read peaks, wait for full metadata. Unlike cpp (:592),
     /// fast metadata keeps the selected ion and its zoom-scan correction, so its precursors
     /// match a full read's: MsDataFileImpl.GetPrecursors settles on the first level that returns
@@ -519,7 +522,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
     private Spectrum GetSpectrumImpl(int index, DetailLevel detailLevel, IntegerSet? msLevelsToCentroid)
     {
         var ie = _index[index];
-        bool getBinaryData = detailLevel == DetailLevel.FullData;
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
 
         // PDA-as-spectra: separate population path. Cpp SpectrumList_Thermo.cpp:282-317 emits
         // these as MS_EMR_spectrum with wavelength axis (UO_nanometer) and no msLevel.
@@ -563,13 +566,23 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         // interaction cpp applies at :370-374 is mirrored by `emitCentroid` further down.
         bool preferCentroid = msLevelsToCentroid?.Contains(msLevel) ?? false;
 
-        // cpp SpectrumList_Thermo.cpp:258-264: instant metadata is the ms level and the start
-        // time, both from the scan index. "Parsing scanInfo is not instant."
-        if (detailLevel == DetailLevel.InstantMetadata)
+        // cpp SpectrumList_Thermo.cpp:263 returns here at InstantMetadata, before parsing the scan
+        // filter: Skyline asks every spectrum for its ms level and retention time before it reads
+        // the data. Polarity and representation come from the index, so reporting them here parses
+        // nothing.
+        if (detailLevel < DetailLevel.FastMetadata)
         {
-            spec.ScanList.Set(CVID.MS_no_combination);
-            var instantScan = new Scan();
+            var instantScan = new Scan
+            {
+                InstrumentConfiguration = _icByAnalyzer.TryGetValue(ie.MassAnalyzer, out var instantIc) ? instantIc : _defaultIc,
+            };
             instantScan.Set(CVID.MS_scan_start_time, _raw.RetentionTimeMinutes(scanNumber), CVID.UO_minute);
+            if (ie.Polarity == PolarityType.Positive)
+                spec.Params.Set(CVID.MS_positive_scan);
+            else if (ie.Polarity == PolarityType.Negative)
+                spec.Params.Set(CVID.MS_negative_scan);
+            spec.Params.Set(!ie.IsProfile || preferCentroid ? CVID.MS_centroid_spectrum : CVID.MS_profile_spectrum);
+            spec.ScanList.Set(CVID.MS_no_combination);
             spec.ScanList.Scans.Add(instantScan);
             return spec;
         }

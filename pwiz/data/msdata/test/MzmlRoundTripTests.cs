@@ -126,8 +126,8 @@ public class MzmlRoundTripTests
         // Binary arrays preserved bit-for-bit at default 64-bit precision.
         Assert.AreEqual(4, spec.DefaultArrayLength);
         Assert.AreEqual("controllerType=0 controllerNumber=1 scan=1", spec.Id);
-        CollectionAssert.AreEqual(new[] { 100.0, 200.0, 300.0, 400.0 }, spec.GetMZArray()!.Data);
-        CollectionAssert.AreEqual(new[] { 50.0, 100.0, 150.0, 200.0 }, spec.GetIntensityArray()!.Data);
+        CollectionAssert.AreEqual(new[] { 100.0, 200.0, 300.0, 400.0 }, spec.GetMZArray()!.Data.ToArray());
+        CollectionAssert.AreEqual(new[] { 50.0, 100.0, 150.0, 200.0 }, spec.GetIntensityArray()!.Data.ToArray());
 
         // UserParam round-trips through scan.
         var scan = spec.ScanList.Scans[0];
@@ -153,7 +153,7 @@ public class MzmlRoundTripTests
             "unknown term kept as a CVID_Unknown cvParam");
         var newerIntensity = newerSpec.GetIntensityArray()!;
         Assert.AreEqual(CVID.CVID_Unknown, newerIntensity.CvParam(CVID.MS_intensity_array).Units);
-        CollectionAssert.AreEqual(new[] { 50.0, 100.0, 150.0, 200.0 }, newerIntensity.Data);
+        CollectionAssert.AreEqual(new[] { 50.0, 100.0, 150.0, 200.0 }, newerIntensity.Data.ToArray());
     }
 
     [TestMethod]
@@ -163,7 +163,7 @@ public class MzmlRoundTripTests
         var zlibXml = new MzmlWriter(new BinaryEncoderConfig { Compression = BinaryCompression.Zlib })
             .Write(BuildSynthetic());
         var zlibMz = new MzmlReader().Read(zlibXml).Run.SpectrumList!.GetSpectrum(0).GetMZArray()!;
-        CollectionAssert.AreEqual(new[] { 100.0, 200.0, 300.0, 400.0 }, zlibMz.Data, "zlib lossless");
+        CollectionAssert.AreEqual(new[] { 100.0, 200.0, 300.0, 400.0 }, zlibMz.Data.ToArray(), "zlib lossless");
         Assert.IsTrue(zlibMz.HasCVParam(CVID.MS_zlib_compression), "zlib CV stamped");
 
         // 32-bit precision: lossy at ~1e-4 Da; MS_32_bit_float CV is stamped.
