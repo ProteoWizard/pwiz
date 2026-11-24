@@ -5,10 +5,10 @@
 training), 12 fragment XICs, the 7 ppm correlation tolerance, the correlation-chosen reference XIC, the local RT
 tolerance over 15 neighbors, the 0.40 min tc_* window, the 1.0 min RT tolerance floor and the 0.10 LOESS bandwidth,
 besides the `default` feature set. At every
-resolution: out-of-fold gbdt scoring, no reconciliation refit and the ratio PEP. Unit-resolution data keeps
-`--protein-boost compact` (the protein-compact second pass) until Stellar is measured on a larger cohort, and the
-values in the Default column for the rest. Each variable still overrides its default
-(`OSPREY_FDR_MODEL=svm`, `OSPREY_GBT_OOF=0`, `--protein-boost compact`, `OSPREY_XIC_FRAGMENTS=6`,
+resolution: out-of-fold gbdt scoring, `--protein-boost best`, the `default` feature set, no reconciliation refit
+and the ratio PEP. Unit-resolution data (`ResolutionDefaults.UNIT_RESOLUTION`) keeps the values in the Default
+column for the scoring settings: on the regression Stellar entrapment data they beat the HRAM ones. Each variable
+still overrides its default (`OSPREY_FDR_MODEL=svm`, `OSPREY_GBT_OOF=0`, `--protein-boost off`, `OSPREY_XIC_FRAGMENTS=6`,
 `OSPREY_CORR_FRAGMENT_TOLERANCE=off`, `OSPREY_REF_XIC=intensity`, `OSPREY_LOCAL_RT_TOLERANCE=off`,
 `OSPREY_MIN_RT_TOLERANCE=0.5`, `OSPREY_TC_HALF_WINDOW=0.15`, `OSPREY_LOESS_BANDWIDTH=0.3`, `OSPREY_RECON_REFIT=on`,
 `OSPREY_PEP_FORMULA=mixture`).
