@@ -255,7 +255,7 @@ namespace pwiz.Osprey.Test
         {
             using (EnvVar.OverrideVariables(variables))
             {
-                StringAssert.Contains(log, OspreyEnvironment.DescribeProteinBest(new OspreyConfig { ProteinBoost = on ? ProteinBoost.best : ProteinBoost.compact }));
+                StringAssert.Contains(log, OspreyEnvironment.DescribeProteinBest(new OspreyConfig { ProteinBoost = on ? ProteinBoost.best : ProteinBoost.off }));
             }
         }
 
@@ -283,7 +283,7 @@ namespace pwiz.Osprey.Test
 
         private static string[] ProteinBestArgs(bool on)
         {
-            return new[] { OspreyCommandArgs.ARG_PROTEIN_BOOST.ArgumentText, (on ? ProteinBoost.best : ProteinBoost.compact).ToString() };
+            return new[] { OspreyCommandArgs.ARG_PROTEIN_BOOST.ArgumentText, (on ? ProteinBoost.best : ProteinBoost.off).ToString() };
         }
 
         /// <summary>The on arm with one thread and one lane, which RunAnalysis's common arguments do not allow.</summary>

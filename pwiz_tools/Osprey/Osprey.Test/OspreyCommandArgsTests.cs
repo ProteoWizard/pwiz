@@ -210,10 +210,11 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(SharedPeptideMode.Razor, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES + @"razor").SharedPeptides);
             Assert.AreEqual(SharedPeptideMode.All, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES, @"bogus").SharedPeptides); // warn -> default
             // --protein-boost: best, compact and off are its values. Absent, the resolution chooses (best
-            // at both resolutions), so it declares no single default and is the legacy compact until
+            // at both resolutions), so it declares no single default and is the legacy off until
             // a resolution is applied; given, it stands whatever the resolution. The classifier
             // follows the resolution the same way when OSPREY_FDR_MODEL is unset.
-            Assert.AreEqual(ProteinBoost.compact, io.ProteinBoost, @"the boost is compact until a resolution is applied");
+            Assert.AreEqual(ProteinBoost.off, io.ProteinBoost, @"the boost is off until a resolution is applied");
+            Assert.AreEqual(ResolutionDefaults.LEGACY.ProteinBoost, io.ProteinBoost);
             Assert.IsNull(OspreyCommandArgs.ARG_PROTEIN_BOOST.DefaultValue);
             string hramArg = OspreyCommandArgs.ARG_RESOLUTION + OspreyCommandArgs.RESOLUTION_HRAM;
             string unitArg = OspreyCommandArgs.ARG_RESOLUTION + OspreyCommandArgs.RESOLUTION_UNIT;

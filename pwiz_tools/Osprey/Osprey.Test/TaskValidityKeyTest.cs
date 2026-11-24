@@ -95,7 +95,7 @@ namespace pwiz.Osprey.Test
             var unitProteinBest = new OspreyConfig { ProteinBoost = ProteinBoost.best, ProteinBoostGiven = true };
             unitProteinBest.ApplyResolutionMode(ResolutionMode.UnitResolution);
             Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, unitProteinBest.Pass2QValue);
-            var hramNoProteinBest = new OspreyConfig { ProteinBoost = ProteinBoost.compact, ProteinBoostGiven = true };
+            var hramNoProteinBest = new OspreyConfig { ProteinBoost = ProteinBoost.off, ProteinBoostGiven = true };
             hramNoProteinBest.ApplyResolutionMode(ResolutionMode.HRAM);
             Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, hramNoProteinBest.Pass2QValue);
             using (OspreyEnvironment.OverrideVariables(new Dictionary<string, string>
@@ -531,14 +531,14 @@ namespace pwiz.Osprey.Test
         {
             var tasks = OspreyTasks.Create().Pipeline;
             // The protein-best column off in both, so the classifier is the only difference.
-            var linearCtx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core, ProteinBoost = ProteinBoost.compact }, tasks, null, null, null);
-            var treeCtx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core, FdrClassifier = FdrClassifier.Gbdt, ProteinBoost = ProteinBoost.compact }, tasks, null, null, null);
+            var linearCtx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core, ProteinBoost = ProteinBoost.off }, tasks, null, null, null);
+            var treeCtx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core, FdrClassifier = FdrClassifier.Gbdt, ProteinBoost = ProteinBoost.off }, tasks, null, null, null);
             string treeTerm = PercolatorEngine.GbdtValidityKeySuffix(treeCtx.Config);
             Assert.AreNotEqual(string.Empty, treeTerm, @"gbdt must emit a term");
             // The linear SVM with the protein-best column off emits NOTHING, through both overloads
             // and whatever the tree settings say, so moving the choice from --fdr-method to
             // OSPREY_FDR_MODEL invalidates no existing SVM output directory.
-            Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig { ProteinBoost = ProteinBoost.compact }),
+            Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig { ProteinBoost = ProteinBoost.off }),
                 @"the linear SVM must emit nothing, or every existing output directory is invalidated");
             // Off is the default, so the default key is the one before the column existed.
             Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig()),

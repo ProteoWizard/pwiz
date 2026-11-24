@@ -1236,11 +1236,11 @@ namespace pwiz.Osprey.Test
 
             // The protein-compact second pass needs one first-pass model for the analysis, and each
             // run trains its own, so it is refused before any run is scored. It is retired in a
-            // follow-up change. The compact boost keeps the protein-best column, which is refused with
-            // protein-compact for another reason, out of the way.
+            // follow-up change, which deletes this leg whole. The off boost keeps the protein-best
+            // column, which is refused with protein-compact for another reason, out of the way.
             string compactDir = CreateDir(@"protein-compact-refused");
             string compactLog = RunOspreyExpecting(SearchArgs(compactDir, library,
-                    OspreyCommandArgs.ARG_PROTEIN_BOOST.ArgumentText, ProteinBoost.compact.ToString()),
+                    OspreyCommandArgs.ARG_PROTEIN_BOOST.ArgumentText, ProteinBoost.off.ToString()),
                 WithVariable(Verifier(false), PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT), Program.EXIT_CODE_FAILURE_TO_START);
             StringAssert.Contains(compactLog, PerFileRescoreTask.OwnModelsProteinCompactMessage());
             Assert.IsFalse(compactLog.Contains(TaskLine(FirstPassFdrTask.TASK_NAME, @"starting")), compactLog);

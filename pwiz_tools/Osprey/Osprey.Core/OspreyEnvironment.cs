@@ -1347,7 +1347,7 @@ namespace pwiz.Osprey.Core
             {
                 return string.Format(@"{0} reaches the model through round 2 of the two-round training: " +
                                      @"OSPREY_GBT_PREFILTER_SIZE=0 turns that off. Unset it, or use {1}.",
-                    argText, OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.compact.ToString()));
+                    argText, OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.off.ToString()));
             }
             return null;
         }
@@ -1368,7 +1368,7 @@ namespace pwiz.Osprey.Core
                                  @"protein's other detections, and together report more false discoveries than their " +
                                  @"q-values claim. Unset OSPREY_PASS2_QVALUE, or use {2}.",
                 OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.best.ToString()), PASS2_QVALUE_PROTEIN_COMPACT,
-                OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.compact.ToString()));
+                OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.off.ToString()));
         }
 
         private static string DescribeProteinBestTopN(int topN)

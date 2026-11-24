@@ -35,7 +35,7 @@ namespace pwiz.Osprey.Core
     public sealed class ResolutionDefaults
     {
         /// <summary>The values before the defaults depended on the resolution; unit resolution keeps their scoring settings.</summary>
-        public static readonly ResolutionDefaults LEGACY = new ResolutionDefaults(FdrClassifier.LinearSvm, ProteinBoost.compact,
+        public static readonly ResolutionDefaults LEGACY = new ResolutionDefaults(FdrClassifier.LinearSvm, ProteinBoost.off,
             LEGACY_MIN_RT_TOLERANCE, LEGACY_LOESS_BANDWIDTH, new ScoringSettings(OspreyEnvironment.DEFAULT_XIC_FRAGMENTS, null, false, null, null, true));
 
         /// <summary>

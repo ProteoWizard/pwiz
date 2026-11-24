@@ -1306,13 +1306,11 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Why second-pass FDR refuses a first-pass model trained with the other
         /// <c>--protein-boost</c> setting: names both settings and the task to re-run. A model records only
-        /// whether it has the protein-best column, so one without it names the two boosts that train none.
+        /// whether it has the protein-best column, so one without it names <see cref="ProteinBoost.off"/>.
         /// </summary>
         internal static string ProteinBestMismatchMessage(bool modelScoresProteinBest, ProteinBoost configBoost)
         {
-            string modelBoost = modelScoresProteinBest
-                ? ProteinBoost.best.ToString()
-                : ProteinBoost.compact + @"|" + ProteinBoost.off;
+            string modelBoost = (modelScoresProteinBest ? ProteinBoost.best : ProteinBoost.off).ToString();
             return string.Format(
                 OspreyTasksResources.PerFileRescoreTask_CreatePass2Worker_Second_pass_FDR_cannot_run__the_saved_first_pass_model_was_trained_with__0___but_this_run_has__1___Run__2__again_with__1__,
                 OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, modelBoost),

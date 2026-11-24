@@ -231,10 +231,10 @@ namespace pwiz.Osprey.Core
         /// How a precursor's detection is boosted by the other detections of its protein
         /// (<c>--protein-boost</c>). Unless the command line gives it, <see cref="ApplyResolutionMode"/>
         /// sets it from the resolution's <see cref="ResolutionDefaults"/>; a configuration that never
-        /// learns its resolution keeps <see cref="ProteinBoost.compact"/>, the boost that preceded the
-        /// choice.
+        /// learns its resolution keeps the legacy <see cref="ProteinBoost.off"/>: no protein-best column,
+        /// as before the choice.
         /// </summary>
-        public ProteinBoost ProteinBoost { get; set; } = ProteinBoost.compact;
+        public ProteinBoost ProteinBoost { get; set; } = ResolutionDefaults.LEGACY.ProteinBoost;
 
         /// <summary>
         /// True under <see cref="ProteinBoost.best"/>: the first pass trains with the protein-best column
@@ -800,10 +800,10 @@ namespace pwiz.Osprey.Core
     {
         /// <summary>The protein-best training column in the first pass, with the transfer second pass. The default at both resolutions.</summary>
         best,
-        /// <summary>The protein-compact second pass, which competes the proteins the first pass detected apart from the rest.
-        /// The legacy default, kept by a configuration that never learns its resolution; to be removed.</summary>
+        /// <summary>No protein-best column, like <see cref="off"/>: the protein-compact second pass it once chose is now
+        /// reached only through OSPREY_PASS2_QVALUE. To be removed.</summary>
         compact,
-        /// <summary>No protein boost: the transfer second pass alone.</summary>
+        /// <summary>No protein boost: the transfer second pass alone. The legacy value, kept by a configuration that never learns its resolution.</summary>
         off
     }
 
