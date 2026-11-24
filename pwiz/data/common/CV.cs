@@ -137,6 +137,14 @@ public sealed class CVTermInfo
 /// Data is loaded at class-init time from three OBO files embedded as assembly resources
 /// (psi-ms.obo, unimod.obo, unit.obo). CVIDs that don't appear in the current OBO versions
 /// fall back to name/id derived from the enum identifier.
+/// <para>
+/// An accession the embedded files don't define - a file written against a newer CV - is
+/// resolved online: readers register the CVs a file declares with <see cref="RegisterSource"/>,
+/// and a miss in <see cref="CvTermInfo(string)"/> loads the newest registered version of that
+/// CV (or the latest one) and merges it into the table, the newest version winning. A term
+/// learned that way has an unnamed CVID (value-block offset + accession number), which the
+/// rest of pwiz handles like any other. See <see cref="OnlineUpdate"/>.
+/// </para>
 /// </remarks>
 public static class CvLookup
 {
@@ -146,42 +154,52 @@ public static class CvLookup
     internal const int OffsetUnimod = 300_000_000;
     internal const int OffsetUo = 400_000_000;
 
-    private static readonly Dictionary<CVID, CVTermInfo> s_terms = BuildTermTable();
-    private static readonly Dictionary<string, CVID> s_byAccession = BuildAccessionIndex();
-    private static readonly CVID[] s_allCvids = BuildCvidList();
+    // Each prefix owns a block of 100,000,000 values, so a larger accession number would
+    // collide with the next prefix's block.
+    private const uint ValueBlockSize = 100_000_000;
+
+    // Replaced wholesale, never mutated, when downloaded terms are merged, so lookups take no lock.
+    private static CvTermTable s_table = CvTermTable.Embedded;
+
+    internal static CvTermTable Table => Volatile.Read(ref s_table);
+
+    internal static void Publish(CvTermTable table) => Volatile.Write(ref s_table, table);
 
     /// <summary>Returns CV term metadata for the given <paramref name="cvid"/>, or <see cref="CVTermInfo.Unknown"/>.</summary>
-    public static CVTermInfo CvTermInfo(CVID cvid) =>
-        s_terms.TryGetValue(cvid, out var info) ? info : CVTermInfo.Unknown;
+    public static CVTermInfo CvTermInfo(CVID cvid) => Table.TermInfo(cvid);
 
-    /// <summary>Returns CV term metadata for the given accession id (e.g. "MS:1000031").</summary>
+    /// <summary>
+    /// Returns CV term metadata for the given accession id (e.g. "MS:1000031"), or
+    /// <see cref="CVTermInfo.Unknown"/>. An MS, PEFF, UO or UNIMOD accession is matched by its
+    /// number however it is padded (mz5 writes "UNIMOD:0000001"), and one that no loaded
+    /// version defines triggers an online update first (see <see cref="OnlineUpdate"/>).
+    /// </summary>
     public static CVTermInfo CvTermInfo(string id)
     {
         ArgumentNullException.ThrowIfNull(id);
-        return s_byAccession.TryGetValue(id, out var cvid) ? CvTermInfo(cvid) : CVTermInfo.Unknown;
+        var table = Table;
+        var info = table.TermInfo(id);
+        if (info.Cvid != CVID.CVID_Unknown || !CvOnlineUpdater.TryParseAccession(id, out var family, out var cvid))
+            return info;
+        if (table.Contains(cvid))
+            return table.TermInfo(cvid);
+        return CvOnlineUpdater.TryResolve(family, cvid, id) ? Table.TermInfo(cvid) : CVTermInfo.Unknown;
     }
 
     /// <summary>
     /// Returns true iff <paramref name="child"/> is a descendant of <paramref name="parent"/>
     /// via is_a relations (or equal). Mirrors pwiz's cvIsA.
     /// </summary>
-    public static bool CvIsA(CVID child, CVID parent)
-    {
-        if (child == parent) return true;
-        if (!s_terms.TryGetValue(child, out var info)) return false;
+    public static bool CvIsA(CVID child, CVID parent) => Table.IsA(child, parent);
 
-        foreach (var direct in info.ParentsIsA)
-        {
-            if (direct == parent) return true;
-            if (CvIsA(direct, parent)) return true;
-        }
-        return false;
-    }
+    /// <summary>Returns the list of all known CVID values, including terms learned online.</summary>
+    public static IReadOnlyList<CVID> AllCvids => Table.AllCvids;
 
-    /// <summary>Returns the list of all known CVID values.</summary>
-    public static IReadOnlyList<CVID> AllCvids => s_allCvids;
-
-    /// <summary>Returns a CV descriptor for a known prefix (<c>MS</c>, <c>UO</c>, <c>UNIMOD</c>).</summary>
+    /// <summary>
+    /// Returns a CV descriptor for a known prefix (<c>MS</c>, <c>UO</c>, <c>UNIMOD</c>). The
+    /// version is always the embedded one, even after an online update: it is what pwiz itself
+    /// writes terms from, and output must not depend on what earlier files happened to load.
+    /// </summary>
     public static CV GetCv(string prefix) => prefix switch
     {
         "MS" => new CV
@@ -208,7 +226,46 @@ public static class CvLookup
         _ => throw new ArgumentException($"Unknown CV prefix: {prefix}", nameof(prefix)),
     };
 
-    private static string ExtractVersion(ObOntology obo)
+    // ---- online update ----
+
+    /// <summary>
+    /// Whether an accession the loaded CVs don't define is looked up online. Defaults to
+    /// <see cref="CvOnlineUpdateMode.Enabled"/>, or to what the <c>PWIZ_CV_ONLINE_UPDATE</c>
+    /// environment variable says (<c>0</c>/<c>off</c>/<c>disabled</c>, or <c>cacheonly</c>).
+    /// </summary>
+    public static CvOnlineUpdateMode OnlineUpdate
+    {
+        get => CvOnlineUpdater.Mode;
+        set => CvOnlineUpdater.Mode = value;
+    }
+
+    /// <summary>
+    /// Raised with a human-readable line when an online update downloads a CV, or when a
+    /// download or cache write fails. Lookups never throw for these; this is the only report.
+    /// </summary>
+    public static event Action<string>? OnlineUpdateMessage
+    {
+        add => CvOnlineUpdater.Message += value;
+        remove => CvOnlineUpdater.Message -= value;
+    }
+
+    /// <summary>
+    /// Records a CV that a file being read declares (an mzML <c>cvList</c> entry, say), so that
+    /// an unknown term can be resolved from the version the file was written against. Cheap and
+    /// offline: nothing is downloaded until a lookup misses. CVs other than psi-ms, UO and
+    /// Unimod are ignored.
+    /// </summary>
+    public static void RegisterSource(CV cv)
+    {
+        ArgumentNullException.ThrowIfNull(cv);
+        CvOnlineUpdater.Register(cv);
+    }
+
+    /// <summary>Drops every registered source and downloaded term and restores the online
+    /// update settings to their defaults.</summary>
+    internal static void ResetOnlineUpdateForTests() => CvOnlineUpdater.Reset();
+
+    internal static string ExtractVersion(ObOntology obo)
     {
         foreach (var line in obo.Header)
         {
@@ -225,7 +282,29 @@ public static class CvLookup
 
     // ---- accession <-> CVID mapping ----
 
-    private static string AccessionForCvid(CVID cvid, string prefix)
+    /// <summary>The CVID for an accession, or null when the prefix has no value block or the
+    /// number does not fit in one.</summary>
+    internal static CVID? CvidFor(string prefix, uint number)
+    {
+        if (number >= ValueBlockSize)
+            return null;
+        int? offset = prefix switch
+        {
+            "MS" => OffsetMs,
+            "PEFF" => OffsetPeff,
+            "UO" => OffsetUo,
+            "UNIMOD" => OffsetUnimod,
+            _ => null,
+        };
+        return offset is null ? null : (CVID)(offset.Value + (int)number);
+    }
+
+    internal static string AccessionFor(string prefix, uint number)
+        => prefix == "UNIMOD"
+            ? FormatAccessionVariable(prefix, (int)number)
+            : FormatAccession(prefix, (int)number, 7);
+
+    internal static string AccessionForCvid(CVID cvid, string prefix)
     {
         int numeric = (int)cvid;
         return prefix switch
@@ -245,7 +324,7 @@ public static class CvLookup
     private static string FormatAccessionVariable(string prefix, int number)
         => $"{prefix}:{number.ToString(CultureInfo.InvariantCulture)}";
 
-    private static (string Prefix, string Suffix) SplitPrefix(string enumName)
+    internal static (string Prefix, string Suffix) SplitPrefix(string enumName)
     {
         int underscore = enumName.IndexOf('_');
         if (underscore <= 0) return ("", enumName);
@@ -261,7 +340,7 @@ public static class CvLookup
 
     // ---- OBO loading ----
 
-    private static class OboFiles
+    internal static class OboFiles
     {
         public static readonly ObOntology PsiMs = LoadEmbedded("Pwiz.Data.Common.Cv.psi-ms.obo");
         public static readonly ObOntology Unimod = LoadEmbedded("Pwiz.Data.Common.Cv.unimod.obo");
@@ -279,34 +358,194 @@ public static class CvLookup
         }
     }
 
-    private static Dictionary<CVID, CVTermInfo> BuildTermTable()
+    internal static CVTermInfo BuildFromOboTerm(CVID cvid, string accession, OboTerm term)
     {
-        // Build accession → (OBO prefix, OBO term) lookup from all three ontologies.
-        var oboByAccession = new Dictionary<string, (string Prefix, OboTerm Term)>(StringComparer.Ordinal);
-        foreach (var obo in new[] { OboFiles.PsiMs, OboFiles.Unimod, OboFiles.Unit })
+        // OBO parents have the child's prefix (the parser drops the rest); an id too large for
+        // the prefix's value block, possible in a downloaded file, is dropped rather than wrapped
+        // into another block.
+        CVID[] TranslateParents(List<uint> parentIds) => parentIds
+            .Select(id => CvidFor(term.Prefix, id))
+            .OfType<CVID>()
+            .ToArray();
+
+        var isA = term.ParentsIsA.Count == 0
+            ? (IReadOnlyList<CVID>)Array.Empty<CVID>()
+            : TranslateParents(term.ParentsIsA);
+        var partOf = term.ParentsPartOf.Count == 0
+            ? (IReadOnlyList<CVID>)Array.Empty<CVID>()
+            : TranslateParents(term.ParentsPartOf);
+
+        return new CVTermInfo
+        {
+            Cvid = cvid,
+            Id = accession,
+            Name = term.Name,
+            Def = term.Def,
+            IsObsolete = term.IsObsolete,
+            ParentsIsA = isA,
+            ParentsPartOf = partOf,
+            ExactSynonyms = term.ExactSynonyms.Count == 0
+                ? Array.Empty<string>()
+                : term.ExactSynonyms.ToArray(),
+            PropertyValues = term.PropertyValues.Count == 0
+                ? Array.Empty<KeyValuePair<string, string>>()
+                : term.PropertyValues.ToArray(),
+        };
+    }
+}
+
+/// <summary>
+/// An immutable snapshot of every known term: the embedded OBO files, plus any CV versions
+/// loaded online. <see cref="CvLookup"/> swaps in a new one rather than mutating it.
+/// </summary>
+internal sealed class CvTermTable
+{
+    public static readonly CvTermTable Embedded = BuildEmbedded();
+
+    private readonly Dictionary<CVID, CVTermInfo> _terms;
+    private readonly Dictionary<string, CVID> _byAccession;
+    private readonly CVID[] _allCvids;
+
+    // CVIDs the embedded OBO files define, as opposed to enum values that only have a
+    // fallback derived from their identifier.
+    private readonly HashSet<CVID> _oboDefined;
+
+    // The version each term loaded online came from, so a later, older version cannot replace it.
+    private readonly Dictionary<CVID, CvVersion> _loadedVersions;
+
+    private CvTermTable(Dictionary<CVID, CVTermInfo> terms, Dictionary<string, CVID> byAccession,
+        HashSet<CVID> oboDefined, Dictionary<CVID, CvVersion> loadedVersions)
+    {
+        _terms = terms;
+        _byAccession = byAccession;
+        _oboDefined = oboDefined;
+        _loadedVersions = loadedVersions;
+        _allCvids = terms.Keys.ToArray();
+        Array.Sort(_allCvids);
+    }
+
+    public IReadOnlyList<CVID> AllCvids => _allCvids;
+
+    public CVTermInfo TermInfo(CVID cvid) =>
+        _terms.TryGetValue(cvid, out var info) ? info : CVTermInfo.Unknown;
+
+    public CVTermInfo TermInfo(string accession) =>
+        _byAccession.TryGetValue(accession, out var cvid) ? TermInfo(cvid) : CVTermInfo.Unknown;
+
+    public bool Contains(CVID cvid) => _terms.ContainsKey(cvid);
+
+    // Recursion is safe because WithSource never publishes a table with an is_a cycle.
+    public bool IsA(CVID child, CVID parent)
+    {
+        if (child == parent) return true;
+        if (!_terms.TryGetValue(child, out var info)) return false;
+
+        foreach (var direct in info.ParentsIsA)
+        {
+            if (direct == parent) return true;
+            if (IsA(direct, parent)) return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// This table with <paramref name="source"/> merged in, or null when the merge would give
+    /// the is_a hierarchy a cycle. Each term keeps the newest version that defines it: a version
+    /// older than the embedded one only fills gaps, never reverting a term the embedded files
+    /// define, and never replacing a term an even newer download supplied.
+    /// </summary>
+    public CvTermTable? WithSource(CvSource source)
+    {
+        var family = source.Family;
+        bool newerThanEmbedded = source.Version.CompareTo(family.EmbeddedVersion) > 0;
+        var terms = new Dictionary<CVID, CVTermInfo>(_terms);
+        var byAccession = new Dictionary<string, CVID>(_byAccession, StringComparer.Ordinal);
+        var loadedVersions = new Dictionary<CVID, CvVersion>(_loadedVersions);
+
+        foreach (var term in source.Obo.Terms)
+        {
+            // psi-ms.obo also carries copies of UO and NCIT terms; each CV speaks only for its own.
+            if (!family.Prefixes.Contains(term.Prefix)) continue;
+            if (CvLookup.CvidFor(term.Prefix, term.Id) is not { } cvid) continue;
+            if (loadedVersions.TryGetValue(cvid, out var loaded)
+                    ? loaded.CompareTo(source.Version) >= 0
+                    : !newerThanEmbedded && _oboDefined.Contains(cvid))
+                continue;
+
+            var info = CvLookup.BuildFromOboTerm(cvid, CvLookup.AccessionFor(term.Prefix, term.Id), term);
+            terms[cvid] = info;
+            byAccession[info.Id] = cvid;
+            loadedVersions[cvid] = source.Version;
+        }
+
+        var table = new CvTermTable(terms, byAccession, _oboDefined, loadedVersions);
+        return table.HasIsACycle() ? null : table;
+    }
+
+    /// <summary>True when some term is, through is_a, its own ancestor; <see cref="IsA"/>
+    /// would never return for it.</summary>
+    private bool HasIsACycle()
+    {
+        // Iterative depth-first search: a node met again while still on the path closes a cycle.
+        var state = new Dictionary<CVID, bool>(_terms.Count); // false: on the path; true: done
+        var path = new Stack<(CVID Cvid, int NextParent)>();
+        foreach (var root in _terms.Keys)
+        {
+            if (state.ContainsKey(root)) continue;
+            state[root] = false;
+            path.Push((root, 0));
+            while (path.Count > 0)
+            {
+                var (cvid, next) = path.Pop();
+                var parents = _terms.TryGetValue(cvid, out var info) ? info.ParentsIsA : Array.Empty<CVID>();
+                if (next == parents.Count)
+                {
+                    state[cvid] = true;
+                    continue;
+                }
+                path.Push((cvid, next + 1));
+                var parent = parents[next];
+                if (!state.TryGetValue(parent, out bool done))
+                {
+                    state[parent] = false;
+                    path.Push((parent, 0));
+                }
+                else if (!done)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static CvTermTable BuildEmbedded()
+    {
+        var obos = new[] { CvLookup.OboFiles.PsiMs, CvLookup.OboFiles.Unimod, CvLookup.OboFiles.Unit };
+
+        // Build accession → OBO term lookup from all three ontologies.
+        var oboByAccession = new Dictionary<string, OboTerm>(StringComparer.Ordinal);
+        foreach (var obo in obos)
         {
             foreach (var term in obo.Terms)
-            {
-                string key = term.Prefix == "UNIMOD"
-                    ? FormatAccessionVariable(term.Prefix, (int)term.Id)
-                    : FormatAccession(term.Prefix, (int)term.Id, 7);
-                oboByAccession[key] = (term.Prefix, term);
-            }
+                oboByAccession[CvLookup.AccessionFor(term.Prefix, term.Id)] = term;
         }
 
         var values = Enum.GetValues<CVID>();
-        var dict = new Dictionary<CVID, CVTermInfo>(values.Length);
+        var terms = new Dictionary<CVID, CVTermInfo>(values.Length);
+        var oboDefined = new HashSet<CVID>();
 
         foreach (var cvid in values)
         {
             string enumName = cvid.ToString();
-            var (prefix, _) = SplitPrefix(enumName);
-            string accession = AccessionForCvid(cvid, prefix);
+            var (prefix, _) = CvLookup.SplitPrefix(enumName);
+            string accession = CvLookup.AccessionForCvid(cvid, prefix);
 
             CVTermInfo info;
             if (oboByAccession.TryGetValue(accession, out var found))
             {
-                info = BuildFromOboTerm(cvid, accession, found.Term);
+                info = CvLookup.BuildFromOboTerm(cvid, accession, found);
+                oboDefined.Add(cvid);
             }
             else
             {
@@ -326,66 +565,15 @@ public static class CvLookup
                     IsObsolete = obsolete,
                 };
             }
-            dict[cvid] = info;
+            terms[cvid] = info;
         }
 
-        dict[CVID.CVID_Unknown] = CVTermInfo.Unknown;
-        return dict;
-    }
+        terms[CVID.CVID_Unknown] = CVTermInfo.Unknown;
 
-    private static CVTermInfo BuildFromOboTerm(CVID cvid, string accession, OboTerm term)
-    {
-        // Translate OBO parent numeric ids to CVIDs (same prefix as the child).
-        CVID TranslateParent(uint parentId)
-        {
-            int numeric = term.Prefix switch
-            {
-                "MS" => (int)parentId + OffsetMs,
-                "UO" => (int)parentId + OffsetUo,
-                "UNIMOD" => (int)parentId + OffsetUnimod,
-                "PEFF" => (int)parentId + OffsetPeff,
-                _ => 0,
-            };
-            return (CVID)numeric;
-        }
+        var byAccession = new Dictionary<string, CVID>(terms.Count, StringComparer.Ordinal);
+        foreach (var kv in terms)
+            byAccession[kv.Value.Id] = kv.Key;
 
-        var isA = term.ParentsIsA.Count == 0
-            ? (IReadOnlyList<CVID>)Array.Empty<CVID>()
-            : term.ParentsIsA.Select(TranslateParent).ToArray();
-        var partOf = term.ParentsPartOf.Count == 0
-            ? (IReadOnlyList<CVID>)Array.Empty<CVID>()
-            : term.ParentsPartOf.Select(TranslateParent).ToArray();
-
-        return new CVTermInfo
-        {
-            Cvid = cvid,
-            Id = accession,
-            Name = term.Name,
-            Def = term.Def,
-            IsObsolete = term.IsObsolete,
-            ParentsIsA = isA,
-            ParentsPartOf = partOf,
-            ExactSynonyms = term.ExactSynonyms.Count == 0
-                ? Array.Empty<string>()
-                : term.ExactSynonyms.ToArray(),
-            PropertyValues = term.PropertyValues.Count == 0
-                ? Array.Empty<KeyValuePair<string, string>>()
-                : term.PropertyValues.ToArray(),
-        };
-    }
-
-    private static Dictionary<string, CVID> BuildAccessionIndex()
-    {
-        var dict = new Dictionary<string, CVID>(s_terms.Count, StringComparer.Ordinal);
-        foreach (var kv in s_terms)
-            dict[kv.Value.Id] = kv.Key;
-        return dict;
-    }
-
-    private static CVID[] BuildCvidList()
-    {
-        var all = Enum.GetValues<CVID>();
-        Array.Sort(all);
-        return all;
+        return new CvTermTable(terms, byAccession, oboDefined, new Dictionary<CVID, CvVersion>());
     }
 }

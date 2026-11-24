@@ -275,7 +275,7 @@ namespace pwiz.CommonFileDialogs
             this.lookInImageList.Images.SetKeyName(5, "LocalDrive.png");
             this.lookInImageList.Images.SetKeyName(6, "OpticalDrive.png");
             this.lookInImageList.Images.SetKeyName(7, "NetworkDrive.png");
-            this.lookInImageList.Images.SetKeyName(8, "folder.png");
+            this.lookInImageList.Images.SetKeyName(8, "Folder.png");
             this.lookInImageList.Images.SetKeyName(9, "MassSpecFile.png");
             this.lookInImageList.Images.SetKeyName(10, "File.png");
             this.lookInImageList.Images.SetKeyName(11, "MethodFile.png");

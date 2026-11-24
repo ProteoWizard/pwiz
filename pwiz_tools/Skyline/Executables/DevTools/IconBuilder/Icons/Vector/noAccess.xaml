@@ -1,0 +1,18 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- No access: a small gold-outlined yellow folder with a gray shadow, covered by a thick red
+       prohibition ring with a diagonal bar from upper left to lower right. -->
+  <Path Data="M 20,8 L 24,8 L 24,22 L 2,22 L 2,25 L 22,25 Z" Fill="#8A8A8A" Opacity="0.7"/>
+  <Path Data="M 2,4 L 9,4 L 11,6 L 20,6 L 20,21 L 2,21 Z" Fill="#FFF4B0" Stroke="#C08A10" StrokeThickness="2" StrokeLineJoin="Miter"/>
+  <Path Data="M 5,10 L 23,10 L 21,24 L 3,24 Z" Stroke="#B8860B" StrokeThickness="2" StrokeLineJoin="Miter">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFF6B8" Offset="0"/>
+        <GradientStop Color="#FFE468" Offset="0.5"/>
+        <GradientStop Color="#F3B220" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <!-- Prohibition sign -->
+  <Ellipse Canvas.Left="4" Canvas.Top="4" Width="26" Height="26" Stroke="#F01010" StrokeThickness="4"/>
+  <Path Data="M 9,8 L 26,27" Stroke="#F01010" StrokeThickness="4"/>
+</Canvas>

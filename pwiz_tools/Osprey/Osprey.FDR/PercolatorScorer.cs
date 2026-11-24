@@ -79,7 +79,6 @@ namespace pwiz.Osprey.FDR
             Func<string, double[]> loadFileApexRts,
             IFdrOutputSink sink,
             Action<FeatureContributions> captureContributions = null,
-            bool applyExperimentAgg = true,
             Dictionary<int, int> heldOutFoldByRow = null)
         {
             if (loadFileFeatures == null)
@@ -111,20 +110,7 @@ namespace pwiz.Osprey.FDR
             double[] avgWeights = null;
             double avgBias = 0.0;
             if (gbtModels == null)
-            {
-                avgWeights = new double[nFeatures];
-                for (int f = 0; f < nModels; f++)
-                {
-                    double[] foldW = trainResults.FoldWeights[f];
-                    for (int j = 0; j < nFeatures; j++)
-                        avgWeights[j] += foldW[j];
-                    avgBias += trainResults.FoldBiases[f];
-                }
-                double nModelsD = nModels;
-                for (int j = 0; j < nFeatures; j++)
-                    avgWeights[j] /= nModelsD;
-                avgBias /= nModelsD;
-            }
+                avgWeights = AverageFoldWeights(trainResults.FoldWeights, trainResults.FoldBiases, nFeatures, out avgBias);
 
             var standardizer = trainResults.Standardizer;
             var finalScores = new double[n];
@@ -146,7 +132,7 @@ namespace pwiz.Osprey.FDR
             // covers a slow single file. Console-only -- never touches finalScores /
             // the sink, so byte-identity is unaffected.
             int gi = 0;
-            using (var scoreProgress = new ProgressReporter(string.Format(OspreyFDRResources.PercolatorScorer_ScoreProjectionAndComputeFdrInPlace_Scoring__0__precursor_candidate_peaks, n), n))
+            ProgressReporter.Run(string.Format(OspreyFDRResources.PercolatorScorer_ScoreProjectionAndComputeFdrInPlace_Scoring__0__precursor_candidate_peaks, n), n, scoreProgress =>
             {
                 foreach (var kvp in perFile)
                 {
@@ -198,8 +184,7 @@ namespace pwiz.Osprey.FDR
                         contribAcc.Add(share.ToFeatureSums());
                     scoreProgress.Report(gi);
                 }
-                scoreProgress.Complete();
-            }
+            });
 
             var contributions = reportContributions
                 ? BuildContributions(contribAcc, gbtModels, trainResults, config)
@@ -252,10 +237,12 @@ namespace pwiz.Osprey.FDR
             bool isSingleFile = nonEmptyFiles <= 1;
             Dictionary<uint, double> expPrecByWinnerId = isSingleFile
                 ? null : PercolatorQValues.ComputeExperimentPrecursorQMap(
-                    finalScores, labels, entryIds, applyExperimentAgg);
-            Dictionary<string, double> expPeptByPeptide = isSingleFile
-                ? null : PercolatorQValues.ComputeExperimentPeptideQMap(
-                    finalScores, labels, entryIds, peptides, applyExperimentAgg);
+                    finalScores, labels, entryIds);
+            // The peptide competition runs either way, for its PEP; its q is used only when
+            // multi-file, as before.
+            var expPeptCompetition = PercolatorQValues.ComputeExperimentPeptideQMap(
+                finalScores, labels, entryIds, peptides, out var peptidePepByPeptide);
+            Dictionary<string, double> expPeptByPeptide = isSingleFile ? null : expPeptCompetition;
 
             // The score those experiment competitions ranked each entry on (sidecar v4, issue
             // #4522), persisted beside the q-values they produced. Built even on the
@@ -263,7 +250,7 @@ namespace pwiz.Osprey.FDR
             // aggregate is the entry's max over its own rows -- which is still not the per-row
             // Score, because a precursor carries several pre-compaction rows per file.
             var expAggByEntryId = PercolatorQValues.ComputeExperimentAggregateScoreMap(
-                finalScores, labels, entryIds, applyExperimentAgg);
+                finalScores, entryIds);
 
             // Best-of-runs monotonicity floors (issue #4390): the min-over-runs combined run q
             // that ClampExperimentQToBestRunFlat floors experiment q up to, keyed by EntryId and
@@ -273,7 +260,7 @@ namespace pwiz.Osprey.FDR
             // to assign. min/max are order-independent -> byte-identical to the flat clamp.
             var minRunBothByEntryId = new Dictionary<uint, double>();
             var minRunBothByPeptide = new Dictionary<(string, bool), double>();
-            using (var floorProgress = PercolatorQValues.QProgress(OspreyFDRResources.PercolatorScorer_ScoreProjectionAndComputeFdrInPlace_Per_run_q_value_floors, perFile.Count, n))
+            PercolatorQValues.QRun(OspreyFDRResources.PercolatorScorer_ScoreProjectionAndComputeFdrInPlace_Per_run_q_value_floors, perFile.Count, n, floorProgress =>
             {
                 int off = 0;
                 int floorFile = 0;
@@ -293,8 +280,7 @@ namespace pwiz.Osprey.FDR
                     off += count;
                     floorProgress?.Report(++floorFile);
                 }
-                floorProgress?.Complete();
-            }
+            });
 
             // Emit pass: recompute each file's per-run q-values, assign every row's five q-values
             // from the bounded lookups, write the Score onto the projection row (FdrProjection is
@@ -344,6 +330,7 @@ namespace pwiz.Osprey.FDR
                         epe = floorPept;
 
                     double pep = pepByEntryId.TryGetValue(entryIds[g], out double pv) ? pv : 1.0;
+                    double peptidePep = peptidePepByPeptide.TryGetValue(pept, out double ppv) ? ppv : 1.0;
 
                     double ea = expAggByEntryId.TryGetValue(entryIds[g], out double eav)
                         ? eav : finalScores[g];
@@ -355,7 +342,7 @@ namespace pwiz.Osprey.FDR
                         : double.NaN;
                     sink.Accept(fileIdx, r, projRows[r].EntryId, projRows[r].IsDecoy,
                         projRows[r].Charge, pept, finalScores[g], ea, apexRt,
-                        new FdrQValues(rp, rpe, ep, epe, pep));
+                        new FdrQValues(rp, rpe, ep, epe, pep, peptidePep));
                 }
                 wgi += count;
                 fileIdx++;
@@ -640,6 +627,84 @@ namespace pwiz.Osprey.FDR
                         : AverageGbtScore(gbtModels, featureBuf);
                 }
             });
+        }
+
+        /// <summary>
+        /// Score <paramref name="count"/> rows with a trained model of either classifier, a row in
+        /// <paramref name="heldOutFoldByRow"/> by the one fold model that held it out and any other
+        /// by the model the full-population score passes apply: the mean of the tree ensembles'
+        /// margins (<see cref="ScoreRowsGbt"/>, unchanged), or the averaged-weights dot product
+        /// (<see cref="AverageFoldWeights"/>, <see cref="ScoreStandardizedRow"/>). A held-out linear
+        /// row is that fold's own weights and bias through the same dot product. Used where a
+        /// round-1 model scores rows before round 2 trains (the two-round training and its
+        /// protein-best column), so the SVM and the trees take one path. Parallel over contiguous
+        /// chunks either way and bit-identical at any <paramref name="nThreads"/>: each row's score
+        /// depends only on that row.
+        /// </summary>
+        internal static void ScoreRowsWithModel(
+            int count,
+            Func<int, double[]> rawRowAt,
+            PercolatorResults model,
+            int nFeatures,
+            double[] scores,
+            int baseIndex,
+            int nThreads,
+            IReadOnlyDictionary<int, int> heldOutFoldByRow = null)
+        {
+            var gbtModels = ResolveGbtModels(model);
+            if (gbtModels != null)
+            {
+                ScoreRowsGbt(count, rawRowAt, gbtModels, model.Standardizer, nFeatures, scores, baseIndex,
+                    nThreads, heldOutFoldByRow);
+                return;
+            }
+            if (count == 0)
+                return;
+            double[] avgWeights = AverageFoldWeights(model.FoldWeights, model.FoldBiases, nFeatures, out double avgBias);
+            var standardizer = model.Standardizer;
+            int threads = Math.Max(1, Math.Min(nThreads, count));
+            int chunk = (count + threads - 1) / threads;
+            OspreyParallel.For(0, threads, threads, c =>
+            {
+                var featureBuf = new double[nFeatures];   // per-chunk: never shared
+                int lo = c * chunk;
+                int hi = Math.Min(lo + chunk, count);
+                for (int r = lo; r < hi; r++)
+                {
+                    Array.Copy(rawRowAt(r), 0, featureBuf, 0, nFeatures);
+                    standardizer.TransformSlice(featureBuf);
+                    int fold;
+                    scores[baseIndex + r] = heldOutFoldByRow != null && heldOutFoldByRow.TryGetValue(baseIndex + r, out fold)
+                        ? ScoreStandardizedRow(null, model.FoldWeights[fold], model.FoldBiases[fold], featureBuf)
+                        : ScoreStandardizedRow(null, avgWeights, avgBias, featureBuf);
+                }
+            });
+        }
+
+        /// <summary>
+        /// The linear model the full-population score passes apply: each feature's weight summed
+        /// over the folds in fold order and divided by the fold count, and the biases likewise.
+        /// The one implementation of that average, so every pass that scores with the averaged
+        /// SVM computes the same bits.
+        /// </summary>
+        internal static double[] AverageFoldWeights(IReadOnlyList<double[]> foldWeights,
+            IReadOnlyList<double> foldBiases, int nFeatures, out double avgBias)
+        {
+            int nModels = foldWeights.Count;
+            var avgWeights = new double[nFeatures];
+            avgBias = 0.0;
+            for (int f = 0; f < nModels; f++)
+            {
+                double[] foldW = foldWeights[f];
+                for (int j = 0; j < nFeatures; j++)
+                    avgWeights[j] += foldW[j];
+                avgBias += foldBiases[f];
+            }
+            double nModelsD = nModels;
+            for (int j = 0; j < nFeatures; j++)
+                avgWeights[j] /= nModelsD;
+            avgBias /= nModelsD;
+            return avgWeights;
         }
     }
 }

@@ -128,6 +128,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // toolButtonUndo
             // 
             this.toolButtonUndo.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolButtonUndo.Image = global::pwiz.Common.Properties.Resources.Edit_Undo;
             resources.ApplyResources(this.toolButtonUndo, "toolButtonUndo");
             this.toolButtonUndo.Name = "toolButtonUndo";
             this.toolButtonUndo.Click += new System.EventHandler(this.toolButtonUndo_Click);
@@ -135,6 +136,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // toolButtonRedo
             // 
             this.toolButtonRedo.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolButtonRedo.Image = global::pwiz.Common.Properties.Resources.Edit_Redo;
             resources.ApplyResources(this.toolButtonRedo, "toolButtonRedo");
             this.toolButtonRedo.Name = "toolButtonRedo";
             this.toolButtonRedo.Click += new System.EventHandler(this.toolButtonRedo_Click);
@@ -147,6 +149,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // toolButtonFind
             // 
             this.toolButtonFind.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolButtonFind.Image = global::pwiz.Common.Properties.Resources.Find;
             resources.ApplyResources(this.toolButtonFind, "toolButtonFind");
             this.toolButtonFind.Name = "toolButtonFind";
             this.toolButtonFind.Click += new System.EventHandler(this.toolButtonFind_Click);
@@ -154,6 +157,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // toolButtonAlphabetical
             // 
             this.toolButtonAlphabetical.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolButtonAlphabetical.Image = global::pwiz.Common.Properties.Resources.Alphabetical;
             resources.ApplyResources(this.toolButtonAlphabetical, "toolButtonAlphabetical");
             this.toolButtonAlphabetical.Name = "toolButtonAlphabetical";
             this.toolButtonAlphabetical.Click += new System.EventHandler(this.toolButtonAlphabetical_Click);
@@ -161,6 +165,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // toolButtonShowHiddenColumns
             // 
             this.toolButtonShowHiddenColumns.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolButtonShowHiddenColumns.Image = global::pwiz.Common.Properties.Resources.HiddenColumns;
             resources.ApplyResources(this.toolButtonShowHiddenColumns, "toolButtonShowHiddenColumns");
             this.toolButtonShowHiddenColumns.Name = "toolButtonShowHiddenColumns";
             this.toolButtonShowHiddenColumns.Click += new System.EventHandler(this.showHiddenFieldsToolStripMenuItem_Click);

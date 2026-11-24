@@ -59,6 +59,7 @@ Options:
   --acceptZeroLengthSpectra          : some vendor readers have an efficient way of filtering out empty spectra, but it takes more time to open the file
   --ignoreMissingZeroSamples         : some vendor readers do not include zero samples in their profile data; the default behavior is to add the zero samples but this option disables that
   --ignoreUnknownInstrumentError     : if true, if an instrument cannot be determined from a vendor file, it will not be an error
+  --noCvUpdate                       : do not download a newer controlled vocabulary when an input file uses a term the built-in one does not define (the term is then unknown)
   --stripLocationFromSourceFiles     : if true, sourceFile elements will be stripped of location information, so the same file converted from different locations will produce the same mzML
   --stripVersionFromSoftware         : if true, software elements will be stripped of version information, so the same file converted with different versions will produce the same mzML
   --singleThreaded [arg(=1)]         : if true, reading and writing spectra will be done on a single thread

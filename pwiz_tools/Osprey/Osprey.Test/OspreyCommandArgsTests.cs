@@ -209,6 +209,36 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(FdrLevel.Precursor, Parse(OspreyCommandArgs.ARG_FDR_LEVEL, @"bogus").FdrLevel);     // warn -> default unchanged
             Assert.AreEqual(SharedPeptideMode.Razor, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES + @"razor").SharedPeptides);
             Assert.AreEqual(SharedPeptideMode.All, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES, @"bogus").SharedPeptides); // warn -> default
+            // --protein-boost: best, compact and off are its values. Absent, the resolution chooses (best
+            // for HRAM, compact at unit resolution), so it declares no single default and is compact until
+            // a resolution is applied; given, it stands whatever the resolution. The classifier
+            // follows the resolution the same way when OSPREY_FDR_MODEL is unset.
+            Assert.AreEqual(ProteinBoost.compact, io.ProteinBoost, @"the boost is compact until a resolution is applied");
+            Assert.IsNull(OspreyCommandArgs.ARG_PROTEIN_BOOST.DefaultValue);
+            string hramArg = OspreyCommandArgs.ARG_RESOLUTION + OspreyCommandArgs.RESOLUTION_HRAM;
+            string unitArg = OspreyCommandArgs.ARG_RESOLUTION + OspreyCommandArgs.RESOLUTION_UNIT;
+            Assert.AreEqual(ProteinBoost.best, Parse(hramArg).ProteinBoost);
+            Assert.AreEqual(ProteinBoost.compact, Parse(unitArg).ProteinBoost);
+            Assert.AreEqual(ProteinBoost.off, Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"off", hramArg).ProteinBoost);
+            Assert.AreEqual(ProteinBoost.compact, Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"compact", hramArg).ProteinBoost);
+            Assert.AreEqual(ProteinBoost.best, Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"best", unitArg).ProteinBoost);
+            Assert.AreEqual(FdrClassifier.Gbdt, OspreyCommandArgs.ParseArgs(ArgTokens.Split(hramArg), null).FdrClassifier);
+            Assert.AreEqual(FdrClassifier.LinearSvm, OspreyCommandArgs.ParseArgs(ArgTokens.Split(unitArg), null).FdrClassifier);
+            Assert.AreEqual(FdrClassifier.LinearSvm,
+                OspreyCommandArgs.ParseArgs(ArgTokens.Split(hramArg), FdrClassifier.LinearSvm).FdrClassifier,
+                @"OSPREY_FDR_MODEL=svm stands at HRAM");
+            Assert.AreEqual(ProteinBoost.off, Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"OFF").ProteinBoost);
+            // Off must not end the parse: the arguments after it still apply.
+            var offThenThreads = Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"off", OspreyCommandArgs.ARG_THREADS + 8);
+            Assert.IsFalse(offThenThreads.ProteinBest);
+            Assert.AreEqual(8, offThenThreads.NThreads);
+            Assert.IsTrue(Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"best").ProteinBest);
+            // The second pass follows the boost: protein-compact under compact, the transfer otherwise.
+            Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT, Parse(unitArg).Pass2QValue);
+            Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, Parse(hramArg).Pass2QValue);
+            Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, offThenThreads.Pass2QValue);
+            Assert.ThrowsException<ValueInvalidException>(() => OspreyCommandArgs.ARG_PROTEIN_BOOST + @"max");
+            Assert.ThrowsException<ValueInvalidException>(() => OspreyCommandArgs.ARG_PROTEIN_BOOST + OspreyArgNames.VALUE_ON);
 
             // FDRBench: --fdrbench records the path, --fdrbench-per-run is a flat flag,
             // --fdrbench-pass selects the pass(es) as a bitmask (default 2; 1, 2, or both;
@@ -225,6 +255,17 @@ namespace pwiz.Osprey.Test
             // Decoys.
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY).DecoysInLibrary);
             Assert.AreEqual(@"m.tsv", Parse(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY, OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST + @"m.tsv").DecoyPairingManifestPath);
+            Assert.IsFalse(Parse(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY).StripEntrapment);
+            Assert.IsTrue(Parse(OspreyCommandArgs.ARG_STRIP_ENTRAPMENT).StripEntrapment);
+
+            // Library build: entrapment placed on target proteins is a ratio of its own beside --entrapment's.
+            var entrapment = Parse(OspreyCommandArgs.ARG_FASTA + @"p.fasta", OspreyCommandArgs.ARG_ENTRAPMENT + @"0.1",
+                OspreyCommandArgs.ARG_ENTRAPMENT_IN_TARGETS + @"0.2").LibraryBuild;
+            Assert.IsTrue(entrapment.Entrapment);
+            Assert.AreEqual(0.1, entrapment.EntrapmentRatio);
+            Assert.AreEqual(0.2, entrapment.EntrapmentInTargetsRatio);
+            Assert.IsNull(Parse(OspreyCommandArgs.ARG_FASTA + @"p.fasta", OspreyCommandArgs.ARG_ENTRAPMENT).LibraryBuild.EntrapmentInTargetsRatio);
+            Assert.ThrowsException<ArgumentException>(() => Parse(OspreyCommandArgs.ARG_FASTA + @"p.fasta", OspreyCommandArgs.ARG_ENTRAPMENT_IN_TARGETS + @"x"));
 
             // Training export: off by default, and each setting lands where the task reads it.
             var noExport = Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").TrainingExport;
@@ -301,13 +342,15 @@ namespace pwiz.Osprey.Test
             // The joined --task=Name form too (see OspreyCommandArgsTests.TestNameEqualsValueForm).
             Assert.IsNull(Parse(OspreyCommandArgs.ARG_TASK.ArgumentText + @"=" + SecondPassFdrTask.TASK_NAME, OspreyCommandArgs.ARG_LIBRARY + @"ref.blib", OspreyCommandArgs.ARG_OUTPUT + @"out.blib").SelectedTask);
 
-            // Logging: --timestamp / --memstamp are value-less flags (default off);
+            // Logging: --timestamp / --memstamp / --diskstamp are value-less flags (default off);
             // --log-file takes a path.
             Assert.IsFalse(Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").IsTimeStamped);
             Assert.IsFalse(Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").IsMemStamped);
             Assert.IsNull(Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").LogFilePath);
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_TIMESTAMP).IsTimeStamped);
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_MEMSTAMP).IsMemStamped);
+            Assert.IsFalse(Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").IsDiskStamped);
+            Assert.IsTrue(Parse(OspreyCommandArgs.ARG_DISKSTAMP).IsDiskStamped);
             Assert.AreEqual(@"run.log", Parse(OspreyCommandArgs.ARG_LOG_FILE + @"run.log").LogFilePath);
         }
 
@@ -633,8 +676,8 @@ namespace pwiz.Osprey.Test
                 OspreyArgNames.OUTPUT_DIR, @"export-library", OspreyArgNames.FASTA, OspreyArgNames.PRECURSORS,
                 OspreyArgNames.TRAINING_INPUT, OspreyArgNames.TRAINING_INPUT_LIST, OspreyArgNames.MODEL,
                 OspreyArgNames.TORCH_RUNTIMES, OspreyArgNames.INSTALL_CUDA_RUNTIME, OspreyArgNames.ENTRAPMENT,
-                OspreyArgNames.ENTRAPMENT_FASTA, OspreyArgNames.TASK, OspreyArgNames.TRAINING_SEARCH,
-                OspreyArgNames.TASK_FILES, @"timestamp", @"memstamp", @"log-file", @"help", @"help-env", @"version", @"culture",
+                OspreyArgNames.ENTRAPMENT_FASTA, OspreyArgNames.ENTRAPMENT_IN_TARGETS, OspreyArgNames.TASK, OspreyArgNames.TRAINING_SEARCH,
+                OspreyArgNames.TASK_FILES, @"timestamp", @"memstamp", @"diskstamp", @"log-file", @"help", @"help-env", @"version", @"culture",
                 // Developer options and outputs a user of a host's settings page has no use for
                 OspreyArgNames.DECOY_PAIRING_MANIFEST, OspreyArgNames.TRAINING_EXPORT, @"training-export-claimant-q",
                 @"training-export-xics", @"perf-stats",

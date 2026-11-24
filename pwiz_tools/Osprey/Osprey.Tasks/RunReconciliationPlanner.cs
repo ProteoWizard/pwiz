@@ -50,7 +50,7 @@ namespace pwiz.Osprey.Tasks
     internal sealed class RunReconciliationPlanner
     {
         private readonly double _consensusFdr;
-        private readonly IReadOnlyDictionary<string, string> _perFileParquetPaths;
+        private readonly double _refitBandwidth;
         private readonly Lazy<State> _state;
         private readonly PipelineContext _ctx;
         private int _runsPlanned;
@@ -72,8 +72,6 @@ namespace pwiz.Osprey.Tasks
         /// <param name="perFileCalibrations">Each run's Stage 3 RT calibration.</param>
         /// <param name="perFileIsolationMz">Each run's isolation-window m/z coverage.</param>
         /// <param name="fullLibrary">The library, for the gap-fill lookups.</param>
-        /// <param name="perFileParquetPaths">Each run's Stage 4 scores parquet, for its CWT
-        /// candidates.</param>
         /// <param name="config">The analysis configuration.</param>
         /// <param name="ctx">For the per-run and summary log lines.</param>
         internal RunReconciliationPlanner(
@@ -81,49 +79,60 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
             IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
             IReadOnlyList<LibraryEntry> fullLibrary,
-            IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
             PipelineContext ctx)
         {
             _consensusFdr = config.Reconciliation.ConsensusFdr;
-            _perFileParquetPaths = perFileParquetPaths;
+            _refitBandwidth = config.RtCalibration.LoessBandwidth;
             _ctx = ctx;
             _state = new Lazy<State>(() => BuildState(loadConsensus(), perFileCalibrations,
-                perFileIsolationMz, fullLibrary), LazyThreadSafetyMode.ExecutionAndPublication);
+                perFileIsolationMz, fullLibrary, config.Pass2TransferQ), LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
         /// <summary>
-        /// Plan one run from its compacted survivors and return the plan as the run's
-        /// <see cref="ReconciliationFile"/>, ready to save.
+        /// Plan one run from its compacted survivors: refit its RT calibration, choose the
+        /// survivors whose peak moves and find its gap-fill targets. Where each moved survivor's
+        /// new peak lies is left to the rescore, which computes the survivor's CWT candidates from
+        /// the spectra it loads anyway (<see cref="CwtCandidateRecompute"/>) and then completes the
+        /// plan (<see cref="CompleteRun"/>).
         ///
         /// <para>Plans over a canonically sorted copy of <paramref name="survivors"/>, the order
         /// FirstPassFDR's survivor loader gave the planner when planning ran there. The refit's
         /// LOESS input is built in entry order, so the order is part of the answer; the caller's
         /// list keeps its own order, since the plan names its targets by entry_id.</para>
         /// </summary>
-        internal ReconciliationFile PlanRun(string fileName, IReadOnlyList<FdrEntry> survivors)
+        internal RescorePlan PlanRun(string fileName, IReadOnlyList<FdrEntry> survivors)
         {
             var state = _state.Value;
             var entries = new List<FdrEntry>(survivors);
             FdrEntry.SortCanonicalResolved(entries, fileName);
-            var refined = CalibrationRefit.Refit(state.Consensus.Consensus, entries, _consensusFdr);
+            // A null refit plans the run with its first-pass calibration (OSPREY_RECON_REFIT=off)
+            var refined = OspreyEnvironment.ReconciliationRefitOff ? null
+                : CalibrationRefit.Refit(state.Consensus.Consensus, entries, _consensusFdr, _refitBandwidth);
 
-            List<KeyValuePair<int, ReconcileAction>> actions = null;
-            IReadOnlyList<GapFillTarget> gapFill = Array.Empty<GapFillTarget>();
+            var plan = new RescorePlan(refined, state.Planner != null);
             if (state.Planner != null)
             {
-                // The run's CWT candidates are read here and released with the plan.
-                actions = new List<KeyValuePair<int, ReconcileAction>>();
-                state.Planner.PlanFile(fileName, refined, entries,
-                    CwtCandidateLoader.LoadOneFile(fileName, _perFileParquetPaths), actions);
-                gapFill = state.GapFiller.IdentifyFile(fileName, refined, entries);
+                plan.Moves = state.Planner.SelectMoves(fileName, refined, entries)
+                    .ConvertAll(m => (entries[m.EntryIndex], m));
+                plan.GapFill = state.GapFiller.IdentifyFile(fileName, refined, entries);
             }
-
-            var plan = BuildReconciliationFile(entries, actions, gapFill, refined);
             Interlocked.Increment(ref _runsPlanned);
             if (refined != null)
                 Interlocked.Increment(ref _refitCount);
-            if (actions != null)
+            return plan;
+        }
+
+        /// <summary>
+        /// The run's <see cref="ReconciliationFile"/>, ready to save, once each moved survivor's
+        /// action is known: <paramref name="actions"/>, keyed by entry_id (empty when nothing
+        /// moves).
+        /// </summary>
+        internal ReconciliationFile CompleteRun(string fileName, RescorePlan plan,
+            IReadOnlyDictionary<uint, ReconcileAction> actions)
+        {
+            var file = BuildReconciliationFile(actions, plan.GapFill, plan.RefinedCalibration);
+            if (plan.Planned)
             {
                 Interlocked.Add(ref _actionCount, actions.Count);
                 // Skyline's peak-boundary-imputation vocabulary: use_cwt re-picks a peak, forced
@@ -132,10 +141,20 @@ namespace pwiz.Osprey.Tasks
                 // the line describes work that cannot happen.
                 _ctx.LogInfo(string.Format(
                     OspreyTasksResources.FirstPassFdrTask_WriteReconciliationFile_Cross_run_reconciliation_for__0____1__peaks_to_re_pick___2__peak_boundaries_to_impute___3_,
-                    fileName, plan.UseCwtPeakActions.Count, plan.ForcedIntegrationActions.Count,
-                    plan.GapFillTargets.Count));
+                    fileName, file.UseCwtPeakActions.Count, file.ForcedIntegrationActions.Count,
+                    file.GapFillTargets.Count));
             }
-            return plan;
+            return file;
+        }
+
+        /// <summary>
+        /// The run's plan before its moved survivors' actions are known: its refined calibration
+        /// and gap-fill targets, which the rescore needs first.
+        /// </summary>
+        internal static ReconciliationFile PartialRun(RescorePlan plan)
+        {
+            return BuildReconciliationFile(new Dictionary<uint, ReconcileAction>(), plan.GapFill,
+                plan.RefinedCalibration);
         }
 
         /// <summary>Non-Keep actions planned over every run this process planned.</summary>
@@ -165,7 +184,7 @@ namespace pwiz.Osprey.Tasks
         private static State BuildState(Stage6Consensus consensus,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
             IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
-            IReadOnlyList<LibraryEntry> fullLibrary)
+            IReadOnlyList<LibraryEntry> fullLibrary, bool pass2Transfer)
         {
             var state = new State
             {
@@ -182,8 +201,12 @@ namespace pwiz.Osprey.Tasks
             // lookup they also take is empty and no call on this path reads it.
             IReadOnlyDictionary<string, RTCalibration> noRefitLookup = new Dictionary<string, RTCalibration>();
             BuildGapFillLibraryLookups(fullLibrary, out var libLookup, out var libPrecursorMz);
+            // Transfer carries every decoy's first-pass values forward and competes nothing, so
+            // its decoys stay where the first pass put them; protein-compact re-competes and needs
+            // them moved with their targets.
             state.Planner = new ReconciliationPlanner.FilePlanner(
-                state.Consensus.Consensus, state.Consensus.PassingBaseIds, noRefitLookup, perFileCalibrations);
+                state.Consensus.Consensus, state.Consensus.PassingBaseIds, noRefitLookup, perFileCalibrations,
+                reconcileDecoys: !pass2Transfer);
             state.GapFiller = new GapFillTargetIdentifier.FileIdentifier(
                 state.Consensus.Consensus, state.Consensus.PassingPrecursors, noRefitLookup, perFileCalibrations,
                 libLookup, libPrecursorMz, perFileIsolationMz);
@@ -214,14 +237,13 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Convert one run's plan into the <see cref="ReconciliationFile"/> wire format: resolve
-        /// each entry index to its entry_id, split the non-Keep actions into homogeneous
-        /// use_cwt_peak / forced arrays, snapshot the refined RT calibration if present, and copy
-        /// the gap-fill targets (already sorted by <c>target_entry_id</c> by the identifier).
+        /// Convert one run's plan into the <see cref="ReconciliationFile"/> wire format: split the
+        /// non-Keep actions, keyed by entry_id, into homogeneous use_cwt_peak / forced arrays,
+        /// snapshot the refined RT calibration if present, and copy the gap-fill targets (already
+        /// sorted by <c>target_entry_id</c> by the identifier).
         /// </summary>
         private static ReconciliationFile BuildReconciliationFile(
-            IReadOnlyList<FdrEntry> fileEntries,
-            IReadOnlyList<KeyValuePair<int, ReconcileAction>> fileActions,
+            IReadOnlyDictionary<uint, ReconcileAction> fileActions,
             IReadOnlyList<GapFillTarget> gapFillTargets,
             RTCalibration refinedCalibration)
         {
@@ -231,10 +253,7 @@ namespace pwiz.Osprey.Tasks
             {
                 foreach (var kvp in fileActions)
                 {
-                    int idx = kvp.Key;
-                    if (idx < 0 || idx >= fileEntries.Count)
-                        continue;
-                    uint entryId = fileEntries[idx].EntryId;
+                    uint entryId = kvp.Key;
                     var useCwtAction = kvp.Value as ReconcileAction.UseCwtPeak;
                     var forcedAction = kvp.Value as ReconcileAction.ForcedIntegration;
                     if (useCwtAction != null)
@@ -308,5 +327,32 @@ namespace pwiz.Osprey.Tasks
                 UseCwtPeakActions = useCwt,
             };
         }
+    }
+
+    /// <summary>
+    /// One run's Stage 6 plan as <see cref="RunReconciliationPlanner.PlanRun"/> leaves it: the
+    /// refined calibration, the gap-fill targets and the survivors whose peak moves, each with its
+    /// move. Each moved survivor's action is decided in the rescore.
+    /// </summary>
+    internal sealed class RescorePlan
+    {
+        public RescorePlan(RTCalibration refinedCalibration, bool planned)
+        {
+            RefinedCalibration = refinedCalibration;
+            Planned = planned;
+        }
+
+        /// <summary>The run's refit, null when it was not refit.</summary>
+        public RTCalibration RefinedCalibration { get; }
+
+        /// <summary>True when there was a cross-run consensus to plan from.</summary>
+        public bool Planned { get; }
+
+        /// <summary>The survivors whose peak moves, in planning order.</summary>
+        public IReadOnlyList<(FdrEntry Survivor, ReconcileMove Move)> Moves { get; set; } =
+            Array.Empty<(FdrEntry, ReconcileMove)>();
+
+        /// <summary>The run's gap-fill targets, sorted by target entry_id.</summary>
+        public IReadOnlyList<GapFillTarget> GapFill { get; set; } = Array.Empty<GapFillTarget>();
     }
 }

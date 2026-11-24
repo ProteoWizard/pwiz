@@ -62,7 +62,7 @@ namespace pwiz.Common.SystemUtil
     /// (this class). Equal weight is the simple ProgressStatus default; weighted
     /// segment ends can come later if one phase dominates wall-clock.
     ///
-    /// A file is entered with <see cref="BeginFile"/>, which redirects that async
+    /// A file is entered with <see cref="BeginFile(int,int[])"/>, which redirects that async
     /// flow's narrative into the file's own buffer and makes the file the ambient
     /// <see cref="Current"/> scope (flowing into an inner <c>Parallel.For</c> via
     /// ExecutionContext). The phase code advances segments through
@@ -134,9 +134,24 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public FileScope BeginFile(int index, int segmentCount)
         {
+            var weights = new int[Math.Max(1, segmentCount)];
+            for (int i = 0; i < weights.Length; i++)
+                weights[i] = 1;
+            return BeginFile(index, weights);
+        }
+
+        /// <summary>
+        /// <see cref="BeginFile(int,int)"/> with phases of unequal length:
+        /// <paramref name="segmentWeights"/> gives each phase's share of the file's percent,
+        /// in the order <see cref="FileScope.BeginSegment"/> opens them. Weight a phase by the
+        /// time it takes, so one visible percent costs about the same wall time throughout
+        /// the file; equal slices make the longest phase the slowest to show motion.
+        /// </summary>
+        public FileScope BeginFile(int index, int[] segmentWeights)
+        {
             var buffer = new StringWriter();
             var slot = new FileSlot(index);
-            var scope = new FileScope(this, slot, buffer, segmentCount);
+            var scope = new FileScope(this, slot, buffer, segmentWeights);
             lock (_renderLock)
             {
                 _slots[index] = slot;
@@ -237,13 +252,16 @@ namespace pwiz.Common.SystemUtil
             private readonly StringWriter _buffer;
             private readonly TextWriter _syncBuffer;
             private readonly int _segmentCount;
+            // Each segment's share of the file's percent, and the total of all shares.
+            private readonly int[] _weights;
+            private readonly long _totalWeight;
             // Segments fully behind the cursor (each contributes its full slice).
             private int _completedSegments;
             private SegmentSink _currentSegmentSink;
             private bool _disposed;
 
             internal FileScope(MultiProgressReporter owner, FileSlot slot,
-                StringWriter buffer, int segmentCount)
+                StringWriter buffer, int[] segmentWeights)
             {
                 _owner = owner;
                 Slot = slot;
@@ -251,7 +269,21 @@ namespace pwiz.Common.SystemUtil
                 // The inner scoring Parallel.For can write narrative from several
                 // threads at once into this one buffer; serialize those writes.
                 _syncBuffer = TextWriter.Synchronized(buffer);
-                _segmentCount = Math.Max(1, segmentCount);
+                _weights = segmentWeights != null && segmentWeights.Length > 0
+                    ? (int[])segmentWeights.Clone()
+                    : new[] { 1 };
+                for (int i = 0; i < _weights.Length; i++)
+                {
+                    _weights[i] = Math.Max(0, _weights[i]);
+                    _totalWeight += _weights[i];
+                }
+                if (_totalWeight == 0)
+                {
+                    for (int i = 0; i < _weights.Length; i++)
+                        _weights[i] = 1;
+                    _totalWeight = _weights.Length;
+                }
+                _segmentCount = _weights.Length;
             }
 
             internal FileSlot Slot { get; }
@@ -302,15 +334,35 @@ namespace pwiz.Common.SystemUtil
                 UpdateFilePercent(_completedSegments, 0);
             }
 
-            // Combine (completedSegments + segPercent/100) / segmentCount into the
-            // file's 0..100 and report it to the aggregator.
+            /// <summary>
+            /// Map the reporters that run inside <paramref name="fromPercent"/>..
+            /// <paramref name="toPercent"/> of the active segment until the returned handle is
+            /// disposed. For a phase with several reporters in sequence (calibration's scoring
+            /// passes): without it the first reporter fills the segment and the rest show no
+            /// motion. Applies to the segment open now; the next segment starts at 0..100.
+            /// </summary>
+            public IDisposable BeginSubrange(int fromPercent, int toPercent)
+            {
+                var sink = _currentSegmentSink;
+                if (sink == null)
+                    return null;
+                sink.SetRange(fromPercent, toPercent);
+                return new SubrangeHandle(sink);
+            }
+
+            // Combine the completed segments' weights plus segPercent of the active one into
+            // the file's 0..100 and report it to the aggregator.
             internal void UpdateFilePercent(int completedSegments, int segPercent)
             {
                 if (segPercent < 0)
                     segPercent = 0;
                 else if (segPercent > 100)
                     segPercent = 100;
-                long composite = (completedSegments * 100L + segPercent) / _segmentCount;
+                long before = 0;
+                for (int i = 0; i < completedSegments && i < _segmentCount; i++)
+                    before += _weights[i];
+                long active = completedSegments < _segmentCount ? _weights[completedSegments] : 0;
+                long composite = (before * 100L + active * segPercent) / _totalWeight;
                 if (composite > 100)
                     composite = 100;
                 _owner.ReportFilePercent(Slot, (int)composite);
@@ -339,11 +391,20 @@ namespace pwiz.Common.SystemUtil
                 private readonly FileScope _scope;
                 private readonly int _baseSegment;
                 private int _maxPercent = -1;
+                // The part of the segment the current reporter maps into (BeginSubrange).
+                private int _from;
+                private int _to = 100;
 
                 internal SegmentSink(FileScope scope, int baseSegment)
                 {
                     _scope = scope;
                     _baseSegment = baseSegment;
+                }
+
+                internal void SetRange(int fromPercent, int toPercent)
+                {
+                    _from = Math.Max(0, Math.Min(100, fromPercent));
+                    _to = Math.Max(_from, Math.Min(100, toPercent));
                 }
 
                 public void Report(int percent)
@@ -352,10 +413,26 @@ namespace pwiz.Common.SystemUtil
                         percent = 0;
                     else if (percent > 100)
                         percent = 100;
+                    percent = _from + percent * (_to - _from) / 100;
                     if (percent <= _maxPercent)
                         return;
                     _maxPercent = percent;
                     _scope.UpdateFilePercent(_baseSegment, percent);
+                }
+            }
+
+            private sealed class SubrangeHandle : IDisposable
+            {
+                private readonly SegmentSink _sink;
+
+                internal SubrangeHandle(SegmentSink sink)
+                {
+                    _sink = sink;
+                }
+
+                public void Dispose()
+                {
+                    _sink.SetRange(0, 100);
                 }
             }
         }

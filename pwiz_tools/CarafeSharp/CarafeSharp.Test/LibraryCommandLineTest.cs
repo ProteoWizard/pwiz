@@ -895,6 +895,10 @@ namespace pwiz.CarafeSharp.Test
                 // Differs from PEPTIDEK only by I/L: Carafe's normalization merges the two.
                 new DecoyPairPlanner.Precursor(6, @"PEPTLDEK", 2, string.Empty),
                 new DecoyPairPlanner.Precursor(7, @"EDLTPEPK", 2, string.Empty),
+                // Group 1's entrapment pair: both of its rows are marked entrapment, whatever
+                // protein the entrapment peptide was placed on (the planner never sees proteins).
+                new DecoyPairPlanner.Precursor(8, @"TIDEPEPK", 2, string.Empty),
+                new DecoyPairPlanner.Precursor(9, @"EPEDITPK", 2, string.Empty),
             };
             var manifest = new List<DecoyPairPlanner.ManifestEntry>
             {
@@ -902,19 +906,23 @@ namespace pwiz.CarafeSharp.Test
                 new DecoyPairPlanner.ManifestEntry(@"EDLTPEPK", true, @"decoy", 2),
                 new DecoyPairPlanner.ManifestEntry(@"PEPTIDEK", false, @"Target ", 1),
                 new DecoyPairPlanner.ManifestEntry(@"EDITPEPK", true, @"decoy", 1),
+                new DecoyPairPlanner.ManifestEntry(@"TIDEPEPK", false, PairingManifest.KIND_P_TARGET, 1, PairingManifest.ENTRAPMENT_METHOD_SHUFFLE),
+                new DecoyPairPlanner.ManifestEntry(@"EPEDITPK", true, PairingManifest.KIND_P_DECOY, 1),
                 new DecoyPairPlanner.ManifestEntry(@"MISSINGK", false, @"target", 0),
             };
             var rows = DecoyPairPlanner.Plan(precursors, manifest, out int skipped);
             // Group 1 takes the precursors of both I/L variants, zipped per charge bucket in id
-            // order; group 2 then finds all of its precursors paired, where Carafe fails.
+            // order, then its entrapment pair; group 2 then finds all of its precursors paired,
+            // where Carafe fails.
             Assert.AreEqual(3, skipped);
-            CollectionAssert.AreEqual(new[] { 1, 2, 6, 7, 3, 5 }, rows.Select(r => r.RefSpectraId).ToArray());
+            CollectionAssert.AreEqual(new[] { 1, 2, 6, 7, 3, 5, 8, 9 }, rows.Select(r => r.RefSpectraId).ToArray());
             // The pairing is the manifest's index, shared by every pair the group makes; a decoy names its target.
-            CollectionAssert.AreEqual(new[] { 1, 1, 1, 1, 1, 1 }, rows.Select(r => r.PairingId).ToArray());
-            CollectionAssert.AreEqual(new int?[] { null, 1, null, 6, null, 3 }, rows.Select(r => r.TargetRefSpectraId).ToArray());
-            CollectionAssert.AreEqual(new[] { false, true, false, true, false, true }, rows.Select(r => r.IsDecoy).ToArray());
-            CollectionAssert.AreEqual(new[] { null, @"reverse", null, @"reverse", null, @"reverse" }, rows.Select(r => r.Method).ToArray());
-            Assert.IsFalse(rows.Any(r => r.IsEntrapment));
+            CollectionAssert.AreEqual(new[] { 1, 1, 1, 1, 1, 1, 1, 1 }, rows.Select(r => r.PairingId).ToArray());
+            CollectionAssert.AreEqual(new int?[] { null, 1, null, 6, null, 3, null, 8 }, rows.Select(r => r.TargetRefSpectraId).ToArray());
+            CollectionAssert.AreEqual(new[] { false, true, false, true, false, true, false, true }, rows.Select(r => r.IsDecoy).ToArray());
+            CollectionAssert.AreEqual(new[] { null, @"reverse", null, @"reverse", null, @"reverse", PairingManifest.ENTRAPMENT_METHOD_SHUFFLE, @"cycle" },
+                rows.Select(r => r.Method).ToArray());
+            CollectionAssert.AreEqual(new[] { false, false, false, false, false, false, true, true }, rows.Select(r => r.IsEntrapment).ToArray());
         }
 
         /// <summary>

@@ -1,0 +1,8 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Maximize: a window frame with a thick title bar.
+       Traced from the native pixels: each rectangle is a run of one color on the 2-unit grid. -->
+  <Rectangle Canvas.Left="2" Canvas.Top="2" Width="26" Height="8" Fill="#000000"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="10" Width="4" Height="16" Fill="#000000"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="10" Width="4" Height="16" Fill="#000000"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="26" Width="26" Height="4" Fill="#000000"/>
+</Canvas>

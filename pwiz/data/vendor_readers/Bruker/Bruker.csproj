@@ -19,9 +19,9 @@
       the two trimmed subsets beside it, vendor_api_Bruker.7z (TDF/TSF/BAF) and
       vendor_api_BrukerCompassXtract.7z (YEP/FID), not this build-time archive.
 
-      The Linux libtimsdata.so is the exact sibling of the Windows timsdata.dll we already
-      shipped: both come from Bruker's tdf-sdk 2.21 download, and the DLL in the Windows archive
-      is byte-identical to that download's win64 copy. Bruker's redist.txt permits redistributing
+      The Linux libtimsdata.so is the exact sibling of the Windows timsdata.dll: both come from
+      Bruker's TDF-SDK 5.0.4 download (DLL version 5.2.202.1), and the copies in the archives are
+      byte-identical to that download's win64 / linux64 files. Bruker's redist.txt permits redistributing
       the shared libraries as long as THIRD-PARTY-LICENSE-README.txt accompanies them, so the
       Linux archive carries a copy of it.
       -->

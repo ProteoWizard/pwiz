@@ -487,9 +487,9 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// Verifies the experiment-level columns of a search blib: absent from a library export,
         /// present once <see cref="OspreyBlibWriter.AddSearchGlobalColumns"/> asks for them, then
-        /// a precursor q-value, precursor PEP and peptide q-value on each spectrum and a q-value
-        /// on each protein group, with a group shared by two spectra written once and a spectrum
-        /// linked to two groups.
+        /// a precursor q-value and PEP and a peptide q-value and PEP on each spectrum and a
+        /// q-value and PEP on each protein group, with a group shared by two spectra written once
+        /// and a spectrum linked to two groups.
         /// </summary>
         [TestMethod]
         public void TestSearchGlobalColumns()
@@ -509,7 +509,9 @@ namespace pwiz.Osprey.Test
                     Assert.IsFalse(HasColumn(conn, "RefSpectra", "PrecursorQValue"));
                     Assert.IsFalse(HasColumn(conn, "RefSpectra", "PrecursorPep"));
                     Assert.IsFalse(HasColumn(conn, "RefSpectra", "PeptideQValue"));
+                    Assert.IsFalse(HasColumn(conn, "RefSpectra", "PeptidePep"));
                     Assert.IsFalse(HasColumn(conn, "Proteins", "QValue"));
+                    Assert.IsFalse(HasColumn(conn, "Proteins", "Pep"));
                 }
 
                 long refId2, refId3;
@@ -518,11 +520,11 @@ namespace pwiz.Osprey.Test
                     writer.AddSearchGlobalColumns();
                     writer.BeginBatch();
                     long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
-                    refId2 = AddTestSpectrum(writer, fileId, 2, new SearchGlobalValues(0.003, 0.02, 0.004));
-                    refId3 = AddTestSpectrum(writer, fileId, 3, new SearchGlobalValues(0.006, 0.05, 0.004));
-                    long groupA = writer.AddProteinGroup("sp|P11111|A_HUMAN;sp|P22222|B_HUMAN", 0.002);
-                    long groupC = writer.AddProteinGroup("sp|P33333|C_HUMAN", 1.0);
-                    Assert.AreEqual(groupA, writer.AddProteinGroup("sp|P11111|A_HUMAN;sp|P22222|B_HUMAN", 0.002));
+                    refId2 = AddTestSpectrum(writer, fileId, 2, new SearchGlobalValues(0.003, 0.02, 0.004, 0.03));
+                    refId3 = AddTestSpectrum(writer, fileId, 3, new SearchGlobalValues(0.006, 0.05, 0.004, 0.03));
+                    long groupA = writer.AddProteinGroup("sp|P11111|A_HUMAN;sp|P22222|B_HUMAN", 0.002, 0.01);
+                    long groupC = writer.AddProteinGroup("sp|P33333|C_HUMAN", 1.0, 1.0);
+                    Assert.AreEqual(groupA, writer.AddProteinGroup("sp|P11111|A_HUMAN;sp|P22222|B_HUMAN", 0.002, 0.01));
                     writer.AddSpectrumProtein(refId2, groupA);
                     writer.AddSpectrumProtein(refId2, groupC);
                     writer.AddSpectrumProtein(refId3, groupA);
@@ -539,9 +541,15 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(0.05, QueryDouble(conn, "SELECT PrecursorPep FROM RefSpectra WHERE id = " + refId3), 1e-12);
                     Assert.AreEqual(0.004, QueryDouble(conn, "SELECT PeptideQValue FROM RefSpectra WHERE id = " + refId2), 1e-12);
                     Assert.AreEqual(0.004, QueryDouble(conn, "SELECT PeptideQValue FROM RefSpectra WHERE id = " + refId3), 1e-12);
+                    Assert.AreEqual(0.03, QueryDouble(conn, "SELECT PeptidePep FROM RefSpectra WHERE id = " + refId2), 1e-12);
+                    Assert.AreEqual(0.03, QueryDouble(conn, "SELECT PeptidePep FROM RefSpectra WHERE id = " + refId3), 1e-12);
                     Assert.AreEqual(2L, QueryLong(conn, "SELECT COUNT(*) FROM Proteins"));
                     Assert.AreEqual(0.002, QueryDouble(conn,
                         "SELECT QValue FROM Proteins WHERE accession = 'sp|P11111|A_HUMAN;sp|P22222|B_HUMAN'"), 1e-12);
+                    Assert.AreEqual(0.01, QueryDouble(conn,
+                        "SELECT Pep FROM Proteins WHERE accession = 'sp|P11111|A_HUMAN;sp|P22222|B_HUMAN'"), 1e-12);
+                    Assert.AreEqual(1.0, QueryDouble(conn,
+                        "SELECT Pep FROM Proteins WHERE accession = 'sp|P33333|C_HUMAN'"), 1e-12);
                     Assert.AreEqual(2L, QueryLong(conn, "SELECT COUNT(*) FROM RefSpectraProteins WHERE RefSpectraID = " + refId2));
                     Assert.AreEqual(2L, QueryLong(conn,
                         "SELECT COUNT(*) FROM RefSpectraProteins rp JOIN Proteins p ON p.id = rp.ProteinID " +
@@ -2217,7 +2225,7 @@ namespace pwiz.Osprey.Test
                 };
 
                 // Write
-                ParquetScoreCache.WriteScoresParquet(saver.SafeName, entries, metadata);
+                ParquetScoreCache.WriteScoresParquet(saver.SafeName, entries, metadata, PinFeatureMask.Hram);
                 Assert.IsTrue(File.Exists(saver.SafeName), "Parquet file should exist");
 
                 // Read FDR stubs
@@ -2245,10 +2253,10 @@ namespace pwiz.Osprey.Test
                 // would silently break both.
                 Assert.IsTrue(ParquetScoreCache.HasPinFeatureColumns(saver.SafeName));
 
-                // Read PIN features
-                var features = ParquetScoreCache.LoadPinFeaturesFromParquet(saver.SafeName);
+                // Read the FDR features: the unmasked ones, which lead with PIN 0-20 under the default mask
+                var features = ParquetScoreCache.LoadPinFeaturesFromParquet(saver.SafeName, PinFeatureMask.Hram);
                 Assert.AreEqual(3, features.Count);
-                Assert.AreEqual(ParquetScoreCache.NUM_PIN_FEATURES, features[0].Length);
+                Assert.AreEqual(PinFeatureMask.Hram.FdrFeatureIndices.Length, features[0].Length);
                 // Check first entry features
                 Assert.AreEqual(0.9, features[0][0], 0.001); // coelution_sum
                 Assert.AreEqual(0.95, features[0][1], 0.001); // coelution_max
@@ -2437,13 +2445,13 @@ namespace pwiz.Osprey.Test
             string path = Path.GetTempFileName() + ".parquet";
             try
             {
-                ParquetScoreCache.WriteScoresParquet(path, new List<CoelutionScoredEntry>(), null);
+                ParquetScoreCache.WriteScoresParquet(path, new List<CoelutionScoredEntry>(), null, PinFeatureMask.Hram);
                 Assert.IsFalse(File.Exists(path), "Empty entry list should not create a file");
 
                 // The 3-arg overload (CoelutionScoredEntry) takes List<>, the
                 // FdrEntry overload takes 5 args, so a bare `null` is an
                 // unambiguous match for the CoelutionScoredEntry overload.
-                ParquetScoreCache.WriteScoresParquet(path, null, null);
+                ParquetScoreCache.WriteScoresParquet(path, null, null, PinFeatureMask.Hram);
                 Assert.IsFalse(File.Exists(path), "Null entry list should not create a file");
             }
             finally
@@ -2669,6 +2677,214 @@ namespace pwiz.Osprey.Test
         #region FdrScoresSidecar Tests
 
         /// <summary>
+        /// The feature set decides two things. The FDR stage loads only the set's features
+        /// (<see cref="ParquetScoreCache.LoadPinFeaturesFromParquet"/>), and the scores parquet holds
+        /// a column only for the recorded ones (<see cref="PinFeatureSelection.IsRecorded"/>): the core
+        /// features and the set's features - not the rest of a family the set uses part of, which
+        /// scoring computes (<see cref="PinFeatureSelection.IsComputed"/>) but does not write. Checked for
+        /// every set at both resolutions, reading the written file's schema back. The test process
+        /// leaves OSPREY_FEATURE_MASK and OSPREY_RECORD_ALL_FEATURES unset. A file that lacks a
+        /// column a reader needs is refused, not read as zeros.
+        /// </summary>
+        [TestMethod]
+        public void TestFeatureMaskAppliesAtFdrLoad()
+        {
+            foreach (var mode in new[] { ResolutionMode.HRAM, ResolutionMode.UnitResolution })
+            {
+                foreach (OspreyFeatureSet featureSet in Enum.GetValues(typeof(OspreyFeatureSet)))
+                {
+                    AssertFeatureSetRecordsItsColumns(mode, featureSet);
+                }
+            }
+
+            // Without --feature-set the resolution chooses: default for HRAM, core at unit resolution.
+            Assert.AreEqual(OspreyFeatureSet.@default, PinFeatureMask.For(ResolutionMode.HRAM, null).FeatureSet);
+            var unit = PinFeatureMask.For(ResolutionMode.UnitResolution, null);
+            Assert.AreEqual(OspreyFeatureSet.core, unit.FeatureSet);
+            // The core set keeps the keys the core-only default had, so no core output is invalidated.
+            Assert.AreEqual(@";featmask=default;fdrcols=unmasked", unit.ValidityKeySuffix());
+            Assert.AreEqual(string.Empty, unit.RecordedFeaturesValidityKeySuffix(),
+                "the core set records the core features only, so its keys must not change");
+            // A search's selection is its own: one at another resolution in the same process leaves it alone.
+            Assert.AreSame(unit, PinFeatureMask.For(new OspreyConfig { ResolutionMode = ResolutionMode.UnitResolution }));
+            Assert.AreNotEqual(unit.FdrFeatureIndices.Length, PinFeatureMask.Hram.FdrFeatureIndices.Length);
+            Assert.IsNull(PinFeatureMask.UnknownFeatureName());
+            AssertMissingFeatureColumnIsRefused();
+        }
+
+        // Writes one row with every PIN feature set and checks the file's columns, the stored row and
+        // the FDR vector against the set resolved at the resolution.
+        private static void AssertFeatureSetRecordsItsColumns(ResolutionMode mode, OspreyFeatureSet featureSet)
+        {
+            string arm = featureSet + @" at " + mode;
+            var selection = PinFeatureMask.For(mode, featureSet);
+            var inSet = new HashSet<int>(PinFeatureMask.FeatureSetIndices(featureSet));
+            var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
+            for (int f = 0; f < features.Length; f++)
+                features[f] = f + 1.0;
+            var entries = new List<FdrEntry>
+            {
+                new FdrEntry { EntryId = 1, Charge = 2, ScanNumber = 10, ModifiedSequence = "PEPTIDE", Features = features },
+            };
+            string dest = Path.Combine(Path.GetTempPath(),
+                @"osprey_featmask_" + Path.GetRandomFileName() + @".parquet");
+            using (var saver = new SimpleFileSaver(dest))
+            {
+                ParquetScoreCache.WriteScoresParquet(saver.SafeName, entries, null, null, "f.mzML", false, selection);
+
+                var expectedColumns = new List<string>();
+                double[] stored = ParquetScoreCache.LoadFullFdrEntries(saver.SafeName, selection).Single().Features;
+                double[] loaded = ParquetScoreCache.LoadPinFeaturesFromParquet(saver.SafeName, selection).Single();
+                var loadedByName = selection.FdrFeatureNames.Zip(loaded, (name, v) => (name, v))
+                    .ToDictionary(p => p.name, p => p.v);
+                Assert.AreEqual(loaded.Length, loadedByName.Count, arm);
+                for (int f = 0; f < features.Length; f++)
+                {
+                    string name = ParquetScoreCache.PIN_FEATURE_NAMES[f] + @" (" + arm + @")";
+                    bool masked = !inSet.Contains(f) || !PinFeatureMask.IsAvailable(f, mode);
+                    Assert.AreEqual(masked, selection.IsMasked(f), name);
+                    bool recorded = f < PinFeatureMask.CORE_FEATURE_COUNT || !masked;
+                    Assert.AreEqual(recorded, selection.IsRecorded(f), name);
+                    Assert.IsTrue(!recorded || selection.IsComputed(f), name + " must be computed when recorded");
+                    if (recorded)
+                        expectedColumns.Add(ParquetScoreCache.PIN_FEATURE_NAMES[f]);
+                    Assert.AreEqual(recorded ? f + 1.0 : 0.0, stored[f], name + " as stored");
+                    if (masked)
+                        Assert.IsFalse(loadedByName.ContainsKey(ParquetScoreCache.PIN_FEATURE_NAMES[f]), name + " must be absent as the FDR stage loads it");
+                    else
+                        Assert.AreEqual(f + 1.0, loadedByName[ParquetScoreCache.PIN_FEATURE_NAMES[f]], name + " as the FDR stage loads it");
+                }
+                CollectionAssert.AreEqual(expectedColumns, ReadFeatureColumns(saver.SafeName),
+                    arm + @": the file must hold exactly the recorded feature columns");
+            }
+        }
+
+        // The PIN feature columns a parquet's schema holds, in schema order.
+        private static List<string> ReadFeatureColumns(string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                var reader = ParquetReader.CreateAsync(stream).GetAwaiter().GetResult();
+                return reader.Schema.GetDataFields().Select(field => field.Name)
+                    .Where(name => ParquetScoreCache.PIN_FEATURE_NAMES.Contains(name)).ToList();
+            }
+        }
+
+        /// <summary>
+        /// A scores file that holds features but not one the reader needs - scored under a
+        /// narrower recorded set than this run uses - is refused by both the FDR load and the full
+        /// row read, naming the column, rather than read as zeros.
+        /// </summary>
+        private static void AssertMissingFeatureColumnIsRefused()
+        {
+            string dest = Path.Combine(Path.GetTempPath(),
+                @"osprey_featmissing_" + Path.GetRandomFileName() + @".parquet");
+            using (var saver = new SimpleFileSaver(dest))
+            {
+                var entryIdField = new DataField<uint>("entry_id");
+                var isDecoyField = new DataField<bool>("is_decoy");
+                var chargeField = new DataField<byte>("charge");
+                var firstFeatureField = new DataField<double>(ParquetScoreCache.PIN_FEATURE_NAMES[0]);
+                var schema = new ParquetSchema(entryIdField, isDecoyField, chargeField, firstFeatureField);
+                using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
+                {
+                    var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult();
+                    using (var group = writer.CreateRowGroup())
+                    {
+                        group.WriteAsync(entryIdField, new ReadOnlyMemory<uint>(new[] { 1u })).GetAwaiter().GetResult();
+                        group.WriteAsync(isDecoyField, new ReadOnlyMemory<bool>(new[] { false })).GetAwaiter().GetResult();
+                        group.WriteAsync(chargeField, new ReadOnlyMemory<byte>(new byte[] { 2 })).GetAwaiter().GetResult();
+                        group.WriteAsync(firstFeatureField, new ReadOnlyMemory<double>(new[] { 1.0 })).GetAwaiter().GetResult();
+                    }
+                    // Writes the footer
+                    writer.DisposeAsync().GetAwaiter().GetResult();
+                }
+
+                string missing = ParquetScoreCache.PIN_FEATURE_NAMES[1];
+                var fdrLoad = Assert.ThrowsException<InvalidDataException>(
+                    () => ParquetScoreCache.LoadPinFeaturesFromParquet(saver.SafeName, PinFeatureMask.Hram));
+                StringAssert.Contains(fdrLoad.Message, missing);
+                var fullRead = Assert.ThrowsException<InvalidDataException>(
+                    () => ParquetScoreCache.LoadFullFdrEntries(saver.SafeName, PinFeatureMask.Hram));
+                StringAssert.Contains(fullRead.Message, missing);
+            }
+        }
+
+        /// <summary>
+        /// The XIC count is not in the search hash, so a FDR task pointed at existing scores
+        /// (--task FirstPassFDR / SecondPassFDR) must check the count the scores record, or it
+        /// adopts scores from another count and labels its output with its own. Covers where the
+        /// count is read from (footer entry, validity stamp, neither) and that a scores file
+        /// recording another count is refused, naming the file. The test process leaves
+        /// OSPREY_XIC_FRAGMENTS unset, so this run's count is the default.
+        /// </summary>
+        [TestMethod]
+        public void TestScoresXicCountValidatedOnLoad()
+        {
+            int current = new OspreyConfig().Scoring.XicFragments;
+            Assert.AreEqual(OspreyEnvironment.DEFAULT_XIC_FRAGMENTS, current);
+            string stampOf12 = new ArtifactStamp(PerFileScoringTask.TASK_NAME, OspreyVersion.Current,
+                @"search=s;library=l;xic=12;featmask=default").ToString();
+            string stampWithoutXic = new ArtifactStamp(PerFileScoringTask.TASK_NAME, OspreyVersion.Current,
+                @"search=s;library=l").ToString();
+
+            // Where the count comes from: the footer entry wins over the stamp; a stamp written
+            // before the entry still carries the count; a file older than both used the default.
+            Assert.AreEqual(12, ParquetScoreCache.RecordedXicFragments(new Dictionary<string, string>
+                { { ParquetScoreCache.META_XIC_FRAGMENTS, @"12" }, { ArtifactStamp.PARQUET_KEY, stampWithoutXic } }));
+            Assert.AreEqual(12, ParquetScoreCache.RecordedXicFragments(new Dictionary<string, string>
+                { { ArtifactStamp.PARQUET_KEY, stampOf12 } }));
+            Assert.AreEqual(OspreyEnvironment.DEFAULT_XIC_FRAGMENTS, ParquetScoreCache.RecordedXicFragments(
+                new Dictionary<string, string> { { ArtifactStamp.PARQUET_KEY, stampWithoutXic } }));
+            Assert.AreEqual(OspreyEnvironment.DEFAULT_XIC_FRAGMENTS, ParquetScoreCache.RecordedXicFragments(
+                new Dictionary<string, string>()));
+            Assert.IsNull(ParquetScoreCache.RecordedXicFragments(new Dictionary<string, string>
+                { { ParquetScoreCache.META_XIC_FRAGMENTS, @"twelve" } }));
+
+            // The load-time gate: same count accepted, another count refused with the file named.
+            var config = new OspreyConfig();
+            string dir = Path.Combine(Path.GetTempPath(), @"osprey_xicload_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string matching = WriteScoresWithXic(dir, @"matching", config, current);
+                string other = WriteScoresWithXic(dir, @"other", config, current * 2);
+                Assert.IsNull(ParquetScoreCache.ValidateScoresParquetGroup(new[] { matching }, config, OspreyVersion.Current, null));
+                string error = ParquetScoreCache.ValidateScoresParquetGroup(new[] { matching, other }, config, OspreyVersion.Current, null);
+                Assert.IsNotNull(error, "scores from another XIC count must be refused");
+                StringAssert.Contains(error, other);
+                StringAssert.Contains(error, @"OSPREY_XIC_FRAGMENTS");
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
+        private static string WriteScoresWithXic(string dir, string stem, OspreyConfig config, int xicCount)
+        {
+            var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
+            var entries = new List<FdrEntry>
+            {
+                new FdrEntry { EntryId = 1, Charge = 2, ScanNumber = 10, ModifiedSequence = "PEPTIDE", Features = features },
+            };
+            var metadata = new Dictionary<string, string>
+            {
+                { @"osprey.version", OspreyVersion.Current },
+                { ParquetScoreCache.META_SEARCH_HASH, config.Identity.SearchParameterHash() },
+                { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
+                { ParquetScoreCache.META_XIC_FRAGMENTS, ParquetScoreCache.XicFragmentsText(xicCount) },
+            };
+            string path = Path.Combine(dir, stem + @".scores.parquet");
+            using (var saver = new SimpleFileSaver(path))
+            {
+                ParquetScoreCache.WriteScoresParquet(saver.SafeName, entries, metadata, null, stem + @".mzML", false, PinFeatureMask.Hram);
+                saver.Commit();
+            }
+            return path;
+        }
+
+        /// <summary>
         /// Bounded row-group write: a parquet written as several row groups (forced via the
         /// test-only <see cref="ParquetScoreCache.RowGroupRowCapForTest"/> cap) reads back
         /// logically identical -- same rows in the same global (entry_id, charge, scan_number)
@@ -2685,7 +2901,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 // EntryIds deliberately out of order so the write's canonical sort is
-                // exercised; distinct features + fragment blobs per row so a chunk-boundary
+                // exercised; distinct features + reference XIC blobs per row so a chunk-boundary
                 // row mismap surfaces as a value mismatch, not a silent pass.
                 var entries = new List<FdrEntry>();
                 foreach (uint id in new uint[] { 5, 2, 9, 1, 7, 3, 8 })
@@ -2704,8 +2920,6 @@ namespace pwiz.Osprey.Test
                         EndRt = id + 0.9,
                         ModifiedSequence = "PEPTIDE" + id,
                         Features = features,
-                        FragmentMzs = new[] { id + 0.25, id + 0.75 },
-                        FragmentIntensities = new float[] { id, id + 1 },
                         ReferenceXicRts = new[] { id + 1.5, id + 2.5, id + 3.5 },
                         ReferenceXicIntensities = new[] { id * 2.0, id * 3.0 },
                     });
@@ -2717,16 +2931,16 @@ namespace pwiz.Osprey.Test
                 // Single-group reference (cap unset), then multi-group (cap 3 -> ceil(7/3)=3
                 // groups). Same entries, same writer, only the row-group cap differs.
                 ParquetScoreCache.RowGroupRowCapForTest = null;
-                ParquetScoreCache.WriteScoresParquet(singlePath, entries, null, null, "f.mzML");
+                ParquetScoreCache.WriteScoresParquet(singlePath, entries, null, null, "f.mzML", true, PinFeatureMask.Hram);
                 ParquetScoreCache.RowGroupRowCapForTest = 3;
-                ParquetScoreCache.WriteScoresParquet(multiPath, entries, null, null, "f.mzML");
+                ParquetScoreCache.WriteScoresParquet(multiPath, entries, null, null, "f.mzML", true, PinFeatureMask.Hram);
                 ParquetScoreCache.RowGroupRowCapForTest = null;
 
                 Assert.AreEqual(1, CountRowGroups(singlePath));
                 Assert.AreEqual(3, CountRowGroups(multiPath));
 
-                var single = ParquetScoreCache.LoadFullFdrEntries(singlePath);
-                var multi = ParquetScoreCache.LoadFullFdrEntries(multiPath);
+                var single = ParquetScoreCache.LoadFullFdrEntries(singlePath, PinFeatureMask.Hram);
+                var multi = ParquetScoreCache.LoadFullFdrEntries(multiPath, PinFeatureMask.Hram);
 
                 Assert.AreEqual(entries.Count, single.Count);
                 Assert.AreEqual(single.Count, multi.Count);
@@ -2751,8 +2965,8 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(single[i].EndRt, multi[i].EndRt);
                     Assert.AreEqual(single[i].ModifiedSequence, multi[i].ModifiedSequence);
                     CollectionAssert.AreEqual(single[i].Features, multi[i].Features);
-                    CollectionAssert.AreEqual(single[i].FragmentMzs, multi[i].FragmentMzs);
-                    CollectionAssert.AreEqual(single[i].FragmentIntensities, multi[i].FragmentIntensities);
+                    CollectionAssert.AreEqual(single[i].ReferenceXicRts, multi[i].ReferenceXicRts);
+                    CollectionAssert.AreEqual(single[i].ReferenceXicIntensities, multi[i].ReferenceXicIntensities);
                 }
 
                 // An all-empty blob column across bounded row groups. Decoys form a
@@ -2773,25 +2987,22 @@ namespace pwiz.Osprey.Test
                         ScanNumber = id,
                         ModifiedSequence = "PEP" + id,
                         Features = new double[ParquetScoreCache.NUM_PIN_FEATURES],
-                        FragmentMzs = new[] { id + 0.5 },
-                        FragmentIntensities = new float[] { id },
                         // ReferenceXicRts / ReferenceXicIntensities left null (empty).
                     });
                 }
                 string emptyXicPath = Path.Combine(dir, "empty_xic.scores.parquet");
                 ParquetScoreCache.RowGroupRowCapForTest = 3;
-                ParquetScoreCache.WriteScoresParquet(emptyXicPath, emptyXic, null, null, "f.mzML");
+                ParquetScoreCache.WriteScoresParquet(emptyXicPath, emptyXic, null, null, "f.mzML", true, PinFeatureMask.Hram);
                 ParquetScoreCache.RowGroupRowCapForTest = null;
 
                 Assert.AreEqual(3, CountRowGroups(emptyXicPath));
-                var reloaded = ParquetScoreCache.LoadFullFdrEntries(emptyXicPath);
+                var reloaded = ParquetScoreCache.LoadFullFdrEntries(emptyXicPath, PinFeatureMask.Hram);
                 Assert.AreEqual(emptyXic.Count, reloaded.Count);
                 foreach (var e in reloaded)
                 {
                     Assert.AreEqual(0, e.ReferenceXicRts.Length,
                         "an all-empty reference-XIC column must read back as empty, not crash");
                     Assert.AreEqual(0, e.ReferenceXicIntensities.Length);
-                    Assert.AreEqual(1, e.FragmentMzs.Length);
                 }
             }
             finally
@@ -2802,88 +3013,50 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// CWT-candidate column round-trip through the real writer and reader: the
-        /// per-row candidate lists come back bit-identical, keep their own row via the
-        /// running <see cref="FdrEntry.ParquetIndex"/>, and survive a multi-row-group
-        /// write. Covers <see cref="CwtCandidateCodec"/>'s wiring into the
-        /// cwt_candidates column, which the codec's own unit tests cannot reach
-        /// because they never touch parquet.
-        ///
-        /// A row with a NULL candidate list is included deliberately: the writer
-        /// normalizes null and empty alike to a 4-byte zero-count blob (never a null
-        /// cell) to match Rust, and nothing else exercises the null branch.
+        /// A scores parquet written over several row groups reads back with each row on its own
+        /// running <see cref="FdrEntry.ParquetIndex"/> and its own reference XIC, and with no
+        /// <c>cwt_candidates</c> column: the CWT peak candidates are computed when Stage 6 plans
+        /// a run, not stored (#5024). Ids out of order so the write's canonical sort runs; one
+        /// row has no reference XIC, which the writer stores as an empty blob.
         /// </summary>
         [TestMethod]
-        public void TestCwtCandidatesRoundTripThroughParquet()
+        public void TestScoresParquetRowsAcrossRowGroups()
         {
             string dir = Path.Combine(Path.GetTempPath(),
-                "osprey_cwt_parquet_" + Guid.NewGuid().ToString("N"));
+                "osprey_rows_parquet_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(dir);
             try
             {
-                // Ids out of order so the write's canonical sort runs; candidate-list
-                // lengths deliberately mixed (2 / none / 1 / null) so a per-row boundary
-                // mismap surfaces as a count mismatch instead of a silent pass.
-                var byId = new Dictionary<uint, List<CwtCandidate>>
-                {
-                    { 5, new List<CwtCandidate> {
-                        NewCwtCandidate(51.5, 51.0, 52.0, 1.5e6, 42.5, 8.25),
-                        // Boundary value that pins the byte-exact BitConverter path
-                        // (the ryu/R formatter ambiguity from the Stage 5 dump).
-                        NewCwtCandidate(0.097751617431640625, 0.5, 1.5, 1.0, 1.0, -1.5) } },
-                    { 2, new List<CwtCandidate>() },
-                    { 9, new List<CwtCandidate> {
-                        NewCwtCandidate(90.25, 90.0, 90.5, 7.5e5, 13.0, 3.125) } },
-                    { 1, null },
-                };
-
                 var entries = new List<FdrEntry>();
                 foreach (uint id in new uint[] { 5, 2, 9, 1 })
                 {
                     var e = MakeStreamEntry(id, id * 100.0);
-                    e.CwtCandidates = byId[id];
+                    e.ReferenceXicRts = id == 2 ? null : new[] { id - 0.5, id + 0.097751617431640625 };
+                    e.ReferenceXicIntensities = id == 2 ? null : new[] { 1.5e6, 42.5 };
                     entries.Add(e);
                 }
 
-                string path = Path.Combine(dir, "cwt.scores.parquet");
+                string path = Path.Combine(dir, "rows.scores.parquet");
                 // Cap 2 -> ceil(4/2) = 2 row groups, so the reader's per-group append
                 // loop is exercised rather than a single-group degenerate case.
                 ParquetScoreCache.RowGroupRowCapForTest = 2;
-                ParquetScoreCache.WriteScoresParquet(path, entries, null, null, "f.mzML");
+                ParquetScoreCache.WriteScoresParquet(path, entries, null, null, "f.mzML", true, PinFeatureMask.Hram);
                 ParquetScoreCache.RowGroupRowCapForTest = null;
 
-                // Full entries carry both ParquetIndex and CwtCandidates, so one load
-                // checks the candidate values AND that each list landed on the row its
-                // running index claims (the alignment defect that once made every
-                // lookup return row 0's list).
-                var reloaded = ParquetScoreCache.LoadFullFdrEntries(path);
+                Assert.IsFalse(ParquetScoreCache.HasColumn(path, "cwt_candidates"), "the CWT candidates are not stored");
+                var reloaded = ParquetScoreCache.LoadFullFdrEntries(path, PinFeatureMask.Hram);
                 Assert.AreEqual(entries.Count, reloaded.Count, "row count");
+                var byId = entries.ToDictionary(e => e.EntryId);
                 for (int i = 0; i < reloaded.Count; i++)
                 {
-                    Assert.AreEqual((uint)i, reloaded[i].ParquetIndex,
-                        "ParquetIndex must be the running row position");
-                }
-
-                // The column-only reader must agree row-for-row with the full load.
-                var columnOnly = ParquetScoreCache.LoadCwtCandidatesFromParquet(path);
-                Assert.AreEqual(reloaded.Count, columnOnly.Count, "cwt column row count");
-
-                foreach (var row in reloaded)
-                {
-                    var expected = byId[row.EntryId] ?? new List<CwtCandidate>();
-                    var actual = row.CwtCandidates ?? new List<CwtCandidate>();
-                    string label = "entry " + row.EntryId;
-                    Assert.AreEqual(expected.Count, actual.Count, label + " candidate count");
-                    // Null and empty must both decode to an empty list, never null:
-                    // the writer emits the 4-byte zero-count blob for each.
-                    Assert.IsNotNull(row.CwtCandidates, label + " list must not be null");
-                    Assert.AreEqual(expected.Count, columnOnly[(int)row.ParquetIndex].Count,
-                        label + " column-only candidate count");
-                    for (int k = 0; k < expected.Count; k++)
-                    {
-                        AssertCwtCandidateBitEqual(expected[k], actual[k],
-                            label + " candidate " + k);
-                    }
+                    var row = reloaded[i];
+                    Assert.AreEqual((uint)i, row.ParquetIndex, "ParquetIndex must be the running row position");
+                    var expected = byId[row.EntryId];
+                    var expectedRts = expected.ReferenceXicRts ?? Array.Empty<double>();
+                    var actualRts = row.ReferenceXicRts ?? Array.Empty<double>();
+                    Assert.AreEqual(expectedRts.Length, actualRts.Length, "entry " + row.EntryId + " XIC length");
+                    for (int k = 0; k < expectedRts.Length; k++)
+                        AssertBitEqual(expectedRts[k], actualRts[k], "entry " + row.EntryId + " XIC rt " + k);
                 }
 
                 AssertTrainingExportProjection(path, reloaded);
@@ -2899,28 +3072,21 @@ namespace pwiz.Osprey.Test
         /// Concurrent scores-parquet writes must not corrupt each other's nullable columns.
         /// When the writer's DataFields were shared statics, building one write's schema reset
         /// the shared fields' definition level to 0 for a moment. A write in progress on another
-        /// thread then recorded present values as null, and its file read back with null
-        /// cwt_candidates cells and every later list shifted onto the wrong row. Found with 4
-        /// files scored at once in the 2026-10-13 SEA-AD acceptance run. Each row here carries
-        /// one candidate whose apex is its own entry id, so any null or shift is a mismatch.
+        /// thread then recorded present values as null, and its file read back with null cells
+        /// and every later value shifted onto the wrong row. Found with 4 files scored at once in
+        /// the 2026-10-13 SEA-AD acceptance run, in the cwt_candidates column the file no longer
+        /// has. Each row here carries a reference XIC whose one RT is its own entry id, so any
+        /// null or shift is a mismatch.
         /// </summary>
         [TestMethod]
-        public void TestConcurrentScoresParquetWritesKeepCwtCandidatesAligned()
+        public void TestConcurrentScoresParquetWritesKeepRowsAligned()
         {
             string dir = Path.Combine(Path.GetTempPath(),
-                "osprey_cwt_concurrent_" + Guid.NewGuid().ToString("N"));
+                "osprey_rows_concurrent_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(dir);
             try
             {
                 const int rows = 20000;
-                var entries = new List<FdrEntry>(rows);
-                for (uint id = 1; id <= rows; id++)
-                {
-                    var e = MakeStreamEntry(id, id);
-                    e.CwtCandidates = new List<CwtCandidate> { NewCwtCandidate(id, id - 0.5, id + 0.5, 1.0, 1.0, 1.0) };
-                    entries.Add(e);
-                }
-
                 int writers = Math.Max(4, Environment.ProcessorCount / 2);
                 var deadline = DateTime.UtcNow.AddSeconds(5);
                 int files = 0;
@@ -2928,30 +3094,35 @@ namespace pwiz.Osprey.Test
                 Parallel.For(0, writers, new ParallelOptions { MaxDegreeOfParallelism = writers }, w =>
                 {
                     // Each writer needs its own entries: the write assigns ParquetIndex.
-                    var mine = entries.Select(e => MakeStreamEntry(e.EntryId, e.EntryId)).ToList();
-                    for (int i = 0; i < mine.Count; i++)
-                        mine[i].CwtCandidates = entries[i].CwtCandidates;
+                    var mine = new List<FdrEntry>(rows);
+                    for (uint id = 1; id <= rows; id++)
+                    {
+                        var e = MakeStreamEntry(id, id);
+                        e.ReferenceXicRts = new double[] { id };
+                        e.ReferenceXicIntensities = new[] { 1.0 };
+                        mine.Add(e);
+                    }
                     // A minimum number of writes each, so a writer started late still overlaps the others.
                     for (int n = 0; n < 3 || DateTime.UtcNow < deadline; n++)
                     {
                         string path = Path.Combine(dir, string.Format("w{0}_{1}.scores.parquet", w, n));
-                        ParquetScoreCache.WriteScoresParquet(path, mine, null, null, "f.mzML");
-                        var lists = ParquetScoreCache.LoadCwtCandidatesFromParquet(path);
+                        ParquetScoreCache.WriteScoresParquet(path, mine, null, null, "f.mzML", true, PinFeatureMask.Hram);
+                        var read = ParquetScoreCache.LoadFullFdrEntries(path, PinFeatureMask.Hram);
                         Interlocked.Increment(ref files);
-                        if (lists.Count != rows)
+                        if (read.Count != rows)
                         {
                             lock (failures)
-                                failures.Add(string.Format("{0}: {1} rows", Path.GetFileName(path), lists.Count));
+                                failures.Add(string.Format("{0}: {1} rows", Path.GetFileName(path), read.Count));
                         }
-                        for (int row = 0; row < lists.Count; row++)
+                        for (int row = 0; row < read.Count; row++)
                         {
-                            var list = lists[row];
-                            if (list == null || list.Count != 1 || list[0].ApexRt != row + 1)
+                            var xic = read[row].ReferenceXicRts;
+                            if (xic == null || xic.Length != 1 || xic[0] != row + 1)
                             {
                                 lock (failures)
                                 {
                                     failures.Add(string.Format("{0} row {1}: {2}", Path.GetFileName(path), row,
-                                        list == null ? "null" : list.Count == 1 ? "apex " + list[0].ApexRt : list.Count + " candidates"));
+                                        xic == null ? "null" : xic.Length == 1 ? "rt " + xic[0] : xic.Length + " points"));
                                 }
                                 break;
                             }
@@ -2971,13 +3142,12 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// The training export's projection of the same two-group file: the target rows only,
         /// each field it reads exactly as the full load reads it - the running ParquetIndex
-        /// across groups with the decoys skipped included - and no CWT candidates or fragment
-        /// arrays.
+        /// across groups with the decoys skipped included.
         /// </summary>
         private static void AssertTrainingExportProjection(string path, List<FdrEntry> full)
         {
             var targets = full.Where(e => !e.IsDecoy).ToList();
-            var projected = ParquetScoreCache.LoadTrainingExportRows(path);
+            var projected = ParquetScoreCache.LoadTrainingExportRows(path, PinFeatureMask.Hram);
             Assert.AreEqual(targets.Count, projected.Count, "targets only");
             for (int i = 0; i < targets.Count; i++)
             {
@@ -2995,35 +3165,7 @@ namespace pwiz.Osprey.Test
                 CollectionAssert.AreEqual(e.Features, a.Features);
                 CollectionAssert.AreEqual(e.ReferenceXicRts, a.ReferenceXicRts);
                 CollectionAssert.AreEqual(e.ReferenceXicIntensities, a.ReferenceXicIntensities);
-                Assert.IsNull(a.CwtCandidates, "the CWT candidates are not decoded");
-                Assert.AreEqual(0, a.FragmentMzs.Length, "the fragment m/z are not decoded");
-                Assert.AreEqual(0, a.FragmentIntensities.Length, "the fragment intensities are not decoded");
             }
-        }
-
-        private static CwtCandidate NewCwtCandidate(double apexRt, double startRt, double endRt,
-            double area, double snr, double coelutionScore)
-        {
-            return new CwtCandidate
-            {
-                ApexRt = apexRt,
-                StartRt = startRt,
-                EndRt = endRt,
-                Area = area,
-                Snr = snr,
-                CoelutionScore = coelutionScore,
-            };
-        }
-
-        private static void AssertCwtCandidateBitEqual(CwtCandidate expected, CwtCandidate actual,
-            string label)
-        {
-            AssertBitEqual(expected.ApexRt, actual.ApexRt, label + " ApexRt");
-            AssertBitEqual(expected.StartRt, actual.StartRt, label + " StartRt");
-            AssertBitEqual(expected.EndRt, actual.EndRt, label + " EndRt");
-            AssertBitEqual(expected.Area, actual.Area, label + " Area");
-            AssertBitEqual(expected.Snr, actual.Snr, label + " Snr");
-            AssertBitEqual(expected.CoelutionScore, actual.CoelutionScore, label + " CoelutionScore");
         }
 
         private static void AssertBitEqual(double expected, double actual, string label)
@@ -3064,7 +3206,7 @@ namespace pwiz.Osprey.Test
                 var original = new List<FdrEntry>();
                 foreach (uint id in new uint[] { 3, 1, 2 })
                     original.Add(MakeStreamEntry(id, id * 10.0));
-                ParquetScoreCache.WriteScoresParquet(originalPath, original, null, null, "f.mzML");
+                ParquetScoreCache.WriteScoresParquet(originalPath, original, null, null, "f.mzML", true, PinFeatureMask.Hram);
 
                 // The Stage 4 original is a well-formed parquet with neither the marker nor the
                 // score_index column, and it must not pass: it is the file a stem-derivation
@@ -3087,7 +3229,7 @@ namespace pwiz.Osprey.Test
                     metadata["osprey.reconciled"]);
                 ParquetScoreCache.StreamReconciledScoresParquet(
                     originalPath, reconciledPath, null, null, metadata, null, "f.mzML", null,
-                    PerFileRescoreTask.TASK_NAME, null, null);
+                    PerFileRescoreTask.TASK_NAME, null, null, true, PinFeatureMask.Hram);
                 Assert.IsTrue(ParquetScoreCache.IsCurrentReconciledSurvivorSubset(reconciledPath));
 
                 // And it is the POSITIVE form of the interim-shape refusal, not a second
@@ -3131,12 +3273,12 @@ namespace pwiz.Osprey.Test
 
                 // Write the original as several bounded row groups (cap 3 -> 3 groups).
                 ParquetScoreCache.RowGroupRowCapForTest = 3;
-                ParquetScoreCache.WriteScoresParquet(originalPath, original, null, null, "f.mzML");
+                ParquetScoreCache.WriteScoresParquet(originalPath, original, null, null, "f.mzML", true, PinFeatureMask.Hram);
 
                 // Map each original entry_id to the global row position the write assigned,
                 // so the overlay indices below hit the right rows.
                 var posById = new Dictionary<uint, uint>();
-                foreach (var e in ParquetScoreCache.LoadFullFdrEntries(originalPath))
+                foreach (var e in ParquetScoreCache.LoadFullFdrEntries(originalPath, PinFeatureMask.Hram))
                     posById[e.EntryId] = e.ParquetIndex.Value;
 
                 // Overlay two existing rows (id 3, id 8) with distinctly re-scored
@@ -3161,19 +3303,19 @@ namespace pwiz.Osprey.Test
 
                 // Reference (old behavior): load the whole file, overlay in place by index,
                 // append gap-fill, re-sort on write.
-                var oldFull = ParquetScoreCache.LoadFullFdrEntries(originalPath);
+                var oldFull = ParquetScoreCache.LoadFullFdrEntries(originalPath, PinFeatureMask.Hram);
                 foreach (var kv in overlayByIndex)
                     if (kv.Key < oldFull.Count)
                         oldFull[(int)kv.Key] = kv.Value;
                 oldFull.AddRange(gapFill);
-                ParquetScoreCache.WriteScoresParquet(refPath, oldFull, null, null, "f.mzML");
-                var refResult = ParquetScoreCache.LoadFullFdrEntries(refPath);
+                ParquetScoreCache.WriteScoresParquet(refPath, oldFull, null, null, "f.mzML", true, PinFeatureMask.Hram);
+                var refResult = ParquetScoreCache.LoadFullFdrEntries(refPath, PinFeatureMask.Hram);
 
                 // New behavior: stream the transfer.
                 var warnings = new List<string>();
                 var result = ParquetScoreCache.StreamReconciledScoresParquet(
                     originalPath, streamPath, overlayByIndex, gapFill, null, null, "f.mzML", null,
-                    PerFileRescoreTask.TASK_NAME, null, warnings.Add);
+                    PerFileRescoreTask.TASK_NAME, null, warnings.Add, true, PinFeatureMask.Hram);
                 ParquetScoreCache.RowGroupRowCapForTest = null;
 
                 // Counts: two in-range overlays replaced, two gap-fill appended, 7 originals.
@@ -3187,12 +3329,31 @@ namespace pwiz.Osprey.Test
                 // The stream output is genuinely multi-group (3 original groups + gap-fill).
                 Assert.IsTrue(CountRowGroups(streamPath) >= 3,
                     "streaming reconciled transfer must preserve bounded row groups");
+                // Neither file stores CWT candidates: Stage 6 computes the few it reads (#5024).
+                Assert.IsFalse(ParquetScoreCache.HasColumn(originalPath, "cwt_candidates"));
+                Assert.IsFalse(ParquetScoreCache.HasColumn(streamPath, "cwt_candidates"));
+
+                // Without the training export neither file carries the reference XIC, and a
+                // reconciled write asked for it from a Stage 4 file that lacks it refuses
+                // rather than copying an empty XIC onto every row.
+                string noXicPath = Path.Combine(dir, "noxic.scores.parquet");
+                ParquetScoreCache.WriteScoresParquet(noXicPath, original, null, null, "f.mzML", false, PinFeatureMask.Hram);
+                Assert.IsFalse(ParquetScoreCache.HasColumn(noXicPath, "reference_xic_rts"));
+                string noXicStreamPath = Path.Combine(dir, "noxic.scores-reconciled.parquet");
+                ParquetScoreCache.StreamReconciledScoresParquet(noXicPath, noXicStreamPath,
+                    new Dictionary<uint, FdrEntry>(), new List<FdrEntry>(), null, null, "f.mzML", null,
+                    PerFileRescoreTask.TASK_NAME, null, null, false, PinFeatureMask.Hram);
+                Assert.IsFalse(ParquetScoreCache.HasColumn(noXicStreamPath, "reference_xic_rts"));
+                Assert.ThrowsException<InvalidOperationException>(() => ParquetScoreCache.StreamReconciledScoresParquet(
+                    noXicPath, Path.Combine(dir, "refused.scores-reconciled.parquet"),
+                    new Dictionary<uint, FdrEntry>(), new List<FdrEntry>(), null, null, "f.mzML", null,
+                    PerFileRescoreTask.TASK_NAME, null, null, true, PinFeatureMask.Hram));
 
                 // Physical order: the streaming merge must emit rows already in canonical
                 // (entry_id, charge, scan_number) order -- gap-fill interleaved by scan,
                 // NOT appended at the end. This is the guarantee Pass 2's projection sort
                 // relies on; a plain append would leave ids 4/6 after id 9 and fail here.
-                var streamResult = ParquetScoreCache.LoadFullFdrEntries(streamPath);
+                var streamResult = ParquetScoreCache.LoadFullFdrEntries(streamPath, PinFeatureMask.Hram);
                 Comparison<FdrEntry> byKey = (a, b) =>
                 {
                     int c = a.EntryId.CompareTo(b.EntryId);
@@ -3246,7 +3407,7 @@ namespace pwiz.Osprey.Test
 
                 string originalPath = Path.Combine(dir, "orig.scores.parquet");
                 string subsetPath = Path.Combine(dir, "subset.scores-reconciled.parquet");
-                ParquetScoreCache.WriteScoresParquet(originalPath, original, null, null, "f.mzML");
+                ParquetScoreCache.WriteScoresParquet(originalPath, original, null, null, "f.mzML", true, PinFeatureMask.Hram);
 
                 // Survivors: 2, 3, 8. Dropped: 1, 5, 7, 9. Gap-fill id 4 sorts between a
                 // kept row (3) and a DROPPED one (5), so an interleave that only advanced
@@ -3262,7 +3423,7 @@ namespace pwiz.Osprey.Test
 
                 var result = ParquetScoreCache.StreamReconciledScoresParquet(
                     originalPath, subsetPath, new Dictionary<uint, FdrEntry>(), gapFill,
-                    null, null, "f.mzML", keep, PerFileRescoreTask.TASK_NAME, null, s => { });
+                    null, null, "f.mzML", keep, PerFileRescoreTask.TASK_NAME, null, s => { }, true, PinFeatureMask.Hram);
 
                 Assert.AreEqual(1, result.NAppended);
                 // Rows READ, not emitted - the count still describes the input.
@@ -3270,7 +3431,7 @@ namespace pwiz.Osprey.Test
                 // Four emitted: three survivors plus the gap-fill row.
                 Assert.AreEqual(4, result.NWritten);
 
-                var rows = ParquetScoreCache.LoadFullFdrEntries(subsetPath);
+                var rows = ParquetScoreCache.LoadFullFdrEntries(subsetPath, PinFeatureMask.Hram);
                 var ids = new List<uint>();
                 foreach (var row in rows)
                     ids.Add(row.EntryId);
@@ -3313,7 +3474,7 @@ namespace pwiz.Osprey.Test
                 ParquetScoreCache.RowGroupRowCapForTest = 2;
                 try
                 {
-                    ParquetScoreCache.WriteScoresParquet(path, entries, null, null, "f.mzML");
+                    ParquetScoreCache.WriteScoresParquet(path, entries, null, null, "f.mzML", true, PinFeatureMask.Hram);
                 }
                 finally
                 {
@@ -3387,7 +3548,7 @@ namespace pwiz.Osprey.Test
                 for (int i = 0; i < iters; i++)
                 {
                     string path = Path.Combine(dir, @"stress" + i + ParquetScoreCache.EXT_SCORES);
-                    ParquetScoreCache.WriteScoresParquet(path, entries, null, null, @"f.mzML");
+                    ParquetScoreCache.WriteScoresParquet(path, entries, null, null, @"f.mzML", true, PinFeatureMask.Hram);
                     var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(path);
                     string bad = null;
                     if (stubs.Count != entries.Count)
@@ -3456,7 +3617,7 @@ namespace pwiz.Osprey.Test
                 var entries = new List<FdrEntry> { MakeStreamEntry(1, 100.0), MakeStreamEntry(3, 300.0) };
                 entries[1].Charge = 0;
                 string path = Path.Combine(dir, "zero.scores.parquet");
-                ParquetScoreCache.WriteScoresParquet(path, entries, null, null, "f.mzML");
+                ParquetScoreCache.WriteScoresParquet(path, entries, null, null, "f.mzML", true, PinFeatureMask.Hram);
                 var identity = new LibraryIdentity(new List<LibraryEntry>
                 {
                     new LibraryEntry(1, @"PEPTIDE1", @"PEPTIDE1", 2, 450.0, 10.0),
@@ -3481,9 +3642,11 @@ namespace pwiz.Osprey.Test
 
         private static FdrEntry MakeStreamEntry(uint id, double baseValue)
         {
+            // A value for each recorded feature and 0 for the rest, as scoring leaves the vector:
+            // an unrecorded feature has no parquet column, so it cannot round-trip a value.
             var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
             for (int f = 0; f < features.Length; f++)
-                features[f] = baseValue + f;
+                features[f] = PinFeatureMask.Hram.IsRecorded(f) ? baseValue + f : 0.0;
             return new FdrEntry
             {
                 EntryId = id,
@@ -3497,8 +3660,6 @@ namespace pwiz.Osprey.Test
                 BoundsSnr = id + 0.7,
                 ModifiedSequence = "PEPTIDE" + id,
                 Features = features,
-                FragmentMzs = new[] { baseValue + 0.25, baseValue + 0.75 },
-                FragmentIntensities = new[] { (float)baseValue, (float)(baseValue + 1) },
                 ReferenceXicRts = new[] { baseValue + 1.5, baseValue + 2.5 },
                 ReferenceXicIntensities = new[] { baseValue * 2.0, baseValue * 3.0 },
             };
@@ -3528,8 +3689,6 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(e.BoundsSnr, a.BoundsSnr);
                 Assert.AreEqual(e.ModifiedSequence, a.ModifiedSequence);
                 CollectionAssert.AreEqual(e.Features, a.Features);
-                CollectionAssert.AreEqual(e.FragmentMzs, a.FragmentMzs);
-                CollectionAssert.AreEqual(e.FragmentIntensities, a.FragmentIntensities);
                 CollectionAssert.AreEqual(e.ReferenceXicRts, a.ReferenceXicRts);
                 CollectionAssert.AreEqual(e.ReferenceXicIntensities, a.ReferenceXicIntensities);
             }
@@ -3816,7 +3975,7 @@ namespace pwiz.Osprey.Test
         private static void AssertPartialUpdatePreservesEveryField()
         {
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(7, 0.011, 0.012, 1.0, -1.5, 0.25);
+            accumulator.Add(7, 0.011, 0.012, 1.0, -1.5, 0.25, 0.25);
             accumulator.SetProteinQvalue(7, 0.0042);
 
             var updated = accumulator.Records[7];
@@ -3846,10 +4005,10 @@ namespace pwiz.Osprey.Test
         private static void AssertRunQFloorsAreAppliedNotStored()
         {
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(1, 0.001, 0.002, 0.5, -1.0, 0.1);   // both floors bite
-            accumulator.Add(2, 0.030, 0.040, 0.6, -2.0, 0.2);   // neither floor bites
-            accumulator.Add(3, 0.004, 0.050, 0.7, -3.0, 0.3);   // only the precursor floor bites
-            accumulator.Add(4, 0.005, 0.006, 0.8, -4.0, 0.4);   // floors unknown
+            accumulator.Add(1, 0.001, 0.002, 0.5, -1.0, 0.1, 0.1);   // both floors bite
+            accumulator.Add(2, 0.030, 0.040, 0.6, -2.0, 0.2, 0.2);   // neither floor bites
+            accumulator.Add(3, 0.004, 0.050, 0.7, -3.0, 0.3, 0.3);   // only the precursor floor bites
+            accumulator.Add(4, 0.005, 0.006, 0.8, -4.0, 0.4, 0.4);   // floors unknown
 
             var floors = new Dictionary<uint, (double Entry, double Peptide)>
             {
@@ -3888,12 +4047,12 @@ namespace pwiz.Osprey.Test
             AssertRunQFloorsAreAppliedNotStored();
             string path = Path.Combine(dir, "analysis.1st-pass.fdr_experiment.bin");
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(7, 0.011, 0.012, 0.013, -1.5, 1.0);
-            accumulator.Add(2, 0.021, 0.022, 0.023, -2.5, 1.0);
-            accumulator.Add(9, 0.031, 0.032, 0.033, -3.5, 1.0);
+            accumulator.Add(7, 0.011, 0.012, 0.013, -1.5, 1.0, 1.0);
+            accumulator.Add(2, 0.021, 0.022, 0.023, -2.5, 1.0, 1.0);
+            accumulator.Add(9, 0.031, 0.032, 0.033, -3.5, 1.0, 1.0);
             // A repeat sighting of an entry_id already held, with identical values: the ordinary
             // case, since every observation of a precursor carries the same experiment values.
-            accumulator.Add(2, 0.021, 0.022, 0.023, -2.5, 1.0);
+            accumulator.Add(2, 0.021, 0.022, 0.023, -2.5, 1.0, 1.0);
             Assert.AreEqual(3, accumulator.Count);
 
             FdrExperimentSidecar.Write(path, accumulator.Records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
@@ -3949,8 +4108,8 @@ namespace pwiz.Osprey.Test
             // Control: a valid file of the expected pass reads back with its records.
             string path = Path.Combine(dir, "unreadable-probe.2nd-pass.fdr_experiment.bin");
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(4, 0.041, 0.042, 0.043, -4.5, 1.0);
-            accumulator.Add(5, 0.051, 0.052, 0.053, -5.5, 1.0);
+            accumulator.Add(4, 0.041, 0.042, 0.043, -4.5, 1.0, 1.0);
+            accumulator.Add(5, 0.051, 0.052, 0.053, -5.5, 1.0, 1.0);
             FdrExperimentSidecar.Write(path, accumulator.Records, pass, TestStamps.Any);
             Assert.AreEqual(2, Pass2FdrSidecar.LoadExperimentRecordsFrom(path, pass).Count);
 
@@ -3978,10 +4137,10 @@ namespace pwiz.Osprey.Test
         private static void AssertExperimentCollapseRejectsDisagreement()
         {
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(4, 0.01, 0.02, 0.03, -1.0, 1.0);
+            accumulator.Add(4, 0.01, 0.02, 0.03, -1.0, 1.0, 1.0);
             try
             {
-                accumulator.Add(4, 0.01, 0.02, 0.03, -1.25, 1.0);
+                accumulator.Add(4, 0.01, 0.02, 0.03, -1.25, 1.0, 1.0);
                 Assert.Fail("Disagreeing experiment values for one entry_id must throw.");
             }
             catch (InvalidOperationException)
@@ -4002,7 +4161,7 @@ namespace pwiz.Osprey.Test
                 new List<FdrEntry> { MakeFdrEntry(1, -1.0, 0.01, 0.02) },
                 FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(1, 0.01, 0.02, 0.03, -1.0, 1.0);
+            accumulator.Add(1, 0.01, 0.02, 0.03, -1.0, 1.0, 1.0);
             FdrExperimentSidecar.Write(experiment, accumulator.Records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
 
             Assert.IsFalse(FdrExperimentSidecar.IsCurrentFormat(perFile, FdrScoresSidecar.Pass.FirstPass));
@@ -4674,7 +4833,7 @@ namespace pwiz.Osprey.Test
 
             string experiment = Path.Combine(dir, "out.1st-pass" + FdrExperimentSidecar.EXT);
             FdrExperimentSidecar.Write(experiment,
-                new Dictionary<uint, FdrExperimentRecord> { { 7u, new FdrExperimentRecord(7, 0.1, 0.2, 0.3, 4.0, 0.5) } },
+                new Dictionary<uint, FdrExperimentRecord> { { 7u, new FdrExperimentRecord(7, 0.1, 0.2, 0.3, 4.0, 0.5, 0.6) } },
                 FdrScoresSidecar.Pass.FirstPass, stamp);
             AssertStampRead(experiment, stamp);
             Assert.AreEqual(1, FdrExperimentSidecar.ReadMap(experiment, FdrScoresSidecar.Pass.FirstPass).Count);
@@ -4745,10 +4904,10 @@ namespace pwiz.Osprey.Test
                 },
             };
             string parquet = Path.Combine(dir, "run.scores.parquet");
-            ParquetScoreCache.WriteScoresParquet(parquet, entries, ParquetScoreCache.WithStamp(null, stamp));
+            ParquetScoreCache.WriteScoresParquet(parquet, entries, ParquetScoreCache.WithStamp(null, stamp), PinFeatureMask.Hram);
             AssertStampRead(parquet, stamp);
             string unstampedParquet = Path.Combine(dir, "unstamped.scores.parquet");
-            ParquetScoreCache.WriteScoresParquet(unstampedParquet, entries, null);
+            ParquetScoreCache.WriteScoresParquet(unstampedParquet, entries, null, PinFeatureMask.Hram);
             Assert.IsNull(ArtifactValidity.ReadStamp(unstampedParquet));
 
             string blib = Path.Combine(dir, "out.blib");

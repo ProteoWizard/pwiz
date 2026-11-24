@@ -63,6 +63,7 @@ public class TruncationAndPredictionTests
                 Assert.AreEqual(mz[i], got[i], 1e-12, $"m/z[{i}] outside round-trip tolerance");
             CollectionAssert.AreEqual(inten, s.GetIntensityArray()!.Data, "intensity untouched");
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         finally { try { File.Delete(path); } catch { } }
     }
 
@@ -90,6 +91,7 @@ public class TruncationAndPredictionTests
             CollectionAssert.AreEqual(inten, s.GetIntensityArray()!.Data,
                 "intensity untouched (no prediction override)");
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         finally { try { File.Delete(path); } catch { } }
     }
 
@@ -114,6 +116,7 @@ public class TruncationAndPredictionTests
             for (int i = 0; i < mz.Length; i++)
                 Assert.AreEqual(mz[i], roundMz[i], mz[i] * 1e-6, $"m/z[{i}] beyond truncation tolerance");
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         finally { try { File.Delete(path); } catch { } }
     }
 
@@ -135,6 +138,7 @@ public class TruncationAndPredictionTests
             CollectionAssert.AreEqual(new[] { 12.0, 18.0, 24.0 }, s.GetIntensityArray()!.Data,
                 "intensities should round to nearest integer (12.4→12, 17.6→18, 23.5→24)");
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         finally { try { File.Delete(path); } catch { } }
     }
 
@@ -158,6 +162,7 @@ public class TruncationAndPredictionTests
             Assert.IsTrue(mzArr.HasCVParam(CVID.MS_truncation__delta_prediction_and_zlib_compression),
                 "MS_truncation_delta_prediction_and_zlib_compression cvParam should be on the m/z array");
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         finally { try { File.Delete(path); } catch { } }
     }
 }
