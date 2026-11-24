@@ -838,7 +838,9 @@ if (-not (Test-Path $ospreyExe)) {
 . (Join-Path $regressionDir 'DiagnosticsGolden.ps1')
 . (Join-Path $regressionDir 'FdrSidecars.ps1')
 Initialize-Sqlite -OspreyBinDir $ospreyBinDir
-Initialize-OspreyStubReader -OspreyBinDir $ospreyBinDir
+# Built by Osprey.sln with Osprey.exe; it reads stub scores parquets out of process, because
+# this pwsh may run on an older .NET than Osprey's (see Initialize-OspreyStubReader).
+Initialize-OspreyStubReader -ToolDir (Join-Path $regressionDir "OspreyStubReader\bin\x64\$Configuration\net10.0")
 
 # --- Acquire data (download + unzip + skip-if-present) ------------------------
 Write-Progress-Tc 'Acquiring regression data'
@@ -2314,8 +2316,10 @@ foreach ($name in $selected) {
     # Stage 6 did, because a missing file cannot be told apart from a write that failed and
     # never committed. So the count IS the invariant, and a skip that tolerated absence would
     # report a run that silently wrote nothing as SKIPPED rather than red.
-    $pass2Stubs = @(Get-ChildItem -File -Path $straightDir -Filter '*.scores-reconciled.parquet' `
-        -ErrorAction SilentlyContinue | Where-Object { [OspreyFdrStubReader]::HasScores($_.FullName) })
+    $pass2Candidates = @(Get-ChildItem -File -Path $straightDir -Filter '*.scores-reconciled.parquet' `
+        -ErrorAction SilentlyContinue)
+    $pass2Info = Get-OspreyStubInfo -Path ($pass2Candidates | ForEach-Object { $_.FullName })
+    $pass2Stubs = @($pass2Candidates | Where-Object { $pass2Info[$_.FullName].HasScores })
     if ($pass2Stubs.Count -ne $inputs.Mzmls.Count) {
         $overallFail = $true
         Write-Problem-Tc ("$name mode1c (2nd-pass protein q is pass-2): FAIL -- " +
@@ -2519,7 +2523,8 @@ foreach ($name in $selected) {
         # names PerFileRescoring as its producer, and phase 4 reported the fold. A run's
         # second-pass records are its reconciled stub, stamped by the task that wrote it.
         $chainSidecars = @(Get-ChildItem -File -Path $chainDir -Filter '*.scores-reconciled.parquet' -ErrorAction SilentlyContinue)
-        $chainWorkerSidecars = @($chainSidecars | Where-Object { [OspreyFdrStubReader]::ProducedBy($_.FullName) -eq 'PerFileRescoring' })
+        $chainInfo = Get-OspreyStubInfo -Path ($chainSidecars | ForEach-Object { $_.FullName })
+        $chainWorkerSidecars = @($chainSidecars | Where-Object { $chainInfo[$_.FullName].ProducedBy -eq 'PerFileRescoring' })
         # The fold line carries the verifier state. Both second-pass folds write it (the
         # competition and the q-value transfer), so it is demanded unconditionally.
         $chainFolded = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `

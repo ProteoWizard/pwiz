@@ -350,7 +350,8 @@ public static class OspreyFdrSidecarComparer
     }
 
     /// Validates a run-scope image built in memory - a run whose records live in its stub
-    /// scores parquet, re-encoded by OspreyFdrStubReader.ReadAsSidecar - exactly as a file is.
+    /// scores parquet, re-encoded by OspreyStubReader (Regression\OspreyStubReader) - exactly as
+    /// a file is.
     /// ReadIfValid for the PowerShell side: one run-scope file, validated.
     public static byte[] ReadRunScope(string path, int expectedPass, out long count, out string problem)
     {
@@ -937,8 +938,8 @@ public static class OspreyFdrSidecarComparer
 
 function Initialize-OspreyStubReader {
     <#
-    Compile OspreyFdrStubReader against the Osprey build at -OspreyBinDir, so the per-run
-    comparisons below read records a run keeps in its stub scores parquets.
+    Point the per-run comparisons below at the OspreyStubReader build at -ToolDir, so they read
+    records a run keeps in its stub scores parquets.
 
     Per-run first- and second-pass records live in <stem>.scores.parquet and
     <stem>.scores-reconciled.parquet; no .fdr_scores.bin is written. The records are read through
@@ -947,95 +948,87 @@ function Initialize-OspreyStubReader {
     Each run's records are re-encoded in the v9 run-scope layout so the comparer above validates
     and compares them as it does a file. The stubs carry no feature sums, so that section is empty.
 
-    Call once per session, after the build (the dlls are held open for its life).
+    OspreyStubReader (Regression\OspreyStubReader, built with Osprey.sln) does the reading in a
+    process of its own. Osprey.IO is net10.0, and an assembly built for a newer runtime than the
+    one hosting PowerShell cannot be loaded into it: the TeamCity agent's pwsh runs on .NET 9,
+    where loading Osprey.IO here failed every leg with CS1705. Nothing of Osprey's is loaded into
+    this process. Call once per session, after the build.
     #>
-    param([Parameter(Mandatory = $true)][string]$OspreyBinDir)
+    param([Parameter(Mandatory = $true)][string]$ToolDir)
 
-    if (([System.Management.Automation.PSTypeName]'OspreyFdrStubReader').Type) { return }
-    $refs = @('Osprey.IO.dll', 'Osprey.Core.dll', 'pwiz.CommonUtil.dll') |
-        ForEach-Object { Join-Path $OspreyBinDir $_ }
-    foreach ($dll in $refs) {
-        if (-not (Test-Path $dll)) { throw "$dll not found - build Osprey (net10.0) first." }
-        [void][System.Reflection.Assembly]::LoadFrom($dll)
+    $dll = Join-Path $ToolDir 'OspreyStubReader.dll'
+    if (-not (Test-Path $dll)) {
+        throw "$dll not found - build Osprey (net10.0) first; Osprey.sln builds OspreyStubReader."
     }
-    Add-Type -ReferencedAssemblies ($refs + @('System.Collections', 'System.Runtime')) -TypeDefinition @'
-using System;
-using System.Collections.Generic;
-using System.IO;
-using pwiz.Osprey.IO;
-
-public static class OspreyFdrStubReader
-{
-    private const int HeaderLen = 32;
-    private const int RecordLen = 36;
-    private const byte Version = 9;
-    private static readonly byte[] Magic =
-        { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'F', (byte)'D', (byte)'R' };
-
-    /// The file Osprey reads <paramref name="sidecarPath"/>'s records from: its stub scores
-    /// parquet when that holds them, else the path itself.
-    public static string ReadablePath(string sidecarPath, int pass)
-    {
-        return FdrScoresSidecar.ReadablePath(sidecarPath, (FdrScoresSidecar.Pass)pass);
-    }
-
-    /// Whether <paramref name="parquetPath"/> is a parquet that carries a run's scores.
-    public static bool HasScores(string parquetPath)
-    {
-        return ParquetScoreCache.HasScores(parquetPath);
-    }
-
-    /// The task named in the validity stamp of the parquet at <paramref name="parquetPath"/>,
-    /// or null when it has none.
-    public static string ProducedBy(string parquetPath)
-    {
-        var stamp = ParquetScoreCache.ReadStamp(parquetPath);
-        return stamp == null ? null : stamp.Task;
-    }
-
-    /// The run's records of <paramref name="pass"/>, read as Osprey reads them, encoded as a
-    /// v9 run-scope image with no feature sums and no stamp; null with a problem when unreadable.
-    public static byte[] ReadAsSidecar(string sidecarPath, int pass, out string problem)
-    {
-        problem = null;
-        var records = new List<FdrScoreRecord>();
-        bool ok;
-        try
-        {
-            ok = FdrScoresSidecar.ReadRecords(sidecarPath, (FdrScoresSidecar.Pass)pass, records.Add);
-        }
-        catch (Exception ex)
-        {
-            problem = string.Format("could not be read: {0}", ex.Message);
-            return null;
-        }
-        if (!ok)
-        {
-            string source = ReadablePath(sidecarPath, pass);
-            problem = File.Exists(source)
-                ? string.Format("{0} is not readable as pass-{1} records", Path.GetFileName(source), pass)
-                : "neither the sidecar nor a stub scores parquet holding its records exists";
-            return null;
-        }
-        var data = new byte[HeaderLen + (long)records.Count * RecordLen];
-        Array.Copy(Magic, data, Magic.Length);
-        data[8] = Version;
-        data[9] = (byte)pass;
-        BitConverter.GetBytes((ulong)records.Count).CopyTo(data, 16);
-        int off = HeaderLen;
-        foreach (var r in records)
-        {
-            BitConverter.GetBytes(r.EntryId).CopyTo(data, off);
-            BitConverter.GetBytes(r.Score).CopyTo(data, off + 4);
-            BitConverter.GetBytes(r.RunPrecursorQvalue).CopyTo(data, off + 12);
-            BitConverter.GetBytes(r.RunPeptideQvalue).CopyTo(data, off + 20);
-            BitConverter.GetBytes(r.ApexRt).CopyTo(data, off + 28);
-            off += RecordLen;
-        }
-        return data;
-    }
+    $script:OspreyStubReaderDll = $dll
 }
-'@
+
+function Test-OspreyStubReader {
+    # Whether Initialize-OspreyStubReader has run, so stub scores parquets can be read.
+    return [bool](Get-Variable -Name OspreyStubReaderDll -Scope Script -ValueOnly -ErrorAction SilentlyContinue)
+}
+
+function Get-OspreyStubInfo {
+    <#
+    Path -> @{ HasScores; ProducedBy } for each parquet in -Path, in one OspreyStubReader call:
+    whether it carries a run's scores, and the task named in its validity stamp (null when it
+    has none). Needs Initialize-OspreyStubReader.
+    #>
+    param([AllowNull()][AllowEmptyCollection()][string[]]$Path)
+
+    $info = @{}
+    foreach ($r in (Invoke-OspreyStubReader -Command 'info' -Paths $Path)) {
+        $info[$r.Path] = @{ HasScores = [bool]$r.HasScores; ProducedBy = $r.ProducedBy }
+    }
+    return $info
+}
+
+function Invoke-OspreyStubReader {
+    <#
+    One OspreyStubReader call over -Paths, returning its result objects in path order. The paths
+    go in, and the answer comes back, as UTF-8 files in a temporary directory, so no path is
+    subject to a console code page; a 'read' result's v9 image is loaded into its Data property
+    before that directory is deleted.
+    #>
+    param(
+        [Parameter(Mandatory = $true)][ValidateSet('info', 'read')][string]$Command,
+        [AllowNull()][AllowEmptyCollection()][string[]]$Paths,
+        [int]$Pass
+    )
+
+    if (-not (Test-OspreyStubReader)) {
+        throw 'OspreyStubReader is not initialized - call Initialize-OspreyStubReader first.'
+    }
+    if ($null -eq $Paths -or $Paths.Count -eq 0) { return @() }
+    $work = Join-Path ([System.IO.Path]::GetTempPath()) ('osprey-stubreader-' + [guid]::NewGuid().ToString('N'))
+    [void](New-Item -ItemType Directory -Path $work)
+    try {
+        $list = Join-Path $work 'paths.txt'
+        [System.IO.File]::WriteAllLines($list, $Paths, [System.Text.UTF8Encoding]::new($false))
+        $toolArgs = @($script:OspreyStubReaderDll, $Command, $list, $work)
+        if ($Command -eq 'read') { $toolArgs += [string]$Pass }
+        $output = & dotnet @toolArgs 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            throw ("OspreyStubReader $Command failed (exit $LASTEXITCODE): " + ($output -join [Environment]::NewLine))
+        }
+        $results = @(Get-Content -Raw -Path (Join-Path $work 'result.json') | ConvertFrom-Json)
+        if ($results.Count -ne $Paths.Count) {
+            throw "OspreyStubReader $Command answered $($results.Count) of $($Paths.Count) paths."
+        }
+        if ($Command -eq 'read') {
+            foreach ($r in $results) {
+                # Assigned in the branch, not as an if-expression's value, which would enumerate
+                # the image into an object[] of boxed bytes.
+                $data = $null
+                if ($r.Image) { $data = [System.IO.File]::ReadAllBytes($r.Image) }
+                $r | Add-Member -NotePropertyName Data -NotePropertyValue $data
+            }
+        }
+        return $results
+    }
+    finally {
+        Remove-Item -Recurse -Force -Path $work -ErrorAction SilentlyContinue
+    }
 }
 
 function Get-RunScopeStems {
@@ -1052,9 +1045,11 @@ function Get-RunScopeStems {
     foreach ($f in Get-ChildItem -File -Path $Dir -Filter "*$suffix" -ErrorAction SilentlyContinue) {
         $stems[$f.Name.Substring(0, $f.Name.Length - $suffix.Length)] = $f.FullName
     }
-    if (([System.Management.Automation.PSTypeName]'OspreyFdrStubReader').Type) {
-        foreach ($f in Get-ChildItem -File -Path $Dir -Filter "*$stubExt" -ErrorAction SilentlyContinue) {
-            if (-not [OspreyFdrStubReader]::HasScores($f.FullName)) { continue }
+    if (Test-OspreyStubReader) {
+        $stubs = @(Get-ChildItem -File -Path $Dir -Filter "*$stubExt" -ErrorAction SilentlyContinue)
+        $info = Get-OspreyStubInfo -Path ($stubs | ForEach-Object { $_.FullName })
+        foreach ($f in $stubs) {
+            if (-not $info[$f.FullName].HasScores) { continue }
             $stem = $f.Name.Substring(0, $f.Name.Length - $stubExt.Length)
             $stems[$stem] = Join-Path $Dir "$stem$suffix"
         }
@@ -1062,30 +1057,39 @@ function Get-RunScopeStems {
     return $stems
 }
 
-function Read-RunScopeImage {
+function Read-RunScopeImages {
     <#
-    One run's run-scope records of -Pass for Compare-FdrSidecars: the binary sidecar at -Path
-    when Osprey would read that file, else the records its stub scores parquet holds, through
-    OspreyFdrStubReader (Initialize-OspreyStubReader). Returns Data, Count, Problem and Source.
+    Path -> each run's run-scope records of -Pass for Compare-FdrSidecars: the binary sidecar at
+    the path when Osprey would read that file, else the records its stub scores parquet holds,
+    read by OspreyStubReader (Initialize-OspreyStubReader) in one call for every path. Each value
+    has Data, Count, Problem and Source.
     #>
-    param([Parameter(Mandatory = $true)][string]$Path, [int]$Pass)
+    param([AllowEmptyCollection()][string[]]$Paths, [int]$Pass)
 
-    $source = $Path
-    if (([System.Management.Automation.PSTypeName]'OspreyFdrStubReader').Type) {
-        $source = [OspreyFdrStubReader]::ReadablePath($Path, $Pass)
-    }
-    $count = [long]0
-    $problem = $null
-    if ($source -eq $Path) {
-        $data = [OspreyFdrSidecarComparer]::ReadRunScope($Path, $Pass, [ref]$count, [ref]$problem)
-    } else {
-        $image = [OspreyFdrStubReader]::ReadAsSidecar($Path, $Pass, [ref]$problem)
-        $data = $null
-        if ($null -ne $image) {
-            $data = [OspreyFdrSidecarComparer]::ValidateImage($image, $Pass, [ref]$count, [ref]$problem)
+    $stub = @{}
+    if ((Test-OspreyStubReader) -and $Paths.Count -gt 0) {
+        foreach ($r in (Invoke-OspreyStubReader -Command 'read' -Paths $Paths -Pass $Pass)) {
+            $stub[$r.Path] = $r
         }
     }
-    return @{ Data = $data; Count = $count; Problem = $problem; Source = $source }
+    $images = @{}
+    foreach ($path in $Paths) {
+        $r = $stub[$path]
+        $source = if ($null -ne $r) { $r.Source } else { $path }
+        $count = [long]0
+        $problem = $null
+        if ($source -eq $path) {
+            $data = [OspreyFdrSidecarComparer]::ReadRunScope($path, $Pass, [ref]$count, [ref]$problem)
+        } else {
+            $problem = $r.Problem
+            $data = $null
+            if ($null -ne $r.Data) {
+                $data = [OspreyFdrSidecarComparer]::ValidateImage($r.Data, $Pass, [ref]$count, [ref]$problem)
+            }
+        }
+        $images[$path] = @{ Data = $data; Count = $count; Problem = $problem; Source = $source }
+    }
+    return $images
 }
 
 function Compare-FdrSidecars {
@@ -1130,8 +1134,10 @@ function Compare-FdrSidecars {
     foreach ($stem in ($expected.Keys | Sort-Object)) {
         if (-not $actual.ContainsKey($stem)) { continue }
 
-        $a = Read-RunScopeImage -Path $expected[$stem] -Pass $Pass
-        $b = Read-RunScopeImage -Path $actual[$stem] -Pass $Pass
+        # One run's pair per reader call, so only two runs' records are held at a time.
+        $images = Read-RunScopeImages -Paths @($expected[$stem], $actual[$stem]) -Pass $Pass
+        $a = $images[$expected[$stem]]
+        $b = $images[$actual[$stem]]
         $diff = [OspreyFdrSidecarComparer]::CompareLoaded(
             $a.Data, $a.Count, $a.Problem, $b.Data, $b.Count, $b.Problem, $Tolerance)
         if (-not $diff.ReadableExpected -or -not $diff.ReadableActual) {
