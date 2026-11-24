@@ -128,8 +128,8 @@ Osprey -i *.mzML -l lib.tsv -o out.blib --resolution hram --protein-fdr 0.01 --s
 # Trust decoys already in the library instead of generating reverse decoys
 Osprey -i *.mzML -l lib_with_decoys.tsv -o out.blib --resolution hram --decoys-in-library
 
-# Timestamped, memory-stamped log to a file (for perf visualization)
-Osprey -i *.mzML -l lib.tsv -o out.blib --resolution hram --timestamp --memstamp --log-file run.log
+# Timestamped, memory- and disk-stamped log to a file (for perf visualization)
+Osprey -i *.mzML -l lib.tsv -o out.blib --resolution hram --timestamp --memstamp --diskstamp --log-file run.log
 ```
 
 ---
@@ -327,6 +327,7 @@ None of these counts enters a validity key or changes an output byte; one lane i
 |--------|--------|
 | `--timestamp` | Prefix each output line with `[yyyy/MM/dd HH:mm:ss]`. |
 | `--memstamp` | Prefix each line with managed and process private bytes in MB, for monitoring memory use during long runs. |
+| `--diskstamp` | Write a `[DISK]` line with the change in used space, since the run started, on the volume holding the run's per-file outputs (`--output-dir`, else the first input file's folder), and the volume's free space: at the start, every 5 minutes, at each `[TASK]` done and at the end. See [Log format](#log-format). |
 | `--log-file <path>` | Write all output to a file instead of stderr. |
 | `--perf-stats` | Emit the machine-channel lines (`[COUNT]`, `[TIMING]`, `[BENCH]`, `[STAGE-WALL]`, `[PATH]`, `[TRAIN]`); see [Log format](#log-format). |
 | `--verbose` | Show implementer-grade detail (e.g. per-fold Percolator iterations). |
@@ -357,6 +358,7 @@ translated, and it is the only part of the log a script or test may read.
 | `[PATH]` | `--perf-stats` | which code route the run took, e.g. `[PATH] second-pass-join: per-run runs=3` |
 | `[TIMING]`, `[STAGE-WALL]`, `[BENCH]` | `--perf-stats` | timings the perf tools read |
 | `[TRAIN]` | `--perf-stats` | which population a model trained on |
+| `[DISK]` | `--diskstamp` | `[DISK] used: +12.34 GB since start, 812.50 GB free on D:` - the used-space change (signed) and free space in GB (1024^3 bytes, two decimals; used + free is the volume size) on the volume holding the run's per-file outputs - `--output-dir`, else the first input file's folder; with no inputs, `--output-dir` or `-o`'s folder. The volume is the mount point the path is under (`/mnt/data`, not `/`) and comes last on the line, since it may contain spaces. Measured on the whole volume, so another process writing there shows up too, and a run whose outputs span several volumes is measured on the first. A probe that fails writes no line. |
 | `[MEM <label>]` | `OSPREY_LOG_MEMORY` | a memory probe |
 
 Prose that the user asked for with an option (`--model-diagnostics`, `--training-export`,
@@ -534,6 +536,8 @@ The catalog text is developer text and is not translated. The ones most likely t
 | `OSPREY_FDR_MODEL` | First-pass classifier: unset / `svm` = linear SVM (**default**), `gbdt` = **experimental** gradient-boosted trees (C#-only). An unrecognized value is a startup ERROR. Replaced the removed `--fdr-method` | [07](07-fdr-control.md) |
 | `OSPREY_GBT_*` | GBDT hyperparameters; apply only under `OSPREY_FDR_MODEL=gbdt` | [07](07-fdr-control.md) |
 | `OSPREY_DETERMINISTIC_MATH` | Exp/Log in GBDT training: unset / `1` = managed fdlibm port, bit-identical on Windows and Linux (**default**); `0` = `System.Math`, which calls the OS C library and can differ in the last bit between OSes (an A/B arm for timing and for reproducing pre-switch models; keys the gbdt tasks). Anything else is a startup ERROR | [07](07-fdr-control.md) |
+| `OSPREY_MS2_CAL_MEAN` | Calibrate MS2 m/z by one mean offset, as Rust does: no unit-resolution offset curve, and overrides `OSPREY_MS2_CAL_CURVE_PPM`. For cross-implementation parity runs | [04](04-calibration.md#ms2-mz-offset-curve-ms2offsetcurvecs) |
+| `OSPREY_MS2_CAL_CURVE_PPM` | **Experimental, opt-in**: calibrate MS2 m/z of ppm searches by an m/z-dependent offset curve instead of the mean (+5.7% precursors on one ZenoTOF 8600 ZT Scan run). C#-only | [04](04-calibration.md#the-ppm-curve-experimental-osprey_ms2_cal_curve_ppm1) |
 | `OSPREY_DIAGNOSTICS` | Turns on the bundle of cross-impl bisection dumps (was the `-d` / `--diagnostics` argument) | [18](18-peptide-trace.md) |
 | `OSPREY_DUMP_*` / `OSPREY_DIAG_*` | Cross-impl bisection dumps, one at a time | [18](18-peptide-trace.md) |
 

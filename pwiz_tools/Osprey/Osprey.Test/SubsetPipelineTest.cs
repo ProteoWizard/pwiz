@@ -355,7 +355,10 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_FDRBENCH.ArgumentText, bench,
                 OspreyCommandArgs.ARG_FDRBENCH_PASS.ArgumentText, @"both"
             };
-            RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, WithDiannReports(Verifier(false)), args);
+            // Calibrated by the mean: what is tested here is the entrapment on target proteins, and
+            // on this subset the m/z curve's narrower window leaves none of it in the library.
+            var variables = new Dictionary<string, string>(Verifier(false)) { [@"OSPREY_MS2_CAL_MEAN"] = @"1" };
+            RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, WithDiannReports(variables), args);
             string blib = Path.Combine(workDir, BLIB_FILE);
             Assert.IsTrue(BlibComparer.CountRows(blib, @"RefSpectra") >= MIN_LIBDECOY_PRECURSORS);
             // No decoy reaches the library, but entrapment peptides compete as targets and reach
@@ -391,13 +394,13 @@ namespace pwiz.Osprey.Test
             // so PerFileRescoring still skips.
             DeleteFiles(workDir, @"*" + FdrScoresSidecar.EXT_FIRST_PASS);
             DeleteSecondPassOutputs(blib);
-            string resumeLog = RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, Verifier(false), args);
+            string resumeLog = RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, variables, args);
             AssertTasks(resumeLog, new[] { PerFileScoringTask.TASK_NAME, PerFileRescoreTask.TASK_NAME },
                 new[] { FirstPassFdrTask.TASK_NAME, SecondPassFdrTask.TASK_NAME });
 
             // The report alone, from what the analysis left: every analysis task is cached.
             File.Delete(diagnosticsReport);
-            string log = RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, Verifier(false),
+            string log = RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, variables,
                 args.Concat(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, ModelDiagnosticsTask.TASK_NAME }).ToArray());
             AssertNoRecompute(log);
             AssertHasRows(diagnosticsReport);
@@ -406,7 +409,7 @@ namespace pwiz.Osprey.Test
             // or protein in the library, whichever protein it sits on, and no entrapment peptide
             // or entrapment-only group in the reports, while the targets are reported as before.
             string stripDir = CreateDir(@"libdecoy-strip");
-            RunAnalysis(stripDir, DataInputs(), LIBDECOY_FILE, WithDiannReports(Verifier(false)),
+            RunAnalysis(stripDir, DataInputs(), LIBDECOY_FILE, WithDiannReports(variables),
                 OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY.ArgumentText,
                 OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, manifest,
                 OspreyCommandArgs.ARG_STRIP_ENTRAPMENT.ArgumentText);

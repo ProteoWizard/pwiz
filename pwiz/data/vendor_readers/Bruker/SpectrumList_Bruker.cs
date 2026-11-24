@@ -68,7 +68,11 @@ public sealed class SpectrumList_Bruker : SpectrumListBase, IVendorCentroidingSp
 
     /// <inheritdoc/>
     public Spectrum GetCentroidSpectrum(int index, bool getBinaryData, IntegerSet msLevelsToCentroid) =>
-        BuildSpectrum(index, getBinaryData, msLevelsToCentroid);
+        BuildSpectrum(index, ToDetailLevel(getBinaryData), msLevelsToCentroid);
+
+    /// <inheritdoc/>
+    public Spectrum GetCentroidSpectrum(int index, DetailLevel detailLevel, IntegerSet msLevelsToCentroid) =>
+        BuildSpectrum(index, detailLevel, msLevelsToCentroid);
 
     /// <summary>DataProcessing emitted as the <c>defaultDataProcessingRef</c>.</summary>
     public DataProcessing? Dp { get; set; }
@@ -117,15 +121,27 @@ public sealed class SpectrumList_Bruker : SpectrumListBase, IVendorCentroidingSp
 
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
-        BuildSpectrum(index, getBinaryData, msLevelsToCentroid: null);
+        BuildSpectrum(index, ToDetailLevel(getBinaryData), msLevelsToCentroid: null);
 
-    private Spectrum BuildSpectrum(int index, bool getBinaryData, IntegerSet? msLevelsToCentroid)
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Overridden, as cpp's is, so a request below <see cref="DetailLevel.FullMetadata"/> does not
+    /// decode a TIMS frame. Skyline asks for the ms level, retention time and precursors of every
+    /// spectrum it then decides whether to read.
+    /// </remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel) =>
+        BuildSpectrum(index, detailLevel, msLevelsToCentroid: null);
+
+    private static DetailLevel ToDetailLevel(bool getBinaryData) =>
+        getBinaryData ? DetailLevel.FullData : DetailLevel.FullMetadata;
+
+    private Spectrum BuildSpectrum(int index, DetailLevel detailLevel, IntegerSet? msLevelsToCentroid)
     {
         var entry = _index[index];
         // cpp SpectrumList_Bruker.cpp:426 - `getLineData = msLevelsToCentroid.contains(msLevel)`.
         bool preferCentroid = msLevelsToCentroid?.Contains(entry.MsLevel) ?? false;
         var spec = new Spectrum { Index = index, Id = entry.Id };
-        _data.FillSpectrum(spec, entry, getBinaryData, preferCentroid, _sortAndJitter, _includeIsolationArrays);
+        _data.FillSpectrum(spec, entry, detailLevel, preferCentroid, _sortAndJitter, _includeIsolationArrays);
         return spec;
     }
 

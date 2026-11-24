@@ -1056,7 +1056,7 @@ namespace pwiz.Skyline.Model.Results
                     _imWinCenter = CalcCenter(firstSpectrum.IonMobility.Mobility,
                         spectra.Last().IonMobility.Mobility);
 
-                    if (firstSpectrum.IonMobilities == null)
+                    if (!firstSpectrum.HasIonMobilities)
                     {
                         // For diaPASEF we will see the isolation window shift periodically as we cycle through ion mobilities - and we may see overlaps
                         _filteredSpectra = new Dictionary<SpectrumFilterPair, List<ExtractedSpectrum>>();

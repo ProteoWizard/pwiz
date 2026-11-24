@@ -88,13 +88,15 @@ public interface IBrukerData : IDisposable
         bool passEntireDiaPasefFrame);
 
     /// <summary>
-    /// Populates <paramref name="spec"/> with all metadata for the entry and, if
-    /// <paramref name="getBinaryData"/> is true, its peak arrays. The existing <c>Index</c> /
-    /// <c>Id</c> on <paramref name="spec"/> are left untouched. When
+    /// Populates <paramref name="spec"/> with the metadata for the entry that
+    /// <paramref name="detailLevel"/> asks for and, at <see cref="DetailLevel.FullData"/>, its
+    /// peak arrays. A source may leave out metadata that is costly to produce, such as a peak
+    /// count that needs a frame decoded, below <see cref="DetailLevel.FullMetadata"/>. The
+    /// existing <c>Index</c> / <c>Id</c> on <paramref name="spec"/> are left untouched. When
     /// <paramref name="includeIsolationArrays"/> is true (only meaningful for TDF whole-frame
     /// diaPASEF spectra), the two scanning-quadrupole isolation m/z arrays are emitted.
     /// </summary>
-    void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, bool getBinaryData, bool preferCentroid, bool sortAndJitter, bool includeIsolationArrays);
+    void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, DetailLevel detailLevel, bool preferCentroid, bool sortAndJitter, bool includeIsolationArrays);
 
     /// <summary>
     /// Yields the points of the TIC / BPC chromatograms, honoring

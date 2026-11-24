@@ -342,13 +342,15 @@ namespace pwiz.Osprey.Test
             // The joined --task=Name form too (see OspreyCommandArgsTests.TestNameEqualsValueForm).
             Assert.IsNull(Parse(OspreyCommandArgs.ARG_TASK.ArgumentText + @"=" + SecondPassFdrTask.TASK_NAME, OspreyCommandArgs.ARG_LIBRARY + @"ref.blib", OspreyCommandArgs.ARG_OUTPUT + @"out.blib").SelectedTask);
 
-            // Logging: --timestamp / --memstamp are value-less flags (default off);
+            // Logging: --timestamp / --memstamp / --diskstamp are value-less flags (default off);
             // --log-file takes a path.
             Assert.IsFalse(Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").IsTimeStamped);
             Assert.IsFalse(Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").IsMemStamped);
             Assert.IsNull(Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").LogFilePath);
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_TIMESTAMP).IsTimeStamped);
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_MEMSTAMP).IsMemStamped);
+            Assert.IsFalse(Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").IsDiskStamped);
+            Assert.IsTrue(Parse(OspreyCommandArgs.ARG_DISKSTAMP).IsDiskStamped);
             Assert.AreEqual(@"run.log", Parse(OspreyCommandArgs.ARG_LOG_FILE + @"run.log").LogFilePath);
         }
 
@@ -675,7 +677,7 @@ namespace pwiz.Osprey.Test
                 OspreyArgNames.TRAINING_INPUT, OspreyArgNames.TRAINING_INPUT_LIST, OspreyArgNames.MODEL,
                 OspreyArgNames.TORCH_RUNTIMES, OspreyArgNames.INSTALL_CUDA_RUNTIME, OspreyArgNames.ENTRAPMENT,
                 OspreyArgNames.ENTRAPMENT_FASTA, OspreyArgNames.ENTRAPMENT_IN_TARGETS, OspreyArgNames.TASK, OspreyArgNames.TRAINING_SEARCH,
-                OspreyArgNames.TASK_FILES, @"timestamp", @"memstamp", @"log-file", @"help", @"help-env", @"version", @"culture",
+                OspreyArgNames.TASK_FILES, @"timestamp", @"memstamp", @"diskstamp", @"log-file", @"help", @"help-env", @"version", @"culture",
                 // Developer options and outputs a user of a host's settings page has no use for
                 OspreyArgNames.DECOY_PAIRING_MANIFEST, OspreyArgNames.TRAINING_EXPORT, @"training-export-claimant-q",
                 @"training-export-xics", @"perf-stats",

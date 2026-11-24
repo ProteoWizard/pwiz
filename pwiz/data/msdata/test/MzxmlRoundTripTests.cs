@@ -110,8 +110,8 @@ public class MzxmlRoundTripTests
 
         var spec = reparsedZlib.Run.SpectrumList.GetSpectrum(0, getBinaryData: true);
         Assert.AreEqual(4, spec.DefaultArrayLength);
-        CollectionAssert.AreEqual(new[] { 100.0, 200.0, 300.0, 400.0 }, spec.GetMZArray()!.Data);
-        CollectionAssert.AreEqual(new[] { 50.0, 100.0, 150.0, 200.0 }, spec.GetIntensityArray()!.Data);
+        CollectionAssert.AreEqual(new[] { 100.0, 200.0, 300.0, 400.0 }, spec.GetMZArray()!.Data.ToArray());
+        CollectionAssert.AreEqual(new[] { 50.0, 100.0, 150.0, 200.0 }, spec.GetIntensityArray()!.Data.ToArray());
 
         Assert.AreEqual(1, spec.Params.CvParam(CVID.MS_ms_level).ValueAs<int>());
         Assert.IsTrue(spec.Params.HasCVParam(CVID.MS_centroid_spectrum));
@@ -153,8 +153,8 @@ public class MzxmlRoundTripTests
             Assert.IsFalse(xml.Contains("zstd", StringComparison.OrdinalIgnoreCase), compression.ToString());
 
             var spec = ReparseMzxml(xml).Run.SpectrumList!.GetSpectrum(0, getBinaryData: true);
-            CollectionAssert.AreEqual(new[] { 100.0, 200.0, 300.0, 400.0 }, spec.GetMZArray()!.Data, compression.ToString());
-            CollectionAssert.AreEqual(new[] { 50.0, 100.0, 150.0, 200.0 }, spec.GetIntensityArray()!.Data, compression.ToString());
+            CollectionAssert.AreEqual(new[] { 100.0, 200.0, 300.0, 400.0 }, spec.GetMZArray()!.Data.ToArray(), compression.ToString());
+            CollectionAssert.AreEqual(new[] { 50.0, 100.0, 150.0, 200.0 }, spec.GetIntensityArray()!.Data.ToArray(), compression.ToString());
         }
     }
 
@@ -216,12 +216,12 @@ public class MzxmlRoundTripTests
             var s1 = rt.Run.SpectrumList.GetSpectrum(1, getBinaryData: true);
             Assert.AreEqual("scan=2", s1.Id);
             Assert.AreEqual(2, s1.Params.CvParam(CVID.MS_ms_level).ValueAs<int>());
-            CollectionAssert.AreEqual(new[] { 250.0, 350.0 }, s1.GetMZArray()!.Data);
+            CollectionAssert.AreEqual(new[] { 250.0, 350.0 }, s1.GetMZArray()!.Data.ToArray());
 
             var s0 = rt.Run.SpectrumList.GetSpectrum(0, getBinaryData: true);
             Assert.AreEqual("scan=1", s0.Id);
             Assert.AreEqual(4, s0.DefaultArrayLength);
-            CollectionAssert.AreEqual(new[] { 100.0, 200.0, 300.0, 400.0 }, s0.GetMZArray()!.Data);
+            CollectionAssert.AreEqual(new[] { 100.0, 200.0, 300.0, 400.0 }, s0.GetMZArray()!.Data.ToArray());
 
             // Metadata-only (getBinaryData=false) returns the spectrum but skips peak decoding.
             var s0meta = rt.Run.SpectrumList.GetSpectrum(0, getBinaryData: false);

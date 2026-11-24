@@ -828,6 +828,9 @@ namespace pwiz.Osprey
                 // Machine twin of the banner: the liveness anchor a route assertion needs before
                 // it can trust an absence.
                 LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_STARTUP, @"threads={0}", config.NThreads));
+                // --diskstamp: the start line, then a timer line every few minutes until the try block
+                // ends and disposal writes the end line (before RunCommand closes a --log-file writer).
+                using var diskStamper = StartDiskStamper(config);
                 LogInfo(string.Empty);
 
                 // --task ModelDiagnostics is a RENDER over completed analysis state, not a run.
@@ -1640,6 +1643,39 @@ namespace pwiz.Osprey
             config.OutputDir = FullPathOrEmpty(config.OutputDir);
             config.CacheDir = FullPathOrEmpty(config.CacheDir);
             config.OutputBlib = FullPathOrEmpty(config.OutputBlib);
+        }
+
+        /// <summary>
+        /// The <c>--diskstamp</c> stamper for this run, or null when it was not asked for. It writes to
+        /// <see cref="_out"/> itself, not <see cref="CommandOutput.Out"/>: the timer thread must not
+        /// land in whatever per-file block is open on another thread. <see cref="_out"/> is the
+        /// writer the pipeline's lines end up in too, and a <see cref="CommandStatusWriter"/>
+        /// synchronizes its sink, so the timer's lines and the pipeline's serialize on one lock.
+        /// </summary>
+        private static DiskStamper StartDiskStamper(OspreyConfig config)
+        {
+            if (!config.IsDiskStamped)
+                return null;
+            return DiskStamper.Start(GetDiskStampDirectory(config, ArtifactPaths.ResolveOutputDir),
+                OspreyLog.FromDelegate(line => _out.WriteLine(line)));
+        }
+
+        /// <summary>
+        /// The directory whose volume <c>--diskstamp</c> measures: where the run writes its per-file
+        /// artifacts (the scores parquets and sidecars), as <paramref name="resolveOutputDir"/>
+        /// (<see cref="ArtifactPaths.ResolveOutputDir"/>) resolves it for the first input -
+        /// <c>--output-dir</c> when given, else that input's own folder. With no inputs (a library
+        /// phase), <c>--output-dir</c>, else the folder of <c>-o</c>, else the current directory
+        /// (empty). One volume only: a run that spreads its artifacts over several is measured on
+        /// the first.
+        /// </summary>
+        internal static string GetDiskStampDirectory(OspreyConfig config, Func<string, string> resolveOutputDir)
+        {
+            if (config.InputFiles.Count > 0)
+                return resolveOutputDir(config.InputFiles[0]);
+            if (!string.IsNullOrEmpty(config.OutputDir))
+                return config.OutputDir;
+            return string.IsNullOrEmpty(config.OutputBlib) ? string.Empty : Path.GetDirectoryName(config.OutputBlib);
         }
 
         private static string FullPathOrEmpty(string path)

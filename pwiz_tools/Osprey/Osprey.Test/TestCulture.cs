@@ -44,6 +44,8 @@ namespace pwiz.Osprey.Test
         [AssemblyInitialize]
         public static void Initialize(TestContext context)
         {
+            // An assembly has one initializer, and libtorch must be pinned before any test loads it.
+            TorchTestSettings.Apply();
             string name = Environment.GetEnvironmentVariable(ENV_VAR);
             if (!string.IsNullOrEmpty(name))
                 _scope = new CultureScope(CultureInfo.GetCultureInfo(name));

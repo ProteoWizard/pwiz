@@ -106,13 +106,15 @@ namespace pwiz.Osprey.Test
         {
             string offDir = CreateDir(@"protein-best-pre-column");
             // With the second-pass defaults the digest was pinned under, before transfer, refit off
-            // and the ratio PEP became the defaults.
+            // and the ratio PEP became the defaults, and before the unit-resolution MS2 offset curve
+            // became the default (the digest was pinned under the mean MS2 calibration).
             var variables = new Dictionary<string, string>(Verifier(false))
             {
                 [PREFILTER_SIZE] = string.Empty,
                 [PASS2_QVALUE] = OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT,
                 [@"OSPREY_RECON_REFIT"] = @"on",
-                [@"OSPREY_PEP_FORMULA"] = @"mixture"
+                [@"OSPREY_PEP_FORMULA"] = @"mixture",
+                [@"OSPREY_MS2_CAL_MEAN"] = @"1"
             };
             string log = RunAnalysis(offDir, DataInputs(), variables);
             AssertProteinBestLogged(log, false, variables);

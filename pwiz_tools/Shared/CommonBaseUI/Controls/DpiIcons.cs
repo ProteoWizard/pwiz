@@ -106,7 +106,8 @@ namespace pwiz.Common.Controls
         /// the image's file name ("Pindownlight.bmp" names Pindownlight), resampled to the
         /// target size, or null. Image lists carry no Resources.resx name, and the files are
         /// looked for in the assembly of the control's type and then of each base type, so a
-        /// dialog derived from a shared base class finds the icons its own assembly embeds.
+        /// dialog derived from a shared base class finds the icons its own assembly embeds, and
+        /// then in any other assembly seen so far.
         /// The native size is the icon's square 96-DPI size; only 16 and 14 px icons have
         /// embedded sizes.
         /// </summary>
@@ -115,11 +116,24 @@ namespace pwiz.Common.Controls
             if (string.IsNullOrEmpty(key) || (nativeSize != ICON_NATIVE && nativeSize != ICON_NATIVE_SMALL))
                 return null;
             var name = Path.GetFileNameWithoutExtension(key);
+            // The assemblies of the control's type chain first, then any other seen so far, as
+            // PrepareIcons matches natives: a control in an assembly that embeds no icon files
+            // (PanoramaClient's folder browser) uses the ones Skyline embeds
+            var sources = new List<IconSource>();
             for (var type = control.GetType(); type != null && type.Assembly != typeof(Control).Assembly; type = type.BaseType)
+                sources.Add(IconSource.ForAssembly(type.Assembly));
+            sources.AddRange(IconSource.AllSources.Where(s => !sources.Contains(s)));
+            // A list stretches a 14 px icon to its 16 px size (or the other way), so an icon with
+            // no file in the list's size set is looked for in the other set too
+            var otherSize = nativeSize == ICON_NATIVE ? ICON_NATIVE_SMALL : ICON_NATIVE;
+            foreach (var size in new[] { nativeSize, otherSize })
             {
-                var icon = IconSource.ForAssembly(type.Assembly).LoadIcon(name, nativeSize, target);
-                if (icon != null)
-                    return MarkPrepared(icon);
+                foreach (var source in sources)
+                {
+                    var icon = source.LoadIcon(name, size, target);
+                    if (icon != null)
+                        return MarkPrepared(icon);
+                }
             }
             return null;
         }
@@ -133,6 +147,17 @@ namespace pwiz.Common.Controls
         public static Image LoadIcon(Type resourcesType, string name, int nativeSize, int size)
         {
             return IconSource.ForResources(resourcesType).LoadIcon(name, nativeSize, new Size(size, size));
+        }
+
+        /// <summary>
+        /// <see cref="LoadIcon(Type, string, int, int)"/> from whichever assembly seen so far
+        /// embeds a drawing of that name, for code that cannot reference the Resources class
+        /// that owns it (PanoramaClient showing Skyline's icons). Null when none does.
+        /// </summary>
+        public static Image LoadIcon(string name, int nativeSize, int size)
+        {
+            return IconSource.AllSources.Select(source => source.LoadIcon(name, nativeSize, new Size(size, size)))
+                .FirstOrDefault(icon => icon != null);
         }
 
         /// <summary>
@@ -390,6 +415,20 @@ namespace pwiz.Common.Controls
                             return source;
                     }
                     return null;
+                }
+            }
+
+            /// <summary>
+            /// Every source created so far, for a lookup that falls back past the owner's.
+            /// </summary>
+            public static IconSource[] AllSources
+            {
+                get
+                {
+                    lock (LOCK)
+                    {
+                        return _sources.ToArray();
+                    }
                 }
             }
 
