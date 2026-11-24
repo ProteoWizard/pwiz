@@ -115,9 +115,9 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The search across the offsets this subset can discover: within about 0.2 Th the mean
-        /// stays, and it sees the offset; further off, on either side, each run's curve recovers it.
-        /// Each reports nearly what the unshifted subset reports. Beyond that, at +0.75 Th, too few
+        /// The search across the offsets this subset can discover: near zero and further off, on
+        /// either side, each run's curve recovers the offset, and each search reports nearly what
+        /// the unshifted subset reports, so taking the curve at a small offset costs nothing. Beyond that, at +0.75 Th, too few
         /// calibration peptides match within the uncorrected tolerance on a subset this small, and
         /// the search refuses cleanly rather than reporting from a calibration it could not make.
         /// </summary>
@@ -128,7 +128,7 @@ namespace pwiz.Osprey.Test
             RunOsprey(Ms2OffsetArgs(DataInputs().ToArray(), baselineDir), Verifier(false));
             int baseline = BlibComparer.CountRows(Path.Combine(baselineDir, BLIB_FILE), @"RefSpectra");
 
-            foreach (var (shift, expectCurve) in new[] { (-0.10, false), (0.20, false), (-0.40, true), (0.40, true) })
+            foreach (var (shift, expectCurve) in new[] { (-0.10, true), (0.20, true), (-0.40, true), (0.40, true) })
             {
                 string name = string.Format(CultureInfo.InvariantCulture, @"ms2-range-{0:F2}", shift);
                 var inputs = WriteShiftedInputs(name + @"-data", _ => shift);
@@ -157,8 +157,8 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// Calibration is per run: one run of three far off takes the curve while the others keep
-        /// their mean, and the experiment reports nearly what it reports with none shifted.
+        /// Calibration is per run: one run of three far off gets its own curve beside the curves of
+        /// the two unshifted runs, and the experiment reports nearly what it reports with none shifted.
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetMs2OffsetInOneRun()
@@ -173,7 +173,7 @@ namespace pwiz.Osprey.Test
             string workDir = CreateDir(@"ms2-onerun");
             RunOsprey(Ms2OffsetArgs(inputs, workDir), Verifier(false));
             for (int i = 0; i < inputs.Length; i++)
-                Assert.AreEqual(i == shiftedRun, LoadMs2Calibration(inputs[i], workDir).HasOffsetCurve, inputs[i]);
+                Assert.IsTrue(LoadMs2Calibration(inputs[i], workDir).HasOffsetCurve, inputs[i]);
             int count = BlibComparer.CountRows(Path.Combine(workDir, BLIB_FILE), @"RefSpectra");
             Assert.IsTrue(count >= MIN_SHIFTED_FRACTION * baseline,
                 string.Format(@"{0} precursors reported, {1} unshifted", count, baseline));
@@ -242,9 +242,9 @@ namespace pwiz.Osprey.Test
         /// The curve on the subset's real centroids over the whole range of the shift scan, past what
         /// so small a subset can discover in a search: the peaks the calibration collects at the apex
         /// of each precursor its unshifted search reported, with the spectrum moved first. A shift
-        /// of the data only moves the curve, so at any shift the mean gives way at the same place
-        /// and the curve is the one at any other shift, moved by the difference: no shift lands on
-        /// a neighbouring isotope, including those a whole isotope spacing from zero. A shift that
+        /// of the data only moves the curve: there is a curve at every shift, zero included, and it
+        /// is the one at any other shift, moved by the difference, so no shift lands on a
+        /// neighbouring isotope, including those a whole isotope spacing from zero. A shift that
         /// changes with m/z is followed. (Not one as steep as 0.001 per Th about -0.65 Th, which the
         /// first association about a single shift gets wrong: see the discussion on the PR.)
         /// With too few fragments there is no curve and no shift.
@@ -256,10 +256,10 @@ namespace pwiz.Osprey.Test
             RunOsprey(Ms2OffsetArgs(DataInputs().ToArray(), workDir), Verifier(false));
             var apexes = SubsetApexSpectra(workDir);
 
-            Assert.IsNull(Ms2OffsetCurve.Calculate(ShiftedFragmentPeaks(apexes, _ => 0), FRAGMENT_TOLERANCE_TH, out double ownShift));
+            Assert.IsNotNull(Ms2OffsetCurve.Calculate(ShiftedFragmentPeaks(apexes, _ => 0), FRAGMENT_TOLERANCE_TH, out double ownShift));
             foreach (double applied in new[] { -0.10, 0.10, 0.30 })
             {
-                Assert.IsNull(Ms2OffsetCurve.Calculate(ShiftedFragmentPeaks(apexes, _ => applied), FRAGMENT_TOLERANCE_TH, out double shift),
+                Assert.IsNotNull(Ms2OffsetCurve.Calculate(ShiftedFragmentPeaks(apexes, _ => applied), FRAGMENT_TOLERANCE_TH, out double shift),
                     applied.ToString(CultureInfo.InvariantCulture));
                 Assert.AreEqual(ownShift + applied, shift, SHIFT_SCAN_TOLERANCE_TH, applied.ToString(CultureInfo.InvariantCulture));
             }
