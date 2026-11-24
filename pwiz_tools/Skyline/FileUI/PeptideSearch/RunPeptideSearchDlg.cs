@@ -52,6 +52,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private SearchSettingsPreset _lastAppliedPreset;
         private SearchSettingsPreset _modificationsPagePreset; // The preset whose modifications the modifications page has checked
         private bool _suppressPresetWarning;
+        private bool _restoringPresetSelection;
 
         private List<KeyValuePair<string, MsDataFileUri[]>> _namedResults; // The results to import, decided before the run
         private string _runSearchFingerprint; // The search inputs of the run in progress
@@ -229,6 +230,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             PrepareFollowingPages(TakePresetForModificationsPage());
 
+            // For DIA the DIA search method page sets the spectra searched and the engines offered. Any
+            // other workflow searches the files' own spectra with the DDA engines, also after the user
+            // comes back from a DIA run set up to search with one engine.
+            if (WorkflowType != Workflow.dia && !IsFeatureDetectionWorkflow)
+            {
+                ImportPeptideSearch.IsGpfData = false;
+                SearchSettingsControl.InitializeControls();
+            }
+
             ImportPeptideSearch.SpectrumSourceFiles.Clear();
 
             // Set SpectrumSourceFiles from the files to search and offer to remove a common prefix
@@ -296,6 +306,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             ImportPeptideSearch.IsGpfData = ConverterSettingsControl.IsGpf;
             ImportPeptideSearch.IsDIASearch = !ConverterSettingsControl.UseDiaUmpire;
+            // The audit log records gas phase fractionation from the results control, which shows no
+            // check box for it here
+            if (ImportResultsControl is ImportResultsDIAControl diaResultsControl)
+                diaResultsControl.IsGpf = ConverterSettingsControl.IsGpf;
             SearchSettingsControl.InitializeControls();
         }
 
@@ -382,6 +396,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             btnNext.Enabled = false;
             btnCancel.Enabled = false;
             btnBack.Enabled = false;
+            // A preset would change the engine and the inputs the run is using
+            cbSettingsPreset.Enabled = false;
+            btnSavePreset.Enabled = false;
 
             try
             {
@@ -511,10 +528,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     }
                     try
                     {
-                        ApplyResult(result);
+                        ApplyResult(result, pipeline);
                     }
                     catch (Exception x)
                     {
+                        pipeline.ReleaseLibrary(); // Does nothing once the document has the new library
                         RunFailed(x);
                     }
                 });
@@ -524,7 +542,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// Commits the run's document to Skyline as one change and starts importing the results,
         /// then writes a summary of what was done into the run page's log.
         /// </summary>
-        private void ApplyResult(RunPeptideSearchPipeline.Result result)
+        private void ApplyResult(RunPeptideSearchPipeline.Result result, RunPeptideSearchPipeline pipeline)
         {
             LastRunResult = result;
             if (IsFeatureDetectionWorkflow)
@@ -545,6 +563,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             SetDocument(docNew, Document);
+            pipeline.KeepLibrary();
             if (IsFeatureDetectionWorkflow && !result.NoFeaturesDetected)
             {
                 // Update UI for new content type
@@ -624,6 +643,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // Once the document is applied there is nothing to go back to
             btnBack.Enabled = !success;
             btnCancel.Enabled = !success;
+            cbSettingsPreset.Enabled = !success;
             UpdateButtons();
         }
 
@@ -647,10 +667,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 string.Join(@",", BuildPepSearchLibControl.DdaSearchDataSources.Select(f => f.ToString())),
                 fastaFile,
                 File.Exists(fastaFile) ? File.GetLastWriteTimeUtc(fastaFile).Ticks : 0,
-                settings.Enzyme.Name,
+                // Definitions, not just names, which an edit can keep. The hash codes are of their values,
+                // and the fingerprint is only compared within this wizard.
+                settings.Enzyme.Name, settings.Enzyme.GetHashCode(),
                 settings.DigestSettings.MaxMissedCleavages,
                 string.Join(@",", settings.Modifications.StaticModifications.Concat(settings.Modifications.AllHeavyModifications)
-                    .Select(mod => mod.Name)),
+                    .Select(mod => mod.Name + @":" + mod.GetHashCode())),
                 ConverterSettingsControl.UseDiaUmpire,
                 ConverterSettingsControl.IsGpf,
             };
@@ -659,7 +681,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 parts.AddRange(new object[]
                 {
                     ConverterSettingsControl.InstrumentPreset, ConverterSettingsControl.EstimateBackground,
-                    SearchSettingsPreset.SerializeAdditionalSettings(ConverterSettingsControl.AdditionalSettings)
+                    SearchSettingsPreset.SerializeAdditionalSettings(ConverterSettingsControl.AdditionalSettings),
+                    // DIA-Umpire reads the isolation windows from the full-scan page, which comes after the search settings
+                    FullScanSettingsControl.IsolationScheme?.GetHashCode() ?? 0
                 });
             }
             if (IsFeatureDetectionWorkflow)
@@ -696,7 +720,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             // Enable save button only once search settings have been configured
             if (btnSavePreset.Visible)
-                btnSavePreset.Enabled = IsAtOrAfterPage(Pages.dda_search_settings_page);
+                btnSavePreset.Enabled = IsAtOrAfterPage(Pages.dda_search_settings_page) && !_runRunning;
         }
 
         protected override void BeforeImportResults()
@@ -794,6 +818,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 LoadPresetList(_settingsPresetDriver.SelectedItem?.Name);
                 return;
             }
+            if (_restoringPresetSelection)
+                return; // Showing the preset already applied, not applying one
 
             var preset = _settingsPresetDriver.SelectedItem;
             if (preset != null)
@@ -801,11 +827,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 // Warn when changing preset on a page other than the first
                 if (CurrentPage != Pages.spectra_page && !WarnAndConfirmPresetChange())
                 {
-                    // User cancelled - restore previous selection
-                    LoadPresetList(_lastAppliedPreset?.Name);
+                    RestorePresetSelection();
                     return;
                 }
                 ApplyPreset(preset);
+            }
+        }
+
+        /// <summary>
+        /// Shows the preset last applied again, after the user chose one that was not applied.
+        /// </summary>
+        private void RestorePresetSelection()
+        {
+            _restoringPresetSelection = true;
+            try
+            {
+                LoadPresetList(_lastAppliedPreset?.Name);
+            }
+            finally
+            {
+                _restoringPresetSelection = false;
             }
         }
 
@@ -838,12 +879,23 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void ApplyPreset(SearchSettingsPreset preset)
         {
-            // DIA-NN takes ppm tolerances only; checked before the preset changes anything
+            // Checked before the preset changes anything. DIA-NN takes ppm tolerances only. The pages after
+            // the first were set up for the workflow chosen there, which only the first page can change.
+            string rejection = null;
             if (preset.SearchEngine == SearchEngine.DIANN &&
                 (preset.PrecursorToleranceValue > 0 && preset.PrecursorToleranceUnit != MzTolerance.Units.ppm ||
                  preset.FragmentToleranceValue > 0 && preset.FragmentToleranceUnit != MzTolerance.Units.ppm))
             {
-                MessageDlg.Show(this, string.Format(PeptideSearchResources.SearchSettingsControl_ApplySearchSettingsPreset_DiaNN_requires_ppm_tolerances_, preset.Name));
+                rejection = PeptideSearchResources.SearchSettingsControl_ApplySearchSettingsPreset_DiaNN_requires_ppm_tolerances_;
+            }
+            else if (CurrentPage != Pages.spectra_page && preset.Workflow.HasValue && (Workflow) preset.Workflow.Value != WorkflowType)
+            {
+                rejection = PeptideSearchResources.RunPeptideSearchDlg_ApplyPreset_The_preset__0__is_for_a_different_workflow__Go_back_to_the_first_page_to_apply_it_;
+            }
+            if (rejection != null)
+            {
+                MessageDlg.Show(this, string.Format(rejection, preset.Name));
+                RestorePresetSelection();
                 return;
             }
 
@@ -901,10 +953,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (CurrentPage == Pages.match_modifications_page)
                 MatchModificationsControl.Initialize(Document, TakePresetForModificationsPage());
 
-            // Apply workflow and IRT settings (null means reset to defaults)
-            BuildPepSearchLibControl.WorkflowType = preset.Workflow.HasValue
-                ? (Workflow)preset.Workflow.Value
-                : Workflow.dda;
+            // Apply workflow and IRT settings (a null workflow means the default, but only on the first
+            // page: later, e.g. for a params file imported on the search settings page, it means no change)
+            if (CurrentPage == Pages.spectra_page)
+            {
+                BuildPepSearchLibControl.WorkflowType = preset.Workflow.HasValue
+                    ? (Workflow)preset.Workflow.Value
+                    : Workflow.dda;
+            }
             if (!string.IsNullOrEmpty(preset.IrtStandardName))
             {
                 var irtStandard = IrtStandard.ALL.FirstOrDefault(s => s.Name == preset.IrtStandardName);

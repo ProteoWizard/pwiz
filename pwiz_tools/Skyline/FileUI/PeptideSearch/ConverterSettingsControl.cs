@@ -50,41 +50,47 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             // Searching the DIA spectra directly (without DIA-Umpire) needs an engine that can, and for
             // MSFragger, whether they are gas phase fractions: a row of its own between the description and
-            // the DIA-Umpire settings, which move down to make room for it
-            const int rowHeight = 30;
-            _lblDirectDiaSearchEngine = new Label
-            {
-                AutoSize = true,
-                Location = new Point(3, 7),
-                Name = @"lblDirectDiaSearchEngine",
-                Text = PeptideSearchResources.ConverterSettingsControl_ConverterSettingsControl_Search_engine_for_the_DIA_spectra_
-            };
-            _comboDirectDiaSearchEngine = new ComboBox
-            {
-                DropDownStyle = ComboBoxStyle.DropDownList,
-                // An AutoSize label has its width only once shown, so the combo goes after its preferred width
-                Location = new Point(_lblDirectDiaSearchEngine.Left + _lblDirectDiaSearchEngine.PreferredWidth + 6, 3),
-                Name = @"comboDirectDiaSearchEngine",
-                Width = 100
-            };
-            _comboDirectDiaSearchEngine.Items.AddRange(new object[] { @"MSFragger", @"DIA-NN" });
-            _comboDirectDiaSearchEngine.SelectedIndex = 0;
-            _cbGpf = new CheckBox
-            {
-                AutoSize = true,
-                Location = new Point(_comboDirectDiaSearchEngine.Right + 12, 5),
-                Name = @"cbGpf",
-                Text = PeptideSearchResources.ConverterSettingsControl_ConverterSettingsControl_Gas_phase_fractionation,
-                UseVisualStyleBackColor = true
-            };
+            // the DIA-Umpire settings, which move down to make room for it. The control has already
+            // auto-scaled, so the pixel literals are scaled here, and each control is added before it is
+            // measured so that it measures in the control's font rather than the default one.
+            int Scaled(int pixels) => DpiUtil.Scale(this, pixels);
+            int rowHeight = Scaled(30);
             var directDiaPanel = new Panel
             {
                 Location = new Point(diaUmpireDescriptionPanel.Left, diaUmpireDescriptionPanel.Bottom),
                 Size = new Size(diaUmpireDescriptionPanel.Width, rowHeight),
                 Name = @"directDiaPanel"
             };
-            directDiaPanel.Controls.AddRange(new Control[] { _lblDirectDiaSearchEngine, _comboDirectDiaSearchEngine, _cbGpf });
             diaUmpireTabPage.Controls.Add(directDiaPanel);
+            _lblDirectDiaSearchEngine = new Label
+            {
+                AutoSize = true,
+                Name = @"lblDirectDiaSearchEngine",
+                Text = PeptideSearchResources.ConverterSettingsControl_ConverterSettingsControl_Search_engine_for_the_DIA_spectra_
+            };
+            directDiaPanel.Controls.Add(_lblDirectDiaSearchEngine);
+            _lblDirectDiaSearchEngine.Location = new Point(Scaled(3), Scaled(7));
+            _comboDirectDiaSearchEngine = new ComboBox
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Name = @"comboDirectDiaSearchEngine",
+                Width = Scaled(100)
+            };
+            _comboDirectDiaSearchEngine.Items.AddRange(new object[] { @"MSFragger", @"DIA-NN" });
+            _comboDirectDiaSearchEngine.SelectedIndex = 0;
+            directDiaPanel.Controls.Add(_comboDirectDiaSearchEngine);
+            // An AutoSize label has its width only once shown, so the combo goes after its preferred width
+            _comboDirectDiaSearchEngine.Location = new Point(
+                _lblDirectDiaSearchEngine.Left + _lblDirectDiaSearchEngine.PreferredWidth + Scaled(6), Scaled(3));
+            _cbGpf = new CheckBox
+            {
+                AutoSize = true,
+                Name = @"cbGpf",
+                Text = PeptideSearchResources.ConverterSettingsControl_ConverterSettingsControl_Gas_phase_fractionation,
+                UseVisualStyleBackColor = true
+            };
+            directDiaPanel.Controls.Add(_cbGpf);
+            _cbGpf.Location = new Point(_comboDirectDiaSearchEngine.Right + Scaled(12), Scaled(5));
             diaUmpireSettingsPanel.Top += rowHeight;
             btnAdditionalSettings.Top -= rowHeight;
             _comboDirectDiaSearchEngine.SelectedIndexChanged += (sender, args) => UpdateDirectDiaControls();

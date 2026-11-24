@@ -155,6 +155,7 @@ namespace pwiz.SkylineTestFunctional
             // regardless of what's actually present in the default Tools directory.
             const string bogusPath = @"C:\__diann_not_installed__\diann.exe";
             var customPreset = MakeCustomPreset();
+            var rejectedPresets = MakeRejectedPresets();
             bool savedWarnOnPresetChange = Settings.Default.WarnOnPresetChange;
             RunUI(() =>
             {
@@ -164,10 +165,15 @@ namespace pwiz.SkylineTestFunctional
                 Settings.Default.SearchToolList.Add(new SearchTool(SearchToolType.DIANN,
                     bogusPath, string.Empty, Path.GetDirectoryName(bogusPath), false));
                 Settings.Default.SearchSettingsPresets.Add(customPreset);
+                foreach (var preset in rejectedPresets)
+                    Settings.Default.SearchSettingsPresets.Add(preset);
                 Settings.Default.WarnOnPresetChange = false; // Presets change on later pages here
             });
             try
             {
+                // Once is enough: the wizard flow does not depend on the DIA-NN version or the file format
+                if (version == DiannHelpers.DIANN_VERSION && !_searchFileName.EndsWith(@".mzXML"))
+                    VerifySearchSettingsFollowTheSpectraSearched(rejectedPresets);
                 RunSearch(version, realDiannPath, customPreset);
             }
             finally
@@ -176,7 +182,8 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                 {
                     Settings.Default.WarnOnPresetChange = savedWarnOnPresetChange;
-                    foreach (var name in new[] { customPreset.Name, SNAPSHOT_PRESET_NAME })
+                    var names = new[] { customPreset.Name, SNAPSHOT_PRESET_NAME }.Concat(rejectedPresets.Select(p => p.Name));
+                    foreach (var name in names)
                     {
                         var preset = Settings.Default.SearchSettingsPresets.FirstOrDefault(p => p.Name == name);
                         if (preset != null)
@@ -365,6 +372,117 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SaveDocument();
             });
             VerifyPeakBoundsFromLibrary(searchFilePath);
+        }
+
+        /// <summary>
+        /// The search settings page offers the engines for what the earlier pages say is searched, also
+        /// when the user goes back and changes it, and keeps the values the user entered for them. A preset
+        /// the page cannot take leaves everything as it was.
+        /// </summary>
+        private void VerifySearchSettingsFollowTheSpectraSearched(SearchSettingsPreset[] rejectedPresets)
+        {
+            var dataSources = new MsDataFileUri[] { new MsDataFilePath(TestFilesDir.GetTestPath(_searchFileName)) };
+            var dlg = ShowDialog<RunPeptideSearchDlg>(SkylineWindow.ShowDiannSearchDlg);
+            RunUI(() =>
+            {
+                dlg.BuildPepSearchLibControl.InputFileType = PeptideSearchWizardDlg.InputFile.dia_raw;
+                dlg.BuildPepSearchLibControl.DdaSearchDataSources = dataSources;
+                dlg.ImportFastaControl.SetFastaContent(TestFilesDir.GetTestPath(@"pan_human_library.fasta"));
+                NextToPage(dlg, PeptideSearchWizardDlg.Pages.dda_search_settings_page);
+                AssertEx.AreEqualDeep(new[] { SearchEngine.DIANN }, dlg.SearchSettingsControl.SearchEngineChoices.ToArray());
+
+                dlg.SelectedPresetName = DiannHelpers.PRESET_ORBITRAP;
+                dlg.SearchSettingsControl.PrecursorTolerance = new MzTolerance(12, MzTolerance.Units.ppm);
+            });
+
+            // A DIA-NN preset with a tolerance in Da, then a preset for another workflow: each is refused,
+            // and the page keeps the preset it had and the tolerance the user changed after it
+            var expectedMessages = new[]
+            {
+                PeptideSearchResources.SearchSettingsControl_ApplySearchSettingsPreset_DiaNN_requires_ppm_tolerances_,
+                PeptideSearchResources.RunPeptideSearchDlg_ApplyPreset_The_preset__0__is_for_a_different_workflow__Go_back_to_the_first_page_to_apply_it_
+            };
+            for (int i = 0; i < rejectedPresets.Length; i++)
+            {
+                var preset = rejectedPresets[i];
+                var expectedMessage = string.Format(expectedMessages[i], preset.Name);
+                var refusal = ShowDialog<MessageDlg>(() => dlg.SelectedPresetName = preset.Name);
+                RunUI(() => AssertEx.AreEqual(expectedMessage, refusal.Message));
+                OkDialog(refusal, refusal.OkDialog);
+                RunUI(() =>
+                {
+                    AssertEx.AreEqual(DiannHelpers.PRESET_ORBITRAP, dlg.SelectedPresetName);
+                    AssertEx.AreEqual(PeptideSearchWizardDlg.Workflow.dia, dlg.WorkflowType);
+                    AssertEx.AreEqual(12.0, dlg.SearchSettingsControl.PrecursorTolerance.Value);
+                });
+            }
+
+            RunUI(() =>
+            {
+                // A fragment tolerance in Da for an engine searching DIA-Umpire's pseudo-DDA spectra means
+                // nothing to DIA-NN, which takes ppm only: it chooses its own instead
+                AssertEx.IsTrue(dlg.ClickBackButton());
+                AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.converter_settings_page, dlg.CurrentPage);
+                dlg.ConverterSettingsControl.UseDiaUmpire = true;
+                NextToPage(dlg, PeptideSearchWizardDlg.Pages.dda_search_settings_page);
+                VerifyDdaEnginesOffered(dlg);
+                dlg.SearchSettingsControl.FragmentTolerance = new MzTolerance(0.02);
+
+                AssertEx.IsTrue(dlg.ClickBackButton());
+                dlg.ConverterSettingsControl.UseDiaUmpire = false;
+                dlg.ConverterSettingsControl.DirectDiaSearchEngine = SearchEngine.DIANN;
+                NextToPage(dlg, PeptideSearchWizardDlg.Pages.dda_search_settings_page);
+                var settings = dlg.SearchSettingsControl;
+                AssertEx.AreEqual(SearchEngine.DIANN, settings.SelectedSearchEngine);
+                AssertEx.AreEqual(0.0, settings.FragmentTolerance.Value);
+                AssertEx.AreEqual(MzTolerance.Units.ppm, settings.FragmentTolerance.Unit);
+                // Made again for DIA-NN, the engine gets the preset's settings but not its tolerances,
+                // which the user may have changed since
+                AssertEx.AreEqual(12.0, settings.PrecursorTolerance.Value);
+
+                // Back to the first page for DDA: the DDA engines, not the one DIA-NN the DIA run offered
+                while (dlg.CurrentPage != PeptideSearchWizardDlg.Pages.spectra_page)
+                    AssertEx.IsTrue(dlg.ClickBackButton());
+                dlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.dda;
+                dlg.BuildPepSearchLibControl.InputFileType = PeptideSearchWizardDlg.InputFile.dda_raw;
+                dlg.BuildPepSearchLibControl.DdaSearchDataSources = dataSources;
+                NextToPage(dlg, PeptideSearchWizardDlg.Pages.dda_search_settings_page);
+                VerifyDdaEnginesOffered(dlg);
+            });
+            OkDialog(dlg, dlg.ClickCancelButton);
+        }
+
+        private static void NextToPage(RunPeptideSearchDlg dlg, PeptideSearchWizardDlg.Pages page)
+        {
+            while (dlg.CurrentPage != page)
+                AssertEx.IsTrue(dlg.ClickNextButton(), dlg.CurrentPage.ToString());
+        }
+
+        private static void VerifyDdaEnginesOffered(RunPeptideSearchDlg dlg)
+        {
+            var settings = dlg.SearchSettingsControl;
+            AssertEx.IsFalse(settings.SearchEngineChoices.Contains(SearchEngine.DIANN));
+            AssertEx.IsTrue(settings.SearchEngineChoices.Count > 1);
+            AssertEx.AreNotEqual(SearchEngine.DIANN, settings.SelectedSearchEngine, @"DIA-NN left selected for DDA spectra");
+        }
+
+        /// <summary>
+        /// Presets the search settings page refuses: a DIA-NN preset with a tolerance in Da, and, past the
+        /// first page, a preset for another workflow than the one chosen there.
+        /// </summary>
+        private static SearchSettingsPreset[] MakeRejectedPresets()
+        {
+            return new[]
+            {
+                new SearchSettingsPreset(@"DIA-NN unit-test Da preset", SearchEngine.DIANN,
+                    new MzTolerance(0.5), new MzTolerance(20, MzTolerance.Units.ppm),
+                    maxVariableMods: 2, fragmentIons: null, ms2Analyzer: null, cutoffScore: 0.01,
+                    additionalSettings: new Dictionary<string, string>(), workflowType: SearchWorkflowType.dia),
+                new SearchSettingsPreset(@"DDA unit-test preset", SearchEngine.Comet,
+                    new MzTolerance(20, MzTolerance.Units.ppm), new MzTolerance(),
+                    maxVariableMods: 2, fragmentIons: null, ms2Analyzer: null, cutoffScore: 0.01,
+                    additionalSettings: new Dictionary<string, string>(), workflowType: SearchWorkflowType.dda)
+            };
         }
 
         /// <summary>

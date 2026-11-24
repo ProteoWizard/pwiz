@@ -48,6 +48,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private List<SearchEngine> _engineChoices = new List<SearchEngine>();
         private (bool IsDia, bool IsGpf) _engineContext; // What the search engine was made for
         private SearchSettingsPreset _preset; // Applied to its engine whenever that engine is made for the spectra
+        private bool _presetTolerancesSet; // The preset's tolerances are in the text boxes, where the user may since have changed them
 
         /// <summary>
         /// The engines that search DDA spectra, including DIA spectra DIA-Umpire has turned into pseudo-DDA spectra.
@@ -515,34 +516,43 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 ImportPeptideSearch.SearchEngine.DefaultCutoffScore;
             ImportPeptideSearch.SearchEngine.SetCutoffScore(CutoffScore);
 
-            // DIA-NN chooses its mass accuracies itself when they are 0
-            if (SelectedSearchEngine == SearchEngine.DIANN)
+            // DIA-NN chooses its mass accuracies itself when they are 0. To any other engine an empty
+            // field means its default, so a 0 left by DIA-NN goes back to empty.
+            bool isDiann = SelectedSearchEngine == SearchEngine.DIANN;
+            foreach (var txtTolerance in new[] { txtMS1Tolerance, txtMS2Tolerance })
             {
-                if (string.IsNullOrEmpty(txtMS1Tolerance.Text))
-                    txtMS1Tolerance.Text = 0.ToString(LocalizationHelper.CurrentCulture);
-                if (string.IsNullOrEmpty(txtMS2Tolerance.Text))
-                    txtMS2Tolerance.Text = 0.ToString(LocalizationHelper.CurrentCulture);
+                if (isDiann && string.IsNullOrEmpty(txtTolerance.Text))
+                    txtTolerance.Text = 0.ToString(LocalizationHelper.CurrentCulture);
+                else if (!isDiann && double.TryParse(txtTolerance.Text, out double tolerance) && tolerance.Equals(0.0))
+                    txtTolerance.Text = string.Empty;
             }
         }
 
         private void LoadMassUnitEntries()
         {
-            void ClearAndRestoreComboBoxItems(ComboBox cb, string[] newEntries)
+            void ClearAndRestoreComboBoxItems(ComboBox cb, TextBox txtTolerance, string[] newEntries)
             {
                 string oldSelection = cb.SelectedItem as string;
                 cb.Items.Clear();
                 cb.Items.AddRange(newEntries);
                 if (oldSelection != null && newEntries.Contains(oldSelection))
+                {
                     cb.SelectedIndex = newEntries.ToList().IndexOf(oldSelection);
-                else if (newEntries.Length == 1)
+                    return;
+                }
+                // A tolerance in a unit the engine does not take (e.g. Da for DIA-NN) means nothing
+                // in the units it does
+                if (oldSelection != null)
+                    txtTolerance.Text = string.Empty;
+                if (newEntries.Length == 1)
                     cb.SelectedIndex = 0;
             }
 
             var ms1Entries = ImportPeptideSearch.SearchEngine.PrecursorIonToleranceUnitTypes.Select(t => t.Name).ToArray();
-            ClearAndRestoreComboBoxItems(cbMS1TolUnit, ms1Entries);
+            ClearAndRestoreComboBoxItems(cbMS1TolUnit, txtMS1Tolerance, ms1Entries);
 
             var ms2Entries = ImportPeptideSearch.SearchEngine.FragmentIonToleranceUnitTypes.Select(t => t.Name).ToArray();
-            ClearAndRestoreComboBoxItems(cbMS2TolUnit, ms2Entries);
+            ClearAndRestoreComboBoxItems(cbMS2TolUnit, txtMS2Tolerance, ms2Entries);
         }
 
         private void LoadFragmentIonEntries()
@@ -902,6 +912,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public void ApplySearchSettingsPreset(SearchSettingsPreset preset)
         {
             _preset = preset;
+            _presetTolerancesSet = false;
             if (!_engineChoices.Contains(preset.SearchEngine))
                 return;
 
@@ -910,18 +921,27 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ApplyPresetSettings(preset);
         }
 
+        /// <summary>
+        /// Applies a preset to the engine just made for it. The tolerances go into the text boxes only the
+        /// first time: the boxes keep their text when the engine is made again for other spectra, and the
+        /// user may have changed it since. The rest belongs to the engine and is applied every time.
+        /// </summary>
         private void ApplyPresetSettings(SearchSettingsPreset preset)
         {
-            // Set tolerances: zero means clear the fields (use engine defaults), except for DIA-NN,
-            // which chooses them itself when they are 0
-            if (preset.PrecursorToleranceValue > 0 || preset.SearchEngine == SearchEngine.DIANN)
-                PrecursorTolerance = preset.PrecursorTolerance;
-            else
-                txtMS1Tolerance.Text = string.Empty;
-            if (preset.FragmentToleranceValue > 0 || preset.SearchEngine == SearchEngine.DIANN)
-                FragmentTolerance = preset.FragmentTolerance;
-            else
-                txtMS2Tolerance.Text = string.Empty;
+            if (!_presetTolerancesSet)
+            {
+                // Zero means clear the fields (use engine defaults), except for DIA-NN, which chooses
+                // them itself when they are 0
+                if (preset.PrecursorToleranceValue > 0 || preset.SearchEngine == SearchEngine.DIANN)
+                    PrecursorTolerance = preset.PrecursorTolerance;
+                else
+                    txtMS1Tolerance.Text = string.Empty;
+                if (preset.FragmentToleranceValue > 0 || preset.SearchEngine == SearchEngine.DIANN)
+                    FragmentTolerance = preset.FragmentTolerance;
+                else
+                    txtMS2Tolerance.Text = string.Empty;
+                _presetTolerancesSet = true;
+            }
             MaxVariableMods = preset.MaxVariableMods;
 
             // Set fragment ions if specified

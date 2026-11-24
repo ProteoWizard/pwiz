@@ -391,6 +391,9 @@
   <data name="RunPeptideSearchDlg_AddSummary_The_document_has__0__proteins___1__peptides___2__precursors_and__3__transitions_" xml:space="preserve">
     <value>The document has {0} proteins, {1} peptides, {2} precursors and {3} transitions.</value>
   </data>
+  <data name="RunPeptideSearchDlg_ApplyPreset_The_preset__0__is_for_a_different_workflow__Go_back_to_the_first_page_to_apply_it_" xml:space="preserve">
+    <value>The preset "{0}" is for a different workflow. Go back to the first page to apply it.</value>
+  </data>
   <data name="RunPeptideSearchDlg_PrepareRun_A_spectral_library_already_exists_at___0___Overwrite_it__or_append_the_new_results_to_it_" xml:space="preserve">
     <value>A spectral library already exists at:
 

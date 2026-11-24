@@ -1192,6 +1192,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The preset &quot;{0}&quot; is for a different workflow. Go back to the first page to apply it..
+        /// </summary>
+        public static string RunPeptideSearchDlg_ApplyPreset_The_preset__0__is_for_a_different_workflow__Go_back_to_the_first_page_to_apply_it_ {
+            get {
+                return ResourceManager.GetString("RunPeptideSearchDlg_ApplyPreset_The_preset__0__is_for_a_different_workflow__Go_back_to_the_first_page_to_apply_it_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A spectral library already exists at:
         ///
         ///{0}

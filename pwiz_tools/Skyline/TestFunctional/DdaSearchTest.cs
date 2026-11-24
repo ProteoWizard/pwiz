@@ -865,13 +865,23 @@ namespace pwiz.SkylineTestFunctional
                     "Preset 1 should restore Auto IRT standard on spectra page");
             });
 
-            // A preset chosen on a later page cannot change which pages the workflow chosen on the first page shows
+            // A preset for another workflow chosen on a later page is refused: the pages were set up for the
+            // workflow chosen on the first page, and the preset stays the one applied there
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Mods
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // FASTA
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
-                importPeptideSearchDlg.SelectedPresetName = MSFRAGGER_DIA_PRESET;
+            });
+            var refusal = ShowDialog<MessageDlg>(() => importPeptideSearchDlg.SelectedPresetName = MSFRAGGER_DIA_PRESET);
+            RunUI(() => AssertEx.AreEqual(string.Format(
+                PeptideSearchResources.RunPeptideSearchDlg_ApplyPreset_The_preset__0__is_for_a_different_workflow__Go_back_to_the_first_page_to_apply_it_,
+                MSFRAGGER_DIA_PRESET), refusal.Message));
+            OkDialog(refusal, refusal.OkDialog);
+            RunUI(() =>
+            {
+                Assert.AreEqual(PRESET_1_NAME, importPeptideSearchDlg.SelectedPresetName);
+                Assert.AreEqual(PRESET_1_WORKFLOW, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Search settings, not the DIA conversion page
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // FASTA

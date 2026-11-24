@@ -73,6 +73,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         protected List<ProgressEntry> _progressTextItems = new List<ProgressEntry>();
 
         private readonly int _timestampsToLogGap;
+        private IProgressStatus _lastProgressSent; // Set by the threads reporting progress; a race only sends a status twice
 
         public SearchControl()
         {
@@ -251,7 +252,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 bool success;
                 try
                 {
-                    work(this, cancelToken.Token);
+                    work(new AfterSearchProgressMonitor(this), cancelToken.Token);
                     success = !cancelToken.IsCancellationRequested;
                 }
                 catch (Exception x) when (x is OperationCanceledException || cancelToken.IsCancellationRequested)
@@ -427,15 +428,59 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// progress updates from AbstractDdaConverter (should be prefixed by the file currently being processed)
         public virtual UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
+            return ShowProgress(status);
+        }
+
+        private UpdateProgressResponse ShowProgress(IProgressStatus status)
+        {
             if (IsCanceled)
                 return UpdateProgressResponse.cancel;
 
             if (InvokeRequired)
-                Invoke(new MethodInvoker(() => UpdateProgress(status)));
+            {
+                // A step that reports once per item (e.g. per library entry or protein) would otherwise
+                // wait on the UI thread for every item, though what it shows changes once per percent
+                if (IsUnchangedProgress(_lastProgressSent, status))
+                    return UpdateProgressResponse.normal;
+                _lastProgressSent = status;
+                Invoke(new MethodInvoker(() => ShowProgress(status)));
+            }
             else
+            {
                 UpdateSearchEngineProgress(status);
+            }
 
             return UpdateProgressResponse.normal;
+        }
+
+        /// <summary>
+        /// Shows the progress of the steps after the search as they report it, not through an engine's
+        /// <see cref="UpdateProgress"/> (e.g. Hardklor's, which counts the steps of its own search).
+        /// </summary>
+        private class AfterSearchProgressMonitor : IProgressMonitor
+        {
+            private readonly SearchControl _control;
+
+            public AfterSearchProgressMonitor(SearchControl control)
+            {
+                _control = control;
+            }
+
+            public bool IsCanceled => _control.IsCanceled;
+            public bool HasUI => true;
+
+            public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+            {
+                return _control.ShowProgress(status);
+            }
+        }
+
+        private static bool IsUnchangedProgress(IProgressStatus last, IProgressStatus status)
+        {
+            return last != null && last.State == status.State && last.ProgressEqual(status) &&
+                   last.ZoomedPercentComplete == status.ZoomedPercentComplete && last.Segment == status.Segment &&
+                   Equals(last.SegmentName, status.SegmentName) && Equals(last.Message, status.Message) &&
+                   Equals(last.WarningMessage, status.WarningMessage) && ReferenceEquals(last.ErrorException, status.ErrorException);
         }
 
         public class ParallelRunnerProgressControl : MultiProgressControl, IProgressMonitor
