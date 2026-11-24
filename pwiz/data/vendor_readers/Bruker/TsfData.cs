@@ -21,6 +21,9 @@ internal sealed class TsfData : IBrukerData
         AnalysisDirectory = analysisDirectory;
         _meta = new TsfMetadata(analysisDirectory);
         _tsf = new TsfBinaryData(analysisDirectory, useRecalibratedState);
+        // As for TDF, tsfdata decodes on a single thread unless told otherwise; cpp asks for 4
+        // (TsfData.cpp:117).
+        TsfBinaryData.SetNumThreads(4);
         _preferProfile = _meta.HasProfileSpectra;
     }
 
@@ -88,10 +91,11 @@ internal sealed class TsfData : IBrukerData
 
     // ---------- spectrum fill ----------
 
-    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, bool getBinaryData, bool preferCentroid, bool sortAndJitter = false, bool includeIsolationArrays = false)
+    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, DetailLevel detailLevel, bool preferCentroid, bool sortAndJitter = false, bool includeIsolationArrays = false)
     {
         ArgumentNullException.ThrowIfNull(spec);
         ArgumentNullException.ThrowIfNull(entry);
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
         _ = includeIsolationArrays; // TSF has no diaPASEF isolation arrays.
         var tag = (Tag)entry.Tag;
         var frame = tag.Frame;
@@ -129,14 +133,42 @@ internal sealed class TsfData : IBrukerData
         if (msLevel > 1 && frame.PrecursorMz.HasValue)
             AddTsfPrecursor(spec, frame);
 
+        // Everything below decodes the peak arrays. cpp returns before reading them for anything
+        // short of full metadata (SpectrumList_Bruker.cpp:282); Skyline asks for ms level,
+        // retention time and precursors at InstantMetadata before it reads each spectrum's data.
+        // The representation comes from which arrays the file stores. Without it
+        // SpectrumList_PeakPicker raises every later read to full metadata, which decodes the
+        // spectrum here and again for its data. Only an empty profile frame, which falls back to
+        // the line arrays below, is reported differently once decoded.
+        bool useProfile = _preferProfile && !preferCentroid;
+        if (detailLevel < DetailLevel.FullMetadata)
+        {
+            bool lineOnly = !useProfile && _meta.HasLineSpectra;
+            spec.Params.Set(lineOnly ? CVID.MS_centroid_spectrum : CVID.MS_profile_spectrum);
+            return;
+        }
+
         // Read peaks: caller may override via preferCentroid (vendor peak-picking feed).
+        // A profile spectrum of hundreds of thousands of points goes straight into the
+        // spectrum's arrays, sized from the reader's count.
+        int profileCount = useProfile ? _tsf.ReadProfileSpectrum(frame.FrameId) : 0;
+        if (profileCount > 0)
+        {
+            spec.Params.Set(CVID.MS_profile_spectrum);
+            spec.DefaultArrayLength = profileCount;
+            if (getBinaryData)
+            {
+                var mzOut = TdfData.AddBinaryDataArray(spec, CVID.MS_m_z_array, CVID.MS_m_z, profileCount);
+                var intensityOut = TdfData.AddBinaryDataArray(spec, CVID.MS_intensity_array, CVID.MS_number_of_detector_counts, profileCount);
+                _tsf.CopyProfileSpectrum(mzOut, intensityOut);
+            }
+            return;
+        }
+
         double[] mz = Array.Empty<double>();
         double[] intensity = Array.Empty<double>();
         bool isCentroid = false;
-        bool useProfile = _preferProfile && !preferCentroid;
-        if (useProfile)
-            (mz, intensity) = _tsf.ReadProfileSpectrum(frame.FrameId);
-        if (mz.Length == 0 && _meta.HasLineSpectra)
+        if (_meta.HasLineSpectra)
         {
             (mz, intensity) = _tsf.ReadLineSpectrum(frame.FrameId);
             isCentroid = true;

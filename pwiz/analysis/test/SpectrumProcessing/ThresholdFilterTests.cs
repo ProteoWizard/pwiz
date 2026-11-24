@@ -439,8 +439,8 @@ public class ThresholdFilterTests
     {
         var expectedMzArr = ParseDoubles(expectedMz);
         var expectedIntArr = ParseDoubles(expectedIntensity);
-        var actualMz = actual.GetMZArray()?.Data ?? new List<double>();
-        var actualInt = actual.GetIntensityArray()?.Data ?? new List<double>();
+        var actualMz = actual.GetMZArray()?.Data ?? new DetachableList<double>();
+        var actualInt = actual.GetIntensityArray()?.Data ?? new DetachableList<double>();
 
         Assert.AreEqual(expectedMzArr.Length, actual.DefaultArrayLength, $"{label}: defaultArrayLength");
         CollectionAssert.AreEqual(expectedMzArr, actualMz.ToArray(), $"{label}: m/z array");

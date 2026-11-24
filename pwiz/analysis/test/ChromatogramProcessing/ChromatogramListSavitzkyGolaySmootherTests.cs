@@ -61,7 +61,7 @@ public class ChromatogramListSavitzkyGolaySmootherTests
         inner.Chromatograms.Add(c);
 
         var smoothed = new ChromatogramListSavitzkyGolaySmoother(inner).GetChromatogram(0, getBinaryData: true);
-        CollectionAssert.AreEqual(expected, smoothed.GetIntensityArray()!.Data);
+        CollectionAssert.AreEqual(expected, smoothed.GetIntensityArray()!.Data.ToArray());
     }
 
     [TestMethod]

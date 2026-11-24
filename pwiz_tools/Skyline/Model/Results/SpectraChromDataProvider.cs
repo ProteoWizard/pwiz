@@ -847,7 +847,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public static bool IsEmptySpectrum(MsDataSpectrum spectrum)
         {
-            if (spectrum.Mzs != null && spectrum.Mzs.Length != 0)
+            if (spectrum.PeakCount != 0)
                 return false;
             return spectrum.Metadata?.ScanWindowLowerLimit == null &&
                    spectrum.Metadata?.ScanWindowUpperLimit == null;
@@ -1119,7 +1119,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 // If the spectrum contains an IMS array, then it needs to be ordered
                 // Once the sorter thread is created, all spectra must go through it
-                if (nextInfo.DataSpectrum?.IonMobilities != null)
+                if (nextInfo.DataSpectrum?.HasIonMobilities == true)
                 {
                     // If not running async just sort on the current thread
                     if (!_runningAsync)
@@ -1146,7 +1146,9 @@ namespace pwiz.Skyline.Model.Results
             private void SortSpectrum(SpectrumInfo spectrumInfo, int i)
             {
                 var spectrum = spectrumInfo.DataSpectrum;
-                ArrayUtil.Sort(spectrum.Mzs, spectrum.Intensities, spectrum.IonMobilities);
+                // The buffers, not the Mzs/Intensities/IonMobilities properties, which would trim
+                // them to length with a copy of each
+                ArrayUtil.Sort(spectrum.MzBuffer, spectrum.PeakCount, spectrum.IntensityBuffer, spectrum.IonMobilityBuffer);
                 spectrumInfo.SortEvent.Set();
             }
 
@@ -1294,22 +1296,21 @@ namespace pwiz.Skyline.Model.Results
                     Index = index;
                     AllSpectra = allSpectra;
                     RetentionTime = retentionTime;
-                    // Size should be dominated by the array lengths
-                    int arrayLen = 0, arrayCount = 0;
+                    // Size should be dominated by the arrays. Count the buffers as allocated rather
+                    // than PeakCount: a reader's buffer can be longer than the peaks it holds.
+                    long arrayLen = 0;
                     if (allSpectra != null)
                     {
                         DataSpectrum = allSpectra[0];
-                        arrayLen = allSpectra.Sum(s => s.Intensities.Length);
-                        arrayCount = 2;
+                        arrayLen = allSpectra.Sum(s => (long) (s.MzBuffer?.Length ?? 0) +
+                                                       (s.IntensityBuffer?.Length ?? 0) +
+                                                       (s.IonMobilityBuffer?.Length ?? 0));
                     }
 
-                    if (DataSpectrum != null && DataSpectrum.IonMobilities != null)
-                    {
+                    if (DataSpectrum != null && DataSpectrum.HasIonMobilities)
                         SortEvent = new ManualResetEvent(false);
-                        arrayCount++;
-                    }
 
-                    Size = arrayLen * arrayCount * sizeof(double);
+                    Size = (int) Math.Min(int.MaxValue, arrayLen * sizeof(double));
                 }
 
                 public ManualResetEvent SortEvent { get; private set; }
