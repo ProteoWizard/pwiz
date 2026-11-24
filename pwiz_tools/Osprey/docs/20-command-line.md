@@ -532,6 +532,8 @@ The catalog text is developer text and is not translated. The ones most likely t
 | `OSPREY_FDR_MODEL` | First-pass classifier: unset / `svm` = linear SVM (**default**), `gbdt` = **experimental** gradient-boosted trees (C#-only). An unrecognized value is a startup ERROR. Replaced the removed `--fdr-method` | [07](07-fdr-control.md) |
 | `OSPREY_GBT_*` | GBDT hyperparameters; apply only under `OSPREY_FDR_MODEL=gbdt` | [07](07-fdr-control.md) |
 | `OSPREY_DETERMINISTIC_MATH` | Exp/Log in GBDT training: unset / `1` = managed fdlibm port, bit-identical on Windows and Linux (**default**); `0` = `System.Math`, which calls the OS C library and can differ in the last bit between OSes (an A/B arm for timing and for reproducing pre-switch models; keys the gbdt tasks). Anything else is a startup ERROR | [07](07-fdr-control.md) |
+| `OSPREY_MS2_CAL_MEAN` | Calibrate MS2 m/z by one mean offset, as Rust does: no unit-resolution offset curve, and overrides `OSPREY_MS2_CAL_CURVE_PPM`. For cross-implementation parity runs | [04](04-calibration.md#ms2-mz-offset-curve-ms2offsetcurvecs) |
+| `OSPREY_MS2_CAL_CURVE_PPM` | **Experimental, opt-in**: calibrate MS2 m/z of ppm searches by an m/z-dependent offset curve instead of the mean (+5.7% precursors on one ZenoTOF 8600 ZT Scan run). C#-only | [04](04-calibration.md#the-ppm-curve-experimental-osprey_ms2_cal_curve_ppm1) |
 | `OSPREY_DIAGNOSTICS` | Turns on the bundle of cross-impl bisection dumps (was the `-d` / `--diagnostics` argument) | [18](18-peptide-trace.md) |
 | `OSPREY_DUMP_*` / `OSPREY_DIAG_*` | Cross-impl bisection dumps, one at a time | [18](18-peptide-trace.md) |
 
