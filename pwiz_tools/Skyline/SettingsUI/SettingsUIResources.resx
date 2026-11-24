@@ -1302,4 +1302,13 @@ and between result files in the document for peak boundary imputation.</value>
   <data name="BuildLibraryDlg_BuildLibraryDlg_Peptides_not_expected_in_the_sample__flagged_as_entrapment_in_the_library_to_measure_the_false_discovery_rate" xml:space="preserve">
     <value>Peptides not expected in the sample, flagged as entrapment in the library, to measure the false discovery rate of a search.</value>
   </data>
+  <data name="EntrapmentPercentControls_SetToolTips_Shuffled_peptides_on_entrapment_proteins_of_their_own__as_a_percentage_of_the_targets__to_measure_the_true_false_discovery_rate_of_a_search_" xml:space="preserve">
+    <value>Shuffled peptides on entrapment proteins of their own, as a percentage of the targets, to measure the true false discovery rate of a search.</value>
+  </data>
+  <data name="EntrapmentPercentControls_SetToolTips_Shuffled_peptides_placed_on_real_target_proteins__as_a_percentage_of_the_targets__so_protein_aware_scoring_is_audited_too__With_the_entrapment_percentage__the_total_entrapment_added_" xml:space="preserve">
+    <value>Shuffled peptides placed on real target proteins, as a percentage of the targets, so protein-aware scoring is audited too. With the entrapment percentage, the total entrapment added.</value>
+  </data>
+  <data name="EntrapmentPercentControls_Validate_The_entrapment_percentages_together_must_be_at_least__0___and_at_most__1___" xml:space="preserve">
+    <value>The entrapment percentages together must be at least {0}% and at most {1}%.</value>
+  </data>
 </root>

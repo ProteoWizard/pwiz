@@ -31,8 +31,9 @@ namespace pwiz.Osprey.Core
     ///
     /// <para>Two kinds. MACHINE tags (<see cref="COUNT"/>, <see cref="TIMING"/>, <see cref="BENCH"/>,
     /// <see cref="STAGE_WALL"/>, <see cref="PATH"/>, <see cref="TRAIN"/>, <see cref="TASK"/>,
-    /// <see cref="Mem"/>) carry text that scripts and tests read: it is never translated, and it
-    /// is the only part of the log a consumer may key off. All but TASK are gated. CATEGORY tags
+    /// <see cref="DISK"/>, <see cref="Mem"/>) carry text that scripts and tests read: it is never translated, and it
+    /// is the only part of the log a consumer may key off. All but TASK and DISK are gated (DISK by the
+    /// --diskstamp stamper that alone writes it). CATEGORY tags
     /// (<see cref="MODEL_DIAGNOSTICS"/>, <see cref="BISECT"/> and the rest) label the prose that
     /// follows them and appear only when the user asked for that output (an option, <c>-d</c> or an
     /// <c>OSPREY_*</c> setting), so TASK is the only tag in a plain default run. The tag stays
@@ -60,6 +61,12 @@ namespace pwiz.Osprey.Core
         /// documented <c>--task</c> values.
         /// </summary>
         public static readonly LogTag TASK = new LogTag(@"TASK", Always);
+        /// <summary>
+        /// The used-space change on the output directory's drive since the run started, and the
+        /// drive's free space. Written only by the <see cref="DiskStamper"/> <c>--diskstamp</c>
+        /// creates, so the stamper's existence is its gate.
+        /// </summary>
+        public static readonly LogTag DISK = new LogTag(@"DISK", Always);
 
         // Category tags, followed by prose. Warnings and errors are NOT tags: they are written
         // for the user as "Warning:" / "Error:", Skyline's translated command-line prefixes.
@@ -247,8 +254,6 @@ namespace pwiz.Osprey.Core
         public const string ROUTE_SECOND_PASS_FOLD = @"second-pass-fold";
         /// <summary>The pass-2 q-value mode in force.</summary>
         public const string ROUTE_PASS2_QVALUE = @"pass2-qvalue";
-        /// <summary>The experiment-wide aggregation in force.</summary>
-        public const string ROUTE_EXPERIMENT_AGG = @"experiment-agg";
         /// <summary>How the model-diagnostics report was produced.</summary>
         public const string ROUTE_MODEL_DIAGNOSTICS = @"model-diagnostics";
         /// <summary>Protein-level FDR ran in this process.</summary>

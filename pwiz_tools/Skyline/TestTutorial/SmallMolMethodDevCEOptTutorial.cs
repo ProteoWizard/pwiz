@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -93,7 +92,7 @@ namespace pwiz.SkylineTestTutorial
                 // TODO: After translation is updated this first image will need to be added for Chinese and Japanese
                 if (Equals("en", CultureInfo.CurrentCulture.TwoLetterISOLanguageName))
                 {
-                    RunUIForScreenShot(() => ResizeFormOnScreen(confirmHeadersDlg, 1070, null));
+                    RunUIForScreenShot(() => ResizeFormOnScreen(confirmHeadersDlg, ScaledWidth(confirmHeadersDlg, 1070), null));
                     PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Confirming column headers");
                 }
                 OkDialog(confirmHeadersDlg, confirmHeadersDlg.OkDialog);
@@ -194,8 +193,8 @@ namespace pwiz.SkylineTestTutorial
                 {
                     var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
                     string[] repNames = new[] { "2 min", "5 min" };
-                    RunUI(() => manageResultsDlg.Left = SkylineWindow.Right + 50);
-                    RunUIForScreenShot(() => manageResultsDlg.Width += 40); // Easier to get both forms if this is wider
+                    RunUI(() => manageResultsDlg.Left = SkylineWindow.Right + Scaled(50));
+                    RunUIForScreenShot(() => manageResultsDlg.Width += Scaled(40)); // Easier to get both forms if this is wider
                     for (var i = 0; i < 2; i++)
                     {
                         doc = SkylineWindow.Document;
@@ -245,7 +244,7 @@ namespace pwiz.SkylineTestTutorial
                 WaitForGraphs();
                 RunUI(() =>
                 {
-                    SkylineWindow.Size = new Size(1054, 610);
+                    SkylineWindow.Size = ScaledSize(SkylineWindow, 1054, 610);
                     AdjustSequenceTreePanelWidth(true);
                 });
 
@@ -362,9 +361,9 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     var gridFloatingWindow = documentGrid.Parent.Parent;
-                    gridFloatingWindow.Size = new Size(370, 230);
+                    gridFloatingWindow.Size = ScaledSize(gridFloatingWindow, 370, 230);
                     gridFloatingWindow.Top = SkylineWindow.Top;
-                    gridFloatingWindow.Left = SkylineWindow.Right + 20;
+                    gridFloatingWindow.Left = SkylineWindow.Right + Scaled(20);
                 });
                 PauseForScreenShot<DocumentGridForm>("Document Grid - sample types and concentrations ");
                 RunUI(() => SkylineWindow.ShowDocumentGrid(false));
@@ -392,9 +391,9 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     var calibrationFloatingWindow = calibrationForm.Parent.Parent;
-                    calibrationFloatingWindow.Width = 565;
+                    calibrationFloatingWindow.Width = ScaledWidth(calibrationFloatingWindow, 565);
                     calibrationFloatingWindow.Top = SkylineWindow.Top;
-                    calibrationFloatingWindow.Left = SkylineWindow.Right + 20;
+                    calibrationFloatingWindow.Left = SkylineWindow.Right + Scaled(20);
                 });
                 PauseForScreenShot<CalibrationForm>("Calibration Curve ");
                 OkDialog(calibrationForm, calibrationForm.Close); // Hide the calibration window
@@ -465,7 +464,7 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot("Skyline shows new replicate \"CE Optimization\"");
                 RunUI(() =>
                 {
-                    SkylineWindow.Size = new Size(1600, 960);
+                    SkylineWindow.Size = ScaledSize(SkylineWindow, 1600, 960);
                     SkylineWindow.ShowGraphRetentionTime(false, GraphTypeSummary.replicate);
                     SkylineWindow.AutoZoomBestPeak();
                     AdjustSequenceTreePanelWidth();

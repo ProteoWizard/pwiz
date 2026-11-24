@@ -128,7 +128,10 @@ public sealed class MzmlReader
             if (IntegerArray is not null)
                 IntegerArray.Data.AddRange(encoder.DecodeIntegers(Base64));
             else if (DoubleArray is not null)
-                DoubleArray.Data.AddRange(encoder.DecodeDoubles(Base64));
+            {
+                var decoded = encoder.DecodeDoubles(Base64);
+                DoubleArray.Data.Attach(decoded, decoded.Length);
+            }
         }
     }
 
@@ -208,13 +211,15 @@ public sealed class MzmlReader
         {
             if (r.LocalName == "cv" && r.NodeType == XmlNodeType.Element)
             {
-                msd.CVs.Add(new CV
+                var cv = new CV
                 {
                     Id = XmlIdEncoding.Decode(r.GetAttribute("id") ?? string.Empty) ?? string.Empty,
                     FullName = r.GetAttribute("fullName") ?? string.Empty,
                     Version = r.GetAttribute("version") ?? string.Empty,
                     Uri = r.GetAttribute("URI") ?? string.Empty,
-                });
+                };
+                msd.CVs.Add(cv);
+                CvLookup.RegisterSource(cv);
                 MzmlXml.SkipElement(r);
             }
             else r.Read();
@@ -862,7 +867,8 @@ public sealed class MzmlReader
                         // Numpress: read encodedLengthAttr opaque bytes, decode in-process.
                         var bytes = new byte[encodedLengthAttr];
                         ExternalBinarySource.ReadBytes(externalDataset!, externalOffset, bytes);
-                        arr.Data.AddRange(new BinaryDataEncoder(encoderConfig).DecodeDoublesFromRawBytes(bytes));
+                        var decoded = new BinaryDataEncoder(encoderConfig).DecodeDoublesFromRawBytes(bytes);
+                        arr.Data.Attach(decoded, decoded.Length);
                     }
                     else if (externalLength > 0)
                     {
@@ -873,7 +879,7 @@ public sealed class MzmlReader
                         // BinaryDataEncoder doesn't do this (truncation/prediction is an mzMLb
                         // feature only), so it's a sharp-side responsibility on the reader path.
                         InvertPrediction(buf.AsSpan(0, got), encoderConfig.Prediction);
-                        arr.Data.AddRange(buf.AsSpan(0, got).ToArray());
+                        arr.Data.Attach(buf, got);
                     }
                 }
                 doubleArrays.Add(arr);
@@ -906,7 +912,10 @@ public sealed class MzmlReader
                     PendingDecodes.Add(new PendingDecode
                         { DoubleArray = arr, Base64 = base64, Config = encoderConfig });
                 else
-                    arr.Data.AddRange(new BinaryDataEncoder(encoderConfig).DecodeDoubles(base64));
+                {
+                    var decoded = new BinaryDataEncoder(encoderConfig).DecodeDoubles(base64);
+                    arr.Data.Attach(decoded, decoded.Length);
+                }
             }
             doubleArrays.Add(arr);
         }

@@ -736,6 +736,40 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// <see cref="Sort(double[], double[][])"/> over the first <paramref name="length"/> elements
+        /// of <paramref name="keys"/> and of the secondary arrays, which may be null, for arrays used
+        /// as buffers longer than their contents. Returns true if they were already sorted.
+        /// </summary>
+        public static bool Sort(double[] keys, int length, double[] secondary0, double[] secondary1)
+        {
+            // Same NaN caveat as the overload above.
+            if (keys == null || length < 2)
+                return true;
+            if (length > keys.Length || (secondary0 != null && length > secondary0.Length) ||
+                (secondary1 != null && length > secondary1.Length))
+                throw new ArgumentOutOfRangeException(nameof(length));
+            if (IsSorted(keys, length))
+                return true;
+            if (secondary0 == null)
+            {
+                secondary0 = secondary1;
+                secondary1 = null;
+            }
+            IntrosortDouble(keys, secondary0, secondary1, 0, length - 1);
+            return false;
+        }
+
+        private static bool IsSorted(double[] array, int length)
+        {
+            for (int i = 1; i < length; i++)
+            {
+                if (array[i - 1] > array[i])
+                    return false;
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Returns true if <paramref name="array"/> is in non-decreasing order.
         /// </summary>
         public static bool IsSorted<TItem>(TItem[] array)
@@ -757,14 +791,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static bool IsSorted(double[] array)
         {
-            if (array == null || array.Length < 2)
-                return true;
-            for (int i = 1; i < array.Length; i++)
-            {
-                if (array[i - 1] > array[i])
-                    return false;
-            }
-            return true;
+            return array == null || IsSorted(array, array.Length);
         }
 
         private const int INSERTION_SORT_THRESHOLD = 16;

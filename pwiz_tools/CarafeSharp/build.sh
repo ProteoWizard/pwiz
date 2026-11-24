@@ -32,7 +32,9 @@ fi
 export PATH="$HOME/.dotnet/tools:$PATH"
 if ! command -v pwsh > /dev/null 2>&1; then
     echo "==> Installing PowerShell as a dotnet global tool"
-    dotnet tool install --global PowerShell || fail "PowerShell could not be installed as a dotnet global tool"
+    # Pinned to the 7.6 LTS line: PowerShell 7.7.0 ships as a RID-specific tool whose
+    # powershell.<rid> packages are missing from nuget.org, so an unpinned install fails.
+    dotnet tool install --global PowerShell --version '7.6.*' || fail "PowerShell could not be installed as a dotnet global tool"
 fi
 
 # Under WSL2 the NVIDIA driver's CUDA libraries live in /usr/lib/wsl/lib.

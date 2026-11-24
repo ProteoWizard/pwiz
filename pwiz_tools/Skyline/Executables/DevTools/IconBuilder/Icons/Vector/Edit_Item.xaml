@@ -1,0 +1,57 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Pencil at 45 degrees, tip at the bottom left and eraser at the top right: yellow body with
+       a light top and darker bottom, gray ferrule, pink eraser, cream wood and dark graphite tip,
+       all inside a thin brown outline. Drawn horizontally, then rotated. -->
+  <Canvas>
+    <Canvas.RenderTransform>
+      <TransformGroup>
+        <RotateTransform Angle="-45"/>
+        <TranslateTransform X="16" Y="15.5"/>
+      </TransformGroup>
+    </Canvas.RenderTransform>
+    <!-- Body -->
+    <Rectangle Canvas.Left="-9" Canvas.Top="-4.5" Width="17" Height="9">
+      <Rectangle.Fill>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Color="#FFE082" Offset="0"/>
+          <GradientStop Color="#FFC107" Offset="0.35"/>
+          <GradientStop Color="#F5A800" Offset="0.7"/>
+          <GradientStop Color="#D98E00" Offset="1"/>
+        </LinearGradientBrush>
+      </Rectangle.Fill>
+    </Rectangle>
+    <!-- Ferrule -->
+    <Rectangle Canvas.Left="8" Canvas.Top="-4.5" Width="3.5" Height="9">
+      <Rectangle.Fill>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Color="#E0E0E0" Offset="0"/>
+          <GradientStop Color="#A8A8A8" Offset="0.6"/>
+          <GradientStop Color="#8A8A8A" Offset="1"/>
+        </LinearGradientBrush>
+      </Rectangle.Fill>
+    </Rectangle>
+    <!-- Eraser -->
+    <Path Data="M 11.5,-4.5 L 14.5,-4.5 Q 16.5,-4.5 16.5,-2.5 L 16.5,2.5 Q 16.5,4.5 14.5,4.5 L 11.5,4.5 Z">
+      <Path.Fill>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Color="#F48FB1" Offset="0"/>
+          <GradientStop Color="#E8457A" Offset="0.5"/>
+          <GradientStop Color="#C62B5C" Offset="1"/>
+        </LinearGradientBrush>
+      </Path.Fill>
+    </Path>
+    <!-- Wood and graphite -->
+    <Path Data="M -9,-4.5 L -9,4.5 L -14.5,1.5 L -14.5,-1.5 Z">
+      <Path.Fill>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Color="#F7E7BE" Offset="0"/>
+          <GradientStop Color="#E9CF93" Offset="1"/>
+        </LinearGradientBrush>
+      </Path.Fill>
+    </Path>
+    <Path Data="M -14.5,-1.5 L -14.5,1.5 L -17.5,0 Z" Fill="#4A3A2A"/>
+    <!-- Outline -->
+    <Path Data="M -17.5,0 L -14.5,-1.5 L -9,-4.5 L 14.5,-4.5 Q 16.5,-4.5 16.5,-2.5 L 16.5,2.5 Q 16.5,4.5 14.5,4.5 L -9,4.5 L -14.5,1.5 Z" Stroke="#6B5433" StrokeThickness="1" StrokeLineJoin="Round"/>
+    <Line X1="-9" Y1="-4.5" X2="-9" Y2="4.5" Stroke="#6B5433" StrokeThickness="0.75"/>
+  </Canvas>
+</Canvas>

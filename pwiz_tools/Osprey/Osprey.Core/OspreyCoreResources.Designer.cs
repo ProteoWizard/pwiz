@@ -181,7 +181,7 @@ namespace pwiz.Osprey.Core {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to File parallelism: {0} (auto {7}: {1:F1} GB free x {2:P0} / ~{3:F1} GB est per file -&gt; {4} by RAM, capped to {5} cores / {6} files).
+        ///   Looks up a localized string similar to File parallelism: {0} (auto {7}: {1:F1} GB free x {2:P0} / ~{3:F1} GB est per file -&gt; {4} by RAM, capped to {5} by {8} threads at {9}+ per file, {6} files).
         /// </summary>
         public static string FileParallelismResolver_ResolveAuto_File_parallelism___0___auto___1__GB_free_x__2______3__GB_est_per_file_____4__by_RAM__ {
             get {
@@ -191,7 +191,7 @@ namespace pwiz.Osprey.Core {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to File parallelism: {0} (auto {3}, CPU-bound: {1} cores, {2} files; memory estimate unavailable).
+        ///   Looks up a localized string similar to File parallelism: {0} (auto {3}, CPU-bound: {1} threads at {4}+ per file, {2} files; memory estimate unavailable).
         /// </summary>
         public static string FileParallelismResolver_ResolveAuto_File_parallelism___0___auto__CPU_bound___1__cores___2__files__memory_estimate_unavailable_ {
             get {
@@ -286,16 +286,6 @@ namespace pwiz.Osprey.Core {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Experiment aggregation: {0} (default - best observation per unit).
-        /// </summary>
-        public static string OspreyEnvironment_DescribeExperimentAgg_Experiment_aggregation___0___default___best_observation_per_unit_ {
-            get {
-                return ResourceManager.GetString("OspreyEnvironment_DescribeExperimentAgg_Experiment_aggregation___0___default___be" +
-                        "st_observation_per_unit_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to HRAM.
         /// </summary>
         public static string ResolutionModeExtension_LOCALIZED_VALUES_HRAM {
@@ -328,6 +318,24 @@ namespace pwiz.Osprey.Core {
         public static string ToleranceUnitExtension_LOCALIZED_VALUES_ppm {
             get {
                 return ResourceManager.GetString("ToleranceUnitExtension_LOCALIZED_VALUES_ppm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} must be '{1}' or unset, not '{2}'..
+        /// </summary>
+        public static string OspreyEnvironment_ParseSingleValueSwitch__0__must_be___1___or_unset__not___2___ {
+            get {
+                return ResourceManager.GetString("OspreyEnvironment_ParseSingleValueSwitch__0__must_be___1___or_unset__not___2___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} must be a whole number from {1} to {2}, not '{3}'..
+        /// </summary>
+        public static string OspreyEnvironment_ParseXicFragments__0__must_be_a_whole_number_from__1__to__2___not___3___ {
+            get {
+                return ResourceManager.GetString("OspreyEnvironment_ParseXicFragments__0__must_be_a_whole_number_from__1__to__2___not___3___", resourceCulture);
             }
         }
     }

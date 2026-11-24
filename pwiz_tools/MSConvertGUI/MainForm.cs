@@ -120,6 +120,7 @@ namespace MSConvertGUI
             cmdline_args = args;
             InitializeComponent();
 
+            // ReSharper disable once VirtualMemberCallInConstructor
             Text = "MSConvertGUI" + (Environment.Is64BitProcess ? " (64-bit)" : "");
             LoadPresets();
             EnableDragAndDropRows(FilterDGV);
@@ -533,6 +534,7 @@ namespace MSConvertGUI
                         scanTimeHigh = String.IsNullOrEmpty(ScanTimeHigh.Text) ? "1e8" : ScanTimeHigh.Text;
                     }
 
+                    // ReSharper disable once VariableHidesOuterVariable
                     Action<string, string> addOrUpdateFilter = (filter, args) =>
                     {
                         foreach(DataGridViewRow row in FilterDGV.Rows)
@@ -717,18 +719,28 @@ namespace MSConvertGUI
         // if you update this, you probably need to update ConstructCommandLine too
         {
             // Get config settings
+            // ReSharper disable once StringIndexOfIsCultureSpecific.1
             Precision32.Checked = (commandLine.IndexOf("--32") >= 0);
             Precision64.Checked = !Precision32.Checked;
+            // ReSharper disable once StringIndexOfIsCultureSpecific.1
             WriteIndexBox.Checked = !(commandLine.IndexOf("--noindex") >= 0);
             // Match the bare --zlib token (framed by | separators), so --zlib=off does not satisfy a
             // substring check and incorrectly tick the box.
+            // ReSharper disable once StringIndexOfIsCultureSpecific.1
             UseZlibBox.Checked = ("|" + commandLine + "|").IndexOf("|--zlib|") >= 0;
+            // ReSharper disable once StringIndexOfIsCultureSpecific.1
             GzipBox.Checked = (commandLine.IndexOf("--gzip") >= 0);
+            // ReSharper disable once StringIndexOfIsCultureSpecific.1
             NumpressLinearBox.Checked = (commandLine.IndexOf("--numpressLinear") >= 0);
+            // ReSharper disable once StringIndexOfIsCultureSpecific.1
             NumpressSlofBox.Checked = (commandLine.IndexOf("--numpressSlof") >= 0);
+            // ReSharper disable once StringIndexOfIsCultureSpecific.1
             NumpressPicBox.Checked = (commandLine.IndexOf("--numpressPic") >= 0);
+            // ReSharper disable once StringIndexOfIsCultureSpecific.1
             CombineIonMobilitySpectraBox.Checked = (commandLine.IndexOf("--combineIonMobilitySpectra") >= 0);
+            // ReSharper disable once StringIndexOfIsCultureSpecific.1
             SimSpectraBox.Checked = (commandLine.IndexOf("--simAsSpectra") >= 0);
+            // ReSharper disable once StringIndexOfIsCultureSpecific.1
             SrmSpectraBox.Checked = (commandLine.IndexOf("--srmAsSpectra") >= 0);
             string OutputExtension = "";
 
@@ -828,6 +840,7 @@ namespace MSConvertGUI
 
         private void presetSaveAsButton_Click(object sender, EventArgs e)
         {
+            // ReSharper disable once UsingStatementResourceInitialization
             using (var textInputPrompt = new TextInputPrompt("Preset Name", false, "")
             {
                 StartPosition = FormStartPosition.CenterParent,
@@ -1322,6 +1335,7 @@ namespace MSConvertGUI
 
         private void DiaUmpireParamsFileBrowseButton_Click(object sender, EventArgs e)
         {
+            // ReSharper disable once UsingStatementResourceInitialization
             using (var ofd = new OpenFileDialog() {Title = "Pick DIA-Umpire Params File", CheckFileExists = true})
             {
                 if (ofd.ShowDialog(this) == DialogResult.Cancel)

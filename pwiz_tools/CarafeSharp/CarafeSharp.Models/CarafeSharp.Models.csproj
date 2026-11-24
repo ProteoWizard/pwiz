@@ -3,6 +3,8 @@
   <PropertyGroup>
     <RootNamespace>pwiz.CarafeSharp.Models</RootNamespace>
     <AssemblyName>CarafeSharp.Models</AssemblyName>
+    <!-- LibTorchContext calls libtorch's own settings through function pointers. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

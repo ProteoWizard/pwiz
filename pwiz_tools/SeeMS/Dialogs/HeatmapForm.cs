@@ -244,6 +244,7 @@ namespace Pwiz.SeeMS
             msGraphControl.ZoomEvent += msGraphControl_ZoomEvent;
             msGraphControl.IsEnableVZoom = msGraphControl.IsEnableVPan = true;
 
+            // ReSharper disable once VirtualMemberCallInConstructor
             Text = TabText = source.Source.Name + " Ion Mobility Heatmaps";
 
             ContextMenuStrip dummyMenu = new ContextMenuStrip();
@@ -371,6 +372,7 @@ namespace Pwiz.SeeMS
                                                                                           (int) group.Min(o => o.Item2),
                                                                                           (int) group.Max(o => o.Item2));
                 if (msLevel + 1 == 2)
+                    // ReSharper disable once SpecifyACultureInStringConversionExplicitly
                     isolationMzByScanTime[scanTime] = group.Select(o => o.Item1.ToString()).ToList();
 
                 //double intensity = dgv[ticColumn.Index, i].ValueAs<double>();

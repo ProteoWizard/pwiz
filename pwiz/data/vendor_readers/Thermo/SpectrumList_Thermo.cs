@@ -258,6 +258,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         public MassAnalyzerType MassAnalyzer;
         public ScanModeType ScanMode;
         public PolarityType Polarity;
+        public bool IsProfile;
         public double IsolationMz;
 
         // Controller this scan belongs to. MS scans use Device.MS / 1; PDA-as-spectra entries
@@ -308,6 +309,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
                 MassAnalyzer = filter.MassAnalyzer,
                 ScanMode = filter.ScanMode,
                 Polarity = filter.Polarity,
+                IsProfile = filter.ScanData == ScanDataType.Profile,
             };
             if (entry.MsOrder > MSOrderType.Ms && filter.MassCount > 0)
             {
@@ -322,6 +324,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         AddPdaIndex();
 
         // Restore MS as the active controller so subsequent MS-side reads see the right state.
+        // ReSharper disable once EmptyGeneralCatchClause
         try { _raw.Raw.SelectInstrument(Device.MS, 1); } catch { }
     }
 
@@ -384,11 +387,26 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
 
     /// <inheritdoc/>
     public Spectrum GetCentroidSpectrum(int index, bool getBinaryData, IntegerSet msLevelsToCentroid) =>
-        GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid);
+        GetSpectrumImpl(index, ToDetailLevel(getBinaryData), msLevelsToCentroid);
+
+    /// <inheritdoc/>
+    public Spectrum GetCentroidSpectrum(int index, DetailLevel detailLevel, IntegerSet msLevelsToCentroid) =>
+        GetSpectrumImpl(index, detailLevel, msLevelsToCentroid);
 
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
-        GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid: null);
+        GetSpectrumImpl(index, ToDetailLevel(getBinaryData), msLevelsToCentroid: null);
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Overridden, as cpp's is, so a request below <see cref="DetailLevel.FullMetadata"/> does not
+    /// parse the scan filter and trailer or read the peaks.
+    /// </remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel) =>
+        GetSpectrumImpl(index, detailLevel, msLevelsToCentroid: null);
+
+    private static DetailLevel ToDetailLevel(bool getBinaryData) =>
+        getBinaryData ? DetailLevel.FullData : DetailLevel.FullMetadata;
 
     /// <summary>
     /// Populates a PDA "scan" as an electromagnetic-radiation spectrum (wavelength vs intensity),
@@ -483,13 +501,15 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         }
         finally
         {
+            // ReSharper disable once EmptyGeneralCatchClause
             try { raw.SelectInstrument(Device.MS, 1); } catch { }
         }
     }
 
-    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, IntegerSet? msLevelsToCentroid)
+    private Spectrum GetSpectrumImpl(int index, DetailLevel detailLevel, IntegerSet? msLevelsToCentroid)
     {
         var ie = _index[index];
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
 
         // PDA-as-spectra: separate population path. Cpp SpectrumList_Thermo.cpp:282-317 emits
         // these as MS_EMR_spectrum with wavelength axis (UO_nanometer) and no msLevel.
@@ -533,6 +553,27 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         // interaction cpp applies at :370-374 is mirrored by `emitCentroid` further down.
         bool preferCentroid = msLevelsToCentroid?.Contains(msLevel) ?? false;
 
+        // cpp SpectrumList_Thermo.cpp:263 returns here at InstantMetadata, before parsing the scan
+        // filter: Skyline asks every spectrum for its ms level and retention time before it reads
+        // the data. The representation comes from the index, so SpectrumList_PeakPicker has no
+        // reason to raise the request to a level that reads the peaks.
+        if (detailLevel < DetailLevel.FastMetadata)
+        {
+            var instantScan = new Scan
+            {
+                InstrumentConfiguration = _icByAnalyzer.TryGetValue(ie.MassAnalyzer, out var instantIc) ? instantIc : _defaultIc,
+            };
+            instantScan.Set(CVID.MS_scan_start_time, _raw.RetentionTimeMinutes(scanNumber), CVID.UO_minute);
+            if (ie.Polarity == PolarityType.Positive)
+                spec.Params.Set(CVID.MS_positive_scan);
+            else if (ie.Polarity == PolarityType.Negative)
+                spec.Params.Set(CVID.MS_negative_scan);
+            spec.Params.Set(!ie.IsProfile || preferCentroid ? CVID.MS_centroid_spectrum : CVID.MS_profile_spectrum);
+            spec.ScanList.Set(CVID.MS_no_combination);
+            spec.ScanList.Scans.Add(instantScan);
+            return spec;
+        }
+
         // The scan filter is this method's equivalent of cpp's ScanInfo (SpectrumList_Thermo.cpp:269-275):
         // fetched ONCE per spectrum and reused by every site below (enhanced-resolution flag,
         // analyzer scan offset, filter string, profile/centroid, SIM/SRM scan windows, precursor
@@ -574,6 +615,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         if (ie.MsOrder is MSOrderType.Nl or MSOrderType.Ng)
         {
             double analyzerScanOffset = 0;
+            // ReSharper disable once EmptyGeneralCatchClause
             try { if (filter.MassCount > 0) analyzerScanOffset = filter.GetMass(0); } catch { }
             scan.Set(CVID.MS_analyzer_scan_offset, analyzerScanOffset, CVID.MS_m_z);
         }
@@ -720,8 +762,11 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         }
 
         // ---- binary data ----
-        // Always retrieve the mass list so defaultArrayLength + lowest/highest observed m/z match
-        // the data even when getBinaryData is false. C++ does the same (see SpectrumList_Thermo.cpp).
+        // Retrieve the mass list at full metadata and above, so defaultArrayLength + lowest/highest
+        // observed m/z match the data even when getBinaryData is false. cpp does the same
+        // (SpectrumList_Thermo.cpp:743), and like cpp skips it for anything less.
+        if (detailLevel < DetailLevel.FullMetadata)
+            return spec;
         var (mz, intensity) = _raw.GetPeaks(scanNumber, preferCentroid);
         spec.DefaultArrayLength = mz.Length;
         if (mz.Length > 0)
@@ -767,7 +812,14 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         {
             int lvl = i < msLevel - 1 ? i + 1 : msLevel - 1;
             double hw = 0;
-            try { hw = filter.GetIsolationWidth(i) / 2.0; } catch { }
+            try
+            {
+                hw = filter.GetIsolationWidth(i) / 2.0;
+            }
+            catch (Exception)
+            {
+                WarnOnce(ReadFailureMessage("an isolation width could not be read from a multi-precursor scan filter; that precursor has no isolation window offsets"));
+            }
             entries.Add((filter.GetMass(i), lvl, hw, filter.GetActivation(i), filter.GetEnergy(i)));
         }
 
@@ -1034,23 +1086,39 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
             int precursorMsLevel = i + 1;
             bool isPrimary = precursorMsLevel == msLevel - 1;
             double isolationMz = 0;
-            try { isolationMz = filter.GetMass(i); } catch { }
+            try
+            {
+                isolationMz = filter.GetMass(i);
+            }
+            catch (Exception)
+            {
+                WarnOnce(ReadFailureMessage("a precursor m/z could not be read from a scan filter; that precursor is omitted"));
+            }
             if (isolationMz <= 0) continue;
 
             // Mirror pwiz C++ SpectrumList_Thermo.cpp:552-568 isolation-width logic exactly.
             // trailerExtraValueDouble returns 0 (not throw) when the trailer is missing, so the
-            // override is UNCONDITIONAL for primary precursors — an absent trailer zeros out
-            // the filter-based width, then the method fallback takes over. This matters for
+            // override is UNCONDITIONAL for primary precursors - the filter-based width is never
+            // used for them, and an absent trailer leaves 0 for the method fallback. This matters for
             // newer DDA files (e.g. TMT MS3) where no "MS{n} Isolation Width:" trailer exists
             // and cpp emits no offsets because the method also has no width for that event.
             double isolationHalfWidth = 0;
-            try { isolationHalfWidth = filter.GetIsolationWidth(i) / 2.0; } catch { }
-
             if (isPrimary)
             {
                 string widthTag = "MS" + msLevel.ToString(CultureInfo.InvariantCulture) + " Isolation Width:";
                 bool trailerHit = TryGetTrailerDouble(ie.Scan, widthTag, out double trailerWidth);
                 isolationHalfWidth = trailerWidth / 2.0;  // unconditional override, matches cpp
+            }
+            else
+            {
+                try
+                {
+                    isolationHalfWidth = filter.GetIsolationWidth(i) / 2.0;
+                }
+                catch (Exception)
+                {
+                    WarnOnce(ReadFailureMessage("an outer isolation width could not be read from an MSn scan filter; the method default width is used, if any"));
+                }
             }
 
             // Method fallback when the above resolved to 0 (LTQ-class where filter returns 0
@@ -1145,7 +1213,17 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
                 // "ms2 180.00@cid35" scan, not to whichever earlier MS2 happens to cover
                 // 104.96. cpp SpectrumList_Thermo.cpp:638.
                 double precursorIsolationMz = 0;
-                if (i > 0) { try { precursorIsolationMz = filter.GetMass(i - 1); } catch { } }
+                if (i > 0)
+                {
+                    try
+                    {
+                        precursorIsolationMz = filter.GetMass(i - 1);
+                    }
+                    catch (Exception)
+                    {
+                        WarnOnce(ReadFailureMessage("an outer precursor m/z could not be read from an MSn scan filter; that scan's precursor spectrum link may be wrong"));
+                    }
+                }
 
                 int precursorIndex = FindPrecursorIndex(ie.Index, precursorMsLevel, isolationMz,
                     precursorIsolationMz, ie.Scan, out int nonPrecursorMasterScanNumber);
@@ -1333,6 +1411,14 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         }
         return -1;
     }
+
+    /// <summary>
+    /// Text for a per-scan SDK read failure, passed to <see cref="SpectrumListBase.WarnOnce"/>.
+    /// The text names no scan and no exception detail, so that it is identical for every scan and
+    /// WarnOnce reports it once per file rather than once per spectrum.
+    /// </summary>
+    private string ReadFailureMessage(string what) =>
+        $"[SpectrumList_Thermo] {Path.GetFileName(_raw.Filename)}: {what} (reported once per file)";
 
     private static int MsOrderToLevel(MSOrderType order) => order switch
     {

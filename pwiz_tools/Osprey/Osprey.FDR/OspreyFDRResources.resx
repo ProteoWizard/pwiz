@@ -124,6 +124,12 @@
   <data name="ModelDiagnosticsData_ReduceToPrecs_Finding_the_best_peak_of_each_precursor_in_1_file" xml:space="preserve">
     <value>Finding the best peak of each precursor in 1 file</value>
   </data>
+  <data name="PercolatorEngine_AppendProteinBestToRows_Computing_the_protein_best_column_from_1_file" xml:space="preserve">
+    <value>Computing the protein-best column from 1 file</value>
+  </data>
+  <data name="PercolatorEngine_AppendProteinBestToRows_Computing_the_protein_best_column_from__0__files" xml:space="preserve">
+    <value>Computing the protein-best column from {0:N0} files</value>
+  </data>
   <data name="PercolatorEngine_PassDisplayName_First_pass" xml:space="preserve">
     <value>First-pass</value>
   </data>

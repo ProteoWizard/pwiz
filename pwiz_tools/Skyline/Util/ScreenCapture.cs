@@ -545,7 +545,7 @@ namespace pwiz.Skyline.Util
             return FindParent<FloatingWindow>(ctrl) ?? ctrl;
         }
 
-        private static bool IsDocked(DockableForm dockableForm)
+        public static bool IsDocked(DockableForm dockableForm)
         {
             var dockedStates = new[] { DockState.DockBottom, DockState.DockLeft, DockState.DockRight, DockState.DockTop, DockState.Document };
             return dockedStates.Contains(dockableForm.DockState);

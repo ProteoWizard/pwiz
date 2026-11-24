@@ -1,0 +1,7 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Text column: a light gray italic A and b. -->
+  <Path Data="M 6,6 L 14,6 L 14,24 L 10,24 L 10,10 L 8.9,10 L 4,24 L 0,24 Z" Fill="#C0C0C0"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="18" Width="10" Height="2" Fill="#C0C0C0"/>
+  <Path Data="M 20,6 L 24,6 L 20,24 L 16,24 Z" Fill="#C0C0C0"/>
+  <Path Data="M 21,13.5 C 23,10.5 28,10 28,15 C 28,20 25,24 19,23" Stroke="#C0C0C0" StrokeThickness="3.4" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+</Canvas>

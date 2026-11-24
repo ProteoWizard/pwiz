@@ -36,7 +36,6 @@ using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.FDR.Reconciliation;
 using pwiz.Osprey.IO;
-using pwiz.Osprey.Scoring;
 using pwiz.Osprey.Tasks.ModelDiagnostics;
 
 namespace pwiz.Osprey.Tasks
@@ -220,7 +219,13 @@ namespace pwiz.Osprey.Tasks
         {
             if (ctx.Config.InputFiles == null) yield break;
             foreach (var input in ctx.Config.InputFiles)
+            {
                 yield return FdrScoresSidecar.Pass1Path(input);
+                // --protein-boost best: the column each run was scored with, which the second
+                // pass scores that run's rescored rows with and cannot recompute.
+                if (ctx.Config.ProteinBest)
+                    yield return ProteinBestSidecar.PathFor(input);
+            }
 
             // The analysis-wide cross-run consensus every run's Stage 6 plan reads. Each run's
             // .reconciliation.json is PerFileRescoring's output now: that task plans the run
@@ -408,8 +413,12 @@ namespace pwiz.Osprey.Tasks
                     ? null
                     : FdrScoresSidecar.ReadFeatureSums(FdrScoresSidecar.Pass1Path(sidecarBase));
             });
+            // A model trained with the protein-best column reports it as its last feature.
+            var featureInfos = ScoringTaskShared.FdrFeatureInfos(config);
+            if (ProteinBestFeature.IsAppendedTo(saved.Model.FeatureNames))
+                featureInfos = ProteinBestFeature.WithColumnInfo(featureInfos);
             var contributions = PercolatorEngine.FirstPassContributionsFromShares(saved.Model, shares,
-                OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES));
+                featureInfos);
             return ModelDiagnosticsData.ModelView.From(contributions);
         }
 
@@ -474,7 +483,7 @@ namespace pwiz.Osprey.Tasks
             var outputs = Outputs(ctx).ToList();
             foreach (string output in outputs)
             {
-                if (string.Equals(output, diagnosticsPath, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(output, diagnosticsPath, PathComparison.Comparison))
                     continue;
                 if (PerFileResumeDriver.IsCurrent(output, Name, validityKey))
                     continue;
@@ -498,20 +507,6 @@ namespace pwiz.Osprey.Tasks
 
         public override string ValidityKey(PipelineContext ctx)
         {
-            // OSPREY_EXPERIMENT_AGG changes this task's OWN output (the experiment-wide precursor
-            // and peptide q maps), so it has to invalidate the cache. Without it, re-running an A/B
-            // arm in an output directory that already holds the other arm's results makes
-            // the outputs' embedded stamps read as current, the driver skips Run entirely - taking the
-            // unrecognized-value warning with it, since that lives inside Run - and the previous
-            // mode's q is silently reused and recorded as the new arm's measurement. The flag is
-            // read from a process-wide static rather than the config, which is why it is not
-            // already covered by SearchIdentity; promoting it to a real command argument would
-            // subsume this line.
-            // The aggregation suffix (empty unless engaged) is built by the ONE shared helper the
-            // downstream tasks also use, so the three keys cannot drift apart. The floor toggles
-            // are part of it: they feed the aggregate written into this task's own Pass1Path
-            // output, so a floor sweep in one directory would otherwise reuse the previous arm's
-            // q as the new arm's measurement.
             // The 2nd-pass mode belongs here even though pass 2 runs later: protein-compact is
             // the only mode that needs the >=2-peptide stratum, and this task is where the
             // stratum is computed and written into the 1st-pass model sidecar. A sidecar written
@@ -532,9 +527,12 @@ namespace pwiz.Osprey.Tasks
                 // written rather than stored beside them, so the record keeps its columns and its
                 // version. A term here would invalidate this task for a format that did not move,
                 // and invalidating FirstPassFDR costs a 5-hour Stage 5 re-run at 446 files.
-                + OspreyEnvironment.ExperimentAggValidityKeySuffix()
-                + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                + OspreyEnvironment.Pass2QValueValidityKeySuffix(ctx.Config)
+                // The Stage 6 consensus this task writes holds the reconciliation set.
+                + OspreyEnvironment.TransferReconciliationValidityKeySuffix(ctx.Config)
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
+                + PinFeatureMask.For(ctx.Config).ValidityKeySuffix()
+                + OspreyEnvironment.FdrExperimentValidityKeySuffix()
                 // The classifier this task trains, and its tree settings. Empty for the linear
                 // SVM, so no percolator directory is invalidated.
                 + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
@@ -557,29 +555,6 @@ namespace pwiz.Osprey.Tasks
             var perFileCalibrations = ctx.Get<PerFileCalibrations>().Value;
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
             var fullLibrary = ctx.Get<FullLibrary>().Value;
-
-            // OSPREY_EXPERIMENT_AGG family, re-checked at the CONSUMING site against FirstPassFDR's
-            // real file count. Program.ValidateArgs runs the same helper at startup from the
-            // command line, which is where an operator wants the message.
-            //
-            // The two counts are NOT the same number and are not meant to be: startup counts the
-            // files named on the command line, while this counts the files that actually produced
-            // scored entries (PerFileScoringTask adds a file only on success). A run can therefore
-            // pass at startup and be refused here - which is the point of checking twice, not a
-            // drift to be eliminated.
-            //
-            // This MUST stay above every writer below. When a marker deletion stood there, an
-            // argument error destroyed the Stage-5 validity records of a run that had computed no
-            // FDR at all, so the operator fixed the variable and paid for a full recompute - hours at 82
-            // files. The damage concentrated exactly on the sweep workflow, because the arm is part
-            // of ValidityKey, so a warm re-run into a directory holding a different arm always
-            // takes this path. Nothing above this point writes or removes any output.
-            //
-            // Every check inside is gated on the aggregation being engaged, so a default run
-            // that merely inherited a stale sweep variable is untouched.
-            string aggError = OspreyEnvironment.ValidateExperimentAggSettings(perFileEntries.Count);
-            if (aggError != null)
-                throw new InvalidOperationException(aggError);
 
             // NOT a blanket wipe of every declared output's marker on entry. That was written
             // against a partially-written output, and there is no such state: every one of these
@@ -656,7 +631,7 @@ namespace pwiz.Osprey.Tasks
             Func<string, IReadOnlyList<double[]>> loadFileFeatures = fileName =>
             {
                 if (perFileParquetPaths.TryGetValue(fileName, out string scoresPath))
-                    return ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath);
+                    return ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath, PinFeatureMask.For(ctx.Config));
                 return Array.Empty<double[]>();
             };
 
@@ -1002,13 +977,13 @@ namespace pwiz.Osprey.Tasks
             int pass = 1)
         {
             ModelDiagnosticsReport.BuildClassificationFromLibrary(config, libraryById, log, pass,
-                out var classByBaseId, out var pairByBaseId, out var entrapmentRatio);
+                out var classByBaseId, out var pairByBaseId, out var entrapmentRatio, out var placement);
             var runNames = new string[fileNames.Count];
             for (int i = 0; i < runNames.Length; i++)
                 runNames[i] = fileNames[i];
             return new ModelDiagnosticsData.Accumulator(
                 runNames, classByBaseId, pairByBaseId, entrapmentRatio, config.RunFdr,
-                config.FdrLevel, pass);
+                config.FdrLevel, pass, placement);
         }
 
         /// <summary>
@@ -1043,10 +1018,10 @@ namespace pwiz.Osprey.Tasks
             {
                 int files = 0;
                 string error = null;
-                using (var progress = new ProgressReporter(CountText.Format(projections.PerFile.Count,
-                           OspreyTasksResources.FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDRBench_input_for_1_file,
-                           OspreyTasksResources.FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDRBench_input_for__0__files),
-                           projections.PerFile.Count))
+                ProgressReporter.TryRun(CountText.Format(projections.PerFile.Count,
+                    OspreyTasksResources.FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDRBench_input_for_1_file,
+                    OspreyTasksResources.FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDRBench_input_for__0__files),
+                    projections.PerFile.Count, progress =>
                 {
                     // A lane reads a file and builds its rows; the sink, which dedups across files
                     // with first-seen ties (or streams per-run rows straight to the TSV), takes them
@@ -1085,9 +1060,8 @@ namespace pwiz.Osprey.Tasks
                             sink.Add(runName, row);
                         return true;
                     });
-                    if (error == null)
-                        progress.Complete();
-                }
+                    return error == null;
+                });
                 if (error != null)
                 {
                     ctx.LogError(error);
@@ -1189,8 +1163,7 @@ namespace pwiz.Osprey.Tasks
                 var fileNames = new List<string>(perFileEntries.Count);
                 foreach (var kvp in perFileEntries)
                     fileNames.Add(kvp.Key);
-                plan = planner.Plan(fileNames, LoadSurvivorsForPlanning, perFileCalibrations,
-                    perFileParquetPaths, config);
+                plan = planner.Plan(fileNames, LoadSurvivorsForPlanning, perFileCalibrations, config);
             }
             catch (InvalidDataException ex)
             {
@@ -1696,9 +1669,15 @@ namespace pwiz.Osprey.Tasks
                     kv.Key, perFileParquetPaths, config);
                 if (string.IsNullOrEmpty(resumeBase))
                     continue;
+                // Under --protein-boost best a file is resumable only beside a current column: the
+                // score pass writes the column only for the files it scores.
                 if (PerFileResumeDriver.IsCurrent(
-                        FdrScoresSidecar.Pass1Path(resumeBase), Name, sidecarValidityKey))
+                        FdrScoresSidecar.Pass1Path(resumeBase), Name, sidecarValidityKey) &&
+                    (!config.ProteinBest ||
+                     PerFileResumeDriver.IsCurrent(ProteinBestSidecar.PathFor(resumeBase), Name, sidecarValidityKey)))
+                {
                     resumableFiles.Add(kv.Key);
+                }
             }
             if (resumableFiles.Count > 0)
             {
@@ -1806,14 +1785,14 @@ namespace pwiz.Osprey.Tasks
                 ctx.Publish(new FirstPassPercolatorModel
                 {
                     Results = resumeSidecar.Model,
-                    ExperimentAgg = resumeSidecar.ExperimentAgg
+                    Stamp = resumeSidecar.Stamp
                 });
                 // Gated on the MODE, matching the canEnterAtGate clause above. The stratum file
                 // is not a declared Output, so nothing invalidates or removes it when a later
                 // run uses a different pass-2 arm - and the compaction gate applies whatever it
                 // is handed, so an ungated adoption would silently widen the survivor set of an
                 // arm that never computes a stratum at all.
-                if (OspreyEnvironment.Pass2ProteinCompact && resumeSidecar.StratumBaseIds != null)
+                if (config.Pass2ProteinCompact && resumeSidecar.StratumBaseIds != null)
                 {
                     _proteinCompactStratum = resumeSidecar.StratumBaseIds;
                     ctx.Publish(new ProteinCompactStratum(_proteinCompactStratum));
@@ -1885,7 +1864,20 @@ namespace pwiz.Osprey.Tasks
                     throw new IOException(string.Format(
                         OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Could_not_write_the_first_pass_intermediate_file_for___0____and_the_analysis_cannot_, fileName));
                 };
-            var featureInfos = OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES);
+            // --protein-boost best: each scored run's column, beside its first-pass scores and
+            // under the same stamp. Fatal on failure, for the reason the scores write is.
+            void PersistProteinBest(string fileName, ProteinBestRunValues column)
+            {
+                string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
+                if (string.IsNullOrEmpty(sidecarBase))
+                {
+                    throw new IOException(string.Format(
+                        OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Cannot_write_the_first_pass_intermediate_file_for___0____no_location_could_be_derived_, fileName));
+                }
+                ProteinBestSidecar.Write(ProteinBestSidecar.PathFor(sidecarBase), column.EntryIds, column.Values,
+                    column.Floor, sidecarStamp);
+            }
+            var featureInfos = ScoringTaskShared.FdrFeatureInfos(config);
             var swFdr = Stopwatch.StartNew();
             bool aborted;
             // Stage B (issue #4355 struct-shrink S3): the lean 1st pass holds NO resident
@@ -1960,7 +1952,8 @@ namespace pwiz.Osprey.Tasks
                 projections.PerFile.ConvertAll(kv => kv.Key), streamFileRows, loadFileFeatures,
                 config, featureInfos, ctx, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
                 @"First-pass", captureContributions, captureModel, tryStreamCompletedScores,
-                pretrainedModel, flushFileRunScope, ctx.RunPlan.FirstPassFdrLanes, tryLoadFeatureSums);
+                pretrainedModel, flushFileRunScope, ctx.RunPlan.FirstPassFdrLanes, tryLoadFeatureSums,
+                BuildProteinBestRequest(config, fullLibrary, PersistProteinBest));
             // How many files' 1st-pass sidecars are on disk after the score pass - written by it
             // or adopted from an earlier run. flushFileRunScope is the only writer of these files
             // on this path, so a shortfall here is a file the compaction gate will fail to read.
@@ -2042,7 +2035,7 @@ namespace pwiz.Osprey.Tasks
                 // Build + publish the protein-compact stratum on the PROJECTION (production)
                 // path too -- the compaction gate below (ComputeFirstPassBaseIds) reads it to
                 // admit present-protein peptides that did not pass 1st-pass FDR.
-                if (OspreyEnvironment.Pass2ProteinCompact)
+                if (config.Pass2ProteinCompact)
                 {
                     BuildAndPublishProteinCompactStratum(
                         proteinResult, fullLibrary, sidecarValidityKey, ctx);
@@ -2079,6 +2072,23 @@ namespace pwiz.Osprey.Tasks
             // base_id set (the same predicate RescoreCompaction applies, risk #7). The
             // stratum (protein-compact) admits present-protein peptides that failed 1st-pass FDR.
             return CompactFromSidecars(projections, perFileParquetPaths, beforeCount, config, ctx);
+        }
+
+        /// <summary>
+        /// The protein-aware column's request (<see cref="OspreyConfig.ProteinBest"/>), or null when it is off. The
+        /// proteins come from the target library entries, so an entrapment peptide sits on whatever
+        /// accession the library gives it; a decoy finds its target's through their shared base_id.
+        /// The accessions are already free of the Carafe per-peptide suffix
+        /// (<see cref="CarafeProteinIdNormalizer"/>).
+        /// </summary>
+        private static ProteinBestRequest BuildProteinBestRequest(OspreyConfig config, List<LibraryEntry> library,
+            Action<string, ProteinBestRunValues> persistRun)
+        {
+            if (!config.ProteinBest)
+                return null;
+            ulong? shuffleSeed = OspreyEnvironment.ProteinBestShuffle ? OspreyEnvironment.FdrSeed ?? 42UL : null;
+            return new ProteinBestRequest(ProteinBestMembership.FromLibrary(library, shuffleSeed),
+                OspreyEnvironment.PROTEIN_BEST_TOP_N, persistRun);
         }
 
         /// <summary>
@@ -2140,7 +2150,7 @@ namespace pwiz.Osprey.Tasks
                         PercolatorResults.ClassifierName(modelSidecar.Model.IsGradientBoostedTrees),
                         PercolatorResults.ClassifierName(runUsesTrees)));
                 }
-                if (OspreyEnvironment.Pass2ProteinCompact && modelSidecar.StratumBaseIds == null)
+                if (config.Pass2ProteinCompact && modelSidecar.StratumBaseIds == null)
                 {
                     refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides_was_found_at__0_,
                         FirstPassModelIO.StratumPathFor(config)));
@@ -2166,7 +2176,7 @@ namespace pwiz.Osprey.Tasks
             string path = FirstPassModelIO.PathFor(config);
             if (path == null || !PerFileResumeDriver.IsCurrent(path, Name, validityKey))
                 return null;
-            var sidecar = FirstPassModelIO.Load(path);
+            var sidecar = FirstPassModelIO.Load(path, PinFeatureMask.For(config));
             return sidecar?.Model != null ? sidecar : null;
         }
 
@@ -2195,20 +2205,15 @@ namespace pwiz.Osprey.Tasks
             string validityKey, PipelineContext ctx)
         {
             bool adopted = adoptedModel != null && ReferenceEquals(results, adoptedModel);
-            if ((OspreyEnvironment.Pass2TransferQ || OspreyEnvironment.Pass2ProteinCompact) &&
+            if ((ctx.Config.Pass2TransferQ || ctx.Config.Pass2ProteinCompact) &&
                 !ctx.TryGet<FirstPassPercolatorModel>(out _))
             {
-                // Stamp the arm the TRAINING process ran under; the 2nd pass may be another process.
                 ctx.Publish(new FirstPassPercolatorModel
                 {
                     Results = results,
-                    // For an adopted model that is the arm recorded beside it, not this one's: the
-                    // recorded arm is what the pass-2 mean-best-N refusal is evaluated against, so
-                    // re-reading the environment would judge a reused model by the wrong arm. A
-                    // model trained here was trained under this process's arm.
-                    ExperimentAgg = adopted
-                        ? reloadedModel?.ExperimentAgg ?? OspreyEnvironment.ExperimentAgg
-                        : OspreyEnvironment.ExperimentAgg
+                    // The stamp this pass writes the model and the protein-best columns with, or
+                    // for an adopted model the one recorded beside it.
+                    Stamp = adopted ? reloadedModel?.Stamp : OspreyVersion.Stamp(Name, validityKey)
                 });
             }
             if (!adopted)
@@ -2238,8 +2243,7 @@ namespace pwiz.Osprey.Tasks
             string modelJson;
             try
             {
-                modelJson = FirstPassModelIO.Serialize(results, OspreyEnvironment.ExperimentAgg,
-                    OspreyVersion.Stamp(Name, validityKey));
+                modelJson = FirstPassModelIO.Serialize(results, OspreyVersion.Stamp(Name, validityKey));
             }
             catch (Exception ex)
             {
@@ -2417,9 +2421,9 @@ namespace pwiz.Osprey.Tasks
             var stubIdentity = StubIdentity(ctx);
             int proteinReduceFiles = 0;
             string reduceError = null;
-            using (var reduceProgress = new ProgressReporter(CountText.Format(projections.PerFile.Count,
-                       OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Computing_first_pass_protein_FDR_for_1_file,
-                       OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Computing_first_pass_protein_FDR_for__0__files), projections.PerFile.Count))
+            ProgressReporter.TryRun(CountText.Format(projections.PerFile.Count,
+                OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Computing_first_pass_protein_FDR_for_1_file,
+                OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Computing_first_pass_protein_FDR_for__0__files), projections.PerFile.Count, reduceProgress =>
             {
                 OrderedFileLanes.RunWhile(projections.PerFile.Count, ctx.RunPlan.FirstPassFdrLanes, f =>
                 {
@@ -2437,9 +2441,8 @@ namespace pwiz.Osprey.Tasks
                     accumulator.Merge(file.Accumulator);
                     return true;
                 });
-                if (reduceError == null)
-                    reduceProgress.Complete();
-            }
+                return reduceError == null;
+            });
             if (reduceError != null)
             {
                 ctx.LogError(reduceError);
@@ -2650,11 +2653,11 @@ namespace pwiz.Osprey.Tasks
             ctx.LogBlockReads(@"First-pass before trim");
             int compactFiles = 0;
             string compactError = null;
-            using (var compactProgress = new ProgressReporter(ScoringTaskShared.IsSingleFileSearch(config)
-                       ? OspreyTasksResources.FirstPassFdrTask_ComputeFirstPassBaseIds_Trimming_first_pass_results_to_the_precursor_candidates_kept_for_re_scoring_and_second_
-                       : string.Format(OspreyTasksResources.FirstPassFdrTask_ComputeFirstPassBaseIds_Trimming_first_pass_results_to_the_precursor_candidates_kept_for_cross_run_reconciliation_,
-                           projections.PerFile.Count),
-                       projections.PerFile.Count))
+            ProgressReporter.TryRun(ScoringTaskShared.IsSingleFileSearch(config)
+                    ? OspreyTasksResources.FirstPassFdrTask_ComputeFirstPassBaseIds_Trimming_first_pass_results_to_the_precursor_candidates_kept_for_re_scoring_and_second_
+                    : string.Format(OspreyTasksResources.FirstPassFdrTask_ComputeFirstPassBaseIds_Trimming_first_pass_results_to_the_precursor_candidates_kept_for_cross_run_reconciliation_,
+                        projections.PerFile.Count),
+                projections.PerFile.Count, compactProgress =>
             {
                 OrderedFileLanes.RunWhile(projections.PerFile.Count, ctx.RunPlan.FirstPassFdrLanes, f =>
                 {
@@ -2709,9 +2712,8 @@ namespace pwiz.Osprey.Tasks
                     firstPassBaseIds.UnionWith(file.Passing);
                     return true;
                 });
-                if (compactError == null)
-                    compactProgress.Complete();
-            }
+                return compactError == null;
+            });
             if (compactError != null)
             {
                 ctx.LogError(compactError);

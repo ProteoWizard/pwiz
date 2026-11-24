@@ -623,7 +623,7 @@ namespace TestPerf
             if (IsCoverShotMode)
             {
                 // Resize the form before running or the output will not appear scrolled to the end
-                RunUI(() => importPeptideSearchDlg.Size = new Size(404, 578));  // minimum height
+                RunUI(() => importPeptideSearchDlg.Size = ScaledSize(importPeptideSearchDlg, 404, 578));  // minimum height
             }
 
             // Run the search, then build the library, calibrate it to the iRT standard and add the proteins
@@ -735,7 +735,7 @@ namespace TestPerf
                 Rectangle rectFrame = Rectangle.Empty;
                 RunUI(() =>
                 {
-                    SkylineWindow.Size = new Size(900, 900);
+                    SkylineWindow.Size = ScaledSize(SkylineWindow, 900, 900);
                     SkylineWindow.ForceOnScreen();  // Avoid this shifting the window under the floating window later
                 });
                 Thread.Sleep(200);  // Give layout time to adjust
@@ -746,7 +746,7 @@ namespace TestPerf
                     var rtGraphFrame = FindFloatingWindow(SkylineWindow.GraphRetentionTime);
                     var chromTopLeft = chromPane1.PointToScreen(new Point(0, 0));
                     var chromTopRight = chromPane2.PointToScreen(new Point(chromPane2.Width, 0));
-                    rtGraphFrame.Location = chromPane1.PointToScreen(new Point(((chromTopRight.X - chromTopLeft.X) - rtGraphFrame.Width) / 2, 50));
+                    rtGraphFrame.Location = chromPane1.PointToScreen(new Point(((chromTopRight.X - chromTopLeft.X) - rtGraphFrame.Width) / 2, Scaled(50)));
                     rectFrame = rtGraphFrame.Bounds;
                     rtGraphFrame.Activate();    // TODO: Want the graph activated but a screenshot of screen
                 });
@@ -770,7 +770,7 @@ namespace TestPerf
 
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 SkylineWindow.ShowRTReplicateGraph();
-                SkylineWindow.Size = new Size(1226, 900);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 1226, 900);
             });
             RestoreViewOnScreenNoSelChange(18);
             WaitForGraphs();
@@ -880,8 +880,8 @@ namespace TestPerf
                 RunUI(() =>
                 {
                     var fcFloatingWindow = fcGrid.Parent.Parent;
-                    fcFloatingWindow.Left = SkylineWindow.Left + 8;
-                    fcFloatingWindow.Top = SkylineWindow.Bottom - fcFloatingWindow.Height - 8;
+                    fcFloatingWindow.Left = SkylineWindow.Left + Scaled(8);
+                    fcFloatingWindow.Top = SkylineWindow.Bottom - fcFloatingWindow.Height - Scaled(8);
                 });*/
                 TakeCoverShot();
             }
@@ -914,17 +914,6 @@ namespace TestPerf
             // which has no decoys of its own
             foreach (var file in Directory.GetFiles(ddaSearchDir, "decoy_*"))
                 FileEx.SafeDelete(file);
-        }
-
-        private static Bitmap ClipDockingRect(Bitmap bmp, Rectangle rectFrame)
-        {
-            const int hBorder = 20;
-            const int topBorder = 100;
-            const int bottomBorder = 10;
-            var rectClip = new Rectangle(rectFrame.X - hBorder, rectFrame.Y - topBorder, rectFrame.Width + hBorder * 2,
-                rectFrame.Height + topBorder + bottomBorder);
-            bmp = ClipBitmap(bmp, rectClip);
-            return bmp;
         }
 
         private void PrintAnalysisSettingsAndResultSummary(IDictionary<string, object> diaUmpireParameters, SearchSettingsControl.DdaSearchSettings searchSettings, AnalysisValues analysisValues)

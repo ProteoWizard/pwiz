@@ -18,7 +18,6 @@
  */
 
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -117,7 +116,7 @@ namespace pwiz.SkylineTestTutorial
                           SkylineWindow.ShowRTReplicateGraph();
                           SkylineWindow.AutoZoomBestPeak();
                           SkylineWindow.SelectedPath = docCalibrate.GetPathTo((int) SrmDocument.Level.Molecules, 0);
-                          SkylineWindow.Size = new Size(914, 560);
+                          SkylineWindow.Size = ScaledSize(SkylineWindow, 914, 560);
                       });
             // Ensure graphs look like p. 5
             WaitForGraphs();
@@ -379,7 +378,7 @@ namespace pwiz.SkylineTestTutorial
 
                           SkylineWindow.ShowAllTransitions();
                           SkylineWindow.AutoZoomBestPeak();
-                          SkylineWindow.Size = new Size(657, 632);
+                          SkylineWindow.Size = ScaledSize(SkylineWindow, 657, 632);
                       });
 
             // Review peaks with missing transitions, p. 16
@@ -616,15 +615,15 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     peptideSettingsUI.Top = SkylineWindow.Top;
-                    peptideSettingsUI.Left = SkylineWindow.Left - peptideSettingsUI.Width - 20;
+                    peptideSettingsUI.Left = SkylineWindow.Left - peptideSettingsUI.Width - Scaled(20);
                 });
                 var irtEditor = ShowDialog<EditIrtCalcDlg>(peptideSettingsUI.EditCalculator);
                 RunUI(() =>
                 {
-                    irtEditor.Height = SkylineWindow.DockPanel.Height + 10;
-                    irtEditor.Width += 25;
-                    irtEditor.Top = SkylineWindow.Bottom - irtEditor.Height - SkylineWindow.StatusBarHeight - 5;
-                    irtEditor.Left = SkylineWindow.Right - irtEditor.Width - 5;
+                    irtEditor.Height = SkylineWindow.DockPanel.Height + Scaled(10);
+                    irtEditor.Width += Scaled(25);
+                    irtEditor.Top = SkylineWindow.Bottom - irtEditor.Height - SkylineWindow.StatusBarHeight - Scaled(5);
+                    irtEditor.Left = SkylineWindow.Right - irtEditor.Width - Scaled(5);
                 });
                 TakeCoverShot(irtEditor);
                 OkDialog(irtEditor, irtEditor.CancelDialog);
@@ -729,14 +728,14 @@ namespace pwiz.SkylineTestTutorial
                           Assert.IsTrue(graphChrom.BestPeakTime.HasValue);
                           Assert.AreEqual(37.4, graphChrom.BestPeakTime.Value, 0.05);
 
-                          SkylineWindow.Size = new Size(1250, 660);
+                          SkylineWindow.Size = ScaledSize(SkylineWindow, 1250, 660);
                       });
             FocusDocument();
             PauseForScreenShot("Main window");
 
             // Add results and verify add dialog counts, p. 33
             {
-                RunUI(() => SkylineWindow.Width = 500); // Make room for the form below
+                RunUI(() => SkylineWindow.Width = ScaledWidth(SkylineWindow, 500)); // Make room for the form below
 
                 var editIrtCalc = ShowDialog<EditIrtCalcDlg>(SkylineWindow.ShowEditCalculatorDlg);
                 var addPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(editIrtCalc.AddResults);
@@ -747,7 +746,7 @@ namespace pwiz.SkylineTestTutorial
                     Assert.AreEqual(558, addPeptidesDlg.OverwritePeptidesCount);
                     Assert.AreEqual(3, addPeptidesDlg.ExistingPeptidesCount);
 
-                    addPeptidesDlg.Left = SkylineWindow.Right + 20;
+                    addPeptidesDlg.Left = SkylineWindow.Right + Scaled(20);
                 });
 
                 PauseForScreenShot <AddIrtPeptidesDlg>("Add Peptides form");

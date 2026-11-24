@@ -1,0 +1,7 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Sum: a black sigma, top and bottom bars with a 2-pixel chevron between them. -->
+  <Rectangle Canvas.Left="6" Canvas.Top="2" Width="20" Height="4" Fill="#000000"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="28" Width="20" Height="4" Fill="#000000"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="26" Width="4" Height="2" Fill="#000000"/>
+  <Path Data="M 6,6 L 10,6 L 20,16 L 10,26 L 6,26 L 16,16 Z" Fill="#000000"/>
+</Canvas>

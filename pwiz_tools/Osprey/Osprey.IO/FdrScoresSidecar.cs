@@ -108,8 +108,8 @@ namespace pwiz.Osprey.IO
     /// compete on different quantities -- the run scope on the per-row
     /// discriminant, the experiment scope on a per-entry roll-up across
     /// runs -- so a consumer re-gating at experiment scope had to rebuild
-    /// the roll-up and branch on <c>OSPREY_EXPERIMENT_AGG</c>, which is
-    /// wrong on exactly the arms where the aggregation is under study.
+    /// the roll-up and branch on <c>OSPREY_EXPERIMENT_AGG</c> (since
+    /// retired), which was wrong on exactly the arms under study.
     ///
     /// v4 → v5 (2026-08-29, issue #4486): SPLIT BY SCOPE. The four
     /// experiment-scope columns moved to <see cref="FdrExperimentSidecar"/>,
@@ -639,9 +639,10 @@ namespace pwiz.Osprey.IO
         }
 
         // Full paths of every per-file sidecar written by this run. Cleared only when a new
-        // command line starts: the question it answers is "twice in one run".
+        // command line starts: the question it answers is "twice in one run". Keyed as the file
+        // system compares names: on Linux the sidecars of runs A and a are two files.
         private static readonly HashSet<string> WrittenThisRun =
-            new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            new HashSet<string>(PathComparison.Comparer);
 
         /// <summary>
         /// Start a new run for the write-once check: a sidecar a previous command line in this
@@ -878,6 +879,9 @@ namespace pwiz.Osprey.IO
                     e.ExperimentPeptideQvalue   = exp.ExperimentPeptideQvalue;
                     e.ExperimentAggregateScore  = exp.ExperimentAggregateScore;
                     e.Pep                       = exp.Pep;
+                    // The peptide PEP rides with the peptide q it comes from: the same
+                    // experiment-wide peptide competition gives both.
+                    e.ExperimentPeptidePep      = exp.PeptidePep;
                 }
                 return true;
             });

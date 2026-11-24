@@ -1,0 +1,29 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- TransitionGroupLibDecoy: the TransitionGroupDecoy traces with the lower-right corner
+       cleared for the black library glyph (the same glyph as FragmentLib, bars on even units). -->
+  <Canvas>
+    <Canvas.Clip>
+      <CombinedGeometry GeometryCombineMode="Exclude">
+        <CombinedGeometry.Geometry1><RectangleGeometry Rect="0,0,32,32"/></CombinedGeometry.Geometry1>
+        <CombinedGeometry.Geometry2>
+          <GeometryGroup>
+            <RectangleGeometry Rect="18,18,14,14"/>
+            <RectangleGeometry Rect="24,12,8,20"/>
+          </GeometryGroup>
+        </CombinedGeometry.Geometry2>
+      </CombinedGeometry>
+    </Canvas.Clip>
+    <Path Data="M 9,23 L 11,23 L 13,21 L 15,19 L 15,11 L 17,9 L 19,11 L 19,13 L 21,13 L 21,21 L 23,23" Stroke="#E06000" StrokeThickness="2" StrokeLineJoin="Miter" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+    <Path Data="M 0,23 L 7,23 L 7,17 L 9,17 L 9,13 L 11,11 L 13,13 L 13,15 L 15,15 L 17,19 L 19,21 L 21,23 L 32,23" Stroke="#800000" StrokeThickness="2" StrokeLineJoin="Miter" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+    <Path Data="M 0,21 L 11,21 L 11,19 L 13,19 L 13,17 L 21,17 L 21,15 L 25,15 L 25,19 L 27,19 L 27,21 L 32,21" Stroke="#E02000" StrokeThickness="2" StrokeLineJoin="Miter" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+    <Rectangle Canvas.Left="24" Canvas.Top="12" Width="2" Height="4" Fill="#E02000"/>
+  </Canvas>
+  <Rectangle Canvas.Left="18" Canvas.Top="28" Width="12" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="20" Width="2" Height="8" Fill="#000000"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="16" Width="2" Height="12" Fill="#000000"/>
+  <Rectangle Canvas.Left="28" Canvas.Top="24" Width="2" Height="4" Fill="#000000"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="21" Width="1" Height="7" Fill="#9A9A9A"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="17" Width="1" Height="11" Fill="#9A9A9A"/>
+  <Rectangle Canvas.Left="30" Canvas.Top="25" Width="1" Height="5" Fill="#9A9A9A"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="30" Width="13" Height="1" Fill="#9A9A9A"/>
+</Canvas>

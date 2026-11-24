@@ -1,0 +1,10 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32" RenderOptions.EdgeMode="Aliased">
+  <!-- Data processing: five black bars of different heights standing on a gray baseline, at the
+       native bitmap's positions and colors. Aliased edges keep the bars pixel-crisp at every size. -->
+  <Rectangle Canvas.Left="2" Canvas.Top="26" Width="28" Height="2" Fill="#808080"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="12" Width="2" Height="14" Fill="#000000"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="4" Width="2" Height="22" Fill="#000000"/>
+  <Rectangle Canvas.Left="14" Canvas.Top="16" Width="2" Height="10" Fill="#000000"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="10" Width="2" Height="16" Fill="#000000"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="20" Width="2" Height="6" Fill="#000000"/>
+</Canvas>

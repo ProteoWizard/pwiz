@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
@@ -50,6 +51,7 @@ namespace pwiz.Skyline.Controls.Databinding
         public ExportLiveReportDlg(SkylineWindow skylineWindow)
         {
             InitializeComponent();
+            ImageListScaler.ScaleToDpi(this, imageList1);   // 16x16 icons are a 96-DPI design (issue #4599)
             Icon = Resources.Skyline;
             _skylineWindow = skylineWindow;
             Debug.Assert(indexLocalizedLanguage == comboLanguage.Items.Count);
@@ -119,9 +121,9 @@ namespace pwiz.Skyline.Controls.Databinding
                         DataSchemaLocalizer.INVARIANT));
                 _viewContext.ViewsChanged += OnViewsChanged;
                 imageList1.Images.Clear();
-                imageList1.Images.Add(Resources.Folder);
-                imageList1.Images.Add(Resources.Blank);
-                imageList1.Images.AddRange(_viewContext.GetImageList());
+                ImageListScaler.AddScaled(imageList1, Resources.Folder);
+                ImageListScaler.AddScaled(imageList1, Resources.Blank);
+                ImageListScaler.AddRangeScaled(imageList1, _viewContext.GetImageList());
                 _rowFactories = RowFactories.GetRowFactories(CancellationToken.None, _viewContext.SkylineDataSchema);
                 Repopulate();
             }

@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Pwiz.Vendor.Bruker;
@@ -18,6 +19,10 @@ public sealed class TsfBinaryData : IDisposable
     private double[] _indexBuffer;
     private float[] _intensityBuffer;
     private uint[] _profileBuffer;
+    private double[] _condensedIndexBuffer = new double[128];
+    private long _profileFrameId;
+    private int _profileLength;
+    private int _condensedCount;
     private double[] _mzBuffer;
     private bool _disposed;
 
@@ -38,6 +43,7 @@ public sealed class TsfBinaryData : IDisposable
             throw new DirectoryNotFoundException($"Bruker .d directory not found: {analysisDirectory}");
         AnalysisDirectory = Path.GetFullPath(analysisDirectory);
 
+        NativeInit.EnsureCompatibleCrt();
         _handle = NativeMethods.tsf_open(AnalysisDirectory, useRecalibratedState ? 1u : 0u);
         if (_handle == 0) ThrowLastError();
 
@@ -83,20 +89,24 @@ public sealed class TsfBinaryData : IDisposable
     }
 
     /// <summary>
-    /// Reads the profile spectrum for frame <paramref name="frameId"/>. Skips runs of zero
-    /// intensities (keeping boundary points) and returns matched m/z and intensity arrays.
+    /// Reads the profile spectrum for frame <paramref name="frameId"/> into this reader and
+    /// returns how many points it condenses to, or 0 for an empty frame. Hand storage of that
+    /// length to <see cref="CopyProfileSpectrum"/> to receive the points.
     /// </summary>
-    public (double[] Mz, double[] Intensity) ReadProfileSpectrum(long frameId)
+    public int ReadProfileSpectrum(long frameId)
     {
         while (true)
         {
             int required = NativeMethods.tsf_read_profile_spectrum_v2(
                 _handle, frameId, _profileBuffer, _profileBuffer.Length);
             if (required < 0) ThrowLastError();
-            if (required == 0) return (Array.Empty<double>(), Array.Empty<double>());
-
             if (required <= _profileBuffer.Length)
-                return CondenseProfile(frameId, required);
+            {
+                _profileFrameId = frameId;
+                _profileLength = required;
+                _condensedCount = required == 0 ? 0 : CountCondensedProfile(required);
+                return _condensedCount;
+            }
 
             if (required > 16_777_216)
                 throw new InvalidOperationException("TSF profile spectrum exceeded max expected size.");
@@ -104,31 +114,58 @@ public sealed class TsfBinaryData : IDisposable
         }
     }
 
-    private (double[] Mz, double[] Intensity) CondenseProfile(long frameId, int len)
+    // Keeps the first and last bin, and every bin in a non-zero triplet; matches tsfdata_cpp_pwiz.h
+    private int CountCondensedProfile(int len)
     {
-        // Keep first and last bin, and any non-zero triplet — matches tsfdata_cpp_pwiz.h.
-        var idx = new List<double>(Math.Min(len, 4096));
-        var ints = new List<double>(Math.Min(len, 4096));
-        idx.Add(0); ints.Add(_profileBuffer[0]);
+        var profile = _profileBuffer;
+        int count = 2;
         for (int i = 1; i < len - 1; i++)
         {
-            if (_profileBuffer[i] > 0 || _profileBuffer[i - 1] > 0 || _profileBuffer[i + 1] > 0)
+            if (profile[i] > 0 || profile[i - 1] > 0 || profile[i + 1] > 0)
+                count++;
+        }
+        return count;
+    }
+
+    /// <summary>
+    /// Writes the profile spectrum last read by <see cref="ReadProfileSpectrum"/>, condensed, into
+    /// <paramref name="mz"/> and <paramref name="intensity"/>, which must be the length it returned.
+    /// </summary>
+    public void CopyProfileSpectrum(Span<double> mz, Span<double> intensity)
+    {
+        int count = mz.Length;
+        if (count == 0 || count != intensity.Length || count != _condensedCount)
+            throw new ArgumentException("Storage must match the condensed profile spectrum length.");
+        if (_condensedIndexBuffer.Length < count)
+            _condensedIndexBuffer = new double[count];
+
+        var profile = _profileBuffer;
+        var index = _condensedIndexBuffer;
+        int len = _profileLength;
+        int write = 0;
+        index[write] = 0;
+        intensity[write++] = profile[0];
+        for (int i = 1; i < len - 1; i++)
+        {
+            if (profile[i] > 0 || profile[i - 1] > 0 || profile[i + 1] > 0)
             {
-                idx.Add(i);
-                ints.Add(_profileBuffer[i]);
+                index[write] = i;
+                intensity[write++] = profile[i];
             }
         }
-        idx.Add(len - 1); ints.Add(_profileBuffer[len - 1]);
+        index[write] = len - 1;
+        intensity[write] = profile[len - 1];
 
-        var idxArr = idx.ToArray();
-        var mz = new double[idxArr.Length];
-        uint ok = NativeMethods.tsf_index_to_mz(_handle, frameId, idxArr, mz, (uint)idxArr.Length);
+        uint ok = NativeMethods.tsf_index_to_mz(_handle, _profileFrameId, index, ref MemoryMarshal.GetReference(mz), (uint)count);
         if (ok == 0) ThrowLastError();
-        return (mz, ints.ToArray());
     }
 
     /// <summary>Sets the internal OpenMP thread count for the TSF half of the DLL.</summary>
-    public static void SetNumThreads(uint n) => NativeMethods.tsf_set_num_threads(n);
+    public static void SetNumThreads(uint n)
+    {
+        NativeInit.EnsureCompatibleCrt();
+        NativeMethods.tsf_set_num_threads(n);
+    }
 
     private static void ThrowLastError()
     {

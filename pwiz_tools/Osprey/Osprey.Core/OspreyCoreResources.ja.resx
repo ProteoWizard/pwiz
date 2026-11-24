@@ -122,11 +122,11 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FileParallelismResolver_ResolveAuto_File_parallelism___0___auto__CPU_bound___1__cores___2__files__memory_estimate_unavailable_" xml:space="preserve">
-    <value>ファイル並列度：{0}（自動 {3}、CPUバウンド：{1}コア、{2}ファイル、メモリ推定値なし）</value>
+    <value>ファイル並列度：{0}（自動 {3}、CPUバウンド：{1}スレッド、ファイルあたり{4}以上、{2}ファイル、メモリ推定値なし）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FileParallelismResolver_ResolveAuto_File_parallelism___0___auto___1__GB_free_x__2______3__GB_est_per_file_____4__by_RAM__" xml:space="preserve">
-    <value>ファイル並列度：{0}（自動 {7}：空き{1:F1} GB x {2:P0} / ファイルあたり推定~{3:F1} GB -&gt; RAMにより{4}、上限{5}コア / {6}ファイル）</value>
+    <value>ファイル並列度：{0}（自動 {7}：空き{1:F1} GB x {2:P0} / ファイルあたり推定~{3:F1} GB -&gt; RAMにより{4}、{8}スレッド・ファイルあたり{9}以上で上限{5}、{6}ファイル）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FileParallelismResolver_Resolve_File_parallelism___0___explicit___parallel_files___1__files_" xml:space="preserve">
@@ -157,10 +157,6 @@
   </data>
   <data name="LibraryStringInterner_LogSummary_Unique_library_strings___0_____1__total___2___reduced_" xml:space="preserve">
     <value>一意のライブラリ文字列：{0:N0} / 合計{1:N0}（{2:F1}%削減）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="OspreyEnvironment_DescribeExperimentAgg_Experiment_aggregation___0___default___best_observation_per_unit_" xml:space="preserve">
-    <value>実験集約：{0}（デフォルト - 単位ごとの最良の観測）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ResolutionModeExtension_LOCALIZED_VALUES_HRAM" xml:space="preserve">

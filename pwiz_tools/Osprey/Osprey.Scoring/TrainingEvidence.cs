@@ -118,7 +118,7 @@ namespace pwiz.Osprey.Scoring
             // A .blib states no ion types: its peaks carry the ones Osprey's typing gave them
             // from m/z at load, so they are matched by m/z, not annotated by the library.
             bool libraryStatesTypes = settings.SearchConfig.LibrarySource?.Format != LibraryFormat.Blib;
-            MapLibrary(entry, ladder, length, tolerance, libraryStatesTypes, record);
+            MapLibrary(entry, ladder, length, tolerance, settings.SearchConfig.Scoring.XicFragments, libraryStatesTypes, record);
 
             // Every applicable ion: its apex match, its XIC over the peak, and its projection
             // onto the fit.
@@ -265,7 +265,7 @@ namespace pwiz.Osprey.Scoring
         }
 
         /// <summary>
-        /// The core fit: the library's top-6 fragments' XICs over [start, end], then Osprey's
+        /// The core fit: the XICs of the library's top fragments (6, or OSPREY_XIC_FRAGMENTS) over [start, end], then Osprey's
         /// median polish on them - the same inputs and arguments as <c>CoelutionScorer</c>, so a
         /// peak of fewer than three scans has no fit, as it has no scored one.
         /// </summary>
@@ -293,7 +293,7 @@ namespace pwiz.Osprey.Scoring
         /// flagged <see cref="TrainingIonFlags.LIBRARY_MZ_MATCHED"/>, as an unannotated fragment is.
         /// </summary>
         private static void MapLibrary(LibraryEntry entry, double[] ladder, int length,
-            FragmentToleranceConfig tolerance, bool libraryStatesTypes, TrainingRecord record)
+            FragmentToleranceConfig tolerance, int xicFragments, bool libraryStatesTypes, TrainingRecord record)
         {
             var fragments = entry.Fragments;
             if (fragments == null || fragments.Count == 0)
@@ -325,8 +325,9 @@ namespace pwiz.Osprey.Scoring
                 if (float.IsNaN(current) || fragment.RelativeIntensity > current)
                     record.LibraryRelIntensity[slot] = fragment.RelativeIntensity;
             }
-            foreach (int core in TopFragmentExtractor.SelectTopFragmentIndices(fragments,
-                         TopFragmentExtractor.CAL_TOP_N_FRAGMENTS))
+            // The fragments FitCorePolish extracts XICs for, so the CORE flags and nCore agree
+            // under OSPREY_XIC_FRAGMENTS.
+            foreach (int core in TopFragmentExtractor.SelectTopFragmentIndices(fragments, xicFragments))
             {
                 if (slotOfFragment[core] >= 0)
                     record.IonFlags[slotOfFragment[core]] |= TrainingIonFlags.CORE;

@@ -90,7 +90,7 @@ The parquet footer is stamped once against the unmutated outer config (`:226-232
 
 Under `--task PerFileScoring` the task is included because it is the selection (`OspreyConfig.Includes`), and nothing before it is skipped because nothing precedes it: `ScoringTaskShared.StartsAfterPerFileScoring` is false. The cross `ValidateArgs` used to reject here - `--task PerFileScoring --input-scores` - cannot be typed any more, which is the point of retiring the second seam rather than teaching a third predicate about it.
 
-`ProcessFile` always writes the parquet regardless of task, matching Rust's end-to-end behavior (the sidecar is needed by Stage 6 reconciliation to lazy-load CWT candidates).
+`ProcessFile` always writes the parquet regardless of task, matching Rust's end-to-end behavior (every later stage reads it). Stage 6 planning also reads the run's `.spectra.bin`, from which it computes the CWT candidates of the rows it would move (#5024).
 
 ## Stage 5 — First-pass FDR (`--task FirstPassFDR`)
 

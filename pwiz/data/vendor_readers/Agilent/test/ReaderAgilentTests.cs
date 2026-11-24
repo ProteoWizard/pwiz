@@ -47,6 +47,38 @@ public class ReaderAgilentTests
 
     // -------------------- non-IM fixtures (default config) --------------------
 
+    /// <summary>
+    /// Skyline asks each spectrum for its ms level, start time and precursors at instant metadata
+    /// before it reads the data. cpp answers from the scan record and returns before the SDK
+    /// spectrum (SpectrumList_Agilent.cpp:289); the non-IM path fetched it for every such question,
+    /// decompressing and mass-calibrating each profile scan several times per import. What the
+    /// early return reports must still agree with a full read.
+    /// </summary>
+    [TestMethod]
+    public void Reader_Agilent_InstantMetadata_AgreesWithFullRead()
+    {
+        string? root = FindTestDataRoot();
+        if (root is null) { Assert.Inconclusive("Agilent test data tree not found."); return; }
+        int compared = 0;
+        foreach (var name in new[] { "GFb_4Scan_TimeSegs_1530_100ng.d", "RS080806_NL_448.2_001.d", "Neg_MS_002_1scan.d" })
+        {
+            string d = Path.Combine(root, name);
+            if (!Directory.Exists(d))
+                continue;
+            compared++;
+            IReadOnlyList<string> problems;
+            try { problems = DetailLevelChecks.InstantMetadataMismatches(new Reader_Agilent(), d, 50); }
+            catch (Pwiz.Data.MsData.Readers.VendorSupportNotEnabledException)
+            {
+                Assert.Inconclusive("Agilent SDK not compiled into this build.");
+                return;
+            }
+            Assert.AreEqual(0, problems.Count, name + ":\n" + string.Join("\n", problems.Take(10)));
+        }
+        if (compared == 0)
+            Assert.Inconclusive("None of the instant-metadata fixtures are present.");
+    }
+
     [TestMethod]
     public void Reader_Agilent_RS080806_APCI_PIscan_CE35()
     {

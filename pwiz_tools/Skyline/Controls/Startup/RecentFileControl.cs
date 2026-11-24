@@ -28,6 +28,19 @@ namespace pwiz.Skyline.Controls.Startup
         public RecentFileControl()
         {
             InitializeComponent();
+
+            // Lay out the two label rows from the actual font metrics instead of the
+            // designer's fixed 96-DPI pixel values, so the rows keep breathing room at
+            // any display scale, and let the labels track the control's width so long
+            // paths use all the space available before showing an ellipsis.
+            var linePadding = labelFileName.Top;
+            labelFileName.Height = labelFileName.Font.Height + linePadding;
+            labelFilePath.Top = labelFileName.Bottom;
+            labelFilePath.Height = labelFilePath.Font.Height + linePadding;
+            Height = labelFilePath.Bottom + linePadding;
+            labelFileName.Width = labelFilePath.Width = ClientSize.Width;
+            labelFileName.Anchor = labelFilePath.Anchor =
+                AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         }
 
         public string FileName { get { return labelFileName.Text; } set { labelFileName.Text = value; } }

@@ -163,7 +163,7 @@ namespace pwiz.Osprey.Core
         public string[] Values { get; set; }
 
         /// <summary>
-        /// The test for an accepted value when no list can name them all (<c>mean-best-&lt;N&gt;</c>).
+        /// The test for an accepted value when no list can name them all (<c>&lt;N&gt;|off</c>).
         /// When set it decides alone, and <see cref="Values"/> is only what help and the refusal
         /// show; any value it refuses is a startup error.
         /// </summary>

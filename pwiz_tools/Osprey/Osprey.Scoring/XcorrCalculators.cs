@@ -175,7 +175,7 @@ namespace pwiz.Osprey.Scoring
         /// literal 1e-12 on the post-Sqrt norm. Sqrt is taken per term before the
         /// dot/norm accumulation, in the order of the in-range fragments.
         /// </summary>
-        private static double ComputeCosineAtScan(
+        internal static double ComputeCosineAtScan(
             LibraryEntry candidate, Spectrum spectrum, OspreyConfig config)
         {
             var mzs = spectrum.Mzs;

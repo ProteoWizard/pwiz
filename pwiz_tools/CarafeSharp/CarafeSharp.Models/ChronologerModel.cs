@@ -70,8 +70,9 @@ namespace pwiz.CarafeSharp.Models
         /// <summary>
         /// The pretrained Chronologer the run alignment maps every run onto, on the CPU in float64 with each
         /// prediction rounded to float32. Float32 inference differs in its last bits between libtorch builds
-        /// (Windows, Linux) and the GPU's TF32 convolutions differ by up to 5e-3, enough to move the KDE
-        /// ridge; float64 rounded to float32 gives the same values everywhere, so a run's training targets do too.
+        /// (Windows, Linux) and between the CPU and the GPU (by up to 5e-3 with TF32 convolutions), enough to move
+        /// the KDE ridge; float64 rounded to float32 gives the same values everywhere, so a run's training targets
+        /// do too.
         /// </summary>
         public static ChronologerModel AlignmentReference(ChronologerFiles files)
         {

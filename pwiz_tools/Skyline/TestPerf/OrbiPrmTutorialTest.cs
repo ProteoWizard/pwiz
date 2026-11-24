@@ -413,7 +413,7 @@ namespace TestPerf
             SelectNode(SrmDocument.Level.Molecules, 0);
 
             RestoreViewOnScreen(17);
-            RunUI(() => SkylineWindow.Size = new Size(1100, 657));
+            RunUI(() => SkylineWindow.Size = ScaledSize(SkylineWindow, 1100, 657));
             PauseForScreenShot<SkylineWindow>("Main window with peptide selected and Library Match view");
 
             SaveBackup("PRM_Proteome");
@@ -488,7 +488,7 @@ namespace TestPerf
             // All nodes expected in the same parent. So, just expand the parent of the first node
             viewEditor.ChooseColumnsTab.ExpandPropertyPath(columnsToAdd[0].Parent, true);
             // Make the view editor bigger so that these expanded nodes can be seen in the next screenshot
-            viewEditor.Height = Math.Min(viewEditor.Height, 434);
+            viewEditor.Height = Math.Min(viewEditor.Height, ScaledHeight(viewEditor, 434));
             foreach (var id in columnsToAdd)
             {
                 Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
@@ -537,7 +537,7 @@ namespace TestPerf
             {
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 SkylineWindow.ShowRTReplicateGraph();
-                SkylineWindow.Height = 790;
+                SkylineWindow.Height = ScaledHeight(SkylineWindow, 790);
 
             });
             RestoreViewOnScreen(20);
@@ -722,7 +722,7 @@ namespace TestPerf
                 dlg.OkDialog();
             });
 
-            RunUI(() => SkylineWindow.Size = new Size(1276, 840));
+            RunUI(() => SkylineWindow.Size = ScaledSize(SkylineWindow, 1276, 840));
             RestoreViewOnScreen(24);
             RunUI(SkylineWindow.SequenceTree.ScrollLeft);
             PauseForScreenShot<SkylineWindow>("Skyline main window");
@@ -821,7 +821,7 @@ namespace TestPerf
             RunUI(() =>
             {
                 var gridFloatingWindow = documentGridForm.Parent.Parent;
-                gridFloatingWindow.Size = new Size(874, 352);
+                gridFloatingWindow.Size = ScaledSize(gridFloatingWindow, 874, 352);
             });
             RunUI(() => documentGridForm.ChooseView(Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results));
             WaitForConditionUI(() =>
@@ -906,7 +906,7 @@ namespace TestPerf
             RunUI(() =>
             {
                 var gridFloatingWindow = documentGridForm.Parent.Parent;
-                gridFloatingWindow.Size = new Size(570, 308);
+                gridFloatingWindow.Size = ScaledSize(gridFloatingWindow, 570, 308);
             });
             RunUI(() => documentGridForm.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates));
             int rowCount = 9, cellCount = 5;
@@ -948,7 +948,7 @@ namespace TestPerf
             RunUIForScreenShot(() =>
             {
                 skylineSize = SkylineWindow.Size;
-                SkylineWindow.Size = new Size(1399, 883);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 1399, 883);
                 SkylineWindow.ForceOnScreen();
             });
             PauseForGraphScreenShot("Peak Areas grouped", SkylineWindow.GraphPeakArea);
@@ -988,7 +988,7 @@ namespace TestPerf
             const string comparisonName2 = "S-vs-G1";
             const string caseValue2 = "S";
             AddGroupComparison(documentSettingsDlg, comparisonName2, controlAnnotation, controlValue, caseValue2, identityAnnotation);
-            RunUI(() => documentSettingsDlg.Height = 310);
+            RunUI(() => documentSettingsDlg.Height = ScaledHeight(documentSettingsDlg, 310));
             PauseForScreenShot<DocumentSettingsDlg>("Document Settings");
             OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
             var docAfterComparison = WaitForDocumentChange(docBeforeComparison);
@@ -1000,14 +1000,22 @@ namespace TestPerf
             var foldChangeGrid1 = ShowDialog<FoldChangeGrid>(() => SkylineWindow.ShowGroupComparisonWindow(comparisonName1));
             WaitForConditionUI(() => 19 == foldChangeGrid1.DataboundGridControl.RowCount);
             VerifyFoldChangeValues(foldChangeGrid1, _g2mVsG1ExpectedValues, nameof(_g2mVsG1ExpectedValues));
-            RunUI(() => foldChangeGrid1.Parent.Parent.Width = 383);
+            RunUI(() =>
+            {
+                var foldChangeFloatingWindow = foldChangeGrid1.Parent.Parent;
+                foldChangeFloatingWindow.Width = ScaledWidth(foldChangeFloatingWindow, 383);
+            });
             PauseForScreenShot<FoldChangeGrid>(comparisonName1 + ":Grid");
             OkDialog(foldChangeGrid1, () => foldChangeGrid1.Close());
 
             var foldChangeGrid2 = ShowDialog<FoldChangeGrid>(() => SkylineWindow.ShowGroupComparisonWindow(comparisonName2));
             WaitForConditionUI(() => 19 == foldChangeGrid2.DataboundGridControl.RowCount);
             VerifyFoldChangeValues(foldChangeGrid2, _sVsG1ExpectedValues, nameof(_sVsG1ExpectedValues));
-            RunUI(() => foldChangeGrid2.Parent.Parent.Width = 383);
+            RunUI(() =>
+            {
+                var foldChangeFloatingWindow = foldChangeGrid2.Parent.Parent;
+                foldChangeFloatingWindow.Width = ScaledWidth(foldChangeFloatingWindow, 383);
+            });
             PauseForScreenShot<FoldChangeGrid>(comparisonName2 + ":Grid");
             OkDialog(foldChangeGrid2, () => foldChangeGrid2.Close());
 

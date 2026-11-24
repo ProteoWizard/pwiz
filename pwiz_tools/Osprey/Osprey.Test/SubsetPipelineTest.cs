@@ -29,12 +29,15 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.BiblioSpec.IO;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 using pwiz.Osprey.Tasks.ModelDiagnostics;
@@ -86,14 +89,18 @@ namespace pwiz.Osprey.Test
         private const double MAX_NEWLY_DETECTED_FRACTION = 0.15;
         // The library-decoy variant reports about 150.
         private const int MIN_LIBDECOY_PRECURSORS = 100;
-        // The Astral subset reports about 164.
+        // The Astral subset reports about 144.
         private const int MIN_ASTRAL_PRECURSORS = 120;
         // A .blib of the subset library reports within a few precursors of the .tsv it came from
         // (the .blib stores intensities as float and its peaks are typed from m/z).
         private const double MIN_BLIB_LIBRARY_FRACTION = 0.9;
-        // The Astral subset recovers about 164 of the 203 its full run detected (81%), so the
-        // Stellar floor would leave one precursor of headroom.
-        private const double MIN_ASTRAL_RECOVERED_FRACTION = 0.7;
+        // The Astral subset recovers about 141 of the 203 its full run detected (69%). It was
+        // 164 (81%) before the second pass competed the protein stratum's complement against
+        // its own decoys (issue #4581): each subset file's complement holds only 25-28 targets
+        // at a 1% first-pass q, and no decoy winners, so its conservative q (at least 1/28) keeps
+        // none of them at 1%. The full-run reference was itself made with the complement pooled
+        // into the stratum.
+        private const double MIN_ASTRAL_RECOVERED_FRACTION = 0.6;
 
         private static readonly string[] RUN_NAMES =
         {
@@ -122,6 +129,11 @@ namespace pwiz.Osprey.Test
 
         private string _testDir;
         private string _dataDir;
+
+        // The legs search the Stellar subset at unit resolution, and the test reads the parquets and
+        // models they write: it must read them with the features those runs used, the unit-resolution
+        // default set.
+        private static PinFeatureSelection UnitFeatures => PinFeatureMask.For(ResolutionMode.UnitResolution, null);
 
         [TestInitialize]
         public void ExtractData()
@@ -317,18 +329,28 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// The StellarLibDecoy / StellarGenDecoyEntrap legs: a library that supplies its own
         /// decoys and carries shuffled entrapment peptides, searched with its pairing manifest,
-        /// the model diagnostics report and FDRBench input for both passes. Then the report again
-        /// from the finished analysis alone, with <c>--task ModelDiagnostics</c>.
+        /// the model diagnostics report and FDRBench input for both passes. The manifest places
+        /// half the entrapment on real target proteins (the protein-aware audit), whose class
+        /// only the manifest records: the run must still treat it as entrapment, in the FDP
+        /// views' placement split and the pairing manifest written for FDRBench, and the
+        /// result keeps it. Then the report again from the finished analysis alone, with
+        /// <c>--task ModelDiagnostics</c>. Last, the same search with <c>--strip-entrapment</c>,
+        /// whose library and reports leave every entrapment peptide and entrapment-only
+        /// protein group out.
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetLibraryDecoysAndReports()
         {
             string workDir = CreateDir(@"libdecoy");
             string bench = Path.Combine(workDir, @"bench.tsv");
+            string manifest = WriteEntrapmentOnTargetManifest(Path.Combine(_dataDir, LIBDECOY_PAIRING_FILE),
+                Path.Combine(workDir, LIBDECOY_PAIRING_FILE), out var onTargetSequences);
+            var entrapmentSequences = new HashSet<string>(DecoyPairingManifest.FromTsv(manifest).Kinds()
+                .Where(kv => kv.Value == PeptideKind.PTarget).Select(kv => kv.Key), StringComparer.Ordinal);
             var args = new[]
             {
                 OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY.ArgumentText,
-                OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, Path.Combine(_dataDir, LIBDECOY_PAIRING_FILE),
+                OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, manifest,
                 OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText,
                 OspreyCommandArgs.ARG_FDRBENCH.ArgumentText, bench,
                 OspreyCommandArgs.ARG_FDRBENCH_PASS.ArgumentText, @"both"
@@ -336,20 +358,42 @@ namespace pwiz.Osprey.Test
             RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, WithDiannReports(Verifier(false)), args);
             string blib = Path.Combine(workDir, BLIB_FILE);
             Assert.IsTrue(BlibComparer.CountRows(blib, @"RefSpectra") >= MIN_LIBDECOY_PRECURSORS);
-            // No decoy reaches the library, but entrapment peptides compete as targets.
+            // No decoy reaches the library, but entrapment peptides compete as targets and reach
+            // it. On this subset only entrapment on a target protein does, riding that protein's
+            // evidence through the protein gate: no entrapment-only protein group passes, so the
+            // entrapment accession never reaches the library's Proteins table either way.
             Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"Proteins", @"accession LIKE 'decoy_%'"));
+            Assert.IsTrue(CountEntrapmentPrecursors(blib, entrapmentSequences) > 0, @"no entrapment precursor in the library");
+            string proteinGroups = Path.Combine(workDir, OutputArtifact(OspreyReportWriter.EXT_PROTEIN_GROUPS));
+            CountEntrapmentGroups(proteinGroups, entrapmentSequences, out int reportedEntrapmentPeptides);
+            Assert.IsTrue(reportedEntrapmentPeptides > 0, @"no entrapment peptide in the protein-group report");
             foreach (string pass in new[] { @"pass1", @"pass2" })
                 AssertHasRows(Path.ChangeExtension(bench, pass + @".tsv"));
+            // The pairing manifest written for FDRBench labels the entrapment on target proteins
+            // as entrapment, which nothing in its accessions does.
+            AssertFdrBenchManifestKinds(Path.ChangeExtension(bench, @"pass1.tsv") + FdrBenchInputWriter.EXT_PAIRING, onTargetSequences);
             // The protein-group and summary reports, under OSPREY_DIANN_REPORTS, are named from
             // the output library.
-            AssertHasRows(Path.Combine(workDir, OutputArtifact(OspreyReportWriter.EXT_PROTEIN_GROUPS)));
+            AssertHasRows(proteinGroups);
             AssertHasRows(Path.Combine(workDir, OutputArtifact(OspreyReportWriter.EXT_STATS)));
             string diagnosticsReport = Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_HTML));
             AssertHasRows(diagnosticsReport);
-            AssertTrainingSetAnalysis(Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_PASS1)),
-                Path.Combine(workDir, OutputArtifact(FirstPassModelIO.EXT_MODEL)));
+            string pass1Product = Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
+            AssertTrainingSetAnalysis(pass1Product, Path.Combine(workDir, OutputArtifact(FirstPassModelIO.EXT_MODEL)));
+            AssertPlacementSplit(pass1Product);
+            AssertProteinEntrapmentView(Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_PASS2)));
+            AssertFragmentMassErrors(workDir, diagnosticsReport);
             // With the optional reports on (diagnostics, FDRBench), still nothing replicated.
             AssertNoReplicatedPerRunOutputs(workDir, RUN_NAMES);
+
+            // Mode 2 with the report on: a resume that re-runs the first pass rewrites its q-value
+            // sidecars bit-identically, which must leave the fragment mass-error summaries current,
+            // so PerFileRescoring still skips.
+            DeleteFiles(workDir, @"*" + FdrScoresSidecar.EXT_FIRST_PASS);
+            DeleteSecondPassOutputs(blib);
+            string resumeLog = RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, Verifier(false), args);
+            AssertTasks(resumeLog, new[] { PerFileScoringTask.TASK_NAME, PerFileRescoreTask.TASK_NAME },
+                new[] { FirstPassFdrTask.TASK_NAME, SecondPassFdrTask.TASK_NAME });
 
             // The report alone, from what the analysis left: every analysis task is cached.
             File.Delete(diagnosticsReport);
@@ -357,6 +401,120 @@ namespace pwiz.Osprey.Test
                 args.Concat(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, ModelDiagnosticsTask.TASK_NAME }).ToArray());
             AssertNoRecompute(log);
             AssertHasRows(diagnosticsReport);
+
+            // The same search leaving the entrapment out of the result: no entrapment precursor
+            // or protein in the library, whichever protein it sits on, and no entrapment peptide
+            // or entrapment-only group in the reports, while the targets are reported as before.
+            string stripDir = CreateDir(@"libdecoy-strip");
+            RunAnalysis(stripDir, DataInputs(), LIBDECOY_FILE, WithDiannReports(Verifier(false)),
+                OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY.ArgumentText,
+                OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, manifest,
+                OspreyCommandArgs.ARG_STRIP_ENTRAPMENT.ArgumentText);
+            string strippedBlib = Path.Combine(stripDir, BLIB_FILE);
+            var targetKeys = ReadPrecursorKeys(blib).Where(key => !entrapmentSequences.Contains(key.Split('|')[0])).ToList();
+            CollectionAssert.AreEquivalent(targetKeys, ReadPrecursorKeys(strippedBlib).ToList(), @"the targets reported differ");
+            Assert.AreEqual(0, CountEntrapmentPrecursors(strippedBlib, entrapmentSequences));
+            Assert.AreEqual(0, CountEntrapmentProteins(strippedBlib));
+            string strippedGroups = Path.Combine(stripDir, OutputArtifact(OspreyReportWriter.EXT_PROTEIN_GROUPS));
+            Assert.AreEqual(0, CountEntrapmentGroups(strippedGroups, entrapmentSequences, out int strippedPeptides));
+            Assert.AreEqual(0, strippedPeptides, @"entrapment peptides listed in the protein-group report");
+            AssertHasRows(Path.Combine(stripDir, OutputArtifact(OspreyReportWriter.EXT_STATS)));
+        }
+
+        /// <summary>RefSpectra rows of <paramref name="blib"/> whose sequence is one of <paramref name="entrapmentSequences"/>.</summary>
+        private static int CountEntrapmentPrecursors(string blib, HashSet<string> entrapmentSequences)
+        {
+            return ReadPrecursorKeys(blib).Count(key => entrapmentSequences.Contains(key.Split('|')[0]));
+        }
+
+        /// <summary>Proteins rows of <paramref name="blib"/> carrying the entrapment accession marker.</summary>
+        private static int CountEntrapmentProteins(string blib)
+        {
+            return BlibComparer.CountWhere(blib, @"Proteins", @"instr(accession, '_p_target') > 0");
+        }
+
+        /// <summary>
+        /// Rows of the protein-group report at <paramref name="path"/> made only of entrapment
+        /// accessions; <paramref name="entrapmentPeptides"/> receives the number of grouping
+        /// peptides, over every row, whose sequence is one of <paramref name="entrapmentSequences"/>.
+        /// </summary>
+        private static int CountEntrapmentGroups(string path, HashSet<string> entrapmentSequences, out int entrapmentPeptides)
+        {
+            int groups = 0;
+            entrapmentPeptides = 0;
+            foreach (string line in File.ReadLines(path).Skip(1))
+            {
+                var fields = line.Split('\t');
+                if (fields[0].Split(';').All(accession => EntrapmentLibraryClassifier.IsEntrapment(new[] { accession })))
+                    groups++;
+                entrapmentPeptides += fields[6].Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Count(peptide => entrapmentSequences.Contains(DiannTsvLoader.StripModifications(peptide)));
+            }
+            return groups;
+        }
+
+        /// <summary>
+        /// The pairing manifest Osprey wrote for FDRBench at <paramref name="path"/> calls every
+        /// peptide of <paramref name="onTargetSequences"/> it lists entrapment (p_target), and
+        /// lists some of them.
+        /// </summary>
+        private static void AssertFdrBenchManifestKinds(string path, HashSet<string> onTargetSequences)
+        {
+            var kinds = DecoyPairingManifest.FromTsv(path).Kinds().Where(kv => onTargetSequences.Contains(kv.Key)).ToList();
+            Assert.IsTrue(kinds.Count > 0, @"no entrapment on a target protein in " + path);
+            foreach (var kv in kinds)
+                Assert.AreEqual(PeptideKind.PTarget, kv.Value, kv.Key);
+        }
+
+        /// <summary>
+        /// Every FDP view of the first-pass diagnostics product at <paramref name="path"/> splits
+        /// its entrapment by protein placement, with entrapment on target proteins accepted by
+        /// the last threshold and the two halves summing to the entrapment accepted.
+        /// </summary>
+        private static void AssertPlacementSplit(string path)
+        {
+            var views = Token(JObject.Parse(File.ReadAllText(path)), @"fdpViews");
+            Assert.IsTrue(views.Any(), @"no FDP view in " + path);
+            foreach (var view in views)
+            {
+                string label = (string)Token(view, @"label");
+                Assert.IsTrue((bool)Token(view, @"hasPlacementSplit"), label);
+                var accepted = Token(view, @"nEntrapmentAccepted").Select(n => (int)n).ToArray();
+                var onTarget = Token(view, @"nEntrapmentOnTargetProteins").Select(n => (int)n).ToArray();
+                var onOwn = Token(view, @"nEntrapmentOnEntrapmentProteins").Select(n => (int)n).ToArray();
+                Assert.AreEqual(accepted.Length, onTarget.Length, label);
+                Assert.AreEqual(accepted.Length, onOwn.Length, label);
+                for (int i = 0; i < accepted.Length; i++)
+                    Assert.AreEqual(accepted[i], onTarget[i] + onOwn[i], label);
+                Assert.IsTrue(onTarget.Last() > 0, label + @": no entrapment on a target protein accepted");
+                Assert.IsTrue(onOwn.Last() > 0, label + @": no entrapment on its own protein accepted");
+                Assert.IsTrue((double)Token(view, @"ratioOnTargetProteins") > 0, label);
+                Assert.IsTrue((double)Token(view, @"ratioOnEntrapmentProteins") > 0, label);
+            }
+        }
+
+        /// <summary>
+        /// The second-pass diagnostics product at <paramref name="path"/> carries the protein-group
+        /// entrapment view, swept over the reported groups against the library's entrapment proteins.
+        /// </summary>
+        private static void AssertProteinEntrapmentView(string path)
+        {
+            var view = Token(JObject.Parse(File.ReadAllText(path)), @"proteinEntrapment");
+            Assert.IsTrue(view.HasValues, @"proteinEntrapment null in " + path);
+            Assert.IsTrue((int)Token(view, @"nLibraryEntrapmentProteins") > 0, path);
+            Assert.IsTrue((int)Token(view, @"nLibraryTargetProteins") > 0, path);
+            int points = Token(view, @"q").Count();
+            Assert.IsTrue(points > 0, path);
+            Assert.AreEqual(points, Token(view, @"combined").Count(), path);
+            Assert.AreEqual(points, Token(view, @"nEntrapmentGroups").Count(), path);
+        }
+
+        /// <summary>The property <paramref name="key"/> of <paramref name="parent"/>, which must be there.</summary>
+        private static JToken Token(JToken parent, string key)
+        {
+            var value = parent[key];
+            Assert.IsNotNull(value, key + @" missing");
+            return value;
         }
 
         /// <summary>
@@ -411,6 +569,24 @@ namespace pwiz.Osprey.Test
             log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(true), args);
             AssertRescoredOnly(log, 1);
             AssertBlibsEqual(uninterruptedBlib, blib);
+
+            // A fragment mass-error summary that fails while its run re-scores - a directory holds
+            // its path, so it cannot be written - is reported once, not measured again from disk by
+            // the same run, and does not fail the analysis.
+            CutRescore(workDir, cutRun, true);
+            DeleteSecondPassOutputs(blib);
+            string summaryPath = Path.Combine(workDir, cutRun + FragmentMassErrorWriter.EXT);
+            File.Delete(summaryPath);
+            Directory.CreateDirectory(summaryPath);
+            log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(true), args);
+            AssertRescoredOnly(log, 1);
+            string failure = string.Format(
+                OspreyTasksResources.PerFileRescoreTask_WriteFragmentMassErrors_The_fragment_mass_error_summary_failed_for__0____1_,
+                Path.Combine(workDir, cutRun + MZML_EXTENSION), string.Empty);
+            Assert.AreEqual(1, SplitLines(log).Count(line => line.Contains(failure)),
+                @"the failed fragment mass-error summary was not reported exactly once" + Environment.NewLine + log);
+            AssertBlibsEqual(uninterruptedBlib, blib);
+            Directory.Delete(summaryPath);
         }
 
         /// <summary>
@@ -596,14 +772,23 @@ namespace pwiz.Osprey.Test
             RunIn(referenceDir, withFlag);
             RunIn(workDir, withoutFlag);
             AssertBlibsEqual(Path.Combine(referenceDir, BLIB_FILE), Path.Combine(workDir, BLIB_FILE));
+            // The diagnostics measure the spectra after every score is written, so no score moves:
+            // both passes' per-run q-value sidecars are the same with the flag and without it.
+            foreach (var pass in new[] { FdrScoresSidecar.Pass.FirstPass, FdrScoresSidecar.Pass.SecondPass })
+                AssertFdrSidecarsEqual(referenceDir, workDir, pass, RUN_NAMES);
             foreach (string product in products)
                 Assert.IsFalse(File.Exists(Path.Combine(workDir, product)), @"the analysis without the flag wrote " + product);
+            Assert.AreEqual(0, Directory.GetFiles(workDir, @"*" + FragmentMassErrorWriter.EXT).Length,
+                @"the analysis without the flag wrote fragment mass-error summaries");
 
             // --task ModelDiagnostics folds both products from what the analysis stored.
             string log = RunIn(workDir, withFlag, ModelDiagnosticsTask.TASK_NAME);
             AssertNoRecompute(log);
             AssertLogShape(log, Array.Empty<string>(), NoAnalysisLines());
             AssertSameAsWithFlag(OspreyArgNames.TaskText(ModelDiagnosticsTask.TASK_NAME));
+            // The per-run fragment mass-error summaries, written from the runs' artifacts, are the
+            // ones the analysis wrote while re-scoring with the flag given up front.
+            AssertSameFragmentMassErrors(referenceDir, workDir);
 
             // The original command line with the flag added, products absent, folds them too.
             DeleteDiagnosticsProducts(workDir, pass1, pass2);
@@ -644,6 +829,11 @@ namespace pwiz.Osprey.Test
             RunAnalysis(parallelDir, DataInputs(), FdrLanes(RUN_NAMES.Length),
                 OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText, RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture));
             AssertBlibsEqual(baseBlib, Path.Combine(parallelDir, BLIB_FILE));
+            // Planning computes its CWT candidates on the rescore's file lanes, so the parallel
+            // runs must plan exactly what the sequential ones did.
+            foreach (string run in RUN_NAMES)
+                AssertSameReconciliationActions(baseDir, parallelDir, run);
+            AssertCwtCandidatesComputed(baseDir, RUN_NAMES);
 
             // Each per-file stage resolves its own count: scoring and re-scoring on different lane
             // counts, over a shared --parallel-files they both override, still give the sequential
@@ -716,7 +906,7 @@ namespace pwiz.Osprey.Test
 
             // The gradient-boosted trees in place of the linear SVM (OSPREY_FDR_MODEL=gbdt). The
             // variable is read once at class load, so an override cannot reach it; set the value it
-            // parses to, as the pass-2 leg below does for OSPREY_EXPERIMENT_AGG.
+            // parses to.
             string gbdtDir = CreateDir(@"fdr-model-gbdt");
             var savedFdrModel = OspreyEnvironment.FdrModel;
             try
@@ -737,30 +927,17 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_FDRBENCH_PER_RUN.ArgumentText);
             AssertHasRows(bench);
 
-            // The non-default second-pass arms the regression's mode 10 runs: first-pass q-values
-            // transferred, and the experiment score as the mean of each precursor's best two runs.
+            // The non-default second-pass arm: first-pass q-values transferred.
             string transferDir = CreateDir(@"pass2-transfer");
-            int savedMeanBestN = OspreyEnvironment.MeanBestN;
-            try
+            string transferLog = RunAnalysis(transferDir, DataInputs(), new Dictionary<string, string>
             {
-                // OSPREY_EXPERIMENT_AGG is parsed once at class load, so an override cannot reach
-                // it; set the value it parses to, as MeanBestNAggregationTest does.
-                OspreyEnvironment.MeanBestN = 2;
-                string transferLog = RunAnalysis(transferDir, DataInputs(), new Dictionary<string, string>
-                {
-                    { @"OSPREY_PASS2_VERIFY_WORKER", string.Empty },
-                    { @"OSPREY_PASS2_QVALUE", @"transfer" }
-                });
-                AssertHasLine(transferLog, PathLine(LogKey.ROUTE_PASS2_QVALUE, @"transfer"));
-                AssertHasLine(transferLog, PathLine(LogKey.ROUTE_EXPERIMENT_AGG, OspreyEnvironment.ExperimentAgg));
-                // Transfer's per-file half runs in the rescore worker like every other mode
-                // (#4665), so Stage 7 folds run by run instead of holding every run's survivors.
-                AssertHasLine(transferLog, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
-            }
-            finally
-            {
-                OspreyEnvironment.MeanBestN = savedMeanBestN;
-            }
+                { @"OSPREY_PASS2_VERIFY_WORKER", string.Empty },
+                { @"OSPREY_PASS2_QVALUE", @"transfer" }
+            });
+            AssertHasLine(transferLog, PathLine(LogKey.ROUTE_PASS2_QVALUE, @"transfer"));
+            // Transfer's per-file half runs in the rescore worker like every other mode
+            // (#4665), so Stage 7 folds run by run instead of holding every run's survivors.
+            AssertHasLine(transferLog, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
             Assert.IsTrue(BlibComparer.CountRows(Path.Combine(transferDir, BLIB_FILE), @"RefSpectra") > 0,
                 @"the transfer arm reported no precursors");
             // And it leaves the files the default leaves: transfer once completed without writing
@@ -854,6 +1031,7 @@ namespace pwiz.Osprey.Test
             RunOsprey(AstralArgs(parallelDir, OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText,
                 ASTRAL_RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture)), Verifier(false));
             AssertBlibsEqual(blib, Path.Combine(parallelDir, BLIB_FILE));
+            AssertCwtCandidatesComputed(straightDir, ASTRAL_RUN_NAMES);
         }
 
         /// <summary>
@@ -971,9 +1149,10 @@ namespace pwiz.Osprey.Test
                 return fields;
             });
             string singleHitsDir = CreateDir(@"one-protein-per-peptide");
+            // The protein stratum exists only for the protein-compact competition.
             string singleHitsLog = RunOspreyExpecting(SearchArgs(singleHitsDir, singleHits,
                     OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, @"0"),
-                Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);
+                WithVariable(Verifier(false), PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT), Program.EXIT_CODE_FAILURE_TO_START);
             // The detected-peptide count varies with the search, so the line is matched on either
             // side of it (a string argument ignores the N0 format).
             var stratumLine = string.Format(
@@ -1029,7 +1208,7 @@ namespace pwiz.Osprey.Test
             }).Concat(CommonArgs()).ToArray();
             string output;
             int exitCode;
-            using (OspreyEnvironment.OverrideVariables(Verifier(false)))
+            using (EnvVar.OverrideVariables(Verifier(false)))
             {
                 exitCode = InProcessOsprey.Run(args, out output);
             }
@@ -1221,7 +1400,7 @@ namespace pwiz.Osprey.Test
             byte[] before = HashFile(library);
             string output;
             int exitCode;
-            using (OspreyEnvironment.OverrideVariables(Verifier(false)))
+            using (EnvVar.OverrideVariables(Verifier(false)))
             {
                 exitCode = InProcessOsprey.Run(new[]
                 {
@@ -1264,7 +1443,7 @@ namespace pwiz.Osprey.Test
                 Assert.IsNotNull(reconciledName);
                 string reconciled = Path.Combine(workDir, reconciledName);
                 Assert.IsTrue(File.Exists(reconciled), reconciled);
-                var rows = ParquetScoreCache.LoadFullFdrEntries(reconciled);
+                var rows = ParquetScoreCache.LoadFullFdrEntries(reconciled, UnitFeatures);
                 var zeroApex = rows.Where(e => e.Features[apex] == 0 && e.Features[area] > 0)
                     .Select(e => string.Format(@"{0}{1} (entry {2})", e.ModifiedSequence, e.IsDecoy ? @" decoy" : string.Empty, e.EntryId))
                     .ToList();
@@ -1276,7 +1455,9 @@ namespace pwiz.Osprey.Test
         {
             AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
             AssertHasLine(log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
-            AssertHasLine(log, PathLine(LogKey.ROUTE_SECOND_PASS_FOLD, @"verify=on"));
+            // Unit resolution runs without the protein-best column, so its default second pass is
+            // protein-compact; the HPC chain legs check its fold (AssertCompetitionFoldSplit).
+            AssertHasLine(log, PathLine(LogKey.ROUTE_PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
             // The library-fragment release ran at both of its points (issue #4532).
             foreach (string scope in new[] { LogKey.SCOPE_RESCORE_GAP_FILL, LogKey.SCOPE_RETAINED_SUMMARY })
             {
@@ -1306,9 +1487,19 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PrecursorPep < 0 OR PrecursorPep > 1"));
             Assert.IsTrue(BlibComparer.CountWhere(blib, @"RefSpectra", @"PrecursorPep < 1") > 0);
             Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PeptideQValue IS NULL"));
-            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"Proteins", @"QValue IS NULL"));
             Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"peptideModSeq IN (" +
                 @"SELECT peptideModSeq FROM RefSpectra GROUP BY peptideModSeq HAVING COUNT(DISTINCT PeptideQValue) > 1)"));
+            // The peptide and protein-group PEPs: probabilities, one per peptide and per group, and
+            // not all at the 1.0 a PEP that never reached the row would leave.
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PeptidePep IS NULL"));
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PeptidePep < 0 OR PeptidePep > 1"));
+            Assert.IsTrue(BlibComparer.CountWhere(blib, @"RefSpectra", @"PeptidePep < 1") > 0);
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"peptideModSeq IN (" +
+                @"SELECT peptideModSeq FROM RefSpectra GROUP BY peptideModSeq HAVING COUNT(DISTINCT PeptidePep) > 1)"));
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"Proteins", @"QValue IS NULL"));
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"Proteins", @"Pep IS NULL"));
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"Proteins", @"Pep < 0 OR Pep > 1"));
+            Assert.IsTrue(BlibComparer.CountWhere(blib, @"Proteins", @"Pep < 1") > 0);
             // Every protein group row is linked to a spectrum.
             Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"Proteins",
                 @"id NOT IN (SELECT ProteinID FROM RefSpectraProteins)"));
@@ -1416,10 +1607,14 @@ namespace pwiz.Osprey.Test
                     OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT),
                     OutputArtifact(FirstPassModelIO.EXT_MODEL), OutputArtifact(Stage6ConsensusFile.EXT));
                 ShipFilesIfPresent(dirPrefix + @"phase2", phaseDir, OutputArtifact(FirstPassModelIO.EXT_STRATUM),
-                    ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass), OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
+                    ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass), OutputArtifact(ModelDiagnosticsReport.EXT_PASS1),
+                    PassArtifact(run, FdrScoresSidecar.Pass.FirstPass, ProteinBestSidecar.EXT));
                 string log = RunTask(data, phaseDir, PerFileRescoreTask.TASK_NAME, run);
                 logs[PerFileRescoreTask.TASK_NAME] = log;
                 AssertHasLine(log, PathLine(LogKey.ROUTE_RESCORE_HYDRATE, @"per-run"));
+                // The worker computed its run's CWT candidates from the spectra cache and the
+                // calibration file it was shipped, and must plan what the straight run planned.
+                AssertSameReconciliationActions(straightDir, phaseDir, run);
             }
 
             // Phase 4, one node over every run: second-pass FDR and the library.
@@ -1434,7 +1629,7 @@ namespace pwiz.Osprey.Test
                 // per-run 1st-pass file.
                 ShipFiles(phase3, phase4Dir, PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, FdrScoresSidecar.EXT));
                 // The decoy side of a competition; the transfer competes nothing and writes none.
-                if (data.Pass2Mode == null)
+                if (data.EffectivePass2Mode == OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT)
                     ShipFiles(phase3, phase4Dir, PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, Pass2CompetitionDecoys.EXT));
             }
             ShipFiles(dirPrefix + @"phase2", phase4Dir, OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT),
@@ -1447,7 +1642,7 @@ namespace pwiz.Osprey.Test
             // Every run's per-file worker answer was folded - SecondPassFDR refuses to start
             // otherwise, so the fold line is the evidence it ran. It and the verifier belong to
             // the competition; the transfer fold has neither.
-            if (data.Pass2Mode == null)
+            if (data.EffectivePass2Mode == OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT)
                 AssertCompetitionFoldSplit(data, straightLog, phase4Log);
 
             AssertBlibsEqual(straightBlib, Path.Combine(phase4Dir, BLIB_FILE));
@@ -1533,7 +1728,7 @@ namespace pwiz.Osprey.Test
                 {
                     OspreyCommandArgs.ARG_LIBRARY.ArgumentText, library,
                     OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(phaseDir, BLIB_FILE)
-                }).Concat(CommonArgs(data.Resolution));
+                }).Concat(CommonArgs(data.Resolution)).Concat(data.MoreArgs);
             return RunOsprey(args.ToArray(), data.Variables(false));
         }
 
@@ -1555,7 +1750,7 @@ namespace pwiz.Osprey.Test
         {
             string output;
             int exitCode;
-            using (OspreyEnvironment.OverrideVariables(variables))
+            using (EnvVar.OverrideVariables(variables))
             {
                 exitCode = InProcessOsprey.Run(args, out output);
             }
@@ -1618,6 +1813,40 @@ namespace pwiz.Osprey.Test
                 on[kvp.Key] = kvp.Value;
             on[DIANN_REPORTS] = @"1";
             return on;
+        }
+
+        /// <summary>
+        /// The two directories' plans for <paramref name="run"/> hold the same reconciliation
+        /// actions: the same peaks re-picked at the same CWT candidates, and the same boundaries
+        /// imputed.
+        /// </summary>
+        private static void AssertSameReconciliationActions(string expectedDir, string actualDir, string run)
+        {
+            var expected = ReconciliationFile.Load(Path.Combine(expectedDir, run + ReconciliationFile.EXT));
+            var actual = ReconciliationFile.Load(Path.Combine(actualDir, run + ReconciliationFile.EXT));
+            Assert.AreEqual(JsonConvert.SerializeObject(expected.UseCwtPeakActions),
+                JsonConvert.SerializeObject(actual.UseCwtPeakActions), run + @": the peaks re-picked differ");
+            Assert.AreEqual(JsonConvert.SerializeObject(expected.ForcedIntegrationActions),
+                JsonConvert.SerializeObject(actual.ForcedIntegrationActions), run + @": the boundaries imputed differ");
+        }
+
+        /// <summary>
+        /// Stage 6 planned from CWT candidates it computed, not stored ones (#5024): no
+        /// <c>.scores.parquet</c> carries a <c>cwt_candidates</c> column, and the plans still
+        /// re-pick peaks at candidates - candidates that were never computed would leave every
+        /// moved peak an imputed boundary.
+        /// </summary>
+        private static void AssertCwtCandidatesComputed(string workDir, IEnumerable<string> runs)
+        {
+            int rePicked = 0;
+            foreach (string run in runs)
+            {
+                string scores = Path.Combine(workDir, run + ParquetScoreCache.EXT_SCORES);
+                Assert.IsFalse(ParquetScoreCache.HasColumn(scores, @"cwt_candidates"), scores + @" stores CWT candidates");
+                var plan = ReconciliationFile.Load(Path.Combine(workDir, run + ReconciliationFile.EXT));
+                rePicked += plan.UseCwtPeakActions?.Count ?? 0;
+            }
+            Assert.IsTrue(rePicked > 0, @"no peak was re-picked at a CWT candidate in " + workDir);
         }
 
         /// <summary>
@@ -1715,6 +1944,9 @@ namespace pwiz.Osprey.Test
             foreach (string product in products)
             {
                 string path = Path.Combine(workDir, product);
+                // The competition decoys exist only under protein-compact; the transfer writes none.
+                if (product.EndsWith(Pass2CompetitionDecoys.EXT, StringComparison.Ordinal) && !File.Exists(path))
+                    continue;
                 Assert.IsTrue(File.Exists(path), @"no rescore product to cut: " + path);
                 File.Delete(path);
             }
@@ -1733,9 +1965,10 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(metadata.ContainsKey(ArtifactStamp.PARQUET_KEY), @"no stamp to keep: " + reconciled);
             metadata[ParquetScoreCache.META_RECONCILED] = @"true";
             File.Delete(reconciled);
+            // As the run wrote it: no training export, so no reference XIC in either file.
             ParquetScoreCache.StreamReconciledScoresParquet(Path.Combine(workDir, run + ParquetScoreCache.EXT_SCORES),
                 reconciled, null, null, metadata, null, run + MZML_EXTENSION, null,
-                PerFileRescoreTask.TASK_NAME, null, null);
+                PerFileRescoreTask.TASK_NAME, null, null, false, UnitFeatures);
             Assert.IsFalse(ParquetScoreCache.IsCurrentReconciledSurvivorSubset(reconciled));
         }
 
@@ -2080,6 +2313,50 @@ namespace pwiz.Osprey.Test
             Assert.IsFalse(HasLine(log, PathLine(LogKey.ROUTE_RESCORE_FILE, string.Empty)), log);
         }
 
+        /// <summary>
+        /// Every run has a fragment mass-error summary that measured something in each intensity
+        /// class, and the report carries them as its mass-error view.
+        /// </summary>
+        private static void AssertFragmentMassErrors(string workDir, string report)
+        {
+            foreach (string run in RUN_NAMES)
+            {
+                string path = Path.Combine(workDir, run + FragmentMassErrorWriter.EXT);
+                var summary = FragmentMassErrorWriter.ReadRun(path);
+                Assert.IsNotNull(summary, @"no fragment mass-error summary " + path);
+                Assert.IsTrue(summary.Precursors > 0, path);
+                Assert.AreEqual(ModelDiagnosticsData.MASS_ERROR_CLASSES.Length, summary.Classes.Count, path);
+                foreach (var massErrorClass in summary.Classes)
+                    Assert.IsTrue(massErrorClass.Total > 0, path + @" " + massErrorClass.Name);
+                Assert.IsTrue(summary.HalfWidth > summary.SearchTolerance, path);
+                Assert.IsFalse(double.IsNaN(summary.Classes.Last().Sd), path);
+            }
+            string html = File.ReadAllText(report);
+            Assert.IsTrue(html.Contains(@"""fragmentMassErrors"":{""files"":[{"), @"the report has no fragment mass-error view");
+        }
+
+        /// <summary>
+        /// The two directories' per-run fragment mass-error summaries hold the same content; only
+        /// the embedded stamp, which names each directory's own input files, may differ.
+        /// </summary>
+        private static void AssertSameFragmentMassErrors(string expectedDir, string actualDir)
+        {
+            foreach (string run in RUN_NAMES)
+            {
+                string expectedPath = Path.Combine(expectedDir, run + FragmentMassErrorWriter.EXT);
+                string actualPath = Path.Combine(actualDir, run + FragmentMassErrorWriter.EXT);
+                Assert.IsTrue(File.Exists(actualPath), @"no fragment mass-error summary " + actualPath);
+                JObject Content(string path)
+                {
+                    var json = JObject.Parse(File.ReadAllText(path));
+                    json.Remove(ArtifactStamp.JSON_PROPERTY);
+                    return json;
+                }
+                Assert.IsTrue(JToken.DeepEquals(Content(expectedPath), Content(actualPath)),
+                    @"the fragment mass-error summary written later differs: " + actualPath);
+            }
+        }
+
         private static void AssertBlibsEqual(string expectedBlib, string actualBlib)
         {
             var differences = BlibComparer.Compare(expectedBlib, actualBlib, TOLERANCE);
@@ -2313,13 +2590,15 @@ namespace pwiz.Osprey.Test
         private sealed class Subset
         {
             public Subset(string dataDir, string libraryFile, string resolution, string[] runs,
-                string pass2Mode = null)
+                string pass2Mode = null, IReadOnlyDictionary<string, string> moreVariables = null, string[] moreArgs = null)
             {
                 DataDir = dataDir;
                 LibraryFile = libraryFile;
                 Resolution = resolution;
                 Runs = runs;
                 Pass2Mode = pass2Mode;
+                MoreVariables = moreVariables;
+                MoreArgs = moreArgs ?? Array.Empty<string>();
             }
 
             public string DataDir { get; }
@@ -2331,12 +2610,43 @@ namespace pwiz.Osprey.Test
             public string Pass2Mode { get; }
 
             /// <summary>
+            /// The second pass every phase runs: <see cref="Pass2Mode"/>, else the default, which follows
+            /// <c>--protein-boost</c> (<see cref="OspreyConfig.Pass2QValue"/>) and so, unless an argument
+            /// sets it, the resolution: best for HRAM data, compact at unit resolution and for detection
+            /// here, whose subsets measure as unit resolution.
+            /// </summary>
+            public string EffectivePass2Mode
+            {
+                get
+                {
+                    if (Pass2Mode != null)
+                        return Pass2Mode;
+                    int i = Array.IndexOf(MoreArgs, OspreyCommandArgs.ARG_PROTEIN_BOOST.ArgumentText);
+                    bool compact = i >= 0
+                        ? MoreArgs[i + 1] == ProteinBoost.compact.ToString()
+                        : Resolution != OspreyCommandArgs.RESOLUTION_HRAM;
+                    return compact ? OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT : OspreyEnvironment.PASS2_QVALUE_TRANSFER;
+                }
+            }
+
+            /// <summary>Further variables every phase runs under (an experimental arm), or null.</summary>
+            public IReadOnlyDictionary<string, string> MoreVariables { get; }
+
+            /// <summary>Further arguments every phase runs with (a setting the arm asks for), or none.</summary>
+            public string[] MoreArgs { get; }
+
+            /// <summary>
             /// <see cref="Verifier"/>, with this subset's pass-2 mode set on every phase - a chain
             /// whose phases disagreed on it would compare two analyses, not two routes.
             /// </summary>
             public IReadOnlyDictionary<string, string> Variables(bool verify)
             {
                 var variables = Verifier(verify).ToDictionary(kv => kv.Key, kv => kv.Value);
+                if (MoreVariables != null)
+                {
+                    foreach (var kv in MoreVariables)
+                        variables[kv.Key] = kv.Value;
+                }
                 if (Pass2Mode != null)
                     variables[@"OSPREY_PASS2_QVALUE"] = Pass2Mode;
                 return variables;
@@ -2353,7 +2663,7 @@ namespace pwiz.Osprey.Test
                     OspreyCommandArgs.ARG_LIBRARY.ArgumentText, Path.Combine(DataDir, LibraryFile),
                     OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(workDir, BLIB_FILE),
                     OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, workDir
-                }).Concat(CommonArgs(Resolution)).ToArray();
+                }).Concat(CommonArgs(Resolution)).Concat(MoreArgs).ToArray();
             }
         }
     }
