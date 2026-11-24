@@ -333,12 +333,6 @@
       <Component Id="pwiz.CommonBaseUI.pdb">
         <File Source="$(var.Skyline.TargetDir)/pwiz.CommonBaseUI.pdb" KeyPath="yes"/>
       </Component>
-      <Component Id="pwiz.CommonUI.dll">
-        <File Source="$(var.Skyline.TargetDir)/pwiz.CommonUI.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="pwiz.CommonUI.pdb">
-        <File Source="$(var.Skyline.TargetDir)/pwiz.CommonUI.pdb" KeyPath="yes"/>
-      </Component>
       <Component Id="pwiz_data_cli.dll">
         <File Source="$(var.Skyline.TargetDir)/pwiz_data_cli.dll" KeyPath="yes"/>
       </Component>
@@ -353,12 +347,6 @@
       </Component>
       <Component Id="PanoramaClient.pdb">
         <File Source="$(var.Skyline.TargetDir)/PanoramaClient.pdb" KeyPath="yes"/>
-      </Component>
-      <Component Id="PanoramaClientUI.dll">
-        <File Source="$(var.Skyline.TargetDir)/PanoramaClientUI.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="PanoramaClientUI.pdb">
-        <File Source="$(var.Skyline.TargetDir)/PanoramaClientUI.pdb" KeyPath="yes"/>
       </Component>
       <Component Id="SharedBatch.dll">
         <File Source="$(var.Skyline.TargetDir)/SharedBatch.dll" KeyPath="yes"/>
@@ -502,9 +490,6 @@
       <Component Id="ja_pwiz.CommonBaseUI.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/ja\pwiz.CommonBaseUI.resources.dll" Id="ja_pwiz.CommonBaseUI.resources.dll_file" KeyPath="yes"/>
       </Component>
-      <Component Id="ja_pwiz.CommonUI.resources.dll">
-        <File Source="$(var.Skyline.TargetDir)/ja\pwiz.CommonUI.resources.dll" Id="ja_pwiz.CommonUI.resources.dll_file" KeyPath="yes"/>
-      </Component>
       <Component Id="ja_Skyline.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/ja\$(var.Skyline.TargetName).resources.dll" Id="ja_Skyline.resources.dll_file" KeyPath="yes"/>
       </Component>
@@ -567,9 +552,6 @@
       </Component>
       <Component Id="zh_CHS_pwiz.CommonBaseUI.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/zh-CHS\pwiz.CommonBaseUI.resources.dll" Id="zh_CHS_pwiz.CommonBaseUI.resources.dll_file" KeyPath="yes"/>
-      </Component>
-      <Component Id="zh_CHS_pwiz.CommonUI.resources.dll">
-        <File Source="$(var.Skyline.TargetDir)/zh-CHS\pwiz.CommonUI.resources.dll" Id="zh_CHS_pwiz.CommonUI.resources.dll_file" KeyPath="yes"/>
       </Component>
       <Component Id="zh_CHS_Skyline.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/zh-CHS\$(var.Skyline.TargetName).resources.dll" Id="zh_CHS_Skyline.resources.dll_file" KeyPath="yes"/>
