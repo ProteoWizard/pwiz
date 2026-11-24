@@ -35,6 +35,7 @@ using pwiz.CarafeSharp.Training;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
+using TorchSharp;
 
 namespace pwiz.Osprey.Test
 {
@@ -82,6 +83,9 @@ namespace pwiz.Osprey.Test
                 // Cold: every phase runs - the training library, the search of the tuning run, the
                 // tuning, the library from the tuned models, and the output's search.
                 string log = RunOsprey(buildArgs, Verifier(false));
+                // The libtorch this run loaded took the assembly's settings, without which the tuned
+                // models differ from one CPU to the next.
+                Assert.AreEqual(TorchTestSettings.THREADS, torch.get_num_threads());
                 AssertTunedPhases(log, Array.Empty<string>(), TUNING_PHASES, false, true);
                 AssertTunedProducts(products, tuningRuns, inputs.Length, MIN_LIBRARY_BUILD_PRECURSORS);
                 AssertTrainingChain(products, tuningRuns);
@@ -142,7 +146,8 @@ namespace pwiz.Osprey.Test
                 // tuning search are current, and in the output's search the remaining runs' scoring
                 // is too, so only the experiment-wide stages run again. What runs is checked here,
                 // not what passes: two windows of two runs searched with a one-epoch tuning detect
-                // nothing at 1% on some machines (the CPU changes the tuned weights), and a search
+                // nothing at 1% on one system or another (Windows and Linux tune different weights,
+                // see TorchTestSettings), and a search
                 // that detects nothing fails, so every precursor is reported.
                 string fewer = RunOsprey(TunedArgs(fasta, workDir, inputs.Take(2), tuningRuns)
                     .Concat(new[] { CarafeCommandLine.ARG_SEED.ArgumentText, @"7", OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, @"1" }).ToArray(),
