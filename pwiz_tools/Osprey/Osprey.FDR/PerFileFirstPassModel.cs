@@ -155,8 +155,15 @@ namespace pwiz.Osprey.FDR
             int count = entryIds.Count;
             if (count == 0)
                 return new double[0];
-            // The training reports its percent from inside, so a run that trains for minutes shows
-            // motion; under --parallel-files the percent feeds the run's "[i] p%" slot.
+            // Under --parallel-files the training reports its percent from inside into the run's
+            // "[i] p%" slot, which otherwise sits still for the minutes a run trains while every run
+            // of the wave trains at once. Without a file scope the trainer's own iteration lines
+            // already show it working, so the log stays as it was.
+            if (MultiProgressReporter.Current == null)
+            {
+                return TrainAndScore(null, fileName, entryIds, charges, isDecoys, coelutionSums, peptides, featureRows,
+                    nFeatures, out trained);
+            }
             RunFirstPassModel model = null;
             var scores = ProgressReporter.Run(
                 string.Format(OspreyFDRResources.PerFileFirstPassModel_TrainAndScore_Training_the_run_s_first_pass_model_on__0__precursor_candidate_peaks, count),
@@ -167,7 +174,8 @@ namespace pwiz.Osprey.FDR
             return scores;
         }
 
-        /// <summary>The training and scoring of one run, reporting each step to <paramref name="progress"/>.</summary>
+        /// <summary>The training and scoring of one run, reporting each step to <paramref name="progress"/>
+        /// when it is not null.</summary>
         private double[] TrainAndScore(TrainingProgress progress, string fileName, IReadOnlyList<uint> entryIds,
             IReadOnlyList<byte> charges, IReadOnlyList<bool> isDecoys, IReadOnlyList<double> coelutionSums,
             IReadOnlyList<string> peptides, IReadOnlyList<double[]> featureRows, int nFeatures,
@@ -175,7 +183,7 @@ namespace pwiz.Osprey.FDR
         {
             int count = entryIds.Count;
             var scores = new double[count];
-            progress.BeginStep(TrainingStep.round_1);
+            progress?.BeginStep(TrainingStep.round_1);
             long t = Stopwatch.GetTimestamp();
             long fileStart = t;
             // This file's own step times for its [TIMING] line: the column inside round 2's setup.
@@ -247,7 +255,8 @@ namespace pwiz.Osprey.FDR
                 entries = new List<PercolatorEntry>(subset.Length);
                 foreach (int r in subset)
                     entries.Add(NewEntry(fileName, r, labels, ids, seqs, charges, bestScores, featureRows, nFeatures));
-                // A copy for this run, as the two-round branch has: one instance serves every run.
+                // A copy for this run, as the two-round branch has: an instance may serve several runs
+                // at once, so the run's progress cannot go on the shared config.
                 var config = _trainConfig.CloneForTrainOnly();
                 config.TrainingProgress = progress;
                 model = PercolatorTrainer.RunPercolator(entries, config);
@@ -272,9 +281,9 @@ namespace pwiz.Osprey.FDR
                 };
                 scoreFeatures = nFeatures + 1;
             }
-            progress.BeginStep(TrainingStep.scoring);
+            progress?.BeginStep(TrainingStep.scoring);
             PercolatorScorer.ScoreRowsWithModel(count, rowAt, model, scoreFeatures, scores, 0, _threads, heldOutFoldByRow);
-            progress.BeginStep(TrainingStep.safeguard);
+            progress?.BeginStep(TrainingStep.safeguard);
             int fallbackFeature = ChooseFallbackFeature(fileName, scores, labels, ids, featureRows, bestScores, nFeatures);
             if (fallbackFeature != RunFirstPassModel.NO_FALLBACK)
             {
@@ -284,7 +293,7 @@ namespace pwiz.Osprey.FDR
             t = Accumulate(ref _scoreTicks, t);
 
             double scoreSeconds = Seconds(t - trainEnd);
-            progress.BeginStep(TrainingStep.calibration);
+            progress?.BeginStep(TrainingStep.calibration);
             var anchor = Calibrate(scores, labels, ids, seqs, _trainConfig.TestFdr, out double threshold, out double denominator);
             if (anchor == CalibrationAnchor.BEST_DECOY)
             {

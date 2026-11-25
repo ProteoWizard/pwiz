@@ -330,7 +330,7 @@ namespace pwiz.Common.SystemUtil
             /// Open segment <paramref name="segment"/> (0-based) directly, banking every segment
             /// before it at its full slice: for a file whose work skips phases (one resumed from
             /// an earlier run's output), so the phases it runs still fill their own slices. Never
-            /// moves back: a segment before the one open now opens the open one again.
+            /// moves back: the segment open now, or one before it, leaves the open segment as it is.
             /// </summary>
             public void BeginSegment(int segment)
             {
@@ -339,6 +339,8 @@ namespace pwiz.Common.SystemUtil
                 // phase boundaries). The inner scoring Parallel.For never calls this -
                 // it drives the captured SegmentSink, whose cross-thread report path is
                 // synchronized by the owner's render lock.
+                if (_currentSegmentSink != null && segment <= _completedSegments)
+                    return;
                 _completedSegments = Math.Min(Math.Max(segment, _completedSegments), _segmentCount);
                 _currentSegmentSink = new SegmentSink(this, _completedSegments);
                 UpdateFilePercent(_completedSegments, 0);

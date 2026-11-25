@@ -50,7 +50,8 @@ namespace pwiz.Osprey.FDR
     /// iterations done over those done plus the fewest still to come: the iterations it may run
     /// before its patience runs out, or its last iteration, whichever is sooner. Each iteration
     /// that does not improve brings the fold closer to 1 and an improving one holds it, so the
-    /// percent never runs ahead of the work. Never read by the training itself.</para>
+    /// percent never runs ahead of the work. A fold is done when it returns, whichever way its loop
+    /// ended. Reporting only: it never changes what is trained.</para>
     /// </summary>
     internal sealed class TrainingProgress
     {
@@ -101,14 +102,32 @@ namespace pwiz.Osprey.FDR
             double fraction = iterationsDone + remaining > 0 ? (double)iterationsDone / (iterationsDone + remaining) : 1.0;
             lock (_lock)
             {
-                if (_foldFractions == null || _foldFractions.Length != nFolds)
-                    _foldFractions = new double[nFolds];
-                _foldFractions[fold] = Math.Max(_foldFractions[fold], fraction);
-                double sum = 0;
-                foreach (double f in _foldFractions)
-                    sum += f;
-                Report(sum / nFolds);
+                SetFoldFraction(fold, nFolds, fraction);
             }
+        }
+
+        /// <summary>
+        /// Fold <paramref name="fold"/> of the open step's cross-validation has returned: its share of
+        /// the step is done, also when its loop stopped early (no positive training set).
+        /// </summary>
+        public void ReportFoldDone(int fold, int nFolds)
+        {
+            lock (_lock)
+            {
+                SetFoldFraction(fold, nFolds, 1.0);
+            }
+        }
+
+        // Raise the fold's fraction and report the mean over folds. Caller holds _lock.
+        private void SetFoldFraction(int fold, int nFolds, double fraction)
+        {
+            if (_foldFractions == null || _foldFractions.Length != nFolds)
+                _foldFractions = new double[nFolds];
+            _foldFractions[fold] = Math.Max(_foldFractions[fold], fraction);
+            double sum = 0;
+            foreach (double f in _foldFractions)
+                sum += f;
+            Report(sum / nFolds);
         }
 
         // The fraction of the open step done, as the reporter's units. Caller holds _lock.

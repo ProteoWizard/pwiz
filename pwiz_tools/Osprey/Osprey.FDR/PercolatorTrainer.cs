@@ -1013,6 +1013,7 @@ namespace pwiz.Osprey.FDR
                     foldBestC[fold] = foldC;
                 }
                 foldIterations[fold] = iters;
+                trainProgress.ReportFoldDone(fold);
                 swFold.Stop();
                 foldElapsed[fold] = swFold.Elapsed.TotalSeconds;
             });
@@ -1110,6 +1111,12 @@ namespace pwiz.Osprey.FDR
             public void ReportConvergence(int foldIndex, int iterationsDone, int noImprove, int patience)
             {
                 _percent?.ReportFoldIteration(foldIndex, _nFolds, iterationsDone, noImprove, patience, _maxIterations);
+            }
+
+            /// <summary>A fold has returned, however its loop ended: its share of the training is done.</summary>
+            public void ReportFoldDone(int foldIndex)
+            {
+                _percent?.ReportFoldDone(foldIndex, _nFolds);
             }
 
             public void ReportIteration(int foldIndex, int iteration, int nPassing, int nTargets)

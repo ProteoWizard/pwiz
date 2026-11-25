@@ -178,7 +178,7 @@ namespace pwiz.Osprey.FDR
         /// default) for no report. Set only by <see cref="PerFileFirstPassModel"/>, on its own copy
         /// for one run, so one run's training is never reported into another's. Copied by
         /// <see cref="CloneForTrainOnly"/>, so both rounds of a two-round training report into it.
-        /// Never read by the training itself.
+        /// The trainer only reports to it: it never changes what is trained.
         /// </summary>
         internal TrainingProgress TrainingProgress { get; set; }
 
