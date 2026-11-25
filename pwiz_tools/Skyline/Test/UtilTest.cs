@@ -391,9 +391,8 @@ namespace pwiz.SkylineTest
 
         /// <summary>
         /// Each loading thread reports its finished file to <see cref="FileLoadCompletionAccumulator"/>,
-        /// and the batch it commits must hold every file. When files finish together, one completion
-        /// could reach the commit queue behind its end marker; the batch was then never committed and
-        /// a command-line import waited forever for a document that would never load.
+        /// and the batch it commits must hold every file, including when files finish together and
+        /// race to queue their completions ahead of the commit queue's end marker.
         /// </summary>
         [TestMethod]
         public void FileLoadCompletionAccumulatorConcurrentCompleteTest()
