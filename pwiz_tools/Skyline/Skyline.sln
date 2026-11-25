@@ -74,6 +74,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConnected", "TestConnec
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineCmd", "SkylineCmd\SkylineCmd.csproj", "{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineCore", "SkylineCore\SkylineCore.csproj", "{3FA0DF58-9256-4ED1-8638-B577D4965887}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineNightlyShim", "SkylineNightlyShim\SkylineNightlyShim.csproj", "{3C7F5209-6507-42C5-80CE-472AE6A51CD1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PanoramaClient", "..\Shared\PanoramaClient\PanoramaClient.csproj", "{BF849CF8-25D7-4619-B001-9ED8E3771C44}"
@@ -284,6 +286,14 @@ Global
 		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Release|x64.Build.0 = Release|x64
 		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Release|x86.ActiveCfg = Release|x86
 		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Release|x86.Build.0 = Release|x86
+		{3FA0DF58-9256-4ED1-8638-B577D4965887}.Debug|x64.ActiveCfg = Debug|x64
+		{3FA0DF58-9256-4ED1-8638-B577D4965887}.Debug|x64.Build.0 = Debug|x64
+		{3FA0DF58-9256-4ED1-8638-B577D4965887}.Debug|x86.ActiveCfg = Debug|x86
+		{3FA0DF58-9256-4ED1-8638-B577D4965887}.Debug|x86.Build.0 = Debug|x86
+		{3FA0DF58-9256-4ED1-8638-B577D4965887}.Release|x64.ActiveCfg = Release|x64
+		{3FA0DF58-9256-4ED1-8638-B577D4965887}.Release|x64.Build.0 = Release|x64
+		{3FA0DF58-9256-4ED1-8638-B577D4965887}.Release|x86.ActiveCfg = Release|x86
+		{3FA0DF58-9256-4ED1-8638-B577D4965887}.Release|x86.Build.0 = Release|x86
 		{3C7F5209-6507-42C5-80CE-472AE6A51CD1}.Debug|x64.ActiveCfg = Debug|x64
 		{3C7F5209-6507-42C5-80CE-472AE6A51CD1}.Debug|x64.Build.0 = Debug|x64
 		{3C7F5209-6507-42C5-80CE-472AE6A51CD1}.Debug|x86.ActiveCfg = Debug|x86
