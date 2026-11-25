@@ -31,6 +31,9 @@ internal sealed class CompassXtractParameterList
     /// <see cref="this[int]"/> are <c>0 .. Count-1</c>.</summary>
     public int Count => _collection.Count;
 
+    /// <summary>The COM collection this list reads, for the caller to release.</summary>
+    public object Collection => _collection;
+
     /// <summary>
     /// Number of parameters an <i>enumeration</i> yields, which is one fewer than
     /// <see cref="Count"/>: the last parameter is never enumerated.
@@ -60,11 +63,18 @@ internal sealed class CompassXtractParameterList
         get
         {
             var p = _collection[index + 1];
-            return (p.GroupName ?? string.Empty,
-                    p.ParameterName ?? string.Empty,
-                    // ParameterValue is a VARIANT (typed `object` by tlbimp); cpp calls
-                    // ->ToString() on the boxed value (CompassData.cpp:188).
-                    Convert.ToString(p.ParameterValue, CultureInfo.InvariantCulture) ?? string.Empty);
+            try
+            {
+                return (p.GroupName ?? string.Empty,
+                        p.ParameterName ?? string.Empty,
+                        // ParameterValue is a VARIANT (typed `object` by tlbimp); cpp calls
+                        // ->ToString() on the boxed value (CompassData.cpp:188).
+                        Convert.ToString(p.ParameterValue, CultureInfo.InvariantCulture) ?? string.Empty);
+            }
+            finally
+            {
+                CompassXtractData.Release(p);
+            }
         }
     }
 }

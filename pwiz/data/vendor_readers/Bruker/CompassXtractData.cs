@@ -228,17 +228,27 @@ internal sealed class CompassXtractData : IBrukerData
             return false;
         if (!_hasMsData || _spectra is null) return false;
 
-        var parameters = new CompassXtractParameterList(_spectra[1].MSSpectrumParameterCollection);
-        // cpp builds its name/value map with BOOST_FOREACH (Reader_Bruker_Detail.cpp:146), i.e.
-        // an enumeration, so it too stops one short - see CompassXtractParameterList.EnumeratedCount.
-        int count = parameters.EnumeratedCount;
-        for (int i = 0; i < count; i++)
+        var spectrum = _spectra[1];
+        CompassXtractParameterList? parameters = null;
+        try
         {
-            var p = parameters[i];
-            if (string.Equals(p.Name, "Mobile Hexapole Position", StringComparison.Ordinal))
-                return string.Equals(p.Value, "MALDI", StringComparison.Ordinal);
+            parameters = new CompassXtractParameterList(spectrum.MSSpectrumParameterCollection);
+            // cpp builds its name/value map with BOOST_FOREACH (Reader_Bruker_Detail.cpp:146), i.e.
+            // an enumeration, so it too stops one short - see CompassXtractParameterList.EnumeratedCount.
+            int count = parameters.EnumeratedCount;
+            for (int i = 0; i < count; i++)
+            {
+                var p = parameters[i];
+                if (string.Equals(p.Name, "Mobile Hexapole Position", StringComparison.Ordinal))
+                    return string.Equals(p.Value, "MALDI", StringComparison.Ordinal);
+            }
+            return false;
         }
-        return false;
+        finally
+        {
+            Release(parameters?.Collection);
+            Release(spectrum);
+        }
     }
 
     /// <summary>
@@ -265,7 +275,17 @@ internal sealed class CompassXtractData : IBrukerData
 
         if (!_hasMsData || _spectra is null) return;
         for (int scan = 1; scan <= _spectrumCount && (!HasMs1Frames || !HasMsNFrames); scan++)
-            RecordMsLevel(_spectra[scan].MSMSStage);
+        {
+            var spectrum = _spectra[scan];
+            try
+            {
+                RecordMsLevel(spectrum.MSMSStage);
+            }
+            finally
+            {
+                Release(spectrum);
+            }
+        }
     }
 
     private void RecordMsLevel(int msLevel)
@@ -277,13 +297,15 @@ internal sealed class CompassXtractData : IBrukerData
     private static int OpenFidSpectrumLevel(string fidDirectory)
     {
         EDAL.IMSAnalysis? analysis = null;
+        EDAL.IMSSpectrum? spectrum = null;
         try
         {
-            analysis = OpenFid(fidDirectory, out EDAL.IMSSpectrum spectrum);
+            analysis = OpenFid(fidDirectory, out spectrum);
             return spectrum.MSMSStage;
         }
         finally
         {
+            Release(spectrum);
             Release(analysis);
         }
     }
@@ -362,13 +384,15 @@ internal sealed class CompassXtractData : IBrukerData
             if (entry.Tag is string fidDirectory)
             {
                 EDAL.IMSAnalysis? analysis = null;
+                EDAL.IMSSpectrum? fidSpectrum = null;
                 try
                 {
-                    analysis = OpenFid(fidDirectory, out EDAL.IMSSpectrum fidSpectrum);
+                    analysis = OpenFid(fidDirectory, out fidSpectrum);
                     FillFromSpectrum(spec, fidSpectrum, detailLevel, preferCentroid);
                 }
                 finally
                 {
+                    Release(fidSpectrum);
                     Release(analysis);
                 }
                 return;
@@ -381,11 +405,33 @@ internal sealed class CompassXtractData : IBrukerData
             if (scan < 1 || scan > _spectrumCount)
                 throw new ArgumentOutOfRangeException(nameof(entry),
                     $"[CompassXtract] scan number {scan} is out of range.");   // CompassData.cpp:569-570
-            FillFromSpectrum(spec, _spectra[scan], detailLevel, preferCentroid);
+            var spectrum = _spectra[scan];
+            try
+            {
+                FillFromSpectrum(spec, spectrum, detailLevel, preferCentroid);
+            }
+            finally
+            {
+                Release(spectrum);
+            }
         }
     }
 
     private void FillFromSpectrum(Spectrum spec, EDAL.IMSSpectrum spectrum, DetailLevel detailLevel, bool preferCentroid)
+    {
+        var parameters = new CompassXtractParameterList(spectrum.MSSpectrumParameterCollection);
+        try
+        {
+            FillFromSpectrum(spec, spectrum, parameters, detailLevel, preferCentroid);
+        }
+        finally
+        {
+            Release(parameters.Collection);
+        }
+    }
+
+    private void FillFromSpectrum(Spectrum spec, EDAL.IMSSpectrum spectrum, CompassXtractParameterList parameters,
+        DetailLevel detailLevel, bool preferCentroid)
     {
         int msLevel = spectrum.MSMSStage;
         spec.Params.Set(CVID.MS_ms_level, msLevel);
@@ -396,7 +442,6 @@ internal sealed class CompassXtractData : IBrukerData
         if (scanTime > 0)
             scan.Set(CVID.MS_scan_start_time, scanTime, CVID.UO_second);
 
-        var parameters = new CompassXtractParameterList(spectrum.MSSpectrumParameterCollection);
         var cache = GetParameterCache(msLevel);
 
         var (scanBegin, scanEnd) = GetScanRange(cache, parameters);
@@ -649,20 +694,26 @@ internal sealed class CompassXtractData : IBrukerData
     /// and asks it for spectrum 1.
     /// </summary>
     /// <remarks>Caller must already hold a <see cref="CompassXtractActivationContext.Activate"/>
-    /// scope, and must <see cref="Release"/> the returned analysis.</remarks>
+    /// scope, and must <see cref="Release"/> the returned spectrum and then the analysis.</remarks>
     private static EDAL.IMSAnalysis OpenFid(string fidDirectory, out EDAL.IMSSpectrum spectrum)
     {
         EDAL.IMSAnalysis analysis = new EDAL.MSAnalysis();
+        EDAL.IMSSpectrumCollection? spectra = null;
         try
         {
             analysis.Open(Filesystem.GetNonUnicodePath(fidDirectory));
-            spectrum = analysis.MSSpectrumCollection[1];
+            spectra = analysis.MSSpectrumCollection;
+            spectrum = spectra[1];
             return analysis;
         }
         catch
         {
             Release(analysis);
             throw;
+        }
+        finally
+        {
+            Release(spectra);
         }
     }
 
@@ -860,7 +911,16 @@ internal sealed class CompassXtractData : IBrukerData
     /// it that CompassXtract keeps the underlying file locked regardless — "allow CompassXtract
     /// to keep this file locked because it doesn't seem to interfere with opening the file again".
     /// </summary>
-    private static void Release(object? comObject)
+    /// <remarks>
+    /// Every CompassXtract object this reader obtains - each spectrum, its parameter collection
+    /// and each parameter, not only the analysis and its spectrum collection - goes through here
+    /// as soon as it has been used. One left to the garbage collector can keep
+    /// <c>analysis.yep</c> open after <see cref="Dispose()"/> for the rest of the process:
+    /// on the <c>Sample_1-A,1_01_985.d</c> fixture, repeated read-and-dispose cycles kept the
+    /// file open from the 6th to 31st cycle when spectra were left to the GC, and never in 200
+    /// cycles with every object released here.
+    /// </remarks>
+    internal static void Release(object? comObject)
     {
         if (comObject is null) return;
         try
