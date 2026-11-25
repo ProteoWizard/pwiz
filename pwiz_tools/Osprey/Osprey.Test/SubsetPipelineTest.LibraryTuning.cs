@@ -60,6 +60,22 @@ namespace pwiz.Osprey.Test
         // Inside the subset's one isolation window: every tuning run's meta.json entry must hold it.
         private const double SUBSET_WINDOW_TARGET = 594.5201;
 
+        /// <summary>
+        /// Every precursor reported and kept for the second pass, for a leg that checks what runs
+        /// rather than what passes. Each run's own first-pass model on a seven-minute window sits
+        /// under the 100-target floor of a 1% run q (1 / the targets above its first decoy), so
+        /// with a predicted or one-epoch-tuned library a run can pass nothing at 1%, and a search
+        /// none of whose runs passes the compaction FDR stops before the second pass.
+        /// </summary>
+        private static string[] ReportAllArgs()
+        {
+            return new[]
+            {
+                OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, @"1",
+                OspreyCommandArgs.ARG_RECONCILIATION_COMPACTION_FDR.ArgumentText, @"1"
+            };
+        }
+
         // The library-build phases of a tuned run, in order, before the output's search.
         private static readonly string[] TUNING_PHASES =
         {
@@ -108,37 +124,39 @@ namespace pwiz.Osprey.Test
                 // What runs is checked, not what passes: with a one-epoch tuning each seven-minute
                 // run sits at the 100-target first-pass floor, so a run can keep nothing at 1%, and
                 // every precursor is reported.
-                string entrapment = RunOsprey(buildArgs.Concat(new[]
-                {
-                    OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText, OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, @"1"
-                }).ToArray(), Verifier(false));
+                string entrapment = RunOsprey(buildArgs.Concat(new[] { OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText })
+                    .Concat(ReportAllArgs()).ToArray(), Verifier(false));
                 AssertTunedPhases(entrapment, TUNING_PHASES.Take(2), new[] { PredictLibraryTask.TASK_NAME }, true, true);
                 Assert.IsTrue(File.Exists(Path.Combine(products.WorkDirectory, LibraryBuildWorkflow.PAIRING_FILE_NAME)));
                 Assert.AreEqual(1, Math.Sign(BlibComparer.CountWhere(products.Library, @"DecoyPairs", @"IsEntrapment = 1")));
 
                 // A lost model is tuned again from the exports, with no search of the tuning run;
-                // the library it predicts is predicted again, and the output searched again.
+                // the library it predicts is predicted again, and the output searched again. From
+                // here on what runs is checked, not what passes: a one-epoch tuning run again need
+                // not reproduce the first one's weights, and its library can leave every run's own
+                // first-pass model under the 1% floor (ReportAllArgs).
+                var reportAllArgs = buildArgs.Concat(ReportAllArgs()).ToArray();
                 File.Delete(products.Model);
-                string retune = RunOsprey(buildArgs, Verifier(false));
+                string retune = RunOsprey(reportAllArgs, Verifier(false));
                 AssertTunedPhases(retune, TUNING_PHASES.Take(1), TUNING_PHASES.Skip(1), true, true);
                 Assert.IsTrue(File.Exists(products.Model), products.Model);
 
                 // The model kept but its folder, which the library is predicted from, lost: the
                 // tuning runs again rather than being skipped as current.
                 Directory.Delete(products.ModelDirectory, true);
-                string refolder = RunOsprey(buildArgs, Verifier(false));
+                string refolder = RunOsprey(reportAllArgs, Verifier(false));
                 AssertTunedPhases(refolder, TUNING_PHASES.Take(1), TUNING_PHASES.Skip(1), true, true);
                 Assert.IsTrue(Directory.Exists(products.ModelDirectory), products.ModelDirectory);
 
                 // Nor is the tuning current when the folder holds other weights than the model file
                 // packed (a later tuning that died before saving its model): it runs again.
                 File.WriteAllBytes(Path.Combine(products.ModelDirectory, ModelFiles.RT_SAFETENSORS), new byte[] { 1, 2, 3 });
-                string reweighted = RunOsprey(buildArgs, Verifier(false));
+                string reweighted = RunOsprey(reportAllArgs, Verifier(false));
                 AssertTunedPhases(reweighted, TUNING_PHASES.Take(1), TUNING_PHASES.Skip(1), true, true);
 
                 // A tuning option changes the tuning and what follows it, not the training library
                 // or its search.
-                var seedArgs = buildArgs.Concat(new[] { CarafeCommandLine.ARG_SEED.ArgumentText, @"7" }).ToArray();
+                var seedArgs = reportAllArgs.Concat(new[] { CarafeCommandLine.ARG_SEED.ArgumentText, @"7" }).ToArray();
                 string seed = RunOsprey(seedArgs, Verifier(false));
                 AssertTunedPhases(seed, TUNING_PHASES.Take(1), TUNING_PHASES.Skip(1), true, true);
 
@@ -150,7 +168,7 @@ namespace pwiz.Osprey.Test
                 // see TorchTestSettings), and a search
                 // that detects nothing fails, so every precursor is reported.
                 string fewer = RunOsprey(TunedArgs(fasta, workDir, inputs.Take(2), tuningRuns)
-                    .Concat(new[] { CarafeCommandLine.ARG_SEED.ArgumentText, @"7", OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, @"1" }).ToArray(),
+                    .Concat(new[] { CarafeCommandLine.ARG_SEED.ArgumentText, @"7" }).Concat(ReportAllArgs()).ToArray(),
                     Verifier(false));
                 string fewerBuild = SplitAtSearch(fewer, out string fewerSearch);
                 AssertTasks(fewerBuild, TUNING_PHASES.Concat(ALL_TASKS), Array.Empty<string>());
@@ -210,7 +228,7 @@ namespace pwiz.Osprey.Test
             // Which runs reach the output is checked, not what passes: two seven-minute runs searched
             // with a one-epoch tuning sit at the 100-target first-pass floor, so every precursor is
             // reported.
-            var reportAll = new[] { OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, @"1" };
+            var reportAll = ReportAllArgs();
             using (ShortFineTune())
             {
                 string log = RunOsprey(TunedArgs(fasta, workDir, inputs, tuningRuns).Concat(reportAll).ToArray(), Verifier(false));

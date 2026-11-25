@@ -57,8 +57,9 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// The HRAM defaults key exactly as the variables that once chose them (OSPREY_TC_HALF_WINDOW=0.4,
         /// OSPREY_CORR_FRAGMENT_TOLERANCE=7, OSPREY_REF_XIC=corr, OSPREY_LOCAL_RT_TOLERANCE=15), so the outputs of
-        /// a recipe run are adopted by a default one; unit resolution keeps the legacy key, so no output of a
-        /// unit-resolution search is invalidated. The settings are the configuration's, so two configurations
+        /// a recipe run are adopted by a default one; unit resolution keeps the legacy scoring key, so its
+        /// per-file scores are not invalidated (its classifier and protein boost are the HRAM ones, which the
+        /// FDR tasks key). The settings are the configuration's, so two configurations
         /// in one process each keep their own. Meaningful only when none of those variables is set.
         /// </summary>
         [TestMethod]
@@ -87,16 +88,16 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(unitConfig.Scoring.GbtOutOfFold);
             Assert.AreEqual(0.5, unitConfig.RtCalibration.MinRtTolerance);
             Assert.AreEqual(0.3, unitConfig.RtCalibration.LoessBandwidth);
-            // The second pass credits protein evidence once: protein-compact without the protein-best
-            // column, the transfer with it, whichever way protein-best was chosen.
-            Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT, unitConfig.Pass2QValue);
+            // The second pass is the transfer at every resolution, with or without the protein-best
+            // column; protein-compact is chosen only through OSPREY_PASS2_QVALUE.
+            Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, unitConfig.Pass2QValue);
             Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, hramConfig.Pass2QValue);
             var unitProteinBest = new OspreyConfig { ProteinBoost = ProteinBoost.best, ProteinBoostGiven = true };
             unitProteinBest.ApplyResolutionMode(ResolutionMode.UnitResolution);
             Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, unitProteinBest.Pass2QValue);
-            var hramNoProteinBest = new OspreyConfig { ProteinBoost = ProteinBoost.compact, ProteinBoostGiven = true };
+            var hramNoProteinBest = new OspreyConfig { ProteinBoost = ProteinBoost.off, ProteinBoostGiven = true };
             hramNoProteinBest.ApplyResolutionMode(ResolutionMode.HRAM);
-            Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT, hramNoProteinBest.Pass2QValue);
+            Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, hramNoProteinBest.Pass2QValue);
             using (OspreyEnvironment.OverrideVariables(new Dictionary<string, string>
                    {
                        { @"OSPREY_PASS2_QVALUE", OspreyEnvironment.PASS2_QVALUE_TRANSFER }
@@ -113,7 +114,7 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(hramSettings, @"classifier gbdt, protein boost best, XIC fragments 12, correlation tolerance 7 ppm");
             StringAssert.Contains(hramSettings, @"tc half window 0.4 min, gbdt out-of-fold on, RT tolerance floor 1 min, LOESS bandwidth 0.1, reconciliation refit off, PEP ratio");
             string unitSettings = OspreyEnvironment.DescribeSearchSettings(unitConfig);
-            StringAssert.Contains(unitSettings, @"classifier svm, protein boost compact, XIC fragments 6, correlation tolerance off");
+            StringAssert.Contains(unitSettings, @"classifier gbdt, protein boost best, XIC fragments 6, correlation tolerance off");
             Assert.AreEqual(12, hramConfig.Scoring.XicFragments);
             Assert.IsTrue(hramConfig.Scoring.GbtOutOfFold);
             // A shallow clone (per-file scoring, the correlation re-extraction) carries the settings
@@ -356,7 +357,7 @@ namespace pwiz.Osprey.Test
                 string current = RunKey(runA);
                 foreach (string artifact in new[]
                          {
-                             ParquetScoreCache.GetReconciledScoresPath(runA),
+                             ParquetScoreCache.GetReconciledFeaturesPath(runA),
                              FdrScoresSidecar.Pass1Path(runA),
                              CalibrationIO.CalibrationPathForInput(runA, ArtifactPaths.ResolveOutputDir(runA)),
                              SpectraCache.GetCachePath(runA),
@@ -606,14 +607,14 @@ namespace pwiz.Osprey.Test
         {
             var tasks = OspreyTasks.Create().Pipeline;
             // The protein-best column off in both, so the classifier is the only difference.
-            var linearCtx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core, ProteinBoost = ProteinBoost.compact }, tasks, null, null, null);
-            var treeCtx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core, FdrClassifier = FdrClassifier.Gbdt, ProteinBoost = ProteinBoost.compact }, tasks, null, null, null);
+            var linearCtx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core, ProteinBoost = ProteinBoost.off }, tasks, null, null, null);
+            var treeCtx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core, FdrClassifier = FdrClassifier.Gbdt, ProteinBoost = ProteinBoost.off }, tasks, null, null, null);
             string treeTerm = PercolatorEngine.GbdtValidityKeySuffix(treeCtx.Config);
             Assert.AreNotEqual(string.Empty, treeTerm, @"gbdt must emit a term");
             // The linear SVM with the protein-best column off emits NOTHING, through both overloads
             // and whatever the tree settings say, so moving the choice from --fdr-method to
             // OSPREY_FDR_MODEL invalidates no existing SVM output directory.
-            Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig { ProteinBoost = ProteinBoost.compact }),
+            Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig { ProteinBoost = ProteinBoost.off }),
                 @"the linear SVM must emit nothing, or every existing output directory is invalidated");
             // Off is the default, so the default key is the one before the column existed.
             Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig()),
@@ -986,14 +987,14 @@ namespace pwiz.Osprey.Test
                 PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => defaultRecorded[f]));
 
             // Under the core set no task carries the term, so no core output directory is invalidated;
-            // under the HRAM default the scoring and rescoring tasks do.
+            // under the default set the scoring and rescoring tasks do.
             var tasks = OspreyTasks.Create().Pipeline;
-            var unitConfig = new OspreyConfig { ResolutionMode = ResolutionMode.UnitResolution };
-            var unitCtx = new PipelineContext(unitConfig, tasks, null, null, null);
-            Assert.AreEqual(string.Empty, PinFeatureMask.For(unitConfig).RecordedFeaturesValidityKeySuffix());
+            var unitCoreConfig = new OspreyConfig { ResolutionMode = ResolutionMode.UnitResolution, FeatureSet = OspreyFeatureSet.core };
+            var unitCoreCtx = new PipelineContext(unitCoreConfig, tasks, null, null, null);
+            Assert.AreEqual(string.Empty, PinFeatureMask.For(unitCoreConfig).RecordedFeaturesValidityKeySuffix());
             foreach (var task in tasks)
             {
-                string key = task.ValidityKey(unitCtx);
+                string key = task.ValidityKey(unitCoreCtx);
                 Assert.IsFalse(key.Contains(@";featrec=") || key.Contains(@";featcols="), task.Name);
             }
             var ctx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
@@ -1081,16 +1082,16 @@ namespace pwiz.Osprey.Test
                 @"at HRAM the unit-resolution columns are not all of them");
             Assert.AreEqual(string.Empty, PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => onlySpec[f], unit));
 
-            // The mask term likewise: core keys are the old default's everywhere (the default at unit
-            // resolution), the default set lists what it uses at the resolution, all counts at HRAM,
-            // and only an HRAM mask counts.
+            // The mask term likewise: core keys are the old default's everywhere (the unit-resolution
+            // default before the default set), the default set lists what it uses at the resolution, all
+            // counts at HRAM, and only an HRAM mask counts.
             const string coreMaskKey = @";featmask=default;fdrcols=unmasked";
             Assert.AreEqual(coreMaskKey, PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.core, hram));
             Assert.AreEqual(coreMaskKey, PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.core, unit));
-            Assert.AreEqual(coreMaskKey, PinFeatureMask.ValidityKeySuffix(null, unit));
             Func<int[], string> setKey = used => @";featset=" + string.Join(@"+",
                 used.Where(f => f >= PinFeatureMask.CORE_FEATURE_COUNT).Select(f => names[f])) + @";fdrcols=unmasked";
             Assert.AreEqual(setKey(defaultHram), PinFeatureMask.ValidityKeySuffix(null, hram));
+            Assert.AreEqual(setKey(defaultUnit), PinFeatureMask.ValidityKeySuffix(null, unit));
             Assert.AreEqual(setKey(defaultHram), PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.@default, hram));
             Assert.AreEqual(setKey(defaultUnit), PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.@default, unit));
             Assert.AreEqual(setKey(efficientHram), PinFeatureMask.ValidityKeySuffix(null, OspreyFeatureSet.efficient, hram));
@@ -1215,8 +1216,8 @@ namespace pwiz.Osprey.Test
             var proteinBestConfig = new OspreyConfig { ProteinBoost = ProteinBoost.best };
             Assert.AreEqual(string.Empty, OspreyEnvironment.Pass2StrataValidityKeySuffix(proteinBestConfig),
                 @"the transfer, the default with protein-best, does not compete a complement, so its outputs keep their key");
-            Assert.AreEqual(OspreyEnvironment.PASS2_STRATA_TERM, OspreyEnvironment.Pass2StrataValidityKeySuffix(new OspreyConfig()),
-                @"protein-compact, the default without protein-best, carries the complement term");
+            Assert.AreEqual(string.Empty, OspreyEnvironment.Pass2StrataValidityKeySuffix(new OspreyConfig()),
+                @"the transfer, the default without protein-best too, does not compete a complement");
             using (OspreyEnvironment.OverrideVariables(new Dictionary<string, string>
                    {
                        { @"OSPREY_PASS2_QVALUE", OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT }

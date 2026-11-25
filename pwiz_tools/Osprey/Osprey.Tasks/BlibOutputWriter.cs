@@ -374,7 +374,7 @@ namespace pwiz.Osprey.Tasks
             // searched without the column is the one written before the setting existed.
             if (config.ProteinBest)
                 writer.AddMetadata(OspreyBlibWriter.KEY_PROTEIN_BEST, OspreyArgNames.VALUE_ON);
-            // The same for the feature set, whose default depends on the detected resolution: core,
+            // The same for the feature set, whose default once depended on the detected resolution: core,
             // the set every library had before the others existed, writes no row. A research mask
             // overrides the set, so it writes none either.
             var featureSet = PinFeatureMask.For(config).FeatureSet;

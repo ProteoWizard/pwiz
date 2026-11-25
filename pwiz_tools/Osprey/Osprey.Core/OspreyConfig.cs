@@ -231,10 +231,10 @@ namespace pwiz.Osprey.Core
         /// How a precursor's detection is boosted by the other detections of its protein
         /// (<c>--protein-boost</c>). Unless the command line gives it, <see cref="ApplyResolutionMode"/>
         /// sets it from the resolution's <see cref="ResolutionDefaults"/>; a configuration that never
-        /// learns its resolution keeps <see cref="ProteinBoost.compact"/>, the boost that preceded the
-        /// choice.
+        /// learns its resolution keeps the legacy <see cref="ProteinBoost.off"/>: no protein-best column,
+        /// as before the choice.
         /// </summary>
-        public ProteinBoost ProteinBoost { get; set; } = ProteinBoost.compact;
+        public ProteinBoost ProteinBoost { get; set; } = ResolutionDefaults.LEGACY.ProteinBoost;
 
         /// <summary>
         /// True under <see cref="ProteinBoost.best"/>: the first pass trains with the protein-best column
@@ -253,14 +253,11 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// How the second pass assigns reported q-values: <see cref="OspreyEnvironment.PASS2_QVALUE_TRANSFER"/>
-        /// or <see cref="OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT"/>. Not a choice of its own: it follows
-        /// <see cref="ProteinBoost"/>, protein-compact under <see cref="ProteinBoost.compact"/> and the transfer
-        /// otherwise. The developer variable OSPREY_PASS2_QVALUE overrides it.
+        /// or <see cref="OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT"/>. Not a choice of its own: the transfer,
+        /// for every <see cref="ProteinBoost"/> and resolution. The developer variable OSPREY_PASS2_QVALUE
+        /// overrides it.
         /// </summary>
-        public string Pass2QValue => OspreyEnvironment.Pass2QValueOverride ??
-                                     (ProteinBoost == ProteinBoost.compact
-                                         ? OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT
-                                         : OspreyEnvironment.PASS2_QVALUE_TRANSFER);
+        public string Pass2QValue => OspreyEnvironment.Pass2QValueOverride ?? OspreyEnvironment.PASS2_QVALUE_TRANSFER;
 
         /// <summary>True when <see cref="Pass2QValue"/> is the frozen-model confidence transfer.</summary>
         public bool Pass2TransferQ =>
@@ -283,9 +280,8 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// The PIN features the FDR classifier trains on (<c>--feature-set</c>): the 21 core features,
-        /// the chosen default set, or every feature. Null when the command line did not say, and the
-        /// resolution chooses: <see cref="OspreyFeatureSet.@default"/> for HRAM data and
-        /// <see cref="OspreyFeatureSet.core"/> at unit resolution (<c>PinFeatureMask.FeatureSetFor</c>).
+        /// the chosen default set, or every feature. Null when the command line did not say, which means
+        /// <see cref="OspreyFeatureSet.@default"/> at either resolution (<c>PinFeatureMask.FeatureSetFor</c>).
         /// OSPREY_FEATURE_MASK, when set, overrides it.
         /// </summary>
         public OspreyFeatureSet? FeatureSet { get; set; }
@@ -327,6 +323,15 @@ namespace pwiz.Osprey.Core
         /// only -- intentionally NOT part of any identity hash.
         /// </summary>
         public bool ModelDiagnostics { get; set; }
+
+        /// <summary>
+        /// --keep-scores-parquet: also write each run's features - every scalar and feature
+        /// column - beside its stub scores parquet, <c>&lt;stem&gt;.features.parquet</c> from the
+        /// first pass and <c>&lt;stem&gt;.features-reconciled.parquet</c> from the second, so a
+        /// later run can train the run's model again without scoring it again. Not part of any
+        /// identity hash: it adds files and changes none.
+        /// </summary>
+        public bool KeepScoresParquet { get; set; }
 
         /// <summary>
         /// Leave the entrapment peptides, and the protein groups made only of entrapment
@@ -820,12 +825,12 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public enum ProteinBoost
     {
-        /// <summary>The protein-best training column in the first pass, with the transfer second pass. The HRAM default.</summary>
+        /// <summary>The protein-best training column in the first pass, with the transfer second pass. The default at both resolutions.</summary>
         best,
-        /// <summary>The protein-compact second pass, which competes the proteins the first pass detected apart from the rest.
-        /// The unit-resolution default until Stellar data is measured on a larger cohort; to be removed.</summary>
+        /// <summary>No protein-best column, like <see cref="off"/>: the protein-compact second pass it once chose is now
+        /// reached only through OSPREY_PASS2_QVALUE. To be removed.</summary>
         compact,
-        /// <summary>No protein boost: the transfer second pass alone.</summary>
+        /// <summary>No protein boost: the transfer second pass alone. The legacy value, kept by a configuration that never learns its resolution.</summary>
         off
     }
 

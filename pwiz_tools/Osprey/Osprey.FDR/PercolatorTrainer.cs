@@ -565,7 +565,9 @@ namespace pwiz.Osprey.FDR
             var round1Config = trainConfig.CloneForTrainOnly();
             round1Config.ReportTrainEntryFolds = true;
             round1Config.Diagnostics = null;
+            var swRound1 = Stopwatch.StartNew();
             var round1 = RunPercolator(round1Entries, round1Config);
+            double round1Seconds = swRound1.Elapsed.TotalSeconds;
 
             // Score every candidate with the round-1 models, out of fold where it trained.
             int m = candidates.Count;
@@ -580,6 +582,8 @@ namespace pwiz.Osprey.FDR
             var round1Scores = new double[m];
             PercolatorScorer.ScoreRowsWithModel(m, k => candidates[k].Features, round1,
                 nFeatures, round1Scores, 0, trainConfig.NThreads, heldOutFold);
+            log.LogInfo(LogTag.TIMING, @"{0} two-round training: round 1 {1:F1}s on {2} rows, round-1 scoring of {3} candidates {4:F1}s",
+                passLabel, round1Seconds, round1Subset.Length, m, swRound1.Elapsed.TotalSeconds - round1Seconds);
 
             // Round 2's subset: the best-scoring peptide groups, kept whole.
             var labels = new bool[m];
@@ -1498,7 +1502,7 @@ namespace pwiz.Osprey.FDR
                     consecutiveNoImprove++;
                 }
 
-                if (consecutiveNoImprove >= 2)
+                if (consecutiveNoImprove >= OspreyEnvironment.GbtPatience)
                     break;
             }
 
@@ -1599,22 +1603,37 @@ namespace pwiz.Osprey.FDR
             out int bestIdx, out int bestPassing)
         {
             int n = features.Rows;
-            int p = features.Cols;
-            bestIdx = 0;
-            bestPassing = 0;
-
-            for (int feat = 0; feat < p; feat++)
+            var passing = new int[features.Cols];
+            for (int feat = 0; feat < passing.Length; feat++)
             {
                 var scores = new double[n];
                 for (int i = 0; i < n; i++)
                     scores[i] = features[i, feat];
-                int nPass = PercolatorQValues.CountPassing(scores, labels, entryIds, fdrThreshold);
-                if (nPass > bestPassing)
+                passing[feat] = PercolatorQValues.CountPassing(scores, labels, entryIds, fdrThreshold);
+            }
+            bestIdx = BestSingleFeature(passing, out bestPassing);
+        }
+
+        /// <summary>
+        /// The best single feature of <paramref name="passing"/>, each feature's count of targets
+        /// passing with its own value as the score: the feature with the most, higher-is-better
+        /// only, the lowest index on a tie, and feature 0 when none passes any. The rule that picks
+        /// the initial direction the folds train from, and the one the per-run first-pass model's
+        /// safeguard compares its model against (<see cref="PerFileFirstPassModel"/>).
+        /// </summary>
+        internal static int BestSingleFeature(int[] passing, out int bestPassing)
+        {
+            int bestIdx = 0;
+            bestPassing = 0;
+            for (int feat = 0; feat < passing.Length; feat++)
+            {
+                if (passing[feat] > bestPassing)
                 {
-                    bestPassing = nPass;
+                    bestPassing = passing[feat];
                     bestIdx = feat;
                 }
             }
+            return bestIdx;
         }
 
         // ============================================================

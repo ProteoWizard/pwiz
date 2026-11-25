@@ -1053,6 +1053,16 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} of {1} runs have no first-pass scores from their own model ({2}). Run {3} with the same settings first..
+        /// </summary>
+        public static string FirstPassFdrTask_RunFirstPassProjection__0__of__1__runs_have_no_first_pass_scores_from_their_own_model___2____Run__3__with_the_same_settings_first_ {
+            get {
+                return ResourceManager.GetString("FirstPassFdrTask_RunFirstPassProjection__0__of__1__runs_have_no_first_pass_score" +
+                        "s_from_their_own_model___2____Run__3__with_the_same_settings_first_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to up to date: {0}.
         /// </summary>
         public static string FirstPassFdrTask_RunFirstPassProjection___up_to_date___0_ {
@@ -2485,12 +2495,34 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Protein-compact second-pass FDR needs one first-pass model for the analysis, but each run trains its own. Unset {0}..
+        /// </summary>
+        public static string PerFileRescoreTask_OwnModelsProteinCompactMessage_Protein_compact_second_pass_FDR_needs_one_first_pass_model_for_the_analysis__but_each_run_trains_its_own__Unset__0__ {
+            get {
+                return ResourceManager.GetString("PerFileRescoreTask_OwnModelsProteinCompactMessage_Protein_compact_second_pass_FD" +
+                        "R_needs_one_first_pass_model_for_the_analysis__but_each_run_trains_its_own__Unse" +
+                        "t__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Second-pass FDR: run &apos;{0}&apos; has no current re-scored results file ({1}), which {2} writes for every run. Its {3} file cannot be used instead, because it holds only first-pass peaks. Run {4} for it..
         /// </summary>
         public static string PerFileRescoreTask_ReconciledPathOrFail_Second_pass_FDR__run___0___has_no_current_re_scored_results_file___scores_reconciled_ {
             get {
                 return ResourceManager.GetString("PerFileRescoreTask_ReconciledPathOrFail_Second_pass_FDR__run___0___has_no_current" +
                         "_re_scored_results_file___scores_reconciled_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Saving second-pass features needs each run&apos;s first-pass features, but {0} is missing. Run {1} with feature writing on ({2})..
+        /// </summary>
+        public static string PerFileRescoreTask_RequireFeaturesCheckpoints_Saving_second_pass_features_needs_each_run_s_first_pass_features__but__0__is_missing__Run__1__with_feature_writing_on___2___ {
+            get {
+                return ResourceManager.GetString("PerFileRescoreTask_RequireFeaturesCheckpoints_Saving_second_pass_features_needs_" +
+                        "each_run_s_first_pass_features__but__0__is_missing__Run__1__with_feature_writing" +
+                        "_on___2___", resourceCulture);
             }
         }
         
@@ -3226,6 +3258,16 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("RescoreHydration_OverlayFirstPassSidecar_Failed_to_read_the_first_pass_intermedia" +
                         "te_file_for__0___expected_at__1___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The run&apos;s first-pass model could not be read from {0}. Run {1} again..
+        /// </summary>
+        public static string RunModelScorer_Load_The_run_s_first_pass_model_could_not_be_read_from__0___Run__1__again_ {
+            get {
+                return ResourceManager.GetString("RunModelScorer_Load_The_run_s_first_pass_model_could_not_be_read_from__0___Run__" +
+                        "1__again_", resourceCulture);
             }
         }
         

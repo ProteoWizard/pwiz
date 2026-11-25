@@ -342,6 +342,9 @@ namespace pwiz.Osprey.Test
                 Assert.IsTrue(FirstPassModelIO.Save(linearPath, MakeSvmModel(), TestStamps.Any), @"SVM model should persist");
                 Assert.IsNull(JObject.Parse(File.ReadAllText(linearPath))[@"FoldGbtModels"],
                     @"a linear model's file must not gain a tree property");
+
+                AssertRunModelRoundTrip(model, path, linearPath);
+                AssertRunModelRoundTrip(MakeSvmModel(), path, linearPath);
             }
             finally
             {
@@ -349,6 +352,77 @@ namespace pwiz.Osprey.Test
                     File.Delete(path);
                 if (File.Exists(linearPath))
                     File.Delete(linearPath);
+            }
+        }
+
+        /// <summary>
+        /// A run's own model file (per-run first-pass models) round-trips the model, its
+        /// calibration map: the reloaded model scores bit-identically
+        /// and calibrates through the same map. An analysis-wide model file, which has no
+        /// calibration map, does not load as a run's model, nor does a map that could not be
+        /// applied. <paramref name="analysisPath"/> holds an analysis-wide model.
+        /// </summary>
+        private static void AssertRunModelRoundTrip(PercolatorResults model, string path, string analysisPath)
+        {
+            Assert.IsTrue(FirstPassModelIO.SaveRunModel(path, new RunFirstPassModel(model, 0.75, 2.5, null, -0.25),
+                TestStamps.Any));
+            var reloaded = FirstPassModelIO.LoadRunModel(path, PinFeatureMask.Hram);
+            Assert.IsNotNull(reloaded, @"a run's model should reload");
+            AssertBitEqual(0.75, reloaded.CalibrationThreshold, @"calibration threshold");
+            AssertBitEqual(2.5, reloaded.CalibrationDenominator, @"calibration denominator");
+            Assert.IsFalse(reloaded.ScoresProteinBest);
+            Assert.IsNull(JObject.Parse(File.ReadAllText(path))[@"ProteinBestFloor"],
+                @"a model without the protein-best column records no floor");
+            var before = FrozenModelScorer.TryCreate(model);
+            var after = FrozenModelScorer.TryCreate(reloaded.Model);
+            Assert.IsNotNull(before);
+            Assert.IsNotNull(after);
+            var rng = new Random(11);
+            for (int i = 0; i < 20; i++)
+            {
+                var row = new double[before.NumFeatures];
+                for (int j = 0; j < row.Length; j++)
+                    row[j] = 2.0 * rng.NextDouble() - 0.5;
+                double raw = before.Score(row);
+                AssertBitEqual(raw, after.Score(row), @"run model Score");
+                AssertBitEqual((raw - 0.75) / 2.5, reloaded.Calibrate(after.Score(row)), @"calibrated score");
+            }
+            Assert.IsNull(FirstPassModelIO.LoadRunModel(analysisPath, PinFeatureMask.Hram),
+                @"an analysis-wide model has no calibration map");
+            var written = JObject.Parse(File.ReadAllText(path));
+            AssertRunModelLoadsNull(Edited(written, json => json[@"CalibrationDenominator"] = 0.0), @"zero denominator");
+            AssertRunModelLoadsNull(Edited(written, json => json.Remove(@"CalibrationThreshold")), @"no threshold");
+            Assert.IsFalse(reloaded.UsesFallbackFeature);
+            Assert.IsNull(written[@"FallbackFeature"], @"a run its model scores records no fallback feature");
+
+            // A run the safeguard scored with one feature keeps that feature through the file.
+            const int fallbackFeature = 2;
+            Assert.IsTrue(FirstPassModelIO.SaveRunModel(path,
+                new RunFirstPassModel(model, 0.75, 2.5, null, -0.25, fallbackFeature), TestStamps.Any));
+            var fallback = FirstPassModelIO.LoadRunModel(path, PinFeatureMask.Hram);
+            Assert.IsNotNull(fallback, @"a run scored by its fallback feature should reload");
+            Assert.AreEqual(fallbackFeature, fallback.FallbackFeature);
+            Assert.IsTrue(fallback.UsesFallbackFeature);
+            var fallbackJson = JObject.Parse(File.ReadAllText(path));
+            AssertRunModelLoadsNull(Edited(fallbackJson, json => json[@"FallbackFeature"] = PinFeatureMask.Hram.FdrFeatureIndices.Length),
+                @"a fallback feature past the FDR features");
+            AssertRunModelLoadsNull(Edited(fallbackJson, json => json[@"FallbackFeatureName"] = @"not_a_feature"),
+                @"a fallback feature under another name");
+        }
+
+        private static void AssertRunModelLoadsNull(string json, string what)
+        {
+            string path = Path.Combine(Path.GetTempPath(),
+                @"osprey_run_model_bad_" + Guid.NewGuid().ToString(@"N") + @".json");
+            try
+            {
+                File.WriteAllText(path, json);
+                Assert.IsNull(FirstPassModelIO.LoadRunModel(path, PinFeatureMask.Hram), what + @" should load as null");
+            }
+            finally
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
             }
         }
 
@@ -379,22 +453,19 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// What FirstPassFDR does with the analysis's model file. It writes every model it TRAINS
-        /// - a current model of the other classifier on disk does not excuse the write, because
-        /// Stage 6 and a distributed SecondPassFDR read whatever file is there - and it enters the
-        /// resume at the compaction gate only with a persisted model of the classifier this run
-        /// uses. The model and stratum are experiment-wide, so they are written ONCE under the
-        /// analysis name and never beside a run.
+        /// FirstPassFDR's fast resume enters at the compaction gate on the experiment sidecar of
+        /// this run, and on no model: each run trained its own in PerFileScoring, which the gate's
+        /// caller checks with the run's stub. The analysis-wide model and stratum files still load
+        /// paired by their stamps, for the protein-compact second pass.
         /// </summary>
         [TestMethod]
-        public void TestFirstPassFdrTaskPersistsAndAdoptsOnlyItsOwnModel()
+        public void TestFirstPassFdrTaskGateAndModelPairing()
         {
             string dir = Path.Combine(Path.GetTempPath(), @"osprey_model_task_" + Guid.NewGuid().ToString(@"N"));
             Directory.CreateDirectory(dir);
             try
             {
-                AssertEveryTrainedModelIsPersisted(dir, AnalysisConfig(dir));
-                AssertGateAdoptsOnlyThisRunsClassifier(dir, AnalysisConfig(dir));
+                AssertGateKeysOnTheExperimentSidecar(dir, AnalysisConfig(dir));
                 string pairingDir = Path.Combine(dir, @"pairing");
                 Directory.CreateDirectory(pairingDir);
                 AssertLoadForAnalysisPairsByStamp(AnalysisConfig(pairingDir));
@@ -550,62 +621,24 @@ namespace pwiz.Osprey.Test
             Assert.IsNull(unpaired.StratumBaseIds, @"a stratum stamped by another run must not be paired");
         }
 
-        private static void AssertEveryTrainedModelIsPersisted(string dir, OspreyConfig config)
-        {
-            const string key = @"validity-key";
-            var task = FirstPassTask();
-            string modelPath = FirstPassModelIO.PathFor(config);
-            Assert.AreEqual(Path.Combine(dir, @"output" + FirstPassModelIO.EXT_MODEL), modelPath,
-                @"the model is named for the analysis, beside the per-run artifacts");
-
-            // A first run persists the linear model it trained - once, and not beside any run.
-            task.PublishFirstPassModel(MakeSvmModel(), null, null, key, NewContext(config));
-            var onDisk = FirstPassModelIO.Load(modelPath, PinFeatureMask.Hram);
-            Assert.IsNotNull(onDisk, @"the trained model should be persisted");
-            Assert.IsNotNull(onDisk.Model, @"the persisted file should carry the model");
-            Assert.IsFalse(onDisk.Model.IsGradientBoostedTrees, @"the persisted model should be the linear one");
-            Assert.AreEqual(0, Directory.GetFiles(dir, @"run*").Length, @"no per-run copy of the model");
-
-            // A re-run finds that model current but trains its own, as it does whenever no file
-            // is resumable. Its model must replace the file.
-            task.PublishFirstPassModel(MakeTreeModel(), onDisk, null, key, NewContext(config));
-            Assert.IsTrue(FirstPassModelIO.Load(modelPath, PinFeatureMask.Hram)?.Model?.IsGradientBoostedTrees ?? false,
-                @"a retrained model must replace the persisted one");
-            Assert.IsTrue(PerFileResumeDriver.IsCurrent(modelPath, FirstPassFdrTask.TASK_NAME, key),
-                @"the replacement must be stamped current");
-
-            // A model the run ADOPTED is the file already on disk, attested by its marker, so it
-            // is not written again.
-            var adopted = FirstPassModelIO.Load(modelPath, PinFeatureMask.Hram);
-            Assert.IsNotNull(adopted);
-            File.Delete(modelPath);
-            task.PublishFirstPassModel(adopted.Model, adopted, adopted.Model, key, NewContext(config));
-            Assert.IsFalse(File.Exists(modelPath), @"an adopted model is not written again");
-        }
-
-        private static void AssertGateAdoptsOnlyThisRunsClassifier(string dir, OspreyConfig config)
+        private static void AssertGateKeysOnTheExperimentSidecar(string dir, OspreyConfig config)
         {
             const string key = @"validity-key";
             var task = FirstPassTask();
             string experimentPath = Path.Combine(dir, @"output.1st-pass.fdr_experiment.bin");
+            // An experiment sidecar left by a run under ANOTHER key is not this run's first pass.
+            FdrExperimentSidecar.Write(experimentPath, new Dictionary<uint, FdrExperimentRecord>(),
+                FdrScoresSidecar.Pass.FirstPass, OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, @"other-key"));
+            var refusals = task.CompactionGateRefusals(experimentPath, key, config, out _);
+            Assert.AreEqual(1, refusals.Count, @"an experiment sidecar stamped with another key must not enter at the gate");
+
             FdrExperimentSidecar.Write(experimentPath, new Dictionary<uint, FdrExperimentRecord>(),
                 FdrScoresSidecar.Pass.FirstPass, OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, key));
-            // A model and stratum left by a run under ANOTHER key are not this run's first pass.
-            var otherRun = OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, @"other-key");
-            SaveModelAndStratum(config, otherRun);
-            var refusals = task.CompactionGateRefusals(experimentPath, key, config, out _);
-            Assert.AreEqual(1, refusals.Count, @"a model stamped with another key must not enter at the gate");
-
-            SaveModelAndStratum(config, OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, key));
+            // A model and stratum on disk are no part of the gate.
+            SaveModelAndStratum(config, OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, @"other-key"));
             refusals = task.CompactionGateRefusals(experimentPath, key, config, out var sidecar);
             Assert.AreEqual(0, refusals.Count, string.Join(@"; ", refusals));
-            Assert.IsNotNull(sidecar, @"the gate should hand back the sidecar it checked");
-            Assert.IsNotNull(sidecar.Model, @"the gate should hand back the model it checked");
-
-            config.FdrClassifier = FdrClassifier.Gbdt;
-            refusals = task.CompactionGateRefusals(experimentPath, key, config, out _);
-            Assert.AreEqual(1, refusals.Count,
-                @"a gbdt run must not enter at the gate with a linear model: it would publish that model");
+            Assert.IsNull(sidecar, @"no analysis-wide model enters at the gate");
         }
 
         private static void SaveModelAndStratum(OspreyConfig config, ArtifactStamp stamp)

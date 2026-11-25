@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Osprey.Demux", "Osprey.Demu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Osprey.DemuxTool", "Osprey.DemuxTool\Osprey.DemuxTool.csproj", "{642B257A-5A49-460C-B5F3-6A8624BBA7CE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OspreyStubReader", "Regression\OspreyStubReader\OspreyStubReader.csproj", "{B6E2C1D4-7F3A-4C59-9E21-3A8D5F0C6B17}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -195,6 +197,18 @@ Global
 		{642B257A-5A49-460C-B5F3-6A8624BBA7CE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{642B257A-5A49-460C-B5F3-6A8624BBA7CE}.Release|x86.ActiveCfg = Release|Any CPU
 		{642B257A-5A49-460C-B5F3-6A8624BBA7CE}.Release|x86.Build.0 = Release|Any CPU
+		{B6E2C1D4-7F3A-4C59-9E21-3A8D5F0C6B17}.Debug|x64.ActiveCfg = Debug|x64
+		{B6E2C1D4-7F3A-4C59-9E21-3A8D5F0C6B17}.Debug|x64.Build.0 = Debug|x64
+		{B6E2C1D4-7F3A-4C59-9E21-3A8D5F0C6B17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6E2C1D4-7F3A-4C59-9E21-3A8D5F0C6B17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6E2C1D4-7F3A-4C59-9E21-3A8D5F0C6B17}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B6E2C1D4-7F3A-4C59-9E21-3A8D5F0C6B17}.Debug|x86.Build.0 = Debug|Any CPU
+		{B6E2C1D4-7F3A-4C59-9E21-3A8D5F0C6B17}.Release|x64.ActiveCfg = Release|x64
+		{B6E2C1D4-7F3A-4C59-9E21-3A8D5F0C6B17}.Release|x64.Build.0 = Release|x64
+		{B6E2C1D4-7F3A-4C59-9E21-3A8D5F0C6B17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6E2C1D4-7F3A-4C59-9E21-3A8D5F0C6B17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6E2C1D4-7F3A-4C59-9E21-3A8D5F0C6B17}.Release|x86.ActiveCfg = Release|Any CPU
+		{B6E2C1D4-7F3A-4C59-9E21-3A8D5F0C6B17}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -66,6 +67,22 @@ namespace pwiz.Osprey.Tasks
         // funnels the disk-bound work into one stream at a time while leaving the
         // subsequent main-search phase free to run in parallel across files.
         internal static readonly SemaphoreSlim s_mzmlReadGate = new SemaphoreSlim(1, 1);
+
+        // One library identity per loaded library, shared by every reader of a stub layout file.
+        private static readonly ConditionalWeakTable<List<LibraryEntry>, LibraryIdentity> STUB_IDENTITIES =
+            new ConditionalWeakTable<List<LibraryEntry>, LibraryIdentity>();
+
+        /// <summary>
+        /// The library identity a reader of a stub layout scores parquet takes each row's peptide,
+        /// charge and decoy flag from, under per-run first-pass models,
+        /// where a run's scores parquet and its reconciled parquet are both stubs with no peptide
+        /// column; null otherwise, so every other run reads its files as it always has. Built once
+        /// per loaded library.
+        /// </summary>
+        internal static LibraryIdentity StubIdentityFor(PipelineContext ctx)
+        {
+            return STUB_IDENTITIES.GetValue(ctx.Get<FullLibrary>().Value, library => new LibraryIdentity(library));
+        }
 
         /// <summary>
         /// The metadata of the FDR classifier's features - the unmasked PIN features, in the order

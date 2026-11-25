@@ -657,7 +657,7 @@ namespace pwiz.Osprey.Core
                 string.Join(@", ", off));
         }
 
-        /// <summary>The <see cref="FdrModel"/> spelling of the linear SVM, the unit-resolution default. Accepted so a
+        /// <summary>The <see cref="FdrModel"/> spelling of the linear SVM, the legacy default. Accepted so a
         /// sweep script can name both arms explicitly rather than unsetting the variable for
         /// one of them.</summary>
         public const string FDR_MODEL_SVM = @"svm";
@@ -667,11 +667,11 @@ namespace pwiz.Osprey.Core
 
         private static readonly EnvVar ENV_FDR_MODEL = new EnvVar(@"OSPREY_FDR_MODEL", EnvVarGroup.behavior,
             @"The first-pass classifier: the linear SVM, or gradient-boosted trees (C# only).")
-            { Values = new[] { @"svm", @"gbdt" }, DefaultValue = @"gbdt for HRAM data, svm at unit resolution" };
+            { Values = new[] { @"svm", @"gbdt" }, DefaultValue = @"gbdt" };
 
         /// <summary>
         /// OSPREY_FDR_MODEL: the classifier first-pass Percolator trains, in place of the
-        /// resolution's default (gbdt for HRAM data, the SVM at unit resolution).
+        /// resolution's default (gbdt at both resolutions).
         /// <see cref="FDR_MODEL_SVM"/> selects the linear SVM;
         /// <see cref="FDR_MODEL_GBDT"/> selects gradient-boosted trees. Case-insensitive and
         /// trimmed, like the other OSPREY_* selectors. An unrecognized value is a startup ERROR
@@ -679,7 +679,9 @@ namespace pwiz.Osprey.Core
         /// silently trained the SVM is the #4491 failure over again.
         ///
         /// <para>GBDT is the HRAM default since the #4950 features, some of which a linear SVM
-        /// cannot use well: with them it found more precursors on SEA-AD Astral than the SVM.</para>
+        /// cannot use well: with them it found more precursors on SEA-AD Astral than the SVM. It is
+        /// the unit-resolution default too since the regression Stellar entrapment data showed the
+        /// same, with protein-best and the default feature set.</para>
         ///
         /// <para>An environment variable rather than a command-line argument because it is a
         /// developer lever, not a product setting: it replaced <c>--fdr-method</c>, which was
@@ -733,8 +735,8 @@ namespace pwiz.Osprey.Core
                 return null;
             return string.Format(
                 @"OSPREY_FDR_MODEL='{0}' is not a recognized classifier. Recognized: '{1}' (the " +
-                @"linear SVM, the default at unit resolution) and '{2}' (gradient-boosted trees, " +
-                @"the default for HRAM data). Unset it for the resolution's default.",
+                @"linear SVM) and '{2}' (gradient-boosted trees, " +
+                @"the default). Unset it for the default.",
                 raw, FDR_MODEL_SVM, FDR_MODEL_GBDT);
         }
 
@@ -769,7 +771,8 @@ namespace pwiz.Osprey.Core
         /// hit the shared cap of 10 -- i.e. the cap was binding on the trees, so their
         /// reported discrimination may understate the model rather than measure it. Raising
         /// it costs nothing when it is not binding: the existing
-        /// stop-after-2-non-improving-iterations rule still ends training on convergence.
+        /// stop-after-N-non-improving-iterations rule (<see cref="GbtPatience"/>, 2 by default)
+        /// still ends training on convergence.
         /// </summary>
         public static readonly int GbtMaxIterations = ResolveGbtMaxIterations();
 
@@ -980,7 +983,7 @@ namespace pwiz.Osprey.Core
             @"Research switch: the PIN features hidden from the FDR classifier, as comma-separated " +
             @"feature names, or none to mask nothing. Set, it overrides " +
             OspreyArgNames.Text(OspreyArgNames.FEATURE_SET) + @"; unset, the " +
-            @"feature set decides (default for HRAM data, core at unit resolution). An unknown name " +
+            @"feature set decides (default unless the command line chose another). An unknown name " +
             @"stops the search at startup.")
             { ValueExample = @"none|<name>,<name>..." };
 
@@ -1485,7 +1488,7 @@ namespace pwiz.Osprey.Core
             {
                 return string.Format(@"{0} reaches the model through round 2 of the two-round training: " +
                                      @"OSPREY_GBT_PREFILTER_SIZE=0 turns that off. Unset it, or use {1}.",
-                    argText, OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.compact.ToString()));
+                    argText, OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.off.ToString()));
             }
             return null;
         }
@@ -1506,7 +1509,7 @@ namespace pwiz.Osprey.Core
                                  @"protein's other detections, and together report more false discoveries than their " +
                                  @"q-values claim. Unset OSPREY_PASS2_QVALUE, or use {2}.",
                 OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.best.ToString()), PASS2_QVALUE_PROTEIN_COMPACT,
-                OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.compact.ToString()));
+                OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.off.ToString()));
         }
 
         private static string DescribeProteinBestTopN(int topN)
@@ -1589,6 +1592,41 @@ namespace pwiz.Osprey.Core
         /// pre-held-out, validated behavior. Exposed so a regularization sweep or an
         /// in-sample-vs-held-out A/B runs without a code revert. Tree-only.</summary>
         public static readonly int GbtInnerFolds = ParseIntOrNull(ENV_GBT_INNER_FOLDS) ?? 5;
+
+        private static readonly EnvVar ENV_FIRST_PASS_TRAIN_SIZE = new EnvVar(@"OSPREY_FIRST_PASS_TRAIN_SIZE", EnvVarGroup.behavior,
+            @"The rows each run's own first-pass model trains its round 1 on; round 2 " +
+            @"takes two thirds of it, at most the global round-2 size, unless OSPREY_FIRST_PASS_ROUND2_SIZE " +
+            @"is set. Changes the validity key.")
+            { ValueExample = @"<N>", DefaultValue = @"300000" };
+
+        /// <summary>OSPREY_FIRST_PASS_TRAIN_SIZE: each run's own model's round-1 training rows (a
+        /// cost lever), or null for the default <c>MaxTrainSize</c>.</summary>
+        public static readonly int? FirstPassTrainSize =
+            ParseIntOrNull(ENV_FIRST_PASS_TRAIN_SIZE) is { } size && size > 0 ? size : null;
+
+        private static readonly EnvVar ENV_FIRST_PASS_ROUND2_SIZE = new EnvVar(@"OSPREY_FIRST_PASS_ROUND2_SIZE", EnvVarGroup.behavior,
+            @"The rows each run's own first-pass model trains its round 2 on, in place " +
+            @"of the size OSPREY_FIRST_PASS_TRAIN_SIZE implies. Changes the validity key.")
+            { ValueExample = @"<N>", DefaultValue = @"the global round-2 size, or 2/3 of OSPREY_FIRST_PASS_TRAIN_SIZE" };
+
+        /// <summary>OSPREY_FIRST_PASS_ROUND2_SIZE: each run's own model's round-2 training rows, or
+        /// null for the size <see cref="FirstPassTrainSize"/> implies.</summary>
+        public static readonly int? FirstPassRound2Size =
+            ParseIntOrNull(ENV_FIRST_PASS_ROUND2_SIZE) is { } size2 && size2 > 0 ? size2 : null;
+
+        private static readonly EnvVar ENV_GBT_PATIENCE = new EnvVar(@"OSPREY_GBT_PATIENCE", EnvVarGroup.behavior,
+            @"Gradient-boosted trees: semi-supervised iterations without a held-out improvement before a fold " +
+            @"stops. Changes the validity key.")
+            { ValueExample = @"<N>", DefaultValue = @"2" };
+
+        /// <summary>Default for <see cref="GbtPatience"/>: the measured behavior.</summary>
+        public const int GBT_PATIENCE_DEFAULT = 2;
+
+        /// <summary>OSPREY_GBT_PATIENCE: how many iterations without a held-out improvement end a tree
+        /// fold's semi-supervised loop (default <see cref="GBT_PATIENCE_DEFAULT"/>). Read by the
+        /// trainer directly, so the global and per-file models share it.</summary>
+        public static readonly int GbtPatience =
+            ParseIntOrNull(ENV_GBT_PATIENCE) is { } patience && patience > 0 ? patience : GBT_PATIENCE_DEFAULT;
 
         private static readonly EnvVar ENV_MZML_DECODE_THREADS = new EnvVar(@"OSPREY_MZML_DECODE_THREADS", EnvVarGroup.performance,
             @"Threads that decode mzML binary arrays. 1 is the serial decode, the A/B arm.")
@@ -1682,12 +1720,11 @@ namespace pwiz.Osprey.Core
             string.IsNullOrWhiteSpace(Pass2QValueSetting) ? null : NormalizePass2QValue(Pass2QValueSetting);
 
         private static readonly EnvVar ENV_PASS2_QVALUE = new EnvVar(@"OSPREY_PASS2_QVALUE", EnvVarGroup.behavior,
-            @"How the second pass assigns reported q-values, in place of the one " + OspreyArgNames.PREFIX +
-            OspreyArgNames.PROTEIN_BOOST + @" implies: transfer carries the first-pass q through and re-scores " +
-            @"only moved peaks; protein-compact constrains the competition to detected proteins.")
+            @"How the second pass assigns reported q-values: transfer (the default) carries the first-pass q through and " +
+            @"re-scores only moved peaks; protein-compact constrains the competition to detected proteins.")
             {
                 Values = new[] { @"transfer", @"protein-compact" },
-                DefaultValue = @"protein-compact with " + OspreyArgNames.PREFIX + OspreyArgNames.PROTEIN_BOOST + @" compact, transfer otherwise"
+                DefaultValue = @"transfer"
             };
 
         /// <summary>OSPREY_PASS2_QVALUE exactly as set, for a message that must quote what the
@@ -1703,13 +1740,24 @@ namespace pwiz.Osprey.Core
         public static bool Pass2QValueUnrecognized => IsUnrecognizedPass2QValue(Pass2QValueSetting);
 
         private static readonly EnvVar ENV_PASS2_VERIFY_WORKER = new EnvVar(@"OSPREY_PASS2_VERIFY_WORKER", EnvVarGroup.diagnostic,
-            @"Re-run the per-file second-pass competition in SecondPassFDR and assert it against the " +
-            @"rescore worker's answer. A test instrument: it re-reads every first-pass file.");
+            @"Recompute each run's second-pass answer in SecondPassFDR and assert it against the " +
+            @"rescore worker's. A test instrument: it re-reads every run's model, features and " +
+            @"first-pass scores, and needs the features a run saves only on request.");
 
         /// <summary>
-        /// OSPREY_PASS2_VERIFY_WORKER: re-run the per-file second-pass competition inside Stage 7
-        /// and assert it against the answer the rescore worker wrote (issue #4486). A TEST
+        /// OSPREY_PASS2_VERIFY_WORKER: recompute each run's second-pass answer inside Stage 7 and
+        /// assert it against the answer the rescore worker wrote (issue #4486). A TEST
         /// INSTRUMENT, off by default.
+        ///
+        /// <para><b>Under the q-value transfer</b> (the default and, with per-run first-pass
+        /// models, the only second pass) it re-scores each run's moved, gap-filled and CWT rows
+        /// from <c>&lt;stem&gt;.features-reconciled.parquet</c> with the run's own
+        /// <c>&lt;stem&gt;.1st-pass.model.json</c>, checks every other row kept its first-pass
+        /// score from the run's stub, re-runs the transfer through the run's first-pass table,
+        /// and asserts score and both run q-values bit for bit
+        /// (<c>Pass2FdrSidecar.VerifyTransferFile</c>). The features are written only with
+        /// <c>--keep-scores-parquet</c>, so the variable without it is refused at startup. The
+        /// paragraphs below describe it on the protein-compact competition.</para>
         ///
         /// <para><b>Why it is not always on.</b> The recompute re-reads each file's 1st-pass
         /// sidecar and re-runs the frozen rescore - measured at 82 files as 9.2 GB of re-reads

@@ -768,6 +768,14 @@ namespace pwiz.Osprey
                     LogError(pass2Err);
                     return EXIT_CODE_FAILURE_TO_START;
                 }
+                // Abort for the same reason: the transfer's verifier re-scores each run's moved rows
+                // from their saved features, so without them it would fail at SecondPassFDR.
+                string verifyErr = VerifyWorkerError(config);
+                if (verifyErr != null)
+                {
+                    LogError(verifyErr);
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
                 // Not an error: OSPREY_FEATURE_MASK=none is the same request on any data, but say what it did not get.
                 if (featureSelection.LeavesUnavailableFeaturesUnmasked())
                 {
@@ -1484,6 +1492,25 @@ namespace pwiz.Osprey
                 @"<stem>" + TrainingExportParquet.EXT, config.TrainingExport.EffectiveMaxQ(config.RunFdr),
                 config.TrainingExport.EffectiveClaimantQ,
                 config.TrainingExport.WriteXics ? OspreyResources.Program_DescribeTrainingExport_on : OspreyResources.Program_DescribeTrainingExport_off);
+        }
+
+        /// <summary>
+        /// Why OSPREY_PASS2_VERIFY_WORKER cannot run, or null when it can or is off. Under the
+        /// q-value transfer it re-scores each run's moved rows from their second-pass features
+        /// (<c>Pass2FdrSidecar.VerifyTransferFile</c>), which are saved only with
+        /// <c>--keep-scores-parquet</c>; a run that goes on to SecondPassFDR without them would
+        /// fail there, after every other stage.
+        /// </summary>
+        internal static string VerifyWorkerError(OspreyConfig config)
+        {
+            if (!OspreyEnvironment.Pass2VerifyWorker || config.Pass2ProteinCompact ||
+                !ScoringTaskShared.RunsStage7Join(config) || PerFileScoringTask.WritesFeaturesCheckpoint(config))
+            {
+                return null;
+            }
+            return string.Format(
+                OspreyResources.Program_VerifyWorkerError__0__checks_the_second_pass_against_the_features_it_was_scored_from__which_are_saved_with__1___Add__1__or_unset__0__,
+                @"OSPREY_PASS2_VERIFY_WORKER", OspreyCommandArgs.ARG_KEEP_SCORES_PARQUET.ArgumentText);
         }
 
         /// <summary>

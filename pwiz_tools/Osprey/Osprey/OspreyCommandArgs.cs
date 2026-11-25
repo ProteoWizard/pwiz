@@ -186,6 +186,12 @@ namespace pwiz.Osprey
                 DescriptionArgs = () => new object[] { SpectraCache.EXT, ARG_WORK_DIR.ArgumentText, TextUtil.EXT_TSV,
                     ARG_TASK.ArgumentText, ARG_OUTPUT_DIR.ArgumentText, LibrarySource.EXT_BLIB }
             };
+        public static readonly OspreyArgument ARG_KEEP_SCORES_PARQUET = new OspreyArgument(OspreyArgNames.KEEP_SCORES_PARQUET,
+            (c, p) => c._config.KeepScoresParquet = true)
+            {
+                DescriptionArgs = () => new object[] { ParquetScoreCache.EXT_FEATURES,
+                    ParquetScoreCache.EXT_FEATURES_RECONCILED, ParquetScoreCache.EXT_SCORES }
+            };
         public static readonly OspreyArgument ARG_EXPORT_LIBRARY = new OspreyArgument(@"export-library",
             () => GetPathToFile(LibrarySource.EXT_BLIB), (c, p) => c._config.ExportLibraryBlib = p.Value)
             {
@@ -197,7 +203,7 @@ namespace pwiz.Osprey
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_GENERAL_IO =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_General_IO, true,
                 ARG_INPUT, ARG_INPUT_LIST, ARG_LIBRARY, ARG_OUTPUT, ARG_WORK_DIR, ARG_OUTPUT_DIR, ARG_CACHE_DIR,
-                ARG_EXPORT_LIBRARY);
+                ARG_KEEP_SCORES_PARQUET, ARG_EXPORT_LIBRARY);
 
         // --- Library Build ----------------------------------------------------------------
         // The one command from a protein FASTA to a .blib: --fasta predicts the library with
@@ -459,9 +465,9 @@ namespace pwiz.Osprey
             }) { Scope = OspreyPropertyScope.search, DefaultValue = Default(() => new OspreyConfig().SharedPeptides), DescriptionArgs = () => new object[] { @"all" } };
 
         // How a detection is boosted by its protein's other detections: best (the protein-best training
-        // column, issue #4580, with the transfer second pass) by default for HRAM data, compact (the
-        // protein-compact second pass) at unit resolution (ResolutionDefaults), so like --feature-set it
-        // declares no single default. compact is to go once Stellar data is measured on a larger cohort;
+        // column, issue #4580, with the transfer second pass) by default at both resolutions
+        // (ResolutionDefaults), though a configuration that never learns its resolution keeps the
+        // legacy off, so it declares no single default; compact (now the same as off) is to go;
         // the developer switch that shapes the column stays an environment variable
         // (OSPREY_PROTEIN_BEST_SHUFFLE). A block body, so the handler is an Action: a value-returning
         // lambda would bind to the Func overload, whose false ends the parse.
@@ -480,8 +486,8 @@ namespace pwiz.Osprey
                 }
             };
 
-        // The PIN features the FDR classifier trains on. Absent, the resolution chooses (default
-        // for HRAM, core at unit resolution), so there is no single default value to declare.
+        // The PIN features the FDR classifier trains on. Absent, default at both resolutions
+        // (PinFeatureMask.FeatureSetFor); unit resolution drops the features it cannot use.
         // OSPREY_FEATURE_MASK, a research switch, overrides it.
         public static readonly OspreyArgument ARG_FEATURE_SET = new OspreyArgument(OspreyArgNames.FEATURE_SET,
             Enum.GetNames(typeof(OspreyFeatureSet)),
