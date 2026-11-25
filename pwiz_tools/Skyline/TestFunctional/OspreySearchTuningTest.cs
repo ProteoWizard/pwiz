@@ -67,6 +67,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             OspreyTestUtil.RegisterOsprey(OspreyTestUtil.EnsureOsprey(TestContext));
+            using var ms2CalibrationMean = OspreyTestUtil.UseMs2CalibrationMean();
             RunUI(() =>
             {
                 // The model list starts with the pretrained models alone
