@@ -45,25 +45,6 @@ namespace pwiz.SkylineTestUtil
         /// <summary>TeamCity's name for the commit a build checks out, set in every build's environment.</summary>
         public const string ENV_TEAMCITY_REVISION = @"BUILD_VCS_NUMBER";
 
-        /// <summary>
-        /// Osprey's switch to calibrate unit-resolution MS2 m/z by one mean offset instead of its
-        /// default, the m/z offset curve.
-        /// </summary>
-        public const string ENV_OSPREY_MS2_CAL_MEAN = @"OSPREY_MS2_CAL_MEAN";
-
-        /// <summary>
-        /// Has every Osprey the test launches, until disposed, calibrate unit-resolution MS2 m/z by the
-        /// mean. A fine-tuning search on the three-run Stellar subset first searches the runs with the
-        /// untuned predicted library, and the offset curve's narrower fragment tolerance leaves that
-        /// first pass with no precursor at 1% FDR, where the mean keeps over a hundred. The curve's
-        /// narrower window costs targets on this subset; the entrapment leg of Osprey's own
-        /// library-build test runs on the mean for that reason too.
-        /// </summary>
-        public static TemporaryEnvironmentVariable UseMs2CalibrationMean()
-        {
-            return new TemporaryEnvironmentVariable(ENV_OSPREY_MS2_CAL_MEAN, @"1");
-        }
-
         /// <summary>Registers <paramref name="ospreyExe"/> as the Osprey Skyline runs, in place of any earlier registration.</summary>
         public static void RegisterOsprey(string ospreyExe)
         {
