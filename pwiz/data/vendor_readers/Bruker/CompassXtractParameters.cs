@@ -17,10 +17,11 @@ namespace Pwiz.Vendor.Bruker;
 /// <c>CompassData.cpp:184</c> range-checks against <c>[1, Count]</c>); this wrapper exposes the
 /// 0-based indexing the rest of pwiz-sharp uses and adds the +1 internally. Every accessor is a
 /// COM round trip, which is exactly why <see cref="CompassXtractParameterCache"/> exists.
-/// Callers must already hold a <see cref="CompassXtractActivationContext.Activate"/> scope.
+/// Callers must already hold a <see cref="CompassXtractActivationContext.Activate"/> scope, and
+/// dispose the list on that thread when done with it, which releases the COM collection.
 /// </remarks>
 [SupportedOSPlatform("windows")]
-internal sealed class CompassXtractParameterList
+internal sealed class CompassXtractParameterList : IDisposable
 {
     private readonly EDAL.IMSSpectrumParameterCollection _collection;
 
@@ -31,8 +32,8 @@ internal sealed class CompassXtractParameterList
     /// <see cref="this[int]"/> are <c>0 .. Count-1</c>.</summary>
     public int Count => _collection.Count;
 
-    /// <summary>The COM collection this list reads, for the caller to release.</summary>
-    public object Collection => _collection;
+    /// <summary>Releases the COM collection; see <see cref="CompassXtractData.Release"/>.</summary>
+    public void Dispose() => CompassXtractData.Release(_collection);
 
     /// <summary>
     /// Number of parameters an <i>enumeration</i> yields, which is one fewer than

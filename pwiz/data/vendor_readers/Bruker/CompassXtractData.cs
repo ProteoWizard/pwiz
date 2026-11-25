@@ -48,6 +48,7 @@ internal sealed class CompassXtractData : IBrukerData
     // Count and the 1-based indexer) is declared on IMSAnalysis / IMSSpectrumCollection.
     private EDAL.IMSAnalysis? _analysis;
     private EDAL.IMSSpectrumCollection? _spectra;
+    private readonly object _readLock = new();
     private readonly int _spectrumCount;
     private readonly bool _hasMsData;
     private bool _disposed;
@@ -229,10 +230,9 @@ internal sealed class CompassXtractData : IBrukerData
         if (!_hasMsData || _spectra is null) return false;
 
         var spectrum = _spectra[1];
-        CompassXtractParameterList? parameters = null;
         try
         {
-            parameters = new CompassXtractParameterList(spectrum.MSSpectrumParameterCollection);
+            using var parameters = new CompassXtractParameterList(spectrum.MSSpectrumParameterCollection);
             // cpp builds its name/value map with BOOST_FOREACH (Reader_Bruker_Detail.cpp:146), i.e.
             // an enumeration, so it too stops one short - see CompassXtractParameterList.EnumeratedCount.
             int count = parameters.EnumeratedCount;
@@ -246,7 +246,6 @@ internal sealed class CompassXtractData : IBrukerData
         }
         finally
         {
-            Release(parameters?.Collection);
             Release(spectrum);
         }
     }
@@ -379,6 +378,15 @@ internal sealed class CompassXtractData : IBrukerData
         _ = sortAndJitter;          // TDF combined-frame only
         _ = includeIsolationArrays; // TDF diaPASEF whole-frame only
 
+        // One caller at a time: Release force-releases the wrappers a read obtains, and a second
+        // thread reading the same scan can hold the same wrapper. The parameter caches are
+        // unsynchronized too.
+        lock (_readLock)
+            FillSpectrumLocked(spec, entry, detailLevel, preferCentroid);
+    }
+
+    private void FillSpectrumLocked(Spectrum spec, BrukerIndexEntry entry, DetailLevel detailLevel, bool preferCentroid)
+    {
         using (CompassXtractActivationContext.Activate())
         {
             if (entry.Tag is string fidDirectory)
@@ -419,20 +427,6 @@ internal sealed class CompassXtractData : IBrukerData
 
     private void FillFromSpectrum(Spectrum spec, EDAL.IMSSpectrum spectrum, DetailLevel detailLevel, bool preferCentroid)
     {
-        var parameters = new CompassXtractParameterList(spectrum.MSSpectrumParameterCollection);
-        try
-        {
-            FillFromSpectrum(spec, spectrum, parameters, detailLevel, preferCentroid);
-        }
-        finally
-        {
-            Release(parameters.Collection);
-        }
-    }
-
-    private void FillFromSpectrum(Spectrum spec, EDAL.IMSSpectrum spectrum, CompassXtractParameterList parameters,
-        DetailLevel detailLevel, bool preferCentroid)
-    {
         int msLevel = spectrum.MSMSStage;
         spec.Params.Set(CVID.MS_ms_level, msLevel);
         spec.Params.Set(msLevel == 1 ? CVID.MS_MS1_spectrum : CVID.MS_MSn_spectrum);
@@ -442,6 +436,7 @@ internal sealed class CompassXtractData : IBrukerData
         if (scanTime > 0)
             scan.Set(CVID.MS_scan_start_time, scanTime, CVID.UO_second);
 
+        using var parameters = new CompassXtractParameterList(spectrum.MSSpectrumParameterCollection);
         var cache = GetParameterCache(msLevel);
 
         var (scanBegin, scanEnd) = GetScanRange(cache, parameters);
@@ -704,16 +699,14 @@ internal sealed class CompassXtractData : IBrukerData
             analysis.Open(Filesystem.GetNonUnicodePath(fidDirectory));
             spectra = analysis.MSSpectrumCollection;
             spectrum = spectra[1];
+            Release(spectra);
             return analysis;
         }
         catch
         {
+            Release(spectra);
             Release(analysis);
             throw;
-        }
-        finally
-        {
-            Release(spectra);
         }
     }
 
@@ -906,19 +899,16 @@ internal sealed class CompassXtractData : IBrukerData
     }
 
     /// <summary>
-    /// Drops an RCW's reference deterministically. cpp's destructor does the same thing with
-    /// <c>delete msAnalysis_</c> (<c>CompassData.cpp:546</c>) and notes in the lines right after
-    /// it that CompassXtract keeps the underlying file locked regardless — "allow CompassXtract
-    /// to keep this file locked because it doesn't seem to interfere with opening the file again".
+    /// Drops an RCW's reference deterministically, on the calling thread.
     /// </summary>
     /// <remarks>
     /// Every CompassXtract object this reader obtains - each spectrum, its parameter collection
     /// and each parameter, not only the analysis and its spectrum collection - goes through here
-    /// as soon as it has been used. One left to the garbage collector can keep
-    /// <c>analysis.yep</c> open after <see cref="Dispose()"/> for the rest of the process:
-    /// on the <c>Sample_1-A,1_01_985.d</c> fixture, repeated read-and-dispose cycles kept the
-    /// file open from the 6th to 31st cycle when spectra were left to the GC, and never in 200
-    /// cycles with every object released here.
+    /// as soon as it has been used, children before their parent. One left to the garbage
+    /// collector is released later on the finalizer thread, possibly after its analysis is gone,
+    /// and that can keep <c>analysis.yep</c> open after <see cref="Dispose()"/> for the rest of
+    /// the process. cpp's destructor releases only the analysis (<c>CompassData.cpp:546</c>) and
+    /// its harness tolerates the resulting lock as a CompassXtract bug.
     /// </remarks>
     internal static void Release(object? comObject)
     {
