@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model
         public bool HasSeenMods { get; private set; }
 
         public void CreateMatches(SrmSettings settings, IEnumerable<string> sequences,
-            MappedList<string, StaticMod> defSetStatic, MappedList<string, StaticMod> defSetHeavy, 
+            IReadOnlyMappedList<string, StaticMod> defSetStatic, IReadOnlyMappedList<string, StaticMod> defSetHeavy, 
             IProgressMonitor progressMonitor = null, IProgressStatus status = null)
         {
             _progressMonitor = progressMonitor;

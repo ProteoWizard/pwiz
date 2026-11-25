@@ -22,6 +22,7 @@ using System.Configuration;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -101,7 +102,70 @@ namespace pwiz.Skyline.Properties
 
         private void SettingsSavingEventHandler(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            SpectralLibraryList.RemoveDocumentLocalLibraries();
+            var spectralLibraryList = SpectralLibraryList;
+            var savedLibraryList = spectralLibraryList.RemoveDocumentLocalLibraries();
+            if (!ReferenceEquals(savedLibraryList, spectralLibraryList))
+                SpectralLibraryList = savedLibraryList;
+        }
+
+        /// <summary>
+        /// True if <paramref name="list"/> is the value of the property that holds lists of its
+        /// type, which a list editor given that list stores its edits back into.
+        /// </summary>
+        public bool IsSettingsList(object list)
+        {
+            var property = GetSettingsListProperty(list.GetType());
+            return property != null && ReferenceEquals(property.GetValue(this), list);
+        }
+
+        /// <summary>
+        /// The value of the property that holds lists of <paramref name="listType"/>.
+        /// </summary>
+        public object GetSettingsList(Type listType)
+        {
+            return GetSettingsListPropertyOrThrow(listType).GetValue(this);
+        }
+
+        /// <summary>
+        /// Sets the property that holds lists of the type of <paramref name="list"/>.
+        /// </summary>
+        public void SetSettingsList(object list)
+        {
+            GetSettingsListPropertyOrThrow(list.GetType()).SetValue(this, list);
+        }
+
+        private static PropertyInfo GetSettingsListPropertyOrThrow(Type listType)
+        {
+            var property = GetSettingsListProperty(listType);
+            if (property == null)
+                throw new ArgumentException(string.Format(@"No settings property holds a {0}", listType.Name));
+            return property;
+        }
+
+        /// <summary>
+        /// The one user scoped property of exactly <paramref name="listType"/>, or null.
+        /// SettingsTest checks that no two properties share a list type.
+        /// </summary>
+        public static PropertyInfo GetSettingsListProperty(Type listType)
+        {
+            return GetSettingsListProperties().FirstOrDefault(property => property.PropertyType == listType);
+        }
+
+        public static IEnumerable<PropertyInfo> GetSettingsListProperties()
+        {
+            return typeof(Settings).GetProperties().Where(property =>
+                property.GetCustomAttribute<UserScopedSettingAttribute>() != null &&
+                IsKeyedListType(property.PropertyType));
+        }
+
+        private static bool IsKeyedListType(Type type)
+        {
+            for (var baseType = type; baseType != null; baseType = baseType.BaseType)
+            {
+                if (baseType.IsGenericType && baseType.GetGenericTypeDefinition() == typeof(XmlMappedList<,>))
+                    return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -315,10 +379,7 @@ namespace pwiz.Skyline.Properties
             if (value is SpectralLibraryList)
             {
                 // If it's a SpectralLibraryList, then remove DocumentLocal libraries before serializing.
-                var spectralLibraryList = (SpectralLibraryList)value;
-                var filteredSpectralLibraryList = new SpectralLibraryList();
-                filteredSpectralLibraryList.AddRange(spectralLibraryList.Where(librarySpec => !librarySpec.IsDocumentLocal));
-                value = filteredSpectralLibraryList;
+                value = ((SpectralLibraryList)value).RemoveDocumentLocalLibraries();
             }
             var settingsPropertyValue = new SettingsPropertyValue(settingsProperty)
             {
@@ -344,8 +405,7 @@ namespace pwiz.Skyline.Properties
             {
                 if (this[@"ToolList"] == null)
                 {
-                    var list = new ToolList();
-                    list.AddDefaults();
+                    var list = new ToolList().ChangeAddDefaults();
                     ToolList = list;
                 }
                 return (ToolList)(this[@"ToolList"]);
@@ -517,8 +577,7 @@ namespace pwiz.Skyline.Properties
                 var list = this[typeof(CarafeModelList).Name] as CarafeModelList;
                 if (list == null)
                 {
-                    list = new CarafeModelList();
-                    list.AddDefaults();
+                    list = new CarafeModelList().ChangeAddDefaults();
                     CarafeModelList = list;
                 }
                 return list;
@@ -691,8 +750,7 @@ namespace pwiz.Skyline.Properties
             {
                 if (this[typeof(EnzymeList).Name] == null)
                 {
-                    EnzymeList list = new EnzymeList();
-                    list.AddDefaults();
+                    EnzymeList list = new EnzymeList().ChangeAddDefaults();
                     EnzymeList = list;
                 }
                 return ((EnzymeList)(this[typeof(EnzymeList).Name]));
@@ -718,8 +776,7 @@ namespace pwiz.Skyline.Properties
             {
                 if (this[typeof(PeptideExcludeList).Name] == null)
                 {
-                    PeptideExcludeList list = new PeptideExcludeList();
-                    list.AddDefaults();
+                    PeptideExcludeList list = new PeptideExcludeList().ChangeAddDefaults();
                     PeptideExcludeList = list;
                 }
                 return ((PeptideExcludeList)(this[typeof(PeptideExcludeList).Name]));
@@ -745,8 +802,7 @@ namespace pwiz.Skyline.Properties
             {
                 if (this[typeof(SpectralLibraryList).Name] == null)
                 {
-                    SpectralLibraryList list = new SpectralLibraryList();
-                    list.AddDefaults();
+                    SpectralLibraryList list = new SpectralLibraryList().ChangeAddDefaults();
                     SpectralLibraryList = list;
                 }
                 return ((SpectralLibraryList)(this[typeof(SpectralLibraryList).Name]));
@@ -765,13 +821,14 @@ namespace pwiz.Skyline.Properties
                 BackgroundProteomeList list = this[typeof (BackgroundProteomeList).Name] as BackgroundProteomeList;
                 if (list == null)
                 {
-                    list = new BackgroundProteomeList();
-                    list.AddDefaults();
+                    list = new BackgroundProteomeList().ChangeAddDefaults();
                     BackgroundProteomeList = list;
                 }
                 else
                 {
-                    list.EnsureDefault();
+                    var listEnsured = list.EnsureDefault();
+                    if (!ReferenceEquals(listEnsured, list))
+                        BackgroundProteomeList = list = listEnsured;
                 }
                 return list;
             }
@@ -796,8 +853,7 @@ namespace pwiz.Skyline.Properties
             {
                 if (this[typeof(StaticModList).Name] == null)
                 {
-                    StaticModList list = new StaticModList();
-                    list.AddDefaults();
+                    StaticModList list = new StaticModList().ChangeAddDefaults();
                     StaticModList = list;
                 }
                 return ((StaticModList)(this[typeof(StaticModList).Name]));
@@ -823,8 +879,7 @@ namespace pwiz.Skyline.Properties
             {
                 if (this[typeof(HeavyModList).Name] == null)
                 {
-                    HeavyModList list = new HeavyModList();
-                    list.AddDefaults();
+                    HeavyModList list = new HeavyModList().ChangeAddDefaults();
                     HeavyModList = list;
                 }
                 return ((HeavyModList)(this[typeof(HeavyModList).Name]));
@@ -850,8 +905,7 @@ namespace pwiz.Skyline.Properties
             {
                 if (this[typeof(CollisionEnergyList).Name] == null)
                 {
-                    CollisionEnergyList list = new CollisionEnergyList();
-                    list.AddDefaults();
+                    CollisionEnergyList list = new CollisionEnergyList().ChangeAddDefaults();
                     CollisionEnergyList = list;
                 }
                 return ((CollisionEnergyList)(this[typeof(CollisionEnergyList).Name]));
@@ -870,13 +924,14 @@ namespace pwiz.Skyline.Properties
                 CompensationVoltageList list = (CompensationVoltageList)this[typeof(CompensationVoltageList).Name];
                 if (list == null)
                 {
-                    list = new CompensationVoltageList();
-                    list.AddDefaults();
+                    list = new CompensationVoltageList().ChangeAddDefaults();
                     CompensationVoltageList = list;
                 }
                 else
                 {
-                    list.EnsureDefault();
+                    var listEnsured = list.EnsureDefault();
+                    if (!ReferenceEquals(listEnsured, list))
+                        CompensationVoltageList = list = listEnsured;
                 }
                 return list;
             }
@@ -911,13 +966,14 @@ namespace pwiz.Skyline.Properties
                 OptimizationLibraryList list = (OptimizationLibraryList)this[typeof(OptimizationLibraryList).Name];
                 if (list == null)
                 {
-                    list = new OptimizationLibraryList();
-                    list.AddDefaults();
+                    list = new OptimizationLibraryList().ChangeAddDefaults();
                     OptimizationLibraryList = list;
                 }
                 else
                 {
-                    list.EnsureDefault();
+                    var listEnsured = list.EnsureDefault();
+                    if (!ReferenceEquals(listEnsured, list))
+                        OptimizationLibraryList = list = listEnsured;
                 }
                 return list;
             }
@@ -948,13 +1004,14 @@ namespace pwiz.Skyline.Properties
                 DeclusterPotentialList list = (DeclusterPotentialList) this[typeof(DeclusterPotentialList).Name];
                 if (list == null)
                 {
-                    list = new DeclusterPotentialList();
-                    list.AddDefaults();
+                    list = new DeclusterPotentialList().ChangeAddDefaults();
                     DeclusterPotentialList = list;
                 }
                 else
                 {
-                    list.EnsureDefault();
+                    var listEnsured = list.EnsureDefault();
+                    if (!ReferenceEquals(listEnsured, list))
+                        DeclusterPotentialList = list = listEnsured;
                 }
                 return list;
             }
@@ -985,13 +1042,14 @@ namespace pwiz.Skyline.Properties
                 RetentionTimeList list = (RetentionTimeList)this[typeof(RetentionTimeList).Name];
                 if (list == null)
                 {
-                    list = new RetentionTimeList();
-                    list.AddDefaults();
+                    list = new RetentionTimeList().ChangeAddDefaults();
                     RetentionTimeList = list;
                 }
                 else
                 {
-                    list.EnsureDefault();
+                    var listEnsured = list.EnsureDefault();
+                    if (!ReferenceEquals(listEnsured, list))
+                        RetentionTimeList = list = listEnsured;
                 }
                 return list;
             }
@@ -1018,13 +1076,14 @@ namespace pwiz.Skyline.Properties
 
                 if (list == null)
                 {
-                    list = new RTScoreCalculatorList();
-                    list.AddDefaults();
+                    list = new RTScoreCalculatorList().ChangeAddDefaults();
                     RTScoreCalculatorList = list;
                 }
                 else
                 {
-                    list.EnsureDefault();
+                    var listEnsured = list.EnsureDefault();
+                    if (!ReferenceEquals(listEnsured, list))
+                        RTScoreCalculatorList = list = listEnsured;
                 }
                 return list;
             }
@@ -1043,8 +1102,7 @@ namespace pwiz.Skyline.Properties
 
                 if (list == null)
                 {
-                    list = new IrtStandardList();
-                    list.AddDefaults();
+                    list = new IrtStandardList().ChangeAddDefaults();
                     IrtStandardList = list;
                 }
                 return list;
@@ -1066,13 +1124,14 @@ namespace pwiz.Skyline.Properties
 
                 if (list == null)
                 {
-                    list = new IonMobilityLibraryList();
-                    list.AddDefaults();
+                    list = new IonMobilityLibraryList().ChangeAddDefaults();
                     IonMobilityLibraryList = list;
                 }
                 else
                 {
-                    list.EnsureDefault();
+                    var listEnsured = list.EnsureDefault();
+                    if (!ReferenceEquals(listEnsured, list))
+                        IonMobilityLibraryList = list = listEnsured;
                 }
                 return list;
             }
@@ -1100,13 +1159,14 @@ namespace pwiz.Skyline.Properties
 
                 if (list == null)
                 {
-                    list = new PeakScoringModelList();
-                    list.AddDefaults();
+                    list = new PeakScoringModelList().ChangeAddDefaults();
                     PeakScoringModelList = list;
                 }
                 else
                 {
-                    list.EnsureDefault();
+                    var listEnsured = list.EnsureDefault();
+                    if (!ReferenceEquals(listEnsured, list))
+                        PeakScoringModelList = list = listEnsured;
                 }
                 return list;
             }
@@ -1133,8 +1193,7 @@ namespace pwiz.Skyline.Properties
                 MeasuredIonList list = (MeasuredIonList)this[typeof(MeasuredIonList).Name];
                 if (list == null)
                 {
-                    list = new MeasuredIonList();
-                    list.AddDefaults();
+                    list = new MeasuredIonList().ChangeAddDefaults();
                     MeasuredIonList = list;
                 }
                 return list;
@@ -1161,8 +1220,7 @@ namespace pwiz.Skyline.Properties
                 IsotopeEnrichmentsList list = (IsotopeEnrichmentsList)this[typeof(IsotopeEnrichmentsList).Name];
                 if (list == null)
                 {
-                    list = new IsotopeEnrichmentsList();
-                    list.AddDefaults();
+                    list = new IsotopeEnrichmentsList().ChangeAddDefaults();
                     IsotopeEnrichmentsList = list;
                 }
                 return list;
@@ -1181,8 +1239,7 @@ namespace pwiz.Skyline.Properties
                 IsolationSchemeList list = (IsolationSchemeList)this[typeof(IsolationSchemeList).Name];
                 if (list == null)
                 {
-                    list = new IsolationSchemeList();
-                    list.AddDefaults();
+                    list = new IsolationSchemeList().ChangeAddDefaults();
                     IsolationSchemeList = list;
                 }
                 return list;
@@ -1200,8 +1257,7 @@ namespace pwiz.Skyline.Properties
             {
                 if (this[typeof(SrmSettingsList).Name] == null)
                 {
-                    SrmSettingsList list = new SrmSettingsList();
-                    list.AddDefaults();
+                    SrmSettingsList list = new SrmSettingsList().ChangeAddDefaults();
                     SrmSettingsList = list;
                 }
                 return ((SrmSettingsList)(this[typeof(SrmSettingsList).Name]));
@@ -1233,8 +1289,7 @@ namespace pwiz.Skyline.Properties
                 var list = (AnnotationDefList)this[@"AnnotationDefList"];
                 if (list == null)
                 {
-                    list = new AnnotationDefList();
-                    list.AddDefaults();
+                    list = new AnnotationDefList().ChangeAddDefaults();
                     AnnotationDefList = list;
                 }
                 return list;
@@ -1273,8 +1328,7 @@ namespace pwiz.Skyline.Properties
                 var list = (GroupComparisonDefList) this[@"GroupComparisonDefList"];
                 if (list == null)
                 {
-                    list = new GroupComparisonDefList();
-                    list.AddDefaults();
+                    list = new GroupComparisonDefList().ChangeAddDefaults();
                     GroupComparisonDefList = list;
                 }
                 return list;
@@ -1293,8 +1347,7 @@ namespace pwiz.Skyline.Properties
                 var list = (ServerList)this[@"ServerList"];
                 if (list == null)
                 {
-                    list = new ServerList();
-                    list.AddDefaults();
+                    list = new ServerList().ChangeAddDefaults();
                     ServerList = list;
                 }
                 return list;
@@ -1313,8 +1366,7 @@ namespace pwiz.Skyline.Properties
                 var list = (SearchToolList)this[@"SearchToolList"];
                 if (list == null)
                 {
-                    list = new SearchToolList();
-                    list.AddDefaults();
+                    list = new SearchToolList().ChangeAddDefaults();
                     SearchToolList = list;
                 }
                 return list;
@@ -1333,8 +1385,7 @@ namespace pwiz.Skyline.Properties
                 var list = (SearchSettingsPresetList)this[@"SearchSettingsPresets"];
                 if (list == null)
                 {
-                    list = new SearchSettingsPresetList();
-                    list.AddDefaults();
+                    list = new SearchSettingsPresetList().ChangeAddDefaults();
                     SearchSettingsPresets = list;
                 }
                 return list;
@@ -1353,8 +1404,7 @@ namespace pwiz.Skyline.Properties
                 var list = (DiannSearchSettingsPresetList)this[@"DiannSearchSettingsPresets"];
                 if (list == null)
                 {
-                    list = new DiannSearchSettingsPresetList();
-                    list.AddDefaults();
+                    list = new DiannSearchSettingsPresetList().ChangeAddDefaults();
                     DiannSearchSettingsPresets = list;
                 }
                 return list;
@@ -1373,8 +1423,7 @@ namespace pwiz.Skyline.Properties
                 var list = (OspreySettingsPresetList)this[@"OspreySettingsPresets"];
                 if (list == null)
                 {
-                    list = new OspreySettingsPresetList();
-                    list.AddDefaults();
+                    list = new OspreySettingsPresetList().ChangeAddDefaults();
                     OspreySettingsPresets = list;
                 }
                 return list;
@@ -1393,8 +1442,7 @@ namespace pwiz.Skyline.Properties
                 var list = (RemoteAccountList)this[@"RemoteAccountList"];
                 if (list == null)
                 {
-                    list = new RemoteAccountList();
-                    list.AddDefaults();
+                    list = new RemoteAccountList().ChangeAddDefaults();
                     RemoteAccountList = list;
                 }
                 return list;
@@ -1430,8 +1478,7 @@ namespace pwiz.Skyline.Properties
                 var colorSchemes = (ColorSchemeList)this[@"ColorSchemes"];
                 if (colorSchemes == null)
                 {
-                    colorSchemes = new ColorSchemeList();
-                    colorSchemes.AddDefaults();
+                    colorSchemes = new ColorSchemeList().ChangeAddDefaults();
                     ColorSchemes = colorSchemes;
                 }
                 return colorSchemes;
@@ -1447,8 +1494,7 @@ namespace pwiz.Skyline.Properties
                 var ruleSets = (MetadataRuleSetList) this[nameof(MetadataRuleSets)];
                 if (ruleSets == null)
                 {
-                    ruleSets = new MetadataRuleSetList();
-                    ruleSets.AddDefaults();
+                    ruleSets = new MetadataRuleSetList().ChangeAddDefaults();
                     MetadataRuleSets = ruleSets;
                 }
 
@@ -1611,12 +1657,12 @@ namespace pwiz.Skyline.Properties
     /// Class wrapper around <see cref="XmlMappedList{TKey,TValue}"/> to
     /// improve XML serialization naming of the list.
     /// </summary>
-    public sealed class MethodTemplateList : XmlMappedList<string, MethodTemplateFile>
+    public sealed class MethodTemplateList : XmlMappedList<string, MethodTemplateFile>, ISelfTypedList<MethodTemplateList, MethodTemplateFile>
     {        
     }
 
     [LlmName("External Tools")]
-    public sealed class ToolList : SettingsList<ToolDescription>
+    public sealed class ToolList : SettingsList<ToolDescription>, ISelfTypedList<ToolList, ToolDescription>
     {
         public override IEnumerable<ToolDescription> GetDefaults(int revisionIndex)
         {
@@ -1628,10 +1674,9 @@ namespace pwiz.Skyline.Properties
                        };
         }
 
-        public void ResetDefaults()
+        public ToolList ResetDefaults()
         {
-            Clear();
-            AddDefaults();
+            return this.ChangeClear().ChangeAddDefaults();
         }
 
         public static readonly ToolDescription DEPRECATED_QUASAR = new ToolDescription(@"QuaSAR",
@@ -1646,16 +1691,14 @@ namespace pwiz.Skyline.Properties
 
         public static ToolList CopyTools(IEnumerable<ToolDescription> list)
         {
-            var listCopy = new ToolList();
-            listCopy.AddRange(from t in list
-                              where !Equals(t, ToolDescription.EMPTY)
-                              select new ToolDescription(t));
-            return listCopy;
+            return new ToolList().ChangeAddRange(from t in list
+                                                 where !Equals(t, ToolDescription.EMPTY)
+                                                 select new ToolDescription(t));
         }
     }
 
     [LlmName("Enzymes")]
-    public sealed class EnzymeList : SettingsList<Enzyme>, ISettingsListDocumentSelection
+    public sealed class EnzymeList : SettingsList<Enzyme>, ISelfTypedList<EnzymeList, Enzyme>, ISettingsListDocumentSelection
     {
         public static Enzyme GetDefault()
         {
@@ -1714,7 +1757,7 @@ namespace pwiz.Skyline.Properties
     }
 
     [LlmName("Peptide Exclusions")]
-    public sealed class PeptideExcludeList : SettingsList<PeptideExcludeRegex>, ISettingsListDocumentSelection
+    public sealed class PeptideExcludeList : SettingsList<PeptideExcludeRegex>, ISelfTypedList<PeptideExcludeList, PeptideExcludeRegex>, ISettingsListDocumentSelection
     {
         public override IEnumerable<PeptideExcludeRegex> GetDefaults(int revisionIndex)
         {
@@ -1749,7 +1792,7 @@ namespace pwiz.Skyline.Properties
     }
 
     [LlmName("Servers")]
-    public sealed class ServerList : SettingsList<Server>
+    public sealed class ServerList : SettingsList<Server>, ISelfTypedList<ServerList, Server>
     {
         public override IEnumerable<Server>  GetDefaults(int revisionIndex)
         {
@@ -1767,15 +1810,8 @@ namespace pwiz.Skyline.Properties
     }
 
     [LlmName("Search Tools")]
-    public sealed class SearchToolList : SettingsList<SearchTool>
+    public sealed class SearchToolList : SettingsList<SearchTool>, ISelfTypedList<SearchToolList, SearchTool>
     {
-        // SearchToolList is a process-wide singleton (Settings.Default.SearchToolList) whose
-        // FileAlreadyDownloaded check mutates it as a side effect. On net8 the DDA import wizard
-        // can reach it from both the UI thread and the functional-test thread at once, corrupting
-        // the underlying Dictionary (e.g. "an item with the same key Java has already been added").
-        // Serialize all keyed access on this lock.
-        private readonly object _sync = new object();
-
         public override IEnumerable<SearchTool> GetDefaults(int revisionIndex)
         {
             yield break;
@@ -1788,91 +1824,35 @@ namespace pwiz.Skyline.Properties
         {
             return new SearchTool(item.Name, item.Path, item.ExtraCommandlineArgs, item.InstallPath, item.AutoInstalled);
         }
-        
+
         public static SearchToolList CopyTools(IEnumerable<SearchTool> list)
         {
-            var listCopy = new SearchToolList();
-            listCopy.AddRange(list.Select(t => new SearchTool(t.Name, t.Path, t.ExtraCommandlineArgs, t.InstallPath, t.AutoInstalled)));
-            return listCopy;
+            return new SearchToolList().ChangeAddRange(list.Select(t => new SearchTool(t.Name, t.Path, t.ExtraCommandlineArgs, t.InstallPath, t.AutoInstalled)));
         }
 
         public bool ContainsKey(SearchToolType toolType)
         {
-            lock (_sync)
-            {
-                return ContainsKey(toolType.ToString());
-            }
+            return ContainsKey(toolType.ToString());
         }
 
         public SearchTool this[SearchToolType toolType]
         {
-            get
-            {
-                lock (_sync)
-                {
-                    return this[toolType.ToString()];
-                }
-            }
+            get { return this[toolType.ToString()]; }
         }
 
         public string GetToolPathOrDefault(SearchToolType toolType, string defaultPath)
         {
-            lock (_sync)
-            {
-                if (ContainsKey(toolType.ToString()))
-                    return this[toolType.ToString()].Path;
-                return defaultPath;
-            }
+            return TryGetValue(toolType.ToString(), out var tool) ? tool.Path : defaultPath;
         }
 
         public string GetToolArgsOrDefault(SearchToolType toolType, string defaultArgs)
         {
-            lock (_sync)
-            {
-                if (ContainsKey(toolType.ToString()))
-                    return this[toolType.ToString()].ExtraCommandlineArgs;
-                return defaultArgs;
-            }
-        }
-
-        // Serialize the MappedList mutators: RemoveExisting + _dict.Add inside InsertItem are not
-        // atomic across threads, so two threads passing the external ContainsKey guard can both
-        // reach _dict.Add. lock is reentrant, so the locked keyed accessors above remain safe.
-        protected override void InsertItem(int index, SearchTool item)
-        {
-            lock (_sync)
-            {
-                base.InsertItem(index, item);
-            }
-        }
-
-        protected override void RemoveItem(int index)
-        {
-            lock (_sync)
-            {
-                base.RemoveItem(index);
-            }
-        }
-
-        protected override void SetItem(int index, SearchTool item)
-        {
-            lock (_sync)
-            {
-                base.SetItem(index, item);
-            }
-        }
-
-        protected override void ClearItems()
-        {
-            lock (_sync)
-            {
-                base.ClearItems();
-            }
+            return TryGetValue(toolType.ToString(), out var tool) ? tool.ExtraCommandlineArgs : defaultArgs;
         }
     }
 
 
-    public sealed class SearchSettingsPresetList : SerializableSettingsList<SearchSettingsPreset>
+    public sealed class SearchSettingsPresetList : SerializableSettingsList<SearchSettingsPreset>, ISelfTypedList<SearchSettingsPresetList, SearchSettingsPreset>
     {
         public const string DEFAULT_PRESET_NAME = @"Default";
         public const string DEFAULT_ENZYME_NAME = @"Trypsin";
@@ -1907,12 +1887,12 @@ namespace pwiz.Skyline.Properties
         public override string Label => PropertiesResources.SearchSettingsPresetList_Label_Settings_Presets;
 
         public override Type SerialType => typeof(SearchSettingsPresetList);
-        public override ICollection<SearchSettingsPreset> CreateEmptyList() => new SearchSettingsPresetList();
+        public override SerializableSettingsList<SearchSettingsPreset> CreateEmptyList() => new SearchSettingsPresetList();
         public override string FileExtension => @".skysp";
     }
 
 
-    public sealed class DiannSearchSettingsPresetList : SerializableSettingsList<SearchSettingsPreset>
+    public sealed class DiannSearchSettingsPresetList : SerializableSettingsList<SearchSettingsPreset>, ISelfTypedList<DiannSearchSettingsPresetList, SearchSettingsPreset>
     {
         public override IEnumerable<SearchSettingsPreset> GetDefaults(int revisionIndex)
         {
@@ -1927,13 +1907,13 @@ namespace pwiz.Skyline.Properties
         public override string Label => PropertiesResources.SearchSettingsPresetList_Label_Settings_Presets;
 
         public override Type SerialType => typeof(DiannSearchSettingsPresetList);
-        public override ICollection<SearchSettingsPreset> CreateEmptyList() => new DiannSearchSettingsPresetList();
+        public override SerializableSettingsList<SearchSettingsPreset> CreateEmptyList() => new DiannSearchSettingsPresetList();
         public override string FileExtension => @".skysp";
     }
 
 
     [LlmName("Spectral Libraries")]
-    public sealed class SpectralLibraryList : SettingsListNotifying<LibrarySpec>, ISettingsListDocumentSelection
+    public sealed class SpectralLibraryList : SettingsList<LibrarySpec>, ISelfTypedList<SpectralLibraryList, LibrarySpec>, ISettingsListDocumentSelection
     {
         public override IEnumerable<LibrarySpec> GetDefaults(int revisionIndex)
         {
@@ -1945,13 +1925,11 @@ namespace pwiz.Skyline.Properties
             return (LibrarySpec) item.ChangeName(string.Empty);
         }
 
-        public void RemoveDocumentLocalLibraries()
+        public SpectralLibraryList RemoveDocumentLocalLibraries()
         {
-            foreach (LibrarySpec librarySpec in this.ToArray())
-            {
-                if (librarySpec.IsDocumentLocal)
-                    Remove(librarySpec);
-            }            
+            if (!this.Any(librarySpec => librarySpec.IsDocumentLocal))
+                return this;
+            return this.ChangeItems(this.Where(librarySpec => !librarySpec.IsDocumentLocal).ToArray());
         }
 
         public override string Title { get { return PropertiesResources.SpectralLibraryList_Title_Edit_Libraries; } }
@@ -1978,7 +1956,7 @@ namespace pwiz.Skyline.Properties
     /// added. Its list editor is a grid of what each model was trained on rather than the generic
     /// name list, so the models can be compared.
     /// </summary>
-    public sealed class CarafeModelList : SettingsList<CarafeModelSpec>
+    public sealed class CarafeModelList : SettingsList<CarafeModelSpec>, ISelfTypedList<CarafeModelList, CarafeModelSpec>
     {
         public override IEnumerable<CarafeModelSpec> GetDefaults(int revisionIndex)
         {
@@ -2005,7 +1983,7 @@ namespace pwiz.Skyline.Properties
     }
 
     [LlmName("Background Proteomes")]
-    public sealed class BackgroundProteomeList : SettingsList<BackgroundProteomeSpec>, ISettingsListDocumentSelection
+    public sealed class BackgroundProteomeList : SettingsList<BackgroundProteomeSpec>, ISelfTypedList<BackgroundProteomeList, BackgroundProteomeSpec>, ISettingsListDocumentSelection
     {
         private static readonly BackgroundProteomeSpec NONE = new BackgroundProteomeSpec(ELEMENT_NONE, string.Empty);
 
@@ -2025,12 +2003,13 @@ namespace pwiz.Skyline.Properties
             return new[] {GetDefault()};
         }
 
-        public void EnsureDefault()
+        public BackgroundProteomeList EnsureDefault()
         {
             // Make sure the choice of no background proteome is present.
             BackgroundProteomeSpec defaultElement = GetDefault();
             if (Count == 0 || this[0].GetKey() != defaultElement.GetKey())
-                Insert(0, defaultElement);            
+                return this.ChangeInsert(0, defaultElement);
+            return this;
         }
 
         public override BackgroundProteomeSpec CopyItem(BackgroundProteomeSpec item)
@@ -2073,7 +2052,7 @@ namespace pwiz.Skyline.Properties
     }
 
     [LlmName("Structural Modifications")]
-    public sealed class StaticModList : SettingsList<StaticMod>, ISettingsListDocumentSelection
+    public sealed class StaticModList : SettingsList<StaticMod>, ISelfTypedList<StaticModList, StaticMod>, ISettingsListDocumentSelection
     {
         public const string LEGACY_DEFAULT_NAME = "Carbamidomethyl Cysteine";
         public const string DEFAULT_NAME = "Carbamidomethyl (C)";
@@ -2115,7 +2094,7 @@ namespace pwiz.Skyline.Properties
     }
 
     [LlmName("Isotope Modifications")]
-    public sealed class HeavyModList : SettingsList<StaticMod>, ISettingsListDocumentSelection
+    public sealed class HeavyModList : SettingsList<StaticMod>, ISelfTypedList<HeavyModList, StaticMod>, ISettingsListDocumentSelection
     {
         public static StaticMod[] GetDefaultsOn()
         {
@@ -2151,7 +2130,7 @@ namespace pwiz.Skyline.Properties
     }
 
     [LlmName("Collision Energy Regressions")]
-    public sealed class CollisionEnergyList : SettingsList<CollisionEnergyRegression>
+    public sealed class CollisionEnergyList : SettingsList<CollisionEnergyRegression>, ISelfTypedList<CollisionEnergyList, CollisionEnergyRegression>
     {
         public static readonly CollisionEnergyRegression NONE =
             new CollisionEnergyRegression(ELEMENT_NONE, new [] { new ChargeRegressionLine(2, 0, 0) });
@@ -2194,10 +2173,11 @@ namespace pwiz.Skyline.Properties
             base.ValidateLoad();
 
             // Make sure NONE is at the beginning of the list
-            if (!ReferenceEquals(NONE, this[0]))
+            var items = LoadingItems;
+            if (!ReferenceEquals(NONE, items[0]))
             {
-                Remove(NONE);
-                InsertItem(0, NONE);
+                items.Remove(NONE);
+                items.Insert(0, NONE);
             }
         }
 
@@ -2399,7 +2379,7 @@ namespace pwiz.Skyline.Properties
     }
 
     [LlmName("Optimization Libraries")]
-    public sealed class OptimizationLibraryList : SettingsList<OptimizationLibrary>
+    public sealed class OptimizationLibraryList : SettingsList<OptimizationLibrary>, ISelfTypedList<OptimizationLibraryList, OptimizationLibrary>
     {
         public override string GetDisplayName(OptimizationLibrary item)
         {
@@ -2422,12 +2402,13 @@ namespace pwiz.Skyline.Properties
             return new[] { GetDefault() };
         }
 
-        public void EnsureDefault()
+        public OptimizationLibraryList EnsureDefault()
         {
             // Make sure the choice of no library is present.
             OptimizationLibrary defaultElement = GetDefault();
             if (Count == 0 || this[0].GetKey() != defaultElement.GetKey())
-                Insert(0, defaultElement);
+                return this.ChangeInsert(0, defaultElement);
+            return this;
         }
 
         public override string Title { get { return PropertiesResources.OptimizationLibraryList_Title_Edit_Optimization_Databases; } }
@@ -2438,7 +2419,7 @@ namespace pwiz.Skyline.Properties
     }
 
     [LlmName("Declustering Potential Regressions")]
-    public sealed class DeclusterPotentialList : SettingsList<DeclusteringPotentialRegression>
+    public sealed class DeclusterPotentialList : SettingsList<DeclusteringPotentialRegression>, ISelfTypedList<DeclusterPotentialList, DeclusteringPotentialRegression>
     {
         public static readonly DeclusteringPotentialRegression NONE =
             new DeclusteringPotentialRegression(ELEMENT_NONE, 0, 0);
@@ -2475,12 +2456,13 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        public void EnsureDefault()
+        public DeclusterPotentialList EnsureDefault()
         {
             // Make sure the choice of no retention time regression is present.
             DeclusteringPotentialRegression defaultElement = GetDefault();
             if (Count == 0 || this[0].GetKey() != defaultElement.GetKey())
-                Insert(0, defaultElement);
+                return this.ChangeInsert(0, defaultElement);
+            return this;
         }
 
         public override DeclusteringPotentialRegression CopyItem(DeclusteringPotentialRegression item)
@@ -2496,7 +2478,7 @@ namespace pwiz.Skyline.Properties
     }
 
     [LlmName("Compensation Voltage Parameters")]
-    public sealed class CompensationVoltageList : SettingsList<CompensationVoltageParameters>
+    public sealed class CompensationVoltageList : SettingsList<CompensationVoltageParameters>, ISelfTypedList<CompensationVoltageList, CompensationVoltageParameters>
     {
         public static readonly CompensationVoltageParameters NONE = new CompensationVoltageParameters(ELEMENT_NONE, 0, 0, 0, 0, 0);
 
@@ -2532,12 +2514,13 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        public void EnsureDefault()
+        public CompensationVoltageList EnsureDefault()
         {
             // Make sure the choice of no retention time regression is present.
             CompensationVoltageParameters defaultElement = GetDefault();
             if (Count == 0 || this[0].GetKey() != defaultElement.GetKey())
-                Insert(0, defaultElement);
+                return this.ChangeInsert(0, defaultElement);
+            return this;
         }
 
         public override CompensationVoltageParameters CopyItem(CompensationVoltageParameters item)
@@ -2551,7 +2534,7 @@ namespace pwiz.Skyline.Properties
     }
     
     [LlmName("Retention Time Calculators")]
-    public sealed class RTScoreCalculatorList : SettingsListNotifying<RetentionScoreCalculatorSpec>
+    public sealed class RTScoreCalculatorList : SettingsList<RetentionScoreCalculatorSpec>, ISelfTypedList<RTScoreCalculatorList, RetentionScoreCalculatorSpec>
     {
         public static readonly RetentionScoreCalculator[] DEFAULTS =
         {
@@ -2570,18 +2553,22 @@ namespace pwiz.Skyline.Properties
             return DEFAULTS;
         }
 
-        public void EnsureDefault()
+        public RTScoreCalculatorList EnsureDefault()
         {
             // Make sure the default calculators are present.
             var defaultCalculators = GetDefaults().ToArray();
             int len = defaultCalculators.Length;
             if (Count < len || !ArrayUtil.ReferencesEqual(defaultCalculators, this.Take(len).ToArray()))
             {
-                foreach (var calc in defaultCalculators)
-                    Remove(calc);
-                foreach (var calc in Enumerable.Reverse(defaultCalculators))
-                    Insert(0, calc);
+                return (RTScoreCalculatorList) ChangeItemsWith(items =>
+                {
+                    foreach (var calc in defaultCalculators)
+                        items.Remove(calc);
+                    foreach (var calc in Enumerable.Reverse(defaultCalculators))
+                        items.Insert(0, calc);
+                });
             }
+            return this;
         }
 
         protected override IXmlElementHelper<RetentionScoreCalculatorSpec>[] GetXmlElementHelpers()
@@ -2628,10 +2615,11 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        public void SetInitializedValue(RetentionScoreCalculatorSpec calcOrig, RetentionScoreCalculatorSpec calcInit)
+        public RTScoreCalculatorList SetInitializedValue(RetentionScoreCalculatorSpec calcOrig, RetentionScoreCalculatorSpec calcInit)
         {
             if (calcInit != null && !Equals(calcOrig.Name, XmlNamedElement.NAME_INTERNAL) && !ReferenceEquals(calcInit, calcOrig))
-                SetValue(calcInit);
+                return this.ChangeValue(calcInit);
+            return this;
         }
 
         public override string Title { get { return PropertiesResources.RTScoreCalculatorList_Title_Edit_Retention_Time_Calculators; } }
@@ -2647,7 +2635,7 @@ namespace pwiz.Skyline.Properties
     }
 
     [LlmName("iRT Standards")]
-    public sealed class IrtStandardList : SettingsList<IrtStandard>
+    public sealed class IrtStandardList : SettingsList<IrtStandard>, ISelfTypedList<IrtStandardList, IrtStandard>
     {
 
         public override IrtStandard CopyItem(IrtStandard item)
@@ -2668,7 +2656,7 @@ namespace pwiz.Skyline.Properties
     }
 
     [LlmName("Ion Mobility Libraries")]
-    public sealed class IonMobilityLibraryList : SettingsListNotifying<IonMobilityLibrary>
+    public sealed class IonMobilityLibraryList : SettingsList<IonMobilityLibrary>, ISelfTypedList<IonMobilityLibraryList, IonMobilityLibrary>
     {
 
         public override string GetDisplayName(IonMobilityLibrary item)
@@ -2687,18 +2675,22 @@ namespace pwiz.Skyline.Properties
             return new[] { IonMobilityLibrary.NONE };
         }
 
-        public void EnsureDefault()
+        public IonMobilityLibraryList EnsureDefault()
         {
             // Make sure the default libraries are present.
             var defaultLibraries = GetDefaults().ToArray();
             int len = defaultLibraries.Length;
             if (Count < len || !ArrayUtil.ReferencesEqual(defaultLibraries, this.Take(len).ToArray()))
             {
-                foreach (var library in defaultLibraries)
-                    Remove(library);
-                foreach (var library in Enumerable.Reverse(defaultLibraries))
-                    Insert(0, library);
+                return (IonMobilityLibraryList) ChangeItemsWith(items =>
+                {
+                    foreach (var library in defaultLibraries)
+                        items.Remove(library);
+                    foreach (var library in Enumerable.Reverse(defaultLibraries))
+                        items.Insert(0, library);
+                });
             }
+            return this;
         }
 
         private static readonly IXmlElementHelper<IonMobilityLibrary>[] ION_MOBILITY_LIB_HELPERS =
@@ -2723,7 +2715,7 @@ namespace pwiz.Skyline.Properties
     }
 
     [LlmName("Peak Scoring Models")]
-    public sealed class PeakScoringModelList : SettingsListNotifying<PeakScoringModelSpec>, ISettingsListDocumentSelection
+    public sealed class PeakScoringModelList : SettingsList<PeakScoringModelSpec>, ISelfTypedList<PeakScoringModelList, PeakScoringModelSpec>, ISettingsListDocumentSelection
     {
         private static readonly PeakScoringModelSpec[] DEFAULTS =
         {
@@ -2736,18 +2728,22 @@ namespace pwiz.Skyline.Properties
             return ReferenceEquals(item, DEFAULTS[0]) ? LegacyScoringModel.DEFAULT_NAME : base.GetDisplayName(item);
         }
 
-        public void EnsureDefault()
+        public PeakScoringModelList EnsureDefault()
         {
             // Make sure the default scoring models are present.
             var defaultScoringModels = GetDefaults().ToArray();
             int len = defaultScoringModels.Length;
             if (Count < len || !ArrayUtil.ReferencesEqual(defaultScoringModels, this.Take(len).ToArray()))
             {
-                foreach (var scoringModel in defaultScoringModels)
-                    Remove(scoringModel);
-                foreach (var scoringModel in Enumerable.Reverse(defaultScoringModels))
-                    Insert(0, scoringModel);
+                return (PeakScoringModelList) ChangeItemsWith(items =>
+                {
+                    foreach (var scoringModel in defaultScoringModels)
+                        items.Remove(scoringModel);
+                    foreach (var scoringModel in Enumerable.Reverse(defaultScoringModels))
+                        items.Insert(0, scoringModel);
+                });
             }
+            return this;
         }
 
         private static readonly IXmlElementHelper<PeakScoringModelSpec>[] MODEL_HELPERS =
@@ -2793,7 +2789,7 @@ namespace pwiz.Skyline.Properties
     }
 
     [LlmName("Retention Time Regressions")]
-    public sealed class RetentionTimeList : SettingsList<RetentionTimeRegression>
+    public sealed class RetentionTimeList : SettingsList<RetentionTimeRegression>, ISelfTypedList<RetentionTimeList, RetentionTimeRegression>
     {
         private static readonly RetentionTimeRegression NONE =
             new RetentionTimeRegression(ELEMENT_NONE, null, 0, 0, 0, new MeasuredRetentionTime[0]);
@@ -2814,12 +2810,13 @@ namespace pwiz.Skyline.Properties
             return new[] { GetDefault() };
         }
 
-        public void EnsureDefault()
+        public RetentionTimeList EnsureDefault()
         {
             // Make sure the choice of no retention time regression is present.
             RetentionTimeRegression defaultElement = GetDefault();
             if (Count == 0 || this[0].GetKey() != defaultElement.GetKey())
-                Insert(0, defaultElement);            
+                return this.ChangeInsert(0, defaultElement);
+            return this;
         }
 
         public override RetentionTimeRegression CopyItem(RetentionTimeRegression item)
@@ -2835,7 +2832,7 @@ namespace pwiz.Skyline.Properties
     }
 
     [LlmName("Special Ions")]
-    public sealed class MeasuredIonList : SettingsList<MeasuredIon>, ISettingsListDocumentSelection
+    public sealed class MeasuredIonList : SettingsList<MeasuredIon>, ISelfTypedList<MeasuredIonList, MeasuredIon>, ISettingsListDocumentSelection
     {
         public static readonly MeasuredIon NTERM_PROLINE =
             new MeasuredIon(@"N-terminal to Proline", @"P", null, SequenceTerminus.N, 3);
@@ -2928,7 +2925,7 @@ namespace pwiz.Skyline.Properties
     }
 
     [LlmName("Isotope Labeling Enrichments")]
-    public sealed class IsotopeEnrichmentsList : SettingsList<IsotopeEnrichments>
+    public sealed class IsotopeEnrichmentsList : SettingsList<IsotopeEnrichments>, ISelfTypedList<IsotopeEnrichmentsList, IsotopeEnrichments>
     {
         public static readonly IsotopeEnrichments DEFAULT = new IsotopeEnrichments(@"Default",   // Persisted in XML
             BioMassCalc.HeavySymbols.Select(sym => new IsotopeEnrichmentItem(sym)).ToArray());
@@ -2965,7 +2962,7 @@ namespace pwiz.Skyline.Properties
     }
 
     [LlmName("Isolation Schemes")]
-    public sealed class IsolationSchemeList : SettingsList<IsolationScheme>
+    public sealed class IsolationSchemeList : SettingsList<IsolationScheme>, ISelfTypedList<IsolationSchemeList, IsolationScheme>
     {
         public override int RevisionIndexCurrent { get { return 2; } }
 
@@ -3281,7 +3278,7 @@ namespace pwiz.Skyline.Properties
     }
 
     [LlmName("Settings Profiles")]
-    public sealed class SrmSettingsList : SerializableSettingsList<SrmSettings>
+    public sealed class SrmSettingsList : SerializableSettingsList<SrmSettings>, ISelfTypedList<SrmSettingsList, SrmSettings>
     {
         public const string EXT_SETTINGS = ".skys";
         private static readonly SrmSettings DEFAULT = new SrmSettings
@@ -3407,7 +3404,7 @@ namespace pwiz.Skyline.Properties
 
         public override Type SerialType { get { return typeof(SrmSettingsList); } }
 
-        public override ICollection<SrmSettings> CreateEmptyList()
+        public override SerializableSettingsList<SrmSettings> CreateEmptyList()
         {
             return new SrmSettingsList();
         }
@@ -3456,7 +3453,7 @@ namespace pwiz.Skyline.Properties
     }
 
     [LlmName("Legacy Reports")]
-    public class ReportSpecList : SerializableSettingsList<ReportSpec>
+    public class ReportSpecList : SerializableSettingsList<ReportSpec>, ISelfTypedList<ReportSpecList, ReportSpec>
     {
         /// <summary>
         /// OBSOLETE: replaced by  <see cref="Settings.PersistedViews"></see> for reports management/>
@@ -3596,19 +3593,19 @@ namespace pwiz.Skyline.Properties
         /// </summary>
         public override Type DeserialType { get { return typeof(SkyrFileList); } }
 
-        public override ICollection<ReportSpec> CreateEmptyList()
+        public override SerializableSettingsList<ReportSpec> CreateEmptyList()
         {
-            return new ReportSpecList {RevisionIndex = RevisionIndexCurrent};
+            return (ReportSpecList) new ReportSpecList().ChangeRevisionIndex(RevisionIndexCurrent);
         }
     }
 
 
-    public sealed class GridColumnsList : XmlMappedList<string, GridColumns>
+    public sealed class GridColumnsList : XmlMappedList<string, GridColumns>, ISelfTypedList<GridColumnsList, GridColumns>
     {
     }
 
     [LlmName("Annotations")]
-    public sealed class AnnotationDefList : SettingsList<AnnotationDef>, IListSerializer<AnnotationDef>, ISettingsListDocumentSelection
+    public sealed class AnnotationDefList : SettingsList<AnnotationDef>, ISelfTypedList<AnnotationDefList, AnnotationDef>, IListSerializer<AnnotationDef>, ISettingsListDocumentSelection
     {
         public override IEnumerable<AnnotationDef> GetDefaults(int revisionIndex)
         {
@@ -3628,9 +3625,9 @@ namespace pwiz.Skyline.Properties
 
         public Type DeserialType { get { return SerialType; } }
 
-        public ICollection<AnnotationDef> CreateEmptyList()
+        public object CreateList(IEnumerable<AnnotationDef> items)
         {
-            return new AnnotationDefList();
+            return new AnnotationDefList().ChangeAddRange(items);
         }
 
         public string FileExtension => @".xml";
@@ -3644,7 +3641,7 @@ namespace pwiz.Skyline.Properties
     }
 
     [LlmName("Color Schemes")]
-    public class ColorSchemeList : SettingsList<ColorScheme>, IListSerializer<ColorScheme>
+    public class ColorSchemeList : SettingsList<ColorScheme>, ISelfTypedList<ColorSchemeList, ColorScheme>, IListSerializer<ColorScheme>
     {
         // Great websites for generating/finding schemes
         // http://vrl.cs.brown.edu/color
@@ -3780,48 +3777,12 @@ namespace pwiz.Skyline.Properties
             get { return typeof(ColorScheme); }
         }
 
-        public ICollection<ColorScheme> CreateEmptyList()
+        public object CreateList(IEnumerable<ColorScheme> items)
         {
-            return new ColorSchemeList();
+            return new ColorSchemeList().ChangeAddRange(items);
         }
 
         public string FileExtension => @".xml";
-    }
-
-    public abstract class SettingsListNotifying<TItem> : SettingsList<TItem>
-        where TItem : IKeyContainer<string>, IXmlSerializable
-    {
-        public event EventHandler<EventArgs> ListChanged;
-
-        private void FireListChanged()
-        {
-            if (ListChanged != null)
-                ListChanged(this, new EventArgs());
-        }
-
-        protected override void ClearItems()
-        {
-            base.ClearItems();
-            FireListChanged();
-        }
-
-        protected override void InsertItem(int index, TItem item)
-        {
-            base.InsertItem(index, item);
-            FireListChanged();
-        }
-
-        protected override void RemoveItem(int index)
-        {
-            base.RemoveItem(index);
-            FireListChanged();
-        }
-
-        protected override void SetItem(int index, TItem item)
-        {
-            base.SetItem(index, item);
-            FireListChanged();
-        }        
     }
 
     public abstract class SerializableSettingsList<TItem> : SettingsListBase<TItem>, IListSerializer<TItem>
@@ -3833,16 +3794,26 @@ namespace pwiz.Skyline.Properties
 
         public virtual Type DeserialType { get { return SerialType; } }
 
-        public abstract ICollection<TItem> CreateEmptyList();
+        public abstract SerializableSettingsList<TItem> CreateEmptyList();
+
+        public object CreateList(IEnumerable<TItem> items)
+        {
+            return CreateEmptyList().ChangeItemsWith(list => list.AddRange(items));
+        }
 
         public virtual string FileExtension => @".xml";
 
         #endregion
 
-        public bool ImportFile(string fileName, Func<IList<string>, IList<string>> whichToNotOverWrite)
+        /// <summary>
+        /// Returns this list with the items in a file added, replacing those of the same name
+        /// unless <paramref name="whichToNotOverWrite"/> names them, or null if it returns null
+        /// to cancel.
+        /// </summary>
+        public SerializableSettingsList<TItem> ImportFile(string fileName, Func<IList<string>, IList<string>> whichToNotOverWrite)
         {
             if (String.IsNullOrEmpty(fileName))
-                return false;
+                return null;
 
             IList<TItem> loadedItems;
             try
@@ -3866,36 +3837,24 @@ namespace pwiz.Skyline.Properties
             {
                 toSkip = whichToNotOverWrite(existing);
                 if (toSkip == null)
-                    return false;
+                    return null;
             }
-            foreach (TItem item in loadedItems)
+            return (SerializableSettingsList<TItem>) ChangeItemsWith(items =>
             {
-                // Skip anything still in the toSkip list
-                if (toSkip.Contains(item.GetKey()))
-                    continue;
-                RemoveKey(item.GetKey());
-                Add(item);
-            }
-            return true;
+                foreach (TItem item in loadedItems)
+                {
+                    // Skip anything still in the toSkip list
+                    if (toSkip.Contains(item.GetKey()))
+                        continue;
+                    items.Add(item);    // Replaces any item with the same key
+                }
+            });
         }
 
         protected virtual IList<TItem> DeserializeItems(Stream stream)
         {
             XmlSerializer xmlSerializer = new XmlSerializer(DeserialType);
-            return (SerializableSettingsList<TItem>)xmlSerializer.Deserialize(stream);
-        }
-
-        //Todo
-        public void RemoveKey(string name)
-        {
-            for (int i = 0; i < Count; i++)
-            {
-                if (Equals(name, this[i].GetKey()))
-                {
-                    RemoveAt(i);
-                    break;
-                }
-            }
+            return ((SerializableSettingsList<TItem>)xmlSerializer.Deserialize(stream)).ToList();
         }
 
         public static TItem DeserializeItem(string s)
@@ -3960,9 +3919,12 @@ namespace pwiz.Skyline.Properties
         : XmlMappedList<string, TItem>, IListDefaults<TItem>, IListEditorSupport
         where TItem : IKeyContainer<string>, IXmlSerializable
     {
-        public virtual void AddDefaults()
+        /// <summary>
+        /// For code that knows the list only by its item type, as the list editors do.
+        /// </summary>
+        public new SettingsListBase<TItem> ChangeItemsWith(Action<MappedList<string, TItem>> edit)
         {
-            AddRange(GetDefaults());
+            return (SettingsListBase<TItem>) base.ChangeItemsWith(edit);
         }
 
         public IEnumerable<TItem> GetDefaults()
@@ -3971,7 +3933,7 @@ namespace pwiz.Skyline.Properties
         }
 
         #region ISettingsListDocumentSelection Support
-        
+
         /// <summary>
         /// Resolves a single item key, validating that exactly one key is provided.
         /// Throws <see cref="SettingsListItemNotFoundException"/> if the key is not found.
@@ -4039,12 +4001,13 @@ namespace pwiz.Skyline.Properties
             if (RevisionIndex != RevisionIndexCurrent)
             {
                 MergeDifferences(GetDefaults(RevisionIndexCurrent), GetDefaults(RevisionIndex));
-                RevisionIndex = RevisionIndexCurrent;
+                SetLoadingRevisionIndex(RevisionIndexCurrent);
             }
         }
 
         private void MergeDifferences(IEnumerable<TItem> itemsNew, IEnumerable<TItem> itemsOld)
         {
+            var items = LoadingItems;
             var itemsOldArray = itemsOld.ToArray();
             foreach (var item in itemsNew)
             {
@@ -4052,13 +4015,13 @@ namespace pwiz.Skyline.Properties
                 int i = itemsOldArray.IndexOf(itemOld => Equals(keyNew, itemOld.GetKey()));
                 // If the item did not exist, add it.
                 if (i == -1)
-                    Add(item);
+                    items.Add(item);
                 // If the item has changed in the latest version
                 else if (!Equals(item, itemsOldArray[i]))
                 {
                     // And the item exists unchanged in the settings, then replace it.
-                    if (Remove(itemsOldArray[i]))
-                        Add(item);
+                    if (items.Remove(itemsOldArray[i]))
+                        items.Add(item);
                 }
             }
         }

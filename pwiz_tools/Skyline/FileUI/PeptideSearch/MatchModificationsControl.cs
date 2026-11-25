@@ -28,6 +28,7 @@ using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
@@ -162,12 +163,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 foreach (var mod in preset.StructuralModifications)
                 {
                     if (!Settings.Default.StaticModList.ContainsKey(mod.Name))
-                        Settings.Default.StaticModList.Add(mod);
+                        Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeAdd(mod);
                 }
                 foreach (var mod in preset.HeavyModifications)
                 {
                     if (!Settings.Default.HeavyModList.ContainsKey(mod.Name))
-                        Settings.Default.HeavyModList.Add(mod);
+                        Settings.Default.HeavyModList = Settings.Default.HeavyModList.ChangeAdd(mod);
                 }
             }
 

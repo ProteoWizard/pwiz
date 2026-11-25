@@ -1556,7 +1556,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public PeptideModifications DeclareExplicitMods(SrmDocument doc,
-            IList<StaticMod> listStaticMods, IList<StaticMod> listHeavyMods)
+            IEnumerable<StaticMod> listStaticMods, IEnumerable<StaticMod> listHeavyMods)
         {
             var modifications = new List<TypedModifications>
                                     {DeclareExplicitMods(doc, listStaticMods, _modifications[0])};
@@ -2440,7 +2440,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (spec != null && File.Exists(spec.FilePath))
                 {
                     librarySpecs.Add(spec);
-                    Settings.Default.SpectralLibraryList.Add(spec);
+                    Settings.Default.SpectralLibraryList = Settings.Default.SpectralLibraryList.ChangeAdd(spec);
                     continue;
                 }
 
@@ -2465,7 +2465,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                    ? library.CreateSpec(pathLibrary)
                                    : spec.ChangeFilePath(pathLibrary));
                 librarySpecs.Add(libSpec);
-                Settings.Default.SpectralLibraryList.Add(libSpec);
+                Settings.Default.SpectralLibraryList = Settings.Default.SpectralLibraryList.ChangeAdd(libSpec);
             }
 
             if (ArrayUtil.ReferencesEqual(LibrarySpecs, librarySpecs))

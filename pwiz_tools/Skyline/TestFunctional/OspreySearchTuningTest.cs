@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -70,8 +71,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 // The model list starts with the pretrained models alone
-                Settings.Default.CarafeModelList.Clear();
-                Settings.Default.CarafeModelList.AddDefaults();
+                Settings.Default.CarafeModelList = Settings.Default.CarafeModelList.ChangeClear();
+                Settings.Default.CarafeModelList = Settings.Default.CarafeModelList.ChangeAddDefaults();
             });
 
             string fastaFilepath = TestFilesDir.GetTestPath("stellar-subset-proteins.fasta");

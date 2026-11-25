@@ -95,15 +95,15 @@ namespace pwiz.SkylineTestFunctional
                                                      TestFilesDir.GetTestPath("phospho_30882_v2.blib"));
 
             // Prepare settings for this test
-            Settings.Default.StaticModList.Clear();
-            Settings.Default.StaticModList.AddRange(StaticModList.GetDefaultsOn());
-            Settings.Default.StaticModList.Add(phosphoLossMod);
-            Settings.Default.StaticModList.Add(multipleLossMod);
-            Settings.Default.StaticModList.Add(waterLossMod);
-            Settings.Default.HeavyModList.Clear();
-            Settings.Default.HeavyModList.Add(heavyKMod);
-            Settings.Default.SpectralLibraryList.Clear();
-            Settings.Default.SpectralLibraryList.Add(librarySpec);
+            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeClear();
+            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeAddRange(StaticModList.GetDefaultsOn());
+            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeAdd(phosphoLossMod);
+            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeAdd(multipleLossMod);
+            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeAdd(waterLossMod);
+            Settings.Default.HeavyModList = Settings.Default.HeavyModList.ChangeClear();
+            Settings.Default.HeavyModList = Settings.Default.HeavyModList.ChangeAdd(heavyKMod);
+            Settings.Default.SpectralLibraryList = Settings.Default.SpectralLibraryList.ChangeClear();
+            Settings.Default.SpectralLibraryList = Settings.Default.SpectralLibraryList.ChangeAdd(librarySpec);
             Settings.Default.ShowLosses = "H3PO4,H2O,NH3";
 
             // Prepare document settings for this test

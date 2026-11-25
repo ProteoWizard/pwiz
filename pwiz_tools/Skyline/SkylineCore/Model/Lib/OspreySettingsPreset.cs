@@ -188,7 +188,7 @@ namespace pwiz.Skyline.Model.Lib
     /// default, each saved from the Search Settings page, edited, imported and exported through
     /// the list editor as the DDA and DIA-NN search presets are.
     /// </summary>
-    public sealed class OspreySettingsPresetList : SerializableSettingsList<OspreySettingsPreset>
+    public sealed class OspreySettingsPresetList : SerializableSettingsList<OspreySettingsPreset>, ISelfTypedList<OspreySettingsPresetList, OspreySettingsPreset>
     {
         public override IEnumerable<OspreySettingsPreset> GetDefaults(int revisionIndex)
         {
@@ -199,7 +199,7 @@ namespace pwiz.Skyline.Model.Lib
         public override string Label => PropertiesResources.SearchSettingsPresetList_Label_Settings_Presets;
 
         public override Type SerialType => typeof(OspreySettingsPresetList);
-        public override ICollection<OspreySettingsPreset> CreateEmptyList() => new OspreySettingsPresetList();
+        public override SerializableSettingsList<OspreySettingsPreset> CreateEmptyList() => new OspreySettingsPresetList();
         public override string FileExtension => @".skyosp";
     }
 }

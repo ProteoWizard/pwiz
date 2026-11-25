@@ -27,6 +27,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -116,7 +117,7 @@ namespace pwiz.SkylineTestFunctional
                         shareSettingsDlg.OkDialog(alteredExpected);
                     });
             AssertFileEquals(alteredActual, alteredExpected);
-            Settings.Default.SrmSettingsList.Clear();
+            Settings.Default.SrmSettingsList = Settings.Default.SrmSettingsList.ChangeClear();
             Assert.AreEqual(Settings.Default.SrmSettingsList.Count, 0);
             RunUI(() => ShareListDlg<SrmSettingsList, SrmSettings>.ImportFile(SkylineWindow, Settings.Default.SrmSettingsList, alteredActual));
             var settingsChangedCopy = SkylineWindow.Document.Settings;

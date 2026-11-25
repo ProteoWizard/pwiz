@@ -241,7 +241,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                                    bool rescorePeaks)
             {
                 OutDir = outDir;
-                Settings.Default.PeakScoringModelList.Clear();
+                Settings.Default.PeakScoringModelList = Settings.Default.PeakScoringModelList.ChangeClear();
                 RunUI(() => SkylineWindow.OpenFile(skylineDocument));
                 WaitForDocumentLoaded();
                 if (rescorePeaks)

@@ -284,7 +284,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     AuditLogEntry.SettingsLogFunction
                 );
                 
-                Settings.Default.GroupComparisonDefList.Add(groupDef);
+                Settings.Default.GroupComparisonDefList = Settings.Default.GroupComparisonDefList.ChangeAdd(groupDef);
             }
             else
             {

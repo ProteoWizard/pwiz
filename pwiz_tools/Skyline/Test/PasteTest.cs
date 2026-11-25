@@ -217,8 +217,6 @@ namespace pwiz.SkylineTest
                                                     MeasuredResults.MergeAction.remove,
                                                     false,
                                                     null,
-                                                    Settings.Default.StaticModList,
-                                                    Settings.Default.HeavyModList,
                                                     to,
                                                     out _,
                                                     out _,
@@ -228,8 +226,8 @@ namespace pwiz.SkylineTest
 
         private static void ClearDefaultModifications()
         {
-            Settings.Default.StaticModList.Clear();
-            Settings.Default.HeavyModList.Clear();            
+            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeClear();
+            Settings.Default.HeavyModList = Settings.Default.HeavyModList.ChangeClear();            
         }
 
         private static void SetDefaultModifications(SrmDocument doc)

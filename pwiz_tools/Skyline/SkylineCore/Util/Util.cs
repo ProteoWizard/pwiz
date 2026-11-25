@@ -101,7 +101,10 @@ namespace pwiz.Skyline.Util
 
         Type DeserialType { get; }
 
-        ICollection<TItem> CreateEmptyList();
+        /// <summary>
+        /// A list of the type <see cref="SerialType"/> holding <paramref name="items"/>.
+        /// </summary>
+        object CreateList(IEnumerable<TItem> items);
 
         bool ContainsKey(string key);
 

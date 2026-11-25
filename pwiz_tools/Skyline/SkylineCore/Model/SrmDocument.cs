@@ -1194,8 +1194,6 @@ namespace pwiz.Skyline.Model
                                              MeasuredResults.MergeAction resultsAction,
                                              bool mergePeptides,
                                              PeptideLibraries.FindLibrary findLibrary,
-                                             MappedList<string, StaticMod> staticMods,
-                                             MappedList<string, StaticMod> heavyMods,
                                              IdentityPath to,
                                              out IdentityPath firstAdded,
                                              out IdentityPath nextAdd,
@@ -1210,6 +1208,8 @@ namespace pwiz.Skyline.Model
 
                 // Add import modifications to default modifications.
                 docImport.Settings.UpdateDefaultModifications(false);
+                var staticMods = Properties.Settings.Default.StaticModList;
+                var heavyMods = Properties.Settings.Default.HeavyModList;
                 
                 var docNew = this;
                 var settingsNew = docNew.Settings;

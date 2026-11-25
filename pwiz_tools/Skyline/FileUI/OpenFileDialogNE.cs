@@ -32,7 +32,7 @@ namespace pwiz.Skyline.FileUI
         /// <param name="sourceTypes"></param>
         /// <param name="remoteAccounts">For UNIFI</param>
         /// <param name="specificDataSourceFilter">Optional list of specific files the user needs to located, ignoring the rest</param>
-        public OpenFileDialogNE(string[] sourceTypes, IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null)
+        public OpenFileDialogNE(string[] sourceTypes, IEnumerable<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null)
             : base(sourceTypes, remoteAccounts, specificDataSourceFilter )
         {
         }

@@ -15,7 +15,7 @@ namespace pwiz.Skyline.FileUI
         protected override bool ShouldCheckMethodDevelopmentSupport => true;
 
         protected string InstrumentType { get; set; }
-        public WatersConnectMethodFileDialog(IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null)
+        public WatersConnectMethodFileDialog(IEnumerable<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null)
             : base(null, remoteAccounts, specificDataSourceFilter, true)
         {
             InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT;

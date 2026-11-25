@@ -566,9 +566,9 @@ namespace TestPerf
             }
             finally
             {
-                Settings.Default.SearchSettingsPresets.Clear();
+                Settings.Default.SearchSettingsPresets = Settings.Default.SearchSettingsPresets.ChangeClear();
                 foreach (var p in savedPresets)
-                    Settings.Default.SearchSettingsPresets.Add(p);
+                    Settings.Default.SearchSettingsPresets = Settings.Default.SearchSettingsPresets.ChangeAdd(p);
             }
         }
 

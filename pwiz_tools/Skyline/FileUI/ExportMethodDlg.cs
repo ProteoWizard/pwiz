@@ -1423,7 +1423,7 @@ namespace pwiz.Skyline.FileUI
                 Settings.Default.ExportThermoTriggerRef = AddTriggerReference;
             }
             if (_fileType == ExportFileType.Method)
-                Settings.Default.ExportMethodTemplateList.SetValue(new MethodTemplateFile(_instrumentType, templateName));
+                Settings.Default.ExportMethodTemplateList = Settings.Default.ExportMethodTemplateList.ChangeValue(new MethodTemplateFile(_instrumentType, templateName));
             if (cbExportMultiQuant.Visible)
                 Settings.Default.ExportMultiQuant = ExportMultiQuant;
             if (cbSureQuant.Visible)

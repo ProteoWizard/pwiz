@@ -138,8 +138,8 @@ namespace pwiz.Skyline.SettingsUI
                                 switch (addPredictorDlg.ShowDialog(this))
                                 {
                                     case DialogResult.OK:
-                                        Settings.Default.RTScoreCalculatorList.Add(addPredictorDlg.Calculator);
-                                        Settings.Default.RetentionTimeList.Add(addPredictorDlg.Regression);
+                                        Settings.Default.RTScoreCalculatorList = Settings.Default.RTScoreCalculatorList.ChangeAdd(addPredictorDlg.Calculator);
+                                        Settings.Default.RetentionTimeList = Settings.Default.RetentionTimeList.ChangeAdd(addPredictorDlg.Regression);
                                         break;
                                     case DialogResult.No:
                                         break;

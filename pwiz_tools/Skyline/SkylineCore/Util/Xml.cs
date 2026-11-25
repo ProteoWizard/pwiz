@@ -52,20 +52,116 @@ namespace pwiz.Skyline.Util
     }
 
     /// <summary>
-    /// XML serializable MappedList for use with lists that must be
-    /// stored in the program settings.
+    /// An immutable, XML serializable list of keyed items for lists that are stored in the
+    /// program settings. Each change makes a new list of the same type (see
+    /// <see cref="XmlMappedListChanges"/>), so a list read from the settings can be shared
+    /// across threads, and a change is seen by setting the property that holds the list.
     /// </summary>
     /// <typeparam name="TKey">Type of the key used in the map</typeparam>
     /// <typeparam name="TValue">Type stored in the collection</typeparam>
     public class XmlMappedList<TKey, TValue>
-        : MappedList<TKey, TValue>, IXmlSerializable, IMergeable
+        : IReadOnlyMappedList<TKey, TValue>, IXmlSerializable, IMergeable
         where TValue : IKeyContainer<TKey>, IXmlSerializable
     {
+        /// <summary>
+        /// Changed only while this list is being built: read from XML, or in
+        /// <see cref="ChangeItemsWith"/> on a copy that nothing else has seen yet.
+        /// </summary>
+        private MappedList<TKey, TValue> _items = new MappedList<TKey, TValue>();
+
         /// <summary>
         /// Monotonically increasing revision number, supporting the ability
         /// to upgrade the elements in a settings list.
         /// </summary>
-        public int RevisionIndex { get; set; }
+        public int RevisionIndex { get; private set; }
+
+        public XmlMappedList<TKey, TValue> ChangeRevisionIndex(int revisionIndex)
+        {
+            var clone = CloneItems();
+            clone.RevisionIndex = revisionIndex;
+            return clone;
+        }
+
+        /// <summary>
+        /// A copy of this list, of the same type, with <paramref name="edit"/> applied to its items.
+        /// The typed methods in <see cref="XmlMappedListChanges"/> are the usual way to call this.
+        /// </summary>
+        public XmlMappedList<TKey, TValue> ChangeItemsWith(Action<MappedList<TKey, TValue>> edit)
+        {
+            var clone = CloneItems();
+            edit(clone._items);
+            return clone;
+        }
+
+        private XmlMappedList<TKey, TValue> CloneItems()
+        {
+            var clone = (XmlMappedList<TKey, TValue>) MemberwiseClone();
+            clone._items = new MappedList<TKey, TValue>();
+            clone._items.AddRange(_items);
+            return clone;
+        }
+
+        /// <summary>
+        /// The items of a list still being built, for <see cref="ValidateLoad"/>.
+        /// </summary>
+        protected MappedList<TKey, TValue> LoadingItems
+        {
+            get { return _items; }
+        }
+
+        #region IReadOnlyMappedList Members
+
+        public int Count
+        {
+            get { return _items.Count; }
+        }
+
+        public TValue this[int index]
+        {
+            get { return _items[index]; }
+        }
+
+        public TValue this[TKey key]
+        {
+            get { return _items[key]; }
+        }
+
+        public IEnumerable<TKey> Keys
+        {
+            get { return _items.Keys; }
+        }
+
+        public bool ContainsKey(TKey key)
+        {
+            return _items.ContainsKey(key);
+        }
+
+        public bool TryGetValue(TKey key, out TValue value)
+        {
+            return _items.TryGetValue(key, out value);
+        }
+
+        public int IndexOf(TValue value)
+        {
+            return _items.IndexOf(value);
+        }
+
+        public bool Contains(TValue value)
+        {
+            return _items.Contains(value);
+        }
+
+        public IEnumerator<TValue> GetEnumerator()
+        {
+            return _items.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        #endregion
 
         #region IMergeable Members
 
@@ -79,23 +175,24 @@ namespace pwiz.Skyline.Util
             var baseByKey = ((IEnumerable) baseValue).Cast<TValue>().ToDictionary(item => item.GetKey());
             var sourceList = ((IEnumerable) sourceValue).Cast<TValue>().ToList();
             var sourceByKey = sourceList.ToDictionary(item => item.GetKey());
-            var merged = (XmlMappedList<TKey, TValue>) Activator.CreateInstance(GetType());
-            merged.RevisionIndex = RevisionIndex;
-            foreach (var item in this)
+            return ChangeItemsWith(merged =>
             {
-                var key = item.GetKey();
-                if (!baseByKey.TryGetValue(key, out var baseItem) || !IsSameItem(item, baseItem))
-                    merged.Add(item);
-                else if (sourceByKey.TryGetValue(key, out var sourceItem))
-                    merged.Add(sourceItem);
-            }
-            foreach (var sourceItem in sourceList)
-            {
-                var key = sourceItem.GetKey();
-                if (!baseByKey.ContainsKey(key) && !merged.ContainsKey(key))
-                    merged.Add(sourceItem);
-            }
-            return merged;
+                merged.Clear();
+                foreach (var item in this)
+                {
+                    var key = item.GetKey();
+                    if (!baseByKey.TryGetValue(key, out var baseItem) || !IsSameItem(item, baseItem))
+                        merged.Add(item);
+                    else if (sourceByKey.TryGetValue(key, out var sourceItem))
+                        merged.Add(sourceItem);
+                }
+                foreach (var sourceItem in sourceList)
+                {
+                    var key = sourceItem.GetKey();
+                    if (!baseByKey.ContainsKey(key) && !merged.ContainsKey(key))
+                        merged.Add(sourceItem);
+                }
+            });
         }
 
         /// <summary>
@@ -124,10 +221,18 @@ namespace pwiz.Skyline.Util
 
         /// <summary>
         /// Provides a place to handle any post read validation or upgrading
-        /// of values.
+        /// of values, which changes <see cref="LoadingItems"/>.
         /// </summary>
         protected virtual void ValidateLoad()
-        {            
+        {
+        }
+
+        /// <summary>
+        /// Called by <see cref="ValidateLoad"/> when it upgrades the list to a new revision.
+        /// </summary>
+        protected void SetLoadingRevisionIndex(int revisionIndex)
+        {
+            RevisionIndex = revisionIndex;
         }
 
         private enum EL
@@ -186,8 +291,8 @@ namespace pwiz.Skyline.Util
                     reader.ReadEndElement();
                 }
             }
-            Clear();
-            AddRange(list);                
+            _items.Clear();
+            _items.AddRange(list);
 
             // Perform final list specific updates
             ValidateLoad();
@@ -224,6 +329,133 @@ namespace pwiz.Skyline.Util
         }
 
         #endregion // IXmlSerializable Members
+    }
+
+    /// <summary>
+    /// Implemented by each concrete list class, naming itself, so that the methods in
+    /// <see cref="XmlMappedListChanges"/> can return the changed list as its own type and take
+    /// items of its item type, both worked out from the list they are called on.
+    /// </summary>
+    /// <typeparam name="TList">The class implementing this interface</typeparam>
+    /// <typeparam name="TItem">The type of the items in the list</typeparam>
+    public interface ISelfTypedList<TList, TItem>
+        where TList : XmlMappedList<string, TItem>
+        where TItem : IKeyContainer<string>, IXmlSerializable
+    {
+    }
+
+    /// <summary>
+    /// Changes to an immutable <see cref="XmlMappedList{TKey,TValue}"/>, each returning a new list
+    /// of the same type as the one changed, with the semantics the mutable list had: adding an
+    /// item whose key is already present removes the old one first.
+    /// </summary>
+    public static class XmlMappedListChanges
+    {
+        public static TList ChangeAdd<TList, TItem>(this ISelfTypedList<TList, TItem> list, TItem item)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items => items.Add(item));
+        }
+
+        public static TList ChangeAddRange<TList, TItem>(this ISelfTypedList<TList, TItem> list, IEnumerable<TItem> itemsAdded)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items => items.AddRange(itemsAdded));
+        }
+
+        public static TList ChangeItems<TList, TItem>(this ISelfTypedList<TList, TItem> list, IEnumerable<TItem> itemsNew)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items =>
+            {
+                items.Clear();
+                items.AddRange(itemsNew);
+            });
+        }
+
+        public static TList ChangeInsert<TList, TItem>(this ISelfTypedList<TList, TItem> list, int index, TItem item)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items => items.Insert(index, item));
+        }
+
+        public static TList ChangeItemAt<TList, TItem>(this ISelfTypedList<TList, TItem> list, int index, TItem item)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items => items[index] = item);
+        }
+
+        public static TList ChangeRemove<TList, TItem>(this ISelfTypedList<TList, TItem> list, TItem item)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items => items.Remove(item));
+        }
+
+        public static TList ChangeRemoveAt<TList, TItem>(this ISelfTypedList<TList, TItem> list, int index)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items => items.RemoveAt(index));
+        }
+
+        public static TList ChangeRemoveKey<TList, TItem>(this ISelfTypedList<TList, TItem> list, string key)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items =>
+            {
+                if (items.TryGetValue(key, out var item))
+                    items.Remove(item);
+            });
+        }
+
+        public static TList ChangeClear<TList, TItem>(this ISelfTypedList<TList, TItem> list)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items => items.Clear());
+        }
+
+        /// <summary>
+        /// Replaces the item with the same key where it is, or adds the item at the end.
+        /// </summary>
+        public static TList ChangeValue<TList, TItem>(this ISelfTypedList<TList, TItem> list, TItem item)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items => items.SetValue(item));
+        }
+
+        /// <summary>
+        /// Replaces the item with the key of <paramref name="oldItem"/> where it is, which lets
+        /// an item be renamed. Returns the list unchanged if no item has that key.
+        /// </summary>
+        public static TList ChangeReplace<TList, TItem>(this ISelfTypedList<TList, TItem> list, TItem oldItem, TItem newItem)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items => items.ReplaceValue(oldItem, newItem));
+        }
+
+        public static TList ChangeAddDefaults<TList, TItem>(this ISelfTypedList<TList, TItem> list)
+            where TList : SettingsListBase<TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return list.ChangeAddRange(((TList) list).GetDefaults());
+        }
+
+        private static TList Change<TList, TItem>(ISelfTypedList<TList, TItem> list, Action<MappedList<string, TItem>> edit)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return (TList) ((TList) list).ChangeItemsWith(edit);
+        }
     }
 
     [XmlRoot("dictionary")]

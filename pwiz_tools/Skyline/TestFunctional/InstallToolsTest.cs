@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            Settings.Default.ToolList.Clear();
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
 
             /* Running in a loop want to move the toolDir out of the way.
              */
@@ -383,7 +383,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void ClearAllTools()
         {
-            Settings.Default.ToolList.Clear();
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
             string toolsDir = ToolDescriptionHelpers.GetToolsDirectory();
             DirectoryEx.SafeDelete(toolsDir);
         }

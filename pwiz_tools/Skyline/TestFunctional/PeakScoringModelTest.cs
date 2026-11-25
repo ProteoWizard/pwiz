@@ -31,6 +31,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -70,7 +71,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            Settings.Default.PeakScoringModelList.Clear();
+            Settings.Default.PeakScoringModelList = Settings.Default.PeakScoringModelList.ChangeClear();
 
             var documentFile = TestFilesDir.GetTestPath("MProphetGold-rescore2.sky");
             RunUI(() => SkylineWindow.OpenFile(documentFile));
@@ -315,7 +316,7 @@ namespace pwiz.SkylineTestFunctional
                                  double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN};
             var parameters = new LinearModelParams(weights, -2.5);
             var incompatibleModel = new MProphetPeakScoringModel("incompatible", parameters, null, true);
-            Settings.Default.PeakScoringModelList.Add(incompatibleModel);
+            Settings.Default.PeakScoringModelList = Settings.Default.PeakScoringModelList.ChangeAdd(incompatibleModel);
             RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsDlg =>
                 {
                     peptideSettingsDlg.ComboPeakScoringModelSelected = "incompatible";

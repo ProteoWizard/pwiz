@@ -20,6 +20,7 @@ using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CommonMsData.RemoteApi.Ardia;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -32,7 +33,7 @@ namespace pwiz.SkylineTest
         {
             var ardiaAccount = new ArdiaAccount("https://ardiaserver.example.com", "ardia_username", "ardia password", EncryptedToken.FromString("ardia token value"));
 
-            var remoteAccountList = new RemoteAccountList { ardiaAccount };
+            var remoteAccountList = new RemoteAccountList().ChangeAdd(ardiaAccount);
 
             var stringWriter = new StringWriter();
             var xmlSerializer = new XmlSerializer(typeof(RemoteAccountList));

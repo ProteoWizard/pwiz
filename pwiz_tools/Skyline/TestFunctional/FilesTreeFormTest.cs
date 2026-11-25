@@ -1288,7 +1288,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     SkylineWindow.Undo();
                     // Restore Settings.Default to original state, since leaving it will cause problems for other tests
-                    Settings.Default.SpectralLibraryList[0] = SkylineWindow.DocumentUI.Settings.PeptideSettings.Libraries.LibrarySpecs[0];
+                    Settings.Default.SpectralLibraryList = Settings.Default.SpectralLibraryList.ChangeItemAt(0, SkylineWindow.DocumentUI.Settings.PeptideSettings.Libraries.LibrarySpecs[0]);
                 });
             }
 

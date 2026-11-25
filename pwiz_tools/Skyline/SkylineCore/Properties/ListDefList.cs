@@ -26,7 +26,7 @@ using SkylineTool;
 namespace pwiz.Skyline.Properties
 {
     [LlmName("Lists")]
-    public class ListDefList : SettingsList<ListData>, IListSerializer<ListData>, ISettingsListDocumentSelection
+    public class ListDefList : SettingsList<ListData>, ISelfTypedList<ListDefList, ListData>, IListSerializer<ListData>, ISettingsListDocumentSelection
     {
         public override ListData CopyItem(ListData item)
         {
@@ -48,9 +48,9 @@ namespace pwiz.Skyline.Properties
             get { return PropertiesResources.ListDefList_Title_Define_Lists; }
         }
 
-        public ICollection<ListData> CreateEmptyList()
+        public object CreateList(IEnumerable<ListData> items)
         {
-            return new ListDefList();
+            return new ListDefList().ChangeAddRange(items);
         }
 
         public Type DeserialType { get { return SerialType; } }

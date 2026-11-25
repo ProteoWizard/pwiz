@@ -24,6 +24,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
@@ -69,9 +70,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 }
                 gridColumnList.Add(new GridColumn(GetPersistedColumnName(columnPropertyDescriptor.PropertyPath), true, column.Width));
             }
-            var allGridColumnLists = Properties.Settings.Default.GridColumnsList;
-            allGridColumnLists.Add(new GridColumns(gridColumnsKey, gridColumnList));
-            Properties.Settings.Default.GridColumnsList = allGridColumnLists;
+            Properties.Settings.Default.GridColumnsList = Properties.Settings.Default.GridColumnsList.ChangeAdd(new GridColumns(gridColumnsKey, gridColumnList));
         }
 
         /// <summary>

@@ -571,7 +571,7 @@ namespace pwiz.Skyline.EditUI
                 StaticMod itemNew = listSettingsMods.NewItem(this, null, null);
                 if (!Equals(itemNew, null))
                 {
-                    listSettingsMods.Add(itemNew);
+                    Settings.Default.SetSettingsList(listSettingsMods.ChangeItemsWith(items => items.Add(itemNew)));
                     string itemAdd = (string) combo.SelectedItem;
                     LoadLists(labelType, indexAA, itemNew.GetKey());
                     // If the selection was not successfully set to the new modification,
@@ -594,7 +594,7 @@ namespace pwiz.Skyline.EditUI
                     if (!Equals(itemNew, null))
                     {
                         int i = listSettingsMods.IndexOf(itemEdit);
-                        listSettingsMods[i] = itemNew;
+                        Settings.Default.SetSettingsList(listSettingsMods.ChangeItemsWith(items => items[i] = itemNew));
                         LoadLists(labelType, indexAA, itemNew.GetKey());
                     }
                 }
@@ -605,8 +605,11 @@ namespace pwiz.Skyline.EditUI
                 IEnumerable<StaticMod> listNew = listSettingsMods.EditList(this, null);
                 if (listNew != null)
                 {
-                    listSettingsMods.Clear();
-                    listSettingsMods.AddRange(listNew);
+                    Settings.Default.SetSettingsList(listSettingsMods.ChangeItemsWith(items =>
+                    {
+                        items.Clear();
+                        items.AddRange(listNew);
+                    }));
 
                     string selectedItemLast = null;
                     if (selectedIndexLast != -1)
@@ -673,7 +676,7 @@ namespace pwiz.Skyline.EditUI
         }
 
         private static IList<ExplicitMod> GetExplicitMods(IList<LiteDropDownList> mods, 
-            MappedList<string, StaticMod> listSettingsMods)
+            IReadOnlyMappedList<string, StaticMod> listSettingsMods)
         {
             List<ExplicitMod> listMods = new List<ExplicitMod>();
             for (int i = 0; i < mods.Count; i++)

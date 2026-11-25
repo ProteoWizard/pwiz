@@ -425,8 +425,8 @@ namespace pwiz.SkylineTestFunctional
             const double PRESET_2_CUTOFF = 0.01;
             const int PRESET_2_MISSED_CLEAVAGES = 1;
 
-            Settings.Default.SearchSettingsPresets.Clear();
-            Settings.Default.SearchSettingsPresets.AddDefaults();
+            Settings.Default.SearchSettingsPresets = Settings.Default.SearchSettingsPresets.ChangeClear();
+            Settings.Default.SearchSettingsPresets = Settings.Default.SearchSettingsPresets.ChangeAddDefaults();
 
             PrepareDocument("TestSettingsPreset.sky");
 
@@ -870,7 +870,7 @@ namespace pwiz.SkylineTestFunctional
             TestEditListImportShare();
 
             OkDialog(importPeptideSearchDlg, importPeptideSearchDlg.ClickCancelButton);
-            Settings.Default.SearchSettingsPresets.Clear();
+            Settings.Default.SearchSettingsPresets = Settings.Default.SearchSettingsPresets.ChangeClear();
         }
 
         private void TestImportParamsFilePresets(ImportPeptideSearchDlg importPeptideSearchDlg)
@@ -1039,10 +1039,10 @@ namespace pwiz.SkylineTestFunctional
 
             // Test that Edit List works after removing default presets from settings
             // (regression: ReloadList assumed all defaults were present in the list)
-            Settings.Default.SearchSettingsPresets.Clear();
+            Settings.Default.SearchSettingsPresets = Settings.Default.SearchSettingsPresets.ChangeClear();
             // Add back only one default (fewer than ExcludeDefaults expects)
             var firstDefault = Settings.Default.SearchSettingsPresets.GetDefaults(0).First();
-            Settings.Default.SearchSettingsPresets.Add(firstDefault);
+            Settings.Default.SearchSettingsPresets = Settings.Default.SearchSettingsPresets.ChangeAdd(firstDefault);
 
             // Opening Edit List should not throw despite missing defaults
             var editListDlg2 = ShowDialog<EditListDlg<SettingsListBase<SearchSettingsPreset>, SearchSettingsPreset>>(
@@ -1050,8 +1050,8 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(editListDlg2, editListDlg2.OkDialog);
 
             // Restore defaults for cleanup
-            Settings.Default.SearchSettingsPresets.Clear();
-            Settings.Default.SearchSettingsPresets.AddDefaults();
+            Settings.Default.SearchSettingsPresets = Settings.Default.SearchSettingsPresets.ChangeClear();
+            Settings.Default.SearchSettingsPresets = Settings.Default.SearchSettingsPresets.ChangeAddDefaults();
 
             File.Delete(sharePath);
         }
@@ -1653,7 +1653,7 @@ namespace pwiz.SkylineTestFunctional
 
             OkDialog(importPeptideSearchDlg2, importPeptideSearchDlg2.ClickCancelButton);
 
-            Settings.Default.SearchSettingsPresets.Clear();
+            Settings.Default.SearchSettingsPresets = Settings.Default.SearchSettingsPresets.ChangeClear();
         }
 
         private void TestDependencyErrors(ImportPeptideSearchDlg importPeptideSearchDlg)

@@ -143,7 +143,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 if (Settings.Default.SearchToolList.ContainsKey(SearchToolType.DIANN))
-                    Settings.Default.SearchToolList.Remove(
+                    Settings.Default.SearchToolList = Settings.Default.SearchToolList.ChangeRemove(
                         Settings.Default.SearchToolList[SearchToolType.DIANN]);
             });
 
@@ -164,9 +164,9 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                 {
                     if (Settings.Default.SearchToolList.ContainsKey(SearchToolType.DIANN))
-                        Settings.Default.SearchToolList.Remove(
+                        Settings.Default.SearchToolList = Settings.Default.SearchToolList.ChangeRemove(
                             Settings.Default.SearchToolList[SearchToolType.DIANN]);
-                    Settings.Default.SearchToolList.Add(new SearchTool(SearchToolType.DIANN,
+                    Settings.Default.SearchToolList = Settings.Default.SearchToolList.ChangeAdd(new SearchTool(SearchToolType.DIANN,
                         bogusPath, string.Empty, Path.GetDirectoryName(bogusPath), false));
                 });
 

@@ -47,7 +47,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             // clear out any existing tools
-            Settings.Default.ToolList.Clear();
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
             
             TestMenuItemAvailability();
             TestDeselectAll();
@@ -62,7 +62,7 @@ namespace pwiz.SkylineTestFunctional
         private static void TestMenuItemAvailability()
         {
             // add a sample tool to the list
-            Settings.Default.ToolList.Add(FULLY_UPDATED_TOOL);
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeAdd(FULLY_UPDATED_TOOL);
             // test the menu item is not enabled if there are no updates available
             RunUI(() =>
                 {
@@ -71,14 +71,14 @@ namespace pwiz.SkylineTestFunctional
                 });
 
             // test the menu item is enabled if there are updates available
-            Settings.Default.ToolList.Add(SAMPLE_TOOL);
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeAdd(SAMPLE_TOOL);
             RunUI(() =>
                 {
                     SkylineWindow.PopulateToolsMenu();
                     Assert.IsTrue(SkylineWindow.UpdatesMenuEnabled());
                 });
 
-            Settings.Default.ToolList.Clear();
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
         }
 
         /// <summary>
@@ -256,11 +256,11 @@ namespace pwiz.SkylineTestFunctional
                 Func<string, IUnpackZipToolSupport, ToolInstaller.UnzipToolReturnAccumulator> unpackZipTool = null)
             {
                 // Clear tool list BEFORE test (prevents cascading failures from previous test failures)
-                Settings.Default.ToolList.Clear();
+                Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
                 
                 // Add tools for this test
                 if (toolsToAdd != null && toolsToAdd.Length > 0)
-                    Settings.Default.ToolList.AddRange(toolsToAdd);
+                    Settings.Default.ToolList = Settings.Default.ToolList.ChangeAddRange(toolsToAdd);
                 
                 // Create update helper - toolStoreClient is now required (not optional)
                 _updateHelper = CreateUpdateHelper(toolStoreClient, unpackZipTool);
@@ -285,7 +285,7 @@ namespace pwiz.SkylineTestFunctional
                 (_updateHelper as IDisposable)?.Dispose();
                 
                 // Clear tool list AFTER test (cleanup)
-                Settings.Default.ToolList.Clear();
+                Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
             }
         }
 

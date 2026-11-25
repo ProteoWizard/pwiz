@@ -20,12 +20,13 @@ using System.Collections.Generic;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Util;
 using SkylineTool;
 
 namespace pwiz.Skyline.Properties
 {
     [LlmName("Group Comparisons")]
-    public class GroupComparisonDefList : SettingsList<GroupComparisonDef>, ISettingsListDocumentSelection
+    public class GroupComparisonDefList : SettingsList<GroupComparisonDef>, ISelfTypedList<GroupComparisonDefList, GroupComparisonDef>, ISettingsListDocumentSelection
     {
         public override IEnumerable<GroupComparisonDef> GetDefaults(int revisionIndex)
         {

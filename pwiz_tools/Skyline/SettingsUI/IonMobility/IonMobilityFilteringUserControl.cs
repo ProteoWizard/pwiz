@@ -28,6 +28,7 @@ using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI.IonMobility
 {
@@ -187,7 +188,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             var libNew = list.EditItem(this, null, list, null);
             if (libNew != null)
             {
-                list.SetValue(libNew);
+                Settings.Default.IonMobilityLibraryList = list.ChangeValue(libNew);
                 SelectedIonMobilityLibrary = libNew.Name;
             }
         }
@@ -199,7 +200,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             var libNew = list.EditItem(this, _driverIonMobilityLib.SelectedItem, list, null);
             if (libNew != null)
             {
-                list.SetValue(libNew);
+                Settings.Default.IonMobilityLibraryList = list.ChangeValue(libNew);
                 SelectedIonMobilityLibrary = libNew.Name;
             }
         }

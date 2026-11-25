@@ -49,10 +49,10 @@ namespace pwiz.SkylineTest
 
             // Change declustering potential, collision energy, and retention time
             var regressions = new DeclusterPotentialList();
-            regressions.AddDefaults();
+            regressions = regressions.ChangeAddDefaults();
             var dpRegress = regressions["SCIEX"];
             var collisions = new CollisionEnergyList();
-            collisions.AddDefaults();
+            collisions = collisions.ChangeAddDefaults();
             var ceRegress = collisions["SCIEX"];
             var calc = Settings.Default.RTScoreCalculatorList.GetDefaults().First();
             var rtRegress = new RetentionTimeRegression("Test", calc, 3.5, 10.4, 12.8,
@@ -88,7 +88,7 @@ namespace pwiz.SkylineTest
 
             // Change enzymes, and verify expected peptide changes
             var enzymes = new EnzymeList();
-            enzymes.AddDefaults();
+            enzymes = enzymes.ChangeAddDefaults();
             SrmDocument docCnbr = docFasta.ChangeSettings(settings.ChangePeptideSettings(
                 p => p.ChangeEnzyme(enzymes["CNBr [M | P]"])));
             foreach (PeptideDocNode nodePeptide in docCnbr.Peptides)
@@ -165,7 +165,7 @@ namespace pwiz.SkylineTest
 
             // Check custom exclusions
             var exclusions = new PeptideExcludeList();
-            exclusions.AddDefaults();
+            exclusions = exclusions.ChangeAddDefaults();
 
             // Exclude Cys
             docFasta2 = docFasta.ChangeSettings(settings.ChangePeptideFilter(

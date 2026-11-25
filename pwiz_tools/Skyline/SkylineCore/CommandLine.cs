@@ -1387,7 +1387,7 @@ namespace pwiz.Skyline
                         string name = commandArgs.BackgroundProteomeName ?? Path.GetFileNameWithoutExtension(commandArgs.BackgroundProteomePath);
                         var bgProteome = new BackgroundProteomeSpec(name, commandArgs.BackgroundProteomePath);
                         p = p.ChangeBackgroundProteome(new BackgroundProteome(bgProteome));
-                        Settings.Default.BackgroundProteomeList.Add(bgProteome);
+                        Settings.Default.BackgroundProteomeList = Settings.Default.BackgroundProteomeList.ChangeAdd(bgProteome);
                     }
                     else if (commandArgs.BackgroundProteomeName != null)
                     {
@@ -1489,11 +1489,15 @@ namespace pwiz.Skyline
                                         mod = mod.ChangeVariable(peptideMod.IsVariable.Value);
                                     }
                                     
-                                    SettingsList<StaticMod> modListSettings = Settings.Default.StaticModList;
-                                    if (!structural)
-                                        modListSettings = Settings.Default.HeavyModList;
-                                    if (!modListSettings.Contains(mod))
-                                        modListSettings.Add(mod);
+                                    if (structural)
+                                    {
+                                        if (!Settings.Default.StaticModList.Contains(mod))
+                                            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeAdd(mod);
+                                    }
+                                    else if (!Settings.Default.HeavyModList.Contains(mod))
+                                    {
+                                        Settings.Default.HeavyModList = Settings.Default.HeavyModList.ChangeAdd(mod);
+                                    }
 
                                     var modList = structural ? strMods : isoMods;
                                     if (modList.Contains(mod))
@@ -2786,8 +2790,6 @@ namespace pwiz.Skyline
                                                     commandArgs.DocImportResultsMerge.Value,
                                                     commandArgs.DocImportMergePeptides,
                                                     FindSpectralLibrary,
-                                                    Settings.Default.StaticModList,
-                                                    Settings.Default.HeavyModList,
                                                     null,   // Always add to the end
                                                     out _,
                                                     out _,
@@ -3000,7 +3002,7 @@ namespace pwiz.Skyline
                 scoringModel = (PeakScoringModelSpec) scoringModel.Train(targetTransitionGroups,
                     decoyTransitionGroups, targetDecoyGenerator, initialParams, modelCutoffs, modelIterationCount, secondBest, true, progressMonitor, documentPath);
 
-                Settings.Default.PeakScoringModelList.SetValue(scoringModel);
+                Settings.Default.PeakScoringModelList = Settings.Default.PeakScoringModelList.ChangeValue(scoringModel);
 
                 if (scoringModel.IsTrained)
                 {
@@ -3448,7 +3450,7 @@ namespace pwiz.Skyline
             {
                 if (def.Name == annotationFromEnvironment)
                 {
-                    var list = new AnnotationDefList { def };
+                    var list = new AnnotationDefList().ChangeAdd(def);
                     var success = AddAnnotationsToDocument(list);
 
                     return success;
@@ -3512,7 +3514,7 @@ namespace pwiz.Skyline
             ListPropertyType type, IList<string> values, bool? resolveConflictsBySkipping)
         {
             var annotationDef = new AnnotationDef(name, targets, type, values);
-            var defList = new AnnotationDefList { annotationDef };
+            var defList = new AnnotationDefList().ChangeAdd(annotationDef);
             return AddAnnotationsToEnvAndDocument(defList, resolveConflictsBySkipping);
         }
 
@@ -3535,11 +3537,11 @@ namespace pwiz.Skyline
                         _out.WriteLine(
                             Resources.CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_conflict_,
                             def.Name);
-                        newAnnotationDefs.Remove(def);
+                        newAnnotationDefs = newAnnotationDefs.ChangeRemove(def);
                         foreach (var settingsDef in Settings.Default.AnnotationDefList.ToList().
                                      Where(settingsDef => Equals(settingsDef.Name, def.Name)))
                         {
-                            newAnnotationDefs.Add(settingsDef);
+                            newAnnotationDefs = newAnnotationDefs.ChangeAdd(settingsDef);
                         }
                     }
                     else
@@ -3550,14 +3552,14 @@ namespace pwiz.Skyline
                         foreach (var settingsDef in Settings.Default.AnnotationDefList.ToList().
                                      Where(settingsDef => Equals(settingsDef.Name, def.Name)))
                         {
-                            Settings.Default.AnnotationDefList.Remove(settingsDef);
+                            Settings.Default.AnnotationDefList = Settings.Default.AnnotationDefList.ChangeRemove(settingsDef);
                         }
-                        Settings.Default.AnnotationDefList.Add(def);
+                        Settings.Default.AnnotationDefList = Settings.Default.AnnotationDefList.ChangeAdd(def);
                     }
                 }
                 else
                 {
-                    Settings.Default.AnnotationDefList.Add(def);
+                    Settings.Default.AnnotationDefList = Settings.Default.AnnotationDefList.ChangeAdd(def);
                 }
             }
 
@@ -3613,8 +3615,10 @@ namespace pwiz.Skyline
                         return null; // Abort
                     };
 
-                if (!Settings.Default.SrmSettingsList.ImportFile(path, conflictResolver))
+                var settingsListImported = (SrmSettingsList) Settings.Default.SrmSettingsList.ImportFile(path, conflictResolver);
+                if (settingsListImported == null)
                     return false;
+                Settings.Default.SrmSettingsList = settingsListImported;
 
                 _out.WriteLine(SkylineResources.CommandLine_AddSettings_Settings_imported_from__0__, Path.GetFileName(path));
                 return true;
@@ -4146,7 +4150,7 @@ namespace pwiz.Skyline
             }
             // Remove the tool to be overwritten.
             if (toolToRemove !=null)
-                Settings.Default.ToolList.Remove(toolToRemove);          
+                Settings.Default.ToolList = Settings.Default.ToolList.ChangeRemove(toolToRemove);          
             // If no tool was overwritten then its a new tool. Show this message. 
             if (toolToRemove == null)
             {
@@ -4157,7 +4161,7 @@ namespace pwiz.Skyline
             // If arguments or initialDirectory is null set it to be an empty string.
             var arguments = commandArgs.ToolArguments ?? string.Empty; 
             var initialDirectory = commandArgs.ToolInitialDirectory ?? string.Empty; 
-            Settings.Default.ToolList.Add(new ToolDescription(commandArgs.ToolName, commandArgs.ToolCommand, arguments, initialDirectory, commandArgs.ToolOutputToImmediateWindow, commandArgs.ToolReportTitle));
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeAdd(new ToolDescription(commandArgs.ToolName, commandArgs.ToolCommand, arguments, initialDirectory, commandArgs.ToolOutputToImmediateWindow, commandArgs.ToolReportTitle));
             SaveSettings(commandArgs);
 
             return true;

@@ -62,12 +62,12 @@ namespace pwiz.SkylineTestData
     {
         protected override void Initialize()
         {
-            Settings.Default.ToolList.Clear();
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
         }
 
         protected override void Cleanup()
         {
-            Settings.Default.ToolList.Clear();
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
         }        
 
         private const string ZIP_FILE = @"TestData\Results\FullScan.zip";
@@ -479,7 +479,7 @@ namespace pwiz.SkylineTestData
 
             // An enrichment other than the default, because a name that does not resolve falls back to the default
             var testEnrichment = new IsotopeEnrichments("Test enrichment", IsotopeEnrichmentsList.DEFAULT.Enrichments);
-            Settings.Default.IsotopeEnrichmentsList.Add(testEnrichment);
+            Settings.Default.IsotopeEnrichmentsList = Settings.Default.IsotopeEnrichmentsList.ChangeAdd(testEnrichment);
 
             // arguments that would normally be quoted on the command-line shouldn't be quoted here
             var settings = new[]
@@ -3525,7 +3525,7 @@ namespace pwiz.SkylineTestData
             const string arguments = "$(DocumentDir) Other";
             const string initialDirectory = @"C:\";
 
-            Settings.Default.ToolList.Clear(); // in case any previous run had trouble
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear(); // in case any previous run had trouble
 
             // Test adding a tool.
             RunCommand("--tool-add=" + title,
@@ -3540,7 +3540,7 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(arguments,tool.Arguments);
             Assert.AreEqual(initialDirectory,tool.InitialDirectory);
             // Remove that tool.
-            Settings.Default.ToolList.RemoveAt(index);
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeRemoveAt(index);
 
             // Test a tool with no Initial Directory and no arguments
             RunCommand("--tool-add=" + title,
@@ -3552,7 +3552,7 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual("", tool1.Arguments);
             Assert.AreEqual("", tool1.InitialDirectory);
             // Remove that Tool.
-            Settings.Default.ToolList.RemoveAt(index1);
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeRemoveAt(index1);
 
             // Test failure to add tool
             string output = RunCommand("--tool-add=" + title);
@@ -3626,7 +3626,7 @@ namespace pwiz.SkylineTestData
             Assert.IsTrue(tool6.OutputToImmediateWindow);
             Assert.AreEqual(reportTitle, tool6.ReportTitle);
             // Remove that tool.
-            Settings.Default.ToolList.RemoveAt(index3);
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeRemoveAt(index3);
 
             const string importReportArgument = ToolMacros.INPUT_REPORT_TEMP_PATH;
             string output8 = RunCommand("--tool-add=" + newToolTitle,
@@ -3654,7 +3654,7 @@ namespace pwiz.SkylineTestData
             var movedDir = new MovedDirectory(ToolDescriptionHelpers.GetToolsDirectory(), Program.StressTest);
             try
             {
-                Settings.Default.ToolList.Clear();
+                Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
                 TestFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
                 {
                     // Test bad input
@@ -3704,7 +3704,7 @@ namespace pwiz.SkylineTestData
                     string path1 = newTool1.ToolDirPath;
                     AssertEx.FileExists(Path.Combine(path1, "HelloWorld.exe"));
                     //Cleanup.
-                    Settings.Default.ToolList.Clear();
+                    Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
                     DirectoryEx.SafeDelete(ToolDescriptionHelpers.GetToolsDirectory());
                     Settings.Default.PersistedViews.RemoveView(PersistedViews.ExternalToolsGroup.Id, "UniqueReport");
                     Settings.Default.PersistedViews.RemoveView(PersistedViews.ExternalToolsGroup.Id, "UniqueReport1");
@@ -3736,7 +3736,7 @@ namespace pwiz.SkylineTestData
                     Assert.IsTrue(Settings.Default.ToolFilePaths.ContainsKey(ppc));
                     Assert.AreEqual(path, Settings.Default.ToolFilePaths[ppc]);
                     Settings.Default.ToolFilePaths.Remove(ppc);
-                    Settings.Default.ToolList.Clear();
+                    Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
                     DirectoryEx.SafeDelete(ToolDescriptionHelpers.GetToolsDirectory());
                 }
                 {
@@ -3770,7 +3770,7 @@ namespace pwiz.SkylineTestData
                     Assert.IsTrue(output.Contains(string.Format(Resources.AddZipToolHelper_ShouldOverwriteAnnotations_Warning__the_annotation__0__is_being_overwritten,"SampleID")));
 
                     Settings.Default.AnnotationDefList = new AnnotationDefList();
-                    Settings.Default.ToolList.Clear();
+                    Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
                     DirectoryEx.SafeDelete(ToolDescriptionHelpers.GetToolsDirectory());
                 }
             }
@@ -3831,7 +3831,7 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleRunCommandsTest()
         {
-            Settings.Default.ToolList.ResetDefaults();
+            Settings.Default.ToolList = Settings.Default.ToolList.ResetDefaults();
             int toolListCount = Settings.Default.ToolList.Count;
             TestFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
             var commandsToRun = TestFilesDir.GetTestPath("ToolList2.txt");
@@ -3882,7 +3882,7 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleExportToolsTest()
         {
-            Settings.Default.ToolList.Clear();
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
 
             // Get a unique tool title.
             string title = GetTitleHelper();

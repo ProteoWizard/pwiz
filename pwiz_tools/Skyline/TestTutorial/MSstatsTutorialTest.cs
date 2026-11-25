@@ -32,6 +32,7 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestTutorial
@@ -87,7 +88,7 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(rInstaller, rInstaller.CancelButton.PerformClick);
             }
 
-            Settings.Default.ToolList.Clear();
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
 
             RunUI(() =>
             {

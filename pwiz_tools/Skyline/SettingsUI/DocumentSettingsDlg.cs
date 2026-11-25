@@ -19,6 +19,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
@@ -60,9 +61,7 @@ namespace pwiz.Skyline.SettingsUI
             _groupComparisonsListBoxDriver = new SettingsListBoxDriver<GroupComparisonDef>(
                 checkedListBoxGroupComparisons, Settings.Default.GroupComparisonDefList);
             _groupComparisonsListBoxDriver.LoadList(dataSettings.GroupComparisonDefs);
-            var listDataList = new ListDefList();
-            listDataList.AddRange(Settings.Default.ListDefList);
-            listDataList.AddRange(dataSettings.Lists);
+            var listDataList = new ListDefList().ChangeAddRange(Settings.Default.ListDefList.Concat(dataSettings.Lists));
             _listsListBoxDriver = new SettingsListBoxDriver<ListData>(
                 checkedListBoxLists, listDataList);
             _listsListBoxDriver.LoadList(dataSettings.Lists);
@@ -106,7 +105,7 @@ namespace pwiz.Skyline.SettingsUI
                     var chosen = _annotationsListBoxDriver.Chosen.ToList();
                     var annotationDef = editDlg.GetAnnotationDef();
                     chosen.Add(annotationDef);
-                    Settings.Default.AnnotationDefList.Add(annotationDef);
+                    Settings.Default.AnnotationDefList = Settings.Default.AnnotationDefList.ChangeAdd(annotationDef);
                     _annotationsListBoxDriver.LoadList(chosen);
                 }
             }
@@ -139,7 +138,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (editDlg.ShowDialog(this) == DialogResult.OK)
                 {
                     var chosen = _groupComparisonsListBoxDriver.Chosen.ToList();
-                    Settings.Default.GroupComparisonDefList.Add(editDlg.GroupComparisonDef);
+                    Settings.Default.GroupComparisonDefList = Settings.Default.GroupComparisonDefList.ChangeAdd(editDlg.GroupComparisonDef);
                     chosen.Add(editDlg.GroupComparisonDef);
                     _groupComparisonsListBoxDriver.LoadList(chosen);
                 }
@@ -199,8 +198,8 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             }
 
-            Settings.Default.ListDefList.Clear();
-            Settings.Default.ListDefList.AddRange(_listsListBoxDriver.List.Select(list=>list.DeleteAllRows()));
+            Settings.Default.ListDefList = Settings.Default.ListDefList.ChangeClear();
+            Settings.Default.ListDefList = Settings.Default.ListDefList.ChangeAddRange(_listsListBoxDriver.List.Select(list=>list.DeleteAllRows()));
 
             DialogResult = DialogResult.OK;
         }
@@ -262,7 +261,7 @@ namespace pwiz.Skyline.SettingsUI
                     var chosen = _listsListBoxDriver.Chosen.ToList();
                     var listDef = editDlg.GetListDef();
                     chosen.Add(listDef);
-                    _listsListBoxDriver.List.Add(editDlg.GetListDef());
+                    _listsListBoxDriver.List = (SettingsList<ListData>) _listsListBoxDriver.List.ChangeItemsWith(items => items.Add(listDef));
                     _listsListBoxDriver.LoadList(chosen);
                 }
             }
@@ -320,7 +319,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (editDlg.ShowDialog(this) == DialogResult.OK)
                 {
                     var chosen = _metadataRuleSetsListBoxDriver.Chosen.ToList();
-                    Settings.Default.MetadataRuleSets.Add(editDlg.MetadataRuleSet);
+                    Settings.Default.MetadataRuleSets = Settings.Default.MetadataRuleSets.ChangeAdd(editDlg.MetadataRuleSet);
                     chosen.Add(editDlg.MetadataRuleSet);
                     _metadataRuleSetsListBoxDriver.LoadList(chosen);
                 }
@@ -347,7 +346,7 @@ namespace pwiz.Skyline.SettingsUI
         public SrmDocument GetDocumentForEditor()
         {
             var document = DocumentContainer.Document;
-            var annotationDefs = new XmlMappedList<string, AnnotationDef>();
+            var annotationDefs = new MappedList<string, AnnotationDef>();
             annotationDefs.AddRange(document.Settings.DataSettings.AnnotationDefs);
             annotationDefs.AddRange(Settings.Default.AnnotationDefList);
             if (!annotationDefs.SequenceEqual(document.Settings.DataSettings.AnnotationDefs))

@@ -311,8 +311,6 @@ namespace pwiz.Skyline.Menus
                             MeasuredResults.MergeAction.remove,
                             false,
                             SkylineWindow.FindSpectralLibrary,
-                            Settings.Default.StaticModList,
-                            Settings.Default.HeavyModList,
                             nodePaste != null ? nodePaste.Path : null,
                             out selectPath,
                             out _,
@@ -1636,8 +1634,8 @@ namespace pwiz.Skyline.Menus
                         dlg.Height = Math.Min(dlg.Height, Screen.FromControl(SkylineWindow).WorkingArea.Height);
                         if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                         {
-                            var listStaticMods = Settings.Default.StaticModList;
-                            var listHeavyMods = Settings.Default.HeavyModList;
+                            var listStaticMods = Settings.Default.StaticModList.ToArray();
+                            var listHeavyMods = Settings.Default.HeavyModList.ToArray();
                             ModifyDocument(
                                 string.Format(MenusResources.SkylineWindow_ModifyPeptide_Modify__0__, nodePepTree.Text),
                                 doc =>

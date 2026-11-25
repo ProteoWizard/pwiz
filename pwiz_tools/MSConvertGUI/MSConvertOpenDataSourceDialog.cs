@@ -48,7 +48,7 @@ namespace MSConvertGUI
         {
         }
 
-        protected override IList<RemoteAccount> OnEditAccounts(IWin32Window owner)
+        protected override IEnumerable<RemoteAccount> OnEditAccounts(IWin32Window owner)
         {
             using (var dlg = new RemoteAccountEditForm(MSConvertRemoteAccountServices.INSTANCE.GetRemoteAccountList()))
             {

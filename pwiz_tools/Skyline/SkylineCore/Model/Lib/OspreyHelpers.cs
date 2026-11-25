@@ -128,10 +128,9 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         public static void RegisterPackage(FileDownloadInfo package)
         {
-            var tools = Settings.Default.SearchToolList;
-            if (tools.ContainsKey(SearchToolType.Osprey))
-                tools.Remove(tools[SearchToolType.Osprey]);
-            tools.Add(new SearchTool(package.ToolType, package.ToolPath, package.ToolExtraArgs, package.InstallPath, true));
+            // Adding a tool replaces any with the same key
+            Settings.Default.SearchToolList = Settings.Default.SearchToolList.ChangeAdd(
+                new SearchTool(package.ToolType, package.ToolPath, package.ToolExtraArgs, package.InstallPath, true));
         }
 
         /// <summary>

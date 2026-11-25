@@ -170,9 +170,9 @@ namespace pwiz.Skyline.Alerts
                             return false;
                         }
                     }
-                    Settings.Default.SearchToolList.Remove(existing);
+                    Settings.Default.SearchToolList = Settings.Default.SearchToolList.ChangeRemove(existing);
                 }
-                Settings.Default.SearchToolList.Add(new SearchTool(SearchToolType.DIANN,
+                Settings.Default.SearchToolList = Settings.Default.SearchToolList.ChangeAdd(new SearchTool(SearchToolType.DIANN,
                     extractedBinary, string.Empty, installDir, true));
                 return true;
             }

@@ -31,15 +31,38 @@ namespace pwiz.Skyline.SettingsUI
     public class SettingsListBoxDriver<TItem>
         where TItem : IKeyContainer<string>, IXmlSerializable
     {
+        private SettingsList<TItem> _list;
+        private readonly bool _isSettingsList;
+
         public SettingsListBoxDriver(ListBox listBox, SettingsList<TItem> list)
         {
             ListBox = listBox;
-            List = list;
+            _list = list;
+            _isSettingsList = Settings.Default.IsSettingsList(list);
         }
 
         public ListBox ListBox { get; private set; }
         public CheckedListBox CheckedListBox { get { return ListBox as CheckedListBox; } }
-        public SettingsList<TItem> List { get; private set; }
+
+        /// <summary>
+        /// The list shown, which for a list from the settings is always the one the settings hold now.
+        /// </summary>
+        public SettingsList<TItem> List
+        {
+            get
+            {
+                return _isSettingsList
+                    ? (SettingsList<TItem>) Settings.Default.GetSettingsList(_list.GetType())
+                    : _list;
+            }
+            set
+            {
+                if (_isSettingsList)
+                    Settings.Default.SetSettingsList(value);
+                else
+                    _list = value;
+            }
+        }
 
         public TItem[] Chosen { get { return GetChosen(null); } }
 
@@ -137,8 +160,11 @@ namespace pwiz.Skyline.SettingsUI
             IEnumerable<TItem> listNew = List.EditList(ListBox.TopLevelControl, tag);
             if (listNew != null)
             {
-                List.Clear();
-                List.AddRange(listNew);
+                List = (SettingsList<TItem>) List.ChangeItemsWith(items =>
+                {
+                    items.Clear();
+                    items.AddRange(listNew);
+                });
 
                 // Reload from the edited list.
                 LoadList();

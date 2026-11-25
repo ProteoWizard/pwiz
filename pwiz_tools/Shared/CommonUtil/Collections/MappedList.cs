@@ -82,6 +82,20 @@ namespace pwiz.Common.Collections
     }
 
     /// <summary>
+    /// An ordered list whose elements can also be looked up by key, without the means to change it.
+    /// </summary>
+    public interface IReadOnlyMappedList<TKey, TValue> : IReadOnlyList<TValue>
+        where TValue : IKeyContainer<TKey>
+    {
+        TValue this[TKey key] { get; }
+        IEnumerable<TKey> Keys { get; }
+        bool ContainsKey(TKey key);
+        bool TryGetValue(TKey key, out TValue value);
+        int IndexOf(TValue value);
+        bool Contains(TValue value);
+    }
+
+    /// <summary>
     /// A generic ordered list based on Collection&lt;TValue>, with
     /// elements also stored in a private dictionary for fast lookup.
     /// Sort of a substitute for LinkedHashMap in Java.
@@ -89,7 +103,7 @@ namespace pwiz.Common.Collections
     /// <typeparam name="TKey">Type of the key used in the map</typeparam>
     /// <typeparam name="TValue">Type stored in the collection</typeparam>
     public class MappedList<TKey, TValue>
-        : Collection<TValue>
+        : Collection<TValue>, IReadOnlyMappedList<TKey, TValue>
         where TValue : IKeyContainer<TKey>
     {
         private readonly Dictionary<TKey, TValue> _dict = new Dictionary<TKey, TValue>();

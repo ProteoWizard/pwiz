@@ -1755,16 +1755,16 @@ namespace pwiz.Skyline.Model.DocSettings
             // CONSIDER: Simple List.Contains() checks mean that values with the same name
             //           but differing values will be overwritten.
             if (!defSet.EnzymeList.Contains(PeptideSettings.Enzyme))
-                defSet.EnzymeList.SetValue(PeptideSettings.Enzyme);
+                defSet.EnzymeList = defSet.EnzymeList.ChangeValue(PeptideSettings.Enzyme);
             // Extra null checks to avoid ReSharper warnings.
             if (PeptideSettings.Prediction != null)
             {
                 if (PeptideSettings.Prediction.RetentionTime != null)
                 {
                     if (!defSet.RetentionTimeList.Contains(PeptideSettings.Prediction.RetentionTime))
-                        defSet.RetentionTimeList.SetValue(PeptideSettings.Prediction.RetentionTime);
+                        defSet.RetentionTimeList = defSet.RetentionTimeList.ChangeValue(PeptideSettings.Prediction.RetentionTime);
                     if (!defSet.RTScoreCalculatorList.Contains(PeptideSettings.Prediction.RetentionTime.Calculator))
-                        defSet.RTScoreCalculatorList.SetValue(PeptideSettings.Prediction.RetentionTime.Calculator);
+                        defSet.RTScoreCalculatorList = defSet.RTScoreCalculatorList.ChangeValue(PeptideSettings.Prediction.RetentionTime.Calculator);
                 }
             }
             if (PeptideSettings.Filter != null)
@@ -1772,18 +1772,18 @@ namespace pwiz.Skyline.Model.DocSettings
                 foreach (PeptideExcludeRegex exclude in PeptideSettings.Filter.Exclusions)
                 {
                     if (!defSet.PeptideExcludeList.Contains(exclude))
-                        defSet.PeptideExcludeList.SetValue(exclude);
+                        defSet.PeptideExcludeList = defSet.PeptideExcludeList.ChangeValue(exclude);
                 }
             }
             // First remove all old document local specs.
-            defSet.SpectralLibraryList.RemoveDocumentLocalLibraries();
+            defSet.SpectralLibraryList = defSet.SpectralLibraryList.RemoveDocumentLocalLibraries();
             // Then add any specs belonging to this document.
             if (PeptideSettings.Libraries.HasLibraries)
             {
                 foreach (LibrarySpec librarySpec in PeptideSettings.Libraries.LibrarySpecs)
                 {
                     if (librarySpec != null && !defSet.SpectralLibraryList.Contains(librarySpec))
-                        defSet.SpectralLibraryList.SetValue(librarySpec);
+                        defSet.SpectralLibraryList = defSet.SpectralLibraryList.ChangeValue(librarySpec);
                 }
             }
 
@@ -1797,7 +1797,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     var documentLibSpec = new BiblioSpecLiteSpec(docFileName, outputPath);
                     if (!defSet.SpectralLibraryList.Contains(documentLibSpec))
                     {
-                        defSet.SpectralLibraryList.Add(documentLibSpec.ChangeDocumentLibrary(true));
+                        defSet.SpectralLibraryList = defSet.SpectralLibraryList.ChangeAdd(documentLibSpec.ChangeDocumentLibrary(true));
                     }
                 }
             }
@@ -1805,7 +1805,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (PeptideSettings.Integration.PeakScoringModel != null &&
                 !Equals(PeptideSettings.Integration.PeakScoringModel.Name, LegacyScoringModel.DEFAULT_NAME))
             {
-                defSet.PeakScoringModelList.Add(PeptideSettings.Integration.PeakScoringModel);
+                defSet.PeakScoringModelList = defSet.PeakScoringModelList.ChangeAdd(PeptideSettings.Integration.PeakScoringModel);
             }
 
             UpdateDefaultModifications(true, true);
@@ -1813,23 +1813,23 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 TransitionPrediction prediction = TransitionSettings.Prediction;
                 if (!defSet.CollisionEnergyList.Contains(prediction.CollisionEnergy))
-                    defSet.CollisionEnergyList.SetValue(prediction.CollisionEnergy);
+                    defSet.CollisionEnergyList = defSet.CollisionEnergyList.ChangeValue(prediction.CollisionEnergy);
                 if (prediction.DeclusteringPotential != null &&
                         !defSet.DeclusterPotentialList.Contains(prediction.DeclusteringPotential))
-                    defSet.DeclusterPotentialList.SetValue(prediction.DeclusteringPotential);
+                    defSet.DeclusterPotentialList = defSet.DeclusterPotentialList.ChangeValue(prediction.DeclusteringPotential);
                 if (prediction.CompensationVoltage != null &&
                         !defSet.CompensationVoltageList.Contains(prediction.CompensationVoltage))
-                    defSet.CompensationVoltageList.SetValue(prediction.CompensationVoltage);
+                    defSet.CompensationVoltageList = defSet.CompensationVoltageList.ChangeValue(prediction.CompensationVoltage);
                 if (!Equals(prediction.OptimizedLibrary, OptimizationLibrary.NONE) &&
                         Equals(defSet.GetOptimizationLibraryByName(prediction.OptimizedLibrary.Name), OptimizationLibrary.NONE))
-                    defSet.OptimizationLibraryList.SetValue(prediction.OptimizedLibrary);
+                    defSet.OptimizationLibraryList = defSet.OptimizationLibraryList.ChangeValue(prediction.OptimizedLibrary);
             }
             if (TransitionSettings.Filter != null)
             {
                 foreach (var measuredIon in TransitionSettings.Filter.MeasuredIons)
                 {
                     if (!defSet.MeasuredIonList.Contains(measuredIon))
-                        defSet.MeasuredIonList.SetValue(measuredIon);
+                        defSet.MeasuredIonList = defSet.MeasuredIonList.ChangeValue(measuredIon);
                 }
             }
             if (TransitionSettings.IonMobilityFiltering != null)
@@ -1837,7 +1837,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (TransitionSettings.IonMobilityFiltering.IonMobilityLibrary != null &&
                     !defSet.IonMobilityLibraryList.Contains(TransitionSettings.IonMobilityFiltering.IonMobilityLibrary))
                 {
-                    defSet.IonMobilityLibraryList.SetValue(TransitionSettings.IonMobilityFiltering.IonMobilityLibrary);
+                    defSet.IonMobilityLibraryList = defSet.IonMobilityLibraryList.ChangeValue(TransitionSettings.IonMobilityFiltering.IonMobilityLibrary);
                 }
             }
 
@@ -1845,28 +1845,28 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 if (!defSet.IsotopeEnrichmentsList.Contains(TransitionSettings.FullScan.IsotopeEnrichments))
                 {
-                    defSet.IsotopeEnrichmentsList.SetValue(TransitionSettings.FullScan.IsotopeEnrichments);
+                    defSet.IsotopeEnrichmentsList = defSet.IsotopeEnrichmentsList.ChangeValue(TransitionSettings.FullScan.IsotopeEnrichments);
                 }
             }
             if (TransitionSettings.FullScan.IsolationScheme != null)
             {
                 if (!defSet.IsolationSchemeList.Contains(TransitionSettings.FullScan.IsolationScheme))
                 {
-                    defSet.IsolationSchemeList.SetValue(TransitionSettings.FullScan.IsolationScheme);
+                    defSet.IsolationSchemeList = defSet.IsolationSchemeList.ChangeValue(TransitionSettings.FullScan.IsolationScheme);
                 }
             }
             foreach (var annotationDef in DataSettings.AnnotationDefs)
             {
                 if (!defSet.AnnotationDefList.Contains(annotationDef))
                 {
-                    defSet.AnnotationDefList.SetValue(annotationDef);
+                    defSet.AnnotationDefList = defSet.AnnotationDefList.ChangeValue(annotationDef);
                 }
             }
             foreach (var groupComparisonDef in DataSettings.GroupComparisonDefs)
             {
                 if (!defSet.GroupComparisonDefList.Contains(groupComparisonDef))
                 {
-                    defSet.GroupComparisonDefList.SetValue(groupComparisonDef);
+                    defSet.GroupComparisonDefList = defSet.GroupComparisonDefList.ChangeValue(groupComparisonDef);
                 }
             }
 
@@ -1874,7 +1874,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 if (!defSet.MetadataRuleSets.Contains(metadataRuleSet))
                 {
-                    defSet.MetadataRuleSets.SetValue(metadataRuleSet);
+                    defSet.MetadataRuleSets = defSet.MetadataRuleSets.ChangeValue(metadataRuleSet);
                 }
             }
             var mainViewSpecList = defSet.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id);
@@ -1888,7 +1888,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 var listDef = listData.DeleteAllRows();
                 if (!defSet.ListDefList.Contains(listDef))
                 {
-                    defSet.ListDefList.SetValue(listDef);
+                    defSet.ListDefList = defSet.ListDefList.ChangeValue(listDef);
                 }
             }
             defSet.PersistedViews.SetViewSpecList(PersistedViews.MainGroup.Id, mainViewSpecList);
@@ -1896,7 +1896,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 if (!defSet.BackgroundProteomeList.Contains(PeptideSettings.BackgroundProteome))
                 {
-                    defSet.BackgroundProteomeList.SetValue(PeptideSettings.BackgroundProteome);
+                    defSet.BackgroundProteomeList = defSet.BackgroundProteomeList.ChangeValue(PeptideSettings.BackgroundProteome);
                 }
             }
         }
@@ -2111,9 +2111,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
             foreach(StaticMod mod in newStaticMods)
-                defSet.StaticModList.Add(mod);
+                defSet.StaticModList = defSet.StaticModList.ChangeAdd(mod);
             foreach(StaticMod mod in newHeavyMods)
-                defSet.HeavyModList.Add(mod);
+                defSet.HeavyModList = defSet.HeavyModList.ChangeAdd(mod);
         }
 
         /// <summary>

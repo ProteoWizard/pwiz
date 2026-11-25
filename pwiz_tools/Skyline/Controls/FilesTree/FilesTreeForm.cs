@@ -240,7 +240,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 ModifyDocument(FilesTreeResources.FilesTreeForm_Update_BackgroundProteome, modifier);
 
                 // Update the settings list to persist the change
-                Settings.Default.BackgroundProteomeList.ReplaceValue(docBgProteome, newBgProteome);
+                Settings.Default.BackgroundProteomeList = Settings.Default.BackgroundProteomeList.ChangeReplace(docBgProteome, newBgProteome);
             }
         }
 
@@ -262,9 +262,9 @@ namespace pwiz.Skyline.Controls.FilesTree
                 ModifyDocument(FilesTreeResources.FilesTreeForm_Update_RTCalculator, modifier);
 
                 // Update the settings list to persist the change
-                Settings.Default.RTScoreCalculatorList.ReplaceValue(docCalc, newCalc);
+                Settings.Default.RTScoreCalculatorList = Settings.Default.RTScoreCalculatorList.ChangeReplace(docCalc, newCalc);
                 // Also need to update the RetentionTimeRegression that uses this calculator (name change impossible)
-                Settings.Default.RetentionTimeList.SetValue(
+                Settings.Default.RetentionTimeList = Settings.Default.RetentionTimeList.ChangeValue(
                     SkylineWindow.DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime);
             }
         }
@@ -288,7 +288,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 ModifyDocument(FilesTreeResources.FilesTreeForm_Update_OptimizationLibrary, modifier);
 
                 // Update the settings list to persist the change
-                Settings.Default.OptimizationLibraryList.ReplaceValue(docOptLib, newLib);
+                Settings.Default.OptimizationLibraryList = Settings.Default.OptimizationLibraryList.ChangeReplace(docOptLib, newLib);
             }
         }
 
@@ -312,7 +312,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 ModifyDocument(FilesTreeResources.FilesTreeForm_Update_IonMobilityLibrary, modifier);
 
                 // Update the settings list to persist the change
-                Settings.Default.IonMobilityLibraryList.ReplaceValue(docIonMobilityLib, newLib);
+                Settings.Default.IonMobilityLibraryList = Settings.Default.IonMobilityLibraryList.ChangeReplace(docIonMobilityLib, newLib);
             }
         }
 
@@ -333,7 +333,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 ModifyDocument(FilesTreeResources.FilesTreeForm_Update_SpectralLibrary, modifier);
 
                 // Update the settings list to persist the change
-                Settings.Default.SpectralLibraryList.ReplaceValue(docLibSpec, newLibSpec);
+                Settings.Default.SpectralLibraryList = Settings.Default.SpectralLibraryList.ChangeReplace(docLibSpec, newLibSpec);
             }
         }
 

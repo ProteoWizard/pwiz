@@ -26,6 +26,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Databinding
 {
@@ -69,10 +70,10 @@ namespace pwiz.Skyline.Model.Databinding
         public static bool ImportSkyrFile(string fileName, Func<IList<string>, IList<string>> whichToNotOverWrite)
         {
             var targetGroup = PersistedViews.MainGroup;
-            var reportOrViewSpecList = new ReportOrViewSpecList();
-            reportOrViewSpecList.AddRange(GetExistingReports()
+            var reportOrViewSpecList = new ReportOrViewSpecList().ChangeAddRange(GetExistingReports()
                 .Where(kvp => targetGroup.Id.Equals(kvp.Key.GroupId)).Select(kvp => kvp.Value));
-            if (!reportOrViewSpecList.ImportFile(fileName, whichToNotOverWrite))
+            reportOrViewSpecList = (ReportOrViewSpecList) reportOrViewSpecList.ImportFile(fileName, whichToNotOverWrite);
+            if (reportOrViewSpecList == null)
             {
                 return false;
             }

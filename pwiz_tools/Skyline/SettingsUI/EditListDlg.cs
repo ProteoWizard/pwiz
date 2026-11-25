@@ -35,7 +35,7 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.Skyline.SettingsUI
 {
     public partial class EditListDlg<TList, TItem> : FormEx
-        where TList : ICollection<TItem>, IListDefaults<TItem>, IListEditorSupport
+        where TList : IEnumerable<TItem>, IListDefaults<TItem>, IListEditorSupport
         where TItem : IKeyContainer<string>
     {
         private readonly TList _model;
@@ -464,12 +464,7 @@ namespace pwiz.Skyline.SettingsUI
 
             try
             {
-                var exportList = serializer.CreateEmptyList();
-                foreach (var item in _list)
-                {
-                    if (itemNames == null || itemNames.Contains(item.GetKey()))
-                        exportList.Add(item);
-                }
+                var exportList = serializer.CreateList(_list.Where(item => itemNames == null || itemNames.Contains(item.GetKey())));
 
                 using (var stream = File.Create(filePath))
                 {

@@ -513,7 +513,7 @@ namespace pwiz.Skyline.ToolsUI
             return tool != null ? tool.PackageVersion : null;
         }
 
-        public static IEnumerable<ToolDescription> UpdatableTools(IList<ToolDescription> tools)
+        public static IEnumerable<ToolDescription> UpdatableTools(IEnumerable<ToolDescription> tools)
         {
             return tools.Where(description => !string.IsNullOrWhiteSpace(description.PackageVersion));
         }

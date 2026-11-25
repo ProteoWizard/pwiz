@@ -1031,10 +1031,14 @@ namespace pwiz.Skyline.ToolsUI
 
             private void RepopulateLiveReportList()
             {
-                _liveReportDriver.List.Clear();
                 var documentGridViewContext = DocumentGridViewContext.CreateDocumentGridViewContext(null, DataSchemaLocalizer.INVARIANT);
-                _liveReportDriver.List.AddRange(documentGridViewContext.GetViewSpecList(PersistedViews.ExternalToolsGroup.Id)
-                    .ViewSpecLayouts.Select(view => new ReportOrViewSpec(view)));
+                var reports = documentGridViewContext.GetViewSpecList(PersistedViews.ExternalToolsGroup.Id)
+                    .ViewSpecLayouts.Select(view => new ReportOrViewSpec(view)).ToArray();
+                _liveReportDriver.List = _liveReportDriver.List.ChangeItemsWith(items =>
+                {
+                    items.Clear();
+                    items.AddRange(reports);
+                });
             }
 
             public void LoadList(string selectedItemLast)

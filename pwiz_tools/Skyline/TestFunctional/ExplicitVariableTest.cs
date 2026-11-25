@@ -25,6 +25,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -61,13 +62,13 @@ namespace pwiz.SkylineTestFunctional
             var variableMod = new StaticMod("Methionine Oxidized", "M", null, true, "O",
                 LabelAtoms.None, RelativeRT.Matching, null, null, null);
 
-            Settings.Default.HeavyModList.Clear();
-            Settings.Default.HeavyModList.AddRange(aquaMods);
-            Settings.Default.HeavyModList.Add(explicitMod);
-            Settings.Default.StaticModList.Clear();
-            Settings.Default.StaticModList.AddRange(StaticModList.GetDefaultsOn());
+            Settings.Default.HeavyModList = Settings.Default.HeavyModList.ChangeClear();
+            Settings.Default.HeavyModList = Settings.Default.HeavyModList.ChangeAddRange(aquaMods);
+            Settings.Default.HeavyModList = Settings.Default.HeavyModList.ChangeAdd(explicitMod);
+            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeClear();
+            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeAddRange(StaticModList.GetDefaultsOn());
             var carbMod = Settings.Default.StaticModList[0];
-            Settings.Default.StaticModList.Add(variableMod);
+            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeAdd(variableMod);
 
             // Clean-up before running the test
             var settings = SrmSettingsList.GetDefault().ChangePeptideModifications(mod =>

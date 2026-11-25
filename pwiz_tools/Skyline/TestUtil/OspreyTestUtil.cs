@@ -51,8 +51,8 @@ namespace pwiz.SkylineTestUtil
             AbstractFunctionalTest.RunUI(() =>
             {
                 if (Settings.Default.SearchToolList.ContainsKey(SearchToolType.Osprey))
-                    Settings.Default.SearchToolList.Remove(Settings.Default.SearchToolList[SearchToolType.Osprey]);
-                Settings.Default.SearchToolList.Add(new SearchTool(SearchToolType.Osprey,
+                    Settings.Default.SearchToolList = Settings.Default.SearchToolList.ChangeRemove(Settings.Default.SearchToolList[SearchToolType.Osprey]);
+                Settings.Default.SearchToolList = Settings.Default.SearchToolList.ChangeAdd(new SearchTool(SearchToolType.Osprey,
                     ospreyExe, string.Empty, Path.GetDirectoryName(ospreyExe), false));
             });
         }
@@ -84,7 +84,7 @@ namespace pwiz.SkylineTestUtil
             AbstractFunctionalTest.RunUI(() =>
             {
                 if (Settings.Default.SearchToolList.ContainsKey(SearchToolType.Osprey))
-                    Settings.Default.SearchToolList.Remove(Settings.Default.SearchToolList[SearchToolType.Osprey]);
+                    Settings.Default.SearchToolList = Settings.Default.SearchToolList.ChangeRemove(Settings.Default.SearchToolList[SearchToolType.Osprey]);
             });
             string revision = Environment.GetEnvironmentVariable(ENV_TEAMCITY_REVISION);
             if (string.IsNullOrEmpty(revision) || !OspreyHelpers.TryGetRevisionBuildDownloadInfo(revision, out var downloadInfo))

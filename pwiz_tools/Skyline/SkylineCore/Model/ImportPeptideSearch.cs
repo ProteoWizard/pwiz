@@ -243,8 +243,8 @@ namespace pwiz.Skyline.Model
             var predictor = new RetentionTimeRegression(
                 Helpers.GetUniqueName(libSpec.Name, Settings.Default.RetentionTimeList.Select(rt => rt.Name).ToArray()),
                 calc, null, null, DEFAULT_RT_WINDOW, new List<MeasuredRetentionTime>());
-            Settings.Default.RTScoreCalculatorList.Add(calc);
-            Settings.Default.RetentionTimeList.Add(predictor);
+            Settings.Default.RTScoreCalculatorList = Settings.Default.RTScoreCalculatorList.ChangeAdd(calc);
+            Settings.Default.RetentionTimeList = Settings.Default.RetentionTimeList.ChangeAdd(predictor);
             return doc.ChangeSettings(
                 doc.Settings.ChangePeptideSettings(
                     doc.Settings.PeptideSettings.ChangePrediction(

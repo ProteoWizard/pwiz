@@ -277,8 +277,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             foreach (var defaultPreset in presets.GetDefaults())
             {
                 if (!presets.Any(p => p.Name == defaultPreset.Name))
-                    presets.Insert(0, defaultPreset);
+                    presets = presets.ChangeInsert(0, defaultPreset);
             }
+            if (!ReferenceEquals(presets, Settings.Default.SearchSettingsPresets))
+                Settings.Default.SearchSettingsPresets = presets;
         }
 
         private void LoadPresetList(string selectedName)
@@ -339,7 +341,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// </summary>
         public void AddImportedPreset(SearchSettingsPreset preset)
         {
-            Settings.Default.SearchSettingsPresets.Add(preset);
+            Settings.Default.SearchSettingsPresets = Settings.Default.SearchSettingsPresets.ChangeAdd(preset);
             LoadPresetList(preset.Name);
             ApplyPreset(preset);
         }
@@ -372,7 +374,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     if (defaultEnzyme != null)
                     {
                         if (!Settings.Default.EnzymeList.ContainsKey(preset.EnzymeName))
-                            Settings.Default.EnzymeList.Add(defaultEnzyme);
+                            Settings.Default.EnzymeList = Settings.Default.EnzymeList.ChangeAdd(defaultEnzyme);
                         ImportFastaControl.Enzyme = defaultEnzyme;
                     }
                 }
@@ -429,11 +431,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     false, MessageBoxButtons.YesNo);
                 if (result != DialogResult.Yes)
                     return;
-                Settings.Default.SearchSettingsPresets.Remove(existingPreset);
+                Settings.Default.SearchSettingsPresets = Settings.Default.SearchSettingsPresets.ChangeRemove(existingPreset);
             }
 
             var preset = BuildPresetFromCurrentSettings(name);
-            Settings.Default.SearchSettingsPresets.Add(preset);
+            Settings.Default.SearchSettingsPresets = Settings.Default.SearchSettingsPresets.ChangeAdd(preset);
             LoadPresetList(name);
         }
 
@@ -536,10 +538,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             var existingPreset = Settings.Default.SearchSettingsPresets.FirstOrDefault(w => w.Name == name);
             if (existingPreset != null)
-                Settings.Default.SearchSettingsPresets.Remove(existingPreset);
+                Settings.Default.SearchSettingsPresets = Settings.Default.SearchSettingsPresets.ChangeRemove(existingPreset);
 
             var preset = BuildPresetFromCurrentSettings(name);
-            Settings.Default.SearchSettingsPresets.Add(preset);
+            Settings.Default.SearchSettingsPresets = Settings.Default.SearchSettingsPresets.ChangeAdd(preset);
             LoadPresetList(name);
         }
 
@@ -547,10 +549,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             var existingPreset = Settings.Default.SearchSettingsPresets.FirstOrDefault(w => w.Name == presetName);
             if (existingPreset != null)
-                Settings.Default.SearchSettingsPresets.Remove(existingPreset);
+                Settings.Default.SearchSettingsPresets = Settings.Default.SearchSettingsPresets.ChangeRemove(existingPreset);
 
             var preset = SearchSettingsParamsFileParser.ImportFromFile(filePath, presetName);
-            Settings.Default.SearchSettingsPresets.Add(preset);
+            Settings.Default.SearchSettingsPresets = Settings.Default.SearchSettingsPresets.ChangeAdd(preset);
             LoadPresetList(presetName);
             ApplyPreset(preset);
         }

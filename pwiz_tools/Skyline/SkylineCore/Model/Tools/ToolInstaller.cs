@@ -343,7 +343,7 @@ namespace pwiz.Skyline.Model.Tools
                     {
                         foreach (var tool in toolsToBeOverwritten)
                         {
-                            Settings.Default.ToolList.Remove(tool);
+                            Settings.Default.ToolList = Settings.Default.ToolList.ChangeRemove(tool);
                         }
                         // The tools are all guarenteed to be from the same directory by GetToolsToBeOverwritten
                         // and all toolDescriptions in a directory come from the same installation
@@ -428,7 +428,7 @@ namespace pwiz.Skyline.Model.Tools
                     tool.ToolDirPath = permToolPath;
                     if (!string.IsNullOrEmpty(tool.ArgsCollectorDllPath))
                         tool.ArgsCollectorDllPath = Path.Combine(permToolPath, tool.ArgsCollectorDllPath);
-                    Settings.Default.ToolList.Add(tool);
+                    Settings.Default.ToolList = Settings.Default.ToolList.ChangeAdd(tool);
                 }
 
                 if (retval.ValidToolsFound.Count != 0)
@@ -617,7 +617,7 @@ namespace pwiz.Skyline.Model.Tools
 
             foreach (AnnotationDef annotation in newAnnotations)
             {
-                Settings.Default.AnnotationDefList.SetValue(annotation);
+                Settings.Default.AnnotationDefList = Settings.Default.AnnotationDefList.ChangeValue(annotation);
             }
             return true;
         }
@@ -631,7 +631,7 @@ namespace pwiz.Skyline.Model.Tools
                    toolDesc.Command.Equals(ToolList.DEPRECATED_QUASAR.Command));
                 if (deprecatedQuaSAR != null)
                 {
-                    Settings.Default.ToolList.Remove(deprecatedQuaSAR);
+                    Settings.Default.ToolList = Settings.Default.ToolList.ChangeRemove(deprecatedQuaSAR);
                     Settings.Default.PersistedViews.RemoveView(PersistedViews.ExternalToolsGroup.Id, ReportSpecList.QUASAR_REPORT_NAME);
                 }
             }

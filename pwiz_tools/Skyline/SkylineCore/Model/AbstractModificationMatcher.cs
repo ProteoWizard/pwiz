@@ -42,8 +42,8 @@ namespace pwiz.Skyline.Model
         protected bool Initialized { get; set; }
         protected internal string LibraryName { get; set; }
 
-        protected MappedList<string, StaticMod> DefSetStatic { get; private set; }
-        protected MappedList<string, StaticMod> DefSetHeavy { get; private set; }
+        protected IReadOnlyMappedList<string, StaticMod> DefSetStatic { get; private set; }
+        protected IReadOnlyMappedList<string, StaticMod> DefSetHeavy { get; private set; }
         protected IsotopeLabelType DocDefHeavyLabelType { get; private set; }
         protected Dictionary<StaticMod, IsotopeLabelType> UserDefinedTypedMods { get; private set; }
         public Dictionary<AAModKey, AAModMatch> Matches { get; private set; }
@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model
         }
         
         internal void InitMatcherSettings(SrmSettings settings,
-            MappedList<string, StaticMod> defSetStatic, MappedList<string, StaticMod> defSetHeavy, string libraryName)
+            IReadOnlyMappedList<string, StaticMod> defSetStatic, IReadOnlyMappedList<string, StaticMod> defSetHeavy, string libraryName)
         {
             DefSetStatic = defSetStatic;
             DefSetHeavy = defSetHeavy;
@@ -77,8 +77,8 @@ namespace pwiz.Skyline.Model
                     DocDefHeavyLabelType = type;
                 InitUserDefTypedModDict(modifications.GetModificationsByName(type.Name), false);
             }
-            InitUserDefTypedModDict(new TypedModifications(IsotopeLabelType.light, DefSetStatic), true);
-            InitUserDefTypedModDict(new TypedModifications(DocDefHeavyLabelType, DefSetHeavy), true);
+            InitUserDefTypedModDict(new TypedModifications(IsotopeLabelType.light, DefSetStatic.ToArray()), true);
+            InitUserDefTypedModDict(new TypedModifications(DocDefHeavyLabelType, DefSetHeavy.ToArray()), true);
 
             Matches = new Dictionary<AAModKey, AAModMatch>();
             UnmatchedSequences = new List<string>();

@@ -68,7 +68,7 @@ namespace pwiz.SkylineTestFunctional
             // add an auto-installed tool to an "old" version (a location other than the current version's tools directory)
             string oldEncyclopediaFilepath = Path.Combine(_oldEncyclopediaDir, "encyclopedia.bat");
             File.Copy(GetTestPath("encyclopedia.bat"), oldEncyclopediaFilepath);
-            Settings.Default.SearchToolList.Add(new SearchTool(SearchToolType.EncyclopeDIA, oldEncyclopediaFilepath, "", Path.GetDirectoryName(oldEncyclopediaFilepath), true));
+            Settings.Default.SearchToolList = Settings.Default.SearchToolList.ChangeAdd(new SearchTool(SearchToolType.EncyclopeDIA, oldEncyclopediaFilepath, "", Path.GetDirectoryName(oldEncyclopediaFilepath), true));
         }
 
         private EditListDlg<SettingsListBase<SearchTool>, SearchTool> EditToolListDlg { get; set; }

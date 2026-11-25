@@ -389,8 +389,6 @@ namespace pwiz.Skyline.Model.Irt
                         MeasuredResults.MergeAction.remove,
                         false,
                         findLibrary,
-                        Settings.Default.StaticModList,
-                        Settings.Default.HeavyModList,
                         document.Children.Any() ? new IdentityPath(document.Children.First().Id) : null,
                         out firstAdded,
                         out _,

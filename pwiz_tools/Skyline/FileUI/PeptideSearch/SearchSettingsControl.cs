@@ -195,7 +195,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         var updatedItem = Settings.Default.SearchToolList.EditItem(this, missingTool, allTools, null);
                         if (updatedItem == null)
                             return false; // user canceled
-                        Settings.Default.SearchToolList.Add(updatedItem);
+                        Settings.Default.SearchToolList = Settings.Default.SearchToolList.ChangeAdd(updatedItem);
                     }
                 }
                 else
@@ -793,7 +793,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             false, MessageBoxButtons.YesNo);
                         if (result != DialogResult.Yes)
                             return;
-                        Settings.Default.SearchSettingsPresets.Remove(existingPreset);
+                        Settings.Default.SearchSettingsPresets = Settings.Default.SearchSettingsPresets.ChangeRemove(existingPreset);
                     }
 
                     _documentContainer.AddImportedPreset(preset);

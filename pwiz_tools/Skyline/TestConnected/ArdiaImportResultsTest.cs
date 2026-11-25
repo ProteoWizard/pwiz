@@ -28,6 +28,7 @@ using pwiz.Skyline.Model.ElementLocators;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.Ardia;
 using pwiz.Skyline.ToolsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestConnected
@@ -210,8 +211,8 @@ namespace pwiz.SkylineTestConnected
             foreach (var rawName in _openPaths.Last())
                 File.Delete(TestFilesDir.GetTestPath(rawName + ".raw"));
 
-            Settings.Default.RemoteAccountList.Clear();
-            Settings.Default.RemoteAccountList.Add(_account);
+            Settings.Default.RemoteAccountList = Settings.Default.RemoteAccountList.ChangeClear();
+            Settings.Default.RemoteAccountList = Settings.Default.RemoteAccountList.ChangeAdd(_account);
             RemoveResultsAndReimport();*/
 
             SkylineWindow.ClearArdiaAccountTokens();

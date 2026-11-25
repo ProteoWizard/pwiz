@@ -233,7 +233,7 @@ namespace pwiz.Skyline.Util
                 return false;
             
             if (!Settings.Default.SearchToolList.ContainsKey(requiredFile.ToolType))
-                Settings.Default.SearchToolList.Add(new SearchTool(requiredFile.ToolType, requiredFile.ToolPath, requiredFile.ToolExtraArgs, requiredFile.InstallPath, true));
+                Settings.Default.SearchToolList = Settings.Default.SearchToolList.ChangeAdd(new SearchTool(requiredFile.ToolType, requiredFile.ToolPath, requiredFile.ToolExtraArgs, requiredFile.InstallPath, true));
             return true;
         }
 
@@ -280,7 +280,7 @@ namespace pwiz.Skyline.Util
                 void addSearchToolsForRequiredFilesGroup(IEnumerable<FileDownloadInfo> requiredFiles)
                 {
                     foreach(var requiredFile in requiredFiles)
-                        Settings.Default.SearchToolList.Add(new SearchTool(requiredFile.ToolType, requiredFile.ToolPath, requiredFile.ToolExtraArgs, requiredFile.InstallPath, true));
+                        Settings.Default.SearchToolList = Settings.Default.SearchToolList.ChangeAdd(new SearchTool(requiredFile.ToolType, requiredFile.ToolPath, requiredFile.ToolExtraArgs, requiredFile.InstallPath, true));
                 }
 
                 foreach (var requiredFileGroup in filesNotAlreadyDownloaded.GroupBy(f => f.Filename))

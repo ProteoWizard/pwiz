@@ -522,7 +522,7 @@ namespace pwiz.Skyline.Properties
 
             foreach (var regression in listChangedCalc)
             {
-                Settings.Default.RetentionTimeList.SetValue(regression);                
+                Settings.Default.RetentionTimeList = Settings.Default.RetentionTimeList.ChangeValue(regression);                
             }
 
             return true;

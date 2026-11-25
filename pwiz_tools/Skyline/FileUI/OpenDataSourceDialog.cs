@@ -47,7 +47,7 @@ namespace pwiz.Skyline.FileUI
         /// </summary>
         /// <param name="remoteAccounts">For UNIFI</param>
         /// <param name="specificDataSourceFilter">Optional list of specific files the user needs to located, ignoring the rest</param>
-        public OpenDataSourceDialog(IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null)
+        public OpenDataSourceDialog(IEnumerable<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null)
             : base(SOURCE_TYPES, remoteAccounts, specificDataSourceFilter )
         {
         }

@@ -654,11 +654,11 @@ namespace pwiz.Skyline.SettingsUI
             var calcNew = list.EditItem(this, null, list, null);
             if (calcNew != null)
             {
-                list.SetValue(calcNew);
+                Settings.Default.RTScoreCalculatorList = list.ChangeValue(calcNew);
                 // Automatically add new RT regression using this calculator
                 var regressionName = Helpers.GetUniqueName(calcNew.Name, name => !_driverRT.List.Contains(r => Equals(r.Name, name)));
                 var regression = new RetentionTimeRegression(regressionName, calcNew, null, null, ImportPeptideSearch.DEFAULT_RT_WINDOW, new List<MeasuredRetentionTime>());
-                Settings.Default.RetentionTimeList.Add(regression);
+                Settings.Default.RetentionTimeList = Settings.Default.RetentionTimeList.ChangeAdd(regression);
                 _driverRT.LoadList(regression.GetKey());
             }
         }
@@ -673,7 +673,7 @@ namespace pwiz.Skyline.SettingsUI
             var list = Settings.Default.RTScoreCalculatorList;
             var calcNew = list.EditItem(this, _driverRT.SelectedItem.Calculator, list, null);
             if (calcNew != null)
-                list.SetValue(calcNew);
+                Settings.Default.RTScoreCalculatorList = list.ChangeValue(calcNew);
         }
 
         private void editCalculatorListContextMenuItem_Click(object sender, EventArgs e)
@@ -686,10 +686,7 @@ namespace pwiz.Skyline.SettingsUI
             var list = Settings.Default.RTScoreCalculatorList;
             var listNew = list.EditList(this, null);
             if (listNew != null)
-            {
-                list.Clear();
-                list.AddRange(listNew);
-            }
+                Settings.Default.RTScoreCalculatorList = list.ChangeItems(listNew);
         }
 
         private void comboBackgroundProteome_SelectedIndexChanged(object sender, EventArgs e)
@@ -766,7 +763,7 @@ namespace pwiz.Skyline.SettingsUI
                     editLibDlg.LibraryPath = dlg.AddLibraryFile;
                     if (editLibDlg.ShowDialog(this) == DialogResult.OK)
                     {
-                        _driverLibrary.List.Add(editLibDlg.LibrarySpec);
+                        _driverLibrary.List = (SettingsList<LibrarySpec>) _driverLibrary.List.ChangeItemsWith(items => items.Add(editLibDlg.LibrarySpec));
                         _driverLibrary.LoadList(_driverLibrary.Chosen.Concat(new[] {editLibDlg.LibrarySpec}).ToArray());
                     }
 
@@ -828,7 +825,7 @@ namespace pwiz.Skyline.SettingsUI
 
             CompleteLibraryBuild(buildState);
 
-            Settings.Default.SpectralLibraryList.Add(builder.LibrarySpec);
+            Settings.Default.SpectralLibraryList = Settings.Default.SpectralLibraryList.ChangeAdd(builder.LibrarySpec);
             _driverLibrary.LoadList();
             var libraryIndex = listLibraries.Items.IndexOf(builder.LibrarySpec.Name);
             if (libraryIndex >= 0)
@@ -1013,8 +1010,8 @@ namespace pwiz.Skyline.SettingsUI
             using var addPredictorDlg = new AddRetentionTimePredictorDlg(predictorName, buildState.LibrarySpec.FilePath, false);
             if (addPredictorDlg.ShowDialog(this) == DialogResult.OK)
             {
-                Settings.Default.RTScoreCalculatorList.Add(addPredictorDlg.Calculator);
-                Settings.Default.RetentionTimeList.Add(addPredictorDlg.Regression);
+                Settings.Default.RTScoreCalculatorList = Settings.Default.RTScoreCalculatorList.ChangeAdd(addPredictorDlg.Calculator);
+                Settings.Default.RetentionTimeList = Settings.Default.RetentionTimeList.ChangeAdd(addPredictorDlg.Regression);
                 _driverRT.LoadList(addPredictorDlg.Regression.Name);
             }
         }
@@ -1061,7 +1058,7 @@ namespace pwiz.Skyline.SettingsUI
 
                     var builder = new MidasBlibBuilder(_parent.Document, midasLib, filterDlg.LibraryName, filterDlg.FileName);
                     builder.BuildLibrary(null);
-                    Settings.Default.SpectralLibraryList.Add(builder.LibrarySpec);
+                    Settings.Default.SpectralLibraryList = Settings.Default.SpectralLibraryList.ChangeAdd(builder.LibrarySpec);
                     _driverLibrary.LoadList();
                 }
             }
@@ -1481,7 +1478,7 @@ namespace pwiz.Skyline.SettingsUI
             var list = Settings.Default.RetentionTimeList;
             var regNew = list.EditItem(this, _driverRT.SelectedItem, list, null);
             if (regNew != null)
-                list.SetValue(regNew);
+                Settings.Default.RetentionTimeList = list.ChangeValue(regNew);
         }
 
         public void EditRegressionList()

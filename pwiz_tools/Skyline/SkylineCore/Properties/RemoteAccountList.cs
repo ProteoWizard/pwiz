@@ -29,7 +29,7 @@ using SkylineTool;
 namespace pwiz.Skyline.Properties
 {
     [LlmName("Remote Accounts")]
-    public sealed class RemoteAccountList : SettingsList<RemoteAccount>
+    public sealed class RemoteAccountList : SettingsList<RemoteAccount>, ISelfTypedList<RemoteAccountList, RemoteAccount>
     {
         public override IEnumerable<RemoteAccount> GetDefaults(int revisionIndex)
         {
@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Properties
 
         public IEnumerable<RemoteAccount> GetAccountsOfType(RemoteAccountType type)
         {
-            return Items.Where(item => item.AccountType == type);
+            return this.Where(item => item.AccountType == type);
         }
 
         public override string Title { get { return PropertiesResources.RemoteAccountList_Title_Edit_Remote_Accounts; } }

@@ -13,7 +13,7 @@ using pwiz.Skyline.Util;
 namespace pwiz.Skyline.Properties
 {
     [XmlRoot("ReportSpecList")]
-    public class ReportOrViewSpecList : SerializableSettingsList<ReportOrViewSpec>
+    public class ReportOrViewSpecList : SerializableSettingsList<ReportOrViewSpec>, ISelfTypedList<ReportOrViewSpecList, ReportOrViewSpec>
     {
         public ReportOrViewSpecList()
         {
@@ -21,10 +21,10 @@ namespace pwiz.Skyline.Properties
 
         public ReportOrViewSpecList(ReportSpecList oldList)
         {
-            RevisionIndex = oldList.RevisionIndex;
+            SetLoadingRevisionIndex(oldList.RevisionIndex);
             var oldReports = oldList.Select(item => new ReportOrViewSpec(item));
             var convertedReports = ReportSharing.ConvertAll(oldReports, new Model.SrmDocument(SrmSettingsList.GetDefault()));
-            AddRange(convertedReports.Select(view => new ReportOrViewSpec(view)));
+            LoadingItems.AddRange(convertedReports.Select(view => new ReportOrViewSpec(view)));
             // ReSharper disable once VirtualMemberCallInConstructor
             ValidateLoad();
         }
@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        public override ICollection<ReportOrViewSpec> CreateEmptyList()
+        public override SerializableSettingsList<ReportOrViewSpec> CreateEmptyList()
         {
             return new ReportOrViewSpecList();
         }

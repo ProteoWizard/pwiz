@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Model
         public PeptideModifications MatcherPepMods { get; set; }
 
         public void CreateMatches(SrmSettings settings, IEnumerable<LibKey> libKeys,
-            MappedList<string, StaticMod> defSetStatic, MappedList<string, StaticMod> defSetHeavy,
+            IReadOnlyMappedList<string, StaticMod> defSetStatic, IReadOnlyMappedList<string, StaticMod> defSetHeavy,
             string libraryName)
         {
             _dictAAMassPairs = new Dictionary<AATermKey, List<string>>();

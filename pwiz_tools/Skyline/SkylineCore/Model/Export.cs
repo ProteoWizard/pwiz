@@ -2753,8 +2753,7 @@ namespace pwiz.Skyline.Model
 
                 var staticExplicitMods = settings.PeptideSettings.Modifications.StaticModifications
                     .Where(mod => !mod.IsVariable).ToArray();
-                var staticModsList = new StaticModList();
-                staticModsList.AddRange(staticExplicitMods);
+                var staticModsList = new StaticModList().ChangeAddRange(staticExplicitMods);
                 var mods = new ExplicitMods(nodePep,
                                         staticExplicitMods,
                                         staticModsList, 

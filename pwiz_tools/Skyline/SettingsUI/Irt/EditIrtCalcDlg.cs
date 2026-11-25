@@ -77,7 +77,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             comboRegressionType.Items.AddRange(IrtRegressionType.ALL.Cast<object>().ToArray());
             SelectedRegressionType = IrtRegressionType.DEFAULT;
 
-            Settings.Default.IrtStandardList.Remove(IrtStandard.AUTO);
+            Settings.Default.IrtStandardList = Settings.Default.IrtStandardList.ChangeRemove(IrtStandard.AUTO);
             _driverStandards = new SettingsListComboDriver<IrtStandard>(comboStandards, Settings.Default.IrtStandardList);
             _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
 
@@ -105,7 +105,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private void EditIrtCalcDlg_FormClosing(object sender, FormClosingEventArgs e)
         {
-            Settings.Default.IrtStandardList.Insert(1, IrtStandard.AUTO);
+            Settings.Default.IrtStandardList = Settings.Default.IrtStandardList.ChangeInsert(1, IrtStandard.AUTO);
         }
 
         private IrtDb _originalDb;
@@ -543,7 +543,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     if (string.IsNullOrEmpty(docXml))
                         docXml = IrtDb.GenerateDocumentXml(StandardPeptides.Select(pep => pep.ModifiedTarget), Program.MainWindow.Document, null);
                     if (!string.IsNullOrEmpty(docXml) && !Equals(docXml, selected.DocXml))
-                        _driverStandards.List[comboStandards.SelectedIndex] = selected.ChangeDocXml(docXml);
+                    {
+                        var index = comboStandards.SelectedIndex;
+                        _driverStandards.List = _driverStandards.List.ChangeItemsWith(items => items[index] = selected.ChangeDocXml(docXml));
+                    }
                 }
                 Calculator = new RCalcIrt(textCalculatorName.Text, path).ChangeDatabase(IrtDb.GetIrtDb(path));
             }
@@ -1497,7 +1500,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 {
                     if (calibrateIrtDlg.ShowDialog(this) == DialogResult.OK)
                     {
-                        _driverStandards.List.Add(calibrateIrtDlg.IrtStandard);
+                        _driverStandards.List = _driverStandards.List.ChangeItemsWith(items => items.Add(calibrateIrtDlg.IrtStandard));
                         _driverStandards.LoadList(calibrateIrtDlg.IrtStandard.GetKey());
                     }
                     else
@@ -1523,7 +1526,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     else if (dlg.UseCurrent)
                     {
                         var newStandard = new IrtStandard(dlg.StandardName, null, null, StandardPeptideList);
-                        _driverStandards.List.Add(newStandard);
+                        _driverStandards.List = _driverStandards.List.ChangeItemsWith(items => items.Add(newStandard));
                         _driverStandards.LoadList(newStandard.GetKey());
                         return;
                     }
@@ -1566,7 +1569,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     // A built-in standard is selected and standards have changed
                     var newIdx = CurrentStandardIndex;
                     if (newIdx == -1)
-                        newIdx = _driverStandards.List.IndexOf(standard => standard.IsEmpty);
+                        newIdx = _driverStandards.List.ToArray().IndexOf(standard => standard.IsEmpty);
                     if (newIdx != comboStandards.SelectedIndex)
                     {
                         comboStandards.SelectedIndexChanged -= comboStandards_SelectedIndexChanged;
@@ -1578,7 +1581,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 else
                 {
                     // Update standard
-                    _driverStandards.List[comboStandards.SelectedIndex] = _driverStandards.SelectedItem.ChangePeptides(StandardPeptides);
+                    var index = comboStandards.SelectedIndex;
+                    var standardNew = _driverStandards.SelectedItem.ChangePeptides(StandardPeptides);
+                    _driverStandards.List = _driverStandards.List.ChangeItemsWith(items => items[index] = standardNew);
                 }
             }
 

@@ -724,7 +724,7 @@ namespace pwiz.SkylineTest
             }
             using var reader = new StringReader(sb.ToString());
             return doc.ImportDocumentXml(reader, null, MeasuredResults.MergeAction.merge_names, false,
-                null, Settings.Default.StaticModList, Settings.Default.HeavyModList, null,
+                null, null,
                 out _, out _, false);
         }
 

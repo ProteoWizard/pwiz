@@ -940,7 +940,7 @@ namespace pwiz.Skyline
                 if (newServer == null)
                     return;
 
-                servers.Add(newServer);
+                Settings.Default.ServerList = servers = servers.ChangeAdd(newServer);
             }
 
             var panoramaServers = servers.Cast<PanoramaServer>().ToList();
@@ -2615,12 +2615,12 @@ namespace pwiz.Skyline
                 SequenceTree.SelectedPath = selectPath;
             if (retentionTimeRegressionStore != null)
             {
-                Settings.Default.RetentionTimeList.Add(retentionTimeRegressionStore);
-                Settings.Default.RTScoreCalculatorList.Add(retentionTimeRegressionStore.Calculator);
+                Settings.Default.RetentionTimeList = Settings.Default.RetentionTimeList.ChangeAdd(retentionTimeRegressionStore);
+                Settings.Default.RTScoreCalculatorList = Settings.Default.RTScoreCalculatorList.ChangeAdd(retentionTimeRegressionStore.Calculator);
             }
             if (docLibrarySpec != null)
             {
-                Settings.Default.SpectralLibraryList.Insert(0, docLibrarySpec);
+                Settings.Default.SpectralLibraryList = Settings.Default.SpectralLibraryList.ChangeInsert(0, docLibrarySpec);
             }
         }
 
@@ -2677,7 +2677,7 @@ namespace pwiz.Skyline
                 if (calcIrt == null)
                 {
                     // If there is no iRT calculator, ask the user to create one
-                    using (var dlg = new CreateIrtCalculatorDlg(doc, DocumentFilePath, Settings.Default.RTScoreCalculatorList, peptideGroups))
+                    using (var dlg = new CreateIrtCalculatorDlg(doc, DocumentFilePath, Settings.Default.RTScoreCalculatorList.ToArray(), peptideGroups))
                     {
                         if (dlg.ShowDialog(this) != DialogResult.OK)
                             return false;
@@ -2983,8 +2983,6 @@ namespace pwiz.Skyline
                                                 resultsAction,
                                                 mergePeptides,
                                                 FindSpectralLibrary,
-                                                Settings.Default.StaticModList,
-                                                Settings.Default.HeavyModList,
                                                 to,
                                                 out firstAddedForFile,
                                                 out nextAdd,
@@ -3826,9 +3824,9 @@ namespace pwiz.Skyline
                     if (choice == DialogResult.Yes)
                     {
                         if (Settings.Default.SearchToolList.ContainsKey(SearchToolType.DIANN))
-                            Settings.Default.SearchToolList.Remove(
+                            Settings.Default.SearchToolList = Settings.Default.SearchToolList.ChangeRemove(
                                 Settings.Default.SearchToolList[SearchToolType.DIANN]);
-                        Settings.Default.SearchToolList.Add(new SearchTool(SearchToolType.DIANN,
+                        Settings.Default.SearchToolList = Settings.Default.SearchToolList.ChangeAdd(new SearchTool(SearchToolType.DIANN,
                             registered, string.Empty, Path.GetDirectoryName(registered), false));
                     }
                     // choice == DialogResult.No: fall through to the download dialog
@@ -4038,7 +4036,7 @@ namespace pwiz.Skyline
                 if (newServer == null)
                     return;
 
-                servers.Add(newServer);
+                Settings.Default.ServerList = servers = servers.ChangeAdd(newServer);
             }
             if (!servers.Any(server => server.HasUserAccount())) // None of the servers have a user account
             {
@@ -4070,7 +4068,7 @@ namespace pwiz.Skyline
                             alertDlg.ShowAndDispose(this);
                             return;
                         }
-                        servers[0] = editedServer; // Replace with edited server
+                        Settings.Default.ServerList = servers = servers.ChangeItemAt(0, editedServer); // Replace with edited server
                     }
                     else
                     {
@@ -4091,7 +4089,7 @@ namespace pwiz.Skyline
                         alertDlg.ShowAndDispose(this);
                         return;
                     }
-                    servers.Add(newServer);
+                    Settings.Default.ServerList = servers = servers.ChangeAdd(newServer);
                 }
             }
 

@@ -2598,7 +2598,7 @@ namespace pwiz.SkylineTestUtil
                 ProgramContext.AddTestException(x);
             }
 
-            Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
+            Settings.Default.SrmSettingsList = Settings.Default.SrmSettingsList.ChangeItemAt(0, SrmSettingsList.GetDefault()); // Release memory held in settings
 
             // Delete unzipped test files.
             if (TestFilesDirs != null)
@@ -2669,11 +2669,11 @@ namespace pwiz.SkylineTestUtil
             Settings.Default.SettingsUpgradeRequired = false; // do not restore settings from older versions
             Settings.Default.ImportResultsAutoCloseWindow = true;
             Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many;    // use maximum threads for multiple file import
-            Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
+            Settings.Default.SrmSettingsList = Settings.Default.SrmSettingsList.ChangeItemAt(0, SrmSettingsList.GetDefault());
             // Reset defaults with names from resources for testing different languages
-            Settings.Default.BackgroundProteomeList[0] = BackgroundProteomeList.GetDefault();
-            Settings.Default.DeclusterPotentialList[0] = DeclusterPotentialList.GetDefault();
-            Settings.Default.RetentionTimeList[0] = RetentionTimeList.GetDefault();
+            Settings.Default.BackgroundProteomeList = Settings.Default.BackgroundProteomeList.ChangeItemAt(0, BackgroundProteomeList.GetDefault());
+            Settings.Default.DeclusterPotentialList = Settings.Default.DeclusterPotentialList.ChangeItemAt(0, DeclusterPotentialList.GetDefault());
+            Settings.Default.RetentionTimeList = Settings.Default.RetentionTimeList.ChangeItemAt(0, RetentionTimeList.GetDefault());
             Settings.Default.ShowStartupForm = ShowStartPage;
             Settings.Default.MruList = SetMru;
             // For automated demos, start with the main window maximized

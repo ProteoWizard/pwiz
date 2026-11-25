@@ -50,7 +50,7 @@ namespace pwiz.SkylineTestConnected
                 // Make the aliased account resolvable in headless mode, the same way Program.Main
                 // wires it up for the real command-line interface.
                 var accountList = new RemoteAccountList();
-                accountList.Add(account);
+                accountList = accountList.ChangeAdd(account);
                 Settings.Default.RemoteAccountList = accountList;
                 RemoteUrl.RemoteAccountStorage = SkylineRemoteAccountServices.INSTANCE;
 

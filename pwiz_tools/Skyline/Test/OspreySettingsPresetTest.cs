@@ -21,6 +21,7 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -122,19 +123,19 @@ namespace pwiz.SkylineTest
         private static void TestList()
         {
             var list = new OspreySettingsPresetList();
-            list.AddDefaults();
+            list = list.ChangeAddDefaults();
             AssertEx.AreEqual(0, list.Count);
 
             var first = new OspreySettingsPreset(PRESET_NAME, true, 10, true, 0.01, 0.01, 0.01, null);
-            list.Add(first);
-            list.Add(new OspreySettingsPreset(OTHER_NAME, false, 0.5, false, 0.01, 0.01, 0.01, null));
+            list = list.ChangeAdd(first);
+            list = list.ChangeAdd(new OspreySettingsPreset(OTHER_NAME, false, 0.5, false, 0.01, 0.01, 0.01, null));
             AssertEx.IsTrue(list.ContainsKey(PRESET_NAME));
             AssertEx.IsTrue(list.ContainsKey(OTHER_NAME));
 
             // Replacing by name, as saving under an existing name does: the new values, the same count
             var replacement = new OspreySettingsPreset(PRESET_NAME, true, 20, true, 0.05, 0.01, 0.01, null);
-            list.RemoveKey(PRESET_NAME);
-            list.Add(replacement);
+            list = list.ChangeRemoveKey(PRESET_NAME);
+            list = list.ChangeAdd(replacement);
             AssertEx.AreEqual(2, list.Count);
             AssertEx.IsTrue(list.TryGetValue(PRESET_NAME, out var found));
             AssertEx.AreEqual(replacement, found);

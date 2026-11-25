@@ -1195,7 +1195,7 @@ namespace pwiz.Skyline.Model
         }
 
         public PeptideDocNode EnsureMods(PeptideModifications source, PeptideModifications target,
-                                         MappedList<string, StaticMod> defSetStat, MappedList<string, StaticMod> defSetHeavy)
+                                         IReadOnlyMappedList<string, StaticMod> defSetStat, IReadOnlyMappedList<string, StaticMod> defSetHeavy)
         {
             // Create explicit mods matching the implicit mods on this peptide for each document.
             var sourceImplicitMods = new ExplicitMods(this, source.StaticModifications, defSetStat, source.GetHeavyModifications(), defSetHeavy);

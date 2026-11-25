@@ -181,9 +181,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     false, MessageBoxButtons.YesNo);
                 if (result != DialogResult.Yes)
                     return;
-                Settings.Default.DiannSearchSettingsPresets.Remove(existing);
+                Settings.Default.DiannSearchSettingsPresets = Settings.Default.DiannSearchSettingsPresets.ChangeRemove(existing);
             }
-            Settings.Default.DiannSearchSettingsPresets.Add(BuildPresetFromCurrentSettings(name));
+            Settings.Default.DiannSearchSettingsPresets = Settings.Default.DiannSearchSettingsPresets.ChangeAdd(BuildPresetFromCurrentSettings(name));
             // Persist immediately so the preset survives even if Skyline isn't closed
             // cleanly. Settings.Default.Save() at SkylineWindow.OnClosing should pick it
             // up too, but the user-reported intermittent reset suggests we shouldn't rely
@@ -349,7 +349,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 if (enzyme != null)
                 {
                     if (Settings.Default.EnzymeList.All(e => e.Name != enzyme.Name))
-                        Settings.Default.EnzymeList.Add(enzyme);
+                        Settings.Default.EnzymeList = Settings.Default.EnzymeList.ChangeAdd(enzyme);
                     ImportFastaControl.Enzyme = enzyme;
                 }
             }

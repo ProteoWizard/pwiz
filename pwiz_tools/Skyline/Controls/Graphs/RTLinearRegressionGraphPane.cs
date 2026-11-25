@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using System.ComponentModel;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
@@ -65,7 +66,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             XAxis.Title.Text = GraphsResources.RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Score;
             RunToRun = runToRun;
-            Settings.Default.RTScoreCalculatorList.ListChanged += RTScoreCalculatorList_ListChanged;
+            Settings.Default.PropertyChanged += Settings_PropertyChanged;
             AllowDisplayTip = true;
             var receiver = _producer.RegisterCustomer(GraphSummary, ProductAvailableAction);
             _graphDataReceiver = new ReplicateCachingReceiver<RetentionTimeRegressionSettings, RtRegressionResults>(
@@ -80,7 +81,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _progressBar?.Dispose();
             _progressBar = null;
             AllowDisplayTip = false;
-            Settings.Default.RTScoreCalculatorList.ListChanged -= RTScoreCalculatorList_ListChanged;
+            Settings.Default.PropertyChanged -= Settings_PropertyChanged;
         }
 
         public override bool HasToolbar { get { return RunToRun; } }
@@ -95,8 +96,10 @@ namespace pwiz.Skyline.Controls.Graphs
             return ShowReplicate == ReplicateDisplay.single && !RunToRun;
         }
 
-        private void RTScoreCalculatorList_ListChanged(object sender, EventArgs e)
+        private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            if (e.PropertyName != nameof(Settings.RTScoreCalculatorList))
+                return;
             if (GraphSummary.IsHandleCreated)
             {
                 GraphSummary.BeginInvoke(() =>
@@ -491,10 +494,12 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (calc.Initialized != null && settingsList.Contains(calc.Original))
                 {
-                    settingsList.SetValue(calc.Initialized);
+                    settingsList = settingsList.ChangeValue(calc.Initialized);
                     anyChanges = true;
                 }
             }
+            if (anyChanges)
+                Settings.Default.RTScoreCalculatorList = settingsList;
 
             return anyChanges;
         }

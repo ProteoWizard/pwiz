@@ -111,7 +111,8 @@ namespace pwiz.Skyline.FileUI
                     var newServer = allServers.EditItem(parentWindow, skylineDocServer, allServers, false);
                     if (newServer == null)
                         return false;
-                    allServers.Add(newServer); // server should not have the same Uri as an existing server in the list. EditServerDlg takes care of that.
+                    // server should not have the same Uri as an existing server in the list. EditServerDlg takes care of that.
+                    Settings.Default.ServerList = allServers = allServers.ChangeAdd(newServer);
 
                     return Open(skyp.SkypPath, allServers, parentWindow);
                 }
@@ -138,7 +139,7 @@ namespace pwiz.Skyline.FileUI
                         return false;
 
                     var idx = allServers.IndexOf(skypServerMatch);
-                    allServers[idx] = editedServer;
+                    Settings.Default.ServerList = allServers = allServers.ChangeItemAt(idx, editedServer);
                     
                     return Open(skyp.SkypPath, allServers, parentWindow);
                 }

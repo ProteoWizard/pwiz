@@ -22,6 +22,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 using System.Linq;
 using System.Xml.Serialization;
@@ -38,13 +39,12 @@ namespace pwiz.SkylineTest.Reporting
         [TestMethod]
         public void TestUpgradedReportSpecList()
         {
-            var toolList = new ToolList();
-            toolList.AddDefaults();
+            var toolList = new ToolList().ChangeAddDefaults();
             var cleanPersistedViews = new PersistedViews(null, null, toolList);
             for (int oldRevision = 0; oldRevision < 2; oldRevision++)
             {
-                var oldReportSpecList = new ReportSpecList {RevisionIndex = oldRevision};
-                oldReportSpecList.AddRange(oldReportSpecList.GetDefaults(oldRevision));
+                var oldReportSpecList = (ReportSpecList) new ReportSpecList().ChangeRevisionIndex(oldRevision);
+                oldReportSpecList = oldReportSpecList.ChangeAddRange(oldReportSpecList.GetDefaults(oldRevision));
                 var upgradedPersistedViews = new PersistedViews(oldReportSpecList, null, toolList);
                 foreach (var group in new[] {PersistedViews.MainGroup, PersistedViews.ExternalToolsGroup})
                 {

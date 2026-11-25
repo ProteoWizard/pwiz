@@ -1154,8 +1154,8 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="listHeavyMods">Global isotope labeled mods</param>
         /// <param name="implicitOnly">True to create an explicit expression of the implicit modifications</param>
         public ExplicitMods(PeptideDocNode nodePep,
-            IList<StaticMod> staticMods, MappedList<string, StaticMod> listStaticMods,
-            IEnumerable<TypedModifications> heavyMods, MappedList<string, StaticMod> listHeavyMods,
+            IList<StaticMod> staticMods, IReadOnlyMappedList<string, StaticMod> listStaticMods,
+            IEnumerable<TypedModifications> heavyMods, IReadOnlyMappedList<string, StaticMod> listHeavyMods,
             bool implicitOnly = false)
         {
             CrosslinkStructure = CrosslinkStructure.EMPTY;
@@ -1227,7 +1227,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="mods">Implicit modifications on the document</param>
         /// <param name="listSettingsMods">All modifications available in the settings</param>
         /// <returns>List of <see cref="ExplicitMod"/> objects for the implicit modifications</returns>
-        private ExplicitMod[] GetImplicitMods(IList<StaticMod> mods, MappedList<string, StaticMod> listSettingsMods)
+        private ExplicitMod[] GetImplicitMods(IList<StaticMod> mods, IReadOnlyMappedList<string, StaticMod> listSettingsMods)
         {
             List<ExplicitMod> listImplicitMods = new List<ExplicitMod>();
 

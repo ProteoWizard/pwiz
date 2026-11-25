@@ -681,7 +681,7 @@ namespace pwiz.Skyline
                 return;
 
             var model = DocumentUI.Settings.PeptideSettings.Integration.PeakScoringModel;
-            Settings.Default.PeakScoringModelList.Add(model);
+            Settings.Default.PeakScoringModelList = Settings.Default.PeakScoringModelList.ChangeAdd(model);
 
             if (Equals(trainedType, PeptideIntegration.AutoTrainType.default_model))
                 return; // don't show dialog when auto trained model is the default model
@@ -691,7 +691,7 @@ namespace pwiz.Skyline
             if (newModel == null || model.Equals(newModel))
                 return;
 
-            Settings.Default.PeakScoringModelList[modelIndex] = newModel;
+            Settings.Default.PeakScoringModelList = Settings.Default.PeakScoringModelList.ChangeItemAt(modelIndex, newModel);
             SrmDocument docCurrent, docNew;
             do
             {
@@ -1865,7 +1865,7 @@ namespace pwiz.Skyline
             {
                 if (editDlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    Settings.Default.GroupComparisonDefList.Add(editDlg.GroupComparisonDef);
+                    Settings.Default.GroupComparisonDefList = Settings.Default.GroupComparisonDefList.ChangeAdd(editDlg.GroupComparisonDef);
                     ModifyDocument(Resources.SkylineWindow_AddGroupComparison_Add_Fold_Change,
                         doc => doc.ChangeSettings(
                             doc.Settings.ChangeDataSettings(
@@ -1882,7 +1882,7 @@ namespace pwiz.Skyline
                 if (editDlg.ShowDialog(this) == DialogResult.OK)
                 {
                     var listDef = editDlg.GetListDef();
-                    Settings.Default.ListDefList.Add(listDef);
+                    Settings.Default.ListDefList = Settings.Default.ListDefList.ChangeAdd(listDef);
                     ModifyDocument(Resources.SkylineWindow_AddGroupComparison_Add_Fold_Change,
                         doc => doc.ChangeSettings(
                             doc.Settings.ChangeDataSettings(
@@ -2053,16 +2053,15 @@ namespace pwiz.Skyline
                 SrmSettingsList list = Settings.Default.SrmSettingsList;
                 SrmSettings settingsDefault = list[0];
                 SrmSettings settingsCurrent = DocumentUI.Settings;
-                list.Clear();
-                list.Add(settingsDefault); // Add back default settings.
-                list.AddRange(listNew);
+                list = list.ChangeItems(new[] { settingsDefault }.Concat(listNew)); // Add back default settings.
                 if (!list.TryGetValue(settingsCurrent.GetKey(), out _))
                 {
                     // If the current settings were removed, then make
                     // them the default, and use them to avoid a shift
                     // to some random settings values.
-                    list[0] = settingsCurrent.MakeSavable(SrmSettingsList.DefaultName);
+                    list = list.ChangeItemAt(0, settingsCurrent.MakeSavable(SrmSettingsList.DefaultName));
                 }
+                Settings.Default.SrmSettingsList = list;
             }
         }
 
@@ -2182,8 +2181,6 @@ namespace pwiz.Skyline
                             MeasuredResults.MergeAction.remove,
                             false,
                             FindSpectralLibrary,
-                            Settings.Default.StaticModList,
-                            Settings.Default.HeavyModList,
                             Document.Children.Any() ? new IdentityPath(Document.Children.First().Id) : null,
                             out firstAdded,
                             out _,
@@ -2328,7 +2325,7 @@ namespace pwiz.Skyline
                                                     }, AuditLogEntry.SkipChange);
 
                 if (settingsNew != null)
-                    Settings.Default.SrmSettingsList.Add(settingsNew.MakeSavable(ss.SaveName));
+                    Settings.Default.SrmSettingsList = Settings.Default.SrmSettingsList.ChangeAdd(settingsNew.MakeSavable(ss.SaveName));
 
                 return true;
             }
@@ -2520,7 +2517,7 @@ namespace pwiz.Skyline
             // other than to the default name is SaveSettings().
             string defaultName = SrmSettingsList.DefaultName;
             // MakeSavable will also remove any results information
-            Settings.Default.SrmSettingsList[0] = settings.MakeSavable(defaultName);
+            Settings.Default.SrmSettingsList = Settings.Default.SrmSettingsList.ChangeItemAt(0, settings.MakeSavable(defaultName));
             // Document must have the same name as the saved version.
             if (!Equals(settings.Name, defaultName))
                 settings = (SrmSettings)settings.ChangeName(defaultName);

@@ -20,7 +20,7 @@ namespace pwiz.Skyline.FileUI
         /// </summary>
         public List<string> MethodNameSuffixes { get; set; }
 
-        public WatersConnectSaveMethodFileDialog(IList<RemoteAccount> remoteAccounts,  IList<string> specificDataSourceFilter = null)
+        public WatersConnectSaveMethodFileDialog(IEnumerable<RemoteAccount> remoteAccounts,  IList<string> specificDataSourceFilter = null)
             : base(remoteAccounts, specificDataSourceFilter)
         {
             Text = string.Format(FileUIResources.ExportMethodDlg_OkDialog_Export__0__Method, InstrumentType);

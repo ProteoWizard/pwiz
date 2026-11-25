@@ -27,6 +27,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Menus
 {
@@ -365,7 +366,7 @@ namespace pwiz.Skyline.Menus
             var list = Settings.Default.RTScoreCalculatorList;
             var calcNew = list.EditItem(SkylineWindow, null, list, null);
             if (calcNew != null)
-                list.SetValue(calcNew);
+                Settings.Default.RTScoreCalculatorList = list.ChangeValue(calcNew);
         }
 
         private void updateCalculatorContextMenuItem_Click(object sender, EventArgs e)

@@ -68,7 +68,7 @@ namespace pwiz.SkylineTestFunctional
                 new MeasuredIon("Carbon", "CO2", null, null, Adduct.M_PLUS, true)
             };
             var ionList = new MeasuredIonList();
-            ionList.AddRange(ions);
+            ionList = ionList.ChangeAddRange(ions);
             Settings.Default.MeasuredIonList = ionList;
 
             RunUI(() => SkylineWindow.ModifyDocument("Change measured ions", document => document.ChangeSettings(
@@ -122,7 +122,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var ions = new MeasuredIon[0];
             var ionList = new MeasuredIonList();
-            ionList.AddRange(ions);
+            ionList = ionList.ChangeAddRange(ions);
             Settings.Default.MeasuredIonList = ionList;
             RunUI(() => SkylineWindow.ModifyDocument("Change measured ions", document => document.ChangeSettings(
                 document.Settings.ChangeTransitionFilter(filter => filter.ChangeMeasuredIons(ions)))));

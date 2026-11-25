@@ -21,12 +21,13 @@ using System.Collections.Generic;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
+using pwiz.Skyline.Util;
 using SkylineTool;
 
 namespace pwiz.Skyline.Properties
 {
     [LlmName("Metadata Rule Sets")]
-    public class MetadataRuleSetList : SettingsList<MetadataRuleSet>, ISettingsListDocumentSelection
+    public class MetadataRuleSetList : SettingsList<MetadataRuleSet>, ISelfTypedList<MetadataRuleSetList, MetadataRuleSet>, ISettingsListDocumentSelection
     {
         public override IEnumerable<MetadataRuleSet> GetDefaults(int revisionIndex)
         {

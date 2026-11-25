@@ -49,7 +49,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            Settings.Default.ToolList.Clear();
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
 
             TestToolDescErrors();
 
@@ -129,13 +129,13 @@ namespace pwiz.SkylineTestFunctional
                 Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error__it_returned_the_message_);
             
             // Clean up.
-            Settings.Default.ToolList.Clear();
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
             RunUI(SkylineWindow.PopulateToolsMenu);
         }
 
         private void RunErrorCase(string toolName, string argCollector, string argCollectorClass, string errorMessage)
         {
-            Settings.Default.ToolList.Add(new ToolDescription(
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeAdd(new ToolDescription(
                 toolName,
                 "Not.here",
                 string.Empty,
@@ -207,7 +207,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestQuasarDeprecated()
         {
-            Settings.Default.ToolList.Add(ToolList.DEPRECATED_QUASAR);
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeAdd(ToolList.DEPRECATED_QUASAR);
 
             RunUI(SkylineWindow.PopulateToolsMenu);
             RunDlg<MessageDlg>(() => SkylineWindow.RunTool(0), messageDlg =>
@@ -218,7 +218,7 @@ namespace pwiz.SkylineTestFunctional
                 messageDlg.OkDialog();
             });
 
-            Settings.Default.ToolList.Clear();
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
         }
 
         private void TestHttpPost()
@@ -281,7 +281,7 @@ namespace pwiz.SkylineTestFunctional
                     // Remove all tools
                     while (Settings.Default.ToolList.Count > 0)
                     {
-                        Settings.Default.ToolList.RemoveAt(0);
+                        Settings.Default.ToolList = Settings.Default.ToolList.ChangeRemoveAt(0);
                     }
                     SkylineWindow.PopulateToolsMenu();
                 });
@@ -428,9 +428,9 @@ namespace pwiz.SkylineTestFunctional
             var sharedToolDir = TestFilesDir.GetTestPath(Path.Combine(@"SharedTools", readOnlyTitle));
             RunUI(() =>
             {
-                Settings.Default.ToolList.Clear();
-                Settings.Default.ToolList.Add(new ToolDescription(editableTitle, url, _empty));
-                Settings.Default.ToolList.Add(new ToolDescription(readOnlyTitle, url, _empty, _empty, false, _empty,
+                Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
+                Settings.Default.ToolList = Settings.Default.ToolList.ChangeAdd(new ToolDescription(editableTitle, url, _empty));
+                Settings.Default.ToolList = Settings.Default.ToolList.ChangeAdd(new ToolDescription(readOnlyTitle, url, _empty, _empty, false, _empty,
                     _empty, _empty, sharedToolDir, new List<AnnotationDef>(), null, null, null));
             });
             RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
@@ -447,7 +447,7 @@ namespace pwiz.SkylineTestFunctional
                 VerifyToolFieldsEnabled(configureToolsDlg, true, false);
                 configureToolsDlg.Cancel();
             });
-            RunUI(() => Settings.Default.ToolList.Clear());
+            RunUI(() => Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear());
         }
 
         private static void VerifyToolFieldsEnabled(ConfigureToolsDlg configureToolsDlg, bool editable, bool programFields)
@@ -1056,9 +1056,9 @@ namespace pwiz.SkylineTestFunctional
             {
                 while (Settings.Default.ToolList.Count > 0)
                 {
-                    Settings.Default.ToolList.RemoveAt(0);
+                    Settings.Default.ToolList = Settings.Default.ToolList.ChangeRemoveAt(0);
                 }
-                Settings.Default.ToolList.Add(new ToolDescription(EXAMPLE2, EXAMPLE2_EXE, "$(DocumentPath)", "$(DocumentDir)", false, string.Empty)); // Not L10N
+                Settings.Default.ToolList = Settings.Default.ToolList.ChangeAdd(new ToolDescription(EXAMPLE2, EXAMPLE2_EXE, "$(DocumentPath)", "$(DocumentDir)", false, string.Empty)); // Not L10N
 
                 SkylineWindow.Paste("PEPTIDER"); // Not L10N
                 string path = TestContext.GetTestResultsPath("ConfigureToolsTest.sky"); // Not L10N

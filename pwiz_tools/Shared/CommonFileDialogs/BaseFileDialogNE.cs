@@ -59,7 +59,7 @@ namespace pwiz.CommonFileDialogs
         /// <param name="remoteAccounts">For UNIFI</param>
         /// <param name="specificDataSourceFilter">Optional list of specific files the user needs to located, ignoring the rest</param>
         /// <param name="isRemote">Indicates that this dialog is for remote accounts only and local drives and folders should be hidden</param>
-        public BaseFileDialogNE(string[] sourceTypes, IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null, bool isRemote = false)
+        public BaseFileDialogNE(string[] sourceTypes, IEnumerable<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null, bool isRemote = false)
         {
             InitializeComponent();
             _remoteAccounts = new List<RemoteAccount>(remoteAccounts);
@@ -1755,7 +1755,7 @@ namespace pwiz.CommonFileDialogs
         /// Must be overridden in application-specific subclasses to provide account editing UI.
         /// Returns the updated list of accounts, or null if the user cancelled.
         /// </summary>
-        protected virtual IList<RemoteAccount> OnEditAccounts(IWin32Window owner)
+        protected virtual IEnumerable<RemoteAccount> OnEditAccounts(IWin32Window owner)
         {
             return null;
         }
