@@ -51,6 +51,11 @@ namespace pwiz.Skyline.Model
             public bool IncludeAmbiguousMatches { get; set; }
 
             /// <summary>
+            /// Replace the document library rather than add the new results to it, when the document has one.
+            /// </summary>
+            public bool OverwriteDocumentLibrary { get; set; }
+
+            /// <summary>
             /// The iRT standard to calibrate the library to; null or empty for none.
             /// </summary>
             public IrtStandard IrtStandard { get; set; }
@@ -134,6 +139,7 @@ namespace pwiz.Skyline.Model
         private readonly LibraryManager _libraryManager;
         private readonly Options _options;
         private LibrarySpec _docLibSpec; // The library this run built and loaded
+        private SetAsideLibrary _setAside; // The document library this run replaces, until the caller keeps the result
 
         public RunPeptideSearchPipeline(ImportPeptideSearch importPeptideSearch, LibraryManager libraryManager, Options options)
         {
@@ -144,13 +150,27 @@ namespace pwiz.Skyline.Model
 
         /// <summary>
         /// Releases the library a run built when no document uses it, because the run failed or was
-        /// canceled, so running again can rebuild it.
+        /// canceled, so running again can rebuild it. A document library the run replaced goes back
+        /// in its place.
         /// </summary>
         public void ReleaseLibrary()
         {
             if (_docLibSpec != null)
                 _importPeptideSearch.ReleasePeptideSearchLibrary(_libraryManager, _docLibSpec);
             _docLibSpec = null;
+            _setAside?.Restore();
+            _setAside = null;
+        }
+
+        /// <summary>
+        /// Deletes the document library the run replaced, once the caller has given the document the
+        /// library the run built. <see cref="ReleaseLibrary"/> then leaves both alone.
+        /// </summary>
+        public void KeepLibrary()
+        {
+            _docLibSpec = null;
+            _setAside?.Discard();
+            _setAside = null;
         }
 
         /// <summary>
@@ -192,6 +212,25 @@ namespace pwiz.Skyline.Model
 
         private LibrarySpec BuildLibrary(SrmDocument document, string documentPath, IProgressMonitor monitor, Result result)
         {
+            // Otherwise the builder adds the new results to the document's library. The library set aside
+            // stays until the caller keeps the result (KeepLibrary) and goes back when the build or any
+            // later step fails (ReleaseLibrary), so the document never refers to a library that is gone.
+            if (_options.OverwriteDocumentLibrary)
+                _setAside = new SetAsideLibrary(document, _libraryManager, BiblioSpecLiteSpec.GetLibraryFileName(documentPath));
+            try
+            {
+                return BuildLibraryFiles(document, documentPath, monitor, result);
+            }
+            catch
+            {
+                _setAside?.Restore();
+                _setAside = null;
+                throw;
+            }
+        }
+
+        private LibrarySpec BuildLibraryFiles(SrmDocument document, string documentPath, IProgressMonitor monitor, Result result)
+        {
             var thresholdsByFile = _importPeptideSearch.SearchFilenames.ToDictionary(f => f, f => _options.CutoffScore);
             var builder = _importPeptideSearch.GetLibBuilder(document, documentPath, _options.IncludeAmbiguousMatches,
                 _options.IsFeatureDetection);
@@ -210,6 +249,82 @@ namespace pwiz.Skyline.Model
                 throw new InvalidDataException(string.Format(ModelResources.ImportPeptideSearch_Failed_to_build_the_library__0__, docLibSpec.Name));
             _docLibSpec = docLibSpec;
             return docLibSpec;
+        }
+
+        /// <summary>
+        /// The files of the document's library, moved aside while a new library is built in their place.
+        /// </summary>
+        private sealed class SetAsideLibrary
+        {
+            private const string SET_ASIDE_EXT = @".overwritten";
+
+            private readonly string[] _libraryPaths;
+            private readonly List<string> _paths = new List<string>(); // The library files moved aside
+
+            /// <summary>
+            /// Moves the library files aside, or none of them: when one cannot be moved, those already
+            /// moved go back before the error is thrown.
+            /// </summary>
+            public SetAsideLibrary(SrmDocument document, LibraryManager libraryManager, string docBlibPath)
+            {
+                _libraryPaths = new[] { docBlibPath, BiblioSpecLiteSpec.GetRedundantName(docBlibPath) };
+                ImportPeptideSearch.ReleaseDocumentLibrary(document, libraryManager);
+                try
+                {
+                    foreach (var path in _libraryPaths)
+                    {
+                        if (!File.Exists(path))
+                            continue;
+                        FileEx.SafeDelete(path + SET_ASIDE_EXT, true);
+                        File.Move(path, path + SET_ASIDE_EXT);
+                        _paths.Add(path);
+                    }
+                }
+                catch
+                {
+                    MoveBack();
+                    throw;
+                }
+            }
+
+            public void Discard()
+            {
+                foreach (var path in _paths)
+                    FileEx.SafeDelete(path + SET_ASIDE_EXT, true);
+            }
+
+            /// <summary>
+            /// Deletes the library files the run wrote in place of the ones set aside, including a
+            /// redundant library the document did not have, and moves the set-aside files back.
+            /// </summary>
+            public void Restore()
+            {
+                try
+                {
+                    foreach (var path in _libraryPaths)
+                        FileEx.SafeDelete(path);
+                }
+                catch (Exception x)
+                {
+                    // The failure of the run is the error to report
+                    Messages.WriteAsyncDebugMessage(@"Failed to delete the library the run built: {0}", x.Message);
+                }
+                MoveBack();
+            }
+
+            private void MoveBack()
+            {
+                try
+                {
+                    foreach (var path in _paths)
+                        File.Move(path + SET_ASIDE_EXT, path);
+                }
+                catch (Exception x)
+                {
+                    // The failure of the run is the error to report
+                    Messages.WriteAsyncDebugMessage(@"Failed to restore the document library: {0}", x.Message);
+                }
+            }
         }
 
         private void CalibrateIrts(LibrarySpec docLibSpec, IProgressMonitor monitor, Result result)

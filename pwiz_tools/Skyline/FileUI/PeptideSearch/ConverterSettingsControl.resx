@@ -268,7 +268,7 @@
     <value>15</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>Running DIA-Umpire on your DIA files allows you to use any of the available DDA search engines. Only MSFragger supports searching raw DIA spectra.</value>
+    <value>Running DIA-Umpire on your DIA files allows you to use any of the available DDA search engines. Without DIA-Umpire, MSFragger or DIA-NN searches the DIA spectra directly.</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>

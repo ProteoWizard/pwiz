@@ -17,6 +17,7 @@ Import Peptide Search > Build Spectral Library > Workflow is "DIA"
 Import Peptide Search > Build Spectral Library > Input File Type is "DIA raw (search and build library)"
 Import Peptide Search > Extract Chromatograms > Found results files : contains "P2_202405_neo_150uID_CSF_GPF_2ThDIA_500-600_30m_14.mzML"
 Import Peptide Search > Extract Chromatograms > Found results files : contains "P2_202405_neo_150uID_CSF_GPF_2ThDIA_600-700_30m_15.mzML"
+Import Peptide Search > Extract Chromatograms > Gas phase fractionation is True
 Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
 Import Peptide Search > Extract Chromatograms > Removed prefix is "P2_202405_neo_150uID_CSF_GPF_2ThDIA_"
 Import Peptide Search > Add Modifications > Added modifications : contains "Carbamidomethyl (C) = C[57] (fixed)"
@@ -187,6 +188,7 @@ Extract Chromatograms =
         "P2_202405_neo_150uID_CSF_GPF_2ThDIA_500-600_30m_14.mzML",
         "P2_202405_neo_150uID_CSF_GPF_2ThDIA_600-700_30m_15.mzML"
     ],
+    Gas phase fractionation = True,
     Files to import simultaneously = "Many",
     Removed prefix = "P2_202405_neo_150uID_CSF_GPF_2ThDIA_"
 },
