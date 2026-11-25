@@ -54,7 +54,7 @@ namespace pwiz.Osprey.IO
         public OspreyFeatureSet? FeatureSetGiven { get; }
 
         /// <summary>The feature set in effect: <see cref="PinFeatureMask.FeatureSetFor"/> of the search's settings.</summary>
-        public OspreyFeatureSet FeatureSet => PinFeatureMask.FeatureSetFor(FeatureSetGiven, Mode);
+        public OspreyFeatureSet FeatureSet => PinFeatureMask.FeatureSetFor(FeatureSetGiven);
 
         /// <summary>True when the PIN feature at <paramref name="featureIndex"/> is masked.</summary>
         public bool IsMasked(int featureIndex)
@@ -94,6 +94,20 @@ namespace pwiz.Osprey.IO
         public bool IsRecorded(int featureIndex)
         {
             return _recorded[featureIndex];
+        }
+
+        /// <summary>
+        /// This selection, recording only the first PIN column (<c>fragment_coelution_sum</c>), for
+        /// a stub scores parquet: the stub readers take each row's coelution sum from that column,
+        /// and nothing that reads a stub reads another feature. What the classifier sees and what
+        /// Stage 4 computes are unchanged. Only the <c>FdrEntry</c> writer takes it: the
+        /// <c>CoelutionScoredEntry</c> one expects every core feature column.
+        /// </summary>
+        public PinFeatureSelection StubColumnsOnly()
+        {
+            var recorded = new bool[_recorded.Length];
+            recorded[0] = true;
+            return new PinFeatureSelection(Mode, FeatureSetGiven, _masked, _fdrIndices, recorded, _computed);
         }
 
         /// <summary>

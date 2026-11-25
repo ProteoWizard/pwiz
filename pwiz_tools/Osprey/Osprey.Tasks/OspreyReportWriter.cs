@@ -141,6 +141,7 @@ namespace pwiz.Osprey.Tasks
 
         // Report file stem = the output blib without its extension, else null (caller skips).
         // Path.ChangeExtension(x, null) drops the extension.
+
         private static string ReportStem(OspreyConfig config)
         {
             return string.IsNullOrEmpty(config.OutputBlib) ? null : Path.ChangeExtension(config.OutputBlib, null);

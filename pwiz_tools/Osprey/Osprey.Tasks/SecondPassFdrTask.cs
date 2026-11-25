@@ -96,12 +96,24 @@ namespace pwiz.Osprey.Tasks
             // wrongly: an undeclared dependency cannot be checked by anyone.
             //
             // They become a real input only when OSPREY_PASS2_VERIFY_WORKER asks this stage to
-            // recompute each file's competition and assert the worker's answer against it. That
-            // is a test instrument, so the dependency is the instrument's, not the task's.
+            // recompute each file's answer and assert the worker's against it. That is a test
+            // instrument, so the dependency is the instrument's, not the task's. Under the
+            // transfer the recompute reads what the worker computed the answer from: the run's
+            // own first-pass model, the features of its second pass, and its stub, which holds
+            // its first-pass scores and records (Pass2FdrSidecar.VerifyTransferFile).
             if (OspreyEnvironment.Pass2VerifyWorker)
             {
                 foreach (var input in ctx.Config.InputFiles)
-                    yield return FdrScoresSidecar.Pass1Path(input);
+                {
+                    if (ctx.Config.Pass2ProteinCompact)
+                    {
+                        yield return FdrScoresSidecar.Pass1Path(input);
+                        continue;
+                    }
+                    yield return FirstPassModelIO.RunModelPathFor(input);
+                    yield return ParquetScoreCache.GetReconciledFeaturesPath(input);
+                    yield return ParquetScoreCache.GetScoresPath(input);
+                }
             }
 
             // The ANALYSIS-WIDE 1st-pass experiment sidecar IS an input, on every path: it is
@@ -133,7 +145,7 @@ namespace pwiz.Osprey.Tasks
 
             foreach (var input in ctx.Config.InputFiles)
             {
-                yield return FdrScoresSidecar.Pass2Path(input);
+                // Each run's second-pass records are in its reconciled stub, declared above.
                 // The decoy side of that file's competition - the null this stage folds. Also an
                 // input, for the same reason and from the same producer, where there is a
                 // competition: the transfer competes nothing.
@@ -158,16 +170,9 @@ namespace pwiz.Osprey.Tasks
             // The frozen 1st-pass model and its stratum, under protein-compact only: that fold
             // re-competes each run's records inside the stratum and refuses to run without both
             // (ComputePass2FrozenCompetition). The transfer carries pass-1 values forward and
-            // needs neither: it reloads a model it finds, and nothing on its path reads it.
-            if (ctx.Config.Pass2ProteinCompact)
-            {
-                string modelPath = FirstPassModelIO.PathFor(ctx.Config);
-                if (!string.IsNullOrEmpty(modelPath))
-                    yield return modelPath;
-                string stratumPath = FirstPassModelIO.StratumPathFor(ctx.Config);
-                if (!string.IsNullOrEmpty(stratumPath))
-                    yield return stratumPath;
-            }
+            // needs neither: it reloads a model it finds, and nothing on its path reads it. Under
+            // per-run first-pass models there is no analysis-wide model, and protein-compact is
+            // refused (PerFileRescoreTask.CreatePass2Worker).
 
             // The pass-1 half of the --model-diagnostics report, which FirstPassFDR wrote because
             // the pass-1 pool is gone by now: this task renders one page with both passes.
@@ -269,6 +274,10 @@ namespace pwiz.Osprey.Tasks
                 FdrScoresSidecar.Pass.SecondPass);
             if (!string.IsNullOrEmpty(experimentPath))
                 yield return experimentPath;
+
+            // NOT the DIA-NN-shaped reports of OSPREY_DIANN_REPORTS: they are derived reports
+            // (doc 00, P16) that carry no stamp, and declaring them would leave this task never
+            // skippable as done whenever the variable is set.
         }
 
         public override string ValidityKey(PipelineContext ctx)
@@ -315,6 +324,9 @@ namespace pwiz.Osprey.Tasks
                 // remains. It was empty on the streamed default, so no existing output directory
                 // is invalidated by its removal. So is the library-fragment release term, for the
                 // same reason, with OSPREY_RELEASE_LIBRARY_FRAGMENTS (2026-11).
+                // The run model's safeguard, which can score a run with one feature in its place.
+                // Ahead of the classifier term, so a tree key is the linear key with it appended.
+                + PercolatorEngine.RUN_MODEL_SAFEGUARD_KEY_TERM
                 // The frozen first-pass model scores the second pass, so the classifier that
                 // trained it keys the .blib and 2nd-pass sidecars too (empty for the SVM).
                 + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
