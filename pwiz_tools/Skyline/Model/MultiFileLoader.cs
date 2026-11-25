@@ -21,7 +21,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results;
@@ -341,7 +340,6 @@ namespace pwiz.Skyline.Model
         private readonly Action<IList<Completion>> _complete;
         private readonly int _threadCount;
         private readonly int _loadingCount;
-        private int _completedCount;
         private int _consumedCount;
         private List<Completion> _accumulatedCompletions;
 
@@ -378,21 +376,20 @@ namespace pwiz.Skyline.Model
                 // Add an empty completion, which will be ignored during batch
                 _accumulatedCompletions[_accumulatedCompletions.Count - 1] = new Completion(null, new ProgressStatus());
             }
+
+            // Stop only once every file's completion has been consumed. Loading threads may queue
+            // their completions in any order, so the end marker must not be queued by them.
+            if (_consumedCount == _loadingCount)
+                _completionWorker.DoneAdding();
         }
 
         public void Complete(ChromatogramCache cache, IProgressStatus status)
         {
-            var completedCount = Interlocked.Increment(ref _completedCount);
             var completion = new Completion(cache, status);
             if (_completionWorker == null)
                 _complete(new SingletonList<Completion>(completion));
             else
-            {
                 _completionWorker.Add(completion);
-
-                if (completedCount == _loadingCount)
-                    _completionWorker.DoneAdding();
-            }
         }
     }
 

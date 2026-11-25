@@ -137,7 +137,8 @@ namespace pwiz.Osprey.Tasks
             Action<int, string, FirstPassFoldRows> onRowsJoined,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             HashSet<uint> retainedBaseIds,
-            IOspreyLog log = null)
+            IOspreyLog log = null,
+            LibraryIdentity identity = null)
         {
             if (parquetPaths == null)
                 throw new ArgumentNullException(nameof(parquetPaths));
@@ -162,7 +163,7 @@ namespace pwiz.Osprey.Tasks
                             parquetPaths[i]));
                     }
 
-                    LoadFoldRows(rows, fileName, parquetPaths[i], sequencePool);
+                    LoadFoldRows(rows, fileName, parquetPaths[i], sequencePool, identity);
 
                     // Same drift predicate as the stub overlay this replaced: the sidecar was
                     // written over the whole pre-compaction row set, so a record whose base_id
@@ -376,11 +377,11 @@ namespace pwiz.Osprey.Tasks
         /// rather than as an <c>IOException</c> with no exit code.
         /// </summary>
         private static void LoadFoldRows(FirstPassFoldRows rows, string fileName, string parquetPath,
-            LibraryStringInterner sequencePool)
+            LibraryStringInterner sequencePool, LibraryIdentity identity)
         {
             try
             {
-                rows.Load(parquetPath, sequencePool);
+                rows.Load(parquetPath, sequencePool, identity);
             }
             catch (Exception ex)
             {

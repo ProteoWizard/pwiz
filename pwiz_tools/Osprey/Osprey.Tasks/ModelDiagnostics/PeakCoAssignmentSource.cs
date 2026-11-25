@@ -385,7 +385,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // produced - and it is final when written, because the experiment-scope columns that
             // used to arrive by a later patch now live in their own analysis-wide sidecar.
             string sidecarPath = FdrScoresSidecar.Pass1Path(sidecarBase);
-            if (!File.Exists(sidecarPath))
+            if (!FdrScoresSidecar.Pass1Available(sidecarPath))
             {
                 reason = string.Format(OspreyTasksResources.PeakCoAssignmentSource_AddFile_no__1st_pass_fdr_scores_bin_file_for__0_, fileName,
                     FdrScoresSidecar.EXT_FIRST_PASS);
@@ -494,7 +494,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             if (string.IsNullOrEmpty(b))
                 return null;
             string p = FdrScoresSidecar.Pass1Path(b);
-            return File.Exists(p) ? p : null;
+            return FdrScoresSidecar.Pass1Available(p) ? p : null;
         }
 
         /// <summary>

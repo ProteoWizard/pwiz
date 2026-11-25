@@ -77,9 +77,10 @@ namespace pwiz.Osprey.Tasks
         /// the row groups <c>LoadFdrStubsFromParquet</c> skips - the two readers share that rule.
         /// Each modified sequence is canonicalized through <paramref name="sequencePool"/> as the
         /// stub loader did, because the fold keeps sequences it has seen and would otherwise keep
-        /// one copy per run.
+        /// one copy per run. A stub layout parquet, which has no peptide column, takes each row's
+        /// identity from <paramref name="identity"/>.
         /// </summary>
-        public void Load(string parquetPath, LibraryStringInterner sequencePool)
+        public void Load(string parquetPath, LibraryStringInterner sequencePool, LibraryIdentity identity = null)
         {
             _count = 0;
             ParquetScoreCache.ReadFdrStubScalars(parquetPath,
@@ -104,7 +105,7 @@ namespace pwiz.Osprey.Tasks
                         ExperimentPeptideQvalue = 1.0,
                     };
                 },
-                StubColumns.SkipCoelutionSum);
+                StubColumns.SkipCoelutionSum, identity);
         }
 
         /// <summary>
