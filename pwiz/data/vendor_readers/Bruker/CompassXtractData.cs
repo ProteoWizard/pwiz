@@ -296,15 +296,17 @@ internal sealed class CompassXtractData : IBrukerData
     private static int OpenFidSpectrumLevel(string fidDirectory)
     {
         EDAL.IMSAnalysis? analysis = null;
+        EDAL.IMSSpectrumCollection? spectra = null;
         EDAL.IMSSpectrum? spectrum = null;
         try
         {
-            analysis = OpenFid(fidDirectory, out spectrum);
+            analysis = OpenFid(fidDirectory, out spectra, out spectrum);
             return spectrum.MSMSStage;
         }
         finally
         {
             Release(spectrum);
+            Release(spectra);
             Release(analysis);
         }
     }
@@ -374,33 +376,35 @@ internal sealed class CompassXtractData : IBrukerData
     {
         ArgumentNullException.ThrowIfNull(spec);
         ArgumentNullException.ThrowIfNull(entry);
-        ObjectDisposedException.ThrowIf(_disposed, this);
         _ = sortAndJitter;          // TDF combined-frame only
         _ = includeIsolationArrays; // TDF diaPASEF whole-frame only
 
-        // One caller at a time: Release force-releases the wrappers a read obtains, and a second
-        // thread reading the same scan can hold the same wrapper. The parameter caches are
-        // unsynchronized too.
+        // One caller at a time, and never during Dispose: Release force-releases the wrappers a
+        // read obtains, and a second thread reading the same scan can hold the same wrapper. The
+        // parameter caches are unsynchronized too.
         lock (_readLock)
             FillSpectrumLocked(spec, entry, detailLevel, preferCentroid);
     }
 
     private void FillSpectrumLocked(Spectrum spec, BrukerIndexEntry entry, DetailLevel detailLevel, bool preferCentroid)
     {
+        ObjectDisposedException.ThrowIf(_disposed, this);
         using (CompassXtractActivationContext.Activate())
         {
             if (entry.Tag is string fidDirectory)
             {
                 EDAL.IMSAnalysis? analysis = null;
+                EDAL.IMSSpectrumCollection? fidSpectra = null;
                 EDAL.IMSSpectrum? fidSpectrum = null;
                 try
                 {
-                    analysis = OpenFid(fidDirectory, out fidSpectrum);
+                    analysis = OpenFid(fidDirectory, out fidSpectra, out fidSpectrum);
                     FillFromSpectrum(spec, fidSpectrum, detailLevel, preferCentroid);
                 }
                 finally
                 {
                     Release(fidSpectrum);
+                    Release(fidSpectra);
                     Release(analysis);
                 }
                 return;
@@ -689,22 +693,24 @@ internal sealed class CompassXtractData : IBrukerData
     /// and asks it for spectrum 1.
     /// </summary>
     /// <remarks>Caller must already hold a <see cref="CompassXtractActivationContext.Activate"/>
-    /// scope, and must <see cref="Release"/> the returned spectrum and then the analysis.</remarks>
-    private static EDAL.IMSAnalysis OpenFid(string fidDirectory, out EDAL.IMSSpectrum spectrum)
+    /// scope, and must <see cref="Release"/> the returned spectrum, then the spectrum collection,
+    /// then the analysis.</remarks>
+    private static EDAL.IMSAnalysis OpenFid(string fidDirectory, out EDAL.IMSSpectrumCollection spectra,
+        out EDAL.IMSSpectrum spectrum)
     {
         EDAL.IMSAnalysis analysis = new EDAL.MSAnalysis();
-        EDAL.IMSSpectrumCollection? spectra = null;
+        EDAL.IMSSpectrumCollection? collection = null;
         try
         {
             analysis.Open(Filesystem.GetNonUnicodePath(fidDirectory));
-            spectra = analysis.MSSpectrumCollection;
-            spectrum = spectra[1];
-            Release(spectra);
+            collection = analysis.MSSpectrumCollection;
+            spectrum = collection[1];
+            spectra = collection;
             return analysis;
         }
         catch
         {
-            Release(spectra);
+            Release(collection);
             Release(analysis);
             throw;
         }
@@ -885,9 +891,13 @@ internal sealed class CompassXtractData : IBrukerData
     /// </remarks>
     public void Dispose()
     {
-        if (_disposed) return;
-        _disposed = true;
-        ReleaseComObjects();
+        // Under the read lock, so the analysis is never released while a read holds its children.
+        lock (_readLock)
+        {
+            if (_disposed) return;
+            _disposed = true;
+            ReleaseComObjects();
+        }
     }
 
     private void ReleaseComObjects()
