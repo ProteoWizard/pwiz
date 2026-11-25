@@ -54,10 +54,10 @@ The mode is not a user setting. A user chooses how detections are boosted by the
 other detections, `--protein-boost best|compact|off`, and the mode follows from it
 (`OspreyConfig.Pass2QValue`): `best` trains the first pass with the protein-best column and
 carries its q-values through with `transfer`; `compact` is the `protein-compact` mode; `off`
-is `transfer` with no column. `best` is the HRAM default and `compact` the unit-resolution one,
-until Stellar is measured on a larger cohort against DIA-NN: on the 3 Stellar regression files
-`best` reported 4.7% fewer precursors at q 1%, and `off` 11% fewer at 1.18% true FDP. `compact`
-is to go after that. `OSPREY_PASS2_QVALUE` remains a developer override; with `best` it
+is `transfer` with no column. `best` is the default at both resolutions. Unit resolution
+defaulted to `compact` (with the linear SVM and the `core` feature set) until, on the Stellar
+regression entrapment data, gbdt with `best` and the `default` set reported 40,340 second-pass
+precursors with library decoys against 27,171. `compact` is to go. `OSPREY_PASS2_QVALUE` remains a developer override; with `best` it
 refuses `protein-compact`, which would credit the protein evidence twice
 (`ValidatePass2WithProteinBest`).
 
@@ -272,7 +272,7 @@ There is no longer anything to degrade TO - the retrain that used to be the fall
 gone - so the abort is the only outcome, not the stricter of two.
 
 Because `protein-compact` was the default until 2026-11, this fail-fast reached ordinary
-runs, not just explicitly flagged ones; it now reaches the runs with `--protein-boost compact`, unit-resolution searches by default. A distributed `--task SecondPassFDR` node
+runs, not just explicitly flagged ones; it now reaches only the runs with `--protein-boost compact`. A distributed `--task SecondPassFDR` node
 never trained pass 1 and cannot rebuild the stratum (that needs the full library
 plus the first-pass detected peptides), so both the model and the stratum are
 reloaded from disk.

@@ -136,7 +136,10 @@ namespace pwiz.Osprey.Tasks
         private readonly Action<string, IReadOnlyList<FdrScoreRecord>,
             IReadOnlyDictionary<uint, (double score, uint entryId)>> _writeAnswer;
 
-        /// <param name="scorer">The frozen 1st-pass model.</param>
+        /// <param name="scorer">The frozen 1st-pass model, or null when each run trained its own
+        /// (per-run first-pass models): each run's reconciled parquet then carries every
+        /// survivor's second-pass score, a moved row's from the run's own frozen model, and the
+        /// transfer reads them from there.</param>
         /// <param name="features">The search's features, as the reconciled parquet holds them.</param>
         /// <param name="transfer">True for <c>OSPREY_PASS2_QVALUE=transfer</c>, false for the
         /// protein-compact competition.</param>
@@ -157,8 +160,12 @@ namespace pwiz.Osprey.Tasks
         {
             _firstPassStamp = firstPassStamp;
             _writeAnswer = writeAnswer ?? throw new ArgumentNullException(nameof(writeAnswer));
-            _scorer = scorer ?? throw new ArgumentNullException(nameof(scorer));
-            _nFeatures = scorer.InputFeatures;
+            // Only the transfer reads its scores from the reconciled parquet; the competition
+            // scores every survivor with the analysis-wide model.
+            if (scorer == null && !transfer)
+                throw new ArgumentNullException(nameof(scorer));
+            _scorer = scorer;
+            _nFeatures = scorer?.InputFeatures ?? 0;
             _features = features ?? throw new ArgumentNullException(nameof(features));
             _transfer = transfer;
             _stratumBaseIds = stratumBaseIds;
@@ -308,6 +315,43 @@ namespace pwiz.Osprey.Tasks
                 for (int i = 0; i < survivors.Count; i++)
                     survivors[i].Features = ownFeatures[i];
             }
+            return FinishTransfer(fileName, pass1SidecarPath, effectiveParquetPath, survivors, tally);
+        }
+
+        /// <summary>
+        /// The transfer under per-run first-pass models, BEFORE
+        /// the run's reconciled stub is written, which then carries its answer: each survivor's
+        /// second-pass score is the one it holds in memory - its first-pass score from the stub
+        /// for a row whose peak did not move, and the run's own frozen model's calibrated score
+        /// for a moved, gap-filled or CWT row - and the transfer stamps its run q-values from the
+        /// run's own first-pass table. No feature is read and no per-run sidecar is written.
+        /// </summary>
+        public void TransferInMemory(string fileName, string pass1SidecarPath, List<FdrEntry> survivors)
+        {
+            if (_scorer != null)
+            {
+                // Exception text for internal diagnostics, not displayed to user
+                throw new InvalidOperationException(@"The in-memory transfer serves per-run first-pass models only.");
+            }
+            var tally = new Pass2FdrSidecar.TransferTally();
+            Pass2FdrSidecar.TransferOneFileByScore(fileName, pass1SidecarPath, survivors,
+                e => e.Score, _pass1Experiment, _logWarning, ref tally);
+            AddTally(fileName, pass1SidecarPath, tally);
+        }
+
+        /// <summary>
+        /// The end of the transfer: a run whose first-pass records could not be read stops, the
+        /// run's counts join the run-wide tally, and the survivors become the run's records.
+        /// </summary>
+        private Pass2FileResult FinishTransfer(string fileName, string pass1SidecarPath, string effectiveParquetPath,
+            List<FdrEntry> survivors, Pass2FdrSidecar.TransferTally tally)
+        {
+            AddTally(fileName, pass1SidecarPath, tally);
+            return new Pass2FileResult(null, BuildRecords(survivors, fileName, effectiveParquetPath));
+        }
+
+        private void AddTally(string fileName, string pass1SidecarPath, Pass2FdrSidecar.TransferTally tally)
+        {
             // TransferOneFile declines a file whose 1st-pass sidecar it cannot read, leaving its
             // survivors unadjusted. In Stage 7 that was a warning; here it is a file that would
             // be written with run q-values nobody computed.
@@ -324,7 +368,6 @@ namespace pwiz.Osprey.Tasks
                 _transferTally.Moved += tally.Moved;
                 _transferTally.GapFill += tally.GapFill;
             }
-            return new Pass2FileResult(null, BuildRecords(survivors, fileName, effectiveParquetPath));
         }
 
         /// <summary>
@@ -335,6 +378,8 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private ProteinBestRunValues ProteinBestFor(string fileName, string pass1SidecarPath, List<FdrEntry> survivors)
         {
+            if (_scorer == null)
+                return null;
             var proteinBest = Pass2FdrSidecar.LoadProteinBestForRun(_scorer, pass1SidecarPath, fileName, _firstPassStamp);
             if (proteinBest != null)
                 CountNoRowFloor(proteinBest, survivors);
@@ -528,7 +573,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public void LogSummary(PipelineContext ctx)
         {
-            if (_scorer.ScoresProteinBest)
+            if (_scorer != null && _scorer.ScoresProteinBest)
             {
                 ctx.LogInfo(LogTag.COUNT,
                     @"Second-pass protein-best: {0} of {1} survivors have no first-pass row and read the run's floor ({2} of them decoys); {3} of those have a recorded sibling value, {4} of which differ from the floor",

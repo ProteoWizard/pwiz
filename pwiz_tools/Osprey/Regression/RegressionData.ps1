@@ -233,12 +233,14 @@ function Get-RegressionData {
     Shared by regression.ps1 (mode 2) and the ai-side cumulative-coverage
     harness so there is ONE definition of what "resume" invalidates. Every
     artifact carries its validity stamp inside itself, so invalidating a task
-    means removing its products: FirstPassFDR's are every '*.1st-pass.*' file
-    (per-run score sidecars, and the analysis-wide model, stratum, consensus,
-    experiment sidecar and retained base ids); SecondPassFDR's is output.blib.
-    PerFileScoring's and PerFileRescoring's products stay - the latter including
-    each run's '*.reconciliation.json', which it writes - so those tasks must
-    report cache hits while the two joins re-run.
+    means removing its products: FirstPassFDR's are every 'output.1st-pass.*' file
+    (the analysis-wide consensus, experiment sidecar and retained base ids; the
+    join writes no per-run file); SecondPassFDR's is output.blib. PerFileScoring's
+    and PerFileRescoring's products stay - including each run's own
+    '<stem>.1st-pass.model.json', which PerFileScoring writes, and each run's
+    '*.reconciliation.json', which PerFileRescoring writes - so those tasks must
+    report cache hits while the two joins re-run. ('*.1st-pass.*' matched the
+    per-run models too, which re-trained every run on the "resume".)
 
     Deleting nothing of EITHER kind is treated as a hard failure: if the
     artifact names ever drift, this throws instead of yielding a "resume" leg
@@ -254,7 +256,7 @@ function Invoke-ResumeInvalidation {
 
     $files = @(Get-ChildItem -Path $WorkDir -File)
     $kinds = [ordered]@{
-        "FirstPassFDR's '*.1st-pass.*' products" = @($files | Where-Object { $_.Name -like '*.1st-pass.*' })
+        "FirstPassFDR's 'output.1st-pass.*' products" = @($files | Where-Object { $_.Name -like 'output.1st-pass.*' })
         "SecondPassFDR's 'output.blib'"          = @($files | Where-Object { $_.Name -eq 'output.blib' })
     }
     foreach ($kind in $kinds.Keys) {

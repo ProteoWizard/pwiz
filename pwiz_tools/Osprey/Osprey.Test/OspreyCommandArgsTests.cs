@@ -210,31 +210,35 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(SharedPeptideMode.Razor, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES + @"razor").SharedPeptides);
             Assert.AreEqual(SharedPeptideMode.All, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES, @"bogus").SharedPeptides); // warn -> default
             // --protein-boost: best, compact and off are its values. Absent, the resolution chooses (best
-            // for HRAM, compact at unit resolution), so it declares no single default and is compact until
+            // at both resolutions), so it declares no single default and is the legacy off until
             // a resolution is applied; given, it stands whatever the resolution. The classifier
             // follows the resolution the same way when OSPREY_FDR_MODEL is unset.
-            Assert.AreEqual(ProteinBoost.compact, io.ProteinBoost, @"the boost is compact until a resolution is applied");
+            Assert.AreEqual(ProteinBoost.off, io.ProteinBoost, @"the boost is off until a resolution is applied");
+            Assert.AreEqual(ResolutionDefaults.LEGACY.ProteinBoost, io.ProteinBoost);
             Assert.IsNull(OspreyCommandArgs.ARG_PROTEIN_BOOST.DefaultValue);
             string hramArg = OspreyCommandArgs.ARG_RESOLUTION + OspreyCommandArgs.RESOLUTION_HRAM;
             string unitArg = OspreyCommandArgs.ARG_RESOLUTION + OspreyCommandArgs.RESOLUTION_UNIT;
             Assert.AreEqual(ProteinBoost.best, Parse(hramArg).ProteinBoost);
-            Assert.AreEqual(ProteinBoost.compact, Parse(unitArg).ProteinBoost);
+            Assert.AreEqual(ProteinBoost.best, Parse(unitArg).ProteinBoost);
             Assert.AreEqual(ProteinBoost.off, Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"off", hramArg).ProteinBoost);
             Assert.AreEqual(ProteinBoost.compact, Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"compact", hramArg).ProteinBoost);
-            Assert.AreEqual(ProteinBoost.best, Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"best", unitArg).ProteinBoost);
+            Assert.AreEqual(ProteinBoost.off, Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"off", unitArg).ProteinBoost);
             Assert.AreEqual(FdrClassifier.Gbdt, OspreyCommandArgs.ParseArgs(ArgTokens.Split(hramArg), null).FdrClassifier);
-            Assert.AreEqual(FdrClassifier.LinearSvm, OspreyCommandArgs.ParseArgs(ArgTokens.Split(unitArg), null).FdrClassifier);
+            Assert.AreEqual(FdrClassifier.Gbdt, OspreyCommandArgs.ParseArgs(ArgTokens.Split(unitArg), null).FdrClassifier);
             Assert.AreEqual(FdrClassifier.LinearSvm,
                 OspreyCommandArgs.ParseArgs(ArgTokens.Split(hramArg), FdrClassifier.LinearSvm).FdrClassifier,
                 @"OSPREY_FDR_MODEL=svm stands at HRAM");
+            Assert.AreEqual(FdrClassifier.LinearSvm,
+                OspreyCommandArgs.ParseArgs(ArgTokens.Split(unitArg), FdrClassifier.LinearSvm).FdrClassifier,
+                @"OSPREY_FDR_MODEL=svm stands at unit resolution");
             Assert.AreEqual(ProteinBoost.off, Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"OFF").ProteinBoost);
             // Off must not end the parse: the arguments after it still apply.
             var offThenThreads = Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"off", OspreyCommandArgs.ARG_THREADS + 8);
             Assert.IsFalse(offThenThreads.ProteinBest);
             Assert.AreEqual(8, offThenThreads.NThreads);
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"best").ProteinBest);
-            // The second pass follows the boost: protein-compact under compact, the transfer otherwise.
-            Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT, Parse(unitArg).Pass2QValue);
+            // The second pass is the transfer whatever the boost.
+            Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, Parse(unitArg).Pass2QValue);
             Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, Parse(hramArg).Pass2QValue);
             Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, offThenThreads.Pass2QValue);
             Assert.ThrowsException<ValueInvalidException>(() => OspreyCommandArgs.ARG_PROTEIN_BOOST + @"max");
@@ -680,7 +684,7 @@ namespace pwiz.Osprey.Test
                 OspreyArgNames.TASK_FILES, @"timestamp", @"memstamp", @"diskstamp", @"log-file", @"help", @"help-env", @"version", @"culture",
                 // Developer options and outputs a user of a host's settings page has no use for
                 OspreyArgNames.DECOY_PAIRING_MANIFEST, OspreyArgNames.TRAINING_EXPORT, @"training-export-claimant-q",
-                @"training-export-xics", @"perf-stats",
+                @"training-export-xics", @"perf-stats", OspreyArgNames.KEEP_SCORES_PARQUET,
                 // CarafeSharp's, hosted: the training seed
                 CarafeCommandLine.ARG_SEED.Name,
             };
