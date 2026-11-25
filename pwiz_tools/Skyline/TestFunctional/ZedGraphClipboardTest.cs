@@ -219,7 +219,7 @@ namespace pwiz.SkylineTestFunctional
                 }
                 catch (Exception e)
                 {
-                    Program.ReportException(e);
+                    ProgramContext.ReportException(e);
                 }
             })
             {

@@ -99,6 +99,7 @@ namespace pwiz.Skyline
             IProgressMonitor,
             IToolMacroProvider,
             IModifyDocumentContainer,
+            ISkylineDocumentWindow,
             IRetentionScoreSource,
             IRemoteAccountUserInteraction,
             IRemoteAccountStorage
@@ -784,7 +785,7 @@ namespace pwiz.Skyline
 
         public void ModifyDocument(string description, [InstantHandle] Func<SrmDocument, SrmDocument> act)
         {
-            if (!Program.FunctionalTest)
+            if (!ProgramContext.FunctionalTest)
                 throw new Exception(@"Function only to be used in testing, use overload with log function");
 
             // Create an empty entry so that tests that rely on there being an undo-redo record don't break
@@ -915,7 +916,7 @@ namespace pwiz.Skyline
             while (!SetDocument(docNew, docOriginal));
 
             if (lastException != null)
-                Program.ReportException(lastException);
+                ProgramContext.ReportException(lastException);
 
             return true;
         }
@@ -1101,11 +1102,11 @@ namespace pwiz.Skyline
         {
             string filePath = DocumentFilePath;
             if (string.IsNullOrEmpty(filePath))
-                Text = Program.Name;
+                Text = ProgramContext.Name;
             else
             {
                 string dirtyMark = (Dirty ? @" *" : string.Empty);
-                Text = string.Format(@"{0} - {1}{2}", Program.Name, Path.GetFileName(filePath), dirtyMark);
+                Text = string.Format(@"{0} - {1}{2}", ProgramContext.Name, Path.GetFileName(filePath), dirtyMark);
             }
         }
 
@@ -1113,7 +1114,7 @@ namespace pwiz.Skyline
         {
             if (_sequenceTreeForm != null && !_sequenceTreeForm.IsFloating)
             {
-                if (!Program.FunctionalTest || Program.PauseSeconds == 0)  // Avoid doing this during screenshots
+                if (!ProgramContext.FunctionalTest || Program.PauseSeconds == 0)  // Avoid doing this during screenshots
                     FocusDocument();
             }
         }
@@ -1235,7 +1236,7 @@ namespace pwiz.Skyline
                 RemoteSession.RemoteAccountUserInteraction = null;
             }
 
-            if (!Program.FunctionalTest)
+            if (!ProgramContext.FunctionalTest)
                 // ReSharper disable LocalizableElement
                 LogManager.GetLogger(typeof(SkylineWindow)).Info("Skyline closed.\r\n-----------------------");
             // ReSharper restore LocalizableElement
@@ -1249,7 +1250,7 @@ namespace pwiz.Skyline
 
             base.OnHandleDestroyed(e);
 
-            if (!Program.FunctionalTest)
+            if (!ProgramContext.FunctionalTest)
             {
                 // HACK: Kill the process to avoid "invalid string binding" errors from
                 // native instrument vendor DLLs during shutdown. This means nothing after
@@ -1418,17 +1419,6 @@ namespace pwiz.Skyline
         public void EditDelete()
         {
             EditMenu.EditDelete();
-        }
-
-        public static AuditLogEntry CreateDeleteNodesEntry(SrmDocumentPair docPair, IEnumerable<string> items, int? count)
-        {
-            var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.deleted_target,
-                MessageType.deleted_targets, docPair.OldDocumentType, items, count);
-
-            if (count > 1)
-                entry = entry.Merge(AuditLogEntry.DiffDocNodes(MessageType.none, docPair), false);
-
-            return entry;
         }
 
         public void SelectAll()
@@ -2725,7 +2715,7 @@ namespace pwiz.Skyline
                         {
                             item = new ToolStripMenuItem(spliced[i])
                                 {
-                                    Image = tool.UpdateAvailable ? Resources.ToolUpdateAvailable : null,
+                                    Image = tool.UpdateAvailable ? ImageResources.ToolUpdateAvailable : null,
                                     ImageTransparentColor = Color.Fuchsia
                                 };
                             if (current == toolsMenu)
@@ -2748,7 +2738,7 @@ namespace pwiz.Skyline
                     ToolMenuItem menuItem = new ToolMenuItem(tool, this)
                         {
                             Text = tool.Title, 
-                            Image = tool.UpdateAvailable ? Resources.ToolUpdateAvailable : null,
+                            Image = tool.UpdateAvailable ? ImageResources.ToolUpdateAvailable : null,
                             ImageTransparentColor = Color.Fuchsia
                         };
                     toolsMenu.DropDownItems.Insert(lastInsertIndex++ , menuItem);
@@ -4026,10 +4016,10 @@ namespace pwiz.Skyline
                 innerException = innerException.InnerException;
             if (innerException is OutOfMemoryException)
             {
-                message = string.Format(Resources.SkylineWindow_CompleteProgressUI_Ran_Out_Of_Memory, Program.Name);
+                message = string.Format(Resources.SkylineWindow_CompleteProgressUI_Ran_Out_Of_Memory, ProgramContext.Name);
                 if (!Install.Is64Bit && Environment.Is64BitOperatingSystem)
                 {
-                    message += string.Format(Resources.SkylineWindow_CompleteProgressUI_version_issue, Program.Name);
+                    message += string.Format(Resources.SkylineWindow_CompleteProgressUI_version_issue, ProgramContext.Name);
                 }
             }
 
@@ -4748,7 +4738,7 @@ namespace pwiz.Skyline
 
         private void submitErrorReportMenuItem_Click(object sender, EventArgs e)
         {
-            Program.ReportException(new ApplicationException(SkylineResources.SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report));
+            ProgramContext.ReportException(new ApplicationException(SkylineResources.SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report));
         }
 
         private void crashSkylineMenuItem_Click(object sender, EventArgs e)

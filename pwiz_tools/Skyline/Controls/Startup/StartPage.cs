@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Controls.Startup
             // around it, so show the vector Folder at the box's scale instead
             if (DpiUtil.IsScaled(this))
             {
-                openFileIcon.Image = DpiUtil.GetIcon(this, nameof(Resources.Folder), Resources.Folder);
+                openFileIcon.Image = DpiUtil.GetIcon(this, nameof(ImageResources.Folder), ImageResources.Folder);
                 openFileIcon.SizeMode = PictureBoxSizeMode.CenterImage;
             }
             // Get placement values before changing anything.
@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Controls.Startup
                     Top = distanceFromTop,
                     EventAction = () => DoAction(skylineWindow=>skylineWindow.LoadFile(filePath, this))
                 };
-                modeUIHandler.SetUIMode(recentFileControl, Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
+                modeUIHandler.SetUIMode(recentFileControl, ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
                 toolTip.SetToolTip(recentFileControl, filePath);
                 foreach (Control control in recentFileControl.Controls)
                 {
@@ -185,7 +185,7 @@ namespace pwiz.Skyline.Controls.Startup
                 new ActionBoxControl
                 {
                     Caption = Resources.SkylineStartup_SkylineStartup_Blank_Document,
-                    Icon = Resources.WizardBlankDocument,
+                    Icon = ImageResources.WizardBlankDocument,
                     EventAction = () => DoAction(skylineWindow =>
                     {
                         skylineWindow.NewDocument(true);
@@ -197,7 +197,7 @@ namespace pwiz.Skyline.Controls.Startup
                 {
                     Caption = StartupResources.SkylineStartup_SkylineStartup_Import_DDA_Peptide_Search,
                     IsProteomicOnly = true, // Don't show in small molecule mode
-                    Icon = Resources.WizardPeptideSearchDDA,
+                    Icon = ImageResources.WizardPeptideSearchDDA,
                     EventAction = () => Import(ActionImport.DataType.peptide_search_dda),
                     Description =
                         StartupResources.SkylineStartup_SkylineStartup_Use_the_Skyline_Import_Peptide_Search_wizard_to_build_a_spectral_library_from_peptide_search_results_on_DDA_data__and_then_import_the_raw_data_to_quantify_peptides_using_Skyline_MS1_Filtering_
@@ -206,7 +206,7 @@ namespace pwiz.Skyline.Controls.Startup
                 {
                     Caption = StartupResources.StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search,
                     IsProteomicOnly = true, // Don't show in small molecule mode
-                    Icon = Resources.WizardPeptideSearchDIA,
+                    Icon = ImageResources.WizardPeptideSearchDIA,
                     EventAction = () => Import(ActionImport.DataType.peptide_search_dia),
                     Description =
                         StartupResources.StartPage_PopulateWizardPanel_Use_the_Skyline_Import_Peptide_Search_wizard_to_build_a_spectral_library_from_peptide_search_results_on_DIA_data__and_then_import_the_raw_data_to_quantify_peptides_using_Skyline_MS1_Filtering_
@@ -215,7 +215,7 @@ namespace pwiz.Skyline.Controls.Startup
                 {
                     Caption = StartupResources.StartPage_PopulateWizardPanel_Import_PRM_Peptide_Search,
                     IsProteomicOnly = true, // Don't show in small molecule mode
-                    Icon = Resources.WizardPeptideSearchPRM,
+                    Icon = ImageResources.WizardPeptideSearchPRM,
                     EventAction = () => Import(ActionImport.DataType.peptide_search_prm),
                     Description =
                         StartupResources.StartPage_PopulateWizardPanel_Use_the_Skyline_Import_Peptide_Search_wizard_to_build_a_spectral_library_from_peptide_search_results_on_PRM_data__and_then_import_the_raw_data_to_quantify_peptides_using_Skyline_MS1_Filtering_
@@ -224,7 +224,7 @@ namespace pwiz.Skyline.Controls.Startup
                 {
                     Caption = StartupResources.SkylineStartup_SkylineStartup_Import_FASTA,
                     IsProteomicOnly = true, // Don't show in small molecule mode
-                    Icon = Resources.WizardFasta,
+                    Icon = ImageResources.WizardFasta,
                     EventAction = () => Import(ActionImport.DataType.fasta),
                     Description =
                         StartupResources.SkylineStartup_SkylineStartup_Start_a_new_Skyline_document_with_target_proteins_specified_in_FASTA_format_
@@ -233,7 +233,7 @@ namespace pwiz.Skyline.Controls.Startup
                 {
                     Caption = StartupResources.SkylineStartup_SkylineStartup_Import_Protein_List,
                     IsProteomicOnly = true, // Don't show in small molecule mode
-                    Icon = Resources.WizardImportProteins,
+                    Icon = ImageResources.WizardImportProteins,
                     EventAction = () => Import(ActionImport.DataType.proteins),
                     Description =
                         StartupResources.SkylineStartup_SkylineStartup_Start_a_new_Skyline_document_with_target_proteins_specified_in_a_tabular_list_you_can_paste_into_a_grid_
@@ -242,7 +242,7 @@ namespace pwiz.Skyline.Controls.Startup
                 {
                     Caption = Resources.SkylineStartup_SkylineStartup_Import_Peptide_List,
                     IsProteomicOnly = true, // Don't show in small molecule mode
-                    Icon = Resources.WizardImportPeptide,
+                    Icon = ImageResources.WizardImportPeptide,
                     EventAction = () => Import(ActionImport.DataType.peptides),
                     Description =
                         StartupResources.SkylineStartup_SkylineStartup_Start_a_new_Skyline_document_with_targets_specified_as_a_list_of_peptide_sequences_in_a_tabular_list_you_can_paste_into_a_grid_
@@ -250,7 +250,7 @@ namespace pwiz.Skyline.Controls.Startup
                 new ActionBoxControl
                 {
                     Caption = Resources.SkylineStartup_SkylineStartup_Import_Transition_List,
-                    Icon = Resources.WizardImportTransition,
+                    Icon = ImageResources.WizardImportTransition,
                     EventAction = () => Import(ActionImport.DataType.transition_list),
                     Description =
                         StartupResources.SkylineStartup_SkylineStartup_Start_a_new_Skyline_document_from_a_complete_transition_list_with_peptide_sequences__precursor_m_z_values__and_product_m_z_values__which_you_can_paste_into_a_grid_

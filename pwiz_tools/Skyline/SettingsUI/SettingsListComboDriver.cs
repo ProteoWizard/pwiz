@@ -74,7 +74,7 @@ namespace pwiz.Skyline.SettingsUI
                     Combo.Items.Add(string.Empty);
                 if (IsVisibleEditting)
                 {
-                    if (List is IItemEditor<TItem>)
+                    if (SettingsListEditors.GetItemEditor<TItem>(List) != null)
                     {
                         Combo.Items.Add(Resources.SettingsListComboDriver_Add);
                         Combo.Items.Add(Resources.SettingsListComboDriver_Edit_current);
@@ -155,7 +155,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddItem()
         {
-            var itemEditor = List as IItemEditor<TItem>;
+            var itemEditor = SettingsListEditors.GetItemEditor<TItem>(List);
             if (itemEditor == null)
                 return;
 
@@ -187,7 +187,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditCurrent()
         {
-            var itemEditor = List as IItemEditor<TItem>;
+            var itemEditor = SettingsListEditors.GetItemEditor<TItem>(List);
             if (itemEditor == null)
                 return;
 

@@ -83,7 +83,7 @@ namespace pwiz.Skyline.EditUI
         public EditPepModsDlg(SrmSettings settings, PeptideDocNode nodePeptide, bool allowCopy)
         {
             InitializeComponent();
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             DocSettings = settings;
             NodePeptide = nodePeptide;

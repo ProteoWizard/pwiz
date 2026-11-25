@@ -54,7 +54,7 @@ namespace pwiz.Skyline.EditUI
         public ReintegrateDlg(SrmDocument document)
         {
             InitializeComponent();
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
             Document = document;
             _scoreAnnotation = false;
             _driverPeakScoringModel = new SettingsListComboDriver<PeakScoringModelSpec>(comboBoxScoringModel, Settings.Default.PeakScoringModelList);

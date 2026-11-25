@@ -23,6 +23,16 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
 {
     public partial class CalibrationGraphControl : UserControl
     {
+        private static readonly Dictionary<SampleType, SymbolType> SYMBOL_TYPES = new Dictionary<SampleType, SymbolType>
+        {
+            { SampleType.UNKNOWN, SymbolType.XCross },
+            { SampleType.STANDARD, SymbolType.Square },
+            { SampleType.QC, SymbolType.Diamond },
+            { SampleType.SOLVENT, SymbolType.Circle },
+            { SampleType.BLANK, SymbolType.Triangle },
+            { SampleType.DOUBLE_BLANK, SymbolType.TriangleDown }
+        };
+
         private CurveList _scatterPlots;
         public CalibrationGraphControl()
         {
@@ -50,7 +60,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [Browsable(false)]
-        public Helpers.ModeUIAwareFormHelper ModeUIAwareFormHelper
+        public ModeUIHelpers.ModeUIAwareFormHelper ModeUIAwareFormHelper
         {
             get;
             set;
@@ -199,8 +209,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             CalibrationCurve = calibrationCurve;
             CalibrationCurveMetrics = calibrationCurveRow;
 
-            var bootstrapCurves = new List<ImmutableList<PointPair>>();
-            FiguresOfMerit = curveFitter.GetFiguresOfMerit(CalibrationCurve, bootstrapCurves);
+            FiguresOfMerit = curveFitter.GetFiguresOfMerit(CalibrationCurve);
             double minX = double.MaxValue, maxX = double.MinValue;
             double minY = double.MaxValue, maxY = double.MinValue;
             _scatterPlots = new CurveList();
@@ -283,7 +292,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 if (pointPairList.Any())
                 {
                     var lineItem = zedGraphControl.GraphPane.AddCurve(curveLabel, pointPairList,
-                        sampleType.Color, sampleType.SymbolType);
+                        sampleType.Color, SYMBOL_TYPES[sampleType]);
                     lineItem.Line.IsVisible = false;
                     lineItem.Symbol.Fill = new Fill(sampleType.Color);
                     _scatterPlots.Add(lineItem);
@@ -291,7 +300,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
 
                 if (pointPairListExcluded.Any())
                 {
-                    var symbolType = sampleType.SymbolType;
+                    var symbolType = SYMBOL_TYPES[sampleType];
                     if (symbolType == SymbolType.XCross)
                     {
                         // Excluded or invalid points get drawn without being filled.

@@ -153,7 +153,7 @@ namespace pwiz.Skyline.Controls.Startup
             // 
             // openFileIcon
             // 
-            this.openFileIcon.Image = global::pwiz.Skyline.Properties.Resources.directoryicon;
+            this.openFileIcon.Image = global::pwiz.Skyline.Properties.ImageResources.directoryicon;
             resources.ApplyResources(this.openFileIcon, "openFileIcon");
             this.openFileIcon.Name = "openFileIcon";
             this.openFileIcon.TabStop = false;
@@ -180,7 +180,7 @@ namespace pwiz.Skyline.Controls.Startup
             // toolStripButtonModeUI
             // 
             this.toolStripButtonModeUI.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButtonModeUI.Image = global::pwiz.Skyline.Properties.Resources.UIModeProteomic;
+            this.toolStripButtonModeUI.Image = global::pwiz.Skyline.Properties.ImageResources.UIModeProteomic;
             resources.ApplyResources(this.toolStripButtonModeUI, "toolStripButtonModeUI");
             this.toolStripButtonModeUI.Name = "toolStripButtonModeUI";
             // 
@@ -192,7 +192,7 @@ namespace pwiz.Skyline.Controls.Startup
             this.Controls.Add(this.tabControlMain);
             this.Controls.Add(this.leftPanel);
             this.Controls.Add(this.tooStripModeUI);
-            this.Icon = global::pwiz.Skyline.Properties.Resources.Skyline;
+            this.Icon = global::pwiz.Skyline.Properties.ImageResources.Skyline;
             this.Name = "StartPage";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.StartPage_FormClosing);
             this.Move += new System.EventHandler(this.StartPage_Move);

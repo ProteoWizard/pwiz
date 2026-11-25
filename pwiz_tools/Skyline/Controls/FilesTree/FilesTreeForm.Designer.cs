@@ -118,7 +118,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             // 
             // openContainingFolderMenuItem
             // 
-            this.openContainingFolderMenuItem.Image = global::pwiz.Skyline.Properties.Resources.Folder;
+            this.openContainingFolderMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.Folder;
             resources.ApplyResources(this.openContainingFolderMenuItem, "openContainingFolderMenuItem");
             this.openContainingFolderMenuItem.Name = "openContainingFolderMenuItem";
             this.openContainingFolderMenuItem.Click += new System.EventHandler(this.FilesTree_OpenContainingFolderMenuItem);

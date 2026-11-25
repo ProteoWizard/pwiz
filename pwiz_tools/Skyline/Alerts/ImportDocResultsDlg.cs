@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Alerts
         {
             InitializeComponent();
 
-            Text = Program.Name;
+            Text = ProgramContext.Name;
 
             CanImportResults = canImportResults;
         }

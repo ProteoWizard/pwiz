@@ -38,7 +38,7 @@ namespace pwiz.Skyline.ToolsUI
         public EditSearchToolDlg(IEnumerable<SearchTool> existing)
         {
             _existing = existing;
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
             InitializeComponent();
 
             comboToolName.Items.AddRange(Enum.GetNames(typeof(SearchToolType)));

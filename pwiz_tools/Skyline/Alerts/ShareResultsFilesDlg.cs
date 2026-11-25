@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Alerts
 
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             PopulateListViews(auxiliaryFiles ?? new AuxiliaryFiles(document, documentPath)); // Populate the selection and missing files list boxes
             UpdateStatusLabel();

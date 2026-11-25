@@ -66,7 +66,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             _gridViewStandardDriver = new StandardGridViewDriver(this, gridViewStandard, bindingSourceStandard, new SortableBindingList<DbIrtPeptide>());
             _gridViewLibraryDriver = new LibraryGridViewDriver(gridViewLibrary, bindingSourceLibrary, new SortableBindingList<DbIrtPeptide>());

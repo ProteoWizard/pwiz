@@ -70,7 +70,7 @@ namespace pwiz.Skyline.EditUI
 
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             // Save text for later use
             _removeLabelText = labelLabelType.Text;

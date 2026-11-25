@@ -62,18 +62,18 @@ namespace pwiz.Skyline.FileUI
             tbFilePath.Text = FileTimeEx.GetTimeStampedFileName(fileName);
             _anonymousServers = new List<Server>(servers.Where(server => !server.HasUserAccount()));
 
-            treeViewFolders.ImageList.Images.Add(nameof(Resources.Panorama), Resources.Panorama);   // 24bpp
-            treeViewFolders.ImageList.Images.Add(nameof(Resources.LabKey), Resources.LabKey);     // 8bpp
-            treeViewFolders.ImageList.Images.Add(nameof(Resources.ChromLib), Resources.ChromLib);   // 8bpp
-            treeViewFolders.ImageList.Images.Add(nameof(Resources.Folder), Resources.Folder);     // 32bpp
+            treeViewFolders.ImageList.Images.Add(nameof(ImageResources.Panorama), ImageResources.Panorama);   // 24bpp
+            treeViewFolders.ImageList.Images.Add(nameof(ImageResources.LabKey), ImageResources.LabKey);     // 8bpp
+            treeViewFolders.ImageList.Images.Add(nameof(ImageResources.ChromLib), ImageResources.ChromLib);   // 8bpp
+            treeViewFolders.ImageList.Images.Add(nameof(ImageResources.Folder), ImageResources.Folder);     // 32bpp
             // Keyed by resource name so ScaleToDpi finds the IconBuilder files (DpiIcons.LoadKeyedIcon)
             ImageListScaler.ScaleToDpi(this, treeViewFolders.ImageList);   // 16x16 icons are a 96-DPI design (issue #4599)
 
             // The icon of the Upload to Panorama menu item and toolbar button that open this
             // form, as Open From Panorama shows its menu item's icon
-            using (var publishImage = Resources.PanoramaPublish)
+            using (var publishImage = ImageResources.PanoramaPublish)
             {
-                Icon = DpiUtil.CreateFormIcon(this, nameof(Resources.PanoramaPublish), publishImage, Color.Magenta);
+                Icon = DpiUtil.CreateFormIcon(this, nameof(ImageResources.PanoramaPublish), publishImage, Color.Magenta);
             }
 
             cbAnonymousServers.Visible = _anonymousServers.Count > 0;
@@ -122,7 +122,7 @@ namespace pwiz.Skyline.FileUI
             catch (Exception x)
             {
                 // Use ExceptionUtil for proper defect vs user error handling
-                ExceptionUtil.DisplayOrReportException(parent, x);
+                ExceptionUtilUI.DisplayOrReportException(parent, x);
                 return null; // Error occurred - don't show dialog
             }
 

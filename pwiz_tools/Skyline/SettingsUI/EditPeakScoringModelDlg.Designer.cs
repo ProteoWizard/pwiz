@@ -233,7 +233,7 @@ namespace pwiz.Skyline.SettingsUI
             // findUnknownModelScoresButton
             // 
             this.findUnknownModelScoresButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.findUnknownModelScoresButton.Image = global::pwiz.Skyline.Properties.Resources.Find;
+            this.findUnknownModelScoresButton.Image = global::pwiz.Skyline.Properties.ImageResources.Find;
             resources.ApplyResources(this.findUnknownModelScoresButton, "findUnknownModelScoresButton");
             this.findUnknownModelScoresButton.Name = "findUnknownModelScoresButton";
             this.findUnknownModelScoresButton.Click += new System.EventHandler(this.findUnknownModelScoresButton_Click);
@@ -276,7 +276,7 @@ namespace pwiz.Skyline.SettingsUI
             // findPeptidesButton
             // 
             this.findPeptidesButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.findPeptidesButton.Image = global::pwiz.Skyline.Properties.Resources.Find;
+            this.findPeptidesButton.Image = global::pwiz.Skyline.Properties.ImageResources.Find;
             resources.ApplyResources(this.findPeptidesButton, "findPeptidesButton");
             this.findPeptidesButton.Name = "findPeptidesButton";
             this.findPeptidesButton.Click += new System.EventHandler(this.findPeptidesButton_Click);

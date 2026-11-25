@@ -205,7 +205,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 using (new StoreExceptions())
                 {
-                    Program.ReportException(x);
+                    ProgramContext.ReportException(x);
                 }
             });
         }
@@ -215,13 +215,13 @@ namespace pwiz.SkylineTestFunctional
             private readonly List<Exception> _programExceptions;
             public StoreExceptions()
             {
-                _programExceptions = Program.TestExceptions;
-                Program.TestExceptions = null;
+                _programExceptions = ProgramContext.TestExceptions;
+                ProgramContext.TestExceptions = null;
             }
 
             public void Dispose()
             {
-                Program.TestExceptions = _programExceptions;
+                ProgramContext.TestExceptions = _programExceptions;
             }
         }
     }

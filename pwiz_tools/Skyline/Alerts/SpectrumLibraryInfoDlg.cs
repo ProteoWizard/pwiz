@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Alerts
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             libraryGridView.AutoGenerateColumns = false;
             libraryGridView.DataSource = new SortableBindingList<Row>();

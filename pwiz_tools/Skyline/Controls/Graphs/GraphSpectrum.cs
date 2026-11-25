@@ -237,7 +237,7 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.MouseLeave += (s, e) => { if (!_contextMenuOpen) UpdateHoveredPeak(null); };
             msGraphExtension.PropertiesSheetVisibilityChanged += msGraphExtension_PropertiesSheetVisibilityChanged;
 
-            Icon = Resources.SkylineData;
+            Icon = ImageResources.SkylineData;
             _graphHelper = GraphHelper.Attach(graphControl);
             _documentContainer = documentUIContainer;
             _documentContainer.ListenUI(OnDocumentUIChanged);

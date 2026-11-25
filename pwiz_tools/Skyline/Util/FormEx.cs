@@ -32,12 +32,12 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.Skyline.Util
 {
     public class FormEx : CommonFormEx,
-                     Helpers.IModeUIAwareForm // Can translate "peptide"=>"molecule" etc if desired
+                     ModeUIHelpers.IModeUIAwareForm // Can translate "peptide"=>"molecule" etc if desired
     {
         private const int STATE_CREATINGHANDLE = 0x00040000;
 
-        private Helpers.ModeUIAwareFormHelper _modeUIHelper;
-        public Helpers.ModeUIExtender modeUIHandler; // Allows UI mode management in Designer
+        private ModeUIHelpers.ModeUIAwareFormHelper _modeUIHelper;
+        public ModeUIHelpers.ModeUIExtender modeUIHandler; // Allows UI mode management in Designer
         private Container _components; // For IExtender use
 
 
@@ -55,12 +55,12 @@ namespace pwiz.Skyline.Util
         private void InitializeComponent()
         {
             this._components = new System.ComponentModel.Container();
-            this.modeUIHandler = new Helpers.ModeUIExtender(_components);
-            this._modeUIHelper = new Helpers.ModeUIAwareFormHelper(modeUIHandler);
+            this.modeUIHandler = new ModeUIHelpers.ModeUIExtender(_components);
+            this._modeUIHelper = new ModeUIHelpers.ModeUIAwareFormHelper(modeUIHandler);
         }
         #endregion
 
-        public Helpers.ModeUIAwareFormHelper GetModeUIHelper() // Method instead of property so it doesn't show up in Designer
+        public ModeUIHelpers.ModeUIAwareFormHelper GetModeUIHelper() // Method instead of property so it doesn't show up in Designer
         {
             return _modeUIHelper; 
         }
@@ -153,7 +153,7 @@ namespace pwiz.Skyline.Util
             if (Program.SkylineOffscreen)
                 SetOffscreen(this);
 
-            if (Program.FunctionalTest)
+            if (ProgramContext.FunctionalTest)
             {
                 // Track undisposed forms.
             }
@@ -172,13 +172,13 @@ namespace pwiz.Skyline.Util
         {
             // Avoid activating forms during test mode or when off-screen, but not when
             // pausing to show Skyline as it normally functions.
-            get { return (Program.FunctionalTest || Program.SkylineOffscreen) && Program.PauseSeconds == 0; }
+            get { return (ProgramContext.FunctionalTest || Program.SkylineOffscreen) && Program.PauseSeconds == 0; }
         }
 
         [Localizable(false)]
         protected override void Dispose(bool disposing)
         {
-            if (Program.FunctionalTest && IsCreatingHandle())
+            if (ProgramContext.FunctionalTest && IsCreatingHandle())
             {
                 // We might be in a stack unwind at this point, so we print out some information
                 // and return so that we don't call base.Dispose and maybe get to find out what

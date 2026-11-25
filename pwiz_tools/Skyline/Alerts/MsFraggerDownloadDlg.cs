@@ -131,7 +131,7 @@ namespace pwiz.Skyline.Alerts
 
         private string RequestVerificationCode()
         {
-            if (Program.FunctionalTest && !Program.IsPaused)
+            if (ProgramContext.FunctionalTest && !Program.IsPaused)
                 return string.Empty;
 
             using var downloadProgressDlg = new LongWaitDlg();
@@ -161,7 +161,7 @@ namespace pwiz.Skyline.Alerts
             }
             catch (Exception ex)
             {
-                ExceptionUtil.DisplayOrReportException(this, ex);
+                ExceptionUtilUI.DisplayOrReportException(this, ex);
                 return string.Empty;
             }
             return resultString;
@@ -174,7 +174,7 @@ namespace pwiz.Skyline.Alerts
                 string message = string.Format(AlertsResources.MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_,
                     MsFraggerSearchEngine.MSFRAGGER_VERSION);
                 downloadProgressDlg.Message = message;
-                if (Program.FunctionalTest && !Program.IsPaused) // original URLs not possible with "verification code" system
+                if (ProgramContext.FunctionalTest && !Program.IsPaused) // original URLs not possible with "verification code" system
                 {
                     var msFraggerDownloadInfo = MsFraggerSearchEngine.MsFraggerDownloadInfo;
                     msFraggerDownloadInfo.DownloadUrl = DOWNLOAD_URL_FOR_FUNCTIONAL_TESTS;
@@ -184,7 +184,7 @@ namespace pwiz.Skyline.Alerts
                     }
                     catch (Exception ex)
                     {
-                        ExceptionUtil.DisplayOrReportException(this, ex);
+                        ExceptionUtilUI.DisplayOrReportException(this, ex);
                         return false;
                     }
                     // If the user canceled the dialog, treat as cancellation
@@ -231,7 +231,7 @@ namespace pwiz.Skyline.Alerts
                 }
                 catch (Exception ex)
                 {
-                    ExceptionUtil.DisplayOrReportException(this, ex);
+                    ExceptionUtilUI.DisplayOrReportException(this, ex);
                     return false;
                 }
             }

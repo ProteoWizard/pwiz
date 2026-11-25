@@ -165,7 +165,7 @@ namespace pwiz.Skyline.Util
                 try
                 {
                     using var longWaitDlg = new LongWaitDlg();
-                    longWaitDlg.Text = Program.Name;
+                    longWaitDlg.Text = ProgramContext.Name;
                     longWaitDlg.Message = ToolsUIResources.ToolOptionsUI_ImportSettings_Importing_settings;
                     longWaitDlg.PerformWork(parent, 800, broker => toolsCopied = CopyTools(broker));
                 }

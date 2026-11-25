@@ -184,7 +184,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 if (ExceptionUtil.IsProgrammingDefect(ex))
                 {
-                    Program.ReportException(ex);
+                    ProgramContext.ReportException(ex);
                 }
             }
             _bindingList.ResetBindings();

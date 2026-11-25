@@ -38,144 +38,6 @@ using TextUtil = pwiz.Skyline.Util.Extensions.TextUtil;
 
 namespace pwiz.Skyline.Util
 {
-    [XmlRoot("server")]
-    public sealed class Server : PanoramaServer, IKeyContainer<string>, IXmlSerializable
-    {
-        public Server(string uriText, string username, string password)
-            : this(new Uri(uriText), username, password)
-        {
-        }
-
-        public Server(Uri uri, string username, string password) : base(uri, username, password)
-        {
-        }
-
-        public string GetKey()
-        {
-            return AppendPath(URI.ToString(), FolderPath) + (HasUserAccount() ? string.Empty : UtilResources.Server_GetKey___anonymous_);
-        }
-
-
-        #region Implementation of IXmlSerializable
-
-        /// <summary>
-        /// For serialization
-        /// </summary>
-        private Server()
-        {
-        }
-
-        private enum ATTR
-        {
-            username,
-            password,
-            password_encrypted,
-            uri,
-            folder_path
-        }
-
-        public static Server Deserialize(XmlReader reader)
-        {
-            return reader.Deserialize(new Server());
-        }
-
-        private void Validate()
-        {
-        }
-
-        public XmlSchema GetSchema()
-        {
-            return null;
-        }
-
-        public void ReadXml(XmlReader reader)
-        {
-            // Read tag attributes
-            Username = reader.GetAttribute(ATTR.username) ?? string.Empty;
-            string encryptedPassword = reader.GetAttribute(ATTR.password_encrypted);
-            if (encryptedPassword != null)
-            {
-                try
-                {
-                    Password = TextUtil.DecryptString(encryptedPassword);
-                }
-                catch (Exception)
-                {
-                    Password = string.Empty;
-                }
-            }
-            else
-            {
-                Password = reader.GetAttribute(ATTR.password) ?? string.Empty;
-            }
-            string uriText = reader.GetAttribute(ATTR.uri);
-            if (string.IsNullOrEmpty(uriText))
-            {
-                throw new InvalidDataException(UtilResources.Server_ReadXml_A_Panorama_server_must_be_specified);
-            }
-            try
-            {
-                URI = new Uri(uriText);
-            }
-            catch (UriFormatException)
-            {
-                throw new InvalidDataException(UtilResources.Server_ReadXml_Server_URL_is_corrupt);
-            }
-
-            FolderPath = reader.GetAttribute(ATTR.folder_path); // Optional: may be null
-
-            // Consume tag
-            reader.Read();
-
-            Validate();
-        }
-
-        public void WriteXml(XmlWriter writer)
-        {
-            // Write tag attributes
-            writer.WriteAttributeString(ATTR.username, Username);
-            if (!string.IsNullOrEmpty(Password))
-            {
-                writer.WriteAttributeString(ATTR.password_encrypted, TextUtil.EncryptString(Password));
-            }
-            writer.WriteAttribute(ATTR.uri, URI);
-            if (!string.IsNullOrEmpty(FolderPath))
-                writer.WriteAttributeString(ATTR.folder_path, FolderPath);
-        }
-        #endregion
-
-        #region object overrides
-
-        private bool Equals(Server other)
-        {
-            return string.Equals(Username, other.Username) &&
-                   string.Equals(Password, other.Password) &&
-                   Equals(URI, other.URI) &&
-                   Equals(FolderPath, other.FolderPath);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return obj is Server && Equals((Server)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                int hashCode = (Username != null ? Username.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Password != null ? Password.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (URI != null ? URI.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (FolderPath != null ? FolderPath.GetHashCode() : 0);
-                return hashCode;
-            }
-        }
-
-        #endregion
-    }
-
     public interface IPanoramaPublishClient
     {
         void UploadSharedZipFile(Control parent, string zipFilePath, string folderPath);
@@ -199,90 +61,16 @@ namespace pwiz.Skyline.Util
 
         public abstract IPanoramaClient PanoramaClient { get; }
 
-        private CacheFormatVersion GetSupportedSkydVersion()
-        {
-            var serverVersionsJson = PanoramaClient.SupportedVersionsJson();
-            if (serverVersionsJson == null)
-            {
-                // There was an error getting the server-supported skyd version for some reason.
-                // Perhaps this is an older server that did not understand the request, or
-                // the returned JSON was malformed. Let the document upload continue.
-                return CacheFormatVersion.CURRENT;
-            }
-
-            JToken serverSkydVersion;
-            if (serverVersionsJson.TryGetValue(@"SKYD_version", out serverSkydVersion))
-            {
-                int version;
-                if (int.TryParse(serverSkydVersion.Value<string>(), out version))
-                {
-                    return (CacheFormatVersion) version;
-                }
-            }
-
-            return CacheFormatVersion.CURRENT;
-        }
-
         public ShareType DecideShareTypeVersion(SrmDocument document, ShareType shareType)
         {
-            var cacheVersion = GetDocumentCacheVersion(document);
-
-            if (!cacheVersion.HasValue)
-            {
-                // The document may not have any chromatogram data.
-                return shareType;
-            }
-
-            var supportedSkylineVersion = GetSupportedVersionForCacheFormat(cacheVersion);
-            CacheFormatVersion supportedVersion = supportedSkylineVersion.CacheFormatVersion;
-            if (supportedVersion >= cacheVersion.Value)
-            {
-                return shareType;
-            }
-            
-            return shareType.ChangeSkylineVersion(supportedSkylineVersion);
-        }
-
-        private SkylineVersion GetSupportedVersionForCacheFormat(CacheFormatVersion? cacheVersion)
-        {
-            var supportedSkydVersion = GetSupportedSkydVersion();
-            if (cacheVersion == null || supportedSkydVersion >= CacheFormat.GetVersionRequired(cacheVersion.Value))
-            {
-                // Either the document does not have any chromatograms or the server supports the document's cache version. 
-                // Since the cache version does not change when the document is shared, it can be shared as the latest Skyline
-                // version even if the cache version associated with that version is higher than what the server supports. 
-                // Example scenario:
-                // Document cache version is 14; max version supported by server is 14; current Skyline version is associated
-                // with cache version 15. In this case the document can be shared as the current Skyline version even though
-                // the cache version associated with the current version is higher than what the server supports. When the document
-                // is shared the cache format of the document will remain at 14. Only the document format (.sky XML) will change.
-                return SkylineVersion.SupportedForSharing().First();
-            }
-            // The server does not support the document's cache version.
-            // Find the highest Skyline version consistent with the cache version supported by the server.
-            foreach (var skylineVersion in SkylineVersion.SupportedForSharing())
-            {
-                if (supportedSkydVersion >= CacheFormat.GetVersionRequired(skylineVersion.CacheFormatVersion))
-                {
-                    return skylineVersion;
-                }
-            }
-            throw new PanoramaServerException(string.Format(
-                Resources.PublishDocumentDlg_ServerSupportsSkydVersion_, (int)cacheVersion.Value));
-        }
-
-        private static CacheFormatVersion? GetDocumentCacheVersion(SrmDocument document)
-        {
-            var settings = document.Settings;
-            Assume.IsTrue(document.IsLoaded);
-            return settings.HasResults ? settings.MeasuredResults.CacheVersion : null;
+            return new PanoramaShareVersions(PanoramaClient).DecideShareTypeVersion(document, shareType);
         }
 
         public ShareType GetShareType(SrmDocument document,
             string documentFilePath, DocumentFormat? fileFormatOnDisk, Control parent, ref bool cancelled)
         {
-            var cacheVersion = GetDocumentCacheVersion(document);
-            var supportedSkylineVersion = GetSupportedVersionForCacheFormat(cacheVersion);
+            var cacheVersion = PanoramaShareVersions.GetDocumentCacheVersion(document);
+            var supportedSkylineVersion = new PanoramaShareVersions(PanoramaClient).GetSupportedVersionForCacheFormat(cacheVersion);
             
             using (var dlgType = new ShareTypeDlg(document, documentFilePath, fileFormatOnDisk, supportedSkylineVersion, 
                        false)) // Don't offer to include mass spec data in .sky.zip - Panorama isn't expecting that

@@ -40,7 +40,7 @@ namespace pwiz.Skyline.FileUI
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             _document = document;
             _canTriggerReplicate = canTriggerReplicate;

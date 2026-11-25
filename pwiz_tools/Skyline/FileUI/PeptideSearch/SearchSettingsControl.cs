@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -390,7 +391,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 _initializingEngine = false;
             }
-            pBLogo.Image = ImportPeptideSearch.SearchEngine.SearchEngineLogo;
+            pBLogo.Image = GetSearchEngineLogo(ImportPeptideSearch.SearchEngine);
             labelCutoff.Text = ImportPeptideSearch.SearchEngine.CutoffScoreLabel + @":";
             HandleSearchEngineBlurb();
             btnAdditionalSettings.Enabled = ImportPeptideSearch.SearchEngine.AdditionalSettings != null;
@@ -409,6 +410,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         // Arrange and populate the search engine blurb, if any, below the search engine logo
+        private static Image GetSearchEngineLogo(AbstractDdaSearchEngine searchEngine)
+        {
+            switch (searchEngine)
+            {
+                case HardklorSearchEngine _:
+                    return ImageResources.HardklorLogo;
+                case MSAmandaSearchWrapper _:
+                    return ImageResources.MSAmandaLogo;
+                default:
+                    return null;
+            }
+        }
+
         private void HandleSearchEngineBlurb()
         {
             lblSearchEngineBlurb.Left = pBLogo.Left;

@@ -191,7 +191,7 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
                 List<IdentityPath> deletedNodePaths = null;
                 skylineWindow.ModifyDocument(RowActionsResources.SkylineViewContext_DeleteDocNodes_Delete_items,
                     doc => DeleteNodes(doc, identityPaths, out deletedNodePaths),
-                    docPair => SkylineWindow.CreateDeleteNodesEntry(docPair,
+                    docPair => AuditLogEntry.CreateDeleteNodesEntry(docPair,
                         deletedNodePaths.Select(i => AuditLogEntry.GetNodeName(docPair.OldDoc, docPair.OldDoc.FindNode(i)).ToString()), deletedNodePaths.Count));
             }
         }

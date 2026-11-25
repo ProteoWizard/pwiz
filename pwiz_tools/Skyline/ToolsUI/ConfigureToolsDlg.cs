@@ -901,7 +901,8 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     int spot = listTools.SelectedIndex;
                     ToolDescription td = ToolList[spot];
-                    ToolMacroInfo tmi = new ToolMacroInfo(SkylineWindowParent, td);
+                    ToolMacroInfo tmi = new ToolMacroInfo(SkylineWindowParent, td.Title, td.ReportTitle,
+                        SkylineWindowParent.Document, SkylineWindowParent, null, td.ToolDirPath);
                     string content;
                     if (menuItem.Text == Resources.ToolMacros__listArguments_Input_Report_Temp_Path)
                     {

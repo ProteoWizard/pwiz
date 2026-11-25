@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Alerts
         public MissingFileDlg()
         {
             InitializeComponent();
-            Text = Program.Name;
+            Text = ProgramContext.Name;
             TEXT = labelMessage.Text;
         }
 

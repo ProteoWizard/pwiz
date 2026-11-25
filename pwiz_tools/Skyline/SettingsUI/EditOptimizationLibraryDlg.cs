@@ -60,7 +60,7 @@ namespace pwiz.Skyline.SettingsUI
 
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             var knownLibraryTargets = _existing.Where(l => l.IsUsable).SelectMany(l => l.GetOptimizations()).Select(o => o.Target);
 

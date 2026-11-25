@@ -210,7 +210,7 @@ namespace pwiz.Skyline.Controls
         private void UpdateAutoManageUI()
         {
             tbbAutoManageChildren.Checked = _autoManageChildren;
-            tbbAutoManageChildren.Image = (_autoManageChildren ? Resources.Wand : Resources.WandProhibit);
+            tbbAutoManageChildren.Image = (_autoManageChildren ? ImageResources.Wand : ImageResources.WandProhibit);
             string[] words = cbItems.Text.Split(TextUtil.SEPARATOR_SPACE);
             tbbAutoManageChildren.ToolTipText =
                 string.Format(ControlsResources.PopupPickList_UpdateAutoManageUI_Auto_select_filtered__0_,

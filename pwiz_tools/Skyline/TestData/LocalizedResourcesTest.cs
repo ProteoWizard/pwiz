@@ -121,6 +121,7 @@ namespace pwiz.SkylineTestData
             foreach (var assembly in new[]
                      {
                          typeof(Skyline.SkylineWindow).Assembly,
+                         typeof(Skyline.Model.SrmDocument).Assembly,
                          typeof(ProteomeDatabase.API.ProteomeDb).Assembly,
                          typeof(CommonFormEx).Assembly, // CommonBaseUI
                          typeof(Assume).Assembly, // CommonUtil - CommonFormEx moved out of it
@@ -178,6 +179,8 @@ namespace pwiz.SkylineTestData
         {
             var skylineAssembly = typeof(Skyline.SkylineWindow).Assembly;
             yield return skylineAssembly;
+            // SkylineCore: the model, command line and most of Skyline's strings
+            yield return typeof(Skyline.Model.SrmDocument).Assembly;
             yield return typeof(ProteomeDatabase.API.ProteomeDb).Assembly;
             yield return typeof(CommonFormEx).Assembly; // CommonBaseUI
             // CommonUtil needs its own sentinel: CommonFormEx moved to CommonBaseUI in the

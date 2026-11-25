@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Menus
             // 
             this.generateDecoysMenuItem.Name = "generateDecoysMenuItem";
             resources.ApplyResources(this.generateDecoysMenuItem, "generateDecoysMenuItem");
-            this.modeUIHandler.SetUIMode(this.generateDecoysMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.generateDecoysMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.generateDecoysMenuItem.Click += new System.EventHandler(this.generateDecoysMenuItem_Click);
             // 
             // compareModelsToolStripMenuItem
@@ -128,7 +128,7 @@ namespace pwiz.Skyline.Menus
             // 
             this.acceptProteinsMenuItem.Name = "acceptProteinsMenuItem";
             resources.ApplyResources(this.acceptProteinsMenuItem, "acceptProteinsMenuItem");
-            this.modeUIHandler.SetUIMode(this.acceptProteinsMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.acceptProteinsMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.acceptProteinsMenuItem.Click += new System.EventHandler(this.acceptProteinsMenuItem_Click);
             // 
             // removeEmptyProteinsMenuItem
@@ -141,14 +141,14 @@ namespace pwiz.Skyline.Menus
             // 
             this.associateFASTAMenuItem.Name = "associateFASTAMenuItem";
             resources.ApplyResources(this.associateFASTAMenuItem, "associateFASTAMenuItem");
-            this.modeUIHandler.SetUIMode(this.associateFASTAMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.associateFASTAMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.associateFASTAMenuItem.Click += new System.EventHandler(this.associateFASTAMenuItem_Click);
             // 
             // renameProteinsMenuItem
             // 
             this.renameProteinsMenuItem.Name = "renameProteinsMenuItem";
             resources.ApplyResources(this.renameProteinsMenuItem, "renameProteinsMenuItem");
-            this.modeUIHandler.SetUIMode(this.renameProteinsMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.renameProteinsMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.renameProteinsMenuItem.Click += new System.EventHandler(this.renameProteinsToolStripMenuItem_Click);
             // 
             // sortProteinsMenuItem
@@ -171,21 +171,21 @@ namespace pwiz.Skyline.Menus
             // 
             this.sortProteinsByAccessionToolStripMenuItem.Name = "sortProteinsByAccessionToolStripMenuItem";
             resources.ApplyResources(this.sortProteinsByAccessionToolStripMenuItem, "sortProteinsByAccessionToolStripMenuItem");
-            this.modeUIHandler.SetUIMode(this.sortProteinsByAccessionToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.sortProteinsByAccessionToolStripMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.sortProteinsByAccessionToolStripMenuItem.Click += new System.EventHandler(this.sortProteinsByAccessionToolStripMenuItem_Click);
             // 
             // sortProteinsByPreferredNameToolStripMenuItem
             // 
             this.sortProteinsByPreferredNameToolStripMenuItem.Name = "sortProteinsByPreferredNameToolStripMenuItem";
             resources.ApplyResources(this.sortProteinsByPreferredNameToolStripMenuItem, "sortProteinsByPreferredNameToolStripMenuItem");
-            this.modeUIHandler.SetUIMode(this.sortProteinsByPreferredNameToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.sortProteinsByPreferredNameToolStripMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.sortProteinsByPreferredNameToolStripMenuItem.Click += new System.EventHandler(this.sortProteinsByPreferredNameToolStripMenuItem_Click);
             // 
             // sortProteinsByGeneToolStripMenuItem
             // 
             this.sortProteinsByGeneToolStripMenuItem.Name = "sortProteinsByGeneToolStripMenuItem";
             resources.ApplyResources(this.sortProteinsByGeneToolStripMenuItem, "sortProteinsByGeneToolStripMenuItem");
-            this.modeUIHandler.SetUIMode(this.sortProteinsByGeneToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.sortProteinsByGeneToolStripMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.sortProteinsByGeneToolStripMenuItem.Click += new System.EventHandler(this.sortProteinsByGeneToolStripMenuItem_Click);
             // 
             // toolStripSeparator43
@@ -197,7 +197,7 @@ namespace pwiz.Skyline.Menus
             // 
             this.acceptPeptidesMenuItem.Name = "acceptPeptidesMenuItem";
             resources.ApplyResources(this.acceptPeptidesMenuItem, "acceptPeptidesMenuItem");
-            this.modeUIHandler.SetUIMode(this.acceptPeptidesMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.acceptPeptidesMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.acceptPeptidesMenuItem.Click += new System.EventHandler(this.acceptPeptidesMenuItem_Click);
             // 
             // removeEmptyPeptidesMenuItem
@@ -227,7 +227,7 @@ namespace pwiz.Skyline.Menus
             // 
             this.permuteIsotopeModificationsMenuItem.Name = "permuteIsotopeModificationsMenuItem";
             resources.ApplyResources(this.permuteIsotopeModificationsMenuItem, "permuteIsotopeModificationsMenuItem");
-            this.modeUIHandler.SetUIMode(this.permuteIsotopeModificationsMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.permuteIsotopeModificationsMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.permuteIsotopeModificationsMenuItem.Click += new System.EventHandler(this.permuteIsotopeModificationsMenuItem_Click);
             // 
             // refineAdvancedMenuItem

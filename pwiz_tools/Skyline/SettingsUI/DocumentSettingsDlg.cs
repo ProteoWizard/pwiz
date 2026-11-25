@@ -51,7 +51,7 @@ namespace pwiz.Skyline.SettingsUI
         public DocumentSettingsDlg(IDocumentUIContainer documentContainer)
         {
             InitializeComponent();
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
             DocumentContainer = documentContainer;
             var dataSettings = DocumentContainer.Document.Settings.DataSettings;
             _annotationsListBoxDriver = new SettingsListBoxDriver<AnnotationDef>(

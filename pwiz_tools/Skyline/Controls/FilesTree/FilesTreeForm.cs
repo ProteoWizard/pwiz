@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             InitializeComponent();
 
             // The designer icon is a single 16 px folder; the tab draws the vector Folder above 100%
-            Icon = DpiUtil.GetFormIcon(this, nameof(Resources.Folder), Icon);
+            Icon = DpiUtil.GetFormIcon(this, nameof(ImageResources.Folder), Icon);
         }
 
         public FilesTreeForm(SkylineWindow skylineWindow) : this()

@@ -392,7 +392,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.IsTrue(buildLibraryDlg.CarafeModel.IsDefault);
                 // The list's model is offered by name, with what it was trained on
                 AssertEx.Contains(models.GetDisplayName(models[1]), SAVED_MODEL_NAME, choice.Instrument,
-                    string.Format(SettingsUIResources.CarafeModelChoice_GetDetails__0__min_gradient,
+                    string.Format(LibResources.CarafeModelChoice_GetDetails__0__min_gradient,
                         choice.GradientMinutes.Value.ToString(@"0.#", LocalizationHelper.CurrentCulture)));
                 buildLibraryDlg.CarafeModel = models[1];
                 AssertEx.AreEqual(SAVED_MODEL_NAME, buildLibraryDlg.CarafeModel.Name);

@@ -40,6 +40,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData.RemoteApi;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Model;
@@ -60,19 +61,15 @@ namespace pwiz.Skyline
     /// <summary>
     /// Anything in this class is really application global, and is better stored
     /// on some more local object like the document settings, or the
-    /// <see cref="Settings"/> class.  Even the only existing <see cref="Name"/>
-    /// property is just a shortcut to the <see cref="Settings"/> application
-    /// scope property for easier use in <see cref="MessageBox"/>.
-    /// 
+    /// <see cref="Settings"/> class. What code without the UI also needs, such as
+    /// the test flags and the program name, is on <see cref="ProgramContext"/>.
+    ///
     /// Should anything else need to be added, it should be clearly described
     /// why it is necessary.
     /// </summary>
     public static class Program
     {
         public const int LICENSE_VERSION_CURRENT = 5;   // Added Shimadzu license
-        public const int EXIT_CODE_SUCCESS = 0;
-        public const int EXIT_CODE_FAILURE_TO_START = 1;
-        public const int EXIT_CODE_RAN_WITH_ERRORS = 2;
         public const string OPEN_DOCUMENT_ARG = "--opendoc";
         public const string START_PAGE_ARG = "--start-page";
 
@@ -81,30 +78,17 @@ namespace pwiz.Skyline
         // (when true) can also surface the StartPage modally after --opendoc.
         public static bool? StartPageOverride { get; private set; }
 
-        public static string MainToolServiceName { get; private set; }
-
-        // Parameters for testing.
+        // Parameters for testing. Those code without the UI also needs are on ProgramContext.
         public static bool StressTest { get; set; }                 // Set true when doing stress testing (i.e. TestRunner).
-        public static bool UnitTest { get; set; }                   // Set to true by AbstractUnitTest and AbstractFunctionalTest
-        public static bool FunctionalTest
-        {
-            get { return CommonApplicationSettings.FunctionalTest;}
-            set
-            {
-                CommonApplicationSettings.FunctionalTest = value;
-            }
-        }
 
         // TODO(nicksh): Remove this once intermittent failures in these tests are fixed
         public static bool IsVerboseLogging(string name)
         {
-            return FunctionalTest && new[]
+            return ProgramContext.FunctionalTest && new[]
             {
                 @"ShareDocumentTest", @"InternationalFilenamesTest"
             }.Any(folder => name.IndexOf(folder, StringComparison.Ordinal) >= 0);
         }
-        public static string TestName { get; set; }                 // Set during unit and functional tests
-        public static bool DoNotTestUnicodeHandling { get; set; }   // Set true to skip unicode handling tests, either because the platform doesn't support it or test attribute forbids it
         public static bool ClosingForms { get; set; }               // Set to true during AbstractFunctionalTest.CloseOpenForm (all forms should check this before cancelling a Close request)
         public static string DefaultUiMode { get; set; }            // Set to avoid seeing NoModeUiDlg at the start of a test
         public static bool IsPaused => FormUtil.OpenForms.Any(form => form.GetType().Name == @"PauseAndContinueForm");
@@ -123,7 +107,6 @@ namespace pwiz.Skyline
 
         public static bool DemoMode { get; set; }                   // Set to true in demo mode (main window is full screen and pauses at screenshots)
         public static bool NoVendorReaders { get; set; }            // Set true to avoid calling vendor readers.
-        public static bool UseOriginalURLs { get; set; }            // Set true to use original URLs for downloading tools instead of our S3 copies
         public static bool IsPassZero { get { return NoVendorReaders; } }   // Currently the only time NoVendorReaders gets set is pass0
         public static bool NoSaveSettings { get; set; }             // Set true to use separate settings file.
         public static bool ShowFormNames { get; set; }              // Set true to show each Form name in title.
@@ -144,21 +127,15 @@ namespace pwiz.Skyline
 
         public static int PauseStartingScreenshot { get; set; }     // First screenshot to pause at during pause for screenshots
         public static IList<string> PauseForms { get; set; }        // List of forms to pause after displaying.
-        public static string ExtraRawFileSearchFolder { get; set; } // Perf test support for avoiding extra copying of large raw files
-        public static List<Exception> TestExceptions { get; set; }  // To avoid showing unexpected exception UI during tests and instead log them as failures
         public static Action<string> Log { get; set; }              // Function to allow Skyline to write to the test log. Needs to be thread-safe
         public static IGarbageCollectionTracker GcTracker { get; set; } // WeakReference tracker for verifying primary objects are GC'd after tests
 
         // Command-line results import support
         public static bool DisableJoining { get; set; }
         public static bool NoAllChromatogramsGraph { get; set; }
-        public static string ReplicateCachePath { get; set; }
-        public static string ImportProgressPipe { get; set; }
-        public static bool MultiProcImport { get; set; }
- 
+
         private static bool _initialized;                           // Flag to do some initialization just once per process.
         [ThreadStatic] private static bool _uiExceptionHandlingInitialized;   // Per-THREAD, see InitUiThreadExceptionHandling
-        private static string _name;                                // Program name.
 
         /// <summary>
         /// The main entry point for the application.
@@ -220,12 +197,12 @@ namespace pwiz.Skyline
             // is one), after which SetHighDpiMode changes the process but not the auto-scaling.
             // The test host stays DPI-unaware so screenshot and layout baselines remain 96-DPI
             // on scaled developer displays (issue #4599).
-            if (!UnitTest && !FunctionalTest)
+            if (!ProgramContext.UnitTest && !ProgramContext.FunctionalTest)
                 Application.SetHighDpiMode(HighDpiMode.SystemAware);
             SetDefaultFont();
             // Forms that set no icon show the executable's; give them the same icon with
             // frames at the scaled title bar sizes.
-            DpiFormIcons.ApplicationIcon = Resources.Skyline;
+            DpiFormIcons.ApplicationIcon = ImageResources.Skyline;
 
             if (String.IsNullOrEmpty(Settings.Default.InstallationId)) // Each instance to have GUID
                 Settings.Default.InstallationId = Guid.NewGuid().ToString();
@@ -234,9 +211,9 @@ namespace pwiz.Skyline
             if (Install.Is64Bit && !Environment.Is64BitProcess)
             {
                 string installUrl = Install.Url32;
-                string installLabel = (installUrl == string.Empty) ? string.Empty : string.Format(SkylineResources.Program_Main_Install_32_bit__0__, Name);
+                string installLabel = (installUrl == string.Empty) ? string.Empty : string.Format(SkylineResources.Program_Main_Install_32_bit__0__, ProgramContext.Name);
                 AlertLinkDlg.Show(null,
-                    string.Format(SkylineResources.Program_Main_You_are_attempting_to_run_a_64_bit_version_of__0__on_a_32_bit_OS_Please_install_the_32_bit_version, Name),
+                    string.Format(SkylineResources.Program_Main_You_are_attempting_to_run_a_64_bit_version_of__0__on_a_32_bit_OS_Please_install_the_32_bit_version, ProgramContext.Name),
                     installLabel,
                     installUrl);
                 return 1;
@@ -245,12 +222,12 @@ namespace pwiz.Skyline
             if (!IsPatchedParquetNet())
             {
                 MessageDlg.Show(null, string.Format(SkylineResources.Program_Main_The_Parquet_dll_at__0__is_not_the_version__1__requires__Reinstall__1__,
-                    typeof(ParquetRowGroupWriter).Assembly.Location, Name));
+                    typeof(ParquetRowGroupWriter).Assembly.Location, ProgramContext.Name));
             }
 
-            CommonApplicationSettings.ProgramName = Name;
+            CommonApplicationSettings.ProgramName = ProgramContext.Name;
             CommonApplicationSettings.ProgramNameAndVersion = Install.ProgramNameAndVersion;
-            CommonActionUtil.ExceptionReporter = ReportException;
+            CommonActionUtil.ExceptionReporter = ProgramContext.ReportException;
             SkylineRemoteAccountServices.Initialize();
 
             // For testing and debugging Skyline command-line interface.
@@ -266,7 +243,7 @@ namespace pwiz.Skyline
             {
                 Common.SystemUtil.PInvoke.Kernel32.AttachConsoleToParentProcess();
                 Console.Error.WriteLine(ex.Message);
-                return EXIT_CODE_FAILURE_TO_START;
+                return ProgramContext.EXIT_CODE_FAILURE_TO_START;
             }
             bool isGuiLaunch = openDoc || StartPageOverride.HasValue;
             if (args != null && args.Length > 0 && !isGuiLaunch)
@@ -301,7 +278,7 @@ namespace pwiz.Skyline
                     clr.Start(args[0]);
                 }
 
-                return EXIT_CODE_SUCCESS;
+                return ProgramContext.EXIT_CODE_SUCCESS;
             }
 
             try
@@ -320,8 +297,8 @@ namespace pwiz.Skyline
                 }
                 LocalizationHelper.InitThread(Thread.CurrentThread);
 
-                if (!FunctionalTest && !CheckNativeLibraries())
-                    return EXIT_CODE_FAILURE_TO_START;
+                if (!ProgramContext.FunctionalTest && !CheckNativeLibraries())
+                    return ProgramContext.EXIT_CODE_FAILURE_TO_START;
 
                 // Make sure the user has agreed to the current license version
                 // or one more recent.
@@ -338,7 +315,7 @@ namespace pwiz.Skyline
                         using (var dlg = new UpgradeLicenseDlg(licenseVersion))
                         {
                             if (dlg.ShowParentlessDialog() == DialogResult.Cancel)
-                                return EXIT_CODE_FAILURE_TO_START;
+                                return ProgramContext.EXIT_CODE_FAILURE_TO_START;
                         }
                     }
 
@@ -360,7 +337,7 @@ namespace pwiz.Skyline
                 {
                     // Tests run out of a build folder, and would otherwise be offered whatever the
                     // developer happens to have installed.
-                    if (!UnitTest && !FunctionalTest)
+                    if (!ProgramContext.UnitTest && !ProgramContext.FunctionalTest)
                         new FirstLaunchImport().Run(null);
                     SharedSettingsMerger.ForSharedSettings()?.MergeIfChanged();
                 }
@@ -388,7 +365,7 @@ namespace pwiz.Skyline
                 // A functional test run with aiconnector=on registers the same way, so an MCP client can
                 // discover and drive the test's Skyline while the test is paused (the test harness
                 // pre-approves screen capture for the process, as McpConnectorTest does).
-                MainToolServiceName = Guid.NewGuid().ToString();
+                ProgramContext.MainToolServiceName = Guid.NewGuid().ToString();
                 if (Settings.Default.EnableMcpAutoConnect || AiConnector)
                 {
                     StartToolService();
@@ -419,7 +396,7 @@ namespace pwiz.Skyline
                             if (StartWindow.ShowParentlessDialog() != DialogResult.OK)
                             {
                                 Application.Exit();
-                                return EXIT_CODE_SUCCESS;
+                                return ProgramContext.EXIT_CODE_SUCCESS;
                             }
 
                             MainWindow = StartWindow.MainWindow;
@@ -441,7 +418,7 @@ namespace pwiz.Skyline
                 // Position window offscreen for stress testing.
                 if (SkylineOffscreen)
                     FormEx.SetOffscreen(MainWindow);
-                if (!UnitTest)  // Covers Unit and Functional tests
+                if (!ProgramContext.UnitTest)  // Covers Unit and Functional tests
                     SendAnalyticsHitAsync();
 
                 // NOTE: Nothing after Application.Run() reliably executes.
@@ -459,7 +436,7 @@ namespace pwiz.Skyline
 
             MainWindow = null;
             SystemEvents.DisplaySettingsChanged -= SystemEventsOnDisplaySettingsChanged;
-            return EXIT_CODE_SUCCESS;
+            return ProgramContext.EXIT_CODE_SUCCESS;
         }
 
         // Returns null when --start-page is absent, true/false for --start-page=true|false.
@@ -599,12 +576,12 @@ namespace pwiz.Skyline
         {
             if (MainJsonToolServer == null)
             {
-                MainJsonToolServer = new JsonToolServer(MainToolServiceName);
+                MainJsonToolServer = new JsonToolServer(ProgramContext.MainToolServiceName);
                 MainJsonToolServer.Start();
             }
             if (MainWindow != null && MainToolService == null)
             {
-                MainToolService = new ToolService(MainToolServiceName, MainWindow);
+                MainToolService = new ToolService(ProgramContext.MainToolServiceName, MainWindow);
                 MainToolService.RunAsync();
                 MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
             }
@@ -668,7 +645,8 @@ namespace pwiz.Skyline
             if (!_initialized)
             {
                 _initialized = true;
-                CommonActionUtil.ExceptionReporter = ReportException;
+                ProgramContext.UI = new ProgramUI();
+                CommonActionUtil.ExceptionReporter = ProgramContext.ReportException;
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
 
@@ -770,20 +748,14 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// Asynchronously brings up the <see cref="ReportErrorDlg"/> dialog.
+        /// Asynchronously brings up the <see cref="ReportErrorDlg"/> dialog, for
+        /// <see cref="ProgramContext.ReportException"/>.
         /// Unhandled exceptions on the UI thread are handled by the
         /// <see cref="Application.ThreadException"/> event, but code on
-        /// other threads should catch and report exceptions here.
+        /// other threads should catch and report exceptions with ProgramContext.ReportException.
         /// </summary>
-        public static void ReportException(Exception exception)
+        private static void ReportExceptionAsync(Exception exception, StackTrace stackTrace)
         {
-            if (TestExceptions != null)
-            {
-                AddTestException(exception);
-                return;
-            }
-
-            var stackTrace = new StackTrace(1, true);
             var mainWindow = MainWindow;
             try
             {
@@ -814,9 +786,9 @@ namespace pwiz.Skyline
                 return;
             }
 
-            if (TestExceptions != null)
+            if (ProgramContext.TestExceptions != null)
             {
-                AddTestException(e.Exception);
+                ProgramContext.AddTestException(e.Exception);
                 return;
             }
 
@@ -936,14 +908,6 @@ namespace pwiz.Skyline
             }
         }
 
-        public static void AddTestException(Exception exception)
-        {
-            lock (TestExceptions)
-            {
-                TestExceptions.Add(exception);
-            }
-        }
-
         public static SkylineWindow MainWindow { get; private set; }
         public static StartPage StartWindow { get; private set; }
 
@@ -953,44 +917,43 @@ namespace pwiz.Skyline
         public static SrmDocument ActiveDocumentUI { get { return MainWindow != null ? MainWindow.DocumentUI : null; } }
         
         /// <summary>
-        /// Gets the current UI mode (proteomic / small molecule / mixed) as a function of  <see cref="Settings"/>
-        /// and the contents of the current document
+        /// What code that also runs without the UI asks of it, installed as <see cref="ProgramContext.UI"/>.
         /// </summary>
-        public static SrmDocument.DOCUMENT_TYPE ModeUI
+        private sealed class ProgramUI : IProgramUI
         {
-            get
+            public SrmDocument.DOCUMENT_TYPE? ModeUI
             {
-                SrmDocument.DOCUMENT_TYPE mode;
-                if (ActiveDocument != null)
-                {
-                    mode = MainWindow.ModeUI; // Document contents help determine UI mode
-                }
-                else if (!Enum.TryParse(Settings.Default.UIMode, out mode))
-                {
-                    mode = SrmDocument.DOCUMENT_TYPE.proteomic; // No saved setting, default to tradition
-                }
-
-                return mode;
+                get { return ActiveDocument != null ? MainWindow.ModeUI : (SrmDocument.DOCUMENT_TYPE?) null; } // Document contents help determine UI mode
             }
-        }
 
-        /// <summary>
-        /// Shortcut to the application name stored in <see cref="Settings"/>
-        /// </summary>
-        public static string Name
-        {
-            get
+            ISkylineDocumentWindow IProgramUI.MainWindow
             {
-                if (Settings.Default.TutorialMode)
-                    _name = Settings.Default.ProgramName;
-                else if (_name == null)
-                {
-                    _name = Settings.Default.ProgramName;
-                    if (Install.Type == Install.InstallType.daily)
-                        _name += @"-daily";
-                }
+                get { return Program.MainWindow; }
+            }
 
-                return _name;
+            SrmDocument IProgramUI.ActiveDocument
+            {
+                get { return Program.ActiveDocument; }
+            }
+
+            public void ReportException(Exception exception, StackTrace stackTrace)
+            {
+                ReportExceptionAsync(exception, stackTrace);
+            }
+
+            public void RunLongOperation(string jobTitle, Action<ILongWaitBroker> action)
+            {
+                new LongOperationRunner { JobTitle = jobTitle }.Run(action);
+            }
+
+            public Func<HttpClient> UserLogin(RemoteAccount account)
+            {
+                var mainWindow = Program.MainWindow;
+                if (mainWindow == null)
+                {
+                    throw new NotSupportedException();
+                }
+                return mainWindow.UserLogin(account);
             }
         }
 
@@ -1000,8 +963,8 @@ namespace pwiz.Skyline
             {
                 // Dynamically assign the image based on the release type
                 return Install.Type == Install.InstallType.daily
-                    ? Resources.SkylineImg
-                    : Resources.Skyline_Release;
+                    ? ImageResources.SkylineImg
+                    : ImageResources.Skyline_Release;
             }
         }
 

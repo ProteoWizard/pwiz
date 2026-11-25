@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             RegressionGraphDatas = regressionGraphDatas;
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             if (regressionGraphDatas.Count > 1)
             {

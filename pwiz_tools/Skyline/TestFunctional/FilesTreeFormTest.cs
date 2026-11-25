@@ -306,7 +306,7 @@ namespace pwiz.SkylineTestFunctional
             AssertFileState(FileState.available, tree.Root.NodeAt(0));
 
             // View Layout (.sky.view)
-            Assert.AreEqual(SkylineWindow.GetViewFile(monitoredPath), tree.Root.NodeAt(1).LocalFilePath);
+            Assert.AreEqual(SkylineViewFile.GetViewFile(monitoredPath), tree.Root.NodeAt(1).LocalFilePath);
             AssertFileState(FileState.available, tree.Root.NodeAt(1));
         }
 

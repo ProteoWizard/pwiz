@@ -450,9 +450,9 @@ namespace pwiz.SkylineTestUtil
         [TestInitialize]
         public void MyTestInitialize()
         {
-            Program.UnitTest = true;
-            Program.TestName = TestContext.TestName;
-            Program.DoNotTestUnicodeHandling = TestContext.Properties["UnicodeDecoration"]==null;
+            ProgramContext.UnitTest = true;
+            ProgramContext.TestName = TestContext.TestName;
+            ProgramContext.DoNotTestUnicodeHandling = TestContext.Properties["UnicodeDecoration"]==null;
 
             // The loader trace ring is static and this process runs test after test, so anything
             // left in it belongs to a previous test and would be presented as evidence for this
@@ -508,8 +508,8 @@ namespace pwiz.SkylineTestUtil
 //                STOPWATCH.ElapsedMilliseconds / 1000.0));
 
             // Prevent any weird interactions between tests on reused processes
-            Program.UnitTest = Program.FunctionalTest = false;
-            Program.TestName = null;
+            ProgramContext.UnitTest = ProgramContext.FunctionalTest = false;
+            ProgramContext.TestName = null;
             // Perf tests turn on real MsDataFileImpl performance timers and rely on this to turn
             // them off again. Left on, a two-pass chromatogram import in a later test fails.
             MsDataFileImpl.PerfUtilFactory.Reset();

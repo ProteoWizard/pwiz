@@ -26,7 +26,7 @@ namespace pwiz.Skyline.FileUI
             Text = string.Format(FileUIResources.ExportMethodDlg_OkDialog_Export__0__Method, InstrumentType);
             actionButton.Text = FileUIResources.WatersConnectSaveMethodFileDialog_SaveButtonText;
             newFolderButton.Visible = true;
-            newFolderButton.Image = Resources.AddFolder;
+            newFolderButton.Image = ImageResources.AddFolder;
             newFolderButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
         }
 

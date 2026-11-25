@@ -114,7 +114,7 @@ namespace pwiz.Skyline.FileUI
             resources.ApplyResources(this.radioPeptide, "radioPeptide");
             this.radioPeptide.Name = "radioPeptide";
             this.radioPeptide.TabStop = true;
-            this.modeUIHandler.SetUIMode(this.radioPeptide, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
+            this.modeUIHandler.SetUIMode(this.radioPeptide, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
             this.radioPeptide.UseVisualStyleBackColor = true;
             // 
             // radioMolecule
@@ -122,7 +122,7 @@ namespace pwiz.Skyline.FileUI
             resources.ApplyResources(this.radioMolecule, "radioMolecule");
             this.radioMolecule.Name = "radioMolecule";
             this.radioMolecule.TabStop = true;
-            this.modeUIHandler.SetUIMode(this.radioMolecule, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
+            this.modeUIHandler.SetUIMode(this.radioMolecule, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
             this.radioMolecule.UseVisualStyleBackColor = true;
             // 
             // checkBoxAssociateProteins

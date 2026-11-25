@@ -1780,24 +1780,6 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} Score.
-        /// </summary>
-        public static string RegressionUnconversion_CalculatorScoreFormat {
-            get {
-                return ResourceManager.GetString("RegressionUnconversion_CalculatorScoreFormat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} Score ({1}).
-        /// </summary>
-        public static string RegressionUnconversion_CalculatorScoreValueFormat {
-            get {
-                return ResourceManager.GetString("RegressionUnconversion_CalculatorScoreValueFormat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Log Peak Area.
         /// </summary>
         public static string RelativeAbundanceGraph_ToolTip_LogPeakArea {

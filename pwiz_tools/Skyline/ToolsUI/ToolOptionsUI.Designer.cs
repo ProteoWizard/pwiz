@@ -226,7 +226,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // pictureBox1
             // 
-            this.pictureBox1.Image = global::pwiz.Skyline.Properties.Resources.koina_logo_fdf731d5;
+            this.pictureBox1.Image = global::pwiz.Skyline.Properties.ImageResources.koina_logo_fdf731d5;
             resources.ApplyResources(this.pictureBox1, "pictureBox1");
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.TabStop = false;

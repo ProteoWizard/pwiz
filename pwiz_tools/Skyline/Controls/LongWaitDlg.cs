@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Controls
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             _documentContainer = documentContainer;
 

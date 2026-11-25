@@ -91,7 +91,7 @@ namespace pwiz.Skyline.SettingsUI
             // Populate the small mol adduct filter helper menu
             AppendAdductMenus(contextMenuStripPrecursorAdduct, precursorAdductStripMenuItem_Click);
             AppendAdductMenus(contextMenuStripFragmentAdduct, fragmentAdductStripMenuItem_Click);
-            Bitmap bm = Resources.PopupBtn;
+            Bitmap bm = ImageResources.PopupBtn;
             bm.MakeTransparent(Color.Fuchsia);
             btnPrecursorAdduct.Image = bm;
             btnFragmentAdduct.Image = bm;

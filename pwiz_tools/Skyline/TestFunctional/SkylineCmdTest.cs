@@ -50,12 +50,12 @@ namespace pwiz.SkylineTestFunctional
             // failure to start
             {
                 var process = Process.Start(GetProcessStartInfo("--invalidargument"));
-                WaitForExit(process, Program.EXIT_CODE_FAILURE_TO_START);
+                WaitForExit(process, ProgramContext.EXIT_CODE_FAILURE_TO_START);
             }
             // ran with errors
             {
                 var process = Process.Start(GetProcessStartInfo("\"--in=" + TestFilesDir.GetTestPath("invalidpath.sky") + "\""));
-                WaitForExit(process, Program.EXIT_CODE_RAN_WITH_ERRORS);
+                WaitForExit(process, ProgramContext.EXIT_CODE_RAN_WITH_ERRORS);
             }
             // mass spec data file instead of skyline document
             {
@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestFunctional
                 var massSpecLogFile = TestFilesDir.GetTestPath("massspec.log");
                 var process = Process.Start(GetProcessStartInfo(
                     "\"--in=" + mzmlFile + "\" --log-file=\"" + massSpecLogFile + "\""));
-                WaitForExit(process, Program.EXIT_CODE_RAN_WITH_ERRORS);
+                WaitForExit(process, ProgramContext.EXIT_CODE_RAN_WITH_ERRORS);
                 Assert.IsTrue(File.Exists(massSpecLogFile), string.Format("Missing log file {0}", massSpecLogFile));
                 var massSpecLogText = File.ReadAllText(massSpecLogFile, Encoding.UTF8);
                 AssertEx.Contains(massSpecLogText,
@@ -76,7 +76,7 @@ namespace pwiz.SkylineTestFunctional
             string logFile = TestFilesDir.GetTestPath("success.log");
             {
                 var process = Process.Start(GetProcessStartInfo("\"--in=" + validFile + "\" --log-file=\"" + logFile + "\""));
-                WaitForExit(process, Program.EXIT_CODE_SUCCESS);
+                WaitForExit(process, ProgramContext.EXIT_CODE_SUCCESS);
                 Assert.IsTrue(File.Exists(logFile), string.Format("Missing log file {0}", logFile));
                 string logText = File.ReadAllText(logFile, Encoding.UTF8);
                 AssertEx.Contains(logText, Resources.CommandLine_OpenSkyFile_Opening_file___,

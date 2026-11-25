@@ -20,6 +20,7 @@
 using System;
 using System.IO;
 using System.IO.Pipes;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -54,6 +55,8 @@ namespace SkylineTool
     /// }
     /// </code>
     /// </summary>
+    // Message-mode named pipes exist only on Windows, where Skyline hosts its tools
+    [SupportedOSPlatform("windows")]
     public class SkylineJsonToolClient : IJsonToolService, IDisposable
     {
         private static readonly JsonSerializerOptions _snakeCaseOptions = new JsonSerializerOptions

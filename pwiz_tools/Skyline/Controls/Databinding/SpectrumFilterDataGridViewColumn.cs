@@ -40,14 +40,14 @@ namespace pwiz.Skyline.Controls.Databinding
     public class SpectrumFilterDataGridViewColumn : TextImageColumn, ICellValidatingColumn
     {
         // Shared so that creating columns repeatedly (different views/grids) does not leak a GDI
-        // bitmap handle each time. Resources.Edit_Item returns a fresh Bitmap on every access.
+        // bitmap handle each time. ImageResources.Edit_Item returns a fresh Bitmap on every access.
         private static readonly Image EDIT_IMAGE = CreateEditImage();
 
         private static Image CreateEditImage()
         {
-            // Resources.Edit_Item returns a fresh Bitmap; dispose it once we have copied it so the
+            // ImageResources.Edit_Item returns a fresh Bitmap; dispose it once we have copied it so the
             // intermediate GDI handle is not leaked.
-            using (var resourceImage = Resources.Edit_Item)
+            using (var resourceImage = ImageResources.Edit_Item)
             {
                 var editImage = new Bitmap(resourceImage);
                 editImage.MakeTransparent(Color.Magenta);
@@ -125,7 +125,7 @@ namespace pwiz.Skyline.Controls.Databinding
             var dataSchema = precursor.DataSchema;
             var rootColumn = ColumnDescriptor.RootColumn(dataSchema, typeof(SpectrumClass));
             var filterPages = SpectrumClassFilter.GetFilterPages(precursor.DocNode);
-            using (var autoComplete = new SpectrumFilterAutoComplete(dataSchema.SkylineWindow))
+            using (var autoComplete = new SpectrumFilterAutoComplete(dataSchema.GetSkylineWindow()))
             using (var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages))
             {
                 dlg.AutoComplete = autoComplete;

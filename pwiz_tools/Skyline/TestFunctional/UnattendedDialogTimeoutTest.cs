@@ -93,9 +93,9 @@ namespace pwiz.SkylineTestFunctional
                 // failure recorded by something else, and the harness check at teardown would then
                 // pass with the real bug gone.
                 bool reported;
-                lock (Program.TestExceptions)
+                lock (ProgramContext.TestExceptions)
                 {
-                    reported = Program.TestExceptions.Remove(firstTimeout);
+                    reported = ProgramContext.TestExceptions.Remove(firstTimeout);
                 }
                 AssertEx.IsTrue(reported, "The unattended dialog was never reported.");
                 AssertEx.Contains(firstTimeout.Message, MESSAGE_TEXT);

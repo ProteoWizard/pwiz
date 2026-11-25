@@ -115,7 +115,7 @@ namespace pwiz.Skyline.SettingsUI
             _spectrumFilters = settings?.TransitionSettings.FullScan.SpectrumClassFilter;
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             //Position GridView
             AdjustGridTop(1);

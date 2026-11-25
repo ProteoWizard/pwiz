@@ -40,7 +40,7 @@ namespace pwiz.SkylineTestFunctional
     /// stop waiting while the entry is still queued. The queued callback then runs normally and
     /// only ThreadMethodEntry.Complete() throws, from Control.InvokeMarshaledCallbacks, with no
     /// thread left waiting on the result. Under a test harness that reaches
-    /// Program.TestExceptions and fails whatever test happened to be running, which is how eight
+    /// ProgramContext.TestExceptions and fails whatever test happened to be running, which is how eight
     /// unrelated tests failed in one .NET 10 nightly. Reported as dotnet/winforms#14996.</para>
     ///
     /// <para>The filter is deliberately narrow, so the second case here asserts that an
@@ -107,7 +107,7 @@ namespace pwiz.SkylineTestFunctional
 
             AssertEx.IsTrue(strandedCallbackRan(),
                 @"The marshaled callback did not run after its wait handle was disposed.");
-            AssertEx.AreEqual(0, Program.TestExceptions.Count,
+            AssertEx.AreEqual(0, ProgramContext.TestExceptions.Count,
                 @"Completing a marshaled call on SkylineWindow reached the test harness.");
         }
 
@@ -180,9 +180,9 @@ namespace pwiz.SkylineTestFunctional
             Exception reported = null;
             try
             {
-                WaitForCondition(WAIT_TIME, () => Program.TestExceptions.Count > 0,
+                WaitForCondition(WAIT_TIME, () => ProgramContext.TestExceptions.Count > 0,
                     timeoutMessage, true, false);
-                reported = Program.TestExceptions[0];
+                reported = ProgramContext.TestExceptions[0];
                 AssertEx.IsTrue(reported is ObjectDisposedException,
                     @"Expected the reported exception to be an ObjectDisposedException.");
                 return reported;
@@ -191,9 +191,9 @@ namespace pwiz.SkylineTestFunctional
             {
                 if (reported != null)
                 {
-                    lock (Program.TestExceptions)
+                    lock (ProgramContext.TestExceptions)
                     {
-                        Program.TestExceptions.Remove(reported);
+                        ProgramContext.TestExceptions.Remove(reported);
                     }
                 }
             }

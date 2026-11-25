@@ -191,7 +191,7 @@ namespace pwiz.Skyline.FileUI
             XICWidth = Settings.Default.ExportMethodXICWidth;
             RunLength = Settings.Default.ExportMethodRunLength;
 
-            Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, document.DocumentType); // Use terminology like "Molecule List" instead of "Protein" if appropriate to document
+            ModeUIHelpers.FormTextMapper.TranslateForm(this, document.DocumentType); // Use terminology like "Molecule List" instead of "Protein" if appropriate to document
 
             // For documents with mixed polarity, offer to emit two different lists or just one polarity
             var isMixedPolarity = document.IsMixedPolarity();

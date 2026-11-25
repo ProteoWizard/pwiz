@@ -210,7 +210,7 @@ namespace pwiz.Skyline.Controls
             }
             catch (Exception exception)
             {
-                ExceptionUtil.DisplayOrReportException(this, exception, ControlsResources.NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip_);
+                ExceptionUtilUI.DisplayOrReportException(this, exception, ControlsResources.NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip_);
             }
         }
 

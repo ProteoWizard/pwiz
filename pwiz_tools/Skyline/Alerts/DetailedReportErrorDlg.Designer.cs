@@ -129,7 +129,7 @@ namespace pwiz.Skyline.Alerts
             this.Controls.Add(this.textBoxMsg);
             this.Controls.Add(this.lblReportError);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Icon = global::pwiz.Skyline.Properties.Resources.Skyline;
+            this.Icon = global::pwiz.Skyline.Properties.ImageResources.Skyline;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "DetailedReportErrorDlg";

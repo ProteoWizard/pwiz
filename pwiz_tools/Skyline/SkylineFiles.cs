@@ -71,11 +71,6 @@ namespace pwiz.Skyline
 {
     public partial class SkylineWindow
     {
-        public static string GetViewFile(string fileName)
-        {
-            return fileName + EXT_VIEW;
-        }
-
         private void fileMenu_DropDownOpening(object sender, EventArgs e)
         {
             ToolStripMenuItem menu = fileToolStripMenuItem;
@@ -1035,7 +1030,7 @@ namespace pwiz.Skyline
             }
             catch (Exception e)
             {
-                ExceptionUtil.DisplayOrReportException(this, e);
+                ExceptionUtilUI.DisplayOrReportException(this, e);
             }
         }
 
@@ -1284,7 +1279,7 @@ namespace pwiz.Skyline
 
             try
             {
-                SaveLayout(GetViewFile(fileName));
+                SaveLayout(Model.Files.SkylineViewFile.GetViewFile(fileName));
 
                 if (includingCacheFile)
                 {
@@ -1305,7 +1300,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 if (ExceptionUtil.IsProgrammingDefect(x))
-                    Program.ReportException(x);
+                    ProgramContext.ReportException(x);
             }
 
             // CONSIDER: it might be possible to remove the DocumentSaved event by moving DocumentFilePath into SrmSettings.
@@ -1482,10 +1477,9 @@ namespace pwiz.Skyline
             }
         }
 
-        public const string EXT_VIEW = ".view";
         public static string FILTER_VIEW
         {
-            get { return TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files, EXT_VIEW); }
+            get { return TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files, Model.Files.SkylineViewFile.EXT_VIEW); }
         }
 
         /// <summary>
@@ -1515,9 +1509,9 @@ namespace pwiz.Skyline
                 dlg.Title = SkylineResources.SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout;
                 dlg.Filter = FILTER_VIEW;
                 dlg.InitialDirectory = GetLayoutDirectory();
-                dlg.DefaultExt = EXT_VIEW;
+                dlg.DefaultExt = Model.Files.SkylineViewFile.EXT_VIEW;
                 if (!string.IsNullOrEmpty(DocumentFilePath))
-                    dlg.FileName = Path.GetFileName(GetViewFile(DocumentFilePath));
+                    dlg.FileName = Path.GetFileName(Model.Files.SkylineViewFile.GetViewFile(DocumentFilePath));
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return;
                 ExportLayout(dlg.FileName);
@@ -1709,12 +1703,12 @@ namespace pwiz.Skyline
                     {
                         var tempDocumentPath = Path.Combine(sharing.EnsureTempDir().DirPath,
                             sharing.GetDocumentFileName());
-                        sharing.ViewFilePath = GetViewFile(tempDocumentPath);
+                        sharing.ViewFilePath = Model.Files.SkylineViewFile.GetViewFile(tempDocumentPath);
                         SaveLayout(sharing.ViewFilePath);
                     }
                     else if (DocumentFilePath != null)
                     {
-                        string viewFilePath = GetViewFile(DocumentFilePath);
+                        string viewFilePath = Model.Files.SkylineViewFile.GetViewFile(DocumentFilePath);
                         if (File.Exists(viewFilePath))
                         {
                             sharing.ViewFilePath = viewFilePath;
@@ -3969,7 +3963,7 @@ namespace pwiz.Skyline
             }
             catch (Exception e)
             {
-                ExceptionUtil.DisplayOrReportException(this, e);
+                ExceptionUtilUI.DisplayOrReportException(this, e);
             }
         }
 
@@ -4113,7 +4107,7 @@ namespace pwiz.Skyline
                 }
                 catch (Exception e)
                 {
-                    ExceptionUtil.DisplayOrReportException(this, e);
+                    ExceptionUtilUI.DisplayOrReportException(this, e);
                     return;
                 }
             }

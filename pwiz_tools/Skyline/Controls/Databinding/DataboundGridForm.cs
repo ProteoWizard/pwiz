@@ -90,7 +90,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            var skylineWindow = (BindingListSource.ViewInfo.DataSchema as SkylineDataSchema)?.SkylineWindow;
+            var skylineWindow = (BindingListSource.ViewInfo.DataSchema as SkylineDataSchema)?.GetSkylineWindow();
             if (skylineWindow != null)
             {
                 switch (keyData)

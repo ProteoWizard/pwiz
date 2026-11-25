@@ -381,7 +381,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             catch (Exception e)
             {
-                ExceptionUtil.DisplayOrReportException(Program.MainWindow, e);
+                ExceptionUtilUI.DisplayOrReportException(Program.MainWindow, e);
                 return;
             }
 

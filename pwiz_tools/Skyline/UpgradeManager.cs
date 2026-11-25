@@ -139,7 +139,7 @@ namespace pwiz.Skyline
 
             using (var dlgUpgrade = new UpgradeDlg(versionText, updateFound))
             {
-                dlgUpgrade.Text = Program.Name;
+                dlgUpgrade.Text = ProgramContext.Name;
                 try
                 {
                     return dlgUpgrade.ShowDialog(ParentWindow) == DialogResult.OK;

@@ -55,7 +55,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             var docPeptides = new Dictionary<Target, PeptideDocNode>();
             foreach (var nodePep in Program.ActiveDocumentUI.Peptides.Where(nodePep => nodePep.PercentileMeasuredRetentionTime.HasValue && !nodePep.IsDecoy))

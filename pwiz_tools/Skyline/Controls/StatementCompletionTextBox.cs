@@ -63,8 +63,8 @@ namespace pwiz.Skyline.Controls
             // The 16x16 icons are a 96-DPI design, added at the pixel size for the DPI by
             // DpiUtil.GetIcon (issue #4599); no control exists yet, so the system DPI is used
             ImageListScaler.PrepareForDpi(null, _imageList);
-            AddImage(nameof(Resources.Protein), Resources.Protein);   // 16bpp
-            AddImage(nameof(Resources.Peptide), Resources.Peptide);   // 4bpp
+            AddImage(nameof(ImageResources.Protein), ImageResources.Protein);   // 16bpp
+            AddImage(nameof(ImageResources.Peptide), ImageResources.Peptide);   // 4bpp
             _hideOnLoseFocus = hideOnLoseFocus;
         }
 

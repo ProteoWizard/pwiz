@@ -44,7 +44,7 @@ namespace pwiz.Skyline.EditUI
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             _document = document;
             _gridViewDriver = new GridViewDriver(dataGridViewRename, renameProteinsWindowBindingSource,

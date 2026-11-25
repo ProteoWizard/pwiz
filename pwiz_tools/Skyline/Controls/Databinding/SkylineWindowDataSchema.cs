@@ -118,4 +118,17 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
     }
+
+    public static class SkylineDataSchemaExtensions
+    {
+        /// <summary>
+        /// The Skyline window a data schema belongs to, as the UI's own type, or null when it
+        /// belongs to none. <see cref="SkylineDataSchema.SkylineWindow"/> gives only what model
+        /// code may use of it.
+        /// </summary>
+        public static SkylineWindow GetSkylineWindow(this SkylineDataSchema dataSchema)
+        {
+            return dataSchema.SkylineWindow as SkylineWindow;
+        }
+    }
 }

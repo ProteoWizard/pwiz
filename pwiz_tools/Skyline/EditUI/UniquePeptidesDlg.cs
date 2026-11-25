@@ -85,7 +85,7 @@ namespace pwiz.Skyline.EditUI
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             DocumentUIContainer = documentUiContainer;
             _peptidesInBackgroundProteome = new HashSet<IdentityPath>();

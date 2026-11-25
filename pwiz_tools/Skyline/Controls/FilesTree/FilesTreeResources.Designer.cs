@@ -61,24 +61,6 @@ namespace pwiz.Skyline.Controls.FilesTree {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Change replicate name.
-        /// </summary>
-        public static string Change_ReplicateName {
-            get {
-                return ResourceManager.GetString("Change_ReplicateName", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Change spectral library name.
-        /// </summary>
-        public static string Change_SpectralLibraryName {
-            get {
-                return ResourceManager.GetString("Change_SpectralLibraryName", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Drag and drop.
         /// </summary>
         public static string Drag_and_Drop {
@@ -192,24 +174,6 @@ namespace pwiz.Skyline.Controls.FilesTree {
         public static string FilesTreeForm_Confirm_Remove_Spectral_Library {
             get {
                 return ResourceManager.GetString("FilesTreeForm_Confirm_Remove_Spectral_Library", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to A replicate named &apos;{0}&apos; already exists. Please choose a different name..
-        /// </summary>
-        public static string FilesTreeForm_Error_Renaming_Replicate {
-            get {
-                return ResourceManager.GetString("FilesTreeForm_Error_Renaming_Replicate", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to A spectral library named &apos;{0}&apos; already exists. Please choose a different name..
-        /// </summary>
-        public static string FilesTreeForm_Error_Renaming_SpectralLibrary {
-            get {
-                return ResourceManager.GetString("FilesTreeForm_Error_Renaming_SpectralLibrary", resourceCulture);
             }
         }
         

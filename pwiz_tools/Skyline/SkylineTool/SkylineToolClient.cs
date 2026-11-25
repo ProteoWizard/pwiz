@@ -21,12 +21,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Text;
 
 // ReSharper disable All
 
 namespace SkylineTool
 {
+    // Wraps RemoteClient, whose message-mode named pipes exist only on Windows
+    [SupportedOSPlatform("windows")]
     public class SkylineToolClient : IDisposable
     {
         public event EventHandler DocumentChanged; 

@@ -63,7 +63,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         protected override void DoTest()
         {
             string skyFile = TestFilesDir.GetTestPath("tims_test.sky");
-            Program.ExtraRawFileSearchFolder = TestFilesDir.PersistentFilesDir;
+            ProgramContext.ExtraRawFileSearchFolder = TestFilesDir.PersistentFilesDir;
             var testPath = TestFilesDir.GetTestPath("local.sky");
 
             // Make sure that commandline loading employs 3-array IMS (should be quick if it does)

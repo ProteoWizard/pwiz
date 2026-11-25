@@ -30,6 +30,7 @@ using pwiz.Skyline.Controls.Clustering;
 using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -151,7 +152,7 @@ namespace pwiz.SkylineTestFunctional
             // Verify CloseInapplicableForms: open a document without the list
             // and verify that both the ListGridForm and HeatMapGraph close.
             // Delete .sky.view so we don't go through LoadLayoutLocked.
-            FileEx.SafeDelete(SkylineWindow.GetViewFile(emptyDocPath));
+            FileEx.SafeDelete(SkylineViewFile.GetViewFile(emptyDocPath));
             OpenDocument(emptyDocPath);
             ValidateListGridAndHeatMap(false);
             // And then that they are truly reopened when the document with the list is opened again.

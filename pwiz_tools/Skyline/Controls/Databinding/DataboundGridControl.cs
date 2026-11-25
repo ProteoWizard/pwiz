@@ -246,7 +246,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             get
             {
-                return (BindingListSource.ViewContext?.DataSchema as SkylineDataSchema)?.SkylineWindow;
+                return (BindingListSource.ViewContext?.DataSchema as SkylineDataSchema)?.GetSkylineWindow();
             }
         }
 
@@ -596,7 +596,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
             _boundDataGridViewPasteHandler.PerformUndoableOperation(DatabindingResources.DataboundGridControl_FillDown_Fill_Down,
                 longWaitBroker => DoFillDown(longWaitBroker, propertyDescriptors, firstRowIndex, lastRowIndex),
-                new DataGridViewPasteHandler.BatchModifyInfo(DataGridViewPasteHandler.BatchModifyAction.FillDown,
+                new BatchModifyInfo(BatchModifyAction.FillDown,
                     BindingListSource.ViewInfo.Name, BindingListSource.RowFilter));
             return false;
         }

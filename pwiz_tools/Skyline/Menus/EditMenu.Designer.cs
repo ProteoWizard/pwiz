@@ -125,13 +125,13 @@ namespace pwiz.Skyline.Menus
             // undoMenuItem
             // 
             resources.ApplyResources(this.undoMenuItem, "undoMenuItem");
-            this.undoMenuItem.Image = global::pwiz.Skyline.Properties.Resources.Edit_Undo;
+            this.undoMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.Edit_Undo;
             this.undoMenuItem.Name = "undoMenuItem";
             // 
             // redoMenuItem
             // 
             resources.ApplyResources(this.redoMenuItem, "redoMenuItem");
-            this.redoMenuItem.Image = global::pwiz.Skyline.Properties.Resources.Edit_Redo;
+            this.redoMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.Edit_Redo;
             this.redoMenuItem.Name = "redoMenuItem";
             // 
             // toolStripSeparator34
@@ -141,28 +141,28 @@ namespace pwiz.Skyline.Menus
             // 
             // cutMenuItem
             // 
-            this.cutMenuItem.Image = global::pwiz.Skyline.Properties.Resources.Cut;
+            this.cutMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.Cut;
             resources.ApplyResources(this.cutMenuItem, "cutMenuItem");
             this.cutMenuItem.Name = "cutMenuItem";
             this.cutMenuItem.Click += new System.EventHandler(this.cutMenuItem_Click);
             // 
             // copyMenuItem
             // 
-            this.copyMenuItem.Image = global::pwiz.Skyline.Properties.Resources.Copy;
+            this.copyMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.Copy;
             resources.ApplyResources(this.copyMenuItem, "copyMenuItem");
             this.copyMenuItem.Name = "copyMenuItem";
             this.copyMenuItem.Click += new System.EventHandler(this.copyMenuItem_Click);
             // 
             // pasteMenuItem
             // 
-            this.pasteMenuItem.Image = global::pwiz.Skyline.Properties.Resources.Paste;
+            this.pasteMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.Paste;
             resources.ApplyResources(this.pasteMenuItem, "pasteMenuItem");
             this.pasteMenuItem.Name = "pasteMenuItem";
             this.pasteMenuItem.Click += new System.EventHandler(this.pasteMenuItem_Click);
             // 
             // deleteMenuItem
             // 
-            this.deleteMenuItem.Image = global::pwiz.Skyline.Properties.Resources.Delete;
+            this.deleteMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.Delete;
             resources.ApplyResources(this.deleteMenuItem, "deleteMenuItem");
             this.deleteMenuItem.Name = "deleteMenuItem";
             this.deleteMenuItem.Click += new System.EventHandler(this.deleteMenuItem_Click);
@@ -197,7 +197,7 @@ namespace pwiz.Skyline.Menus
             // 
             // editNoteToolStripMenuItem
             // 
-            this.editNoteToolStripMenuItem.Image = global::pwiz.Skyline.Properties.Resources.Comment;
+            this.editNoteToolStripMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.Comment;
             resources.ApplyResources(this.editNoteToolStripMenuItem, "editNoteToolStripMenuItem");
             this.editNoteToolStripMenuItem.Name = "editNoteToolStripMenuItem";
             this.editNoteToolStripMenuItem.Click += new System.EventHandler(this.editNoteMenuItem_Click);
@@ -276,21 +276,21 @@ namespace pwiz.Skyline.Menus
             // 
             this.insertFASTAMenuItem.Name = "insertFASTAMenuItem";
             resources.ApplyResources(this.insertFASTAMenuItem, "insertFASTAMenuItem");
-            this.modeUIHandler.SetUIMode(this.insertFASTAMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.insertFASTAMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.insertFASTAMenuItem.Click += new System.EventHandler(this.insertFASTAToolStripMenuItem_Click);
             // 
             // insertProteinsMenuItem
             // 
             this.insertProteinsMenuItem.Name = "insertProteinsMenuItem";
             resources.ApplyResources(this.insertProteinsMenuItem, "insertProteinsMenuItem");
-            this.modeUIHandler.SetUIMode(this.insertProteinsMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.insertProteinsMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.insertProteinsMenuItem.Click += new System.EventHandler(this.insertProteinsToolStripMenuItem_Click);
             // 
             // insertPeptidesMenuItem
             // 
             this.insertPeptidesMenuItem.Name = "insertPeptidesMenuItem";
             resources.ApplyResources(this.insertPeptidesMenuItem, "insertPeptidesMenuItem");
-            this.modeUIHandler.SetUIMode(this.insertPeptidesMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.insertPeptidesMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.insertPeptidesMenuItem.Click += new System.EventHandler(this.insertPeptidesToolStripMenuItem_Click);
             // 
             // insertTransitionListMenuItem

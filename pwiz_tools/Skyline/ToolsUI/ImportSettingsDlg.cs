@@ -50,7 +50,7 @@ namespace pwiz.Skyline.ToolsUI
         public ImportSettingsDlg(IEnumerable<SkylineInstallation> installations, bool userInitiated)
         {
             InitializeComponent();
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
             _uninstallWanted = !userInitiated;
             if (!userInitiated)
             {

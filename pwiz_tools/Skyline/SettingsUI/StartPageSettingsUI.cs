@@ -38,7 +38,7 @@ namespace pwiz.Skyline.SettingsUI
             InitializeComponent();
             if (ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)
             {
-                pictureBox2.Image = Resources.WizardMoleculeIcon;
+                pictureBox2.Image = ImageResources.WizardMoleculeIcon;
             }
 
             AcceptButton = nextBtn;

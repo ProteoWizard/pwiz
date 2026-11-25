@@ -52,7 +52,7 @@ namespace pwiz.Skyline.FileUI
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             DocumentUIContainer = documentUIContainer;
             var settings = DocumentUIContainer.Document.Settings;

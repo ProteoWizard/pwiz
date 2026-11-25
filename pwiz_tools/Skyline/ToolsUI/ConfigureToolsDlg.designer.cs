@@ -87,7 +87,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // btnInitialDirectoryMacros
             // 
-            this.btnInitialDirectoryMacros.Image = global::pwiz.Skyline.Properties.Resources.MacroMenuArrow;
+            this.btnInitialDirectoryMacros.Image = global::pwiz.Skyline.Properties.ImageResources.MacroMenuArrow;
             resources.ApplyResources(this.btnInitialDirectoryMacros, "btnInitialDirectoryMacros");
             this.btnInitialDirectoryMacros.Name = "btnInitialDirectoryMacros";
             this.helpTip.SetToolTip(this.btnInitialDirectoryMacros, resources.GetString("btnInitialDirectoryMacros.ToolTip"));
@@ -96,7 +96,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // btnArguments
             // 
-            this.btnArguments.Image = global::pwiz.Skyline.Properties.Resources.MacroMenuArrow;
+            this.btnArguments.Image = global::pwiz.Skyline.Properties.ImageResources.MacroMenuArrow;
             resources.ApplyResources(this.btnArguments, "btnArguments");
             this.btnArguments.Name = "btnArguments";
             this.helpTip.SetToolTip(this.btnArguments, resources.GetString("btnArguments.ToolTip"));

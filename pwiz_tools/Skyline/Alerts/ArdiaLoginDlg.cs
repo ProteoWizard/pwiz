@@ -808,7 +808,7 @@ namespace pwiz.Skyline.Alerts
             }
             catch (Exception e)
             {
-                Program.ReportException(e);
+                ProgramContext.ReportException(e);
             }
         }
 
@@ -873,7 +873,7 @@ namespace pwiz.Skyline.Alerts
             }
             catch (Exception e)
             {
-                Program.ReportException(e);
+                ProgramContext.ReportException(e);
             }
         }
 
@@ -1487,7 +1487,7 @@ namespace pwiz.Skyline.Alerts
 
                 //  Add exception here to make sure we report that navigation is invalid
 
-                if (Program.FunctionalTest)
+                if (ProgramContext.FunctionalTest)
                 {
                     throw new Exception(@$"ArdiaLoginDlg: WebView Navigation failed with HTTP status code {eventArgs.HttpStatusCode}, AbsolutePath: {webView.Source.AbsolutePath}");
                 }
@@ -1690,7 +1690,7 @@ namespace pwiz.Skyline.Alerts
             catch (Exception ex)
             {
                 // only throw automated login exceptions when testing: users can just log in manually
-                if (Program.FunctionalTest)
+                if (ProgramContext.FunctionalTest)
                     throw;
                 else
                     Console.Error.WriteLine(ex.ToString());

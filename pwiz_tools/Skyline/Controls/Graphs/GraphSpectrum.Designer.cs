@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.propertiesButton.Name = "propertiesButton";
             this.propertiesButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.propertiesButton.Alignment = ToolStripItemAlignment.Right;
-            this.propertiesButton.Image = global::pwiz.Skyline.Properties.Resources.Properties_Button;
+            this.propertiesButton.Image = global::pwiz.Skyline.Properties.ImageResources.Properties_Button;
             this.propertiesButton.Click += new System.EventHandler(this.propertiesMenuItem_Click);
             // 
             // GraphSpectrum

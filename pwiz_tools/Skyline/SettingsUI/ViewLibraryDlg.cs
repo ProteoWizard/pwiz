@@ -181,12 +181,12 @@ namespace pwiz.Skyline.SettingsUI
 
             GraphSettings = new GraphSpectrumSettings(UpdateGraphs);
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
             ModFonts = new ModFontHolder(listPeptide);
             _originalFileLabelText = labelFilename.Text;
             // The 16x16 icons are drawn at the row height scaled above, so get them at that size
-            _peptideImg = (Bitmap) DpiUtil.GetIcon(this, nameof(Resources.PeptideLib), Resources.PeptideLib);
-            _moleculeImg = (Bitmap) DpiUtil.GetIcon(this, nameof(Resources.MoleculeLib), Resources.MoleculeLib);
+            _peptideImg = (Bitmap) DpiUtil.GetIcon(this, nameof(ImageResources.PeptideLib), ImageResources.PeptideLib);
+            _moleculeImg = (Bitmap) DpiUtil.GetIcon(this, nameof(ImageResources.MoleculeLib), ImageResources.MoleculeLib);
 
             // Tip for peptides in list
             _nodeTip = new NodeTip(this) {Parent = this};

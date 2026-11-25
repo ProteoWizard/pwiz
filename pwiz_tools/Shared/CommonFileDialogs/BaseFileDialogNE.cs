@@ -174,7 +174,7 @@ namespace pwiz.CommonFileDialogs
         public void RestoreState(string documentPath, OpenDataSourceState state)
         {
             if (state != null)
-                Size = state.WindowSize;
+                Size = new Size(state.WindowSize.Width, state.WindowSize.Height);
 
             string initialDir = state?.InitialDirectory;
             // If the saved initial directory is not for the same document, then start
@@ -196,8 +196,8 @@ namespace pwiz.CommonFileDialogs
             {
                 if (SourceTypeName != null)
                     SourceTypeName = state.SourceTypeName;
-                ListView = state.ListView;
-                SetListViewSort(state.ListSortColumnIndex, state.ListSortOrder);
+                ListView = (View) state.ListView;
+                SetListViewSort(state.ListSortColumnIndex, (SortOrder) state.ListSortOrder);
             }
         }
 
@@ -208,10 +208,10 @@ namespace pwiz.CommonFileDialogs
                 DocumentPath = documentPath,
                 InitialDirectory = CurrentDirectory.ToString(),
                 SourceTypeName = SourceTypeName,
-                ListView = ListView,
+                ListView = (FileListView) ListView,
                 ListSortColumnIndex = ListSortColumnIndex,
-                ListSortOrder = ListSortOrder,
-                WindowSize = Size
+                ListSortOrder = (FileListSortOrder) ListSortOrder,
+                WindowSize = new FileDialogSize { Width = Size.Width, Height = Size.Height }
             };
         }
 

@@ -340,7 +340,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabPage1.Controls.Add(this.textPeptideIonCharges);
             resources.ApplyResources(this.tabPage1, "tabPage1");
             this.tabPage1.Name = "tabPage1";
-            this.modeUIHandler.SetUIMode(this.tabPage1, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.tabPage1, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
             // label5
@@ -450,7 +450,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabPage2.Controls.Add(this.lblSmallMoleculePrecursorAdducts);
             resources.ApplyResources(this.tabPage2, "tabPage2");
             this.tabPage2.Name = "tabPage2";
-            this.modeUIHandler.SetUIMode(this.tabPage2, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol);
+            this.modeUIHandler.SetUIMode(this.tabPage2, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol);
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
             // btnPrecursorAdduct
@@ -580,7 +580,7 @@ namespace pwiz.Skyline.SettingsUI
             this.radioAllAndFiltered.Name = "radioAllAndFiltered";
             this.radioAllAndFiltered.TabStop = true;
             this.helpTip.SetToolTip(this.radioAllAndFiltered, resources.GetString("radioAllAndFiltered.ToolTip"));
-            this.modeUIHandler.SetUIMode(this.radioAllAndFiltered, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.radioAllAndFiltered, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.radioAllAndFiltered.UseVisualStyleBackColor = true;
             // 
             // radioFiltered
@@ -589,7 +589,7 @@ namespace pwiz.Skyline.SettingsUI
             this.radioFiltered.Name = "radioFiltered";
             this.radioFiltered.TabStop = true;
             this.helpTip.SetToolTip(this.radioFiltered, resources.GetString("radioFiltered.ToolTip"));
-            this.modeUIHandler.SetUIMode(this.radioFiltered, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.radioFiltered, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.radioFiltered.UseVisualStyleBackColor = true;
             // 
             // radioAll
@@ -598,7 +598,7 @@ namespace pwiz.Skyline.SettingsUI
             this.radioAll.Name = "radioAll";
             this.radioAll.TabStop = true;
             this.helpTip.SetToolTip(this.radioAll, resources.GetString("radioAll.ToolTip"));
-            this.modeUIHandler.SetUIMode(this.radioAll, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.radioAll, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.radioAll.UseVisualStyleBackColor = true;
             // 
             // label14

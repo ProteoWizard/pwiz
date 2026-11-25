@@ -223,7 +223,7 @@ namespace pwiz.Skyline
             // 
             this.buttonShowAllChromatograms.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.buttonShowAllChromatograms.DropDownButtonWidth = 0;
-            this.buttonShowAllChromatograms.Image = global::pwiz.Skyline.Properties.Resources.AllIonsStatusButton;
+            this.buttonShowAllChromatograms.Image = global::pwiz.Skyline.Properties.ImageResources.AllIonsStatusButton;
             resources.ApplyResources(this.buttonShowAllChromatograms, "buttonShowAllChromatograms");
             this.buttonShowAllChromatograms.Name = "buttonShowAllChromatograms";
             this.buttonShowAllChromatograms.ButtonClick += new System.EventHandler(this.buttonShowAllChromatograms_ButtonClick);
@@ -274,7 +274,7 @@ namespace pwiz.Skyline
             // newToolBarButton
             // 
             this.newToolBarButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.newToolBarButton.Image = global::pwiz.Skyline.Properties.Resources.NewDocument;
+            this.newToolBarButton.Image = global::pwiz.Skyline.Properties.ImageResources.NewDocument;
             resources.ApplyResources(this.newToolBarButton, "newToolBarButton");
             this.newToolBarButton.Name = "newToolBarButton";
             this.newToolBarButton.Click += new System.EventHandler(this.newMenuItem_Click);
@@ -282,7 +282,7 @@ namespace pwiz.Skyline
             // openToolBarButton
             // 
             this.openToolBarButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.openToolBarButton.Image = global::pwiz.Skyline.Properties.Resources.OpenFolder;
+            this.openToolBarButton.Image = global::pwiz.Skyline.Properties.ImageResources.OpenFolder;
             resources.ApplyResources(this.openToolBarButton, "openToolBarButton");
             this.openToolBarButton.Name = "openToolBarButton";
             this.openToolBarButton.Click += new System.EventHandler(this.openMenuItem_Click);
@@ -290,7 +290,7 @@ namespace pwiz.Skyline
             // saveToolBarButton
             // 
             this.saveToolBarButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.saveToolBarButton.Image = global::pwiz.Skyline.Properties.Resources.Save;
+            this.saveToolBarButton.Image = global::pwiz.Skyline.Properties.ImageResources.Save;
             resources.ApplyResources(this.saveToolBarButton, "saveToolBarButton");
             this.saveToolBarButton.Name = "saveToolBarButton";
             this.saveToolBarButton.Click += new System.EventHandler(this.saveMenuItem_Click);
@@ -298,7 +298,7 @@ namespace pwiz.Skyline
             // publishToolbarButton
             // 
             this.publishToolbarButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.publishToolbarButton.Image = global::pwiz.Skyline.Properties.Resources.PanoramaPublish;
+            this.publishToolbarButton.Image = global::pwiz.Skyline.Properties.ImageResources.PanoramaPublish;
             resources.ApplyResources(this.publishToolbarButton, "publishToolbarButton");
             this.publishToolbarButton.Name = "publishToolbarButton";
             this.publishToolbarButton.Click += new System.EventHandler(this.publishMenuItem_Click);
@@ -311,7 +311,7 @@ namespace pwiz.Skyline
             // cutToolBarButton
             // 
             this.cutToolBarButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.cutToolBarButton.Image = global::pwiz.Skyline.Properties.Resources.Cut;
+            this.cutToolBarButton.Image = global::pwiz.Skyline.Properties.ImageResources.Cut;
             resources.ApplyResources(this.cutToolBarButton, "cutToolBarButton");
             this.cutToolBarButton.Name = "cutToolBarButton";
             this.cutToolBarButton.Click += new System.EventHandler(this.cutMenuItem_Click);
@@ -319,7 +319,7 @@ namespace pwiz.Skyline
             // copyToolBarButton
             // 
             this.copyToolBarButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.copyToolBarButton.Image = global::pwiz.Skyline.Properties.Resources.Copy;
+            this.copyToolBarButton.Image = global::pwiz.Skyline.Properties.ImageResources.Copy;
             resources.ApplyResources(this.copyToolBarButton, "copyToolBarButton");
             this.copyToolBarButton.Name = "copyToolBarButton";
             this.copyToolBarButton.Click += new System.EventHandler(this.copyMenuItem_Click);
@@ -327,7 +327,7 @@ namespace pwiz.Skyline
             // pasteToolBarButton
             // 
             this.pasteToolBarButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.pasteToolBarButton.Image = global::pwiz.Skyline.Properties.Resources.Paste;
+            this.pasteToolBarButton.Image = global::pwiz.Skyline.Properties.ImageResources.Paste;
             resources.ApplyResources(this.pasteToolBarButton, "pasteToolBarButton");
             this.pasteToolBarButton.Name = "pasteToolBarButton";
             this.pasteToolBarButton.Click += new System.EventHandler(this.pasteMenuItem_Click);
@@ -341,14 +341,14 @@ namespace pwiz.Skyline
             // 
             this.undoToolBarButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             resources.ApplyResources(this.undoToolBarButton, "undoToolBarButton");
-            this.undoToolBarButton.Image = global::pwiz.Skyline.Properties.Resources.Edit_Undo;
+            this.undoToolBarButton.Image = global::pwiz.Skyline.Properties.ImageResources.Edit_Undo;
             this.undoToolBarButton.Name = "undoToolBarButton";
             // 
             // redoToolBarButton
             // 
             this.redoToolBarButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             resources.ApplyResources(this.redoToolBarButton, "redoToolBarButton");
-            this.redoToolBarButton.Image = global::pwiz.Skyline.Properties.Resources.Edit_Redo;
+            this.redoToolBarButton.Image = global::pwiz.Skyline.Properties.ImageResources.Edit_Redo;
             this.redoToolBarButton.Name = "redoToolBarButton";
             // 
             // toolStripSeparatorSelectUI
@@ -360,7 +360,7 @@ namespace pwiz.Skyline
             // 
             this.modeUIToolBarDropDownButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.modeUIToolBarDropDownButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.modeUIToolBarDropDownButton.Image = global::pwiz.Skyline.Properties.Resources.UIModeProteomic;
+            this.modeUIToolBarDropDownButton.Image = global::pwiz.Skyline.Properties.ImageResources.UIModeProteomic;
             resources.ApplyResources(this.modeUIToolBarDropDownButton, "modeUIToolBarDropDownButton");
             this.modeUIToolBarDropDownButton.Name = "modeUIToolBarDropDownButton";
             // 
@@ -405,28 +405,28 @@ namespace pwiz.Skyline
             // 
             // startPageMenuItem
             // 
-            this.startPageMenuItem.Image = global::pwiz.Skyline.Properties.Resources.HomeIcon1;
+            this.startPageMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.HomeIcon1;
             resources.ApplyResources(this.startPageMenuItem, "startPageMenuItem");
             this.startPageMenuItem.Name = "startPageMenuItem";
             this.startPageMenuItem.Click += new System.EventHandler(this.startPageMenuItem_Click);
             // 
             // newMenuItem
             // 
-            this.newMenuItem.Image = global::pwiz.Skyline.Properties.Resources.NewDocument;
+            this.newMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.NewDocument;
             resources.ApplyResources(this.newMenuItem, "newMenuItem");
             this.newMenuItem.Name = "newMenuItem";
             this.newMenuItem.Click += new System.EventHandler(this.newMenuItem_Click);
             // 
             // openMenuItem
             // 
-            this.openMenuItem.Image = global::pwiz.Skyline.Properties.Resources.OpenFolder;
+            this.openMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.OpenFolder;
             resources.ApplyResources(this.openMenuItem, "openMenuItem");
             this.openMenuItem.Name = "openMenuItem";
             this.openMenuItem.Click += new System.EventHandler(this.openMenuItem_Click);
             // 
             // openPanoramaMenuItem
             // 
-            this.openPanoramaMenuItem.Image = global::pwiz.Skyline.Properties.Resources.PanoramaDownload;
+            this.openPanoramaMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.PanoramaDownload;
             resources.ApplyResources(this.openPanoramaMenuItem, "openPanoramaMenuItem");
             this.openPanoramaMenuItem.Name = "openPanoramaMenuItem";
             this.openPanoramaMenuItem.Click += new System.EventHandler(this.openPanorama_Click);
@@ -444,7 +444,7 @@ namespace pwiz.Skyline
             // 
             // saveMenuItem
             // 
-            this.saveMenuItem.Image = global::pwiz.Skyline.Properties.Resources.Save;
+            this.saveMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.Save;
             resources.ApplyResources(this.saveMenuItem, "saveMenuItem");
             this.saveMenuItem.Name = "saveMenuItem";
             this.saveMenuItem.Click += new System.EventHandler(this.saveMenuItem_Click);
@@ -463,14 +463,14 @@ namespace pwiz.Skyline
             // 
             // publishMenuItem
             // 
-            this.publishMenuItem.Image = global::pwiz.Skyline.Properties.Resources.PanoramaPublish;
+            this.publishMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.PanoramaPublish;
             resources.ApplyResources(this.publishMenuItem, "publishMenuItem");
             this.publishMenuItem.Name = "publishMenuItem";
             this.publishMenuItem.Click += new System.EventHandler(this.publishMenuItem_Click);
             // 
             // ardiaPublishMenuItem
             // 
-            this.ardiaPublishMenuItem.Image = global::pwiz.Skyline.Properties.Resources.ArdiaIcon;
+            this.ardiaPublishMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.ArdiaIcon;
             resources.ApplyResources(this.ardiaPublishMenuItem, "ardiaPublishMenuItem");
             this.ardiaPublishMenuItem.Name = "ardiaPublishMenuItem";
             this.ardiaPublishMenuItem.Click += new System.EventHandler(this.ardiaPublishMenuItem_Click);
@@ -495,28 +495,28 @@ namespace pwiz.Skyline
             // 
             this.runPeptideSearchToolStripMenuItem.Name = "runPeptideSearchToolStripMenuItem";
             resources.ApplyResources(this.runPeptideSearchToolStripMenuItem, "runPeptideSearchToolStripMenuItem");
-            this.modeUIHandler.SetUIMode(this.runPeptideSearchToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.runPeptideSearchToolStripMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.runPeptideSearchToolStripMenuItem.Click += new System.EventHandler(this.runPeptideSearchToolStripMenuItem_Click);
             // 
             // encyclopeDiaSearchMenuItem
             // 
             this.encyclopeDiaSearchMenuItem.Name = "encyclopeDiaSearchMenuItem";
             resources.ApplyResources(this.encyclopeDiaSearchMenuItem, "encyclopeDiaSearchMenuItem");
-            this.modeUIHandler.SetUIMode(this.encyclopeDiaSearchMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.encyclopeDiaSearchMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.encyclopeDiaSearchMenuItem.Click += new System.EventHandler(this.encyclopeDiaSearchMenuItem_Click);
             //
             // diannSearchMenuItem
             //
             this.diannSearchMenuItem.Name = "diannSearchMenuItem";
             resources.ApplyResources(this.diannSearchMenuItem, "diannSearchMenuItem");
-            this.modeUIHandler.SetUIMode(this.diannSearchMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.diannSearchMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.diannSearchMenuItem.Click += new System.EventHandler(this.diannSearchMenuItem_Click);
             //
             // ospreySearchMenuItem
             //
             this.ospreySearchMenuItem.Name = "ospreySearchMenuItem";
             resources.ApplyResources(this.ospreySearchMenuItem, "ospreySearchMenuItem");
-            this.modeUIHandler.SetUIMode(this.ospreySearchMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.ospreySearchMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.ospreySearchMenuItem.Click += new System.EventHandler(this.ospreySearchMenuItem_Click);
             //
             // importFeatureDetectionMenuItem
@@ -563,7 +563,7 @@ namespace pwiz.Skyline
             // 
             this.importPeptideSearchMenuItem.Name = "importPeptideSearchMenuItem";
             resources.ApplyResources(this.importPeptideSearchMenuItem, "importPeptideSearchMenuItem");
-            this.modeUIHandler.SetUIMode(this.importPeptideSearchMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.importPeptideSearchMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.importPeptideSearchMenuItem.Click += new System.EventHandler(this.importPeptideSearchMenuItem_Click);
             // 
             // toolStripSeparator52
@@ -575,7 +575,7 @@ namespace pwiz.Skyline
             // 
             this.importFASTAMenuItem.Name = "importFASTAMenuItem";
             resources.ApplyResources(this.importFASTAMenuItem, "importFASTAMenuItem");
-            this.modeUIHandler.SetUIMode(this.importFASTAMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.importFASTAMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.importFASTAMenuItem.Click += new System.EventHandler(this.importFASTAMenuItem_Click);
             // 
             // importAssayLibraryMenuItem
@@ -1010,7 +1010,7 @@ namespace pwiz.Skyline
             // 
             this.eSPFeaturesMenuItem.Name = "eSPFeaturesMenuItem";
             resources.ApplyResources(this.eSPFeaturesMenuItem, "eSPFeaturesMenuItem");
-            this.modeUIHandler.SetUIMode(this.eSPFeaturesMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.eSPFeaturesMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.eSPFeaturesMenuItem.Click += new System.EventHandler(this.espFeaturesMenuItem_Click);
             // 
             // SkylineWindow
@@ -1021,7 +1021,7 @@ namespace pwiz.Skyline
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.mainToolStrip);
             this.Controls.Add(this.menuMain);
-            this.Icon = global::pwiz.Skyline.Properties.Resources.Skyline;
+            this.Icon = global::pwiz.Skyline.Properties.ImageResources.Skyline;
             this.MainMenuStrip = this.menuMain;
             this.Name = "SkylineWindow";
             this.Activated += new System.EventHandler(this.SkylineWindow_Activated);

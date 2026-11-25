@@ -19,6 +19,7 @@
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using System;
@@ -80,26 +81,6 @@ namespace pwiz.Skyline.Util
 
         /// <summary>The row filter recorded in the audit log for a paste; empty for an unbound grid.</summary>
         protected virtual RowFilter RowFilter => RowFilter.Empty;
-
-        public enum BatchModifyAction { Paste, Clear, FillDown }
-
-        public class BatchModifyInfo : AuditLogOperationSettings<BatchModifyInfo> // TODO: this is a little lazy, consider rewriting
-        {
-            public BatchModifyInfo(BatchModifyAction batchModifyAction, string viewName, RowFilter rowFilter, string extraInfo = null)
-            {
-                BatchModifyAction = batchModifyAction;
-                ViewName = viewName;
-                Filter = rowFilter;
-                ExtraInfo = extraInfo;
-            }
-
-            public BatchModifyAction BatchModifyAction { get; private set; }
-            [Track(defaultValues: typeof(DefaultValuesNull))]
-            public string ViewName { get; private set; }
-            [TrackChildren]
-            public RowFilter Filter { get; private set; }
-            public string ExtraInfo { get; private set; }
-        }
 
         protected void DataGridViewOnKeyDown(object sender, KeyEventArgs e)
         {
@@ -309,7 +290,7 @@ namespace pwiz.Skyline.Util
             }
             catch (Exception e)
             {
-                Program.ReportException(e);
+                ProgramContext.ReportException(e);
                 return false;
             }
             finally
@@ -424,7 +405,7 @@ namespace pwiz.Skyline.Util
             try
             {
                 Settings.Default.ResultsGridSynchSelection = false;
-                lock (SkylineDataSchema.SkylineWindow.GetDocumentChangeLock())
+                lock (SkylineDataSchema.GetSkylineWindow().GetDocumentChangeLock())
                 {
                     SkylineDataSchema.BeginBatchModifyDocument();
                     if (base.ExecuteOperation(description, operation, batchModifyInfo))

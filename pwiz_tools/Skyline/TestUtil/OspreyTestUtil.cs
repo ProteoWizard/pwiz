@@ -90,16 +90,16 @@ namespace pwiz.SkylineTestUtil
             if (string.IsNullOrEmpty(revision) || !OspreyHelpers.TryGetRevisionBuildDownloadInfo(revision, out var downloadInfo))
                 downloadInfo = OspreyHelpers.GetLatestBuildDownloadInfo();
             Console.WriteLine(@"# Osprey for this test: {0}", downloadInfo.DownloadUrl);
-            bool savedUseOriginalUrls = Skyline.Program.UseOriginalURLs;
+            bool savedUseOriginalUrls = Skyline.ProgramContext.UseOriginalURLs;
             try
             {
-                Skyline.Program.UseOriginalURLs = true;
+                Skyline.ProgramContext.UseOriginalURLs = true;
                 AssertEx.IsTrue(SimpleFileDownloader.DownloadRequiredFiles(new[] { downloadInfo }, new SilentProgressMonitor()),
                     @"failed to download Osprey from " + downloadInfo.DownloadUrl);
             }
             finally
             {
-                Skyline.Program.UseOriginalURLs = savedUseOriginalUrls;
+                Skyline.ProgramContext.UseOriginalURLs = savedUseOriginalUrls;
             }
             AssertEx.FileExists(downloadInfo.ToolPath);
             return downloadInfo.ToolPath;

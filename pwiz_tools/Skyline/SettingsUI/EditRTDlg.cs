@@ -53,7 +53,7 @@ namespace pwiz.Skyline.SettingsUI
 
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             _gridViewDriver = new RetentionTimeGridViewDriver(gridPeptides, bindingPeptides,
                                                             new SortableBindingList<MeasuredPeptide>());

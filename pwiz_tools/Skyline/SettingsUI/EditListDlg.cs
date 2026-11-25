@@ -47,7 +47,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             _model = model;
             _list = model.ToList();
-            _editor = model as IItemEditor<TItem>;
+            _editor = SettingsListEditors.GetItemEditor<TItem>(model);
 
             TagEx = tag;
 
@@ -65,7 +65,7 @@ namespace pwiz.Skyline.SettingsUI
             pnlButtons.Controls.Add(spacerAfterDown);
             pnlButtons.Controls.SetChildIndex(spacerAfterDown, pnlButtons.Controls.IndexOf(btnReset));
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
             Text = model.Title;
             labelListName.Text = model.Label;
 

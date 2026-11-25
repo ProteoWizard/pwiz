@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Alerts
                 }
                 catch (Exception e)
                 {
-                    ExceptionUtil.DisplayOrReportException(parent, e);
+                    ExceptionUtilUI.DisplayOrReportException(parent, e);
                 }
             }
         }

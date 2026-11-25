@@ -33,7 +33,7 @@ namespace pwiz.Skyline.FileUI
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             // Move the prompt text from the label to the text box, hopefully a more obvious cue
             label1.Visible = false;

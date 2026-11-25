@@ -216,7 +216,7 @@ namespace pwiz.Skyline.Menus
                         doc = (SrmDocument)doc.RemoveAll(removeParams.ParentPath, removeParams.RemoveIds);
                 }
                 return doc;
-            }, docPair => SkylineWindow.CreateDeleteNodesEntry(docPair, removedNodes.Select(node => AuditLogEntry.GetNodeName(docPair.OldDoc, node).ToString()), removedNodes.Count));
+            }, docPair => AuditLogEntry.CreateDeleteNodesEntry(docPair, removedNodes.Select(node => AuditLogEntry.GetNodeName(docPair.OldDoc, node).ToString()), removedNodes.Count));
         }
 
         private class RemoveParams
@@ -402,7 +402,7 @@ namespace pwiz.Skyline.Menus
             else
             {
                 var inputType =
-                    SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(text, Document.Settings, Program.ModeUI )
+                    SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(text, Document.Settings, ProgramContext.ModeUI )
                         ? SrmDocument.DOCUMENT_TYPE.small_molecules : SrmDocument.DOCUMENT_TYPE.proteomic;
                 
                 // Perhaps it's a small molecule list with headers
@@ -805,7 +805,7 @@ namespace pwiz.Skyline.Menus
             }
             catch (Exception e)
             {
-                ExceptionUtil.DisplayOrReportException(SkylineWindow, e);
+                ExceptionUtilUI.DisplayOrReportException(SkylineWindow, e);
             }
         }
 
@@ -886,7 +886,7 @@ namespace pwiz.Skyline.Menus
                         continue;
                     }
 
-                    var chromInfo = SkylineWindow.FindChromInfo(document, transitionGroupDocNode, chromSet.Name, filePath);
+                    var chromInfo = TransitionGroupDocNode.FindChromInfo(document, transitionGroupDocNode, chromSet.Name, filePath);
                     if (chromInfo == null)
                     {
                         continue;

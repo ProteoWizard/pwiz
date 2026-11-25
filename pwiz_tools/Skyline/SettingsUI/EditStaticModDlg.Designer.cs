@@ -233,7 +233,7 @@ namespace pwiz.Skyline.SettingsUI
             // tbbAddLoss
             // 
             this.tbbAddLoss.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.tbbAddLoss.Image = global::pwiz.Skyline.Properties.Resources.add_pro32;
+            this.tbbAddLoss.Image = global::pwiz.Skyline.Properties.ImageResources.add_pro32;
             resources.ApplyResources(this.tbbAddLoss, "tbbAddLoss");
             this.tbbAddLoss.Name = "tbbAddLoss";
             this.tbbAddLoss.Click += new System.EventHandler(this.tbbAddLoss_Click);
@@ -242,7 +242,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             this.tbbEditLoss.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             resources.ApplyResources(this.tbbEditLoss, "tbbEditLoss");
-            this.tbbEditLoss.Image = global::pwiz.Skyline.Properties.Resources.Comment;
+            this.tbbEditLoss.Image = global::pwiz.Skyline.Properties.ImageResources.Comment;
             this.tbbEditLoss.Name = "tbbEditLoss";
             this.tbbEditLoss.Click += new System.EventHandler(this.tbbEditLoss_Click);
             // 
@@ -250,7 +250,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             this.tbbDeleteLoss.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             resources.ApplyResources(this.tbbDeleteLoss, "tbbDeleteLoss");
-            this.tbbDeleteLoss.Image = global::pwiz.Skyline.Properties.Resources.Delete;
+            this.tbbDeleteLoss.Image = global::pwiz.Skyline.Properties.ImageResources.Delete;
             this.tbbDeleteLoss.Name = "tbbDeleteLoss";
             this.tbbDeleteLoss.Click += new System.EventHandler(this.tbbDeleteLoss_Click);
             // 

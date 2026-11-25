@@ -178,7 +178,7 @@ namespace pwiz.Skyline.Alerts
             }
             catch (Exception ex)
             {
-                ExceptionUtil.DisplayOrReportException(this, ex);
+                ExceptionUtilUI.DisplayOrReportException(this, ex);
                 return false;
             }
             finally

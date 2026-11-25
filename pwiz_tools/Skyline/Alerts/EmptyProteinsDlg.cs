@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Alerts
         {
             base.CreateHandle();
 
-            Text = Program.Name;
+            Text = ProgramContext.Name;
         }
 
         public void OkDialog()

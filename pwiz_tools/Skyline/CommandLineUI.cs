@@ -45,8 +45,8 @@ namespace pwiz.Skyline
                 return;
             }
 
-            Program.UnitTest = Program.FunctionalTest = true;
-            Program.TestExceptions = new List<Exception>();
+            ProgramContext.UnitTest = ProgramContext.FunctionalTest = true;
+            ProgramContext.TestExceptions = new List<Exception>();
             Program.NoSaveSettings = true;
             Program.DisableJoining = _commandArgs.ImportDisableJoining;
             Program.NoAllChromatogramsGraph = _commandArgs.NoAllChromatogramsGraph;

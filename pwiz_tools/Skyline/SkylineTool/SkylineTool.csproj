@@ -1,20 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- SkylineTool - small IPC surface (Remote*, JsonTool*, DocumentLocation)
-       consumed by external Skyline tools + the Skyline test suite. Multi-target
-       net472 + net10.0-windows. System.Web.HttpUtility (used by DocumentLocation
-       for query-string parsing) is part of the .NET runtime on net8+, so no
-       extra package needed there. -->
+       consumed by external Skyline tools + the Skyline test suite. PLAIN net10.0:
+       SkylineCore references it, and SkylineCore must run on Linux.
+       System.Web.HttpUtility (used by DocumentLocation for query-string parsing)
+       is part of the .NET runtime, so no extra package needed there. -->
   <PropertyGroup>
     <ProjectGuid>{3FD4E167-8F9C-4116-8122-67C7AD143490}</ProjectGuid>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>SkylineTool</RootNamespace>
     <AssemblyName>SkylineTool</AssemblyName>
-    <UseWindowsForms>false</UseWindowsForms>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <IsPackable>false</IsPackable>
     <NoWarn>$(NoWarn);NU1605;NU1701</NoWarn>

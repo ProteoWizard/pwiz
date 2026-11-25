@@ -199,7 +199,7 @@ namespace pwiz.SkylineTestUtil
 
                 Console.Out.WriteLine(
                     @"*** ThreadExceptionDialog detected during InterruptAfter wait - dismissing");
-                Program.AddTestException(new InvalidOperationException(
+                ProgramContext.AddTestException(new InvalidOperationException(
                     string.Format(@"ThreadExceptionDialog appeared while waiting for UI action: {0}",
                         TryGetDialogText(dialog))));
 

@@ -60,7 +60,7 @@ namespace pwiz.Skyline.ToolsUI
         public ToolOptionsUI(SrmSettings settings)
         {
             InitializeComponent();
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
             FindInstallations = () => new SkylineInstallations().ListOtherInstallations();
             RunUninstall = SettingsImporter.RunCommand;
 
@@ -477,7 +477,7 @@ namespace pwiz.Skyline.ToolsUI
                     string.Format(
                         ToolsUIResources
                             .ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_,
-                        Program.Name), MultiButtonMsgDlg.BUTTON_OK) == DialogResult.OK)
+                        ProgramContext.Name), MultiButtonMsgDlg.BUTTON_OK) == DialogResult.OK)
             {
                 Settings.Default.Reset();
                 Settings.Default.SettingsUpgradeRequired = false; // do not restore settings from older versions

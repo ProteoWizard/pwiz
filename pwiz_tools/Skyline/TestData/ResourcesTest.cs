@@ -51,6 +51,7 @@ namespace pwiz.SkylineTestData
             foreach (var assembly in new[]
                      {
                          typeof(SkylineWindow).Assembly, // Skyline
+                         typeof(Skyline.Model.SrmDocument).Assembly, // SkylineCore
                          typeof(ProteomeDb).Assembly, // ProteomeDb
                          typeof(FormUtil).Assembly, // CommonBaseUI
                          typeof(Assume).Assembly, // CommonUtil

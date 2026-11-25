@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -58,6 +59,9 @@ namespace TestRunnerLib
     public class InvokeSkyline
     {
         private readonly Type _skylineProgram;
+        // The process globals that do not need the UI (test flags, Name) are on ProgramContext in
+        // SkylineCore, the rest on Program; a member is looked for on Program first
+        private readonly Type[] _globalsTypes;
 
         public InvokeSkyline()
         {
@@ -68,6 +72,10 @@ namespace TestRunnerLib
                 skylinePath = GetAssemblyPath("Skyline.dll");
             var skylineAssembly = LoadFromAssembly.Try(skylinePath);
             _skylineProgram = skylineAssembly.GetType("pwiz.Skyline.Program");
+            // Loaded through Skyline's own reference, so this is the instance Skyline uses
+            var coreAssembly = Assembly.Load(skylineAssembly.GetReferencedAssemblies()
+                .First(name => name.Name == "SkylineCore"));
+            _globalsTypes = new[] { _skylineProgram, coreAssembly.GetType("pwiz.Skyline.ProgramContext") };
         }
 
         private static string GetAssemblyPath(string assembly)
@@ -88,14 +96,18 @@ namespace TestRunnerLib
 
         public void Set(string field, object value)
         {
-            // ReSharper disable once PossibleNullReferenceException
-            _skylineProgram.GetMethod("set_" + field).Invoke(null, new[] {value});
+            GetGlobalsMethod("set_" + field).Invoke(null, new[] {value});
         }
 
         public T Get<T>(string field)
         {
-            // ReSharper disable once PossibleNullReferenceException
-            return (T) _skylineProgram.GetMethod("get_" + field).Invoke(null, null);
+            return (T) GetGlobalsMethod("get_" + field).Invoke(null, null);
+        }
+
+        private MethodInfo GetGlobalsMethod(string name)
+        {
+            return _globalsTypes.Select(type => type.GetMethod(name)).FirstOrDefault(method => method != null)
+                   ?? throw new MissingMethodException(string.Join(" or ", _globalsTypes.Select(type => type.FullName)), name);
         }
 
         public void CheckSettings()

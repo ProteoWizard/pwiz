@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Controls
             // tbbOk
             // 
             this.tbbOk.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.tbbOk.Image = global::pwiz.Skyline.Properties.Resources.GreenCheck;
+            this.tbbOk.Image = global::pwiz.Skyline.Properties.ImageResources.GreenCheck;
             resources.ApplyResources(this.tbbOk, "tbbOk");
             this.tbbOk.Name = "tbbOk";
             this.tbbOk.Click += new System.EventHandler(this.tbbOk_Click);
@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Controls
             // tbbCancel
             // 
             this.tbbCancel.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.tbbCancel.Image = global::pwiz.Skyline.Properties.Resources.RedX;
+            this.tbbCancel.Image = global::pwiz.Skyline.Properties.ImageResources.RedX;
             resources.ApplyResources(this.tbbCancel, "tbbCancel");
             this.tbbCancel.Name = "tbbCancel";
             this.tbbCancel.Click += new System.EventHandler(this.tbbCancel_Click);
@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Controls
             this.tbbFilter.CheckOnClick = true;
             this.tbbFilter.CheckState = System.Windows.Forms.CheckState.Checked;
             this.tbbFilter.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.tbbFilter.Image = global::pwiz.Skyline.Properties.Resources.Filter;
+            this.tbbFilter.Image = global::pwiz.Skyline.Properties.ImageResources.Filter;
             resources.ApplyResources(this.tbbFilter, "tbbFilter");
             this.tbbFilter.Name = "tbbFilter";
             this.tbbFilter.Click += new System.EventHandler(this.tbbFilter_Click);
@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Controls
             // 
             this.tbbAutoManageChildren.CheckOnClick = true;
             this.tbbAutoManageChildren.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.tbbAutoManageChildren.Image = global::pwiz.Skyline.Properties.Resources.WandProhibit;
+            this.tbbAutoManageChildren.Image = global::pwiz.Skyline.Properties.ImageResources.WandProhibit;
             resources.ApplyResources(this.tbbAutoManageChildren, "tbbAutoManageChildren");
             this.tbbAutoManageChildren.Name = "tbbAutoManageChildren";
             this.tbbAutoManageChildren.Click += new System.EventHandler(this.tbbAutoManageChildren_Click);
@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Controls
             // tbbFind
             // 
             this.tbbFind.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.tbbFind.Image = global::pwiz.Skyline.Properties.Resources.Find;
+            this.tbbFind.Image = global::pwiz.Skyline.Properties.ImageResources.Find;
             resources.ApplyResources(this.tbbFind, "tbbFind");
             this.tbbFind.Name = "tbbFind";
             this.tbbFind.Click += new System.EventHandler(this.tbbFind_Click);

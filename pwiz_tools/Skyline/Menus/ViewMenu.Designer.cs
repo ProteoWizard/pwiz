@@ -198,7 +198,7 @@ namespace pwiz.Skyline.Menus
             this.showTargetsByGeneToolStripMenuItem});
             this.viewProteinsMenuItem.Name = "viewProteinsMenuItem";
             resources.ApplyResources(this.viewProteinsMenuItem, "viewProteinsMenuItem");
-            this.modeUIHandler.SetUIMode(this.viewProteinsMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.viewProteinsMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.viewProteinsMenuItem.DropDownOpening += new System.EventHandler(this.peptidesMenuItem_DropDownOpening);
             // 
             // showTargetsByNameToolStripMenuItem
@@ -213,28 +213,28 @@ namespace pwiz.Skyline.Menus
             // 
             this.showTargetsByAccessionToolStripMenuItem.Name = "showTargetsByAccessionToolStripMenuItem";
             resources.ApplyResources(this.showTargetsByAccessionToolStripMenuItem, "showTargetsByAccessionToolStripMenuItem");
-            this.modeUIHandler.SetUIMode(this.showTargetsByAccessionToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.showTargetsByAccessionToolStripMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.showTargetsByAccessionToolStripMenuItem.Click += new System.EventHandler(this.showTargetsByAccessionToolStripMenuItem_Click);
             // 
             // showTargetsByPreferredNameToolStripMenuItem
             // 
             this.showTargetsByPreferredNameToolStripMenuItem.Name = "showTargetsByPreferredNameToolStripMenuItem";
             resources.ApplyResources(this.showTargetsByPreferredNameToolStripMenuItem, "showTargetsByPreferredNameToolStripMenuItem");
-            this.modeUIHandler.SetUIMode(this.showTargetsByPreferredNameToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.showTargetsByPreferredNameToolStripMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.showTargetsByPreferredNameToolStripMenuItem.Click += new System.EventHandler(this.showTargetsByPreferredNameToolStripMenuItem_Click);
             // 
             // showTargetsByGeneToolStripMenuItem
             // 
             this.showTargetsByGeneToolStripMenuItem.Name = "showTargetsByGeneToolStripMenuItem";
             resources.ApplyResources(this.showTargetsByGeneToolStripMenuItem, "showTargetsByGeneToolStripMenuItem");
-            this.modeUIHandler.SetUIMode(this.showTargetsByGeneToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.showTargetsByGeneToolStripMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.showTargetsByGeneToolStripMenuItem.Click += new System.EventHandler(this.showTargetsByGeneToolStripMenuItem_Click);
             // 
             // viewModificationsMenuItem
             // 
             this.viewModificationsMenuItem.Name = "viewModificationsMenuItem";
             resources.ApplyResources(this.viewModificationsMenuItem, "viewModificationsMenuItem");
-            this.modeUIHandler.SetUIMode(this.viewModificationsMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.viewModificationsMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // textZoomToolStripMenuItem
             // 
@@ -271,30 +271,30 @@ namespace pwiz.Skyline.Menus
             this.mixedToolStripMenuItem});
             this.userInterfaceToolStripMenuItem.Name = "userInterfaceToolStripMenuItem";
             resources.ApplyResources(this.userInterfaceToolStripMenuItem, "userInterfaceToolStripMenuItem");
-            this.modeUIHandler.SetUIMode(this.userInterfaceToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
+            this.modeUIHandler.SetUIMode(this.userInterfaceToolStripMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
             // 
             // proteomicsToolStripMenuItem
             // 
-            this.proteomicsToolStripMenuItem.Image = global::pwiz.Skyline.Properties.Resources.UIModeProteomic;
+            this.proteomicsToolStripMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.UIModeProteomic;
             this.proteomicsToolStripMenuItem.Name = "proteomicsToolStripMenuItem";
             resources.ApplyResources(this.proteomicsToolStripMenuItem, "proteomicsToolStripMenuItem");
-            this.modeUIHandler.SetUIMode(this.proteomicsToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
+            this.modeUIHandler.SetUIMode(this.proteomicsToolStripMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
             this.proteomicsToolStripMenuItem.Click += new System.EventHandler(this.proteomicsToolStripMenuItem_Click);
             // 
             // moleculeToolStripMenuItem
             // 
-            this.moleculeToolStripMenuItem.Image = global::pwiz.Skyline.Properties.Resources.UIModeSmallMolecules;
+            this.moleculeToolStripMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.UIModeSmallMolecules;
             this.moleculeToolStripMenuItem.Name = "moleculeToolStripMenuItem";
             resources.ApplyResources(this.moleculeToolStripMenuItem, "moleculeToolStripMenuItem");
-            this.modeUIHandler.SetUIMode(this.moleculeToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
+            this.modeUIHandler.SetUIMode(this.moleculeToolStripMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
             this.moleculeToolStripMenuItem.Click += new System.EventHandler(this.moleculeToolStripMenuItem_Click);
             // 
             // mixedToolStripMenuItem
             // 
-            this.mixedToolStripMenuItem.Image = global::pwiz.Skyline.Properties.Resources.UIModeMixed;
+            this.mixedToolStripMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.UIModeMixed;
             this.mixedToolStripMenuItem.Name = "mixedToolStripMenuItem";
             resources.ApplyResources(this.mixedToolStripMenuItem, "mixedToolStripMenuItem");
-            this.modeUIHandler.SetUIMode(this.mixedToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
+            this.modeUIHandler.SetUIMode(this.mixedToolStripMenuItem, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
             this.mixedToolStripMenuItem.Click += new System.EventHandler(this.mixedToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
@@ -336,7 +336,7 @@ namespace pwiz.Skyline.Menus
             // 
             // auditLogMenuItem
             // 
-            this.auditLogMenuItem.Image = global::pwiz.Skyline.Properties.Resources.AuditLog;
+            this.auditLogMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.AuditLog;
             this.auditLogMenuItem.Name = "auditLogMenuItem";
             resources.ApplyResources(this.auditLogMenuItem, "auditLogMenuItem");
             this.auditLogMenuItem.Click += new System.EventHandler(this.auditLogMenuItem_Click);

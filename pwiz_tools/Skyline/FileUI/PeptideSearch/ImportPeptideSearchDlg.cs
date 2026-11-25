@@ -134,7 +134,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 _tabPageNames[(Pages)i] = wizardPagesImportPeptideSearch.TabPages[i].Name;
             }
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             btnEarlyFinish.Location = btnBack.Location;
 
@@ -1879,7 +1879,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
             catch (Exception x)
             {
-                ExceptionUtil.DisplayOrReportException(this, x,
+                ExceptionUtilUI.DisplayOrReportException(this, x,
                     string.Format(PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__,
                         Path.GetFileName(BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath))));
                 e.Cancel = true;

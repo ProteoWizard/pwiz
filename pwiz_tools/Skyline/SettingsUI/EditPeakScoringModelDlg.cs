@@ -84,7 +84,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             _existing = existing;
 

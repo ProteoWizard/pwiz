@@ -36,7 +36,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SuspendLayout();
             AutoScaleDimensions = new SizeF(6F, 13F);
             AutoScaleMode = AutoScaleMode.Font;
-            Text = Program.Name;
+            Text = ProgramContext.Name;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             StartPosition = FormStartPosition.CenterParent;
             MaximizeBox = false;

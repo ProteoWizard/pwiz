@@ -106,7 +106,7 @@ namespace pwiz.Skyline.Alerts
             _exceptionMessage = exceptionMessage;
             _stackTraceText = stackTraceText;
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
             tbErrorDescription.Text = _exceptionMessage;
             tbSourceCodeLocation.Text = stackTraceText;
         }

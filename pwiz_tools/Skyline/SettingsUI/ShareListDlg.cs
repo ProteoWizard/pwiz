@@ -42,7 +42,7 @@ namespace pwiz.Skyline.SettingsUI
             AutoScaleDimensions = new SizeF(6F, 13F);
             AutoScaleMode = AutoScaleMode.Font;
             Text = title;
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
             FormBorderStyle = FormBorderStyle.Sizable;
             StartPosition = FormStartPosition.CenterParent;
             MaximizeBox = false;

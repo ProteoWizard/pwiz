@@ -83,7 +83,7 @@ namespace pwiz.Skyline.ToolsUI
                     return;
                 }
 
-                ExceptionUtil.DisplayOrReportException(parent, x, Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store_);
+                ExceptionUtilUI.DisplayOrReportException(parent, x, Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store_);
             }
         }
 

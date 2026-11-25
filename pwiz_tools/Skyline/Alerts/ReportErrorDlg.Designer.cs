@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Alerts
             this.Controls.Add(this.lblReportError);
             this.Controls.Add(this.lblError);
             this.Controls.Add(this.btnCancel);
-            this.Icon = global::pwiz.Skyline.Properties.Resources.Skyline;
+            this.Icon = global::pwiz.Skyline.Properties.ImageResources.Skyline;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ReportErrorDlg";

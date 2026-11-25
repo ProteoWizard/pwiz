@@ -251,7 +251,7 @@ namespace pwiz.Skyline.ToolsUI
             try
             {
                 var process = Process.GetProcessById(processId);
-                return Program.FunctionalTest ||
+                return ProgramContext.FunctionalTest ||
                        process.ProcessName.StartsWith(@"Skyline", StringComparison.OrdinalIgnoreCase);
             }
             catch (ArgumentException)

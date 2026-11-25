@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Controls.Databinding
             BindingListSource.QueryLock = viewContext.SkylineDataSchema.QueryLock;
             BindingListSource.SetViewContext(viewContext);
             BindingListSource.ListChanged += BindingListSourceOnListChanged;
-            _skylineWindow = viewContext.SkylineDataSchema.SkylineWindow;
+            _skylineWindow = viewContext.SkylineDataSchema.GetSkylineWindow();
             var documentGridViewContext = viewContext as DocumentGridViewContext;
             if (documentGridViewContext != null)
             {

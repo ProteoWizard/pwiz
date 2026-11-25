@@ -30,7 +30,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             for (int i = 0; i < statistics.Peptides.Count; i++)
             {

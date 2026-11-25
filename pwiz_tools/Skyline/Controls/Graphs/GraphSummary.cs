@@ -155,7 +155,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _originalResultsIndex = originalIndex;
             InitializeComponent();
 
-            Icon = Resources.SkylineData;
+            Icon = ImageResources.SkylineData;
 
             graphControl.MasterPane.Border.IsVisible = false;
 
@@ -169,7 +169,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             Type = type;
             Text = Controller.Text + @" - " + Type.CustomToString(Controller);
-            Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, _documentContainer.Document.DocumentType); // Use terminology like "Molecule Comparison" instead of "Peptide Comparison" as appropriate
+            ModeUIHelpers.FormTextMapper.TranslateForm(this, _documentContainer.Document.DocumentType); // Use terminology like "Molecule Comparison" instead of "Peptide Comparison" as appropriate
 
             // Clear ZedGraph's default pane so the control paints blank until
             // the controller creates the real pane in the first UpdateGraph call.
@@ -445,7 +445,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
@@ -589,23 +588,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
             return true;
         }
-    }
-
-    [Flags]
-    public enum GraphTypeSummary
-    {
-        invalid = 0,
-        replicate = 1,
-        peptide = 1 << 1,
-        score_to_run_regression = 1 << 2,
-        schedule = 1 << 3,
-        run_to_run_regression = 1 << 4,
-        histogram = 1 << 5,
-        histogram2d = 1 << 6,
-        detections = 1 << 7,
-        detections_histogram = 1 << 8,
-        abundance = 1 << 9,
-        abundance_comparison = 1 << 10
     }
 
     public static class Extensions
