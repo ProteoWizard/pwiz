@@ -120,7 +120,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var searchResultsList = new[] {searchResults};
             RunUI(() =>
             {
-                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchResultsList);
             });
             WaitForConditionUI(() => importPeptideSearchDlg.BuildPepSearchLibControl.Grid.ScoreTypesLoaded);
@@ -143,7 +143,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // We're on the "Extract Chromatograms" page of the wizard.
             // All the files should be found, and we should
             // just be able to move to the next page.
-            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.chromatograms_page);
             RunUI(() =>
             {
                 var importResultsControl = (ImportResultsControl) importPeptideSearchDlg.ImportResultsControl;
@@ -168,11 +168,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // Skip Match Modifications page.
             RunUI(() =>
             {
-                AssertEx.AreEqual(ImportPeptideSearchDlg.Pages.match_modifications_page, importPeptideSearchDlg.CurrentPage);
+                AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.match_modifications_page, importPeptideSearchDlg.CurrentPage);
                 AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
-            RunUI(() => AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page));
+            RunUI(() => AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page));
 
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new []{2,3,4,5});
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof);
@@ -189,7 +189,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // We're on the "Import FASTA" page of the wizard.
             RunUI(() =>
             {
-                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("human_and_yeast.fasta"));
             });
             var peptidesPerProteinDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);

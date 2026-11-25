@@ -62,12 +62,12 @@ namespace TestPerf
             OpenDocument(GetTestPath(SKY_ZIP));
 
             // Launch the Feature Detection wizard
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowFeatureDetectionDlg);
+            var importPeptideSearchDlg = ShowDialog<RunPeptideSearchDlg>(SkylineWindow.ShowFeatureDetectionDlg);
             importPeptideSearchDlg.IsAutomatedTest = true;
 
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                 Assert.IsTrue(importPeptideSearchDlg.BuildPepSearchLibControl.PerformDDASearch);
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources =
                     new MsDataFileUri[] { new MsDataFilePath(GetTestPath(RAW_FILE)) };
@@ -80,7 +80,7 @@ namespace TestPerf
             {
                 // Full scan settings page - document already has Orbitrap 45000 settings, accept as-is
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
-                              ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                              PeptideSearchWizardDlg.Pages.full_scan_settings_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
                 // Search settings page - accept defaults

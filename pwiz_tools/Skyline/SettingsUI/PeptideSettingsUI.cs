@@ -903,83 +903,51 @@ namespace pwiz.Skyline.SettingsUI
         public static bool AddIrts(IrtRegressionType regressionType, Library lib, LibrarySpec libSpec, IrtStandard standard, Control parent, bool useTopMostForm, out IrtStandard outStandard)
         {
             outStandard = standard;
-            if (lib == null || !lib.IsLoaded || standard == null || standard.IsEmpty)
+            if (!LibraryIrtCalibration.CanCalibrate(lib, standard))
                 return false;
 
-            IRetentionTimeProvider[] irtProviders = null;
-            var isAuto = standard.IsAuto;
-            List<IrtStandard> autoStandards = null;
-            var cirtPeptides = Array.Empty<DbIrtPeptide>();
-
-            var standard1 = standard;
+            var calibration = new LibraryIrtCalibration(lib, libSpec, standard, regressionType);
             if (!PerformLongWork(parent, SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Loading_retention_time_providers,
-                    monitor =>
-                    {
-                        ImportPeptideSearch.GetLibIrtProviders(lib, standard1, monitor,
-                            out irtProviders, out autoStandards, out cirtPeptides);
-                    }))
+                    calibration.LoadRetentionTimes))
             {
                 return false;
             }
 
             int? numCirt = null;
-            if (cirtPeptides.Length >= RCalcIrt.MIN_PEPTIDES_COUNT)
+            if (calibration.UsesCirtPeptides)
             {
-                using var dlg = new AddIrtStandardsDlg(cirtPeptides.Length,
+                using var dlg = new AddIrtStandardsDlg(calibration.CirtPeptides.Length,
                     string.Format(
                         Resources.LibraryBuildNotificationHandler_AddIrts__0__distinct_CiRT_peptides_were_found__How_many_would_you_like_to_use_as_iRT_standards_,
-                        cirtPeptides.Length));
+                        calibration.CirtPeptides.Length));
                 if (dlg.ShowDialog(parent) != DialogResult.OK)
                     return false;
                 numCirt = dlg.StandardCount;
             }
-            else if (isAuto)
+            else if (calibration.NeedsStandardChoice)
             {
-                switch (autoStandards.Count)
-                {
-                    case 0:
-                        standard = new IrtStandard(XmlNamedElement.NAME_INTERNAL, null, null, IrtPeptidePicker.Pick(irtProviders, 10));
-                        break;
-                    case 1:
-                        standard = autoStandards[0];
-                        break;
-                    default:
-                        using (var selectIrtStandardDlg = new SelectIrtStandardDlg(autoStandards))
-                        {
-                            if (selectIrtStandardDlg.ShowDialog(parent) != DialogResult.OK)
-                                return false;
-                            standard = selectIrtStandardDlg.Selected;
-                        }
-                        break;
-                }
+                using var selectIrtStandardDlg = new SelectIrtStandardDlg(calibration.AutoStandards);
+                if (selectIrtStandardDlg.ShowDialog(parent) != DialogResult.OK)
+                    return false;
+                calibration.ChooseStandard(selectIrtStandardDlg.Selected);
             }
 
-            ProcessedIrtAverages processed = null;
             if (!PerformLongWorkWithErrorMessage(parent, 
                     SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Processing_retention_times,
                     Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_,
-                    monitor =>
-                    {
-                        processed = ImportPeptideSearch.ProcessRetentionTimes(numCirt, irtProviders,
-                            standard.Peptides.ToArray(), cirtPeptides, regressionType, monitor,
-                            out var newStandardPeptides);
-                        if (newStandardPeptides != null)
-                        {
-                            standard = new IrtStandard(XmlNamedElement.NAME_INTERNAL, null, null, newStandardPeptides);
-                        }
-                    }))
+                    monitor => calibration.ProcessRetentionTimes(numCirt, monitor)))
             {
                 return false;
             }
 
-            using (var resultsDlg = new AddIrtPeptidesDlg(AddIrtPeptidesLocation.spectral_library, processed))
+            using (var resultsDlg = new AddIrtPeptidesDlg(AddIrtPeptidesLocation.spectral_library, calibration.Processed))
             {
                 if (resultsDlg.ShowDialog(parent) != DialogResult.OK)
                     return false;
             }
 
             var recalibrate = false;
-            if (processed.CanRecalibrateStandards(standard.Peptides))
+            if (calibration.CanRecalibrateStandards)
             {
                 using var dlg = new MultiButtonMsgDlg(
                     TextUtil.LineSeparate(Resources.LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_,
@@ -989,21 +957,17 @@ namespace pwiz.Skyline.SettingsUI
                 recalibrate = dlg.ShowDialog(parent) == DialogResult.Yes;
             }
 
-            if (!processed.DbIrtPeptides.Any())
+            if (!calibration.HasCalibratedPeptides)
                 return false;
 
             if (!PerformLongWorkWithErrorMessage(parent, 
                     SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Adding_iRTs_to_library,
                     SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_An_error_occurred_trying_to_add_iRTs_to_the_library_,
-                    monitor =>
-                    {
-                        ImportPeptideSearch.CreateIrtDb(libSpec.FilePath, processed, standard.Peptides.ToArray(),
-                            recalibrate, regressionType, monitor);
-                    }))
+                    monitor => calibration.CreateIrtDb(recalibrate, monitor)))
             {
                 return false;
             }
-            outStandard = standard;
+            outStandard = calibration.Standard;
             return true;
         }
 

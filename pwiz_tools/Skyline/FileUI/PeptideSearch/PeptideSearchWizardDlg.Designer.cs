@@ -1,6 +1,6 @@
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
-    sealed partial class ImportPeptideSearchDlg
+    partial class PeptideSearchWizardDlg
     {
         /// <summary>
         /// Required designer variable.
@@ -29,22 +29,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ImportPeptideSearchDlg));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PeptideSearchWizardDlg));
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnNext = new System.Windows.Forms.Button();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
-            this.cbMissedCleavages = new System.Windows.Forms.ComboBox();
-            this.comboEnzyme = new System.Windows.Forms.ComboBox();
-            this.comboBackgroundProteome = new System.Windows.Forms.ComboBox();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
-            this.comboBox2 = new System.Windows.Forms.ComboBox();
-            this.comboBox3 = new System.Windows.Forms.ComboBox();
-            this.label4 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
-            this.label15 = new System.Windows.Forms.Label();
-            this.label6 = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
-            this.label9 = new System.Windows.Forms.Label();
             this.btnEarlyFinish = new System.Windows.Forms.Button();
             this.wizardPagesImportPeptideSearch = new pwiz.Skyline.Controls.WizardPages();
             this.buildSearchSpecLibPage = new System.Windows.Forms.TabPage();
@@ -120,106 +108,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.helpTip.AutoPopDelay = 10000;
             this.helpTip.InitialDelay = 500;
             this.helpTip.ReshowDelay = 100;
-            // 
-            // cbMissedCleavages
-            // 
-            this.cbMissedCleavages.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cbMissedCleavages.FormattingEnabled = true;
-            this.cbMissedCleavages.Items.AddRange(new object[] {
-            resources.GetString("cbMissedCleavages.Items"),
-            resources.GetString("cbMissedCleavages.Items1"),
-            resources.GetString("cbMissedCleavages.Items2"),
-            resources.GetString("cbMissedCleavages.Items3"),
-            resources.GetString("cbMissedCleavages.Items4"),
-            resources.GetString("cbMissedCleavages.Items5"),
-            resources.GetString("cbMissedCleavages.Items6"),
-            resources.GetString("cbMissedCleavages.Items7"),
-            resources.GetString("cbMissedCleavages.Items8"),
-            resources.GetString("cbMissedCleavages.Items9")});
-            resources.ApplyResources(this.cbMissedCleavages, "cbMissedCleavages");
-            this.cbMissedCleavages.Name = "cbMissedCleavages";
-            this.helpTip.SetToolTip(this.cbMissedCleavages, resources.GetString("cbMissedCleavages.ToolTip"));
-            // 
-            // comboEnzyme
-            // 
-            this.comboEnzyme.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboEnzyme.FormattingEnabled = true;
-            resources.ApplyResources(this.comboEnzyme, "comboEnzyme");
-            this.comboEnzyme.Name = "comboEnzyme";
-            this.helpTip.SetToolTip(this.comboEnzyme, resources.GetString("comboEnzyme.ToolTip"));
-            // 
-            // comboBackgroundProteome
-            // 
-            this.comboBackgroundProteome.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBackgroundProteome.FormattingEnabled = true;
-            resources.ApplyResources(this.comboBackgroundProteome, "comboBackgroundProteome");
-            this.comboBackgroundProteome.Name = "comboBackgroundProteome";
-            this.helpTip.SetToolTip(this.comboBackgroundProteome, resources.GetString("comboBackgroundProteome.ToolTip"));
-            // 
-            // comboBox1
-            // 
-            this.comboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Items.AddRange(new object[] {
-            resources.GetString("comboBox1.Items"),
-            resources.GetString("comboBox1.Items1"),
-            resources.GetString("comboBox1.Items2"),
-            resources.GetString("comboBox1.Items3"),
-            resources.GetString("comboBox1.Items4"),
-            resources.GetString("comboBox1.Items5"),
-            resources.GetString("comboBox1.Items6"),
-            resources.GetString("comboBox1.Items7"),
-            resources.GetString("comboBox1.Items8"),
-            resources.GetString("comboBox1.Items9")});
-            resources.ApplyResources(this.comboBox1, "comboBox1");
-            this.comboBox1.Name = "comboBox1";
-            this.helpTip.SetToolTip(this.comboBox1, resources.GetString("comboBox1.ToolTip"));
-            // 
-            // comboBox2
-            // 
-            this.comboBox2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBox2.FormattingEnabled = true;
-            resources.ApplyResources(this.comboBox2, "comboBox2");
-            this.comboBox2.Name = "comboBox2";
-            this.helpTip.SetToolTip(this.comboBox2, resources.GetString("comboBox2.ToolTip"));
-            // 
-            // comboBox3
-            // 
-            this.comboBox3.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBox3.FormattingEnabled = true;
-            resources.ApplyResources(this.comboBox3, "comboBox3");
-            this.comboBox3.Name = "comboBox3";
-            this.helpTip.SetToolTip(this.comboBox3, resources.GetString("comboBox3.ToolTip"));
-            // 
-            // label4
-            // 
-            resources.ApplyResources(this.label4, "label4");
-            this.label4.Name = "label4";
-            // 
-            // label5
-            // 
-            resources.ApplyResources(this.label5, "label5");
-            this.label5.Name = "label5";
-            // 
-            // label15
-            // 
-            resources.ApplyResources(this.label15, "label15");
-            this.label15.Name = "label15";
-            // 
-            // label6
-            // 
-            resources.ApplyResources(this.label6, "label6");
-            this.label6.Name = "label6";
-            // 
-            // label8
-            // 
-            resources.ApplyResources(this.label8, "label8");
-            this.label8.Name = "label8";
-            // 
-            // label9
-            // 
-            resources.ApplyResources(this.label9, "label9");
-            this.label9.Name = "label9";
             // 
             // btnEarlyFinish
             // 
@@ -469,7 +357,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnSavePreset.Name = "btnSavePreset";
             this.btnSavePreset.UseVisualStyleBackColor = true;
             // 
-            // ImportPeptideSearchDlg
+            // PeptideSearchWizardDlg
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -484,7 +372,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.Controls.Add(this.btnNext);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "ImportPeptideSearchDlg";
+            this.Name = "PeptideSearchWizardDlg";
             this.ShowInTaskbar = false;
             this.wizardPagesImportPeptideSearch.ResumeLayout(false);
             this.buildSearchSpecLibPage.ResumeLayout(false);
@@ -521,24 +409,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         #endregion
 
-        private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.Button btnNext;
+        protected System.Windows.Forms.Button btnCancel;
+        protected System.Windows.Forms.Button btnNext;
         private System.Windows.Forms.ToolTip helpTip;
         private pwiz.Skyline.Controls.WizardPages wizardPagesImportPeptideSearch;
         private System.Windows.Forms.TabPage buildSearchSpecLibPage;
         private System.Windows.Forms.TabPage getChromatogramsPage;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.ComboBox cbMissedCleavages;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.ComboBox comboEnzyme;
-        private System.Windows.Forms.Label label15;
-        private System.Windows.Forms.ComboBox comboBackgroundProteome;
-        private System.Windows.Forms.ComboBox comboBox1;
-        private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.ComboBox comboBox2;
-        private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.ComboBox comboBox3;
         private System.Windows.Forms.TabPage matchModificationsPage;
         private System.Windows.Forms.TabPage importFastaPage;
         private System.Windows.Forms.TabPage ms1FullScanSettingsPage;
@@ -547,28 +423,28 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.Panel importFASTATitlePanel;
         private System.Windows.Forms.Label lblFasta;
         private System.Windows.Forms.Panel ms1FullScanSettingsTitlePanel;
-        private System.Windows.Forms.Label label19;
+        protected System.Windows.Forms.Label label19;
         private System.Windows.Forms.Panel extractChromatogramsTitlePanel;
         private System.Windows.Forms.Label label20;
         private System.Windows.Forms.Button btnEarlyFinish;
-        private System.Windows.Forms.Panel buildSpectralLibraryTitlePanel;
-        private System.Windows.Forms.Label label14;
+        protected System.Windows.Forms.Panel buildSpectralLibraryTitlePanel;
+        protected System.Windows.Forms.Label label14;
         private System.Windows.Forms.TabPage transitionSettingsUiPage;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button btnBack;
+        protected System.Windows.Forms.Button btnBack;
         private System.Windows.Forms.Panel buildLibraryPanel;
-        private System.Windows.Forms.TabPage ddaSearchSettingsPage;
+        protected System.Windows.Forms.TabPage ddaSearchSettingsPage;
         private System.Windows.Forms.Panel searchSettingsTitlePanel;
         private System.Windows.Forms.Label lblSearchSettings;
-        private System.Windows.Forms.TabPage ddaSearchPage;
+        protected System.Windows.Forms.TabPage ddaSearchPage;
         private System.Windows.Forms.Panel ddaSearchTitlePanel;
-        private System.Windows.Forms.Label lblDDASearch;
-        private System.Windows.Forms.TabPage converterSettingsPage;
+        protected System.Windows.Forms.Label lblDDASearch;
+        protected System.Windows.Forms.TabPage converterSettingsPage;
         private System.Windows.Forms.Panel converterSettingsTitlePanel;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label lblSettingsPreset;
-        private System.Windows.Forms.ComboBox cbSettingsPreset;
-        private System.Windows.Forms.Button btnSavePreset;
+        protected System.Windows.Forms.Label lblSettingsPreset;
+        protected System.Windows.Forms.ComboBox cbSettingsPreset;
+        protected System.Windows.Forms.Button btnSavePreset;
     }
 }

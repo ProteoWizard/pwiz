@@ -1038,8 +1038,8 @@ namespace pwiz.Skyline.SettingsUI
                     .FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values_from_Full_Scan_Settings;
         }
 
-        private ImportPeptideSearchDlg.Workflow? _lastPeptideSearchWorkflow;
-        public void ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow workflow, bool libIonMobilities, 
+        private PeptideSearchWizardDlg.Workflow? _lastPeptideSearchWorkflow;
+        public void ModifyOptionsForImportPeptideSearchWizard(PeptideSearchWizardDlg.Workflow workflow, bool libIonMobilities, 
             ImportPeptideSearch.eFeatureDetectionPhase featureDetectionPhase = ImportPeptideSearch.eFeatureDetectionPhase.none)
         {
             var settings = _documentContainer.Document.Settings;
@@ -1057,8 +1057,8 @@ namespace pwiz.Skyline.SettingsUI
             groupBoxMS1.Height -= comboEnrichments.Bottom - cbIncludeMinusOnePrecursor.Bottom;
 
             var isWorkflowDda =
-                workflow == ImportPeptideSearchDlg.Workflow.dda ||
-                workflow == ImportPeptideSearchDlg.Workflow.feature_detection;
+                workflow == PeptideSearchWizardDlg.Workflow.dda ||
+                workflow == PeptideSearchWizardDlg.Workflow.feature_detection;
 
             if (featureDetectionPhase == ImportPeptideSearch.eFeatureDetectionPhase.hardklor_settings)
             {
@@ -1115,9 +1115,9 @@ namespace pwiz.Skyline.SettingsUI
                 lblPrecursorCharges.Enabled = false;
             }
 
-            if (workflow != ImportPeptideSearchDlg.Workflow.dia)
+            if (workflow != PeptideSearchWizardDlg.Workflow.dia)
             {
-                var newRadioTimeAroundTop = workflow == ImportPeptideSearchDlg.Workflow.feature_detection ?
+                var newRadioTimeAroundTop = workflow == PeptideSearchWizardDlg.Workflow.feature_detection ?
                     radioTimeAroundMs2Ids.Top :
                     radioUseSchedulingWindow.Top;
                 int radioTimeAroundTopDifference = radioKeepAllTime.Top - newRadioTimeAroundTop;
@@ -1126,7 +1126,7 @@ namespace pwiz.Skyline.SettingsUI
                 radioKeepAllTime.Top = newRadioTimeAroundTop;
                 groupBoxRetentionTimeToKeep.Height -= radioTimeAroundTopDifference;
 
-                if (workflow == ImportPeptideSearchDlg.Workflow.feature_detection)
+                if (workflow == PeptideSearchWizardDlg.Workflow.feature_detection)
                 {
                     // Only offer "time around ID" 
                     radioTimeAroundMs2Ids.Checked = true;
@@ -1140,7 +1140,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // Select defaults
             PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
-            if (workflow == ImportPeptideSearchDlg.Workflow.dia &&
+            if (workflow == PeptideSearchWizardDlg.Workflow.dia &&
                 settings.PeptideSettings.Prediction.RetentionTime != null &&
                 settings.PeptideSettings.Prediction.RetentionTime.Calculator is RCalcIrt)
             {
@@ -1157,13 +1157,13 @@ namespace pwiz.Skyline.SettingsUI
                 cbHighSelectivity.Top = groupBoxMS2.Bottom + sepMS2FromSel;
                 groupBoxRetentionTimeToKeep.Top = groupBoxMS2.Bottom + sepMS2FromRT;
 
-                AcquisitionMethod = (workflow == ImportPeptideSearchDlg.Workflow.dia)
+                AcquisitionMethod = (workflow == PeptideSearchWizardDlg.Workflow.dia)
                     ? FullScanAcquisitionMethod.DIA
                     : FullScanAcquisitionMethod.PRM;
 
                 ProductMassAnalyzer = PrecursorMassAnalyzer;
 
-                if (workflow == ImportPeptideSearchDlg.Workflow.dia && Settings.Default.IsolationSchemeList.Count > 1 &&
+                if (workflow == PeptideSearchWizardDlg.Workflow.dia && Settings.Default.IsolationSchemeList.Count > 1 &&
                     settings.TransitionSettings.FullScan.IsolationScheme == null)
                 {
                     comboIsolationScheme.SelectedIndex = 1; // Use "Results" isolation scheme

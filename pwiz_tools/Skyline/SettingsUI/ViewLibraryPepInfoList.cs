@@ -26,7 +26,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -73,7 +72,7 @@ namespace pwiz.Skyline.SettingsUI
         public ViewLibraryPepInfoList(IEnumerable<ViewLibraryPepInfo> items, LibKeyModificationMatcher matcher, string selectedFilterCategory, out bool allPeptides)
         {
             _allEntries = ImmutableList.ValueOf(items.OrderBy(item => item, Comparer<ViewLibraryPepInfo>.Create(ComparePepInfos)));
-            var naturalSort = Enumerable.Range(0, _allEntries.Count).OrderBy(i => MakeCompareKey(_allEntries[i])).ToArray();
+            var naturalSort = Enumerable.Range(0, _allEntries.Count).OrderBy(i => ViewLibraryPepInfo.MakeCompareKey(_allEntries[i])).ToArray();
             var naturalSortMap = new int[_allEntries.Count];
             for (var order = 0; order < naturalSort.Length; order++)
             {
@@ -426,14 +425,6 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
             return result;
-        }
-
-        // Natural sort (e.g. "xyz200.5" comes before "xyz1200.5")
-        public static Tuple<NaturalStringComparer.CompareKey, Adduct, NaturalStringComparer.CompareKey> MakeCompareKey(
-            ViewLibraryPepInfo info)
-        {
-            return Tuple.Create(NaturalStringComparer.MakeCompareKey(info.UnmodifiedTargetText), info.Adduct,
-                NaturalStringComparer.MakeCompareKey(info.KeyString));
         }
     }
 }

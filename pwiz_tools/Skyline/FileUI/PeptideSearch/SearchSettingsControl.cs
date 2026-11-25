@@ -41,11 +41,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     public partial class SearchSettingsControl : UserControl
     {
         private ImportPeptideSearch ImportPeptideSearch { get; set; }
-        private readonly ImportPeptideSearchDlg _documentContainer;
+        private readonly RunPeptideSearchDlg _documentContainer;
         private readonly FullScanSettingsControl _hardklorInstrumentSettingsControl;
         private SearchEngine? _searchEngine;
 
-        public SearchSettingsControl(ImportPeptideSearchDlg documentContainer, ImportPeptideSearch importPeptideSearch)
+        public SearchSettingsControl(RunPeptideSearchDlg documentContainer, ImportPeptideSearch importPeptideSearch)
         {
             InitializeComponent();
             ImportPeptideSearch = importPeptideSearch;
@@ -67,7 +67,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 // Add the Hardklor full scan settings control, used only when the user set FullScan analyzer to "Centroided"
                 // Otherwise just displays the previously designated Full Scan settings
                 _hardklorInstrumentSettingsControl = new FullScanSettingsControl(_documentContainer, ImportPeptideSearch.eFeatureDetectionPhase.hardklor_settings);
-                _hardklorInstrumentSettingsControl.ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow.feature_detection, false, ImportPeptideSearch.eFeatureDetectionPhase.hardklor_settings);
+                _hardklorInstrumentSettingsControl.ModifyOptionsForImportPeptideSearchWizard(PeptideSearchWizardDlg.Workflow.feature_detection, false, ImportPeptideSearch.eFeatureDetectionPhase.hardklor_settings);
                 Controls.Add(_hardklorInstrumentSettingsControl);
                 _hardklorInstrumentSettingsControl.Location = new System.Drawing.Point(0, 0);
                 // And adjust location of the other settings controls
