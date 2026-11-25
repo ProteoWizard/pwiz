@@ -295,20 +295,8 @@ internal sealed class CompassXtractData : IBrukerData
 
     private static int OpenFidSpectrumLevel(string fidDirectory)
     {
-        EDAL.IMSAnalysis? analysis = null;
-        EDAL.IMSSpectrumCollection? spectra = null;
-        EDAL.IMSSpectrum? spectrum = null;
-        try
-        {
-            analysis = OpenFid(fidDirectory, out spectra, out spectrum);
-            return spectrum.MSMSStage;
-        }
-        finally
-        {
-            Release(spectrum);
-            Release(spectra);
-            Release(analysis);
-        }
+        using var fid = new FidSpectrum(fidDirectory);
+        return fid.Spectrum.MSMSStage;
     }
 
     // ---------- index ----------
@@ -393,20 +381,8 @@ internal sealed class CompassXtractData : IBrukerData
         {
             if (entry.Tag is string fidDirectory)
             {
-                EDAL.IMSAnalysis? analysis = null;
-                EDAL.IMSSpectrumCollection? fidSpectra = null;
-                EDAL.IMSSpectrum? fidSpectrum = null;
-                try
-                {
-                    analysis = OpenFid(fidDirectory, out fidSpectra, out fidSpectrum);
-                    FillFromSpectrum(spec, fidSpectrum, detailLevel, preferCentroid);
-                }
-                finally
-                {
-                    Release(fidSpectrum);
-                    Release(fidSpectra);
-                    Release(analysis);
-                }
+                using var fid = new FidSpectrum(fidDirectory);
+                FillFromSpectrum(spec, fid.Spectrum, detailLevel, preferCentroid);
                 return;
             }
 
@@ -687,32 +663,45 @@ internal sealed class CompassXtractData : IBrukerData
     // ---------- COM plumbing ----------
 
     /// <summary>
-    /// Opens one <c>fid</c> directory and returns its single spectrum. Port of
+    /// One <c>fid</c> directory opened for its single spectrum. Port of
     /// <c>SpectrumList_Bruker::getMSSpectrumPtr</c>'s FID branch
     /// (<c>SpectrumList_Bruker.cpp:117-121</c>), which likewise creates a fresh analysis per scan
-    /// and asks it for spectrum 1.
+    /// and asks it for spectrum 1. Disposing releases the spectrum, then its collection, then
+    /// the analysis.
     /// </summary>
-    /// <remarks>Caller must already hold a <see cref="CompassXtractActivationContext.Activate"/>
-    /// scope, and must <see cref="Release"/> the returned spectrum, then the spectrum collection,
-    /// then the analysis.</remarks>
-    private static EDAL.IMSAnalysis OpenFid(string fidDirectory, out EDAL.IMSSpectrumCollection spectra,
-        out EDAL.IMSSpectrum spectrum)
+    /// <remarks>Create and dispose it inside a <see cref="CompassXtractActivationContext.Activate"/>
+    /// scope, on the same thread.</remarks>
+    private sealed class FidSpectrum : IDisposable
     {
-        EDAL.IMSAnalysis analysis = new EDAL.MSAnalysis();
-        EDAL.IMSSpectrumCollection? collection = null;
-        try
+        private readonly EDAL.IMSAnalysis _analysis;
+        private readonly EDAL.IMSSpectrumCollection _spectra;
+
+        public FidSpectrum(string fidDirectory)
         {
-            analysis.Open(Filesystem.GetNonUnicodePath(fidDirectory));
-            collection = analysis.MSSpectrumCollection;
-            spectrum = collection[1];
-            spectra = collection;
-            return analysis;
+            _analysis = new EDAL.MSAnalysis();
+            EDAL.IMSSpectrumCollection? spectra = null;
+            try
+            {
+                _analysis.Open(Filesystem.GetNonUnicodePath(fidDirectory));
+                spectra = _analysis.MSSpectrumCollection;
+                Spectrum = spectra[1];
+                _spectra = spectra;
+            }
+            catch
+            {
+                Release(spectra);
+                Release(_analysis);
+                throw;
+            }
         }
-        catch
+
+        public EDAL.IMSSpectrum Spectrum { get; }
+
+        public void Dispose()
         {
-            Release(collection);
-            Release(analysis);
-            throw;
+            Release(Spectrum);
+            Release(_spectra);
+            Release(_analysis);
         }
     }
 
@@ -880,9 +869,11 @@ internal sealed class CompassXtractData : IBrukerData
     /// <c>Dispose</c> leaks it until the process exits, and only a finalizer can close it. This
     /// class holds no native handle: it holds runtime callable wrappers, which are ordinary
     /// managed objects with finalizers of their own. Drop a <see cref="CompassXtractData"/>
-    /// without disposing it and the RCWs become unreachable in the same GC pass and release their
-    /// interfaces on that pass's finalization, which is what
-    /// <c>VendorReaderTestHarness.ProbeFinalizers</c> observes.</para>
+    /// without disposing it and the analysis and its spectrum collection are released on that
+    /// GC pass's finalization, in an order the CLR picks, which is what
+    /// <c>VendorReaderTestHarness.ProbeFinalizers</c> observes. That is the late release
+    /// <see cref="Release"/> warns can keep <c>analysis.yep</c> open, so callers must dispose;
+    /// the finalizer path only bounds the damage to these two objects.</para>
     /// <para>Adding a finalizer here would not improve that and would introduce a hazard: it
     /// would call <see cref="Marshal.FinalReleaseComObject"/> on the finalizer thread, tearing
     /// COM objects down from a thread that never entered the activation context and in an order
@@ -917,8 +908,9 @@ internal sealed class CompassXtractData : IBrukerData
     /// as soon as it has been used, children before their parent. One left to the garbage
     /// collector is released later on the finalizer thread, possibly after its analysis is gone,
     /// and that can keep <c>analysis.yep</c> open after <see cref="Dispose()"/> for the rest of
-    /// the process. cpp's destructor releases only the analysis (<c>CompassData.cpp:546</c>) and
-    /// its harness tolerates the resulting lock as a CompassXtract bug.
+    /// the process. cpp's <c>delete msAnalysis_</c> (<c>CompassData.cpp:546</c>) is a no-op on a
+    /// COM wrapper, so cpp leaves every CompassXtract object to the garbage collector, and its
+    /// harness tolerates the resulting lock as a CompassXtract bug.
     /// </remarks>
     internal static void Release(object? comObject)
     {

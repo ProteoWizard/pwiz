@@ -8,7 +8,9 @@ using System.Runtime.Versioning;
 namespace Pwiz.Vendor.Bruker;
 
 /// <summary>
-/// Read-only view over a CompassXtract spectrum's <c>MSSpectrumParameterCollection</c>. Port of
+/// Read-only view over a CompassXtract spectrum's <c>MSSpectrumParameterCollection</c> that owns
+/// the collection: disposing the list releases it, so wrap a collection fetched for the list
+/// alone, never one still used elsewhere. Port of
 /// <c>MSSpectrumParameterListImpl</c> + <c>MSSpectrumParameterIterator::Impl</c> in
 /// <c>CompassData.cpp:140-190</c>.
 /// </summary>
