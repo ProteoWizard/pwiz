@@ -366,7 +366,7 @@ namespace pwiz.Skyline.Menus
             var list = Settings.Default.RTScoreCalculatorList;
             var calcNew = list.EditItem(SkylineWindow, null, list, null);
             if (calcNew != null)
-                Settings.Default.RTScoreCalculatorList = list.ChangeValue(calcNew);
+                Settings.Default.RTScoreCalculatorList = Settings.Default.RTScoreCalculatorList.ChangeValue(calcNew);
         }
 
         private void updateCalculatorContextMenuItem_Click(object sender, EventArgs e)

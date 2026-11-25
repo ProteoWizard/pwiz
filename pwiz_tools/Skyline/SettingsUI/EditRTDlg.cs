@@ -380,7 +380,7 @@ namespace pwiz.Skyline.SettingsUI
                             MessageDlg.Show(this, status.ErrorException.Message);
                             return;
                         }
-                        Settings.Default.RTScoreCalculatorList.SetInitializedValue(calcOrig, calc);
+                        Settings.Default.RTScoreCalculatorList = Settings.Default.RTScoreCalculatorList.SetInitializedValue(calcOrig, calc);
                     }
                     catch (Exception x)
                     {
@@ -501,7 +501,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         var calcOrig = calculatorSpecsOrig[i];
                         var calc = calculatorSpecsInitialized[i];
-                        Settings.Default.RTScoreCalculatorList.SetInitializedValue(calcOrig, calc);
+                        Settings.Default.RTScoreCalculatorList = Settings.Default.RTScoreCalculatorList.SetInitializedValue(calcOrig, calc);
                     }
                 }
                 catch (Exception x)

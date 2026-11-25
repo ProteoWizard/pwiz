@@ -188,7 +188,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             var libNew = list.EditItem(this, null, list, null);
             if (libNew != null)
             {
-                Settings.Default.IonMobilityLibraryList = list.ChangeValue(libNew);
+                Settings.Default.IonMobilityLibraryList = Settings.Default.IonMobilityLibraryList.ChangeValue(libNew);
                 SelectedIonMobilityLibrary = libNew.Name;
             }
         }
@@ -200,7 +200,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             var libNew = list.EditItem(this, _driverIonMobilityLib.SelectedItem, list, null);
             if (libNew != null)
             {
-                Settings.Default.IonMobilityLibraryList = list.ChangeValue(libNew);
+                Settings.Default.IonMobilityLibraryList = Settings.Default.IonMobilityLibraryList.ChangeValue(libNew);
                 SelectedIonMobilityLibrary = libNew.Name;
             }
         }

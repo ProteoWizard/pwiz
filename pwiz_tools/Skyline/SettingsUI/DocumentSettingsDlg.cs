@@ -198,8 +198,7 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             }
 
-            Settings.Default.ListDefList = Settings.Default.ListDefList.ChangeClear();
-            Settings.Default.ListDefList = Settings.Default.ListDefList.ChangeAddRange(_listsListBoxDriver.List.Select(list=>list.DeleteAllRows()));
+            Settings.Default.ListDefList = Settings.Default.ListDefList.ChangeItems(_listsListBoxDriver.List.Select(list=>list.DeleteAllRows()));
 
             DialogResult = DialogResult.OK;
         }

@@ -2809,7 +2809,7 @@ namespace pwiz.Skyline
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     regression = dlg.Regression;
-                    Settings.Default.RetentionTimeList = listRegression.ChangeAdd(regression);
+                    Settings.Default.RetentionTimeList = Settings.Default.RetentionTimeList.ChangeAdd(regression);
 
                     ModifyDocument(string.Format(SkylineResources.SkylineWindow_CreateRegression_Set_regression__0__, regression!.Name),
                                    doc =>
@@ -2844,7 +2844,7 @@ namespace pwiz.Skyline
                 var calcNew = list.EditItem(this, calcOld, list, null);
                 if (calcNew != null && !Equals(calcNew, calcOld))
                 {
-                    Settings.Default.RTScoreCalculatorList = list.ChangeValue(calcNew);
+                    Settings.Default.RTScoreCalculatorList = Settings.Default.RTScoreCalculatorList.ChangeValue(calcNew);
 
                     var regressionRTDoc = DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime;
                     if (regressionRTDoc != null && Equals(calcOld.Name, regressionRTDoc.Calculator.Name) &&

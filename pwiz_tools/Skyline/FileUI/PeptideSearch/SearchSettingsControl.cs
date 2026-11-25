@@ -409,7 +409,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ImportPeptideSearch.RemainingStepsInSearch = ImportPeptideSearch.IsFeatureDetection ? 2 : 1; // Hardklor is followed by one or more BullseyeSharp calls
         }
 
-        // Arrange and populate the search engine blurb, if any, below the search engine logo
         private static Image GetSearchEngineLogo(AbstractDdaSearchEngine searchEngine)
         {
             switch (searchEngine)
@@ -423,6 +422,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        // Arrange and populate the search engine blurb, if any, below the search engine logo
         private void HandleSearchEngineBlurb()
         {
             lblSearchEngineBlurb.Left = pBLogo.Left;

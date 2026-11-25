@@ -48,9 +48,10 @@ namespace pwiz.Common.Collections
 
         /// <summary>
         /// What StrCmpLogicalW does, for platforms without it: runs of digits compare by their
-        /// value, and the text between them compares ignoring case.
+        /// value, and the text between them compares ignoring case. Of two runs with the same value,
+        /// the one with more leading zeros sorts first, so "S01" precedes "S1" as it does on Windows.
         /// </summary>
-        private static int CompareLogical(string x, string y)
+        public static int CompareLogical(string x, string y)
         {
             int ix = 0, iy = 0;
             while (ix < x.Length && iy < y.Length)
@@ -58,11 +59,15 @@ namespace pwiz.Common.Collections
                 int result;
                 if (char.IsDigit(x[ix]) && char.IsDigit(y[iy]))
                 {
-                    var digitsX = TakeRun(x, ref ix, true).TrimStart('0');
-                    var digitsY = TakeRun(y, ref iy, true).TrimStart('0');
+                    var runX = TakeRun(x, ref ix, true);
+                    var runY = TakeRun(y, ref iy, true);
+                    var digitsX = runX.TrimStart('0');
+                    var digitsY = runY.TrimStart('0');
                     result = digitsX.Length != digitsY.Length
                         ? digitsX.Length.CompareTo(digitsY.Length)
                         : string.CompareOrdinal(digitsX, digitsY);
+                    if (result == 0)
+                        result = runY.Length.CompareTo(runX.Length);
                 }
                 else
                 {

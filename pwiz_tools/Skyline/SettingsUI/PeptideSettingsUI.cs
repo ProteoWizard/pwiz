@@ -654,7 +654,7 @@ namespace pwiz.Skyline.SettingsUI
             var calcNew = list.EditItem(this, null, list, null);
             if (calcNew != null)
             {
-                Settings.Default.RTScoreCalculatorList = list.ChangeValue(calcNew);
+                Settings.Default.RTScoreCalculatorList = Settings.Default.RTScoreCalculatorList.ChangeValue(calcNew);
                 // Automatically add new RT regression using this calculator
                 var regressionName = Helpers.GetUniqueName(calcNew.Name, name => !_driverRT.List.Contains(r => Equals(r.Name, name)));
                 var regression = new RetentionTimeRegression(regressionName, calcNew, null, null, ImportPeptideSearch.DEFAULT_RT_WINDOW, new List<MeasuredRetentionTime>());
@@ -673,7 +673,7 @@ namespace pwiz.Skyline.SettingsUI
             var list = Settings.Default.RTScoreCalculatorList;
             var calcNew = list.EditItem(this, _driverRT.SelectedItem.Calculator, list, null);
             if (calcNew != null)
-                Settings.Default.RTScoreCalculatorList = list.ChangeValue(calcNew);
+                Settings.Default.RTScoreCalculatorList = Settings.Default.RTScoreCalculatorList.ChangeValue(calcNew);
         }
 
         private void editCalculatorListContextMenuItem_Click(object sender, EventArgs e)
@@ -1478,7 +1478,7 @@ namespace pwiz.Skyline.SettingsUI
             var list = Settings.Default.RetentionTimeList;
             var regNew = list.EditItem(this, _driverRT.SelectedItem, list, null);
             if (regNew != null)
-                Settings.Default.RetentionTimeList = list.ChangeValue(regNew);
+                Settings.Default.RetentionTimeList = Settings.Default.RetentionTimeList.ChangeValue(regNew);
         }
 
         public void EditRegressionList()
