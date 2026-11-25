@@ -50,6 +50,9 @@ namespace pwiz.Osprey.FDR
         // iteration keeps the previous set rather than collapsing.
         private static readonly int MIN_POSITIVE = 50;
 
+        // Iterations in a row without improvement that stop an SVM fold.
+        private const int SVM_PATIENCE = 2;
+
         /// <summary>Fewest rows a parallel tree-scoring slice gets; fewer rows are scored serially.</summary>
         private const int MIN_ROWS_PER_SCORE_SLICE = 20000;
 
@@ -568,6 +571,7 @@ namespace pwiz.Osprey.FDR
             var swRound1 = Stopwatch.StartNew();
             var round1 = RunPercolator(round1Entries, round1Config);
             double round1Seconds = swRound1.Elapsed.TotalSeconds;
+            trainConfig.TrainingProgress?.BeginStep(TrainingStep.round_1_scoring);
 
             // Score every candidate with the round-1 models, out of fold where it trained.
             int m = candidates.Count;
@@ -668,6 +672,7 @@ namespace pwiz.Osprey.FDR
                 appendRound2Column(round1, heldOutFoldByBaseId, round2Entries);
                 round2Config.FeatureInfos = ProteinBestFeature.WithColumnInfo(round2Config.FeatureInfos);
             }
+            trainConfig.TrainingProgress?.BeginStep(TrainingStep.round_2);
             return RunPercolator(round2Entries, round2Config, round2InitialScores);
         }
 
@@ -979,7 +984,8 @@ namespace pwiz.Osprey.FDR
             int threadsPerFold = Math.Max(1, config.NThreads / Math.Max(1, config.NFolds));
 
             var swTrain = Stopwatch.StartNew();
-            var trainProgress = new TrainProgressReporter(config.NFolds, config.MaxIterations, trainFdr);
+            var trainProgress = new TrainProgressReporter(config.NFolds, config.MaxIterations, trainFdr,
+                config.TrainingProgress);
             OspreyParallel.For(0, config.NFolds, config.NFolds, fold =>
             {
                 var swFold = Stopwatch.StartNew();
@@ -1082,15 +1088,28 @@ namespace pwiz.Osprey.FDR
             private readonly int _nFolds;
             private readonly int _maxIterations;
             private readonly double _trainFdr;
+            private readonly TrainingProgress _percent;
             private readonly object _lock = new object();
             private readonly Dictionary<int, List<FoldReport>> _rounds =
                 new Dictionary<int, List<FoldReport>>();
 
-            public TrainProgressReporter(int nFolds, int maxIterations, double trainFdr)
+            public TrainProgressReporter(int nFolds, int maxIterations, double trainFdr, TrainingProgress percent)
             {
                 _nFolds = nFolds;
                 _maxIterations = maxIterations;
                 _trainFdr = trainFdr;
+                _percent = percent;
+            }
+
+            /// <summary>
+            /// A fold's convergence after an iteration, for the training's percent when one is
+            /// reported (<see cref="PercolatorConfig.TrainingProgress"/>): <paramref name="iterationsDone"/>
+            /// iterations run, the last <paramref name="noImprove"/> of them without improvement,
+            /// and the fold stops at <paramref name="patience"/> of those.
+            /// </summary>
+            public void ReportConvergence(int foldIndex, int iterationsDone, int noImprove, int patience)
+            {
+                _percent?.ReportFoldIteration(foldIndex, _nFolds, iterationsDone, noImprove, patience, _maxIterations);
             }
 
             public void ReportIteration(int foldIndex, int iteration, int nPassing, int nTargets)
@@ -1298,8 +1317,9 @@ namespace pwiz.Osprey.FDR
                 {
                     consecutiveNoImprove++;
                 }
+                progress.ReportConvergence(foldIndex, iteration + 1, consecutiveNoImprove, SVM_PATIENCE);
 
-                if (consecutiveNoImprove >= 2)
+                if (consecutiveNoImprove >= SVM_PATIENCE)
                     break;
             }
 
@@ -1501,6 +1521,7 @@ namespace pwiz.Osprey.FDR
                 {
                     consecutiveNoImprove++;
                 }
+                progress.ReportConvergence(foldIndex, iteration + 1, consecutiveNoImprove, OspreyEnvironment.GbtPatience);
 
                 if (consecutiveNoImprove >= OspreyEnvironment.GbtPatience)
                     break;
