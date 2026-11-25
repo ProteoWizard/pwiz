@@ -162,6 +162,8 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public static bool CreateHardLink(string sourceFilepath, string destinationFilepath)
         {
+            if (!OperatingSystem.IsWindows())
+                return false;
             return Kernel32.CreateHardLink(destinationFilepath, sourceFilepath, IntPtr.Zero);
         }
 

@@ -1,14 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- SkylineCmd - thin launcher that reflects into Skyline(-daily)'s Program.Main
-       for command-line runs. Standalone: it takes no reference on Skyline and loads
-       it at runtime from its own directory (see Program.GetMainFunction). Multi-target
-       net472 + net10.0-windows; on net8 the managed entry point is Skyline-daily.dll
-       (the .exe there is a native apphost). -->
+  <!-- SkylineCmd - runs Skyline commands through SkylineCore alone, so it targets plain net10.0
+       and needs no Windows Desktop runtime. It is deployed beside Skyline (see Skyline.csproj's
+       _DeploySkylineCmd), where SkylineCore and its dependencies already are, and shares
+       Skyline's user.config, which PortableSettingsProvider finds beside SkylineCore.dll. -->
   <PropertyGroup>
     <ProjectGuid>{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -16,10 +15,6 @@
     <RootNamespace>pwiz.SkylineCmd</RootNamespace>
     <AssemblyName>SkylineCmd</AssemblyName>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <!-- SkylineCmd itself is console-only, but it loads Skyline (a WinForms app) at
-         runtime, so it must run on the Windows Desktop runtime (Microsoft.WindowsDesktop.App)
-         so System.Windows.Forms resolves. -->
-    <UseWindowsForms>true</UseWindowsForms>
     <IsPackable>false</IsPackable>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
     <NoWarn>$(NoWarn);NU1605;NU1701</NoWarn>
@@ -27,5 +22,9 @@
          under. The <gcServer> element in app.config only applies to .NET Framework; see Skyline.csproj. -->
     <ServerGarbageCollection>true</ServerGarbageCollection>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SkylineCore\SkylineCore.csproj" />
+  </ItemGroup>
 
 </Project>

@@ -1531,7 +1531,7 @@ namespace pwiz.Skyline.Model.Results
                 // Copy the cache, if moving to a new location
                 using (FileSaver fs = new FileSaver(cachePathOpt))
                 {
-                    if (progress != null)
+                    if (progress != null && OperatingSystem.IsWindows())
                     {
                         Kernel32.CopyFileWithProgress(CachePath, fs.SafeName, true,
                             progress.CancellationToken, value => progress.ProgressValue = value);

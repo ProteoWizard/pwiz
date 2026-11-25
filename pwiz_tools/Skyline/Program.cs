@@ -177,15 +177,6 @@ namespace pwiz.Skyline
             }
         }
 
-        /// <summary>
-        /// True if the loaded Parquet.dll is pwiz's patched build of Parquet.Net, identified by
-        /// a method the NuGet release does not have. Both have the same assembly identity.
-        /// </summary>
-        private static bool IsPatchedParquetNet()
-        {
-            return typeof(ParquetRowGroupWriter).GetMethod(nameof(ParquetRowGroupWriter.PrepareColumnAsync)) != null;
-        }
-
         [STAThread]
         public static int Main(string[] args = null)
         {
@@ -204,8 +195,7 @@ namespace pwiz.Skyline
             // frames at the scaled title bar sizes.
             DpiFormIcons.ApplicationIcon = ImageResources.Skyline;
 
-            if (String.IsNullOrEmpty(Settings.Default.InstallationId)) // Each instance to have GUID
-                Settings.Default.InstallationId = Guid.NewGuid().ToString();
+            CommandLineProgram.InitializeProcess();
 
             // don't allow 64-bit Skyline to run in a 32-bit process
             if (Install.Is64Bit && !Environment.Is64BitProcess)
@@ -219,16 +209,11 @@ namespace pwiz.Skyline
                 return 1;
             }
 
-            if (!IsPatchedParquetNet())
+            if (!CommandLineProgram.IsPatchedParquetNet())
             {
                 MessageDlg.Show(null, string.Format(SkylineResources.Program_Main_The_Parquet_dll_at__0__is_not_the_version__1__requires__Reinstall__1__,
                     typeof(ParquetRowGroupWriter).Assembly.Location, ProgramContext.Name));
             }
-
-            CommonApplicationSettings.ProgramName = ProgramContext.Name;
-            CommonApplicationSettings.ProgramNameAndVersion = Install.ProgramNameAndVersion;
-            CommonActionUtil.ExceptionReporter = ProgramContext.ReportException;
-            SkylineRemoteAccountServices.Initialize();
 
             // For testing and debugging Skyline command-line interface.
             // Scan every arg, not just args[0], so --opendoc composes order-independently

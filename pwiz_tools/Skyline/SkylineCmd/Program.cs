@@ -18,46 +18,47 @@
  */
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.Loader;
+using System.Runtime.CompilerServices;
 using System.Text;
+using pwiz.Skyline;
 
 namespace pwiz.SkylineCmd
 {
+    /// <summary>
+    /// Runs Skyline commands. Uses only SkylineCore, so it runs wherever .NET does.
+    /// </summary>
     static class Program
     {
-        public const int EXIT_CODE_FAILURE_TO_START = 1;
         [STAThread]
         static int Main(string[] args)
         {
             var argsList = args.ToList();
-            if (argsList.FirstOrDefault() == @"--ui")
-            {
-                // If "--ui" is specified, remove it from the argument list
-                // This enables invoking Skyline's Main without any arguments to bring up the UI
-                argsList.RemoveAt(0);
-            }
-            else
-            {
-                AddBufferWidth(argsList);
-            }
+            AddBufferWidth(argsList);
 
             var preferredEncoding = GetPreferredEncoding(argsList);
             using (new EncodingManager(preferredEncoding))
             {
                 try
                 {
-                    // ReSharper disable once PossibleNullReferenceException
-                    return (int) GetMainFunction().Invoke(null, new object[] {argsList.ToArray()});
+                    return Run(argsList.ToArray());
                 }
                 catch (Exception e)
                 {
                     Console.Out.WriteLine(SkylineCmdResources.Program_Main_Error_trying_to_run_Skyline___0_, e);
-                    return EXIT_CODE_FAILURE_TO_START;
+                    return ProgramContext.EXIT_CODE_FAILURE_TO_START;
                 }
             }
+        }
+
+        /// <summary>
+        /// Kept out of Main, so that a missing SkylineCore.dll, which fails as this method is
+        /// compiled, is caught and reported by Main.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static int Run(string[] args)
+        {
+            return CommandLineProgram.Run(args, Console.Out);
         }
 
         private static void AddBufferWidth(List<string> argsList)
@@ -78,51 +79,6 @@ namespace pwiz.SkylineCmd
             // If forcing culture to be something other than the system settings, then also force UTF8 encoding
             // ReSharper disable once LocalizableElement
             return argsList.FirstOrDefault(arg => arg.StartsWith(@"--culture=")) != null ? Encoding.UTF8 : null;
-        }
-
-        private static MethodInfo GetMainFunction()
-        {
-            // SkylineCmd and Skyline must be in the same directory
-            string dirPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
-            // On .NET Framework the managed entry point is Skyline(.exe). On .NET (net8+)
-            // the .exe is a native apphost that Assembly.LoadFrom can't load, so load the
-            // managed assembly (Skyline-daily.dll) instead.
-            const string SKYLINE = @"Skyline.dll";
-            const string SKYLINE_DAILY = @"Skyline-daily.dll"; // Keep -daily;
-            foreach (var exeName in new []{SKYLINE, SKYLINE_DAILY})
-            {
-                string exePath = Path.Combine(dirPath, exeName);
-                if (!File.Exists(exePath))
-                {
-                    continue;
-                }
-                // .NET resolves assemblies through the RUNNING app's deps.json rather than by
-                // probing its directory, and Skyline is deliberately NOT a dependency of
-                // SkylineCmd - it is discovered at run time. Two things follow, and only fixing
-                // both makes SkylineCmd work on net8 at all:
-                //   1. Assembly.Load(AssemblyName) cannot find Skyline-daily.dll even though it
-                //      sits in this very directory, because the name is not in our deps.json.
-                //      LoadFromAssemblyPath takes the file directly, into the DEFAULT context so
-                //      that everything resolved afterwards shares one context (what net472 got
-                //      from probing, without the mark-of-the-web refusal that ruled out LoadFrom).
-                //   2. Skyline's OWN dependencies then fail the same way - pwiz.PortableUtil is
-                //      the first. AssemblyDependencyResolver reads Skyline-daily.deps.json, which
-                //      is the only thing that knows that graph, so hand resolution to it.
-                var resolver = new AssemblyDependencyResolver(exePath);
-                AssemblyLoadContext.Default.Resolving += (context, name) =>
-                {
-                    string dependencyPath = resolver.ResolveAssemblyToPath(name);
-                    return dependencyPath == null ? null : context.LoadFromAssemblyPath(dependencyPath);
-                };
-                var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(exePath);
-                var programClass = assembly.GetType(@"pwiz.Skyline.Program");
-                var mainFunction = programClass.GetMethod(@"Main");
-                return mainFunction;
-            }
-
-            string message = string.Format(SkylineCmdResources.Program_GetMainFunction_Unable_to_find_either_file___0___or_file___1___in_folder___2___,
-                SKYLINE, SKYLINE_DAILY, dirPath);
-            throw new FileNotFoundException(message);
         }
     }
 

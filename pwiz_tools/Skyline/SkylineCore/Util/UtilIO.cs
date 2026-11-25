@@ -990,6 +990,8 @@ namespace pwiz.Skyline.Util
             StringBuilder sb = new StringBuilder(260);
 
             Directory.CreateDirectory(basePath);
+            if (!OperatingSystem.IsWindows())
+                return CreateTempFile(basePath, prefix);
             uint result = GetTempFileName(basePath, prefix, unique, sb);
             if (result == 0)
             {
@@ -1006,6 +1008,31 @@ namespace pwiz.Skyline.Util
             }
 
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// What Win32 GetTempFileName does: creates an empty file named for up to three characters
+        /// of the prefix followed by hex digits and .tmp, and returns its path.
+        /// </summary>
+        private static string CreateTempFile(string basePath, string prefix)
+        {
+            var namePrefix = prefix.Length > 3 ? prefix.Substring(0, 3) : prefix;
+            var random = new Random();
+            for (int attempt = 0; ; attempt++)
+            {
+                var path = Path.Combine(basePath, namePrefix + random.Next(0x10000).ToString(@"X") + @".tmp");
+                try
+                {
+                    using (new FileStream(path, FileMode.CreateNew))
+                    {
+                    }
+                    return path;
+                }
+                catch (IOException) when (attempt < 0x10000 && File.Exists(path))
+                {
+                    // Taken, so try another name
+                }
+            }
         }
     }
 

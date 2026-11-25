@@ -389,9 +389,9 @@
                       DeployOutput="true" />
   </ItemGroup>
 
-  <!-- SkylineCmd.exe launcher - command-line tests (e.g. CmdLineAssociateProteinsTest)
-       shell out to it expecting it next to Skyline in the bin dir. Reference it so it
-       builds first. net8-only: the net472 build gets SkylineCmd from the Jam toolchain. -->
+  <!-- SkylineCmd.exe - installed beside Skyline, and command-line tests (e.g.
+       CmdLineAssociateProteinsTest) shell out to it expecting it next to Skyline in the bin
+       dir. Reference it so it builds first. It references SkylineCore, not Skyline. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <ProjectReference Include="SkylineCmd\SkylineCmd.csproj"
                       ReferenceOutputAssembly="false"
@@ -409,8 +409,8 @@
          does: bin\Release for AnyCPU, bin\x64\Release for x64. Reading the AnyCPU folder for an
          x64 build deployed a stale SkylineCmd whose runtimeconfig lacked the server GC setting. -->
     <PropertyGroup>
-      <_SkylineCmdBin Condition="'$(PlatformName)' == 'AnyCPU'">SkylineCmd\bin\$(Configuration)\net10.0-windows\</_SkylineCmdBin>
-      <_SkylineCmdBin Condition="'$(PlatformName)' != 'AnyCPU'">SkylineCmd\bin\$(PlatformName)\$(Configuration)\net10.0-windows\</_SkylineCmdBin>
+      <_SkylineCmdBin Condition="'$(PlatformName)' == 'AnyCPU'">SkylineCmd\bin\$(Configuration)\net10.0\</_SkylineCmdBin>
+      <_SkylineCmdBin Condition="'$(PlatformName)' != 'AnyCPU'">SkylineCmd\bin\$(PlatformName)\$(Configuration)\net10.0\</_SkylineCmdBin>
     </PropertyGroup>
     <ItemGroup>
       <_SkylineCmdOutput Include="$(_SkylineCmdBin)SkylineCmd.*" />

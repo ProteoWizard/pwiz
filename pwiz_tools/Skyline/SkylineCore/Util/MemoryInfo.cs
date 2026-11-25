@@ -18,6 +18,7 @@
  */
 
 using System.Runtime.InteropServices;
+using System;
 
 namespace pwiz.Skyline.Util
 {
@@ -56,6 +57,8 @@ namespace pwiz.Skyline.Util
         {
             get
             {
+                if (!OperatingSystem.IsWindows())
+                    return GC.GetGCMemoryInfo().TotalAvailableMemoryBytes;
                 MEMORYSTATUSEX statEX = new MEMORYSTATUSEX();
                 if (GlobalMemoryStatusEx(statEX))
                     return (long) statEX.ullTotalPhys;
@@ -67,6 +70,11 @@ namespace pwiz.Skyline.Util
         {
             get
             {
+                if (!OperatingSystem.IsWindows())
+                {
+                    var gcMemoryInfo = GC.GetGCMemoryInfo();
+                    return gcMemoryInfo.TotalAvailableMemoryBytes - gcMemoryInfo.MemoryLoadBytes;
+                }
                 MEMORYSTATUSEX statEX = new MEMORYSTATUSEX();
                 if (GlobalMemoryStatusEx(statEX))
                     return (long) statEX.ullAvailPhys;

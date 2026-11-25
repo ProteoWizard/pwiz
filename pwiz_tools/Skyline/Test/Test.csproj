@@ -190,8 +190,8 @@
           AfterTargets="Build">
     <!-- Same platform-dependent folder as Skyline.csproj's _DeploySkylineCmd -->
     <PropertyGroup>
-      <_SkylineCmdBin Condition="'$(PlatformName)' == 'AnyCPU'">..\SkylineCmd\bin\$(Configuration)\net10.0-windows\</_SkylineCmdBin>
-      <_SkylineCmdBin Condition="'$(PlatformName)' != 'AnyCPU'">..\SkylineCmd\bin\$(PlatformName)\$(Configuration)\net10.0-windows\</_SkylineCmdBin>
+      <_SkylineCmdBin Condition="'$(PlatformName)' == 'AnyCPU'">..\SkylineCmd\bin\$(Configuration)\net10.0\</_SkylineCmdBin>
+      <_SkylineCmdBin Condition="'$(PlatformName)' != 'AnyCPU'">..\SkylineCmd\bin\$(PlatformName)\$(Configuration)\net10.0\</_SkylineCmdBin>
     </PropertyGroup>
     <ItemGroup>
       <_SkylineCmdOutput Include="$(_SkylineCmdBin)SkylineCmd.*" />

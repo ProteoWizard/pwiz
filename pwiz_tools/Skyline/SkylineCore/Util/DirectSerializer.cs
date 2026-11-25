@@ -50,6 +50,10 @@ namespace pwiz.Skyline.Util
 
             public TItem[] ReadArray(FileStream stream, int count)
             {
+                // The direct reads and writes are Win32 calls. Elsewhere, the caller's managed
+                // path does the work.
+                if (!OperatingSystem.IsWindows())
+                    return null;
                 try
                 {
                     // Save the caller's logical position, then Flush() to make FileStream
@@ -76,7 +80,7 @@ namespace pwiz.Skyline.Util
 
             public bool WriteArray(FileStream stream, TItem[] items)
             {
-                if (_writeAction == null)
+                if (_writeAction == null || !OperatingSystem.IsWindows())
                 {
                     return false;
                 }
