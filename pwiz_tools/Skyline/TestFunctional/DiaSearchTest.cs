@@ -26,12 +26,12 @@ using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -313,12 +313,7 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = testDetails.SearchFiles
                     .Select(o => (MsDataFileUri) new MsDataFilePath(GetTestPath(o))).Take(1).ToArray();
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.dia;
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-            });
-
-            RunUI(() =>
-            {
-                Assert.AreEqual(PeptideSearchWizardDlg.Pages.chromatograms_page, importPeptideSearchDlg.CurrentPage);
+                importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
@@ -362,58 +357,10 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
-            // We're on the transition settings page.
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.transition_settings_page);
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-            });
-
-            // We're on the MS1 full scan settings page.
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
-            });
-
-            string isolationSchemeName = "DiaUmpire Test Scheme";
-            if (secondLoop)
-            {
-                RunUI(() =>
-                {
-                    importPeptideSearchDlg.FullScanSettingsControl.ComboIsolationSchemeSetFocus();
-                    importPeptideSearchDlg.FullScanSettingsControl.IsolationSchemeName = isolationSchemeName;
-                });
-            }
-            else
-            {
-                RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.ComboIsolationSchemeSetFocus());
-                var isolationScheme = ShowDialog<EditIsolationSchemeDlg>(importPeptideSearchDlg.FullScanSettingsControl.AddIsolationScheme);
-
-                RunUI(() =>
-                {
-                    isolationScheme.IsolationSchemeName = isolationSchemeName;
-                    isolationScheme.UseResults = false;
-                });
-
-                testDetails.EditIsolationSchemeAction(importPeptideSearchDlg, isolationScheme);
-                WaitForConditionUI(10000, () => isolationScheme.GetIsolationWindows().Any());
-
-                var isolationGraph = ShowDialog<DiaIsolationWindowsGraphForm>(isolationScheme.OpenGraph);
-
-                OkDialog(isolationGraph, isolationGraph.CloseButton);
-                OkDialog(isolationScheme, isolationScheme.OkDialog);
-            }
-
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-            });
-
             // We're on the "Import FASTA" page.
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
-                // Assert.IsFalse(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
                 importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath(testDetails.FastaPath));
                 importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = 0;
@@ -462,68 +409,74 @@ namespace pwiz.SkylineTestFunctional
 
             WaitForConditionUI(() => testDetails.FragmentMzTolerance.Unit == importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance.Unit);
 
-            // Run the search
+            // Leaving the search settings page makes sure the search tools are installed
             SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
-
             if (HasMissingDependencies())
-            {
-                if (testDetails.SearchEngine == SearchEngine.MSFragger)
-                {
-                    var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
-                    if (msfraggerDownloaderDlg != null)
-                    {
-                        RunUI(() => msfraggerDownloaderDlg.SetValues("Matt (testing download from Skyline)", "Chambers", "chambem2@uw.edu", "UW"));
-                        OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
-                    }
-                }
+                AcceptSearchToolDownloads(testDetails.SearchEngine);
 
-                // All engines reaching here may still need the generic download-confirmation
-                // dialog handled (MSAmanda and MSFragger's Java/Crux deps are on-demand on net8);
-                // excluding an engine leaves its "Download <engine>" dialog open -> 10s timeout.
-                {
-                    var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
-                    if (downloaderDlg != null)
-                    {
-                        OkDialog(downloaderDlg, downloaderDlg.ClickYes);
-                        var waitDlg = WaitForOpenForm<LongWaitDlg>();
-                        WaitForClosedForm(waitDlg);
-                    }
-                }
-            }
+            // We're on the transition settings page.
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.transition_settings_page);
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
-            bool? searchSucceeded = null;
+            // We're on the MS1 full scan settings page, the last page before the run.
             RunUI(() =>
             {
-                importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
-                importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
-
-                // Cancel search
-                importPeptideSearchDlg.SearchControl.Cancel();
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
             });
 
-            WaitForConditionUI(60000, () => searchSucceeded.HasValue,
+            string isolationSchemeName = "DiaUmpire Test Scheme";
+            if (secondLoop)
+            {
+                RunUI(() =>
+                {
+                    importPeptideSearchDlg.FullScanSettingsControl.ComboIsolationSchemeSetFocus();
+                    importPeptideSearchDlg.FullScanSettingsControl.IsolationSchemeName = isolationSchemeName;
+                });
+            }
+            else
+            {
+                RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.ComboIsolationSchemeSetFocus());
+                var isolationScheme = ShowDialog<EditIsolationSchemeDlg>(importPeptideSearchDlg.FullScanSettingsControl.AddIsolationScheme);
+
+                RunUI(() =>
+                {
+                    isolationScheme.IsolationSchemeName = isolationSchemeName;
+                    isolationScheme.UseResults = false;
+                });
+
+                testDetails.EditIsolationSchemeAction(importPeptideSearchDlg, isolationScheme);
+                WaitForConditionUI(10000, () => isolationScheme.GetIsolationWindows().Any());
+
+                var isolationGraph = ShowDialog<DiaIsolationWindowsGraphForm>(isolationScheme.OpenGraph);
+
+                OkDialog(isolationGraph, isolationGraph.CloseButton);
+                OkDialog(isolationScheme, isolationScheme.OkDialog);
+            }
+
+            // Run, then cancel the run, which must stop after the search if it finishes first
+            RunUI(() => importPeptideSearchDlg.AcceptSearchResults = () => false);
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_page);
+            RunUI(importPeptideSearchDlg.SearchControl.Cancel);
+
+            WaitForConditionUI(60000, () => importPeptideSearchDlg.RunSucceeded.HasValue,
                 () => importPeptideSearchDlg.SearchControl.LogText);
-            RunUI(() => Assert.IsFalse(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
-            searchSucceeded = null;
+            RunUI(() => Assert.IsFalse(importPeptideSearchDlg.RunSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
 
             // Go back and add another file
             RunUI(() =>
             {
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on full scan settings
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on transition settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on search settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on converter settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on import FASTA
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on full scan settings
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on transition settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on modifications
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on extract chromatograms
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on input files
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
 
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = testDetails.SearchFiles.Select(o => (MsDataFileUri) new MsDataFilePath(GetTestPath(o))).ToArray();
-
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on extract chromatograms
             });
-
 
             // With 2 sources, we get the remove prefix/suffix dialog; accept default behavior
             if (testDetails.SearchFiles.Count() > 1)
@@ -544,6 +497,11 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(1, true); // check M+16
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(2, true); // check U+C3P0
 
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on import FASTA
+                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on converter settings
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on search settings
+                importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;    // default q value is 0.01
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on transition settings
                 importPeptideSearchDlg.TransitionSettingsControl.IonRangeFrom = TransitionFilter.StartFragmentFinder.ION_1.Label;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on full scan settings
@@ -552,43 +510,58 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.FullScanSettingsControl.IsolationSchemeName = isolationSchemeName;
             });
 
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on import FASTA
-                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on converter settings
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on search settings
-                importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;    // default q value is 0.01
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on search progress
-            });
+            // Run
+            RunUI(() => importPeptideSearchDlg.AcceptSearchResults = null);
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
+            WaitForConditionUI(120000, () => importPeptideSearchDlg.RunSucceeded.HasValue, () => importPeptideSearchDlg.SearchControl.LogText);
 
-            WaitForConditionUI(120000, () => searchSucceeded.HasValue, () => importPeptideSearchDlg.SearchControl.LogText);
-
-            RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.RunSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
 
             if(IsRecordMode)
                 Console.WriteLine();
 
-            var emptyProteinsDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
-            WaitForConditionUI(() => emptyProteinsDlg.DocumentFinalCalculated);
             RunUI(() =>
             {
                 var aic = new TestDetails.DocumentCounts();
-
-                /*emptyProteinsDlg.NewTargetsAll(out aic.ProteinCount, out aic.PeptideCount, out aic.PrecursorCount, out aic.TransitionCount);
-                if (Environment.Is64BitProcess)
-                    // TODO: reenable these checks for 32 bit once intermittent failures are debugged
-                    ValidateTargets(testDetails.Initial, aic, "_testDetails.Initial");*/
-
-                emptyProteinsDlg.NewTargetsFinalSync(out aic.ProteinCount, out aic.PeptideCount, out aic.PrecursorCount, out aic.TransitionCount);
+                var proteinAssociation = importPeptideSearchDlg.LastRunResult.ProteinAssociation;
+                AssociateProteinsResults.GetFinalTargetCounts(proteinAssociation.DocumentFinal, proteinAssociation.ProteinAssociation,
+                    out aic.ProteinCount, out aic.PeptideCount, out aic.PrecursorCount, out aic.TransitionCount, out _);
 
                 if (Environment.Is64BitProcess)
                     ValidateTargets(testDetails.Final, aic, "_testDetails.Final");
             });
-            OkDialog(emptyProteinsDlg, emptyProteinsDlg.OkDialog);
+            OkDialog(importPeptideSearchDlg, () => importPeptideSearchDlg.ClickNextButton()); // Finish
 
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
+        }
+
+        /// <summary>
+        /// Answers the search tool download prompts that leaving the search settings page shows when
+        /// a tool is missing.
+        /// </summary>
+        private void AcceptSearchToolDownloads(SearchEngine searchEngine)
+        {
+            if (searchEngine == SearchEngine.MSFragger)
+            {
+                var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
+                if (msfraggerDownloaderDlg != null)
+                {
+                    RunUI(() => msfraggerDownloaderDlg.SetValues("Matt (testing download from Skyline)", "Chambers", "chambem2@uw.edu", "UW"));
+                    OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
+                }
+            }
+
+            // All engines reaching here may still need the generic download-confirmation
+            // dialog handled (MSAmanda and MSFragger's Java/Crux deps are on-demand on net8);
+            // excluding an engine leaves its "Download <engine>" dialog open -> 10s timeout.
+            var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
+            if (downloaderDlg != null)
+            {
+                OkDialog(downloaderDlg, downloaderDlg.ClickYes);
+                var waitDlg = WaitForOpenForm<LongWaitDlg>();
+                WaitForClosedForm(waitDlg);
+            }
         }
 
         private void TestDiaSearchPredicate()
@@ -600,7 +573,6 @@ namespace pwiz.SkylineTestFunctional
             var importPeptideSearchDlg = ShowDialog<RunPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
             // We're on the "Build Spectral Library" page of the wizard.
-
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
@@ -608,13 +580,7 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = testDetails.SearchFiles
                     .Select(o => (MsDataFileUri)new MsDataFilePath(GetTestPath(o))).Take(1).ToArray();
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.dia;
-                //Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-            });
-
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.chromatograms_page);
+                importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
@@ -658,14 +624,64 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
-            // We're on the transition settings page.
+            // We're on the "Import FASTA" page.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.transition_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
+                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
+                importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath(testDetails.FastaPath));
+                importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = 0;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
-            // We're on the MS1 full scan settings page.
+            // We're on the DIA-Umpire settings page
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.converter_settings_page);
+                Assert.IsFalse(importPeptideSearchDlg.ConverterSettingsControl.UseDiaUmpire);
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+
+            // We're on the Adjust search settings page
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
+
+                // MSFragger should be selected by default
+                Assert.AreEqual(SearchEngine.MSFragger, importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine);
+            });
+
+            // selecting something other than MSFragger should show an error
+            RunDlg<MessageDlg>(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = SearchEngine.MSAmanda,
+                messageDlg =>
+                {
+                    Assert.AreEqual(DdaSearchResources.SearchSettingsControl_SelectedIndexChanged_Only_MSFragger_is_currently_supported, messageDlg.Message);
+                    messageDlg.ClickOk();
+                });
+
+            RunUI(() =>
+            {
+                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = testDetails.PrecursorMzTolerance;
+                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = testDetails.FragmentMzTolerance;
+                importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;    // default q value is 0.01
+                if (_testDetails.AdditionalSettings != null)
+                    foreach (var additionalSetting in testDetails.AdditionalSettings)
+                        importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting(additionalSetting.Key, additionalSetting.Value);
+                //importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
+            });
+
+            WaitForConditionUI(() => testDetails.FragmentMzTolerance.Unit == importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance.Unit);
+
+            // Leaving the search settings page makes sure the search tools are installed
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
+            if (HasMissingDependencies())
+                AcceptSearchToolDownloads(testDetails.SearchEngine);
+
+            // We're on the transition settings page.
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.transition_settings_page);
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
+
+            // We're on the MS1 full scan settings page, the last page before the run.
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
@@ -701,123 +717,30 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(isolationScheme, isolationScheme.OkDialog);
             }
 
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-            });
+            // Run, then cancel the run, which must stop after the search if it finishes first
+            RunUI(() => importPeptideSearchDlg.AcceptSearchResults = () => false);
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_page);
+            RunUI(importPeptideSearchDlg.SearchControl.Cancel);
 
-            // We're on the "Import FASTA" page.
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
-                // Assert.IsFalse(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
-                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
-                importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath(testDetails.FastaPath));
-                importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = 0;
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-            });
-
-            // We're on the DIA-Umpire settings page
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.converter_settings_page);
-                Assert.IsFalse(importPeptideSearchDlg.ConverterSettingsControl.UseDiaUmpire);
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-            });
-
-
-            // We're on the Adjust search settings page
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
-
-                // MSFragger should be selected by default
-                Assert.AreEqual(SearchEngine.MSFragger, importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine);
-            });
-
-            // selecting something other than MSFragger should show an error
-            RunDlg<MessageDlg>(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = SearchEngine.MSAmanda,
-                messageDlg =>
-                {
-                    Assert.AreEqual(DdaSearchResources.SearchSettingsControl_SelectedIndexChanged_Only_MSFragger_is_currently_supported, messageDlg.Message);
-                    messageDlg.ClickOk();
-                });
-
-            RunUI(() =>
-            {
-                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = testDetails.PrecursorMzTolerance;
-                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = testDetails.FragmentMzTolerance;
-                importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;    // default q value is 0.01
-                if (_testDetails.AdditionalSettings != null)
-                    foreach (var additionalSetting in testDetails.AdditionalSettings)
-                        importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting(additionalSetting.Key, additionalSetting.Value);
-                //importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
-            });
-
-            WaitForConditionUI(() => testDetails.FragmentMzTolerance.Unit == importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance.Unit);
-
-            // Run the search
-            SkylineWindow.BeginInvoke(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
-
-            if (HasMissingDependencies())
-            {
-                if (testDetails.SearchEngine == SearchEngine.MSFragger)
-                {
-                    var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
-                    if (msfraggerDownloaderDlg != null)
-                    {
-                        RunUI(() => msfraggerDownloaderDlg.SetValues("Matt (testing download from Skyline)", "Chambers", "chambem2@uw.edu", "UW"));
-                        OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
-                    }
-                }
-
-                // All engines reaching here may still need the generic download-confirmation
-                // dialog handled (MSAmanda and MSFragger's Java/Crux deps are on-demand on net8);
-                // excluding an engine leaves its "Download <engine>" dialog open -> 10s timeout.
-                {
-                    var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
-                    if (downloaderDlg != null)
-                    {
-                        OkDialog(downloaderDlg, downloaderDlg.ClickYes);
-                        var waitDlg = WaitForOpenForm<LongWaitDlg>();
-                        WaitForClosedForm(waitDlg);
-                    }
-                }
-            }
-
-            bool? searchSucceeded = null;
-            RunUI(() =>
-            {
-                importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
-                importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
-
-                // Cancel search
-                importPeptideSearchDlg.SearchControl.Cancel();
-            });
-
-            WaitForConditionUI(60000, () => searchSucceeded.HasValue,
+            WaitForConditionUI(60000, () => importPeptideSearchDlg.RunSucceeded.HasValue,
                 () => importPeptideSearchDlg.SearchControl.LogText);
-            RunUI(() => Assert.IsFalse(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
-            searchSucceeded = null;
+            RunUI(() => Assert.IsFalse(importPeptideSearchDlg.RunSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
 
             // Go back and add another file
             RunUI(() =>
             {
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on full scan settings
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on transition settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on search settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on converter settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on import FASTA
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on full scan settings
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on transition settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on modifications
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on extract chromatograms
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on input files
                 Assert.AreEqual(PeptideSearchWizardDlg.Pages.spectra_page, importPeptideSearchDlg.CurrentPage);
 
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = testDetails.SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(GetTestPath(o))).ToArray();
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on extract chromatograms
-                Assert.AreEqual(PeptideSearchWizardDlg.Pages.chromatograms_page, importPeptideSearchDlg.CurrentPage);
             });
-
 
             // With 2 sources, we get the remove prefix/suffix dialog; accept default behavior
             if (testDetails.SearchFiles.Count() > 1)
@@ -838,6 +761,13 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(1, true); // check M+16
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(2, true); // check U+C3P0
 
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on import FASTA
+                // Auto-train without a decoy method fails after the search, to test running again
+                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = true;
+                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod = string.Empty;
+                importPeptideSearchDlg.ImportFastaControl.AutoTrain = true;
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on converter settings
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on search settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on transition settings
                 importPeptideSearchDlg.TransitionSettingsControl.IonRangeFrom = TransitionFilter.StartFragmentFinder.ION_1.Label;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on full scan settings
@@ -846,31 +776,56 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.FullScanSettingsControl.IsolationSchemeName = isolationSchemeName;
             });
 
+            // Run: the search succeeds and the steps after it fail
+            RunUI(() => importPeptideSearchDlg.AcceptSearchResults = null);
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
+            var errorDlg = WaitForOpenForm<MessageDlg>(120000);
+            RunUI(() => Assert.AreEqual(ModelResources.ImportPeptideSearch_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_,
+                errorDlg.Message));
+            OkDialog(errorDlg, errorDlg.OkDialog);
+            WaitForConditionUI(() => importPeptideSearchDlg.RunSucceeded.HasValue);
+            RunUI(() => Assert.IsFalse(importPeptideSearchDlg.RunSucceeded.Value));
+
+            // Go back to fix the decoy options, which leaves the search inputs as they were
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on import FASTA
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on full scan settings
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on transition settings
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on search settings
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on converter settings
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on import FASTA
+                Assert.AreEqual(PeptideSearchWizardDlg.Pages.import_fasta_page, importPeptideSearchDlg.CurrentPage);
                 importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on converter settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on search settings
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on search progress
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on transition settings
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on full scan settings
+                importPeptideSearchDlg.FullScanSettingsControl.IsolationSchemeName = isolationSchemeName;
             });
 
-            WaitForConditionUI(120000, () => searchSucceeded.HasValue, () => importPeptideSearchDlg.SearchControl.LogText);
+            // Run again: the search results are reused
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
+            WaitForConditionUI(120000, () => importPeptideSearchDlg.RunSucceeded.HasValue, () => importPeptideSearchDlg.SearchControl.LogText);
 
-            RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.RunSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText);
+                AssertEx.Contains(importPeptideSearchDlg.SearchControl.LogText,
+                    PeptideSearchResources.RunPeptideSearchDlg_StartRun_The_search_settings_and_files_have_not_changed_since_the_last_search__using_its_results_);
+            });
 
             if (IsRecordMode)
                 Console.WriteLine();
 
-            var emptyProteinsDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
-            WaitForConditionUI(() => emptyProteinsDlg.DocumentFinalCalculated);
             RunUI(() =>
             {
                 var aic = new TestDetails.DocumentCounts();
-                emptyProteinsDlg.NewTargetsFinalSync(out aic.ProteinCount, out aic.PeptideCount, out aic.PrecursorCount, out aic.TransitionCount);
+                var proteinAssociation = importPeptideSearchDlg.LastRunResult.ProteinAssociation;
+                AssociateProteinsResults.GetFinalTargetCounts(proteinAssociation.DocumentFinal, proteinAssociation.ProteinAssociation,
+                    out aic.ProteinCount, out aic.PeptideCount, out aic.PrecursorCount, out aic.TransitionCount, out _);
                 ValidateTargets(testDetails.Final, aic, "_testDetails.Final");
             });
-            OkDialog(emptyProteinsDlg, emptyProteinsDlg.OkDialog);
+            OkDialog(importPeptideSearchDlg, () => importPeptideSearchDlg.ClickNextButton()); // Finish
 
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());

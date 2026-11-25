@@ -206,26 +206,18 @@ namespace pwiz.SkylineTestFunctional
             var importPeptideSearchDlg = ShowDialog<RunPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
             // We're on the "Build Spectral Library" page of the wizard.
-
-            // We're on the "Match Modifications" page. Add M+16 mod.
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).ToArray();
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.dda;
                 importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.AUTO;
+                importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 // With only 1 source, no add/remove prefix/suffix dialog
 
+                // We're on the "Match Modifications" page.
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
-            });
-
-            // We're on the MS1 full scan settings page.
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
-                importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3 };
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
@@ -239,7 +231,6 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // We're on the "Adjust Search Settings" page
-            bool? searchSucceeded = null;
             TryWaitForOpenForm(typeof(PeptideSearchWizardDlg.DDASearchSettingsPage));   // Stop to show this form during form testing
             RunUI(() =>
             {
@@ -258,26 +249,28 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.SearchSettingsControl.FragmentIons = TestSettings.FragmentIons;
                 importPeptideSearchDlg.SearchSettingsControl.Ms2Analyzer = TestSettings.Ms2Analyzer;
                 importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.1;
-
-                // Run the search
-                //Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
+
+            // We're on the MS1 full scan settings page, the last page before the run.
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3 };
+            });
+
+            // Run the search
             SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
 
             TryWaitForOpenForm(typeof(PeptideSearchWizardDlg.DDASearchPage));   // Stop to show this form during form testing
-            RunUI(() =>
-            {
-                importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
-                importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
-            });
-            
+
             var errorDlg = WaitForOpenForm<MessageDlg>();
             StringAssert.Contains(errorDlg.DetailMessage, "Just kidding, there's no MSFragger here!");
             OkDialog(errorDlg);
 
-            WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+            WaitForConditionUI(60000, () => importPeptideSearchDlg.RunSucceeded.HasValue);
+            RunUI(() => Assert.IsFalse(importPeptideSearchDlg.RunSucceeded.Value));
 
-            
             OkDialog(importPeptideSearchDlg, importPeptideSearchDlg.Close);
 
             testFilesDir.Cleanup();

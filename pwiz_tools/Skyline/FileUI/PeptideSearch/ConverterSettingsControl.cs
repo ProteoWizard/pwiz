@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
 using JetBrains.Annotations;
 using pwiz.Common.SystemUtil;
@@ -47,7 +48,36 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             _diaUmpireAdditionalSettings = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
 
+            // Searching the DIA spectra directly (without DIA-Umpire) needs to know whether they are
+            // gas phase fractions
+            _cbGpf = new CheckBox
+            {
+                AutoSize = true,
+                Location = new Point(cbDiaUmpire.Right + 12, cbDiaUmpire.Top),
+                Name = @"cbGpf",
+                Text = PeptideSearchResources.ConverterSettingsControl_ConverterSettingsControl_Gas_phase_fractionation,
+                UseVisualStyleBackColor = true
+            };
+            diaUmpireDescriptionPanel.Controls.Add(_cbGpf);
+            UpdateGpf();
+
             LoadComboboxEntries();
+        }
+
+        private readonly CheckBox _cbGpf;
+
+        /// <summary>
+        /// True when the DIA files searched without DIA-Umpire are gas phase fractions.
+        /// </summary>
+        public bool IsGpf
+        {
+            get => _cbGpf.Checked && !UseDiaUmpire;
+            set => _cbGpf.Checked = value;
+        }
+
+        private void UpdateGpf()
+        {
+            _cbGpf.Enabled = !UseDiaUmpire;
         }
 
         public enum Protocol
@@ -347,6 +377,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void cbDiaUmpire_CheckedChanged(object sender, EventArgs e)
         {
             diaUmpireSettingsPanel.Enabled = cbDiaUmpire.Checked;
+            UpdateGpf();
         }
     }
 }

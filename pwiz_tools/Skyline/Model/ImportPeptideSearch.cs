@@ -220,6 +220,25 @@ namespace pwiz.Skyline.Model
             FileEx.SafeDelete(BiblioSpecLiteSpec.GetRedundantName(docBlibPath), true);
         }
 
+        /// <summary>
+        /// Closes and evicts the library <see cref="LoadPeptideSearchLibrary"/> loaded, when no document
+        /// uses it, so the library can be built again.
+        /// </summary>
+        public void ReleasePeptideSearchLibrary(LibraryManager libraryManager, LibrarySpec libSpec)
+        {
+            if (DocLib is BiblioSpecLiteLibrary blib)
+            {
+                foreach (var stream in blib.ReadStreams)
+                    stream.CloseStream();
+            }
+            else
+            {
+                DocLib?.ReadStream?.CloseStream();
+            }
+            libraryManager.ReleaseLibraries(libSpec);
+            DocLib = null;
+        }
+
         public bool LoadPeptideSearchLibrary(LibraryManager libraryManager, LibrarySpec libSpec, IProgressMonitor monitor)
         {
             if (libSpec == null)
@@ -273,14 +292,33 @@ namespace pwiz.Skyline.Model
 
         public static SrmDocument AddRetentionTimePredictor(SrmDocument doc, LibrarySpec libSpec)
         {
+            var predictor = CreateRetentionTimePredictor(libSpec);
+            SaveRetentionTimePredictor(predictor);
+            return ChangeRetentionTimePredictor(doc, predictor);
+        }
+
+        /// <summary>
+        /// A retention time predictor using the iRT values in a calibrated library, named uniquely
+        /// among the saved calculators and predictors.
+        /// </summary>
+        public static RetentionTimeRegression CreateRetentionTimePredictor(LibrarySpec libSpec)
+        {
             var calc = new RCalcIrt(
                 Helpers.GetUniqueName(libSpec.Name, Settings.Default.RTScoreCalculatorList.Select(lib => lib.Name).ToArray()),
                 libSpec.FilePath);
-            var predictor = new RetentionTimeRegression(
+            return new RetentionTimeRegression(
                 Helpers.GetUniqueName(libSpec.Name, Settings.Default.RetentionTimeList.Select(rt => rt.Name).ToArray()),
                 calc, null, null, DEFAULT_RT_WINDOW, new List<MeasuredRetentionTime>());
-            Settings.Default.RTScoreCalculatorList.Add(calc);
+        }
+
+        public static void SaveRetentionTimePredictor(RetentionTimeRegression predictor)
+        {
+            Settings.Default.RTScoreCalculatorList.Add(predictor.Calculator);
             Settings.Default.RetentionTimeList.Add(predictor);
+        }
+
+        public static SrmDocument ChangeRetentionTimePredictor(SrmDocument doc, RetentionTimeRegression predictor)
+        {
             return doc.ChangeSettings(
                 doc.Settings.ChangePeptideSettings(
                     doc.Settings.PeptideSettings.ChangePrediction(
@@ -666,6 +704,15 @@ namespace pwiz.Skyline.Model
 
         public static SrmDocument AddStandardsToDocument(SrmDocument doc, IrtStandard standard)
         {
+            return AddStandardsToDocument(doc, standard, out _);
+        }
+
+        /// <param name="doc">The document to add the standard peptides to</param>
+        /// <param name="standard">The iRT standard</param>
+        /// <param name="proteinsRemoved">The proteins removed because all their peptides are iRT standard peptides</param>
+        public static SrmDocument AddStandardsToDocument(SrmDocument doc, IrtStandard standard, out int proteinsRemoved)
+        {
+            proteinsRemoved = 0;
             if (standard == null || standard.IsEmpty)
                 return doc;
 
@@ -699,6 +746,7 @@ namespace pwiz.Skyline.Model
                 ).ToArray(), false);
             //var transitions = group.Peptides.SelectMany(p => p.TransitionGroups.SelectMany(t => t.Transitions.Select(t2 => t2.Id)));
             //Console.WriteLine(transitions.Count());
+            proteinsRemoved = doc.PeptideGroupCount - proteins.Count;
             proteins.Insert(0, group);
             return (SrmDocument) doc.ChangeChildrenChecked(proteins.Cast<DocNode>().ToArray());
 

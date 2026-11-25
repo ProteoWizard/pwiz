@@ -175,9 +175,7 @@ namespace TestPerf
                 importPeptideSearchDlg.BuildPepSearchLibControl.InputFileType = PeptideSearchWizardDlg.InputFile.dia_raw;
                 // Check default settings shown in the tutorial
                 Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-
-                Assert.AreEqual(PeptideSearchWizardDlg.Pages.chromatograms_page, importPeptideSearchDlg.CurrentPage);
+                importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
@@ -200,6 +198,59 @@ namespace TestPerf
 
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
+                Assert.AreEqual("Trypsin [KR | P]", importPeptideSearchDlg.ImportFastaControl.Enzyme.GetKey());
+                Assert.AreEqual(0, importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages);
+                importPeptideSearchDlg.ImportFastaControl.SetFastaContent(fastaPathForSearch);
+                importPeptideSearchDlg.ImportFastaControl.FastaImportTargetsFile = fastaPathForImport;
+                Assert.IsTrue(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
+                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod =
+                    Resources.DecoyGeneration_SHUFFLE_SEQUENCE_Shuffle_Sequence;
+                importPeptideSearchDlg.ImportFastaControl.AutoTrain = true;
+                Assert.IsTrue(importPeptideSearchDlg.ImportFastaControl.ContainsFastaContent);
+            });
+
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.converter_settings_page);
+
+                importPeptideSearchDlg.ConverterSettingsControl.UseDiaUmpire = true;
+                importPeptideSearchDlg.ConverterSettingsControl.InstrumentPreset = _instrumentValues.InstrumentPreset;
+                importPeptideSearchDlg.ConverterSettingsControl.EstimateBackground = true;
+                importPeptideSearchDlg.ConverterSettingsControl.AdditionalSettings = _instrumentValues.AdditionalSettings;
+            });
+
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
+                              PeptideSearchWizardDlg.Pages.dda_search_settings_page);
+                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = _instrumentValues.PrecursorTolerance;
+                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = _instrumentValues.FragmentTolerance;
+                importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
+                Assert.AreEqual(PropertyNames.CutoffScore_PERCOLATOR_QVALUE, importPeptideSearchDlg.SearchSettingsControl.CutoffLabel);
+                Assert.AreEqual(0.05, importPeptideSearchDlg.SearchSettingsControl.CutoffScore);
+            });
+
+            // Leaving the search settings page makes sure the search tools are installed. Click
+            // asynchronously so the test thread stays free to dismiss the on-demand MSAmanda download
+            // prompt (a modal "Download MSAmanda" MultiButtonMsgDlg); when MSAmanda is already
+            // installed no dialog appears, so TryWaitForOpenForm just times out (no-op).
+            SkylineWindow.BeginInvoke(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
+
+            var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
+            if (downloaderDlg != null)
+            {
+                OkDialog(downloaderDlg, downloaderDlg.ClickYes);
+                var waitDlg = WaitForOpenForm<LongWaitDlg>();
+                WaitForClosedForm(waitDlg);
+            }
+
+            // We're on the transition settings page.
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.transition_settings_page);
             RunUI(() =>
             {
@@ -261,73 +312,24 @@ namespace TestPerf
             OkDialog(isolationScheme, isolationScheme.OkDialog);
 
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
-            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
-
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
-                Assert.AreEqual("Trypsin [KR | P]", importPeptideSearchDlg.ImportFastaControl.Enzyme.GetKey());
-                Assert.AreEqual(0, importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages);
-                importPeptideSearchDlg.ImportFastaControl.SetFastaContent(fastaPathForSearch);
-                importPeptideSearchDlg.ImportFastaControl.FastaImportTargetsFile = fastaPathForImport;
-                Assert.IsTrue(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
-                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod =
-                    Resources.DecoyGeneration_SHUFFLE_SEQUENCE_Shuffle_Sequence;
-                importPeptideSearchDlg.ImportFastaControl.AutoTrain = true;
-                Assert.IsTrue(importPeptideSearchDlg.ImportFastaControl.ContainsFastaContent);
-            });
-
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-
-                importPeptideSearchDlg.ConverterSettingsControl.UseDiaUmpire = true;
-                importPeptideSearchDlg.ConverterSettingsControl.InstrumentPreset = _instrumentValues.InstrumentPreset;
-                importPeptideSearchDlg.ConverterSettingsControl.EstimateBackground = true;
-                importPeptideSearchDlg.ConverterSettingsControl.AdditionalSettings = _instrumentValues.AdditionalSettings;
-            });
-
-            bool? searchSucceeded = null;
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
-                              PeptideSearchWizardDlg.Pages.dda_search_settings_page);
-                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = _instrumentValues.PrecursorTolerance;
-                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = _instrumentValues.FragmentTolerance;
-                importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
-                Assert.AreEqual(PropertyNames.CutoffScore_PERCOLATOR_QVALUE, importPeptideSearchDlg.SearchSettingsControl.CutoffLabel);
-                Assert.AreEqual(0.05, importPeptideSearchDlg.SearchSettingsControl.CutoffScore);
-            });
 
             // The search runs DiaUmpire, which (re)writes the -diaumpire outputs. Wrap it in try/finally
             // so they are cleaned from the persistent (shared) source dir even if the search assertion
             // below fails. (Nothing is generated before this point, so earlier failures leave nothing.)
             try
             {
+                // Only the search matters here, so stop the run after it
+                bool? searchSucceeded = null;
                 RunUI(() =>
                 {
                     importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
-                    importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
+                    importPeptideSearchDlg.AcceptSearchResults = () => false;
                 });
 
-                // Run the search. Click asynchronously so the test thread stays free to dismiss the
-                // on-demand MSAmanda download prompt. On net8 MSAmanda is downloaded on demand (a modal
-                // "Download MSAmanda" MultiButtonMsgDlg shown synchronously by ClickNextButton); on net472
-                // MSAmanda is bundled and no dialog appears, so TryWaitForOpenForm just times out (no-op).
                 SkylineWindow.BeginInvoke(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
-                var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
-                if (downloaderDlg != null)
-                {
-                    OkDialog(downloaderDlg, downloaderDlg.ClickYes);
-                    var waitDlg = WaitForOpenForm<LongWaitDlg>();
-                    WaitForClosedForm(waitDlg);
-                }
-
-                WaitForConditionUI(120 * 600000, () => searchSucceeded.HasValue);
-                Assert.IsTrue(searchSucceeded.Value);
+                WaitForConditionUI(120 * 600000, () => importPeptideSearchDlg.RunSucceeded.HasValue);
+                Assert.IsTrue(searchSucceeded.HasValue && searchSucceeded.Value);
 
                 RunUI(() => importPeptideSearchDlg.ClickCancelButton());
             }

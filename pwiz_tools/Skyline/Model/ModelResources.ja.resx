@@ -379,6 +379,18 @@
   <data name="ImportFastaControl_ImportFasta_iRT_standards" xml:space="preserve">
     <value>iRT標準</value>
   </data>
+  <data name="ImportPeptideSearch_Adding_detected_features_to_document" xml:space="preserve">
+    <value>検出したフィーチャーをドキュメントに追加中</value>
+  </data>
+  <data name="ImportPeptideSearch_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_" xml:space="preserve">
+    <value>デコイなしではmProphetモデルを自動的にトレーニングすることはできませんが、デコイオプションではデコイは生成されませんでした。ターゲット毎のデコイ数を増やすか、mProphetモデルの自動トレーニングを無効にしてください。</value>
+  </data>
+  <data name="ImportPeptideSearch_Failed_to_build_the_library__0__" xml:space="preserve">
+    <value>ライブラリ{0}の構築に失敗しました。</value>
+  </data>
+  <data name="ImportPeptideSearch_The_document_must_contain_at_least_one_precursor_transition_in_order_to_proceed_" xml:space="preserve">
+    <value>続行するにはドキュメントに1つ以上のプリカーサートランジションを含めなければなりません。</value>
+  </data>
   <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential" xml:space="preserve">
     <value>デクラスタリングポテンシャル</value>
   </data>
