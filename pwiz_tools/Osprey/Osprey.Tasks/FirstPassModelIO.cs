@@ -131,6 +131,32 @@ namespace pwiz.Osprey.Tasks
             /// round-trip converter refuses; they are written as the string "NaN".</summary>
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public JToken TrainingAnalysis { get; set; }
+
+            /// <summary>A run's own model only (<see cref="SaveRunModel"/>): the raw score its
+            /// calibration maps to 0, and the distance it maps to 1. Omitted from the
+            /// analysis-wide model, which is not calibrated.</summary>
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public double? CalibrationThreshold { get; set; }
+
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public double? CalibrationDenominator { get; set; }
+
+            /// <summary>A run's own model trained with the protein-best column: the value of an
+            /// entry the run had no row for. The values of the run's rows are a column of its stub
+            /// scores parquet.</summary>
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public double? ProteinBestFloor { get; set; }
+
+            /// <summary>A run's own model only, when its safeguard scored the run with its best
+            /// single feature in place of the model (<see cref="RunFirstPassModel.FallbackFeature"/>):
+            /// that feature's index in the FDR feature vector. Omitted for a run its model scores.</summary>
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public int? FallbackFeature { get; set; }
+
+            /// <summary>The name of <see cref="FallbackFeature"/>, which a load checks against the
+            /// model's feature names, so the index cannot name another column.</summary>
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public string FallbackFeatureName { get; set; }
         }
 
         /// <summary>Serializable form of the protein-compact stratum: the base ids of every
@@ -183,6 +209,69 @@ namespace pwiz.Osprey.Tasks
         public static string StratumPathFor(OspreyConfig config)
         {
             return ScoringTaskShared.AnalysisArtifactPath(config, EXT_STRATUM);
+        }
+
+        /// <summary>
+        /// One run's own first-pass model file, <c>&lt;stem&gt;.1st-pass.model.json</c>, beside the
+        /// run's other first-pass artifacts: written by PerFileScoring, which trains each run's own
+        /// model, read by PerFileRescoring.
+        /// </summary>
+        public static string RunModelPathFor(string inputFile)
+        {
+            string pass1 = FdrScoresSidecar.Pass1Path(inputFile);
+            return pass1.Substring(0, pass1.Length - FdrScoresSidecar.EXT_FIRST_PASS.Length) + EXT_MODEL;
+        }
+
+        /// <summary>
+        /// Write one run's own model with its calibration map and protein-best floor. Returns false,
+        /// writing nothing, when <see cref="Serialize"/> declines the model.
+        /// </summary>
+        public static bool SaveRunModel(string path, RunFirstPassModel runModel, ArtifactStamp stamp)
+        {
+            if (runModel == null)
+                throw new ArgumentNullException(nameof(runModel));
+            var dto = BuildModelDto(runModel.Model, stamp);
+            if (dto == null)
+                return false;
+            dto.CalibrationThreshold = runModel.CalibrationThreshold;
+            dto.CalibrationDenominator = runModel.CalibrationDenominator;
+            if (runModel.ScoresProteinBest)
+                dto.ProteinBestFloor = runModel.ProteinBestFloor;
+            if (runModel.UsesFallbackFeature)
+            {
+                dto.FallbackFeature = runModel.FallbackFeature;
+                dto.FallbackFeatureName = FeatureNameAt(runModel.Model.FeatureNames, runModel.FallbackFeature);
+            }
+            WriteText(path, SerializeJson(dto));
+            return true;
+        }
+
+        /// <summary>
+        /// Load one run's own model, or null when the file is absent, unreadable, carries no
+        /// calibration map (an analysis-wide model), or was trained on other features. The
+        /// protein-best values of the run's rows are not in the file: they are a column of the
+        /// run's stub scores parquet.
+        /// </summary>
+        public static RunFirstPassModel LoadRunModel(string path, PinFeatureSelection features)
+        {
+            var dto = ReadModelDto(path, features, out var model);
+            if (dto?.CalibrationThreshold == null || !(dto.CalibrationDenominator > 0))
+                return null;
+            if (ProteinBestFeature.IsAppendedTo(model.FeatureNames) && !dto.ProteinBestFloor.HasValue)
+                return null;
+            int fallbackFeature = RunFirstPassModel.NO_FALLBACK;
+            if (dto.FallbackFeature.HasValue)
+            {
+                fallbackFeature = dto.FallbackFeature.Value;
+                // The index must name an FDR feature, and the same one the run was scored with.
+                if (fallbackFeature < 0 || fallbackFeature >= features.FdrFeatureIndices.Length ||
+                    !string.Equals(dto.FallbackFeatureName, FeatureNameAt(model.FeatureNames, fallbackFeature), StringComparison.Ordinal))
+                {
+                    return null;
+                }
+            }
+            return new RunFirstPassModel(model, dto.CalibrationThreshold.Value, dto.CalibrationDenominator.Value,
+                null, dto.ProteinBestFloor ?? 0.0, fallbackFeature);
         }
 
         /// <summary>
@@ -242,6 +331,13 @@ namespace pwiz.Osprey.Tasks
         /// <param name="stamp">The writing task's validity stamp, embedded as the first property.</param>
         public static string Serialize(PercolatorResults model, ArtifactStamp stamp)
         {
+            var dto = BuildModelDto(model, stamp);
+            return dto == null ? null : SerializeJson(dto);
+        }
+
+        /// <summary>The serializable form of <paramref name="model"/>, or null when <see cref="Serialize"/> declines it.</summary>
+        private static ModelDto BuildModelDto(PercolatorResults model, ArtifactStamp stamp)
+        {
             if (stamp == null)
                 throw new ArgumentNullException(nameof(stamp));
             if (model?.Standardizer == null)
@@ -286,7 +382,7 @@ namespace pwiz.Osprey.Tasks
                 dto.FoldWeights = model.FoldWeights.ToArray();
                 dto.FoldBiases = model.FoldBiases.ToArray();
             }
-            return SerializeJson(dto);
+            return dto;
         }
 
         /// <summary>
@@ -360,6 +456,23 @@ namespace pwiz.Osprey.Tasks
         /// <param name="features">The search's features, which a model must have been trained on.</param>
         public static Sidecar Load(string path, PinFeatureSelection features)
         {
+            var dto = ReadModelDto(path, features, out var model);
+            if (dto == null)
+                return null;
+            return new Sidecar
+            {
+                Model = model,
+                ExperimentAgg = dto.ExperimentAgg,
+            };
+        }
+
+        /// <summary>
+        /// The model file at <paramref name="path"/> and the model it carries, or null (and a null
+        /// model) on the terms <see cref="Load"/> documents.
+        /// </summary>
+        private static ModelDto ReadModelDto(string path, PinFeatureSelection features, out PercolatorResults model)
+        {
+            model = null;
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
                 return null;
 
@@ -376,26 +489,28 @@ namespace pwiz.Osprey.Tasks
                     (dto.FeatureNames != null && dto.FeatureNames.Length != dto.NumFeatures))
                     return null;
 
-                var model = dto.FoldGbtModels != null && dto.FoldGbtModels.Length > 0
+                var loaded = dto.FoldGbtModels != null && dto.FoldGbtModels.Length > 0
                     ? LoadTreeModel(dto)
                     : LoadLinearModel(dto);
-                if (model == null)
+                if (loaded == null)
                     return null;
-                model.FeatureNames = dto.FeatureNames;
-                model.TrainingAnalysis = ReadTrainingAnalysis(dto.TrainingAnalysis);
-                if (!HasFdrFeatureLayout(model, features))
+                loaded.FeatureNames = dto.FeatureNames;
+                loaded.TrainingAnalysis = ReadTrainingAnalysis(dto.TrainingAnalysis);
+                if (!HasFdrFeatureLayout(loaded, features))
                     return null;
-
-                return new Sidecar
-                {
-                    Model = model,
-                    ExperimentAgg = dto.ExperimentAgg,
-                };
+                model = loaded;
+                return dto;
             }
             catch (Exception)
             {
                 return null;
             }
+        }
+
+        /// <summary>The name of feature <paramref name="index"/>, or null when the model records no names.</summary>
+        private static string FeatureNameAt(string[] featureNames, int index)
+        {
+            return featureNames != null && index < featureNames.Length ? featureNames[index] : null;
         }
 
         /// <summary>

@@ -23,56 +23,45 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.BiblioSpec.IO;
-using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
-using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
 {
     public partial class SubsetPipelineTest
     {
         /// <summary>
-        /// <c>--feature-set</c> on the Stellar subset (unit resolution). Without it the search uses the
-        /// core set and its scores parquets hold the core columns alone. The same directory searched with
-        /// the default set must score again, because per-file scoring keys the recorded columns, and
-        /// its parquets then hold exactly the default set's columns the resolution can use - not the
-        /// rest of the families it computes. Searched again, every task is cached. A first-pass FDR
-        /// alone under a wider set, over scores that lack its columns, must not read them as zeros.
-        /// Last, the efficient set scores again and records its own, smaller set of columns.
+        /// <c>--feature-set</c> on the Stellar subset (unit resolution), with <c>--keep-scores-parquet</c>
+        /// so each run keeps its features parquets beside its stub scores parquet. Without the option
+        /// the search uses the default set, and its features parquets hold exactly the default set's
+        /// columns the resolution can use - not the rest of the families it computes. The same
+        /// directory searched with the core set must score again, because per-file scoring keys the
+        /// recorded columns, and the features parquets then hold the core columns alone. Searched
+        /// again, every task is cached. Last, the efficient set scores again and records its own set
+        /// of columns.
+        /// A first-pass FDR alone reads no features (each run's own model scored the run in
+        /// PerFileScoring), so it has no columns to refuse.
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetFeatureSets()
         {
             string workDir = CreateDir(@"feature-sets");
-            string log = RunAnalysis(workDir, DataInputs(), Verifier(false));
-            AssertFeatureSetRun(workDir, log, null, OspreyFeatureSet.core);
-            AssertBlibFeatureSet(workDir, null);
-
-            log = RunAnalysis(workDir, DataInputs(), Verifier(false), FeatureSetArgs(OspreyFeatureSet.@default));
-            AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
-            AssertFeatureSetRun(workDir, log, OspreyFeatureSet.@default, OspreyFeatureSet.@default);
+            string log = RunAnalysis(workDir, DataInputs(), Verifier(false), KeepScoresParquetArgs());
+            AssertFeatureSetRun(workDir, log, null, OspreyFeatureSet.@default);
+            AssertNoZeroApexUnderArea(workDir);
             AssertBlibFeatureSet(workDir, OspreyFeatureSet.@default.ToString());
 
-            log = RunAnalysis(workDir, DataInputs(), Verifier(false), FeatureSetArgs(OspreyFeatureSet.@default));
+            log = RunAnalysis(workDir, DataInputs(), Verifier(false), FeatureSetArgs(OspreyFeatureSet.core).Concat(KeepScoresParquetArgs()).ToArray());
+            AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
+            AssertFeatureSetRun(workDir, log, OspreyFeatureSet.core, OspreyFeatureSet.core);
+            AssertBlibFeatureSet(workDir, null);
+
+            log = RunAnalysis(workDir, DataInputs(), Verifier(false), FeatureSetArgs(OspreyFeatureSet.core).Concat(KeepScoresParquetArgs()).ToArray());
             AssertTasks(log, ALL_TASKS, Array.Empty<string>());
             AssertNoRecompute(log);
 
-            // The first-pass FDR alone, under the all set, over the default set's scores: a single-task
-            // run adopts the scores it is pointed at, so the feature load must refuse them, naming the
-            // first column the set uses that they lack, rather than train on zeros.
-            log = RunAnalysisExpecting(workDir, RunNames(workDir, MZML_EXTENSION), LIBRARY_FILE, Verifier(false),
-                Program.EXIT_CODE_FAILURE_TO_START,
-                FeatureSetArgs(OspreyFeatureSet.all).Concat(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, FirstPassFdrTask.TASK_NAME }).ToArray());
-            int missing = Enumerable.Range(0, ParquetScoreCache.NUM_PIN_FEATURES)
-                .First(f => PinFeatureMask.IsAvailable(f, ResolutionMode.UnitResolution) &&
-                            !PinFeatureMask.FeatureSetIndices(OspreyFeatureSet.@default).Contains(f));
-            string error = SplitLines(log).Single(CommandStatusWriter.IsErrorLine);
-            StringAssert.Contains(error, ParquetScoreCache.PIN_FEATURE_NAMES[missing]);
-            StringAssert.Contains(error, ParquetScoreCache.EXT_SCORES);
-
             // The efficient set, within the default: fewer columns is another file too, so it scores again.
-            log = RunAnalysis(workDir, DataInputs(), Verifier(false), FeatureSetArgs(OspreyFeatureSet.efficient));
+            log = RunAnalysis(workDir, DataInputs(), Verifier(false), FeatureSetArgs(OspreyFeatureSet.efficient).Concat(KeepScoresParquetArgs()).ToArray());
             AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
             AssertFeatureSetRun(workDir, log, OspreyFeatureSet.efficient, OspreyFeatureSet.efficient);
             AssertBlibFeatureSet(workDir, OspreyFeatureSet.efficient.ToString());
@@ -90,7 +79,14 @@ namespace pwiz.Osprey.Test
             return new[] { OspreyCommandArgs.ARG_FEATURE_SET.ArgumentText, featureSet.ToString() };
         }
 
-        // The run logged the set it used, and every scores parquet it left holds exactly the core and
+        /// <summary>Keeps each run's features parquets, which hold the feature columns the stub
+        /// scores parquets no longer do.</summary>
+        private static string[] KeepScoresParquetArgs()
+        {
+            return new[] { OspreyCommandArgs.ARG_KEEP_SCORES_PARQUET.ArgumentText };
+        }
+
+        // The run logged the set it used, and every features parquet it left holds exactly the core and
         // the set's columns the resolution can use.
         private static void AssertFeatureSetRun(string workDir, string log, OspreyFeatureSet? asked, OspreyFeatureSet expected)
         {
@@ -105,9 +101,10 @@ namespace pwiz.Osprey.Test
                 .Where(f => PinFeatureMask.IsAvailable(f, unit)).Select(f => ParquetScoreCache.PIN_FEATURE_NAMES[f]);
             CollectionAssert.AreEqual(inSet.ToArray(), expectedColumns, @"the recorded columns are the set's");
 
-            var parquets = Directory.GetFiles(workDir, @"*" + ParquetScoreCache.EXT_SCORES)
-                .Concat(Directory.GetFiles(workDir, @"*" + ParquetScoreCache.EXT_SCORES_RECONCILED)).ToArray();
-            Assert.AreNotEqual(0, parquets.Length, workDir);
+            var parquets = Directory.GetFiles(workDir, @"*" + ParquetScoreCache.EXT_FEATURES)
+                .Concat(Directory.GetFiles(workDir, @"*" + ParquetScoreCache.EXT_FEATURES_RECONCILED)).ToArray();
+            // A first-pass and a second-pass features parquet per run.
+            Assert.AreEqual(2 * RUN_NAMES.Length, parquets.Length, workDir);
             foreach (string parquet in parquets)
             {
                 foreach (string name in ParquetScoreCache.PIN_FEATURE_NAMES)

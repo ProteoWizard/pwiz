@@ -23,12 +23,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.CommonResources;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
 
@@ -387,6 +389,43 @@ namespace pwiz.SkylineTest
                 MultiFileLoader.GetOptimalThreadCount(null, MultiFileLoader.MAX_PARALLEL_LOAD_FILES+2, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.many));
         }
 
+        /// <summary>
+        /// Each loading thread reports its finished file to <see cref="FileLoadCompletionAccumulator"/>,
+        /// and the batch it commits must hold every file, including when files finish together and
+        /// race to queue their completions ahead of the commit queue's end marker.
+        /// </summary>
+        [TestMethod]
+        public void FileLoadCompletionAccumulatorConcurrentCompleteTest()
+        {
+            const int threadCount = 4;
+            const int fileCount = 4;
+            const int iterations = 2000;
+            for (int iteration = 0; iteration < iterations; iteration++)
+            {
+                int committed = 0;
+                using (var allCommitted = new ManualResetEventSlim())
+                using (var start = new Barrier(fileCount))
+                {
+                    var accumulator = new FileLoadCompletionAccumulator(completions =>
+                    {
+                        if (Interlocked.Add(ref committed, completions.Count) == fileCount)
+                            allCommitted.Set();
+                    }, threadCount, fileCount);
+                    var loaders = Enumerable.Range(0, fileCount).Select(i => new Thread(() =>
+                    {
+                        start.SignalAndWait();
+                        accumulator.Complete(null, new ProgressStatus().Complete());
+                    })).ToArray();
+                    foreach (var loader in loaders)
+                        loader.Start();
+                    foreach (var loader in loaders)
+                        loader.Join();
+                    Assert.IsTrue(allCommitted.Wait(TimeSpan.FromSeconds(10)),
+                        $@"Iteration {iteration}: {committed} of {fileCount} completions committed");
+                }
+            }
+        }
+
         [TestMethod]
         public void ArrayUtilSortTest()
         {
@@ -441,6 +480,63 @@ namespace pwiz.SkylineTest
             var unsorted = new[] { 3.0, 1.0, 2.0 };
             Assert.IsFalse(ArrayUtil.Sort(unsorted, null, null));
             AssertEx.AreEqualDeep(new[] { 1.0, 2.0, 3.0 }, unsorted);
+
+            // Length overload, for buffers longer than their peaks: sorts only the first length
+            // elements of every array. The slack holds values that a full-length sort would move
+            // to the front, so touching it shows.
+            var mzBuffer = new[] { 30.0, 10.0, 20.0, -1.0, -2.0 };
+            var intensityBuffer = new[] { 3.0, 1.0, 2.0, -1.0, -2.0 };
+            var imBuffer = new[] { 0.3, 0.1, 0.2, -1.0, -2.0 };
+            Assert.IsFalse(ArrayUtil.Sort(mzBuffer, 3, intensityBuffer, imBuffer));
+            AssertEx.AreEqualDeep(new[] { 10.0, 20.0, 30.0, -1.0, -2.0 }, mzBuffer);
+            AssertEx.AreEqualDeep(new[] { 1.0, 2.0, 3.0, -1.0, -2.0 }, intensityBuffer);
+            AssertEx.AreEqualDeep(new[] { 0.1, 0.2, 0.3, -1.0, -2.0 }, imBuffer);
+            // Already sorted within length, though not across the slack
+            Assert.IsTrue(ArrayUtil.Sort(mzBuffer, 3, intensityBuffer, null));
+            // Only the second secondary array given
+            var mzBuffer2 = new[] { 2.0, 1.0, 0.0 };
+            var imBuffer2 = new[] { 0.2, 0.1, 0.0 };
+            Assert.IsFalse(ArrayUtil.Sort(mzBuffer2, 2, null, imBuffer2));
+            AssertEx.AreEqualDeep(new[] { 1.0, 2.0, 0.0 }, mzBuffer2);
+            AssertEx.AreEqualDeep(new[] { 0.1, 0.2, 0.0 }, imBuffer2);
+            AssertEx.ThrowsException<ArgumentOutOfRangeException>(() => { ArrayUtil.Sort(mzBuffer2, 3, new double[2], null); });
+        }
+
+        [TestMethod]
+        public void MsDataSpectrumBuffersTest()
+        {
+            // Buffers longer than their peaks are kept as given until something asks for arrays
+            var spectrum = new MsDataSpectrum();
+            var mzBuffer = new[] { 1.0, 2.0, 3.0, -1.0 };
+            var intensityBuffer = new[] { 10.0, 20.0, 30.0, -1.0 };
+            var imBuffer = new[] { 0.1, 0.2, 0.3, -1.0 };
+            spectrum.SetBuffers(mzBuffer, intensityBuffer, imBuffer, 3);
+            Assert.AreEqual(3, spectrum.PeakCount);
+            Assert.AreSame(mzBuffer, spectrum.MzBuffer);
+            Assert.AreSame(intensityBuffer, spectrum.IntensityBuffer);
+            Assert.AreSame(imBuffer, spectrum.IonMobilityBuffer);
+            Assert.IsTrue(spectrum.HasIonMobilities);
+
+            // The array properties trim all three to the peak count, once
+            AssertEx.AreEqualDeep(new[] { 1.0, 2.0, 3.0 }, spectrum.Mzs);
+            AssertEx.AreEqualDeep(new[] { 10.0, 20.0, 30.0 }, spectrum.Intensities);
+            AssertEx.AreEqualDeep(new[] { 0.1, 0.2, 0.3 }, spectrum.IonMobilities);
+            Assert.AreSame(spectrum.Mzs, spectrum.MzBuffer);
+            Assert.AreEqual(3, spectrum.PeakCount);
+
+            // Setting one array after SetBuffers keeps the others trimmed to the peak count
+            spectrum.SetBuffers(mzBuffer, intensityBuffer, null, 2);
+            spectrum.Intensities = new[] { 5.0, 6.0 };
+            AssertEx.AreEqualDeep(new[] { 1.0, 2.0 }, spectrum.Mzs);
+            Assert.IsFalse(spectrum.HasIonMobilities);
+            Assert.AreEqual(2, spectrum.PeakCount);
+
+            // Exact arrays: count is their length
+            spectrum.SetArrays(new[] { 7.0 }, new[] { 70.0 });
+            Assert.AreEqual(1, spectrum.PeakCount);
+            Assert.AreEqual(0, new MsDataSpectrum().PeakCount);
+
+            AssertEx.ThrowsException<ArgumentOutOfRangeException>(() => spectrum.SetBuffers(new double[2], new double[1], null, 2));
         }
 
         private static void VerifyDoubleSortAgainstReference(double[] mzs)

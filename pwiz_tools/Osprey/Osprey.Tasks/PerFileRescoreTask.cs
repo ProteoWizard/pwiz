@@ -169,6 +169,9 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public const string TASK_NAME = OspreyTaskNames.PER_FILE_RESCORING;
 
+        // The key term of a reconciled stub, with its layout version.
+        private const string RECONCILED_STUB_KEY_TERM = @";reconciled=stub1";
+
         public override string Name => TASK_NAME;
 
         /// <summary>
@@ -219,13 +222,14 @@ namespace pwiz.Osprey.Tasks
         //
         // Inputs are what a node rescoring its runs must be given, doc 00's "Boundary 2 -> 3"
         // made checkable. Per run: the spectra cache Stage 6 streams its MS2 from (no data file -
-        // there is no mzML fallback), the Stage 4 parquet the run is rehydrated from, the
-        // calibration (mass calibration is required; the RT calibration plans the run), and the
-        // run's 1st-pass FDR sidecar. Analysis-wide, the four files FirstPassFDR wrote for every
-        // node: the experiment sidecar (Stage 6's compaction reads its q-values), the retained
-        // base_id summary (fatal when absent), the frozen 1st-pass model the pass-2 worker scores
-        // with (both pass-2 modes are frozen, so it is unconditional), and under protein-compact
-        // the stratum it competes within.
+        // there is no mzML fallback), the run's stub scores parquet (its first-pass records and
+        // protein-best column, which the run is rehydrated from), the calibration (mass
+        // calibration is required; the RT calibration plans the run), the run's own
+        // <stem>.1st-pass.model.json (the frozen model its moved rows are scored with) and, with
+        // feature writing on, its <stem>.features.parquet (read for its unmoved rows).
+        // Analysis-wide, the files FirstPassFDR wrote for every node: the experiment sidecar
+        // (Stage 6's compaction reads its q-values), the retained base_id summary (fatal when
+        // absent) and the cross-run consensus. There is no analysis-wide model.
         //
         // Under --demux a multiplexed run streams <stem>.demux.spectra.bin instead of the plain
         // cache, which the configuration alone cannot tell; the plain cache is what is declared.
@@ -240,11 +244,9 @@ namespace pwiz.Osprey.Tasks
                 yield return SpectraCache.GetCachePath(input);
                 yield return ParquetScoreCache.GetScoresPath(input);
                 yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
-                yield return FdrScoresSidecar.Pass1Path(input);
-                // The column the pass-2 worker scores the run's rescored rows with, under
-                // --protein-boost best: the frozen model was trained with it.
-                if (config.ProteinBest)
-                    yield return ProteinBestSidecar.PathFor(input);
+                yield return FirstPassModelIO.RunModelPathFor(input);
+                if (PerFileScoringTask.WritesFeaturesCheckpoint(config))
+                    yield return ParquetScoreCache.GetFeaturesPath(input);
             }
             string siblingPath = ScoringTaskShared.ArtifactSiblingPath(config);
             string experimentPath = FdrExperimentSidecar.PathFor(config.OutputBlib, siblingPath,
@@ -254,15 +256,6 @@ namespace pwiz.Osprey.Tasks
             string retainedSummary = RetainedBaseIdSidecar.PathFor(config.OutputBlib, siblingPath);
             if (!string.IsNullOrEmpty(retainedSummary))
                 yield return retainedSummary;
-            string modelPath = FirstPassModelIO.PathFor(config);
-            if (!string.IsNullOrEmpty(modelPath))
-                yield return modelPath;
-            if (config.Pass2ProteinCompact)
-            {
-                string stratumPath = FirstPassModelIO.StratumPathFor(config);
-                if (!string.IsNullOrEmpty(stratumPath))
-                    yield return stratumPath;
-            }
             if (config.Reconciliation != null && config.Reconciliation.Enabled)
             {
                 string consensusPath = Stage6ConsensusFile.PathFor(ctx.Config);
@@ -285,6 +278,14 @@ namespace pwiz.Osprey.Tasks
             // fast per-file-skip its way back to the same answer.
             foreach (var input in ctx.Config.InputFiles)
                 yield return ParquetScoreCache.GetReconciledScoresPath(input);
+
+            // Under per-run first-pass models with feature writing on, the second pass's features,
+            // which the reconciled stub beside them leaves out.
+            if (PerFileScoringTask.WritesFeaturesCheckpoint(ctx.Config))
+            {
+                foreach (var input in ctx.Config.InputFiles)
+                    yield return ParquetScoreCache.GetReconciledFeaturesPath(input);
+            }
 
             // Each run's Stage 6 plan, written by this task as it plans the run just before
             // rescoring it, under the stamp its reconciled parquet carries.
@@ -320,18 +321,8 @@ namespace pwiz.Osprey.Tasks
             // In EVERY pass-2 mode and for every run (#4665). Both modes have a per-file half
             // the worker runs, and a run with no Stage 6 work gets its answer written like any
             // other, so there is no run whose sidecar some other task owes.
-            foreach (var input in ctx.Config.InputFiles)
-            {
-                yield return FdrScoresSidecar.Pass2Path(input);
-                // The decoy side of this file's competition, written by the same worker in the
-                // same call (#4486). Declared for the same reason the sidecar is: it is an
-                // output of THIS task, its validity is this task's validity, and a resume that
-                // found the pool image but not this file would fold an empty null. Two declared
-                // outputs make that state fail the task rather than be discovered downstream.
-                // Only where there IS a competition: the transfer competes nothing.
-                if (ctx.Config.Pass2ProteinCompact)
-                    yield return Pass2CompetitionDecoys.PathFor(input);
-            }
+            // No per-run second-pass sidecar: the reconciled stub, declared above, holds each run's
+            // second-pass records.
         }
 
         public override string ValidityKey(PipelineContext ctx)
@@ -364,7 +355,13 @@ namespace pwiz.Osprey.Tasks
                 + OspreyEnvironment.FdrExperimentValidityKeySuffix()
                 // OSPREY_RECON_REFIT=off plans reconciliation on the first-pass calibrations; empty when unset.
                 + OspreyEnvironment.ReconRefitValidityKeySuffix()
-                // The Stage 6 competition and the 2nd-pass sidecar score with the first-pass
+                // The reconciled parquet is a stub that carries the second-pass answer. Ahead of
+                // the classifier term, so a tree key is the linear key with that term appended.
+                + RECONCILED_STUB_KEY_TERM
+                // The run model's safeguard, which can score a run with one feature in its place.
+                // Ahead of the classifier term, for the reason the stub term is.
+                + PercolatorEngine.RUN_MODEL_SAFEGUARD_KEY_TERM
+                // The Stage 6 competition and the 2nd-pass answer score with the first-pass
                 // model, so the classifier that trained it keys this task too (empty for the SVM).
                 + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config)
                 // The reconciled parquet carries the reference XIC only for the training export.
@@ -680,6 +677,11 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private bool RunRescore(PipelineContext ctx)
         {
+            // Under per-run first-pass models, saving the second pass's features takes the unmoved
+            // rows' features from each run's first-pass checkpoint, the only file that has them,
+            // so a run without one stops here rather than after hours of re-scoring.
+            if (!RequireFeaturesCheckpoints(ctx))
+                return false;
             // Compute path (Stage 6 rescore): re-score each file's entries
             // against the consensus + reconciliation boundaries and write the
             // reconciled parquets. Used by the straight-through pipeline and
@@ -1154,7 +1156,7 @@ namespace pwiz.Osprey.Tasks
                 TaskValidityKey = ValidityKey(ctx),
                 JoinFileStems = joinFileStems,
             };
-            inputs.Pass2Worker = CreatePass2Worker(config, ctx, Name, inputs.TaskValidityKey);
+            inputs.Pass2Worker = CreatePass2Worker(config, ctx);
             var runPlanner = CreateRunPlanner(perFileCalibrations, fullLibrary, config, ctx);
             inputs.HydrateRun = BuildPerRunHydrate(perFileParquetPaths, config, ctx);
             var planStamp = OspreyVersion.Stamp(Name, inputs.TaskValidityKey);
@@ -1292,109 +1294,44 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Build the per-file second-pass worker for this run.
-        ///
-        /// <para>Every pass-2 mode has one (#4665), and there is no Stage 7 fallback for a run
-        /// without it: SecondPassFDR folds the per-run sidecars this worker writes and computes
-        /// none of its own. So a 1st-pass model sidecar that cannot be read, or a model with no
-        /// usable model/standardizer, stops the run HERE, where the remedy is a re-run of the
-        /// first pass, rather than at the top of Stage 7 after every run has been re-scored.
-        /// Both used to leave the run to Stage 7, which answered it from the whole pool.</para>
-        ///
-        /// <para>The three whole-run constants it needs come from the analysis's
-        /// <c>.1st-pass.model.json</c> and <c>.1st-pass.stratum.json</c>, which
-        /// <c>FirstPassFdrTask</c> already writes - the frozen model, the experiment-agg arm and
-        /// the protein stratum. The fourth input is the analysis-wide 1st-pass experiment
-        /// sidecar (issue #4486).</para>
+        /// Build the per-file second-pass worker for this run: the transfer, which each run's
+        /// reconciled write runs in memory on its survivors (<see cref="WriteRunModelReconciled"/>),
+        /// with the analysis-wide 1st-pass experiment records it carries forward (issue #4486).
         /// </summary>
-        private static Pass2PerFileWorker CreatePass2Worker(OspreyConfig config,
-            PipelineContext ctx, string taskName, string taskValidityKey)
+        private static Pass2PerFileWorker CreatePass2Worker(OspreyConfig config, PipelineContext ctx)
         {
-            var sidecar = FirstPassModelIO.LoadForAnalysis(config);
-            var scorer = sidecar?.Model != null ? FrozenModelScorer.TryCreate(sidecar.Model) : null;
-            if (scorer == null)
-            {
-                throw new InvalidOperationException(string.Format(
-                    OspreyTasksResources.Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__,
-                    OspreyArgNames.Text(OspreyArgNames.TASK)));
-            }
-            var inputByName = new Dictionary<string, string>(StringComparer.Ordinal);
-            if (config.InputFiles != null)
-            {
-                foreach (string inputFile in config.InputFiles)
-                    inputByName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
-            }
-            void WriteAnswer(string fileName, IReadOnlyList<FdrScoreRecord> records,
-                IReadOnlyDictionary<uint, (double score, uint entryId)> bestDecoy)
-            {
-                // --task ModelDiagnostics touches no artifact but the report, exactly as the
-                // Stage 7 writer this replaces.
-                if (config.DiagnosticsOnly)
-                    return;
-                if (!inputByName.TryGetValue(fileName, out string inputFile))
-                {
-                    throw new InvalidOperationException(string.Format(
-                        @"Second-pass per-file competition wrote records for '{0}', which matches " +
-                        @"no configured input file, so its sidecar has nowhere to go. See issue #4486.",
-                        fileName));
-                }
-                // Every artifact embeds the PRODUCER's stamp: they belong to PerFileRescoring, so
-                // whatever invalidates PerFileRescoring invalidates them. Stamping SecondPassFDR's
-                // key here would leave a file that outlives the inputs it was computed from. Each
-                // commits atomically with its stamp, and a file is this run's answer only when
-                // every artifact carries the stamp of the reconciled parquet beside it
-                // (Pass2FdrSidecar.HasWorkerStamp), so an interruption between the two writes
-                // leaves a file that is re-scored on resume rather than one Stage 7 folds against
-                // a missing or stale decoy artifact. The decoys are written only where there was
-                // a competition to produce them - the transfer passes none.
-                var stamp = OspreyVersion.Stamp(taskName, taskValidityKey);
-                if (bestDecoy != null)
-                    Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(inputFile), bestDecoy, stamp);
-                FdrScoresSidecar.Write(FdrScoresSidecar.Pass2Path(inputFile), records,
-                    FdrScoresSidecar.Pass.SecondPass, stamp);
-            }
-            // --protein-boost best: a model with the column scores only with each run's column,
-            // and one without cannot use it. The validity key already keeps the two arms apart, so
-            // a disagreement here is a model from another arm, which no run may score with.
-            if (scorer.ScoresProteinBest != config.ProteinBest)
-                throw new InvalidOperationException(ProteinBestMismatchMessage(scorer.ScoresProteinBest, config.ProteinBoost));
-            bool transfer = !config.Pass2ProteinCompact;
-            // The competition is constrained to the stratum, and competing without one would be
-            // the full-population form that was removed (#4581), not a smaller version of this.
-            // An EMPTY stratum is not a missing one: no protein had 2 or more detected peptides.
-            // The competition then admits only the peaks reconciliation changed, and a run that
-            // reports nothing ends in SecondPassFDR's error saying so.
-            if (!transfer && sidecar.StratumBaseIds == null)
-            {
-                throw new InvalidOperationException(string.Format(
-                    OspreyTasksResources.PerFileRescoreTask_CreatePass2Worker_The_saved_first_pass_model_carries_no_list_of_precursor_candidates_from_proteins_with_2_or_more_detections__,
-                    OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME)));
-            }
+            // The protein-compact competition scores every survivor with one model for the
+            // analysis, and each run trained its own, so it is refused.
+            if (config.Pass2ProteinCompact)
+                throw new InvalidOperationException(OwnModelsProteinCompactMessage());
             // The transfer carries each precursor's pass-1 experiment values, and the loader reads
             // an absent sidecar as an empty map - every run would be written at q = 1.0.
-            if (transfer)
-                Pass2FdrSidecar.RequireTransferExperimentSidecar(config);
-            return new Pass2PerFileWorker(
-                scorer,
-                PinFeatureMask.For(config),
-                transfer,
-                transfer ? null : sidecar.StratumBaseIds,
-                Pass2FdrSidecar.LoadPass1ExperimentRecords(config),
-                WriteAnswer,
-                ctx.LogWarning,
-                sidecar.Stamp);
+            Pass2FdrSidecar.RequireTransferExperimentSidecar(config);
+            // The transfer writes no per-run file of its own: the reconciled stub carries its answer.
+            return new Pass2PerFileWorker(null, PinFeatureMask.For(config), true, null,
+                Pass2FdrSidecar.LoadPass1ExperimentRecords(config), (fileName, records, bestDecoy) => { }, ctx.LogWarning);
+        }
+
+        /// <summary>
+        /// Why the protein-compact second pass is refused under per-run first-pass models: it
+        /// competes every survivor under one first-pass model for the analysis, and each run
+        /// trained its own.
+        /// </summary>
+        internal static string OwnModelsProteinCompactMessage()
+        {
+            return string.Format(
+                OspreyTasksResources.PerFileRescoreTask_OwnModelsProteinCompactMessage_Protein_compact_second_pass_FDR_needs_one_first_pass_model_for_the_analysis__but_each_run_trains_its_own__Unset__0__,
+                @"OSPREY_PASS2_QVALUE=" + OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT);
         }
 
         /// <summary>
         /// Why second-pass FDR refuses a first-pass model trained with the other
         /// <c>--protein-boost</c> setting: names both settings and the task to re-run. A model records only
-        /// whether it has the protein-best column, so one without it names the two boosts that train none.
+        /// whether it has the protein-best column, so one without it names <see cref="ProteinBoost.off"/>.
         /// </summary>
         internal static string ProteinBestMismatchMessage(bool modelScoresProteinBest, ProteinBoost configBoost)
         {
-            string modelBoost = modelScoresProteinBest
-                ? ProteinBoost.best.ToString()
-                : ProteinBoost.compact + @"|" + ProteinBoost.off;
+            string modelBoost = (modelScoresProteinBest ? ProteinBoost.best : ProteinBoost.off).ToString();
             return string.Format(
                 OspreyTasksResources.PerFileRescoreTask_CreatePass2Worker_Second_pass_FDR_cannot_run__the_saved_first_pass_model_was_trained_with__0___but_this_run_has__1___Run__2__again_with__1__,
                 OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, modelBoost),
@@ -1624,9 +1561,7 @@ namespace pwiz.Osprey.Tasks
                 // second pass (#4665): a run with no Stage 6 work is a run whose peaks did not
                 // move, which is an answer, and SecondPassFDR computes no per-run answer of its
                 // own for this one to fall back on.
-                string unchangedInput = WriteUnchangedReconciled(fileName, fdrEntries, inputs, ctx);
-                if (unchangedInput != null)
-                    WritePass2Answer(fileName, unchangedInput, fdrEntries, inputs);
+                WriteUnchangedReconciled(fileName, fdrEntries, inputs, ctx);
                 return (totalRescored, totalGapCwt, totalGapForced, false);
             }
 
@@ -1804,22 +1739,8 @@ namespace pwiz.Osprey.Tasks
             // PHASE 3 -- reconciled parquet write-back + sidecar stamp.
             bool wroteReconciled = WriteReconciledAndStamp(fileName, inputFile, fdrEntries, inputs, ctx);
 
-            // PHASE 3b -- the per-file half of the SECOND pass (#4486).
-            //
-            // Here, and not in Stage 7, because this is the only moment all three of its inputs
-            // are simultaneously true: this file's survivors are in hand, its reconciled parquet
-            // is on disk (the frozen recompute reads it), and the heavy per-entry payload has not
-            // been dropped yet. Stage 7 could only reach the same state by holding every file's
-            // survivors resident and re-opening the 1st-pass sidecars - 52.3 GB of them at 257
-            // files - which is the whole of what this move removes.
-            //
-            // Gated on wroteReconciled for the same reason ReleaseRescoredPayload below is: when
-            // the write did not persist, the reconciled parquet this reads either does not exist
-            // or was deleted after a failed write, and competing against a stale Stage 4 parquet
-            // would produce a run q for peaks that no longer exist. Skipping leaves the file with
-            // no current answer, so the task does not complete and a resume re-scores it.
-            if (wroteReconciled)
-                WritePass2Answer(fileName, inputFile, fdrEntries, inputs);
+            // The per-file half of the SECOND pass (#4486) ran inside the write above, on these
+            // survivors, before the reconciled stub that carries it was written.
 
             // Per-file rescore high-water mark: the raw (pre-GC) working_set peak and
             // managed_heap since the last collection -- the during-scoring transient (the
@@ -1916,43 +1837,6 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Write one file's second-pass answer - its <c>.2nd-pass.fdr_scores.bin</c>, and under
-        /// protein-compact the decoy side of its competition - from its survivors and the
-        /// reconciled parquet just written for them.
-        ///
-        /// <para>Called for EVERY run (#4665): the one Stage 6 re-scored and the one it had no
-        /// work for. There is no run whose answer SecondPassFDR computes instead.</para>
-        /// </summary>
-        private static void WritePass2Answer(string fileName, string inputFile,
-            List<FdrEntry> fdrEntries, RescorePassInputs inputs)
-        {
-            string parquetPath = inputs.ParquetPaths != null &&
-                                 inputs.ParquetPaths.TryGetValue(fileName, out string p)
-                ? p
-                : null;
-            if (parquetPath == null)
-            {
-                // Absence is a stop. A file whose parquet is unmapped here would otherwise
-                // silently get no 2nd-pass sidecar, and the join reads a missing file as a
-                // file that contributed nothing - lowering nothing, reporting nothing, and
-                // leaving its precursors to be represented by other runs alone.
-                // Exception text for internal diagnostics, not displayed to user
-                throw new InvalidOperationException(string.Format(
-                    @"Second-pass per-file competition for '{0}': no scores parquet is mapped " +
-                    @"for this file, so its reconciled parquet cannot be located. See issue #4486.",
-                    fileName));
-            }
-            inputs.Pass2Worker.ComputeStampAndWrite(
-                fileName,
-                FdrScoresSidecar.Pass1Path(inputFile),
-                // The reconciled parquet the refusal above is worded for. Derived rather than
-                // probed: this task wrote it moments ago, so its absence is a failure to
-                // report, not a reason to read Stage 4's.
-                ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath),
-                fdrEntries);
-        }
-
-        /// <summary>
         /// Release the heavy per-entry payload a rescore attaches, once the file's
         /// reconciled parquet has been written. These arrays have no reader after
         /// Stage 6: <see cref="ReconciledParquetWriter"/> consumes them per file during
@@ -2009,7 +1893,18 @@ namespace pwiz.Osprey.Tasks
         private bool IsFileRescored(string inputFile, string reconciledPath, string validityKey, OspreyConfig config)
         {
             return PerFileResumeDriver.IsCurrent(reconciledPath, Name, validityKey) &&
+                   ReconciledFeaturesCurrent(inputFile, validityKey, config) &&
                    Pass2FdrSidecar.HasWorkerStamp(inputFile, config);
+        }
+
+        /// <summary>
+        /// Whether the run's second-pass features file is current, when this run writes one
+        /// (<see cref="WriteRunModelReconciled"/>); true when it does not.
+        /// </summary>
+        private bool ReconciledFeaturesCurrent(string inputFile, string validityKey, OspreyConfig config)
+        {
+            return !PerFileScoringTask.WritesFeaturesCheckpoint(config) ||
+                   PerFileResumeDriver.IsCurrent(ParquetScoreCache.GetReconciledFeaturesPath(inputFile), Name, validityKey);
         }
 
         /// <summary>
@@ -2199,9 +2094,8 @@ namespace pwiz.Osprey.Tasks
 
             string reconciledOutPath = ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath);
             // The parquet embeds this task's stamp in its footer, in the same commit as its rows.
-            bool wrote = ReconciledParquetWriter.Write(parquetPath, reconciledOutPath, fdrEntries, fileName,
-                inputs.LibraryById, config, inputs.JoinFileStems,
-                OspreyVersion.Stamp(Name, inputs.TaskValidityKey), ctx.LogInfo, ctx.LogWarning);
+            bool wrote = WriteRunModelReconciled(fileName, inputFile, parquetPath, reconciledOutPath, fdrEntries,
+                inputs, ctx);
             if (wrote)
                 return true;
 
@@ -2222,6 +2116,96 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// The reconciled write under per-run first-pass models.
+        /// Every row the rescore re-scored holds its features in memory; each is scored with the
+        /// run's own frozen model and calibrated (<see cref="RunModelScorer"/>), and the reconciled
+        /// parquet is written in the stub layout from the run's stub: scalars, each row's score
+        /// and run q-values, and the protein-best column, with no feature beyond the coelution
+        /// sum. An unmoved row carries its first-pass score from the stub. The moved rows'
+        /// features are kept only with feature writing on, in
+        /// <c>&lt;stem&gt;.features-reconciled.parquet</c>, which takes every unmoved row's
+        /// features from the run's <c>&lt;stem&gt;.features.parquet</c>; it is written first, and
+        /// the gap-fill rows' ordinals it assigns are cleared so the stub write numbers them the
+        /// same way. Returns whether every file was written.
+        /// </summary>
+        private bool WriteRunModelReconciled(string fileName, string inputFile, string scoresPath,
+            string reconciledOutPath, List<FdrEntry> fdrEntries, RescorePassInputs inputs, PipelineContext ctx)
+        {
+            var config = inputs.Config;
+            var runScorer = RunModelScorer.Load(FirstPassModelIO.RunModelPathFor(inputFile), scoresPath,
+                PinFeatureMask.For(config));
+            runScorer.ScoreRescoredRows(fdrEntries);
+            // Every other row keeps its first-pass score, from the stub row it streams from.
+            var unmovedRows = new HashSet<uint>();
+            foreach (var entry in fdrEntries)
+            {
+                if (entry.Features == null && entry.ParquetIndex.HasValue)
+                    unmovedRows.Add(entry.ParquetIndex.Value);
+            }
+            var stubScores = ParquetScoreCache.LoadScoresByScoreIndex(scoresPath, unmovedRows.Contains);
+            if (stubScores == null)
+                throw new InvalidDataException(RunModelScorer.MissingMessage(scoresPath));
+            foreach (var entry in fdrEntries)
+            {
+                if (entry.Features == null && entry.ParquetIndex.HasValue &&
+                    stubScores.TryGetValue(entry.ParquetIndex.Value, out double score))
+                {
+                    entry.Score = score;
+                }
+            }
+            // The run's second-pass answer, computed before the write so the reconciled stub
+            // carries it: there is no per-run second-pass sidecar under the mode.
+            inputs.Pass2Worker.TransferInMemory(fileName, FdrScoresSidecar.Pass1Path(inputFile), fdrEntries);
+            // A second-pass sidecar an earlier run left beside it is removed first: its readers
+            // prefer it to the reconciled stub.
+            FileEx.SafeDelete(FdrScoresSidecar.Pass2Path(inputFile));
+            var stamp = OspreyVersion.Stamp(Name, inputs.TaskValidityKey);
+            if (PerFileScoringTask.WritesFeaturesCheckpoint(config))
+            {
+                var gapFill = fdrEntries.Where(e => !e.ParquetIndex.HasValue).ToList();
+                string featuresOutPath = ParquetScoreCache.GetReconciledFeaturesPath(inputFile);
+                bool wroteFeatures = ReconciledParquetWriter.Write(ParquetScoreCache.GetFeaturesPath(inputFile),
+                    featuresOutPath, fdrEntries, fileName, inputs.LibraryById, config, inputs.JoinFileStems, stamp,
+                    ctx.LogInfo, ctx.LogWarning);
+                foreach (var entry in gapFill)
+                    entry.ParquetIndex = null;
+                if (!wroteFeatures)
+                {
+                    FileEx.SafeDelete(featuresOutPath);
+                    return false;
+                }
+            }
+            return ReconciledParquetWriter.Write(scoresPath, reconciledOutPath, fdrEntries, fileName,
+                inputs.LibraryById, config, inputs.JoinFileStems, stamp, ctx.LogInfo, ctx.LogWarning,
+                true, runScorer.ProteinBestOf);
+        }
+
+        /// <summary>
+        /// Whether every run has the first-pass features checkpoint the second pass's features
+        /// need (<see cref="WriteRunModelReconciled"/>); true whenever they are not saved. A run
+        /// without one stops the task, naming the file and how to write it.
+        /// </summary>
+        private static bool RequireFeaturesCheckpoints(PipelineContext ctx)
+        {
+            var config = ctx.Config;
+            if (!PerFileScoringTask.WritesFeaturesCheckpoint(config) || config.InputFiles == null)
+                return true;
+            foreach (string input in config.InputFiles)
+            {
+                string featuresPath = ParquetScoreCache.GetFeaturesPath(input);
+                if (File.Exists(featuresPath))
+                    continue;
+                ctx.LogError(string.Format(
+                    OspreyTasksResources.PerFileRescoreTask_RequireFeaturesCheckpoints_Saving_second_pass_features_needs_each_run_s_first_pass_features__but__0__is_missing__Run__1__with_feature_writing_on___2___,
+                    featuresPath, OspreyArgNames.TaskText(PerFileScoringTask.TASK_NAME),
+                    OspreyArgNames.Text(OspreyArgNames.KEEP_SCORES_PARQUET)));
+                ctx.ExitCode = 1;
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Write the reconciled parquet for a file that had no rescore work, so that EVERY
         /// input has one on disk.
         ///
@@ -2239,18 +2223,14 @@ namespace pwiz.Osprey.Tasks
         /// <para>Silent when the file has no <c>input_files</c> entry: that is the other
         /// reason <see cref="TryAssembleRescoreTargets"/> bails, it already warned, and
         /// there is no input path to stamp the resume record against.</para>
-        ///
-        /// <para>Returns the run's input file when its reconciled parquet is current on disk -
-        /// written here or already there - so the caller can answer its second pass from it, and
-        /// null when there is no such parquet to answer from.</para>
         /// </summary>
-        private string WriteUnchangedReconciled(
+        private void WriteUnchangedReconciled(
             string fileName, List<FdrEntry> fdrEntries, RescorePassInputs inputs, PipelineContext ctx)
         {
             if (inputs.FileNameToIdx == null ||
                 !inputs.FileNameToIdx.TryGetValue(fileName, out int inputIdx))
             {
-                return null;
+                return;
             }
             string inputFile = inputs.Config.InputFiles[inputIdx];
             // A current copy is left as it is. This file's resume arm can still decline it -
@@ -2260,13 +2240,12 @@ namespace pwiz.Osprey.Tasks
             // re-run landed in a later second (#4729).
             if (inputs.ParquetPaths.TryGetValue(fileName, out string parquetPath) &&
                 PerFileResumeDriver.IsCurrent(ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath),
-                    Name, inputs.TaskValidityKey))
+                    Name, inputs.TaskValidityKey) &&
+                ReconciledFeaturesCurrent(inputFile, inputs.TaskValidityKey, inputs.Config))
             {
-                return inputFile;
+                return;
             }
-            return WriteReconciledAndStamp(fileName, inputFile, fdrEntries, inputs, ctx)
-                ? inputFile
-                : null;
+            WriteReconciledAndStamp(fileName, inputFile, fdrEntries, inputs, ctx);
         }
 
         /// <summary>
@@ -2367,7 +2346,8 @@ namespace pwiz.Osprey.Tasks
                 // per file (LoadJoinOnlyScoresForFile), one run at a time.
                 return RescoreHydration.HydrateOneRun(parquetPath, retainedBaseIds,
                     experimentRecords,
-                    (name, path) => ParquetScoreCache.LoadFdrStubsFromParquet(path, null, sequencePool));
+                    (name, path) => ParquetScoreCache.LoadFdrStubsFromParquet(path, null, sequencePool,
+                        ScoringTaskShared.StubIdentityFor(ctx)));
             };
         }
 
@@ -2569,7 +2549,8 @@ namespace pwiz.Osprey.Tasks
                 }
                 RescoreHydration.RefillOneRunSurvivors(fileName, parquetPath, survivors,
                     retainedBaseIds,
-                    (name, path) => ParquetScoreCache.LoadFdrStubsFromParquet(path, null, sequencePool));
+                    (name, path) => ParquetScoreCache.LoadFdrStubsFromParquet(path, null, sequencePool,
+                        ScoringTaskShared.StubIdentityFor(ctx)));
             };
         }
 

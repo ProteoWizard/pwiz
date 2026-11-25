@@ -51,6 +51,7 @@ namespace pwiz.Osprey.Core
         public const string DECOY_PAIRING_MANIFEST = @"decoy-pairing-manifest";
         public const string TASK = @"task";
         public const string MODEL_DIAGNOSTICS = @"model-diagnostics";
+        public const string KEEP_SCORES_PARQUET = @"keep-scores-parquet";
         public const string PARALLEL_FILES = @"parallel-files";
         public const string PARALLEL_FILES_CACHING = @"parallel-files-caching";
         public const string PARALLEL_FILES_SCORING = @"parallel-files-scoring";

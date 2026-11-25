@@ -5,10 +5,10 @@
 training), 12 fragment XICs, the 7 ppm correlation tolerance, the correlation-chosen reference XIC, the local RT
 tolerance over 15 neighbors, the 0.40 min tc_* window, the 1.0 min RT tolerance floor and the 0.10 LOESS bandwidth,
 besides the `default` feature set. At every
-resolution: out-of-fold gbdt scoring, no reconciliation refit and the ratio PEP. Unit-resolution data keeps
-`--protein-boost compact` (the protein-compact second pass) until Stellar is measured on a larger cohort, and the
-values in the Default column for the rest. Each variable still overrides its default
-(`OSPREY_FDR_MODEL=svm`, `OSPREY_GBT_OOF=0`, `--protein-boost compact`, `OSPREY_XIC_FRAGMENTS=6`,
+resolution: out-of-fold gbdt scoring, `--protein-boost best`, the `default` feature set, no reconciliation refit
+and the ratio PEP. Unit-resolution data (`ResolutionDefaults.UNIT_RESOLUTION`) keeps the values in the Default
+column for the scoring settings: on the regression Stellar entrapment data they beat the HRAM ones. Each variable
+still overrides its default (`OSPREY_FDR_MODEL=svm`, `OSPREY_GBT_OOF=0`, `--protein-boost off`, `OSPREY_XIC_FRAGMENTS=6`,
 `OSPREY_CORR_FRAGMENT_TOLERANCE=off`, `OSPREY_REF_XIC=intensity`, `OSPREY_LOCAL_RT_TOLERANCE=off`,
 `OSPREY_MIN_RT_TOLERANCE=0.5`, `OSPREY_TC_HALF_WINDOW=0.15`, `OSPREY_LOESS_BANDWIDTH=0.3`, `OSPREY_RECON_REFIT=on`,
 `OSPREY_PEP_FORMULA=mixture`).
@@ -27,10 +27,10 @@ feature set is under study as the eventual default (issue #5018).
 
 | Setting | Value | Default (unit resolution; HRAM where marked) | What it changes |
 |---|---|---|---|
-| `--protein-boost` | `best` | `compact` (HRAM: `best`) | `best`: a second training round with each precursor's best first-pass score among the other peptides of its protein, and the transfer second pass ([12](12-second-pass-fdr.md)) |
-| `OSPREY_FDR_MODEL` | `gbdt` (or `svm`) | `svm` (HRAM: `gbdt`) | First-pass classifier ([07](07-fdr-control.md)) |
+| `--protein-boost` | `best` | `best` | `best`: a second training round with each precursor's best first-pass score among the other peptides of its protein, and the transfer second pass ([12](12-second-pass-fdr.md)) |
+| `OSPREY_FDR_MODEL` | `gbdt` (or `svm`) | `gbdt` | First-pass classifier ([07](07-fdr-control.md)) |
 | `OSPREY_GBT_OOF` | `1` (gbdt) | on | Out-of-fold tree scoring |
-| `OSPREY_FEATURE_MASK` | `none` | unset: `--feature-set core\|efficient\|default\|all` decides (`default`, 70 features, for HRAM; `core` at unit resolution) | Every one of the 109 PIN features reaches the classifier (and is recorded in the scores parquet); `--feature-set all` does the same without the research switch |
+| `OSPREY_FEATURE_MASK` | `none` | unset: `--feature-set core\|efficient\|default\|all` decides (`default`, 70 features, at both resolutions) | Every one of the 109 PIN features reaches the classifier (and is recorded in the scores parquet); `--feature-set all` does the same without the research switch |
 | `OSPREY_XIC_FRAGMENTS` | `12` | `6` (HRAM: `12`) | Fragment XICs per candidate ([03](03-spectral-scoring.md)) |
 | `OSPREY_CORR_FRAGMENT_TOLERANCE` | `7` (ppm) | the calibrated tolerance (HRAM: 7) | A second, wider XIC set for the correlation features |
 | `OSPREY_REF_XIC` | `corr` | most intense fragment (HRAM: `corr`) | Correlation-chosen reference XIC |

@@ -562,7 +562,7 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(1, Array.FindAll(OspreyCommandArgs.ARG_TASK.Values, v => v == expected.Name).Length,
                     string.Format(@"{0} must appear in the {1} values exactly once", expected.Name, OspreyCommandArgs.ARG_TASK.ArgumentText));
             }
-            // The four canonical stages, the two selector-only tasks and the library phases, by the
+            // The four canonical stages, the three selector-only tasks and the library phases, by the
             // constants the classes declare, so a task dropped from the list fails here by name.
             CollectionAssert.AreEqual(
                 new[]
@@ -570,7 +570,7 @@ namespace pwiz.Osprey.Test
                     SpectraCacheTask.TASK_NAME, LibraryBuildConfig.PREDICT_TRAINING_LIBRARY, LibraryBuildConfig.TRAIN_MODEL,
                     LibraryBuildConfig.PREDICT_LIBRARY, PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME,
                     PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME, TrainingExportTask.TASK_NAME,
-                    ModelDiagnosticsTask.TASK_NAME
+                    ModelDiagnosticsTask.TASK_NAME, FirstPassTask.TASK_NAME
                 },
                 OspreyCommandArgs.ARG_TASK.Values);
 
@@ -599,6 +599,7 @@ namespace pwiz.Osprey.Test
             //   PerFileRescoring | false           | false            | false
             //   SecondPassFDR    | false           | true             | false
             //   ModelDiagnostics | false           | false            | true
+            //   FirstPass        | true            | false            | false
             var cases = new (string Task, bool StopAfterStage5, bool ExpectReconciled, bool DiagnosticsOnly)[]
             {
                 (SpectraCacheTask.TASK_NAME,     false, false, false),
@@ -608,6 +609,7 @@ namespace pwiz.Osprey.Test
                 (SecondPassFdrTask.TASK_NAME,    false, true,  false),
                 (TrainingExportTask.TASK_NAME,   false, false, false),
                 (ModelDiagnosticsTask.TASK_NAME, false, false, true),
+                (FirstPassTask.TASK_NAME,        true,  false, false),
             };
             Assert.AreEqual(OspreyTasks.Create().All.Count, cases.Length, @"every task has a flags row");
             foreach (var c in cases)

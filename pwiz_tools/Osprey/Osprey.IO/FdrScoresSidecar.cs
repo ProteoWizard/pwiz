@@ -180,6 +180,8 @@ namespace pwiz.Osprey.IO
         public const string EXT = @".fdr_scores.bin";
         /// <summary>File-name ending of the first-pass FDR scores file: <c>.1st-pass.fdr_scores.bin</c>.</summary>
         public const string EXT_FIRST_PASS = @"." + LABEL_FIRST_PASS + EXT;
+        /// <summary>File-name ending of the second-pass FDR scores file: <c>.2nd-pass.fdr_scores.bin</c>.</summary>
+        public const string EXT_SECOND_PASS = @"." + LABEL_SECOND_PASS + EXT;
         /// <summary>File pattern of every first-pass artifact, for a message that tells the user to delete them.</summary>
         public const string FIRST_PASS_FILE_PATTERN = @"*." + LABEL_FIRST_PASS + @".*";
 
@@ -228,6 +230,10 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static ArtifactStamp ReadStamp(string path, Pass expectedPass)
         {
+            // A run whose second-pass records live in its reconciled stub: that file's stamp.
+            string stubPath = expectedPass == Pass.SecondPass ? StubScoresPathFor(path, expectedPass) : null;
+            if (stubPath != null)
+                return ParquetScoreCache.ReadStamp(stubPath);
             return IsCurrentFormat(path, expectedPass) ? BinarySidecarStamp.TryRead(path, RecordLength) : null;
         }
 
@@ -260,6 +266,9 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static bool IsCurrentFormat(string path, Pass expectedPass)
         {
+            // A run whose second-pass records live in its reconciled stub reads them from there.
+            if (expectedPass == Pass.SecondPass && StubScoresPathFor(path, expectedPass) != null)
+                return true;
             try
             {
                 var info = new FileInfo(path);
@@ -913,6 +922,10 @@ namespace pwiz.Osprey.IO
         private static bool TryWalkRecords(string path, Pass expectedPass,
             Func<byte[], int, bool> onRecord)
         {
+            string stubPath = StubScoresPathFor(path, expectedPass);
+            if (stubPath != null)
+                return TryWalkStubRecords(stubPath, onRecord);
+
             // How many records the caller has already been handed. Decides whether a fault
             // means "unusable file" (return false, nothing applied) or "partly applied"
             // (throw) - see the catch below.
@@ -1036,6 +1049,9 @@ namespace pwiz.Osprey.IO
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (onRecord == null) throw new ArgumentNullException(nameof(onRecord));
+            string stubPath = StubScoresPathFor(path, expectedPass);
+            if (stubPath != null)
+                return ParquetScoreCache.ReadScoreRecords(stubPath, onRecord);
 
             try
             {
@@ -1084,6 +1100,86 @@ namespace pwiz.Osprey.IO
             catch (Exception ex) when (!(ex is OutOfMemoryException))
             {
                 return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// True when a run's first-pass records can be read from <paramref name="pass1Path"/>:
+        /// the file itself, or - for a run whose scores live in its stub scores parquet, as every
+        /// current run's do - that parquet. The existence test a reader of the
+        /// records asks instead of <c>File.Exists</c>.
+        /// </summary>
+        public static bool Pass1Available(string pass1Path)
+        {
+            return File.Exists(pass1Path) || StubScoresPathFor(pass1Path, Pass.FirstPass) != null;
+        }
+
+        /// <summary>
+        /// The file a reader of <paramref name="path"/>'s records of <paramref name="expectedPass"/>
+        /// reads them from: the stub layout parquet that holds them in its place, when there is one,
+        /// else <paramref name="path"/> itself. What a key that follows the records names.
+        /// </summary>
+        public static string ReadablePath(string path, Pass expectedPass)
+        {
+            return StubScoresPathFor(path, expectedPass) ?? path;
+        }
+
+        /// <summary>
+        /// The stub layout parquet that holds a run's records of <paramref name="expectedPass"/>
+        /// in place of <paramref name="path"/>, or null: for a first-pass path with no file, or any
+        /// second-pass path, beside a parquet that carries scores - the run's <c>.scores.parquet</c>
+        /// for the first pass, its
+        /// <c>.scores-reconciled.parquet</c> for the second. Every reader here asks it first, so
+        /// each one serves a run that writes one file per pass as it serves a run that writes two.
+        /// </summary>
+        private static string StubScoresPathFor(string path, Pass expectedPass)
+        {
+            // No second-pass sidecar is written any more, so one on disk is an earlier build's and
+            // the reconciled stub is preferred to it; the first pass removes its own (PerFileScoring).
+            string ext = expectedPass == Pass.FirstPass ? EXT_FIRST_PASS : EXT_SECOND_PASS;
+            if (path == null || (expectedPass == Pass.FirstPass && File.Exists(path)) ||
+                !path.EndsWith(ext, StringComparison.Ordinal))
+            {
+                return null;
+            }
+            string scoresPath = path.Substring(0, path.Length - ext.Length) +
+                                (expectedPass == Pass.FirstPass ? ParquetScoreCache.EXT_SCORES : ParquetScoreCache.EXT_SCORES_RECONCILED);
+            return ParquetScoreCache.HasScores(scoresPath) ? scoresPath : null;
+        }
+
+        /// <summary>
+        /// <see cref="TryWalkRecords"/> over a stub's records, each encoded in this file's own
+        /// record layout so the callback cannot tell the sources apart, with the same answer to
+        /// a rejected record: false when nothing was handed over, a throw when something was.
+        /// </summary>
+        private static bool TryWalkStubRecords(string stubPath, Func<byte[], int, bool> onRecord)
+        {
+            // Read whole before any record is handed over, so a fault reading the stub is "this
+            // file is unusable" (false) and never a partly applied file, as for the binary file.
+            var records = new List<FdrScoreRecord>();
+            try
+            {
+                if (!ParquetScoreCache.ReadScoreRecords(stubPath, records.Add))
+                    return false;
+            }
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
+            {
+                return false;
+            }
+            var buffer = new byte[RecordLength];
+            long delivered = 0;
+            using (var bw = new BinaryWriter(new MemoryStream(buffer)))
+            {
+                foreach (var record in records)
+                {
+                    bw.Seek(0, SeekOrigin.Begin);
+                    WriteRecord(bw, record.EntryId, record.Score, record.RunPrecursorQvalue,
+                        record.RunPeptideQvalue, record.ApexRt);
+                    if (!onRecord(buffer, 0))
+                        return delivered == 0 ? false : ThrowPartialWalk(stubPath, delivered);
+                    delivered++;
+                }
             }
             return true;
         }

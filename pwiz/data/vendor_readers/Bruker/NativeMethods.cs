@@ -149,6 +149,15 @@ internal static class NativeMethods
         ulong handle, long frame_id,
         [In] double[] input, [Out] double[] output, uint count);
 
+    /// <summary>
+    /// <see cref="tsf_index_to_mz(ulong, long, double[], double[], uint)"/> writing from the
+    /// reference onward, so the m/z values land directly in a caller's span.
+    /// </summary>
+    [DllImport(TimsDataDll)]
+    public static extern uint tsf_index_to_mz(
+        ulong handle, long frame_id,
+        [In] double[] input, ref double output, uint count);
+
     /// <summary>Convert m/z back to (possibly non-integer) indices for a TSF frame.</summary>
     [DllImport(TimsDataDll)]
     public static extern uint tsf_mz_to_index(

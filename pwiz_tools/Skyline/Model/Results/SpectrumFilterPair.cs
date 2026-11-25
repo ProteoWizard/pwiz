@@ -266,8 +266,10 @@ namespace pwiz.Skyline.Model.Results
 
                 spectrumCount++;
 
-                var mzArray = spectrum.Mzs;
-                if (mzArray == null || mzArray.Length == 0)
+                // Buffers, of which the first peakCount elements are peaks
+                var mzArray = spectrum.MzBuffer;
+                int peakCount = spectrum.PeakCount;
+                if (peakCount == 0)
                     continue;
 
                 // It's not unusual for mzarray and centerArray to have no overlap, esp. with ion mobility data
@@ -278,8 +280,8 @@ namespace pwiz.Skyline.Model.Results
                         continue;
                 }
 
-                var intensityArray = spectrum.Intensities;
-                var imsArray = spectrum.IonMobilities;
+                var intensityArray = spectrum.IntensityBuffer;
+                var imsArray = spectrum.IonMobilityBuffer;
 
                 // Search for matching peaks for each Q3 filter
                 // N.B. this code searches both MS1 data and MS2, for MS1 Q1 is nominal precursor mz and "Q3" is isotope mz, so it's really Q1
@@ -294,8 +296,8 @@ namespace pwiz.Skyline.Model.Results
                     // In this context HighEnergyIonMobilityValue* may represent the effect of higher CE,
                     // or it may reflect the use of the information found in DIA PASEF window group tables
                     // Ensure uncombined IM spectra are within range
-                    if (spectrum.IonMobilities == null &&
-                        !ContainsIonMobilityValue(spectrum.IonMobility, 
+                    if (!spectrum.HasIonMobilities &&
+                        !ContainsIonMobilityValue(spectrum.IonMobility,
                             useIonMobilityHighEnergyOffset ? productFilter.HighEnergyIonMobilityValueOffsetLow : 0,
                             useIonMobilityHighEnergyOffset ? productFilter.HighEnergyIonMobilityValueOffsetHigh : 0))
                     {
@@ -336,13 +338,13 @@ namespace pwiz.Skyline.Model.Results
                         double startFilter = targetMz - filterWindow / 2;
                         endFilter = startFilter + filterWindow;
 
-                        if (iPeak < mzArray.Length)
+                        if (iPeak < peakCount)
                         {
-                            iPeak = Array.BinarySearch(mzArray, iPeak, mzArray.Length - iPeak, startFilter);
+                            iPeak = Array.BinarySearch(mzArray, iPeak, peakCount - iPeak, startFilter);
                             if (iPeak < 0)
                                 iPeak = ~iPeak;
                         }
-                        if (iPeak >= mzArray.Length)
+                        if (iPeak >= peakCount)
                         {
                             // The extracted intensities for the remaining targets will be zero so we can stop extracting
                             // Consider: we probably still need to keep checking "hasScanWindowCoverage"
@@ -360,7 +362,7 @@ namespace pwiz.Skyline.Model.Results
                     };
 
                     var isMs2DiaPasefWithoutPrecursorIM = spectrum.WindowGroup > 0 && !MinIonMobilityValue.HasValue;
-                    for (int iNext = iPeak; iNext < mzArray.Length && mzArray[iNext] < endFilter; iNext++)
+                    for (int iNext = iPeak; iNext < peakCount && mzArray[iNext] < endFilter; iNext++)
                     {
                         // Avoid adding points that are not within the allowed ion mobility range
                         // In the case of full-frame MS2 DiaPASEF this also enforces mz range
@@ -644,7 +646,7 @@ namespace pwiz.Skyline.Model.Results
                 else
                 {
                     var spectrum = spectra[0];
-                    if (spectrum.IonMobilities != null)
+                    if (spectrum.HasIonMobilities)
                     {
                         double startSpectrumIonMobility = spectrum.MinIonMobility.Value;
                         double endSpectrumIonMobility = spectrum.MaxIonMobility.Value;

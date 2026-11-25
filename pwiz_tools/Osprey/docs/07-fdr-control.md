@@ -101,8 +101,7 @@ The classifier is chosen by the `OSPREY_FDR_MODEL` environment variable, not a c
 argument, because it is a developer lever rather than a product setting. It is read once at
 process start (`OspreyEnvironment.FdrModel`) and copied onto `OspreyConfig.FdrClassifier` when the
 command line is parsed; nothing else reads it. Unset, the resolution chooses (`ResolutionDefaults`,
-applied by `OspreyConfig.ApplyResolutionMode`): gradient-boosted trees for HRAM data, the linear SVM
-at unit resolution.
+applied by `OspreyConfig.ApplyResolutionMode`): gradient-boosted trees at both resolutions.
 
 "Percolator" names the framework, not a classifier, so no enum value is called Percolator.
 The framework is also not the original Percolator tool: it cross-validates during the SVM
@@ -112,7 +111,7 @@ the deleted values below are named as they were.
 
 | `OSPREY_FDR_MODEL` | Classifier |
 |---|---|
-| unset or empty | the resolution's default: `gbdt` for HRAM, `svm` at unit resolution |
+| unset or empty | the resolution's default: `gbdt` at both resolutions |
 | `svm` | linear SVM |
 | `gbdt` | gradient-boosted trees |
 | anything else | the run **fails at startup** |
@@ -465,6 +464,12 @@ Like 3f's held-out scoring, this runs only without `TrainOnly`. A production pas
 fold models before it (`PercolatorTrainer.cs:264-289`), so the scores every production path
 ranks, competes and reports are the uncalibrated fold averages of 3f, for either classifier.
 
+The per-run first-pass model (`PerFileFirstPassModel`) applies the same map per run, after a
+Percolator-style safeguard: a run whose best single FDR feature (chosen as the initial direction
+is, `PercolatorTrainer.BestSingleFeature`) passes more targets at run precursor q 1% than its
+model's out-of-fold scores is scored, calibrated and rescored with that feature instead. See
+"Per-run first-pass models" in [00-pipeline-architecture.md](00-pipeline-architecture.md).
+
 ### 3h. Posterior error probability (PEP)
 
 `PepEstimator.FitDefault` (`Osprey.ML/PepEstimator.cs:67`) fits PEP on the competition
@@ -645,7 +650,7 @@ All defaults are from `Osprey.Core/OspreyConfig.cs` and `Osprey/OspreyCommandArg
 | `--fdrbench <tsv>` | off (`OspreyCommandArgs.cs:179`) | Emit an FDRBench-compatible input TSV (entrapment true-FDR). Level taken from `--fdr-level`. |
 | `--fdrbench-per-run` | off (`OspreyCommandArgs.cs:181`) | One row per (precursor, run) with run-level q-values; default is one row per precursor with experiment q-values. |
 | `--fdrbench-pass {1\|2\|both}` | `2` (`OspreyCommandArgs.cs:183`) | Which pass to emit: 2 = post-compaction second-pass survivors; 1 = full pre-compaction first-pass pool; both = both with `.pass1`/`.pass2` suffixes. |
-| `--protein-boost {best\|compact\|off}` | `best` for HRAM data, `compact` at unit resolution | `best` trains with the protein-best column (#4580): round 2 of the two-round first-pass training and every score pass after it read a `PROTEIN_BEST` column: from round 1's scores in that run, the best of the other peptides on the candidate's protein (a paired decoy reads its target's value), floored at the run's decoy median. It needs the two-round training, so with `OSPREY_GBT_PREFILTER_SIZE` unset it trains two rounds at 200000 rows (an explicit size overrides; `0` is refused). Either classifier. FirstPassFDR writes each run's column to `<stem>.1st-pass.protein_best.bin`, and the second pass (both modes) scores a rescored row with its entry's first-pass value, or the run's floor for an entry with no first-pass row - its siblings' evidence is a pass-1 quantity, which moving its own peak does not change. Logged in run.log, recorded as `osprey.protein_best` in the library's LibMetadata under `best`, and part of the FirstPassFDR, PerFileRescoring and SecondPassFDR validity keys under `best`. `compact` (the protein-compact second pass, [12](12-second-pass-fdr.md)) and `off` train the one-round first pass that preceded it, bit for bit. Developer switch: `OSPREY_PROTEIN_BEST_SHUFFLE` (`0`, `1`, the permuted-accession negative control); the `OSPREY_PROTEIN_BEST` variable it replaced is refused as unknown. |
+| `--protein-boost {best\|compact\|off}` | `best` | `best` trains with the protein-best column (#4580): round 2 of the two-round first-pass training and every score pass after it read a `PROTEIN_BEST` column: from round 1's scores in that run, the best of the other peptides on the candidate's protein (a paired decoy reads its target's value), floored at the run's decoy median. It needs the two-round training, so with `OSPREY_GBT_PREFILTER_SIZE` unset it trains two rounds at 200000 rows (an explicit size overrides; `0` is refused). Either classifier. FirstPassFDR writes each run's column to `<stem>.1st-pass.protein_best.bin`, and the second pass (both modes) scores a rescored row with its entry's first-pass value, or the run's floor for an entry with no first-pass row - its siblings' evidence is a pass-1 quantity, which moving its own peak does not change. Logged in run.log, recorded as `osprey.protein_best` in the library's LibMetadata under `best`, and part of the FirstPassFDR, PerFileRescoring and SecondPassFDR validity keys under `best`. `compact` (the protein-compact second pass, [12](12-second-pass-fdr.md)) and `off` train the one-round first pass that preceded it, bit for bit. Developer switch: `OSPREY_PROTEIN_BEST_SHUFFLE` (`0`, `1`, the permuted-accession negative control); the `OSPREY_PROTEIN_BEST` variable it replaced is refused as unknown. |
 | `--model-diagnostics` | off | Also collects per-feature target/decoy histograms + feature-contribution report (`CollectFeatureHistograms`, `PercolatorEngine.cs:310`); forces the resident first-pass pool. Byte-neutral when off. |
 | `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | (single-process) | HPC split. Each name is the task class's `TASK_NAME` (`PerFileScoringTask`, `FirstPassFdrTask`, `PerFileRescoreTask`, `SecondPassFdrTask`), looked up in the one task set (`OspreyTasks.Create().All`); note the class is `PerFileRescoreTask` where the CLI takes `PerFileRescoring`. See `15-hpc-scoring-split.md`. |
 

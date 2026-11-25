@@ -53,6 +53,14 @@ public sealed class Spectrum : SpectrumIdentity
     /// <summary>Default length of the binary data arrays below.</summary>
     public int DefaultArrayLength { get; set; }
 
+    /// <summary>
+    /// True when the spectrum list that returned this spectrum keeps it and may return the same
+    /// instance on a later read (an in-memory list, or a cache). A caller must then leave its
+    /// binary arrays in place, for example by copying rather than
+    /// <see cref="DetachableList{T}.Detach"/>.
+    /// </summary>
+    public bool RetainedByList { get; set; }
+
     /// <summary>Data processing step that produced this spectrum.</summary>
     public DataProcessing? DataProcessing { get; set; }
 

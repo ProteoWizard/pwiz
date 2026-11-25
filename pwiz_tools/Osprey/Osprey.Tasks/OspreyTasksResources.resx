@@ -115,6 +115,15 @@
   <data name="Calibrator_AggregateMassCalibrations_MS2_calibration__pass__0____mean__1___2___SD__3___2___3_SD__4___2___n__5__fragment_" xml:space="preserve">
     <value>MS2 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} (n={5:N0} fragment matches)</value>
   </data>
+  <data name="Calibrator_AggregateMassCalibrations_MS2_m_z_offset__pass__0____shift__1___2__beyond_half_the__3___2__tolerance__too_few_fragments_to_fit_a_curve" xml:space="preserve">
+    <value>MS2 m/z offset (pass {0}): shift {1:F3} {2}, beyond half the {3:F2} {2} tolerance, but too few fragments lie near it to fit a curve: the mean is kept, and does not see an offset this large</value>
+  </data>
+  <data name="Calibrator_AggregateMassCalibrations_MS2_m_z_offset_curve__pass__0____too_few_fragments_near_the__1___2__shift_to_fit_a_curve__the_mean_is_kept" xml:space="preserve">
+    <value>MS2 m/z offset curve (pass {0}): too few fragments lie near the {1:F3} {2} shift to fit a curve: the mean is kept</value>
+  </data>
+  <data name="Calibrator_AggregateMassCalibrations_MS2_m_z_offset_curve__pass__0____offset__1__to__2___3___SD__4___3___3_SD__5___3___n__6__fragments_" xml:space="preserve">
+    <value>MS2 m/z offset curve (pass {0}): offset {1:F3} to {2:F3} {3}, SD={4:F4} {3}, 3*SD={5:F4} {3} (n={6:N0} fragments)</value>
+  </data>
   <data name="Calibrator_AnchorPurityLine____0____1__anchors____2__target____3__entrapment___entrapment_frac__4____FDP_lower__5__" xml:space="preserve">
     <value>{0}: {1} anchors = {2} target + {3} entrapment | entrapment-frac {4:P2} | FDP lower {5:P2} combined {6:P2}</value>
   </data>
@@ -1344,5 +1353,17 @@
   </data>
   <data name="PerFileRescoreTask_WriteFragmentMassErrors_The_fragment_mass_error_summary_failed_for__0____1_" xml:space="preserve">
     <value>The fragment mass-error summary for the model diagnostics report failed for {0}: {1}</value>
+  </data>
+  <data name="RunModelScorer_Load_The_run_s_first_pass_model_could_not_be_read_from__0___Run__1__again_" xml:space="preserve">
+    <value>The run's first-pass model could not be read from {0}. Run {1} again.</value>
+  </data>
+  <data name="PerFileRescoreTask_RequireFeaturesCheckpoints_Saving_second_pass_features_needs_each_run_s_first_pass_features__but__0__is_missing__Run__1__with_feature_writing_on___2___" xml:space="preserve">
+    <value>Saving second-pass features needs each run's first-pass features, but {0} is missing. Run {1} with feature writing on ({2}).</value>
+  </data>
+  <data name="PerFileRescoreTask_OwnModelsProteinCompactMessage_Protein_compact_second_pass_FDR_needs_one_first_pass_model_for_the_analysis__but_each_run_trains_its_own__Unset__0__" xml:space="preserve">
+    <value>Protein-compact second-pass FDR needs one first-pass model for the analysis, but each run trains its own. Unset {0}.</value>
+  </data>
+  <data name="FirstPassFdrTask_RunFirstPassProjection__0__of__1__runs_have_no_first_pass_scores_from_their_own_model___2____Run__3__with_the_same_settings_first_" xml:space="preserve">
+    <value>{0} of {1} runs have no first-pass scores from their own model ({2}). Run {3} with the same settings first.</value>
   </data>
 </root>

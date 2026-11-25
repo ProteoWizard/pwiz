@@ -90,7 +90,7 @@ namespace pwiz.Osprey.Tasks
             double claimantQ = settings.EffectiveClaimantQ;
             string stem = Path.GetFileNameWithoutExtension(input);
 
-            string reconciledPath = ParquetScoreCache.GetReconciledScoresPath(input);
+            string reconciledPath = ReconciledRowsPath(input);
             if (!File.Exists(reconciledPath))
             {
                 throw new FileNotFoundException(string.Format(
@@ -380,8 +380,9 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// The identities of the per-run artifacts one run's export reads - its reconciled
-        /// parquet, the q-value sidecar it selects on, calibration and spectra cache (name, size,
+        /// The identities of the per-run artifacts one run's export reads - its second-pass
+        /// features, the run q-values it selects on (the run's stub scores parquet, or a sidecar
+        /// an earlier build wrote), calibration and spectra cache (name, size,
         /// mtime; <c>absent</c> for a missing file) - so a rewritten input redoes that run's
         /// export and no other. Only the sidecar the export reads: for a run with no Stage 6
         /// work, or when PerFileRescoring had no readable saved first-pass model, SecondPassFDR
@@ -391,11 +392,22 @@ namespace pwiz.Osprey.Tasks
         public static string RunInputIdentities(string input)
         {
             string runQPath = RunQPath(input, out var pass);
-            return @";recon=" + IdentityOrAbsent(ParquetScoreCache.GetReconciledScoresPath(input))
-                + @";runq=" + (pass == FdrScoresSidecar.Pass.SecondPass ? @"2:" : @"1:") + IdentityOrAbsent(runQPath)
+            return @";recon=" + IdentityOrAbsent(ReconciledRowsPath(input))
+                + @";runq=" + (pass == FdrScoresSidecar.Pass.SecondPass ? @"2:" : @"1:")
+                + IdentityOrAbsent(FdrScoresSidecar.ReadablePath(runQPath, pass))
                 + @";calib=" + IdentityOrAbsent(CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input)))
                 + @";spectra=" + IdentityOrAbsent(SpectraCache.GetCachePath(input))
                 + DemuxSpectraIdentity(input);
+        }
+
+        /// <summary>
+        /// The reconciled file one run's export reads its rows from: the second-pass features
+        /// parquet beside the run's reconciled stub, which has no features, and which the export
+        /// makes PerFileRescoring write.
+        /// </summary>
+        private static string ReconciledRowsPath(string input)
+        {
+            return ParquetScoreCache.GetReconciledFeaturesPath(input);
         }
 
         /// <summary>

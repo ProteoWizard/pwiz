@@ -76,7 +76,7 @@ public class MetadataAndZeroSamplesTests
             new[] { 0.0, 50.0, 0.0, 200.0, 0.0 }));
         var untouched = new SpectrumListZeroSamplesFilter(allFlanking).GetSpectrum(0, getBinaryData: true);
         CollectionAssert.AreEqual(new[] { 50.0, 100.0, 150.0, 200.0, 250.0 },
-            untouched.GetMZArray()!.Data, "profile: every zero flanks a peak, so nothing is dropped");
+            untouched.GetMZArray()!.Data.ToArray(), "profile: every zero flanks a peak, so nothing is dropped");
 
         // Only zeros with a zero on both sides are extra. Here indices 0 and 8 are.
         var withRuns = new SpectrumListSimple();
@@ -87,7 +87,7 @@ public class MetadataAndZeroSamplesTests
         // 10 and 90 have a zero on both sides; so does 50, sitting mid-gap between the two peaks.
         // 40 and 60 survive as the flanks of the peaks at 30 and 70.
         CollectionAssert.AreEqual(new[] { 20.0, 30.0, 40.0, 60.0, 70.0, 80.0 },
-            trimmed.GetMZArray()!.Data, "profile: one flanking zero kept per run, the rest dropped");
+            trimmed.GetMZArray()!.Data.ToArray(), "profile: one flanking zero kept per run, the rest dropped");
 
         // --- removeExtra on a CENTROID spectrum drops every zero: there is no flank to preserve ---
         var centroided = new SpectrumListSimple();
@@ -97,8 +97,8 @@ public class MetadataAndZeroSamplesTests
         centroidSpec.Params.Set(CVID.MS_centroid_spectrum);
         centroided.Spectra.Add(centroidSpec);
         var filtered = new SpectrumListZeroSamplesFilter(centroided).GetSpectrum(0, getBinaryData: true);
-        CollectionAssert.AreEqual(new[] { 100.0, 200.0 }, filtered.GetMZArray()!.Data, "centroid m/z");
-        CollectionAssert.AreEqual(new[] { 50.0, 200.0 }, filtered.GetIntensityArray()!.Data, "centroid intensity");
+        CollectionAssert.AreEqual(new[] { 100.0, 200.0 }, filtered.GetMZArray()!.Data.ToArray(), "centroid m/z");
+        CollectionAssert.AreEqual(new[] { 50.0, 200.0 }, filtered.GetIntensityArray()!.Data.ToArray(), "centroid intensity");
 
         // --- MS-level gate: limited to MS2 leaves the MS1 spectrum untouched ---
         var msLevelGated = new SpectrumListSimple();

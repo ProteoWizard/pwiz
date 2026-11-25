@@ -118,8 +118,8 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Experimental (OSPREY_STUB_IDENTITY): the library lookup the parquet read takes charge,
-        /// decoy flag and peptide from instead of decoding them. Null reads them from the file.
+        /// The library lookup the parquet read takes charge, decoy flag and peptide from, which a
+        /// stub layout parquet (no peptide column) needs. Null reads them from the file.
         /// </summary>
         internal LibraryIdentity Identity { get; set; }
 

@@ -98,8 +98,8 @@ public class SpectrumListUnifiTests
 
         // Binary arrays match what the source returned.
         Assert.AreEqual(2, spec.BinaryDataArrays.Count); // m/z + intensity
-        CollectionAssert.AreEqual(new[] { 100.0, 200.0, 300.0 }, spec.BinaryDataArrays[0].Data);
-        CollectionAssert.AreEqual(new[] { 10.0, 20.0, 30.0 }, spec.BinaryDataArrays[1].Data);
+        CollectionAssert.AreEqual(new[] { 100.0, 200.0, 300.0 }, spec.BinaryDataArrays[0].Data.ToArray());
+        CollectionAssert.AreEqual(new[] { 10.0, 20.0, 30.0 }, spec.BinaryDataArrays[1].Data.ToArray());
         Assert.AreEqual(3, spec.DefaultArrayLength);
         // No precursor on MS1.
         Assert.AreEqual(0, spec.Precursors.Count);

@@ -91,7 +91,7 @@ public class SpectrumListFactoryTests
         byCount.Spectra.Add(s1);
         var threshCount = SpectrumListFactory.Wrap(byCount, "threshold count 3 most-intense");
         CollectionAssert.AreEqual(new[] { 1.0, 2.0, 3.0 },
-            threshCount.GetSpectrum(0, getBinaryData: true).GetMZArray()!.Data);
+            threshCount.GetSpectrum(0, getBinaryData: true).GetMZArray()!.Data.ToArray());
 
         // threshold absolute N (default most-intense) keeps intensities >= N.
         var byAbs = new SpectrumListSimple();
@@ -103,7 +103,7 @@ public class SpectrumListFactoryTests
         byAbs.Spectra.Add(s2);
         var threshAbs = SpectrumListFactory.Wrap(byAbs, "threshold absolute 100");
         CollectionAssert.AreEqual(new[] { 3.0, 4.0 },
-            threshAbs.GetSpectrum(0, getBinaryData: true).GetMZArray()!.Data);
+            threshAbs.GetSpectrum(0, getBinaryData: true).GetMZArray()!.Data.ToArray());
     }
 
     [TestMethod]
@@ -134,7 +134,7 @@ public class SpectrumListFactoryTests
             .GetSpectrum(0, getBinaryData: true);
         Assert.IsTrue(picked.Params.HasCVParam(CVID.MS_centroid_spectrum));
         Assert.IsFalse(picked.Params.HasCVParam(CVID.MS_profile_spectrum));
-        CollectionAssert.AreEqual(new[] { 102.0, 106.0 }, picked.GetMZArray()!.Data);
+        CollectionAssert.AreEqual(new[] { 102.0, 106.0 }, picked.GetMZArray()!.Data.ToArray());
 
         // peakPicking false 1- still falls through to LocalMaximum on a SpectrumListSimple input.
         var fallback = SpectrumListFactory.Wrap(BuildProfileList(), "peakPicking false 1-")

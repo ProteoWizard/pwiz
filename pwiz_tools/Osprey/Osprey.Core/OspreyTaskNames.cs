@@ -36,5 +36,6 @@ namespace pwiz.Osprey.Core
         public const string PER_FILE_RESCORING = @"PerFileRescoring";
         public const string SECOND_PASS_FDR = @"SecondPassFDR";
         public const string MODEL_DIAGNOSTICS = @"ModelDiagnostics";
+        public const string FIRST_PASS = @"FirstPass";
     }
 }
