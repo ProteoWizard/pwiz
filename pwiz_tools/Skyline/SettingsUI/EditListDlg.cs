@@ -89,7 +89,7 @@ namespace pwiz.Skyline.SettingsUI
             // Import/Share available only for lists whose SerialType represents a collection
             // (SerializableSettingsList has correct semantics; other IListSerializer implementers use item types)
             bool canSerialize = model is IListSerializer<TItem> serializer &&
-                                typeof(ICollection<TItem>).IsAssignableFrom(serializer.SerialType);
+                                typeof(IEnumerable<TItem>).IsAssignableFrom(serializer.SerialType);
             if (!canSerialize)
             {
                 pnlButtons.Controls.Remove(btnImport);
@@ -393,7 +393,7 @@ namespace pwiz.Skyline.SettingsUI
                 using (var stream = File.OpenRead(filePath))
                 {
                     var xmlSerializer = new XmlSerializer(serializer.DeserialType);
-                    loadedItems = ((ICollection<TItem>)xmlSerializer.Deserialize(stream)).ToList();
+                    loadedItems = ((IEnumerable<TItem>)xmlSerializer.Deserialize(stream)).ToList();
                 }
             }
             catch (Exception ex)
