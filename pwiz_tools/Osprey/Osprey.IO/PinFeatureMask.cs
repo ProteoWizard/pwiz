@@ -36,8 +36,8 @@ namespace pwiz.Osprey.IO
     /// <see cref="OspreyFeatureSet"/>), nested: <c>core</c>, the 21 core features; <c>efficient</c>
     /// and <c>default</c>, the core and the family features in <see cref="EFFICIENT_FEATURES"/> and
     /// <see cref="DEFAULT_FEATURES"/>; or <c>all</c>. Without the
-    /// option the resolution chooses (<see cref="FeatureSetFor"/>): <c>default</c> for HRAM data,
-    /// <c>core</c> at unit resolution. OSPREY_FEATURE_MASK, a research switch, overrides the set:
+    /// option the set is <c>default</c> at both resolutions (<see cref="FeatureSetFor"/>).
+    /// OSPREY_FEATURE_MASK, a research switch, overrides the set:
     /// when it is set, it alone names what is masked.</para>
     ///
     /// <para>The features used also decide what scoring computes and records. Stage 4 computes the
@@ -197,13 +197,15 @@ namespace pwiz.Osprey.IO
         public static PinFeatureSelection Hram => For(ResolutionMode.HRAM, null);
 
         /// <summary>
-        /// The feature set a search uses: <paramref name="featureSet"/>, or when the command line did not
-        /// choose one, <c>default</c> for HRAM data and <c>core</c> at unit resolution, where the
-        /// families add little and every computed feature costs.
+        /// The feature set a search uses: <paramref name="featureSet"/>, or <c>default</c> when the
+        /// command line did not choose one, at either resolution. Unit resolution used <c>core</c>
+        /// with the linear SVM until, on the regression Stellar entrapment data, gbdt with
+        /// <c>default</c> found 33-35% more precursors at the same true FDP; the resolution still
+        /// drops the features it cannot use.
         /// </summary>
-        public static OspreyFeatureSet FeatureSetFor(OspreyFeatureSet? featureSet, ResolutionMode mode)
+        public static OspreyFeatureSet FeatureSetFor(OspreyFeatureSet? featureSet)
         {
-            return featureSet ?? (mode == ResolutionMode.HRAM ? OspreyFeatureSet.@default : OspreyFeatureSet.core);
+            return featureSet ?? OspreyFeatureSet.@default;
         }
 
         /// <summary>
@@ -433,7 +435,7 @@ namespace pwiz.Osprey.IO
                     : string.Join(@"+", featureMask.Distinct().OrderBy(name => name, StringComparer.Ordinal));
                 return @";featmask=" + mask + AvailableFeaturesTerm(mode) + fdrcols;
             }
-            var used = UnmaskedIndices(MaskAtResolution(FeatureSetMask(FeatureSetFor(featureSet, mode)), mode))
+            var used = UnmaskedIndices(MaskAtResolution(FeatureSetMask(FeatureSetFor(featureSet)), mode))
                 .Where(f => f >= CORE_FEATURE_COUNT).ToArray();
             if (used.Length == 0)
                 return @";featmask=default" + fdrcols;
@@ -575,7 +577,7 @@ namespace pwiz.Osprey.IO
             }
             else
             {
-                named = FeatureSetMask(FeatureSetFor(featureSet, mode));
+                named = FeatureSetMask(FeatureSetFor(featureSet));
             }
             var isMasked = MaskAtResolution(named, mode);
             var masked = Enumerable.Range(0, ParquetScoreCache.NUM_PIN_FEATURES).Select(isMasked).ToArray();

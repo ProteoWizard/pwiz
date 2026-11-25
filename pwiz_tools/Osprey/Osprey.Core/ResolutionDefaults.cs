@@ -34,8 +34,8 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public sealed class ResolutionDefaults
     {
-        /// <summary>The values before the defaults depended on the resolution, and still the unit-resolution ones.</summary>
-        public static readonly ResolutionDefaults LEGACY = new ResolutionDefaults(FdrClassifier.LinearSvm, ProteinBoost.compact,
+        /// <summary>The values before the defaults depended on the resolution; unit resolution keeps their scoring settings.</summary>
+        public static readonly ResolutionDefaults LEGACY = new ResolutionDefaults(FdrClassifier.LinearSvm, ProteinBoost.off,
             LEGACY_MIN_RT_TOLERANCE, LEGACY_LOESS_BANDWIDTH, new ScoringSettings(OspreyEnvironment.DEFAULT_XIC_FRAGMENTS, null, false, null, null, true));
 
         /// <summary>
@@ -49,8 +49,15 @@ namespace pwiz.Osprey.Core
         public static readonly ResolutionDefaults HRAM = new ResolutionDefaults(FdrClassifier.Gbdt, ProteinBoost.best,
             1.0, 0.10, new ScoringSettings(12, 7.0, true, 15, 0.40, true));
 
-        /// <summary>Unit-resolution data.</summary>
-        public static readonly ResolutionDefaults UNIT_RESOLUTION = LEGACY;
+        /// <summary>
+        /// Unit-resolution data: the HRAM classifier and protein-best column with the legacy scoring
+        /// settings. On the regression Stellar entrapment data, gbdt with protein-best and the
+        /// default feature set found 40,340 / 41,441 second-pass precursors (library / generated
+        /// decoys) against 27,171 / 28,792 for the legacy defaults, at no added wall time; the HRAM
+        /// scoring settings lost on top of it (35,763 / 36,468), so they stay HRAM-only.
+        /// </summary>
+        public static readonly ResolutionDefaults UNIT_RESOLUTION = new ResolutionDefaults(FdrClassifier.Gbdt, ProteinBoost.best,
+            LEGACY_MIN_RT_TOLERANCE, LEGACY_LOESS_BANDWIDTH, LEGACY.Scoring);
 
         /// <summary>The defaults for <paramref name="mode"/>.</summary>
         public static ResolutionDefaults For(ResolutionMode mode)

@@ -1008,7 +1008,7 @@ namespace pwiz.Osprey.Tasks
                                     q = 1.0;
                                 byEntryId[entryId] = q;
                             },
-                            StubColumns.Core);
+                            StubColumns.Core, ScoringTaskShared.StubIdentityFor(ctx));
                     }
                     catch (Exception ex)
                     {
@@ -1653,6 +1653,24 @@ namespace pwiz.Osprey.Tasks
         {
             RequireTransferExperimentSidecar(config);
             var pass1Experiment = LoadExperimentRecords(config, FdrScoresSidecar.Pass.FirstPass);
+            // Say whether this run verified, ALWAYS, in the line the competition fold writes: a
+            // silent flag is indistinguishable from one that stopped reaching the child process,
+            // and regression.ps1 and SubsetPipelineTest assert this line to prove the straight leg
+            // verified and the HPC chain did not.
+            bool verify = OspreyEnvironment.Pass2VerifyWorker;
+            if (verify)
+            {
+                ctx.LogInfo(string.Format(
+                    @"Second-pass worker verification ACTIVE (OSPREY_PASS2_VERIFY_WORKER): " +
+                    @"re-scoring and re-transferring {0} file(s) to assert the worker's answer. This " +
+                    @"re-reads each run's model, features and first-pass scores; it is a test " +
+                    @"instrument and is off by default.",
+                    rescored.FileCount));
+            }
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SECOND_PASS_FOLD, @"verify={0} runs={1}",
+                verify ? @"on" : @"off", rescored.FileCount));
+            if (verify)
+                VerifyTransferWorkerAnswers(ctx, rescored.FileNames, config, pass1Experiment);
             var floors = new ExperimentQFloors();
             // The precursors the blib reports, from the first-pass experiment q-values this
             // fold carries forward: only they may set a reported peptide's floor.
@@ -1673,6 +1691,155 @@ namespace pwiz.Osprey.Tasks
                 reportedTargets.Add(baseId.Item1);
             FoldAndPublishExperimentScope(ctx, writer, rescored.FileNames, floors,
                 rec => CarryPass1Experiment(rec.EntryId, pass1Experiment), reportedTargets.Contains);
+        }
+
+        /// <summary>
+        /// OSPREY_PASS2_VERIFY_WORKER under the transfer: recompute each run's second-pass answer
+        /// from the files the rescore worker computed it from, and assert that the run's reconciled
+        /// stub carries it bit for bit. One run at a time: nothing is kept between runs.
+        /// </summary>
+        private static void VerifyTransferWorkerAnswers(PipelineContext ctx, IEnumerable<string> fileNames,
+            OspreyConfig config, IReadOnlyDictionary<uint, FdrExperimentRecord> pass1Experiment)
+        {
+            var inputByFileName = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (string input in config.InputFiles)
+                inputByFileName[Path.GetFileNameWithoutExtension(input) ?? string.Empty] = input;
+            var features = PinFeatureMask.For(config);
+            foreach (string fileName in fileNames)
+            {
+                if (!inputByFileName.TryGetValue(fileName, out string inputFile))
+                {
+                    // Exception text for internal diagnostics, not displayed to user
+                    throw new InvalidOperationException(string.Format(
+                        @"Second-pass worker verification: '{0}' is not among this run's inputs.", fileName));
+                }
+                var verified = VerifyTransferFile(fileName, inputFile, features, pass1Experiment, ctx.LogWarning);
+                ctx.LogInfo(LogTag.COUNT, string.Format(
+                    @"Second-pass worker verified for {0}: {1} rows, {2} re-scored ({3} at their first-pass peak)",
+                    fileName, verified.Rows, verified.Rescored, verified.RescoredInPlace));
+            }
+        }
+
+        /// <summary>
+        /// Recompute one run's second-pass answer and assert its reconciled stub against it, as
+        /// <c>PerFileRescoreTask.WriteRunModelReconciled</c> computed it: a row the rescore
+        /// re-scored takes the run's own frozen model's calibrated score of its features in
+        /// <c>&lt;stem&gt;.features-reconciled.parquet</c>, every other row keeps its first-pass
+        /// score from the run's stub, and the run q-values are the transfer of those scores through
+        /// the run's first-pass table (<see cref="TransferOneFileByScore"/>).
+        ///
+        /// <para>Which rows were re-scored is read from the files, since the worker's in-memory mark
+        /// (a feature vector on the entry) is not written down. A gap-fill row has a score_index past
+        /// the stub's rows. A row the rescore did not touch is the stub's row copied verbatim, so
+        /// one whose peak differs from its stub row in any bit was re-scored at new boundaries. A
+        /// row whose peak matches its stub row's bit for bit is either unmoved or a rescore target
+        /// whose new peak is its first-pass peak - measured on the StellarLibDecoy and Astral
+        /// regression data, with the same features too - so it must carry one of the two scores
+        /// those give: its first-pass score, or the run model's score of its features. Every other
+        /// row has exactly one right answer.</para>
+        ///
+        /// <para>Throws <see cref="InvalidOperationException"/> naming the file, the first entry_id
+        /// that differs, and both values. Returns the rows verified, how many were re-scored, and
+        /// how many of those were re-scored at their first-pass peak.</para>
+        /// </summary>
+        internal static (int Rows, int Rescored, int RescoredInPlace) VerifyTransferFile(string fileName, string inputFile, PinFeatureSelection features,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> pass1Experiment, Action<string> logWarning)
+        {
+            string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
+            string reconciledPath = ParquetScoreCache.GetReconciledScoresPath(inputFile);
+            string featuresPath = ParquetScoreCache.GetReconciledFeaturesPath(inputFile);
+
+            // The worker's answer: every survivor's second-pass score and run q-values.
+            var answers = new List<ParquetScoreCache.StubScoreRow>();
+            if (!ParquetScoreCache.ReadStubScoreRows(reconciledPath, null, answers.Add, out _))
+                throw VerifyInputMissing(fileName, reconciledPath);
+            var answeredRows = new HashSet<uint>();
+            foreach (var answer in answers)
+                answeredRows.Add(answer.ScoreIndex);
+            var firstPassRows = new Dictionary<uint, ParquetScoreCache.StubScoreRow>(answers.Count);
+            if (!ParquetScoreCache.ReadStubScoreRows(scoresPath, answeredRows.Contains,
+                    row => firstPassRows[row.ScoreIndex] = row, out int firstPassRowCount))
+            {
+                throw VerifyInputMissing(fileName, scoresPath);
+            }
+            if (!File.Exists(featuresPath))
+                throw VerifyInputMissing(fileName, featuresPath);
+            var featuresByScoreIndex = LoadReconciledFeaturesByScoreIndex(featuresPath, features);
+            var runScorer = RunModelScorer.Load(FirstPassModelIO.RunModelPathFor(inputFile), scoresPath, features);
+
+            var recomputed = new List<FdrEntry>(answers.Count);
+            int rescoredRows = 0, rescoredInPlace = 0;
+            foreach (var answer in answers)
+            {
+                double score;
+                var firstPass = default(ParquetScoreCache.StubScoreRow);
+                bool samePeak = answer.ScoreIndex < firstPassRowCount &&
+                                firstPassRows.TryGetValue(answer.ScoreIndex, out firstPass) &&
+                                answer.SamePeakAs(firstPass);
+                if (samePeak && SameBits(firstPass.Score, answer.Score))
+                {
+                    score = firstPass.Score;
+                }
+                else if (featuresByScoreIndex.TryGetValue(answer.ScoreIndex, out double[] rowFeatures))
+                {
+                    // Re-scored at new boundaries - or at its own: a rescore target whose new peak is
+                    // its first-pass peak bit for bit, which the files cannot tell from an unmoved
+                    // row, and whose score is then the run model's rather than the first pass's.
+                    score = runScorer.Score(answer.EntryId, rowFeatures);
+                    rescoredRows++;
+                    if (samePeak)
+                        rescoredInPlace++;
+                }
+                else
+                {
+                    // Exception text for internal diagnostics, not displayed to user
+                    throw new InvalidOperationException(string.Format(
+                        @"Second-pass worker verification failed for '{0}': entry_id {1} (score_index {2}) " +
+                        @"was re-scored, and {3} holds no features for it.",
+                        fileName, answer.EntryId, answer.ScoreIndex, featuresPath));
+                }
+                AssertVerifiedValue(fileName, reconciledPath, answer, @"score", score, answer.Score);
+                recomputed.Add(new FdrEntry { EntryId = answer.EntryId, ParquetIndex = answer.ScoreIndex, Score = score });
+            }
+
+            var tally = new TransferTally();
+            TransferOneFileByScore(fileName, FdrScoresSidecar.Pass1Path(inputFile), recomputed, e => e.Score,
+                pass1Experiment, logWarning, ref tally);
+            if (tally.FilesDone != 1)
+                throw VerifyInputMissing(fileName, FdrScoresSidecar.Pass1Path(inputFile));
+            for (int i = 0; i < answers.Count; i++)
+            {
+                AssertVerifiedValue(fileName, reconciledPath, answers[i], @"run precursor q-value",
+                    recomputed[i].RunPrecursorQvalue, answers[i].RunPrecursorQvalue);
+                AssertVerifiedValue(fileName, reconciledPath, answers[i], @"run peptide q-value",
+                    recomputed[i].RunPeptideQvalue, answers[i].RunPeptideQvalue);
+            }
+            return (answers.Count, rescoredRows, rescoredInPlace);
+        }
+
+        private static bool SameBits(double a, double b)
+        {
+            return BitConverter.DoubleToInt64Bits(a) == BitConverter.DoubleToInt64Bits(b);
+        }
+
+        private static InvalidOperationException VerifyInputMissing(string fileName, string path)
+        {
+            // Exception text for internal diagnostics, not displayed to user
+            return new InvalidOperationException(string.Format(
+                @"Second-pass worker verification for '{0}' could not read {1}. OSPREY_PASS2_VERIFY_WORKER " +
+                @"needs every file the rescore worker computed its answer from.", fileName, path));
+        }
+
+        private static void AssertVerifiedValue(string fileName, string reconciledPath,
+            ParquetScoreCache.StubScoreRow answer, string what, double recomputed, double written)
+        {
+            if (SameBits(recomputed, written))
+                return;
+            // Exception text for internal diagnostics, not displayed to user
+            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture,
+                @"Second-pass worker verification failed for '{0}': entry_id {1} (score_index {2}) has " +
+                @"{3} {4:R} in {5}, and the recompute gives {6:R}.",
+                fileName, answer.EntryId, answer.ScoreIndex, what, written, reconciledPath, recomputed));
         }
 
         /// <summary>
@@ -2274,7 +2441,29 @@ namespace pwiz.Osprey.Tasks
             Action<string> logWarning, ref TransferTally tally)
         {
             int nFeatures = scorer.InputFeatures;
+            TransferOneFileByScore(fileName, pass1Path, survivors,
+                // No reconciled features resolved (a stub/parquet mismatch the reload already
+                // warned about): the entry is skipped and keeps its q as-is.
+                entry => entry.Features == null || entry.Features.Length != nFeatures
+                    ? null
+                    : scorer.Score(entry.Features, entry.EntryId, proteinBest),
+                globalExperiment, logWarning, ref tally);
+        }
 
+        /// <summary>
+        /// <see cref="TransferOneFile"/>
+        /// with each survivor's second-pass score from <paramref name="scoreOf"/>, null for a
+        /// survivor that has none and keeps its q-values. Under per-run first-pass models a
+        /// survivor's score is the one its reconciled parquet carries: the first-pass score of a
+        /// row that did not move, which then matches its first-pass record bit for bit, and the
+        /// run's own frozen model's calibrated score of a row that did.
+        /// </summary>
+        internal static void TransferOneFileByScore(
+            string fileName, string pass1Path, List<FdrEntry> survivors,
+            Func<FdrEntry, double?> scoreOf,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> globalExperiment,
+            Action<string> logWarning, ref TransferTally tally)
+        {
             // Build this file's per-run tables + record map from its own 1st-pass sidecar.
             var firstPassByEntryId = new Dictionary<uint, FdrScoreRecord>();
             var precScores = new List<double>();
@@ -2307,17 +2496,17 @@ namespace pwiz.Osprey.Tasks
 
             foreach (var entry in survivors)
             {
-                if (entry.Features == null || entry.Features.Length != nFeatures)
+                double? scored = scoreOf(entry);
+                if (!scored.HasValue)
                 {
-                    // No reconciled features resolved (a stub/parquet mismatch the reload
-                    // already warned about). Leave this ENTRY's q as-is rather than guess, and
-                    // go on to the next one - a `return` here would abandon the rest of the
+                    // No second-pass score resolved. Leave this ENTRY's q as-is rather than guess,
+                    // and go on to the next one - a `return` here would abandon the rest of the
                     // file's survivors at their Stage-6 q AND skip the FilesDone count below,
                     // which is a whole run silently dropped for one entry's missing features.
                     tally.Skipped++;
                     continue;
                 }
-                double newScore = scorer.Score(entry.Features, entry.EntryId, proteinBest);
+                double newScore = scored.Value;
 
                 FdrScoreRecord? rec1 = null;
                 if (firstPassByEntryId.TryGetValue(entry.EntryId, out FdrScoreRecord recFound))
