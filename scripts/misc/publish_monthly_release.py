@@ -30,12 +30,15 @@
 #
 # Usage:
 #   publish_monthly_release.py --output-dir DIR [--month YYYY-MM | --latest] [--dry-run]
+#                              [--commit-file FILE]
 #                              [--teamcity-user USER --teamcity-password PASSWORD | --teamcity-token TOKEN]
 #
 # --month defaults to the previous month (by the TeamCity server's local time). --latest releases the
 # newest successful default-branch build instead. --dry-run reports what would be released without
 # changing anything in TeamCity; the metadata files are still written. Without credentials the script
-# reads TeamCity as a guest, which only allows --dry-run.
+# reads TeamCity as a guest, which only allows --dry-run. --commit-file writes the commit of the build
+# being released, for rebuilding its installers signed; when nothing is released the file is not
+# written.
 
 import argparse
 import base64
@@ -69,6 +72,7 @@ def main():
     parser.add_argument("--month", default="", help="YYYY-MM whose last build to release; defaults to the previous month")
     parser.add_argument("--latest", action="store_true", help="Release the newest successful build (a daily release)")
     parser.add_argument("--dry-run", action="store_true", help="Report what would be released without changing TeamCity")
+    parser.add_argument("--commit-file", help="Write the commit of the build being released to this file")
     args = parser.parse_args()
 
     if args.teamcity_token:
@@ -106,14 +110,26 @@ def main():
                 sys.exit(1)
         daily, description = False, "the last successful build of %s" % month
 
+    if args.commit_file and os.path.exists(args.commit_file):
+        # A persistent agent keeps the last run's file, which must not be rebuilt again
+        os.remove(args.commit_file)
     if build is not None:
-        release(teamcity, releases, build, daily, description, args.dry_run)
+        released = release(teamcity, releases, build, daily, description, args.dry_run)
+        if released and args.commit_file:
+            revisions = (build.get("revisions") or {}).get("revision", [])
+            if not revisions:
+                print("##teamcity[buildProblem description='Build %s, %s, has no commit']" % (build["id"], description))
+                sys.exit(1)
+            with open(args.commit_file, "w", newline="\n") as f:
+                f.write(revisions[0]["version"])
+            print("Commit of build %s: %s" % (build["id"], revisions[0]["version"]))
         if not args.dry_run:
             releases = find_releases(teamcity)
     write_metadata(args.output_dir, releases, teamcity)
 
 
 def release(teamcity, releases, build, daily, description, dry_run):
+    """Pins and tags build as a release; returns False if it is already released."""
     artifacts = teamcity.artifact_names(build["id"])
     # A build whose installers were never built, or already cleaned up, would publish an empty release
     if not any(INSTALLER.match(name) for name in artifacts):
@@ -129,11 +145,12 @@ def release(teamcity, releases, build, daily, description, dry_run):
         # The same commit, built again and released the same way
         print("##teamcity[message text='Not releasing build %s, %s: build %s is already %s' status='WARNING']"
               % (build["id"], description, holder["buildId"], tag))
-        return
+        return False
     print("%s and tag build %s (%s, finished %s), %s, as %s" % ("Dry run: would pin" if dry_run else "Pinning",
           build["id"], build.get("number"), build.get("finishDate"), description, tag))
     if not dry_run:
         teamcity.pin_and_tag(build["id"], tag, "Monthly release channel: %s" % description)
+    return True
 
 
 def release_tag(version, daily):
@@ -235,7 +252,7 @@ def parse_teamcity_time(text):
 
 def recent_successful_builds(teamcity):
     locator = "buildType:%s,branch:default:true,status:SUCCESS,state:finished,count:%d" % (BUILD_TYPE, RECENT_BUILD_COUNT)
-    return teamcity.builds(locator, "id,number,finishDate")
+    return teamcity.builds(locator, "id,number,finishDate,revisions(revision(version))")
 
 
 def newest_successful_build(teamcity):
