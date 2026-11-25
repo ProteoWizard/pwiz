@@ -20,12 +20,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.IO.Pipes;
+using System.IO;
 using System.Management;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 using NHibernate;
@@ -979,6 +980,7 @@ namespace pwiz.Skyline.Util
             return GetTempFileName(basePath, prefix, 0);
         }
 
+        [SupportedOSPlatform("windows")]
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         static extern uint GetTempFileName(string lpPathName, string lpPrefixString,
             uint uUnique, [Out] StringBuilder lpTempFileName);
@@ -1692,6 +1694,9 @@ namespace pwiz.Skyline.Util
         /// <param name="byteCount">How many bytes to read</param>
         public static unsafe void ReadBytes(SafeHandle file, byte* bytes, int byteCount)
         {
+            // Callers read the slow way when this fails
+            if (!OperatingSystem.IsWindows())
+                throw new BulkReadException();
             uint bytesRead;
             bool ret = Kernel32Unsafe.ReadFile(file, bytes, (uint)byteCount, &bytesRead, null);
             if (!ret || bytesRead != byteCount)
@@ -1728,6 +1733,8 @@ namespace pwiz.Skyline.Util
         /// <param name="position"></param>
         public static unsafe void SetFilePointer(SafeHandle file, long position)
         {
+            if (!OperatingSystem.IsWindows())
+                throw new BulkReadException();
             Kernel32Unsafe.SetFilePointerEx(file, position, null, 0);
         }
     }
@@ -1744,6 +1751,9 @@ namespace pwiz.Skyline.Util
         /// <param name="byteCount">How many bytes to write</param>
         public static unsafe void WriteBytes(SafeHandle file, byte* bytes, int byteCount)
         {
+            // Callers write the slow way when this fails
+            if (!OperatingSystem.IsWindows())
+                throw new BulkReadException();
             uint bytesWritten;
             bool ret = Kernel32Unsafe.WriteFile(file, bytes, (uint)byteCount, &bytesWritten, null);
             if (!ret || bytesWritten != byteCount)
@@ -2051,6 +2061,7 @@ namespace pwiz.Skyline.Util
         }
     }
     
+    [SupportedOSPlatform("windows")]
     internal static class Kernel32Unsafe
     {
         [DllImport("kernel32", SetLastError = true)]

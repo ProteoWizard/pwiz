@@ -32,12 +32,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
 using System.Threading;
 using pwiz.Common.CommonResources;
 
 namespace pwiz.Common.SystemUtil
 {
+    [SupportedOSPlatform("windows")]
     public static class FileLockingProcessFinder
     {
         [StructLayout(LayoutKind.Sequential)]

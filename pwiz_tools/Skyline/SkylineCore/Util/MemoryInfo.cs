@@ -17,8 +17,9 @@
  * limitations under the License.
  */
 
-using System.Runtime.InteropServices;
 using System;
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace pwiz.Skyline.Util
 {
@@ -50,6 +51,7 @@ namespace pwiz.Skyline.Util
         }
 
         [return: MarshalAs(UnmanagedType.Bool)]
+        [SupportedOSPlatform("windows")]
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         static extern bool GlobalMemoryStatusEx([In, Out] MEMORYSTATUSEX lpBuffer);
 

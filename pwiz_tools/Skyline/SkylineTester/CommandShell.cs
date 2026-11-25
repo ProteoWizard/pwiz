@@ -25,6 +25,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using TestRunnerLib.PInvoke;
 using Timer = System.Windows.Forms.Timer;
@@ -563,14 +564,14 @@ namespace SkylineTester
                             // includes it, but not for long: a surviving child process can hold them
                             // open. The running test is known either way.
                             outputStreamsOpen.Wait(TimeSpan.FromSeconds(MAX_OUTPUT_DRAIN_SECONDS));
-                            var failureLines = crashReport.GetFailureLines(exitCode, Kernel32.FormatExitCode(exitCode));
+                            var failureLines = crashReport.GetFailureLines(exitCode, ProcessExitCode.Format(exitCode));
                             if (failureLines != null)
                             {
                                 foreach (var line in failureLines)
                                     Log(line);
                             }
                         }
-                        Log(Environment.NewLine + "# Process " + (_processName??string.Empty) + " had nonzero exit code " + Kernel32.FormatExitCode(exitCode) + Environment.NewLine);
+                        Log(Environment.NewLine + "# Process " + (_processName??string.Empty) + " had nonzero exit code " + ProcessExitCode.Format(exitCode) + Environment.NewLine);
                     }
                     RunUI(() => CommandsDone(_restartOnProcessFailure && !processKilled ? EXIT_TYPE.error_restart : EXIT_TYPE.error_stop));
                 }

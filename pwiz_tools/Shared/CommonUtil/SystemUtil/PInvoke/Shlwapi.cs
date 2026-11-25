@@ -15,10 +15,12 @@
  */
 
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace pwiz.Common.SystemUtil.PInvoke
 {
     // Resharper disable once IdentifierTypo
+    [SupportedOSPlatform("windows")]
     public static class Shlwapi
     {
         // ReSharper disable once StringLiteralTypo

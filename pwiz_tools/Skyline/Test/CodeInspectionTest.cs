@@ -1573,6 +1573,7 @@ namespace pwiz.SkylineTest
                 @"SystemUtil\PInvoke",
                 @"TestRunnerLib\PInvoke",
                 @"Test\CodeInspectionTest.cs",
+                @"Test\PlatformNeutralPInvokeTest.cs",
                 
                 // Classes allowed limited use of the [DllImport] attribute outside the PInvoke API.
                 // To be added to this list, a class must:

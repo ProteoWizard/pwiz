@@ -360,7 +360,10 @@ namespace pwiz.Skyline.Util
                     {
                         // Still locked after retrying. "Access to the path is denied" on its own cannot
                         // be acted on, so name whatever is holding the file.
-                        var described = FileLockingProcessFinder.ToFileLockingException(x, requiredFile.InstallPath);
+                        // Only Windows can say which process holds a file
+                        var described = OperatingSystem.IsWindows()
+                            ? FileLockingProcessFinder.ToFileLockingException(x, requiredFile.InstallPath)
+                            : x;
                         if (ReferenceEquals(described, x))
                             throw;  // Nothing to add, so keep the original stack trace
                         throw described;

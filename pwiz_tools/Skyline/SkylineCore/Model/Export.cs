@@ -2851,7 +2851,7 @@ namespace pwiz.Skyline.Model
 
         private void EnsureAnalyst(IProgressMonitor progressMonitor)
         {
-            string analystPath = Advapi32.GetPathFromProgId(@"Analyst.MassSpecMethod.1");
+            string analystPath = OperatingSystem.IsWindows() ? Advapi32.GetPathFromProgId(@"Analyst.MassSpecMethod.1") : null;
             string analystDir = null;
             if (analystPath != null)
                 analystDir = Path.GetDirectoryName(analystPath);
@@ -3148,7 +3148,7 @@ namespace pwiz.Skyline.Model
 
         private static void EnsureSciexOs(IProgressMonitor progressMonitor)
         {
-            var sciexOsDir = Advapi32.RegQueryKeyValue(@"SOFTWARE\SCIEX\SCIEX OS", @"InstallationDirectory");
+            var sciexOsDir = OperatingSystem.IsWindows() ? Advapi32.RegQueryKeyValue(@"SOFTWARE\SCIEX\SCIEX OS", @"InstallationDirectory") : null;
             if (sciexOsDir == null)
                 throw new IOException(ModelResources.SciexOsMethodExporter_EnsureSciexOs_Failed_to_find_a_valid_SCIEX_OS_installation_);
 
@@ -5057,8 +5057,8 @@ namespace pwiz.Skyline.Model
             // ReSharper disable ConstantNullCoalescingCondition
             string buildSubdir = Path.GetDirectoryName(EXE_BUILD_WATERS_METHOD) ?? string.Empty;
             string exeDir = Path.Combine(Path.GetDirectoryName(skylinePath) ?? string.Empty, buildSubdir);
-            string dacServerPath = Advapi32.GetPathFromProgId(@"DACScanStats.DACScanStats"); 
-            if (dacServerPath == null)
+            string dacServerPath = OperatingSystem.IsWindows() ? Advapi32.GetPathFromProgId(@"DACScanStats.DACScanStats") : null; 
+            if (dacServerPath == null && OperatingSystem.IsWindows())
             {
                 dacServerPath = Advapi32.RegQueryKeyValue(@"SOFTWARE\Wow6432Node\Micromass\MassLynx", @"Root"); 
                 if (dacServerPath == null)

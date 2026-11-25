@@ -16,9 +16,11 @@
 
 using System;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace pwiz.Common.SystemUtil.PInvoke
 {
+    [SupportedOSPlatform("windows")]
     public static class Gdi32
     {
         // ReSharper disable once InconsistentNaming

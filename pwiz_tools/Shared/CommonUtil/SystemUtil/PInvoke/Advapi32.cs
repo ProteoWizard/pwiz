@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 
-using System.Runtime.InteropServices;
-using System.Text;
 using System;
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
+using System.Text;
 
 namespace pwiz.Common.SystemUtil.PInvoke
 {
     // CONSIDER: can this whole class be replaced with .NET's built-in Registry API?
     //
     // ReSharper disable once IdentifierTypo
+    [SupportedOSPlatform("windows")]
     public static class Advapi32
     {
         // ReSharper disable InconsistentNaming IdentifierTypo
