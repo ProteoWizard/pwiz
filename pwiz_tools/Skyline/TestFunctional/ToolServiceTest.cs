@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestFunctional
                 try
                 {
                     TryToDoTest();
-                    if (!Program.TestExceptions.Any())
+                    if (!ProgramContext.TestExceptions.Any())
                     {
                         return;
                     }
@@ -73,8 +73,8 @@ namespace pwiz.SkylineTestFunctional
                 {
                     accumulatedExceptions.Add(ex);
                 }
-                accumulatedExceptions.AddRange(Program.TestExceptions);
-                Program.TestExceptions.Clear();
+                accumulatedExceptions.AddRange(ProgramContext.TestExceptions);
+                ProgramContext.TestExceptions.Clear();
             }
 
             throw new AggregateException(accumulatedExceptions);

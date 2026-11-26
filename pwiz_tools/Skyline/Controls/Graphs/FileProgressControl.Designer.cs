@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // 
             // warningIcon
             // 
-            this.warningIcon.Image = global::pwiz.Skyline.Properties.Resources.warning;
+            this.warningIcon.Image = global::pwiz.Skyline.Properties.ImageResources.warning;
             resources.ApplyResources(this.warningIcon, "warningIcon");
             this.warningIcon.Name = "warningIcon";
             this.warningIcon.TabStop = false;

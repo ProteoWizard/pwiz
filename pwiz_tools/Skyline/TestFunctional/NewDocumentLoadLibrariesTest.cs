@@ -28,6 +28,7 @@ using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -53,15 +54,15 @@ namespace pwiz.SkylineTestFunctional
             var settings = SrmSettingsList.GetDefault();
             var ionMobilityLibrary =
                 new IonMobilityLibrary("MyIonMobilityLibrary", TestFilesDir.GetTestPath("testPO.imsdb"), null);
-            Settings.Default.IonMobilityLibraryList.Add(ionMobilityLibrary);
+            Settings.Default.IonMobilityLibraryList = Settings.Default.IonMobilityLibraryList.ChangeAdd(ionMobilityLibrary);
 
             var irtCalculator = new RCalcIrt("MyIrtCalculator", TestFilesDir.GetTestPath("pierce.irtdb"));
             var retentionTimeRegression = new RetentionTimeRegression("MyRetentionTimeRegression", irtCalculator, null,
                 RetentionTimeRegression.DEFAULT_WINDOW, ImmutableList<MeasuredRetentionTime>.EMPTY);
-            Settings.Default.RTScoreCalculatorList.Add(irtCalculator);
+            Settings.Default.RTScoreCalculatorList = Settings.Default.RTScoreCalculatorList.ChangeAdd(irtCalculator);
 
             var librarySpec = new BiblioSpecLiteSpec("MyBlibLibrary", TestFilesDir.GetTestPath("rat_cmp_20.blib"));
-            Settings.Default.SpectralLibraryList.Add(librarySpec);
+            Settings.Default.SpectralLibraryList = Settings.Default.SpectralLibraryList.ChangeAdd(librarySpec);
 
             Assert.IsFalse(ionMobilityLibrary.IsUsable);
             settings = settings
@@ -76,8 +77,8 @@ namespace pwiz.SkylineTestFunctional
                         new List<LibrarySpec>{librarySpec},
                         new List<Library>{null})));
 
-            Settings.Default.SrmSettingsList.Clear();
-            Settings.Default.SrmSettingsList.Add(settings);
+            Settings.Default.SrmSettingsList = Settings.Default.SrmSettingsList.ChangeClear();
+            Settings.Default.SrmSettingsList = Settings.Default.SrmSettingsList.ChangeAdd(settings);
             var startPage = WaitForOpenForm<StartPage>();
             // Push the "Blank Document" button on the Start Page.
             // The Blank Document button causes an extra call to "SkylineWindow.NewDocument", which is

@@ -50,7 +50,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // pictureBox3
             // 
-            this.pictureBox3.Image = global::pwiz.Skyline.Properties.Resources.WizardTransitionIcon;
+            this.pictureBox3.Image = global::pwiz.Skyline.Properties.ImageResources.WizardTransitionIcon;
             resources.ApplyResources(this.pictureBox3, "pictureBox3");
             this.pictureBox3.Name = "pictureBox3";
             this.pictureBox3.TabStop = false;
@@ -58,7 +58,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // pictureBox2
             // 
-            this.pictureBox2.Image = global::pwiz.Skyline.Properties.Resources.WizardPeptideIcon;
+            this.pictureBox2.Image = global::pwiz.Skyline.Properties.ImageResources.WizardPeptideIcon;
             resources.ApplyResources(this.pictureBox2, "pictureBox2");
             this.pictureBox2.Name = "pictureBox2";
             this.pictureBox2.TabStop = false;
@@ -153,7 +153,7 @@ namespace pwiz.Skyline.SettingsUI
             this.Controls.Add(this.button1);
             this.Controls.Add(this.button2);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.Icon = global::pwiz.Skyline.Properties.Resources.Skyline;
+            this.Icon = global::pwiz.Skyline.Properties.ImageResources.Skyline;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "StartPageSettingsUI";

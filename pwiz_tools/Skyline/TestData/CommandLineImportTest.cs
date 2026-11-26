@@ -30,6 +30,7 @@ using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -486,8 +487,8 @@ namespace pwiz.SkylineTestData
             ValidateMultiList(docListMods, docFastaMods, false);
 
             // Clear settings and make sure the Unimod modifications still work
-            Settings.Default.StaticModList.Clear();
-            Settings.Default.StaticModList.AddDefaults();
+            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeClear();
+            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeAddDefaults();
             output = RunCommand(true, CommandArgs.ARG_NEW.GetArgumentTextWithValue(outPath),
                 CommandArgs.ARG_OVERWRITE.ArgumentText,
                 CommandArgs.ARG_SAVE.ArgumentText,

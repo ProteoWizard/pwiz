@@ -23,6 +23,7 @@ using pwiz.CommonFileDialogs;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -32,7 +33,7 @@ namespace pwiz.Skyline.FileUI
     /// </summary>
     public class SkylineFileDialogNE : BaseFileDialogNE
     {
-        public SkylineFileDialogNE(string[] sourceTypes, IList<RemoteAccount> remoteAccounts,
+        public SkylineFileDialogNE(string[] sourceTypes, IEnumerable<RemoteAccount> remoteAccounts,
             IList<string> specificDataSourceFilter = null, bool isRemote = false)
             : base(sourceTypes, remoteAccounts, specificDataSourceFilter, isRemote)
         {
@@ -58,14 +59,13 @@ namespace pwiz.Skyline.FileUI
             return MultiButtonMsgDlg.Show(this, message, retryButtonText);
         }
 
-        protected override IList<RemoteAccount> OnEditAccounts(IWin32Window owner)
+        protected override IEnumerable<RemoteAccount> OnEditAccounts(IWin32Window owner)
         {
             var list = Settings.Default.RemoteAccountList;
             var listNew = list.EditList((Control)owner, null);
             if (listNew != null)
             {
-                list.Clear();
-                list.AddRange(listNew);
+                Settings.Default.RemoteAccountList = list.ChangeItems(listNew);
                 return Settings.Default.RemoteAccountList;
             }
             return null;
@@ -76,7 +76,7 @@ namespace pwiz.Skyline.FileUI
             var newAccount = Settings.Default.RemoteAccountList.NewItem((Control)owner, Settings.Default.RemoteAccountList, null);
             if (null != newAccount)
             {
-                Settings.Default.RemoteAccountList.Add(newAccount);
+                Settings.Default.RemoteAccountList = Settings.Default.RemoteAccountList.ChangeAdd(newAccount);
             }
             return newAccount;
         }

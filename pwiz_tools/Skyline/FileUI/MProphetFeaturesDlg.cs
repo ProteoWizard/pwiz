@@ -47,7 +47,7 @@ namespace pwiz.Skyline.FileUI
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             Document = document;
             DocumentFilePath = documentPath;

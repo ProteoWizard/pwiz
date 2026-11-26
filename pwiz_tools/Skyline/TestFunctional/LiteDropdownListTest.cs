@@ -27,6 +27,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -49,10 +50,10 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(() =>
             {
-                Settings.Default.StaticModList.AddRange(UniMod.DictStructuralModNames.Values);
-                Settings.Default.StaticModList.AddRange(UniMod.DictHiddenStructuralModNames.Values);
-                Settings.Default.HeavyModList.AddRange(UniMod.DictIsotopeModNames.Values);
-                Settings.Default.HeavyModList.AddRange(UniMod.DictHiddenIsotopeModNames.Values);
+                Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeAddRange(UniMod.DictStructuralModNames.Values);
+                Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeAddRange(UniMod.DictHiddenStructuralModNames.Values);
+                Settings.Default.HeavyModList = Settings.Default.HeavyModList.ChangeAddRange(UniMod.DictIsotopeModNames.Values);
+                Settings.Default.HeavyModList = Settings.Default.HeavyModList.ChangeAddRange(UniMod.DictHiddenIsotopeModNames.Values);
             });
             var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() =>
             {

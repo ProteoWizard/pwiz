@@ -637,12 +637,6 @@
   <data name="RegressionGraphPane_RegressionGraphPane_Values" xml:space="preserve">
     <value>値</value>
   </data>
-  <data name="RegressionUnconversion_CalculatorScoreFormat" xml:space="preserve">
-    <value>{0}スコア</value>
-  </data>
-  <data name="RegressionUnconversion_CalculatorScoreValueFormat" xml:space="preserve">
-    <value>{0}スコア ({1})</value>
-  </data>
   <data name="ReplicateGroupOp_ReplicateAxisTitle" xml:space="preserve">
     <value>繰り返し測定</value>
   </data>

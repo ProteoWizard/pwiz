@@ -334,7 +334,7 @@ namespace pwiz.SkylineTestUtil
                 pictureMatching.Visible = true;
                 labelOldSize.Left = pictureMatching.Right;
                 bool matching = !_diff.IsDiff;
-                var bmpDiff = matching ? Skyline.Properties.Resources.Peak : Skyline.Properties.Resources.NoPeak;
+                var bmpDiff = matching ? Skyline.Properties.ImageResources.Peak : Skyline.Properties.ImageResources.NoPeak;
                 bmpDiff.MakeTransparent(Color.White);
                 pictureMatching.Image = bmpDiff;
                 if (matching)

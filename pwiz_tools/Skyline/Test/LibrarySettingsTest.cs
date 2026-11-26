@@ -73,7 +73,7 @@ namespace pwiz.SkylineTest
             var librarySpec = new NistLibSpec("Yeast (NIST)", LibraryLoadTest.PATH_NIST_LIB);
 
             // For serialization, add the library spec to the settings
-            TestLibraryList = new SpectralLibraryList { librarySpec };
+            TestLibraryList = new SpectralLibraryList().ChangeAdd(librarySpec);
 
             libraryManager = new LibraryManager { StreamManager = streamManager };
             docContainer = new TestDocumentContainer();
@@ -368,7 +368,7 @@ namespace pwiz.SkylineTest
             var nistSpec = new NistLibSpec("Yeast (NIST)", LibraryLoadTest.PATH_NIST_LIB);
 
             // For serialization, add the library spec to the settings
-            TestLibraryList = new SpectralLibraryList { hunterSpec, bilbioSpec, nistSpec };
+            TestLibraryList = new SpectralLibraryList().ChangeAdd(hunterSpec).ChangeAdd(bilbioSpec).ChangeAdd(nistSpec);
 
             var libraryManager = new LibraryManager { StreamManager = streamManager };
             var docContainer = new TestDocumentContainer();
@@ -423,7 +423,7 @@ namespace pwiz.SkylineTest
             var hunterSpec = new XHunterLibSpec("Yeast (X!)", LibraryLoadTest.PATH_HUNTER_LIB);
 
             // For serialization, add the library spec to the settings
-            TestLibraryList = new SpectralLibraryList { hunterSpec };
+            TestLibraryList = new SpectralLibraryList().ChangeAdd(hunterSpec);
 
             var libraryManager = new LibraryManager { StreamManager = streamManager };
             var docContainer = new TestDocumentContainer();

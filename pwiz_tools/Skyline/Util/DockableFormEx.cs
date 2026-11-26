@@ -27,7 +27,7 @@ using pwiz.Common.SystemUtil;
 namespace pwiz.Skyline.Util
 {
     public class DockableFormEx : DockableForm, IFormView, IClosingAware,
-        Helpers.IModeUIAwareForm  // Can translate "peptide"=>"molecule" etc if desired
+        ModeUIHelpers.IModeUIAwareForm  // Can translate "peptide"=>"molecule" etc if desired
     {
         /// <summary>
         /// Flag indicating the form is closing or disposing. Set early (in OnFormClosing)
@@ -52,8 +52,8 @@ namespace pwiz.Skyline.Util
             set { base.Text = value; }
         }
 
-        private Helpers.ModeUIAwareFormHelper _modeUIHelper;
-        public Helpers.ModeUIExtender ModeUIExtender; // Allows UI mode management in Designer
+        private ModeUIHelpers.ModeUIAwareFormHelper _modeUIHelper;
+        public ModeUIHelpers.ModeUIExtender ModeUIExtender; // Allows UI mode management in Designer
         private Container _components; // For IExtender use
 
         public DockableFormEx()
@@ -70,12 +70,12 @@ namespace pwiz.Skyline.Util
         private void InitializeComponent()
         {
             this._components = new System.ComponentModel.Container();
-            this.ModeUIExtender = new Helpers.ModeUIExtender(_components);
-            this._modeUIHelper = new Helpers.ModeUIAwareFormHelper(ModeUIExtender);
+            this.ModeUIExtender = new ModeUIHelpers.ModeUIExtender(_components);
+            this._modeUIHelper = new ModeUIHelpers.ModeUIAwareFormHelper(ModeUIExtender);
         }
         #endregion
 
-        public Helpers.ModeUIAwareFormHelper GetModeUIHelper() // Method instead of property so it doesn't show up in Designer
+        public ModeUIHelpers.ModeUIAwareFormHelper GetModeUIHelper() // Method instead of property so it doesn't show up in Designer
         {
             return _modeUIHelper; 
         }
@@ -130,7 +130,7 @@ namespace pwiz.Skyline.Util
 
         protected override bool ShowWithoutActivation
         {
-            get { return Program.FunctionalTest || Program.SkylineOffscreen; }
+            get { return ProgramContext.FunctionalTest || Program.SkylineOffscreen; }
         }
     }
 }

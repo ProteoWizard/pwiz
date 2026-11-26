@@ -246,7 +246,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // bindingNavigatorAddNewItem
             // 
             this.bindingNavigatorAddNewItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.bindingNavigatorAddNewItem.Image = global::pwiz.Skyline.Properties.Resources.NavigatorAddNew;
+            this.bindingNavigatorAddNewItem.Image = global::pwiz.Skyline.Properties.ImageResources.NavigatorAddNew;
             resources.ApplyResources(this.bindingNavigatorAddNewItem, "bindingNavigatorAddNewItem");
             this.bindingNavigatorAddNewItem.Name = "bindingNavigatorAddNewItem";
             // 
@@ -258,7 +258,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // bindingNavigatorDeleteItem
             // 
             this.bindingNavigatorDeleteItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.bindingNavigatorDeleteItem.Image = global::pwiz.Skyline.Properties.Resources.Delete;
+            this.bindingNavigatorDeleteItem.Image = global::pwiz.Skyline.Properties.ImageResources.Delete;
             this.bindingNavigatorDeleteItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             resources.ApplyResources(this.bindingNavigatorDeleteItem, "bindingNavigatorDeleteItem");
             this.bindingNavigatorDeleteItem.Name = "bindingNavigatorDeleteItem";
@@ -266,14 +266,14 @@ namespace pwiz.Skyline.Controls.Graphs
             // bindingNavigatorMoveFirstItem
             // 
             this.bindingNavigatorMoveFirstItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.bindingNavigatorMoveFirstItem.Image = global::pwiz.Skyline.Properties.Resources.NavigatorFirst;
+            this.bindingNavigatorMoveFirstItem.Image = global::pwiz.Skyline.Properties.ImageResources.NavigatorFirst;
             resources.ApplyResources(this.bindingNavigatorMoveFirstItem, "bindingNavigatorMoveFirstItem");
             this.bindingNavigatorMoveFirstItem.Name = "bindingNavigatorMoveFirstItem";
             // 
             // bindingNavigatorMovePreviousItem
             // 
             this.bindingNavigatorMovePreviousItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.bindingNavigatorMovePreviousItem.Image = global::pwiz.Skyline.Properties.Resources.NavigatorPrevious;
+            this.bindingNavigatorMovePreviousItem.Image = global::pwiz.Skyline.Properties.ImageResources.NavigatorPrevious;
             resources.ApplyResources(this.bindingNavigatorMovePreviousItem, "bindingNavigatorMovePreviousItem");
             this.bindingNavigatorMovePreviousItem.Name = "bindingNavigatorMovePreviousItem";
             // 
@@ -295,14 +295,14 @@ namespace pwiz.Skyline.Controls.Graphs
             // bindingNavigatorMoveNextItem
             // 
             this.bindingNavigatorMoveNextItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.bindingNavigatorMoveNextItem.Image = global::pwiz.Skyline.Properties.Resources.NavigatorNext;
+            this.bindingNavigatorMoveNextItem.Image = global::pwiz.Skyline.Properties.ImageResources.NavigatorNext;
             resources.ApplyResources(this.bindingNavigatorMoveNextItem, "bindingNavigatorMoveNextItem");
             this.bindingNavigatorMoveNextItem.Name = "bindingNavigatorMoveNextItem";
             // 
             // bindingNavigatorMoveLastItem
             // 
             this.bindingNavigatorMoveLastItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.bindingNavigatorMoveLastItem.Image = global::pwiz.Skyline.Properties.Resources.NavigatorLast;
+            this.bindingNavigatorMoveLastItem.Image = global::pwiz.Skyline.Properties.ImageResources.NavigatorLast;
             resources.ApplyResources(this.bindingNavigatorMoveLastItem, "bindingNavigatorMoveLastItem");
             this.bindingNavigatorMoveLastItem.Name = "bindingNavigatorMoveLastItem";
             // 

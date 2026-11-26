@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
@@ -36,6 +37,8 @@ namespace pwiz.Skyline.SettingsUI
         where TItem : IKeyContainer<string>, IXmlSerializable
     {
         private int _selectedIndexLast;
+        private SettingsListBase<TItem> _list;
+        private readonly bool _isSettingsList;
 
         public SettingsListComboDriver(ComboBox combo, SettingsListBase<TItem> list)
             : this(combo, list, true)
@@ -46,13 +49,34 @@ namespace pwiz.Skyline.SettingsUI
         {
             IsVisibleEditting = isVisibleEditting;
             Combo = combo;
-            List = list;
+            _list = list;
+            _isSettingsList = Settings.Default.IsSettingsList(list);
         }
 
         public bool IsVisibleEditting { get; private set; }
         public bool IsInSelectedIndexChangedEvent { get; private set; }
         public ComboBox Combo { get; private set; }
-        public SettingsListBase<TItem> List { get; private set; }
+
+        /// <summary>
+        /// The list shown, which for a list from the settings is always the one the settings hold now.
+        /// </summary>
+        public SettingsListBase<TItem> List
+        {
+            get
+            {
+                return _isSettingsList
+                    ? (SettingsListBase<TItem>) Settings.Default.GetSettingsList(_list.GetType())
+                    : _list;
+            }
+            set
+            {
+                if (_isSettingsList)
+                    Settings.Default.SetSettingsList(value);
+                else
+                    _list = value;
+            }
+        }
+
         public int SelectedIndexLast { get { return _selectedIndexLast; } }
 
         public event EventHandler<EditItemEventArgs> EditItemEvent;
@@ -63,7 +87,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 Combo.BeginUpdate();
                 Combo.Items.Clear();
-                foreach (TItem item in List.ToArrayStd())
+                foreach (TItem item in List.ToArray())
                 {
                     string name = List.GetDisplayName(item);
                     int i = Combo.Items.Add(name);
@@ -74,7 +98,7 @@ namespace pwiz.Skyline.SettingsUI
                     Combo.Items.Add(string.Empty);
                 if (IsVisibleEditting)
                 {
-                    if (List is IItemEditor<TItem>)
+                    if (SettingsListEditors.GetItemEditor<TItem>(List) != null)
                     {
                         Combo.Items.Add(Resources.SettingsListComboDriver_Add);
                         Combo.Items.Add(Resources.SettingsListComboDriver_Edit_current);
@@ -155,14 +179,14 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddItem()
         {
-            var itemEditor = List as IItemEditor<TItem>;
+            var itemEditor = SettingsListEditors.GetItemEditor<TItem>(List);
             if (itemEditor == null)
                 return;
 
             TItem itemNew = NewItem(itemEditor);
             if (!Equals(itemNew, default(TItem)))
             {
-                List.Add(itemNew);
+                List = List.ChangeItemsWith(items => items.Add(itemNew));
                 // By display name: LoadList matches the combo's text, which a list may make more than the key
                 LoadList(List.GetDisplayName(itemNew));
             }
@@ -187,7 +211,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditCurrent()
         {
-            var itemEditor = List as IItemEditor<TItem>;
+            var itemEditor = SettingsListEditors.GetItemEditor<TItem>(List);
             if (itemEditor == null)
                 return;
 
@@ -199,7 +223,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             if (!Equals(itemNew, default(TItem)) && !Equals(itemNew, List[i]))
             {
-                List[i] = itemNew;
+                List = List.ChangeItemsWith(items => items[i] = itemNew);
                 // By display name: LoadList matches the combo's text, which a list may make more than the key
                 // ReSharper disable once PossibleNullReferenceException
                 LoadList(List.GetDisplayName(itemNew));
@@ -234,20 +258,16 @@ namespace pwiz.Skyline.SettingsUI
                     selectedItemLast = null;
                 else
                     selectedItemLast = Combo.Items[_selectedIndexLast].ToString();
-                if (List.ExcludeDefaults < 1)
-                    List.Clear();
-                else
+                // If default items were excluded from editing,
+                // then make sure they are preserved as the first items.
+                var list = List;
+                var itemsKept = list.Take(list.ExcludeDefaults).ToArray();
+                List = list.ChangeItemsWith(items =>
                 {
-                    // If default items were excluded from editing,
-                    // then make sure they are preserved as the first items.
-                    List<TItem> tmpList = new List<TItem>();
-                    int countExclude = Math.Min(List.ExcludeDefaults, List.Count);
-                    for (int i = 0; i < countExclude; i++)
-                        tmpList.Add(List[i]);
-                    List.Clear();
-                    List.AddRange(tmpList);
-                }
-                List.AddRange(listNew);
+                    items.Clear();
+                    items.AddRange(itemsKept);
+                    items.AddRange(listNew);
+                });
                 LoadList(selectedItemLast);
             }
             else

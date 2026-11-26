@@ -28,6 +28,7 @@ using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.Unifi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestConnected.Results.RemoteApi
@@ -94,7 +95,7 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
         private void TestRemoteAccountSerialize(RemoteAccount remoteAccount)
         {
             var remoteAccountList = new RemoteAccountList();
-            remoteAccountList.Add(remoteAccount);
+            remoteAccountList = remoteAccountList.ChangeAdd(remoteAccount);
             StringWriter stringWriter = new StringWriter();
             var xmlSerializer = new XmlSerializer(typeof(RemoteAccountList));
             xmlSerializer.Serialize(stringWriter, remoteAccountList);

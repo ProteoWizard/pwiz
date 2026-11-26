@@ -225,9 +225,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// </summary>
         public void SaveSettingsPreset(string name)
         {
-            var presets = SettingsPresets;
-            presets.RemoveKey(name);
-            presets.Add(BuildPreset(name));
+            // Adding a preset replaces any of the same name
+            Settings.Default.OspreySettingsPresets = SettingsPresets.ChangeAdd(BuildPreset(name));
             if (!Program.NoSaveSettings)
                 Settings.Default.SaveWithoutExceptions();
             // The preset just saved is the page's values, so choosing it changes nothing

@@ -42,7 +42,7 @@ namespace pwiz.Skyline.FileUI
         public ChooseSchedulingReplicatesDlg(SkylineWindow skylineWindow)
         {
             InitializeComponent();
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
             SkylineWindow = skylineWindow;
             double windowLength = SkylineWindow.Document.Settings.TransitionSettings.FullScan.RetentionTimeFilterLength;
             labelInstructions.Text = string.Format(labelInstructions.Text, windowLength);

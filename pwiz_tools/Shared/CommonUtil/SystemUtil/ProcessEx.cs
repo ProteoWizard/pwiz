@@ -46,7 +46,8 @@ namespace pwiz.Common.SystemUtil
         /// <summary>
         /// Returns true iff the process is running under Wine (the "wine_get_version" function is exported by ntdll.dll)
         /// </summary>
-        public static bool IsRunningOnWine => Kernel32.GetProcAddress(Kernel32.GetModuleHandle(@"ntdll.dll"), @"wine_get_version") != IntPtr.Zero;
+        public static bool IsRunningOnWine => OperatingSystem.IsWindows() &&
+            Kernel32.GetProcAddress(Kernel32.GetModuleHandle(@"ntdll.dll"), @"wine_get_version") != IntPtr.Zero;
 
         /// <summary>
         /// Returns true iff the process is running under an OS and on volume(s) that support windows 8.3 format conversion

@@ -1040,7 +1040,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.SetIntegrateAll(true));
 
             {
-                Settings.Default.AnnotationDefList.Clear();
+                Settings.Default.AnnotationDefList = Settings.Default.AnnotationDefList.ChangeClear();
                 var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
 
                 AddReplicateAnnotation(documentSettingsDlg, "SubjectId", AnnotationDef.AnnotationType.text, null, true);

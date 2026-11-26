@@ -20,13 +20,13 @@ namespace pwiz.Skyline.FileUI
         /// </summary>
         public List<string> MethodNameSuffixes { get; set; }
 
-        public WatersConnectSaveMethodFileDialog(IList<RemoteAccount> remoteAccounts,  IList<string> specificDataSourceFilter = null)
+        public WatersConnectSaveMethodFileDialog(IEnumerable<RemoteAccount> remoteAccounts,  IList<string> specificDataSourceFilter = null)
             : base(remoteAccounts, specificDataSourceFilter)
         {
             Text = string.Format(FileUIResources.ExportMethodDlg_OkDialog_Export__0__Method, InstrumentType);
             actionButton.Text = FileUIResources.WatersConnectSaveMethodFileDialog_SaveButtonText;
             newFolderButton.Visible = true;
-            newFolderButton.Image = Resources.AddFolder;
+            newFolderButton.Image = ImageResources.AddFolder;
             newFolderButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
         }
 

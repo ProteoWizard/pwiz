@@ -33,7 +33,7 @@ namespace pwiz.Skyline.FileUI
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             labelFile.Text = Path.GetFileName(filePath);
             foreach (var sampleName in sampleNames)

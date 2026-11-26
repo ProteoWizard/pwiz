@@ -49,7 +49,7 @@ namespace pwiz.Skyline.ToolsUI
 
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
         }
         
         public IToolStoreClient ToolStoreClient
@@ -207,7 +207,7 @@ namespace pwiz.Skyline.ToolsUI
                 catch (Exception ex)
                 {
                     // FileSaver.Dispose() will auto-delete ~SK*.tmp
-                    ExceptionUtil.DisplayOrReportException(this, ex);
+                    ExceptionUtilUI.DisplayOrReportException(this, ex);
                 }
             }
         }
@@ -470,7 +470,7 @@ namespace pwiz.Skyline.ToolsUI
     {
         public static Image DefaultImage
         {
-            get { return Resources.ExternalTool; }
+            get { return ImageResources.ExternalTool; }
         }
 
         public static IToolStoreClient ToolStoreClient { get; set; }
@@ -513,7 +513,7 @@ namespace pwiz.Skyline.ToolsUI
             return tool != null ? tool.PackageVersion : null;
         }
 
-        public static IEnumerable<ToolDescription> UpdatableTools(IList<ToolDescription> tools)
+        public static IEnumerable<ToolDescription> UpdatableTools(IEnumerable<ToolDescription> tools)
         {
             return tools.Where(description => !string.IsNullOrWhiteSpace(description.PackageVersion));
         }

@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             InitializeComponent();
             SkylineWindow = skylineWindow;
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
             bindingSource.DataSource = _dataRows;
             colIntercept.CellTemplate.Style.Format = @"0.0000";
             colSlope.CellTemplate.Style.Format = @"0.0000";

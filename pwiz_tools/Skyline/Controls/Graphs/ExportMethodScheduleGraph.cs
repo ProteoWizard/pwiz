@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             if (brukerMetrics != null)
             {

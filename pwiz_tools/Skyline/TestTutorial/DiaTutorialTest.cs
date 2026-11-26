@@ -36,6 +36,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestTutorial
@@ -562,12 +563,12 @@ namespace pwiz.SkylineTestTutorial
         private static void ClearSettingsLists()
         {
             RunUI(() => {
-                Settings.Default.PeakScoringModelList.Clear();
-                Settings.Default.IsolationSchemeList.Clear();
-                Settings.Default.IsolationSchemeList.AddDefaults();
-                Settings.Default.HeavyModList.Clear();
-                Settings.Default.StaticModList.Clear();
-                Settings.Default.SpectralLibraryList.Clear();
+                Settings.Default.PeakScoringModelList = Settings.Default.PeakScoringModelList.ChangeClear();
+                Settings.Default.IsolationSchemeList = Settings.Default.IsolationSchemeList.ChangeClear();
+                Settings.Default.IsolationSchemeList = Settings.Default.IsolationSchemeList.ChangeAddDefaults();
+                Settings.Default.HeavyModList = Settings.Default.HeavyModList.ChangeClear();
+                Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeClear();
+                Settings.Default.SpectralLibraryList = Settings.Default.SpectralLibraryList.ChangeClear();
             });
         }
     }

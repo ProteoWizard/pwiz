@@ -27,6 +27,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestFunctional;
 using pwiz.SkylineTestUtil;
@@ -99,8 +100,8 @@ namespace TestPerf
             RunUI(() =>
             {
                 // The model list starts with the pretrained models alone
-                Settings.Default.CarafeModelList.Clear();
-                Settings.Default.CarafeModelList.AddDefaults();
+                Settings.Default.CarafeModelList = Settings.Default.CarafeModelList.ChangeClear();
+                Settings.Default.CarafeModelList = Settings.Default.CarafeModelList.ChangeAddDefaults();
             });
 
             string fastaFilepath = GetDataPath(FASTA_NAME);

@@ -52,7 +52,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             // clear out the list of tools
-            Settings.Default.ToolList.Clear();
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
             
             TestStoreLoad();
             TestToolDownload();
@@ -121,7 +121,7 @@ namespace pwiz.SkylineTestFunctional
         // tool is installed but not the most recent version
         private void TestToolOldVersion()
         {
-            Settings.Default.ToolList.Add(GetSampleToolDescription(true));
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeAdd(GetSampleToolDescription(true));
             using var client = CreateToolStoreClient();
             var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(client));
             Assert.AreEqual(1, toolStoreDlg.ToolCount);
@@ -130,13 +130,13 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(toolStoreItem.Installed);
             Assert.IsFalse(toolStoreItem.IsMostRecentVersion);
             OkDialog(toolStoreDlg, toolStoreDlg.CancelButton.PerformClick);
-            Settings.Default.ToolList.Clear();
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
         }
 
         // tool is installed and is the most recent version
         private void TestToolFullyUpdated()
         {
-            Settings.Default.ToolList.Add(GetSampleToolDescription(false));
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeAdd(GetSampleToolDescription(false));
             using var client = CreateToolStoreClient();
             var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(client));
             Assert.AreEqual(1, toolStoreDlg.ToolCount);
@@ -145,7 +145,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(toolStoreItem.Installed);
             Assert.IsTrue(toolStoreItem.IsMostRecentVersion);
             OkDialog(toolStoreDlg, toolStoreDlg.CancelButton.PerformClick);
-            Settings.Default.ToolList.Clear();
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
         }
 
         // adding multiple tools to the store
@@ -237,14 +237,14 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(COMMAND, configureToolsDlg.ToolList[0].Command);
                 });
             OkDialog(configureToolsDlg, configureToolsDlg.Cancel);
-            Settings.Default.ToolList.Clear();
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
         }
 
         // tests reinstallation
         private void TestReinstall()
         {
             // change the output to immediate window flag to true
-            Settings.Default.ToolList.Add(new ToolDescription(GetSampleToolDescription(false)) {OutputToImmediateWindow = true});
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeAdd(new ToolDescription(GetSampleToolDescription(false)) {OutputToImmediateWindow = true});
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             using var client = CreateToolStoreClient();
             var toolStoreDlg = ShowDialog<ToolStoreDlg>(configureToolsDlg.AddFromWeb);
@@ -253,7 +253,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
             // on reinstall, it should be back to normal
             Assert.IsFalse(Settings.Default.ToolList.First().OutputToImmediateWindow);
-            Settings.Default.ToolList.Clear();
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
         }
 
         private static void AssertToolItemEquality(ToolStoreItem tool1, ToolStoreItem tool2)

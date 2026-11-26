@@ -104,7 +104,7 @@ namespace pwiz.Skyline.EditUI
             // btnDeleteFilter
             // 
             this.btnDeleteFilter.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnDeleteFilter.Image = global::pwiz.Skyline.Properties.Resources.Delete;
+            this.btnDeleteFilter.Image = global::pwiz.Skyline.Properties.ImageResources.Delete;
             resources.ApplyResources(this.btnDeleteFilter, "btnDeleteFilter");
             this.btnDeleteFilter.Name = "btnDeleteFilter";
             this.btnDeleteFilter.Click += new System.EventHandler(this.btnDeleteFilter_Click);

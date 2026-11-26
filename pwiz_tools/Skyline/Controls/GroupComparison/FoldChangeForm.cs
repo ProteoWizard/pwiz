@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         public FoldChangeForm()
         {
             InitializeComponent();
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
         }
 
         public void SetBindingSource(FoldChangeBindingSource bindingSource)

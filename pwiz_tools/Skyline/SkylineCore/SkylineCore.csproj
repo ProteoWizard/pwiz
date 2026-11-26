@@ -1,0 +1,144 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- SkylineCore - everything in Skyline that runs without WinForms: the document model,
+       import and export, CommandLine/CommandArgs, Settings and its lists, and the string
+       resources. PLAIN net10.0 (no -windows, no WinForms) so SkylineCmd can run on Linux;
+       Skyline(-daily) references this and keeps the UI. The compiler and the platform
+       analyzer (CA1416, active on plain TFMs - see pwiz_tools\Directory.Build.targets) are
+       what keep UI and Windows-only code out of here.
+
+       RootNamespace is pwiz.Skyline and the folders match their old place under
+       pwiz_tools\Skyline, so namespaces and embedded resource names are unchanged. -->
+  <PropertyGroup>
+    <ProjectGuid>{3FA0DF58-9256-4ED1-8638-B577D4965887}</ProjectGuid>
+    <TargetFramework>net10.0</TargetFramework>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>pwiz.Skyline</RootNamespace>
+    <AssemblyName>SkylineCore</AssemblyName>
+    <Company>University of Washington</Company>
+    <Product>Skyline</Product>
+    <AssemblyTitle>SkylineCore</AssemblyTitle>
+    <Copyright>Copyright (c) University of Washington 2026</Copyright>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+    <NoWarn>$(NoWarn);NU1605;NU1701;NU1903;SYSLIB0011</NoWarn>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Parquet.Net, as pwiz's patched build: see ..\..\Shared\Lib\Parquet\ParquetNet.targets -->
+    <ReferenceParquetNet>true</ReferenceParquetNet>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ProtocolBuffers/tmp is intermediate protoc output - the real generated
+         code lives in GeneratedCode/. Including both gives duplicate types. -->
+    <Compile Remove="ProtocolBuffers\tmp\**" />
+    <!-- GeneratedCode/*.cs is protoc output (git-ignored) that may not exist at
+         evaluation time on a clean checkout, so keep it out of the default glob;
+         the GenerateProtobufCode target below regenerates it and injects it into
+         @(Compile) so the build is correct even on a fresh agent. -->
+    <Compile Remove="ProtocolBuffers\GeneratedCode\**" />
+  </ItemGroup>
+
+  <!-- Protobuf/gRPC code generation. The C# under ProtocolBuffers/GeneratedCode/
+       is produced from the .proto sources by ProtocolBuffers/generatecode.bat
+       (protoc + grpc_csharp_plugin, both committed) and is git-ignored, so a
+       clean CI checkout has none. Runs every build but the bat only rewrites
+       GeneratedCode files whose content changed (fc.exe diff), so it does not churn
+       incremental rebuilds. Compile items are injected here rather than via the
+       default glob because the files may not exist when the project is evaluated. -->
+  <Target Name="GenerateProtobufCode" BeforeTargets="CoreCompile">
+    <Exec Command="&quot;$(ProjectDir)ProtocolBuffers\generatecode.bat&quot;" WorkingDirectory="$(ProjectDir)ProtocolBuffers" />
+    <ItemGroup>
+      <Compile Include="ProtocolBuffers\GeneratedCode\*.cs" />
+    </ItemGroup>
+  </Target>
+
+  <!-- NHibernate mapping XMLs. Five Skyline models use NHibernate for
+       persistence (ChromLib chromatogram libs, IonMobility libraries, Irt
+       tables, Midas libs, Optimization libraries; the BlibData spectral
+       libraries moved onto BiblioSpec.IO). Each has a DataModel-adjacent
+       mapping.xml that must be embedded, not deployed - SessionFactoryFactory
+       loads via assembly.GetManifestResourceStream. SDK default globs don't
+       include .xml as EmbeddedResource. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Model\IonMobility\mapping.xml" />
+    <EmbeddedResource Include="Model\Irt\mapping.xml" />
+    <EmbeddedResource Include="Model\Lib\ChromLib\Data\mapping.xml" />
+    <EmbeddedResource Include="Model\Lib\Midas\mapping.xml" />
+    <EmbeddedResource Include="Model\Optimization\mapping.xml" />
+  </ItemGroup>
+
+  <!-- KoinaConfig.xml holds the Koina server config. The real (secret) file is dropped in for
+       official builds and is gitignored; the legacy Jamfile did
+       `make KoinaConfig.xml : KoinaConfig_development.xml : @common.copy`, i.e. defaulted to the
+       checked-in development config. Embed that development file directly under the resource name
+       KoinaConfig.GetKoinaConfig() looks up (assembly.GetManifestResourceStream(typeof(KoinaConfig),
+       "KoinaConfig.xml")). Static so it works on a clean checkout with no generated file. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Model\Koina\Config\KoinaConfig_development.xml">
+      <LogicalName>pwiz.Skyline.Model.Koina.Config.KoinaConfig.xml</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <!-- iRT standard documents (Biognosys, Pierce, CiRT, etc.) loaded via
+       IrtStandard.GetReader -> assembly.GetManifestResourceStream. Like the
+       mapping.xml files above, the SDK default globs don't embed .sky files. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Model\Irt\StandardsDocuments\*.sky" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.IO\BiblioSpec.IO.csproj" />
+    <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpecUtil\BiblioSpecUtil.csproj" />
+    <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj" />
+    <ProjectReference Include="..\..\Shared\Common\Common.csproj" />
+    <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj" />
+    <ProjectReference Include="..\..\Shared\PanoramaClient\PanoramaClient.csproj" />
+    <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj" />
+    <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj" />
+    <ProjectReference Include="..\SkylineTool\SkylineTool.csproj" />
+    <!-- AlphaPeptDeep library prediction runs in Osprey; Skyline keeps only CarafeSharp's
+         TorchSharp-free code in process: the .model.zip reader (Proteome) and the CUDA
+         detection and download behind the Use GPU box (Core). -->
+    <ProjectReference Include="..\..\CarafeSharp\CarafeSharp.Core\CarafeSharp.Core.csproj" />
+    <ProjectReference Include="..\..\CarafeSharp\CarafeSharp.Proteome\CarafeSharp.Proteome.csproj" />
+    <!-- Bruker timsTOF PRM scheduler: managed replacement for the legacy C++/CLI
+         pwiz.CLI.Bruker.PrmScheduling assembly. P/Invokes prmscheduler.dll shipped inside pwiz. -->
+    <ProjectReference Include="..\..\..\pwiz\utility\bindings\timstof_prm_scheduler\Bruker.PrmScheduling.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.27.3" />
+    <!-- Grpc.Net.Client is the replacement for the legacy Grpc.Core native channel. The
+         generated code in ProtocolBuffers/GeneratedCode/ targets Grpc.Core.Api types
+         (ClientBase, ChannelBase, CallInvoker, Marshallers), which Grpc.Net.Client supplies
+         transitively via Grpc.Core.Api 2.66. -->
+    <PackageReference Include="Grpc.Net.Client" Version="2.66.0" />
+    <PackageReference Include="PROdotnetzip" Version="1.20.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
+    <PackageReference Include="log4net" Version="3.4.0" />
+    <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="NHibernate" Version="5.5.2" />
+    <PackageReference Include="Iesi.Collections" Version="4.0.5" />
+    <PackageReference Include="Sprache" Version="2.3.1" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+    <PackageReference Include="IdentityModel" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
+    <PackageReference Include="System.Management" Version="8.0.0" />
+    <!-- Settings derives from ApplicationSettingsBase; the Windows Desktop framework supplied
+         System.Configuration when this code was part of the WinForms exe. -->
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+    <Reference Include="Kajabity Tools">
+      <HintPath>..\..\Shared\Lib\Kajabity Tools.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Same version as Skyline(-daily): Install reads it from this assembly. -->
+  <Import Project="..\SkylineAssemblyVersion.targets" />
+
+</Project>

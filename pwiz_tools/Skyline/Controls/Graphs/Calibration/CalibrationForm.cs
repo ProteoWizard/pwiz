@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
             catch (Exception e)
             {
-                Program.ReportException(e);
+                ProgramContext.ReportException(e);
             }
         }
 

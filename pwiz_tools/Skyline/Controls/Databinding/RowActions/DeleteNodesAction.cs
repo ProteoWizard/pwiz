@@ -75,8 +75,8 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
             }
             public override IEnumerable<SkylineDocNode> GetSelectedNodes(BoundDataGridView dataGridView)
             {
-                var rowItemValues = RowItemValues.FromDataGridView(typeof(Model.Databinding.Entities.Transition), dataGridView);
-                foreach (var rowItem in rowItemValues.GetSelectedRowItems(dataGridView))
+                var rowItemValues = dataGridView.GetRowItemValues(typeof(Model.Databinding.Entities.Transition));
+                foreach (var rowItem in dataGridView.GetSelectedRowItems())
                 {
                     foreach (var transition in rowItemValues.GetRowValues(rowItem).Cast<Model.Databinding.Entities.Transition>())
                     {
@@ -94,8 +94,8 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
             }
             public override IEnumerable<SkylineDocNode> GetSelectedNodes(BoundDataGridView dataGridView)
             {
-                var rowItemValues = RowItemValues.FromDataGridView(typeof(Precursor), dataGridView);
-                foreach (var rowItem in rowItemValues.GetSelectedRowItems(dataGridView))
+                var rowItemValues = dataGridView.GetRowItemValues(typeof(Precursor));
+                foreach (var rowItem in dataGridView.GetSelectedRowItems())
                 {
                     foreach (var precursor in rowItemValues.GetRowValues(rowItem).Cast<Precursor>())
                     {
@@ -120,8 +120,8 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
             }
             public override IEnumerable<SkylineDocNode> GetSelectedNodes(BoundDataGridView dataGridView)
             {
-                var rowItemValues = RowItemValues.FromDataGridView(typeof(Model.Databinding.Entities.Peptide), dataGridView);
-                foreach (var rowItem in rowItemValues.GetSelectedRowItems(dataGridView))
+                var rowItemValues = dataGridView.GetRowItemValues(typeof(Model.Databinding.Entities.Peptide));
+                foreach (var rowItem in dataGridView.GetSelectedRowItems())
                 {
                     foreach (var precursor in rowItemValues.GetRowValues(rowItem).Cast<Model.Databinding.Entities.Peptide>())
                     {
@@ -146,8 +146,8 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
 
             public override IEnumerable<SkylineDocNode> GetSelectedNodes(BoundDataGridView dataGridView)
             {
-                var rowItemValues = RowItemValues.FromDataGridView(typeof(Protein), dataGridView);
-                foreach (var rowItem in rowItemValues.GetSelectedRowItems(dataGridView))
+                var rowItemValues = dataGridView.GetRowItemValues(typeof(Protein));
+                foreach (var rowItem in dataGridView.GetSelectedRowItems())
                 {
                     foreach (var protein in rowItemValues.GetRowValues(rowItem).Cast<Protein>())
                     {
@@ -191,7 +191,7 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
                 List<IdentityPath> deletedNodePaths = null;
                 skylineWindow.ModifyDocument(RowActionsResources.SkylineViewContext_DeleteDocNodes_Delete_items,
                     doc => DeleteNodes(doc, identityPaths, out deletedNodePaths),
-                    docPair => SkylineWindow.CreateDeleteNodesEntry(docPair,
+                    docPair => AuditLogEntry.CreateDeleteNodesEntry(docPair,
                         deletedNodePaths.Select(i => AuditLogEntry.GetNodeName(docPair.OldDoc, docPair.OldDoc.FindNode(i)).ToString()), deletedNodePaths.Count));
             }
         }

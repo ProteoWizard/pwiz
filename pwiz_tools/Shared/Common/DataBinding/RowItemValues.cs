@@ -20,9 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Common.DataBinding.Controls;
 
 namespace pwiz.Common.DataBinding
 {
@@ -58,21 +56,6 @@ namespace pwiz.Common.DataBinding
             {
                 return ColumnDescriptors.Count == 0 && DataPropertyDescriptors.Count == 0;
             }
-        }
-
-        public static RowItemValues FromDataGridView(Type propertyType, BoundDataGridView dataGridView)
-        {
-            if (dataGridView == null)
-            {
-                return Empty(propertyType);
-            }
-            var bindingSource = dataGridView.DataSource as BindingListSource;
-            if (bindingSource == null)
-            {
-                return Empty(propertyType);
-            }
-
-            return FromItemProperties(propertyType, bindingSource.ItemProperties);
         }
 
         private static IEnumerable<ColumnDescriptor> ColumnDescriptorsWithType(Type propertyType, IEnumerable<PropertyDescriptor> itemProperties)
@@ -154,29 +137,6 @@ namespace pwiz.Common.DataBinding
             {
                 yield return dataPropertyDescriptor.GetValue(rowItem);
             }
-        }
-
-        public IEnumerable<RowItem> GetSelectedRowItems(BoundDataGridView dataGridView)
-        {
-            var bindingSource = dataGridView.DataSource as BindingListSource;
-            if (bindingSource == null)
-            {
-                return new RowItem[0];
-            }
-
-            if (dataGridView.SelectedRows.Count == 0)
-            {
-                var currentRow = bindingSource.Current as RowItem;
-                if (currentRow == null)
-                {
-                    return new RowItem[0];
-                }
-
-                return new[] {currentRow};
-            }
-
-            return dataGridView.SelectedRows.Cast<DataGridViewRow>()
-                .Select(row => (RowItem) bindingSource[row.Index]);
         }
 
         /// <summary>

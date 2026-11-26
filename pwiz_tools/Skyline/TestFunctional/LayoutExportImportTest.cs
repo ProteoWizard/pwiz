@@ -27,6 +27,7 @@ using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.ToolsUI;
@@ -206,7 +207,7 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void TestDefaultExportFileName(string documentPath)
         {
-            var offeredPath = SkylineWindow.GetViewFile(documentPath);
+            var offeredPath = SkylineViewFile.GetViewFile(documentPath);
             // Saving the document wrote it; gone, accepting the offer cannot raise the overwrite prompt
             FileEx.SafeDelete(offeredPath);
             RunLongNativeDlg<NativeSaveFileDialog>(SkylineWindow.ShowExportLayoutDlg, dlg =>
@@ -247,7 +248,7 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private string ExportLayout(string baseName)
         {
-            return ExportLayout(baseName, baseName + SkylineWindow.EXT_VIEW);
+            return ExportLayout(baseName, baseName + SkylineViewFile.EXT_VIEW);
         }
 
         /// <summary>

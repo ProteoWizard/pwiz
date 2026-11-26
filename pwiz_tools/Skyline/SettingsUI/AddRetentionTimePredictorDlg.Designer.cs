@@ -67,7 +67,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // btnCalculator
             // 
-            this.btnCalculator.Image = global::pwiz.Skyline.Properties.Resources.Calculator;
+            this.btnCalculator.Image = global::pwiz.Skyline.Properties.ImageResources.Calculator;
             resources.ApplyResources(this.btnCalculator, "btnCalculator");
             this.btnCalculator.Name = "btnCalculator";
             this.btnCalculator.UseVisualStyleBackColor = true;

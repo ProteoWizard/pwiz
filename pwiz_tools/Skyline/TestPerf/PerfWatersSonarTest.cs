@@ -48,7 +48,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
-            Program.ExtraRawFileSearchFolder = TestFilesDir.PersistentFilesDir; // So we can reimport the raw file, which has moved relative to skyd file 
+            ProgramContext.ExtraRawFileSearchFolder = TestFilesDir.PersistentFilesDir; // So we can reimport the raw file, which has moved relative to skyd file 
             Settings.Default.TransformTypeChromatogram = TransformChrom.interpolated.ToString();
             OpenDocument("SkylineSonarTiny.sky");
             var doc = WaitForDocumentLoaded();

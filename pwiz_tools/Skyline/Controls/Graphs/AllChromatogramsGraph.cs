@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Controls.Graphs
             base.OnLoad(e);
             if (DesignMode) return;
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             // Restore window placement.
             if (Program.DemoMode)
@@ -117,7 +117,7 @@ namespace pwiz.Skyline.Controls.Graphs
         protected override void CreateHandle()
         {
             Assume.IsFalse(_inCreateHandle);
-            if (Program.FunctionalTest && Program.MainWindow != null && Program.MainWindow.InvokeRequired)
+            if (ProgramContext.FunctionalTest && Program.MainWindow != null && Program.MainWindow.InvokeRequired)
             {
                 throw new ApplicationException(@"AllChromatogramsGraph.CreateHandle called on wrong thread");
             }
@@ -662,7 +662,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             catch (Exception exception)
             {
-                ExceptionUtil.DisplayOrReportException(Program.MainWindow, exception);
+                ExceptionUtilUI.DisplayOrReportException(Program.MainWindow, exception);
             }
         }
 

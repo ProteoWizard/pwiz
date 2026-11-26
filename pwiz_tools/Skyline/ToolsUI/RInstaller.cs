@@ -225,7 +225,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (Exception ex)
             {
-                ExceptionUtil.DisplayOrReportException(this, ex);
+                ExceptionUtilUI.DisplayOrReportException(this, ex);
                 return false;
             }
             return true;

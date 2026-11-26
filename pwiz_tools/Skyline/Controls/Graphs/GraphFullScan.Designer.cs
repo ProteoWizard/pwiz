@@ -126,7 +126,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // 
             this.rightButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.rightButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.rightButton.Image = global::pwiz.Skyline.Properties.Resources.Icojam_Blueberry_Basic_Arrow_right;
+            this.rightButton.Image = global::pwiz.Skyline.Properties.ImageResources.Icojam_Blueberry_Basic_Arrow_right;
             resources.ApplyResources(this.rightButton, "rightButton");
             this.rightButton.Name = "rightButton";
             this.rightButton.Click += new System.EventHandler(this.rightButton_Click);
@@ -135,7 +135,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // 
             this.leftButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.leftButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.leftButton.Image = global::pwiz.Skyline.Properties.Resources.Icojam_Blueberry_Basic_Arrow_left;
+            this.leftButton.Image = global::pwiz.Skyline.Properties.ImageResources.Icojam_Blueberry_Basic_Arrow_left;
             resources.ApplyResources(this.leftButton, "leftButton");
             this.leftButton.Name = "leftButton";
             this.leftButton.Click += new System.EventHandler(this.leftButton_Click);
@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.magnifyBtn.CheckOnClick = true;
             this.magnifyBtn.CheckState = System.Windows.Forms.CheckState.Checked;
             this.magnifyBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.magnifyBtn.Image = global::pwiz.Skyline.Properties.Resources.magnifier_zoom_in;
+            this.magnifyBtn.Image = global::pwiz.Skyline.Properties.ImageResources.magnifier_zoom_in;
             resources.ApplyResources(this.magnifyBtn, "magnifyBtn");
             this.magnifyBtn.Margin = new System.Windows.Forms.Padding(0, 1, 10, 2);
             this.magnifyBtn.Name = "magnifyBtn";
@@ -159,7 +159,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.spectrumBtn.CheckOnClick = true;
             this.spectrumBtn.CheckState = System.Windows.Forms.CheckState.Checked;
             this.spectrumBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.spectrumBtn.Image = global::pwiz.Skyline.Properties.Resources.DataProcessing;
+            this.spectrumBtn.Image = global::pwiz.Skyline.Properties.ImageResources.DataProcessing;
             resources.ApplyResources(this.spectrumBtn, "spectrumBtn");
             this.spectrumBtn.Name = "spectrumBtn";
             // 
@@ -168,7 +168,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.filterBtn.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.filterBtn.CheckOnClick = true;
             this.filterBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.filterBtn.Image = global::pwiz.Skyline.Properties.Resources.Filter;
+            this.filterBtn.Image = global::pwiz.Skyline.Properties.ImageResources.Filter;
             resources.ApplyResources(this.filterBtn, "filterBtn");
             this.filterBtn.Margin = new System.Windows.Forms.Padding(10, 1, 0, 2);
             this.filterBtn.Name = "filterBtn";
@@ -178,7 +178,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.mobilogramBtn.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.mobilogramBtn.CheckOnClick = true;
             this.mobilogramBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.mobilogramBtn.Image = global::pwiz.Skyline.Properties.Resources.Mobilogram;
+            this.mobilogramBtn.Image = global::pwiz.Skyline.Properties.ImageResources.Mobilogram;
             resources.ApplyResources(this.mobilogramBtn, "mobilogramBtn");
             this.mobilogramBtn.Name = "mobilogramBtn";
             //
@@ -187,7 +187,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.heatmapBtn.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.heatmapBtn.CheckOnClick = true;
             this.heatmapBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.heatmapBtn.Image = global::pwiz.Skyline.Properties.Resources.IonMobilityHeatmap;
+            this.heatmapBtn.Image = global::pwiz.Skyline.Properties.ImageResources.IonMobilityHeatmap;
             resources.ApplyResources(this.heatmapBtn, "heatmapBtn");
             this.heatmapBtn.Name = "heatmapBtn";
             //
@@ -199,7 +199,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.propertiesBtn.CheckOnClick = true;
             this.propertiesBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.propertiesBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.propertiesBtn.Image = global::pwiz.Skyline.Properties.Resources.Properties_Button;
+            this.propertiesBtn.Image = global::pwiz.Skyline.Properties.ImageResources.Properties_Button;
             this.propertiesBtn.Margin = new System.Windows.Forms.Padding(10, 1, 0, 2);
             this.propertiesBtn.Click += new System.EventHandler(this.propertiesBtn_Click);
 
@@ -224,7 +224,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.toolStripButtonShowAnnotations.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.toolStripButtonShowAnnotations.CheckOnClick = true;
             this.toolStripButtonShowAnnotations.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButtonShowAnnotations.Image = global::pwiz.Skyline.Properties.Resources.AnnotatedSpectum;
+            this.toolStripButtonShowAnnotations.Image = global::pwiz.Skyline.Properties.ImageResources.AnnotatedSpectum;
             resources.ApplyResources(this.toolStripButtonShowAnnotations, "toolStripButtonShowAnnotations");
             this.toolStripButtonShowAnnotations.Name = "toolStripButtonShowAnnotations";
             // 

@@ -168,7 +168,7 @@ namespace pwiz.Skyline.SettingsUI
             // btnRemove
             // 
             this.btnRemove.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnRemove.Image = global::pwiz.Skyline.Properties.Resources.Delete;
+            this.btnRemove.Image = global::pwiz.Skyline.Properties.ImageResources.Delete;
             resources.ApplyResources(this.btnRemove, "btnRemove");
             this.btnRemove.Name = "btnRemove";
             this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
@@ -176,7 +176,7 @@ namespace pwiz.Skyline.SettingsUI
             // btnUp
             // 
             this.btnUp.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnUp.Image = global::pwiz.Skyline.Properties.Resources.up_pro32;
+            this.btnUp.Image = global::pwiz.Skyline.Properties.ImageResources.up_pro32;
             resources.ApplyResources(this.btnUp, "btnUp");
             this.btnUp.Name = "btnUp";
             this.btnUp.Click += new System.EventHandler(this.BtnUpOnClick);
@@ -184,7 +184,7 @@ namespace pwiz.Skyline.SettingsUI
             // btnDown
             // 
             this.btnDown.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnDown.Image = global::pwiz.Skyline.Properties.Resources.down_pro32;
+            this.btnDown.Image = global::pwiz.Skyline.Properties.ImageResources.down_pro32;
             resources.ApplyResources(this.btnDown, "btnDown");
             this.btnDown.Name = "btnDown";
             this.btnDown.Click += new System.EventHandler(this.BtnDownOnClick);

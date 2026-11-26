@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Util
             Version.TryParse(Install.BareVersion, out var currentVersion);
             CurrentVersion = currentVersion;
             // The channel is the assembly's name, Skyline or Skyline-daily, which is also how the
-            // installer tells them apart; Program.Name is a display name that drops the -daily
+            // installer tells them apart; ProgramContext.Name is a display name that drops the -daily
             // for a developer build.
             var assembly = typeof(Program).Assembly;
             string channel = assembly.GetName().Name;

@@ -62,7 +62,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         protected override void DoTest()
         {
             string skyFile = TestFilesDir.GetTestPath("NIST_majorsensitivity_ForEval.sky");
-            Program.ExtraRawFileSearchFolder = TestFilesDir.PersistentFilesDir; // So we don't have to reload the raw files, which have moved relative to skyd file 
+            ProgramContext.ExtraRawFileSearchFolder = TestFilesDir.PersistentFilesDir; // So we don't have to reload the raw files, which have moved relative to skyd file 
             RunUI(() => SkylineWindow.OpenFile(skyFile));
 
             const int waitTimeMillis = 10 * 60 * 1000;   // 10 minutes

@@ -160,7 +160,7 @@ namespace SkylineTester
             skylinePath = File.Exists(skylinePath) ? skylinePath : skylineDailyPath;
             var assembly = LoadFromAssembly.Try(skylinePath);
             var types = assembly.GetTypes().ToList();
-            foreach (var dllName in new[] { "pwiz.Common.dll", "PanoramaClient.dll" })
+            foreach (var dllName in new[] { "pwiz.CommonUI.dll", "PanoramaClientUI.dll" })
             {
                 var dllPath = Path.Combine(MainWindow.ExeDir, dllName);
                 var dllAssembly = LoadFromAssembly.Try(dllPath);

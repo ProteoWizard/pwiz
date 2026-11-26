@@ -66,13 +66,13 @@ namespace pwiz.SkylineTest
 
         private static void CheckSkylineLookup()
         {
-            using (var save = Resources.Save)
-                AssertEx.AreEqual(nameof(Resources.Save), DpiUtil.GetIconName(save));
-            using (var statusButton = Resources.AllIonsStatusButton)   // 14 px native
-                AssertEx.AreEqual(nameof(Resources.AllIonsStatusButton), DpiUtil.GetIconName(statusButton));
+            using (var save = ImageResources.Save)
+                AssertEx.AreEqual(nameof(ImageResources.Save), DpiUtil.GetIconName(save));
+            using (var statusButton = ImageResources.AllIonsStatusButton)   // 14 px native
+                AssertEx.AreEqual(nameof(ImageResources.AllIonsStatusButton), DpiUtil.GetIconName(statusButton));
             using (var unknown = new Bitmap(ICON_NATIVE_MAX, ICON_NATIVE_MAX))
                 AssertEx.IsNull(DpiUtil.GetIconName(unknown));
-            using (var large = Resources.ProteoWizard)
+            using (var large = ImageResources.ProteoWizard)
                 AssertEx.IsNull(DpiUtil.GetIconName(large));
             // A ToolStripItem makes its ImageTransparentColor transparent in the bitmap it is
             // given, which is how the designer's keyed natives arrive at PrepareIcons
@@ -81,12 +81,12 @@ namespace pwiz.SkylineTest
                 using (var button = new ToolStripButton())
                 {
                     button.ImageTransparentColor = key;
-                    button.Image = Resources.Save;
-                    AssertEx.AreEqual(nameof(Resources.Save), DpiUtil.GetIconName(button.Image, key), key.Name);
+                    button.Image = ImageResources.Save;
+                    AssertEx.AreEqual(nameof(ImageResources.Save), DpiUtil.GetIconName(button.Image, key), key.Name);
                 }
             }
 
-            var checkedIcons = CheckNativeLookup(typeof(Resources), Resources.ResourceManager, PIXEL_TWINS);
+            var checkedIcons = CheckNativeLookup(typeof(ImageResources), ImageResources.ResourceManager, PIXEL_TWINS);
             AssertEx.IsTrue(checkedIcons > 100, $@"Expected the small icons of Resources.resx, found {checkedIcons}");
         }
 
@@ -102,7 +102,7 @@ namespace pwiz.SkylineTest
                 AssertEx.AreEqual(nameof(CommonResources.Pivot), DpiIcons.GetIconName(typeof(CommonResources), pivot));
                 AssertEx.IsNull(DpiUtil.GetIconName(pivot));
             }
-            using (var save = Resources.Save)
+            using (var save = ImageResources.Save)
                 AssertEx.IsNull(DpiIcons.GetIconName(typeof(CommonResources), save));
 
             var checkedIcons = CheckNativeLookup(typeof(CommonResources), CommonResources.ResourceManager,

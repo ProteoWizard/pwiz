@@ -150,7 +150,7 @@ namespace TestPerf
 
         private void RunTest()
         {
-            if (Program.UseOriginalURLs && !HasKoinaServer())
+            if (ProgramContext.UseOriginalURLs && !HasKoinaServer())
             {
                 Console.Error.WriteLine($"NOTE: skipping {TestContext.TestName} because Koina is not configured");
                 return;
@@ -216,7 +216,7 @@ namespace TestPerf
 
             string workingDir = TestFilesDir.FullPath;
 
-            if (!Program.UseOriginalURLs)
+            if (!ProgramContext.UseOriginalURLs)
                 FileEx.HardLinkOrCopyFile(persistentBlibFilepath, tempBlibFilepath);
 
             RunUI(searchDlg.NextPage); // now on Koina settings

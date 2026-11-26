@@ -116,7 +116,7 @@ namespace pwiz.Skyline.EditUI
             this.tabPageFasta.Controls.Add(this.label1);
             resources.ApplyResources(this.tabPageFasta, "tabPageFasta");
             this.tabPageFasta.Name = "tabPageFasta";
-            this.modeUIHandler.SetUIMode(this.tabPageFasta, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.tabPageFasta, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.tabPageFasta.UseVisualStyleBackColor = true;
             // 
             // label1
@@ -129,7 +129,7 @@ namespace pwiz.Skyline.EditUI
             this.tabPageProteinList.Controls.Add(this.gridViewProteins);
             resources.ApplyResources(this.tabPageProteinList, "tabPageProteinList");
             this.tabPageProteinList.Name = "tabPageProteinList";
-            this.modeUIHandler.SetUIMode(this.tabPageProteinList, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.tabPageProteinList, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.tabPageProteinList.UseVisualStyleBackColor = true;
             // 
             // gridViewProteins
@@ -208,7 +208,7 @@ namespace pwiz.Skyline.EditUI
             this.tabPagePeptideList.Controls.Add(this.gridViewPeptides);
             resources.ApplyResources(this.tabPagePeptideList, "tabPagePeptideList");
             this.tabPagePeptideList.Name = "tabPagePeptideList";
-            this.modeUIHandler.SetUIMode(this.tabPagePeptideList, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.tabPagePeptideList, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.tabPagePeptideList.UseVisualStyleBackColor = true;
             // 
             // gridViewPeptides

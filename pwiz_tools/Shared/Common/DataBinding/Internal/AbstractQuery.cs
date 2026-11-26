@@ -29,7 +29,7 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Internal
 {
-    internal class AbstractQuery
+    public class AbstractQuery
     {
         protected QueryResults RunAll(CancellationToken cancellationToken, QueryResults results)
         {

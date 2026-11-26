@@ -225,7 +225,7 @@ namespace pwiz.SkylineTest.Reporting
                     continue;
                 }
 
-                foreach (var uiMode in UiModes.AllModes)
+                foreach (var uiMode in UiModeChoices.AllModes)
                 {
                     var rootColumn = ColumnDescriptor.RootColumn(dataSchema, type, uiMode.Name);
                     if (startingTypesSet.Contains(type) && typeof(ILinkValue).IsAssignableFrom(type))

@@ -20,10 +20,13 @@
 using System;
 using System.Diagnostics;
 using System.IO.Pipes;
+using System.Runtime.Versioning;
 using System.Threading;
 
 namespace SkylineTool
 {
+    // Message-mode named pipes exist only on Windows, where Skyline hosts its tools
+    [SupportedOSPlatform("windows")]
     public class RemoteService : RemoteBase
     {
         private bool _stop;

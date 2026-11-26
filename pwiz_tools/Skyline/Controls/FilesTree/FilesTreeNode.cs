@@ -322,7 +322,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 {
                     TooltipNewRowWithText(@"     ", customTable, rt);
 
-                    var auditLogEnabledByTestFramework = Program.FunctionalTest && !AuditLogList.IgnoreTestChecks;
+                    var auditLogEnabledByTestFramework = ProgramContext.FunctionalTest && !AuditLogList.IgnoreTestChecks;
                     customTable.AddDetailRow(@"Audit logging enabled by the test framework?", $@"{(auditLogEnabledByTestFramework ? @"Yes" : @"No")}", rt);
                 }
 

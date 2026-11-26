@@ -1191,8 +1191,7 @@ public static class SkylineTools
         "For batch/CLI use from a shell or Python script, every install exposes exactly one of CliPath or RunnerPath:\n\n" +
         "  - CliPath (admin installs only) is SkylineCmd.exe next to Skyline.exe. SkylineCmd.exe uses its OWN user.config separate from the GUI, " +
         "so custom reports / default-settings presets created in the GUI are not visible by default. To make them visible, run the relevant commands once " +
-        "with --save-settings appended (e.g. '--report-add=my.skyr --save-settings'), which persists the in-memory Settings.Default at the end of the run. " +
-        "(SkylineCmd --ui opens a GUI for manual configuration as a human escape hatch.)\n" +
+        "with --save-settings appended (e.g. '--report-add=my.skyr --save-settings'), which persists the in-memory Settings.Default at the end of the run.\n" +
         "  - RunnerPath (ClickOnce installs only) is the bundled SkylineRunner.exe / SkylineDailyRunner.exe shim that launches the user's GUI Skyline in headless CMD mode. " +
         "Because it goes through the GUI binary, it shares the GUI's user.config — custom reports etc. are visible without --save-settings priming. " +
         "Use this when the script needs the user's existing GUI state.\n\n" +

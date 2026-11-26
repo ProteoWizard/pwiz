@@ -33,7 +33,7 @@ namespace pwiz.Skyline.SettingsUI.Optimization
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             OptimizationsCount = optimizationCount;
 

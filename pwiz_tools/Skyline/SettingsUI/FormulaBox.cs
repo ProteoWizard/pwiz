@@ -95,7 +95,7 @@ namespace pwiz.Skyline.SettingsUI
             helpToolStripMenuItem.Text = SettingsUIResources.FormulaBox_FormulaBox_Help;
 
 
-            Bitmap bm = Resources.PopupBtn;
+            Bitmap bm = ImageResources.PopupBtn;
             bm.MakeTransparent(Color.Fuchsia);
             btnFormula.Image = bm;
         }

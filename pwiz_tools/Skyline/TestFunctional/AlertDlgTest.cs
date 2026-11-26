@@ -54,7 +54,7 @@ namespace pwiz.SkylineTestFunctional
             // molecule document.
             RunDlg<AlertDlg>(SkylineWindow.ImportResults, alertDlg=>
             {
-                Assert.AreEqual(Program.Name, alertDlg.Text);
+                Assert.AreEqual(ProgramContext.Name, alertDlg.Text);
                 var peptideMessage = Resources.SkylineWindow_CheckRetentionTimeFilter_NoPredictionAlgorithm;
                 var expectedMessage =
                     Helpers.PeptideToMoleculeTextMapper.Translate(peptideMessage,

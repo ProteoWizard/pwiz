@@ -272,8 +272,8 @@ namespace pwiz.SkylineTestFunctional
             var skypPath = TestFilesDir.GetTestPath("test.skyp");
             var existingServers = new[] { _anotherServer };
 
-            Settings.Default.ServerList.Clear();
-            Settings.Default.ServerList.AddRange(existingServers);
+            Settings.Default.ServerList = Settings.Default.ServerList.ChangeClear();
+            Settings.Default.ServerList = Settings.Default.ServerList.ChangeAddRange(existingServers);
 
             var skyp = SkypFile.Create(skypPath, existingServers);
             Assert.IsNull(skyp.ServerMatch); // No match found in existing servers
@@ -315,7 +315,7 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(editServerDlg, editServerDlg.CancelDialog);
 
-            Settings.Default.ServerList.Clear();
+            Settings.Default.ServerList = Settings.Default.ServerList.ChangeClear();
         }
 
         private void TestSkypOpenWithError(string skypPath, Server[] existingServers,
@@ -325,8 +325,8 @@ namespace pwiz.SkylineTestFunctional
             HttpStatusCode errorCode,
             bool expectEditServerDlg)
         {
-            Settings.Default.ServerList.Clear();
-            Settings.Default.ServerList.AddRange(existingServers);
+            Settings.Default.ServerList = Settings.Default.ServerList.ChangeClear();
+            Settings.Default.ServerList = Settings.Default.ServerList.ChangeAddRange(existingServers);
 
             var skyp = SkypFile.Create(skypPath, existingServers);
             if (matchingServer != null)
@@ -420,7 +420,7 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(errDlg, errDlg.OkDialog);
             }
 
-            Settings.Default.ServerList.Clear();
+            Settings.Default.ServerList = Settings.Default.ServerList.ChangeClear();
         }
 
         private static void AssertErrorContains(string expected, string FullError)

@@ -107,9 +107,7 @@ namespace pwiz.SkylineTestConnected
         {
             RunUI(() =>
             {
-                var servers = Settings.Default.ServerList;
-                servers.Add(CreatePanoramaServer());
-                Settings.Default.ServerList = servers;
+                Settings.Default.ServerList = Settings.Default.ServerList.ChangeAdd(CreatePanoramaServer());
             });
         }
 

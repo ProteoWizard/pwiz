@@ -298,7 +298,7 @@ namespace pwiz.SkylineTestFunctional
             TestTranslate("Peptide &List", "Molecule &List");
             TestTranslate("Ion ch&arges", "Ion &adducts");
 
-            var mapper = new Helpers.PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE.mixed, new Helpers.ModeUIExtender(null));
+            var mapper = new ModeUIHelpers.FormTextMapper(SrmDocument.DOCUMENT_TYPE.mixed, new ModeUIHelpers.ModeUIExtender(null));
             // Deal with keyboard accelerators that don't map cleanly
             var reserved = new HashSet<char>(); // Normally this would be populated by perusing a Form, make our own for test purposes
             mapper.InUseKeyboardAccelerators = reserved;

@@ -23,7 +23,7 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Internal
 {
-    internal class BackgroundQuery : AbstractQuery
+    public class BackgroundQuery : AbstractQuery
     {
         private CancellationToken _rootCancellationToken;
         private CancellationTokenSource _cancellationTokenSource;

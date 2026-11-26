@@ -61,16 +61,6 @@ namespace pwiz.SkylineCmd {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to find either file &apos;{0}&apos; or file &apos;{1}&apos; in folder &apos;{2}&apos;..
-        /// </summary>
-        internal static string Program_GetMainFunction_Unable_to_find_either_file___0___or_file___1___in_folder___2___ {
-            get {
-                return ResourceManager.GetString("Program_GetMainFunction_Unable_to_find_either_file___0___or_file___1___in_folder_" +
-                        "__2___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Error trying to run Skyline: {0}.
         /// </summary>
         internal static string Program_Main_Error_trying_to_run_Skyline___0_ {

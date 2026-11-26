@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     }
                     catch (Exception e)
                     {
-                        Program.ReportException(e);
+                        ProgramContext.ReportException(e);
                     }
                     Interlocked.Decrement(ref _updatingCount);
                 });

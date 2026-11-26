@@ -75,7 +75,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         public EditGroupComparisonDlg(GroupComparisonModel groupComparisonModel)
         {
             InitializeComponent();
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
             GroupComparisonModel = groupComparisonModel;
             HandleCreated += EditGroupComparisonDlg_HandleCreated;
             HandleDestroyed += EditGroupComparisonDlg_HandleDestroyed;
@@ -284,7 +284,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     AuditLogEntry.SettingsLogFunction
                 );
                 
-                Settings.Default.GroupComparisonDefList.Add(groupDef);
+                Settings.Default.GroupComparisonDefList = Settings.Default.GroupComparisonDefList.ChangeAdd(groupDef);
             }
             else
             {

@@ -448,7 +448,7 @@ namespace pwiz.SkylineTestUtil
                 int index = Settings.Default.GroupComparisonDefList.ToList().FindIndex(g => g.Name == name);
                 if (index >= 0)
                 {
-                    Settings.Default.GroupComparisonDefList[index] = def;
+                    Settings.Default.GroupComparisonDefList = Settings.Default.GroupComparisonDefList.ChangeItemAt(index, def);
                     SkylineWindow.ModifyDocument(Resources.SkylineWindow_AddGroupComparison_Add_Fold_Change,
                         doc => doc.ChangeSettings(
                             doc.Settings.ChangeDataSettings(
@@ -551,7 +551,7 @@ namespace pwiz.SkylineTestUtil
                 bool toolOutputToImmediateWindow,
                 string toolReport)
             {
-                Settings.Default.ToolList.Clear();
+                Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
 
                 _movedDirectory = new MovedDirectory(ToolDescriptionHelpers.GetToolsDirectory(), Program.StressTest);
                 _toolPath = toolPath;

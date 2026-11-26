@@ -97,9 +97,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Program_GetMainFunction_Unable_to_find_either_file___0___or_file___1___in_folder___2___" xml:space="preserve">
-    <value>在文件夹 '{2}' 中找不到文件 '{0}' 或文件 '{1}'。</value>
-  </data>
   <data name="Program_Main_Error_trying_to_run_Skyline___0_" xml:space="preserve">
     <value>尝试运行 Skyline 时出错：{0}</value>
   </data>

@@ -51,6 +51,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
+using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -117,7 +118,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                Program.ReportException(x);
+                ProgramContext.ReportException(x);
             }
         }
 
@@ -310,7 +311,7 @@ namespace pwiz.Skyline
             using (var layoutLock = new DockPanelLayoutLock(dockPanel))
             {
                 bool deserialized = false;
-                string layoutFile = GetViewFile(DocumentFilePath);
+                string layoutFile = SkylineViewFile.GetViewFile(DocumentFilePath);
                 if (docIdChanged && File.Exists(layoutFile))
                 {
                     layoutLock.EnsureLocked();
@@ -1925,7 +1926,7 @@ namespace pwiz.Skyline
             document = document.ChangePeak(e.GroupPath, e.NameSet, e.FilePath, e.TransitionId, e.RetentionTime.MeasuredTime, UserSet.TRUE);
 
             var activeTransitionGroup = (TransitionGroupDocNode) document.FindNode(e.GroupPath);
-            var activeChromInfo = FindChromInfo(document, activeTransitionGroup, e.NameSet, e.FilePath);
+            var activeChromInfo = TransitionGroupDocNode.FindChromInfo(document, activeTransitionGroup, e.NameSet, e.FilePath);
 
             document = ChangePeakBounds(document, GetSynchronizedPeakBoundChanges(document,
                 new ChangedPeakBoundsEventArgs(e.GroupPath, null, e.NameSet, e.FilePath,
@@ -1950,7 +1951,7 @@ namespace pwiz.Skyline
                 {
                     continue;
                 }
-                var chromInfo = FindChromInfo(document, transitionGroup, e.NameSet, e.FilePath);
+                var chromInfo = TransitionGroupDocNode.FindChromInfo(document, transitionGroup, e.NameSet, e.FilePath);
                 if (null == chromInfo)
                 {
                     continue;
@@ -1959,31 +1960,6 @@ namespace pwiz.Skyline
                     activeChromInfo.StartRetentionTime, activeChromInfo.EndRetentionTime, UserSet.TRUE, activeChromInfo.Identified, true);
             }
             return document;
-        }
-
-        /// <summary>
-        /// Finds the TransitionGroupChromInfo that matches the specified ChromatogramSet name and file path.
-        /// </summary>
-        public static TransitionGroupChromInfo FindChromInfo(SrmDocument document,
-            TransitionGroupDocNode transitionGroupDocNode, string nameChromatogramSet, MsDataFileUri filePath)
-        {
-            ChromatogramSet chromatogramSet;
-            int indexSet;
-            if (!document.Settings.MeasuredResults.TryGetChromatogramSet(nameChromatogramSet, out chromatogramSet, out indexSet))
-            {
-                return null;
-            }
-            var chromFileInfoId = chromatogramSet.FindFile(filePath);
-            if (null == chromFileInfoId)
-            {
-                return null;
-            }
-            var results = transitionGroupDocNode.Results[indexSet];
-            if (results.IsEmpty)
-            {
-                return null;
-            }
-            return results.FirstOrDefault(chromInfo => ReferenceEquals(chromFileInfoId, chromInfo.FileId));
         }
 
         private void graphChromatogram_ChangedPeakBounds(object sender, ChangedMultiPeakBoundsEventArgs eMulti)
@@ -2192,7 +2168,7 @@ namespace pwiz.Skyline
                         {
                             continue;
                         }
-                        if (null == FindChromInfo(document, transitionGroup, change.NameSet, change.FilePath))
+                        if (null == TransitionGroupDocNode.FindChromInfo(document, transitionGroup, change.NameSet, change.FilePath))
                         {
                             continue;
                         }
@@ -2583,7 +2559,7 @@ namespace pwiz.Skyline
             }
 
             // Translate "Peptide" to "Molecule" etc. based on UI mode (recurses into submenus)
-            Helpers.PeptideToMoleculeTextMapper.TranslateMenuItems(menuStrip.Items, Program.ModeUI, null, recurse: true);
+            ModeUIHelpers.FormTextMapper.TranslateMenuItems(menuStrip.Items, ProgramContext.ModeUI, null, recurse: true);
         }
 
         /// <summary>
@@ -2833,7 +2809,7 @@ namespace pwiz.Skyline
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     regression = dlg.Regression;
-                    listRegression.Add(regression);
+                    Settings.Default.RetentionTimeList = Settings.Default.RetentionTimeList.ChangeAdd(regression);
 
                     ModifyDocument(string.Format(SkylineResources.SkylineWindow_CreateRegression_Set_regression__0__, regression!.Name),
                                    doc =>
@@ -2868,7 +2844,7 @@ namespace pwiz.Skyline
                 var calcNew = list.EditItem(this, calcOld, list, null);
                 if (calcNew != null && !Equals(calcNew, calcOld))
                 {
-                    list.SetValue(calcNew);
+                    Settings.Default.RTScoreCalculatorList = Settings.Default.RTScoreCalculatorList.ChangeValue(calcNew);
 
                     var regressionRTDoc = DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime;
                     if (regressionRTDoc != null && Equals(calcOld.Name, regressionRTDoc.Calculator.Name) &&
@@ -3893,6 +3869,33 @@ namespace pwiz.Skyline
                 CreateCalibrationForm().Show(dockPanel, rectFloat);
             }
             return _calibrationForm;
+        }
+
+        #endregion
+
+        #region ISkylineDocumentWindow
+
+        bool ISkylineDocumentWindow.HasSequenceTree => SequenceTree != null;
+
+        void ISkylineDocumentWindow.ShowCalibrationForm(bool singleBatch)
+        {
+            var calibrationForm = ShowCalibrationForm();
+            if (singleBatch && calibrationForm != null && !Settings.Default.CalibrationCurveOptions.SingleBatch)
+            {
+                Settings.Default.CalibrationCurveOptions =
+                    Settings.Default.CalibrationCurveOptions.ChangeSingleBatch(true);
+                calibrationForm.UpdateUI(false);
+            }
+        }
+
+        void ISkylineDocumentWindow.ZoomChromatogramToPeak(string replicateName, double startTime, double endTime)
+        {
+            GetGraphChrom(replicateName)?.ZoomToPeak(startTime, endTime);
+        }
+
+        void ISkylineDocumentWindow.ShowGraphFullScan(IScanProvider scanProvider, int transitionIndex, int scanIndex, int? optStep)
+        {
+            ShowGraphFullScan(scanProvider, transitionIndex, scanIndex, optStep);
         }
 
         #endregion

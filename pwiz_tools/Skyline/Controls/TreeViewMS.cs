@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Controls
 
             SelectedNodes = new TreeNodeSelectionMS();
 
-            DashBrush = new TextureBrush(Resources.Dash) { WrapMode = WrapMode.Tile };
+            DashBrush = new TextureBrush(ImageResources.Dash) { WrapMode = WrapMode.Tile };
             SetStyle(ControlStyles.UserPaint, true);
             ItemHeight = DpiUtil.Scale(this, DEFAULT_ITEM_HEIGHT);
 
@@ -660,7 +660,7 @@ namespace pwiz.Skyline.Controls
             // Draw Collapse/Expand bmps and the image associated with the node.
             if (Nodes.Count > 0)
             {
-                Image expandCollapse = IsExpanded ? Resources.Collapse : Resources.Expand;
+                Image expandCollapse = IsExpanded ? ImageResources.Collapse : ImageResources.Expand;
                 // Scale the 96-DPI expander glyphs to the rendering DPI so they keep
                 // pace with the DPI-scaled text and row height.
                 int expandWidth = DpiUtil.Scale(treeView, expandCollapse.Width);

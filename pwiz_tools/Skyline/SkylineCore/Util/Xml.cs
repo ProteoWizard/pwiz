@@ -1,0 +1,1568 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml;
+using System.Xml.Linq;
+using System.Xml.Schema;
+using System.Xml.Serialization;
+using pwiz.Common.Collections;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
+
+namespace pwiz.Skyline.Util
+{
+    /// <summary>
+    /// A setting value that can be merged part by part, rather than taken whole, when two copies
+    /// of the settings have each changed it since they were the same.
+    /// </summary>
+    public interface IMergeable
+    {
+        /// <summary>
+        /// A new value holding this one's changes since <paramref name="baseValue"/> along with
+        /// those of <paramref name="sourceValue"/>. A part changed both here and in the source
+        /// keeps the change made here. Both arguments are values of the same setting as this one.
+        /// </summary>
+        object ThreeWayMerge(object baseValue, object sourceValue);
+    }
+
+    /// <summary>
+    /// An immutable, XML serializable list of keyed items for lists that are stored in the
+    /// program settings. Each change makes a new list of the same type (see
+    /// <see cref="XmlMappedListChanges"/>), so a list read from the settings can be shared
+    /// across threads, and a change is seen by setting the property that holds the list.
+    /// </summary>
+    /// <typeparam name="TKey">Type of the key used in the map</typeparam>
+    /// <typeparam name="TValue">Type stored in the collection</typeparam>
+    public class XmlMappedList<TKey, TValue>
+        : IReadOnlyMappedList<TKey, TValue>, IXmlSerializable, IMergeable
+        where TValue : IKeyContainer<TKey>, IXmlSerializable
+    {
+        /// <summary>
+        /// Changed only while this list is being built: read from XML, or in
+        /// <see cref="ChangeItemsWith"/> on a copy that nothing else has seen yet.
+        /// </summary>
+        private MappedList<TKey, TValue> _items = new MappedList<TKey, TValue>();
+
+        /// <summary>
+        /// Monotonically increasing revision number, supporting the ability
+        /// to upgrade the elements in a settings list.
+        /// </summary>
+        public int RevisionIndex { get; private set; }
+
+        public XmlMappedList<TKey, TValue> ChangeRevisionIndex(int revisionIndex)
+        {
+            var clone = CloneItems();
+            clone.RevisionIndex = revisionIndex;
+            return clone;
+        }
+
+        /// <summary>
+        /// A copy of this list, of the same type, with <paramref name="edit"/> applied to its items.
+        /// The typed methods in <see cref="XmlMappedListChanges"/> are the usual way to call this.
+        /// </summary>
+        public XmlMappedList<TKey, TValue> ChangeItemsWith(Action<MappedList<TKey, TValue>> edit)
+        {
+            var clone = CloneItems();
+            edit(clone._items);
+            return clone;
+        }
+
+        private XmlMappedList<TKey, TValue> CloneItems()
+        {
+            var clone = (XmlMappedList<TKey, TValue>) MemberwiseClone();
+            clone._items = new MappedList<TKey, TValue>();
+            clone._items.AddRange(_items);
+            return clone;
+        }
+
+        /// <summary>
+        /// The items of a list still being built, for <see cref="ValidateLoad"/>.
+        /// </summary>
+        protected MappedList<TKey, TValue> LoadingItems
+        {
+            get { return _items; }
+        }
+
+        #region IReadOnlyMappedList Members
+
+        public int Count
+        {
+            get { return _items.Count; }
+        }
+
+        public TValue this[int index]
+        {
+            get { return _items[index]; }
+        }
+
+        public TValue this[TKey key]
+        {
+            get { return _items[key]; }
+        }
+
+        public IEnumerable<TKey> Keys
+        {
+            get { return _items.Keys; }
+        }
+
+        public bool ContainsKey(TKey key)
+        {
+            return _items.ContainsKey(key);
+        }
+
+        public bool TryGetValue(TKey key, out TValue value)
+        {
+            return _items.TryGetValue(key, out value);
+        }
+
+        public int IndexOf(TValue value)
+        {
+            return _items.IndexOf(value);
+        }
+
+        public bool Contains(TValue value)
+        {
+            return _items.Contains(value);
+        }
+
+        public IEnumerator<TValue> GetEnumerator()
+        {
+            return _items.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        #endregion
+
+        #region IMergeable Members
+
+        /// <summary>
+        /// Items match by key. One added, changed or removed here stays that way; one left alone
+        /// here follows the source, including being removed from it; and one the source added is
+        /// added, after the items already here.
+        /// </summary>
+        public virtual object ThreeWayMerge(object baseValue, object sourceValue)
+        {
+            var baseByKey = ((IEnumerable) baseValue).Cast<TValue>().ToDictionary(item => item.GetKey());
+            var sourceList = ((IEnumerable) sourceValue).Cast<TValue>().ToList();
+            var sourceByKey = sourceList.ToDictionary(item => item.GetKey());
+            return ChangeItemsWith(merged =>
+            {
+                merged.Clear();
+                foreach (var item in this)
+                {
+                    var key = item.GetKey();
+                    if (!baseByKey.TryGetValue(key, out var baseItem) || !IsSameItem(item, baseItem))
+                        merged.Add(item);
+                    else if (sourceByKey.TryGetValue(key, out var sourceItem))
+                        merged.Add(sourceItem);
+                }
+                foreach (var sourceItem in sourceList)
+                {
+                    var key = sourceItem.GetKey();
+                    if (!baseByKey.ContainsKey(key) && !merged.ContainsKey(key))
+                        merged.Add(sourceItem);
+                }
+            });
+        }
+
+        /// <summary>
+        /// Compares what the items would save, since not every item type overrides Equals.
+        /// </summary>
+        private static bool IsSameItem(TValue item1, TValue item2)
+        {
+            return Equals(SerializeItem(item1), SerializeItem(item2));
+        }
+
+        private static string SerializeItem(TValue item)
+        {
+            var stringBuilder = new StringBuilder();
+            using (var writer = XmlWriter.Create(stringBuilder))
+            {
+                writer.WriteStartElement(@"item");
+                item.WriteXml(writer);
+                writer.WriteEndElement();
+            }
+            return stringBuilder.ToString();
+        }
+
+        #endregion
+
+        #region IXmlSerializable Members
+
+        /// <summary>
+        /// Provides a place to handle any post read validation or upgrading
+        /// of values, which changes <see cref="LoadingItems"/>.
+        /// </summary>
+        protected virtual void ValidateLoad()
+        {
+        }
+
+        /// <summary>
+        /// Called by <see cref="ValidateLoad"/> when it upgrades the list to a new revision.
+        /// </summary>
+        protected void SetLoadingRevisionIndex(int revisionIndex)
+        {
+            RevisionIndex = revisionIndex;
+        }
+
+        private enum EL
+        {
+            revision
+        }
+
+        private enum ATTR
+        {
+            index
+        }
+
+        public XmlSchema GetSchema()
+        {
+            return null;
+        }
+
+        public void ReadXml(XmlReader reader)
+        {
+            bool isEmpty = reader.IsEmptyElement;
+
+            // Read past the property element
+            reader.Read();
+
+            // For empty lists in Settings.Default
+            if (isEmpty)
+                return;
+
+            if (reader.IsStartElement(EL.revision))
+            {
+                RevisionIndex = reader.GetIntAttribute(ATTR.index);
+                reader.Read();  // Consume tag
+            }
+            var helpers = GetXmlElementHelpers();
+            var helper = reader.FindHelper(helpers);
+
+            // Read list items
+            List<TValue> list = new List<TValue>();
+            if (helper != null)
+            {
+                reader.ReadElements(list, helpers);
+            }
+            else
+            {
+                // Support for v0.1 format
+                if (reader.IsEmptyElement)
+                    reader.Read();
+                else
+                {
+                    // Try to get through the elements with whatever
+                    // names they were given, based on class names.
+                    helper = new XmlElementHelper<TValue>();
+                    reader.ReadStartElement();  // <ArrayOfType
+                    while (reader.IsStartElement())
+                        list.Add(helper.Deserialize(reader));   // <Type
+                    reader.ReadEndElement();
+                }
+            }
+            _items.Clear();
+            _items.AddRange(list);
+
+            // Perform final list specific updates
+            ValidateLoad();
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+            try
+            {
+                // Write non-zero revision index
+                if (RevisionIndex != 0)
+                {
+                    writer.WriteStartElement(EL.revision);
+                    writer.WriteAttribute(ATTR.index, RevisionIndex);
+                    writer.WriteEndElement();
+                }
+                // Write child elements directly into the property tag.
+                writer.WriteElements(this, GetXmlElementHelpers());
+            }
+            catch (Exception ex)
+            {
+                // System.Xml will unfortunately swallow this exception when we rethrow it,
+                // in the context of saving a settings list to user.config.
+                // So we have to save it and throw it again after Settings.Default.Save is
+                // complete - see SkylineWindow.OnClosing.
+                Settings.Default.SaveException = ex;
+                throw;
+            }
+        }
+
+        protected virtual IXmlElementHelper<TValue>[] GetXmlElementHelpers()
+        {
+            return new IXmlElementHelper<TValue>[] { new XmlElementHelper<TValue>() };
+        }
+
+        #endregion // IXmlSerializable Members
+    }
+
+    /// <summary>
+    /// Implemented by each concrete list class, naming itself, so that the methods in
+    /// <see cref="XmlMappedListChanges"/> can return the changed list as its own type and take
+    /// items of its item type, both worked out from the list they are called on.
+    /// </summary>
+    /// <typeparam name="TList">The class implementing this interface</typeparam>
+    /// <typeparam name="TItem">The type of the items in the list</typeparam>
+    public interface ISelfTypedList<TList, TItem>
+        where TList : XmlMappedList<string, TItem>
+        where TItem : IKeyContainer<string>, IXmlSerializable
+    {
+    }
+
+    /// <summary>
+    /// Changes to an immutable <see cref="XmlMappedList{TKey,TValue}"/>, each returning a new list
+    /// of the same type as the one changed, with the semantics the mutable list had: adding an
+    /// item whose key is already present removes the old one first.
+    /// </summary>
+    public static class XmlMappedListChanges
+    {
+        public static TList ChangeAdd<TList, TItem>(this ISelfTypedList<TList, TItem> list, TItem item)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items => items.Add(item));
+        }
+
+        public static TList ChangeAddRange<TList, TItem>(this ISelfTypedList<TList, TItem> list, IEnumerable<TItem> itemsAdded)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items => items.AddRange(itemsAdded));
+        }
+
+        public static TList ChangeItems<TList, TItem>(this ISelfTypedList<TList, TItem> list, IEnumerable<TItem> itemsNew)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items =>
+            {
+                items.Clear();
+                items.AddRange(itemsNew);
+            });
+        }
+
+        public static TList ChangeInsert<TList, TItem>(this ISelfTypedList<TList, TItem> list, int index, TItem item)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items => items.Insert(index, item));
+        }
+
+        public static TList ChangeItemAt<TList, TItem>(this ISelfTypedList<TList, TItem> list, int index, TItem item)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items => items[index] = item);
+        }
+
+        public static TList ChangeRemove<TList, TItem>(this ISelfTypedList<TList, TItem> list, TItem item)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items => items.Remove(item));
+        }
+
+        public static TList ChangeRemoveAt<TList, TItem>(this ISelfTypedList<TList, TItem> list, int index)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items => items.RemoveAt(index));
+        }
+
+        public static TList ChangeRemoveKey<TList, TItem>(this ISelfTypedList<TList, TItem> list, string key)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items =>
+            {
+                if (items.TryGetValue(key, out var item))
+                    items.Remove(item);
+            });
+        }
+
+        public static TList ChangeClear<TList, TItem>(this ISelfTypedList<TList, TItem> list)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items => items.Clear());
+        }
+
+        /// <summary>
+        /// Replaces the item with the same key where it is, or adds the item at the end.
+        /// </summary>
+        public static TList ChangeValue<TList, TItem>(this ISelfTypedList<TList, TItem> list, TItem item)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items => items.SetValue(item));
+        }
+
+        /// <summary>
+        /// Replaces the item with the key of <paramref name="oldItem"/> where it is, which lets
+        /// an item be renamed. Returns the list unchanged if no item has that key.
+        /// </summary>
+        public static TList ChangeReplace<TList, TItem>(this ISelfTypedList<TList, TItem> list, TItem oldItem, TItem newItem)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return Change(list, items => items.ReplaceValue(oldItem, newItem));
+        }
+
+        public static TList ChangeAddDefaults<TList, TItem>(this ISelfTypedList<TList, TItem> list)
+            where TList : SettingsListBase<TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return list.ChangeAddRange(((TList) list).GetDefaults());
+        }
+
+        private static TList Change<TList, TItem>(ISelfTypedList<TList, TItem> list, Action<MappedList<string, TItem>> edit)
+            where TList : XmlMappedList<string, TItem>
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return (TList) ((TList) list).ChangeItemsWith(edit);
+        }
+    }
+
+    [XmlRoot("dictionary")]
+    public class SerializableDictionary<TKey, TValue>
+        : Dictionary<TKey, TValue>, IXmlSerializable
+    {
+        #region IXmlSerializable Members
+        public XmlSchema GetSchema()
+        {
+            return null;
+        }
+
+        public void ReadXml(XmlReader reader)
+        {
+            XmlSerializer keySerializer = new XmlSerializer(typeof(TKey));
+            XmlSerializer valueSerializer = new XmlSerializer(typeof(TValue));
+
+            bool wasEmpty = reader.IsEmptyElement;
+            reader.Read();
+
+            if (wasEmpty)
+                return;
+
+            while (reader.NodeType != XmlNodeType.EndElement)
+            {
+                reader.ReadStartElement(@"item");
+
+                reader.ReadStartElement(@"key");
+                TKey key = (TKey)keySerializer.Deserialize(reader);
+                reader.ReadEndElement();
+
+                reader.ReadStartElement(@"value");
+                TValue value = (TValue)valueSerializer.Deserialize(reader);
+                reader.ReadEndElement();
+
+                Add(key, value);
+
+                reader.ReadEndElement();
+                reader.MoveToContent();
+            }
+            reader.ReadEndElement();
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+            XmlSerializer keySerializer = new XmlSerializer(typeof(TKey));
+            XmlSerializer valueSerializer = new XmlSerializer(typeof(TValue));
+
+            foreach (TKey key in Keys)
+            {
+                writer.WriteStartElement(@"item");
+
+                writer.WriteStartElement(@"key");
+                keySerializer.Serialize(writer, key);
+                writer.WriteEndElement();
+
+                writer.WriteStartElement(@"value");
+                TValue value = this[key];
+                valueSerializer.Serialize(writer, value);
+                writer.WriteEndElement();
+
+                writer.WriteEndElement();
+            }
+        }
+        #endregion
+    }
+
+    /// <summary>
+    /// A set of extension functions on <see cref="XmlWriter"/> and
+    /// <see cref="XmlReader"/> to simplify common tasks in XML serialization
+    /// code.
+    /// </summary>
+    public static class XmlUtil
+    {
+        public const string XML_DIRECTIVE = "<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n";
+
+        public static string ToAttr<TStruct>(TStruct? value)
+            where TStruct : struct
+        {
+            return value == null ? null : value.ToString();
+        }
+
+        public static void WriteAttributeString(this XmlWriter writer, Enum name, string value)
+        {
+// ReSharper disable SpecifyACultureInStringConversionExplicitly
+            writer.WriteAttributeString(name.ToString(), value);
+// ReSharper restore SpecifyACultureInStringConversionExplicitly
+        }
+
+        public static void WriteAttributeNullable<TStruct>(this XmlWriter writer, Enum name, TStruct? value)
+            where TStruct : struct
+        {
+            if (value.HasValue)
+                writer.WriteAttributeString(name, value.ToString());
+        }
+
+        /// <summary>
+        /// Always writes a bool value, if one is present, or nothing for a null value.
+        /// </summary>
+        public static void WriteAttributeNullable(this XmlWriter writer, Enum name, bool? value)
+        {
+            if (value.HasValue)
+                writer.WriteAttribute(name, value.Value, !value.Value);
+        }
+
+        public static void WriteAttributeNullable(this XmlWriter writer, Enum name, int? value)
+        {
+            if (value.HasValue)
+                writer.WriteAttribute(name, value.Value);
+        }
+
+        public static void WriteAttributeNullable(this XmlWriter writer, Enum name, float? value)
+        {
+            if (value.HasValue)
+                writer.WriteAttribute(name, value.Value);
+        }
+
+        public static void WriteAttributeNullable(this XmlWriter writer, Enum name, double? value)
+        {
+            if (value.HasValue)
+                writer.WriteAttribute(name, value.Value);
+        }
+
+        public static void WriteAttributeNullable(this XmlWriter writer, Enum name, double? value, int precision)
+        {
+            if (value.HasValue)
+                writer.WriteAttribute(name, value.Value, precision);
+        }
+
+        public static void WriteAttributeIfString(this XmlWriter writer, Enum name, string value)
+        {
+            if (!string.IsNullOrEmpty(value))
+                writer.WriteAttributeString(name, value);
+        }
+
+        public static void WriteAttribute<TAttr>(this XmlWriter writer, Enum name, TAttr value)
+        {
+            writer.WriteAttributeString(name, value.ToString());
+        }
+
+        public static void WriteAttribute<TAttr>(this XmlWriter writer, Enum name, TAttr value, TAttr defaultValue)
+        {
+            if (!Equals(value, defaultValue))
+                writer.WriteAttributeString(name, value.ToString());
+        }
+
+        public static void WriteAttribute(this XmlWriter writer, Enum name, bool value)
+        {
+            WriteAttribute(writer, name, value, false);
+        }
+
+        public static void WriteAttribute(this XmlWriter writer, Enum name, bool value, bool defaultValue)
+        {
+            if (value != defaultValue)
+                writer.WriteAttributeString(name, value.ToString(CultureInfo.InvariantCulture).ToLowerInvariant());
+        }
+
+        public static void WriteAttribute(this XmlWriter writer, Enum name, int value)
+        {
+            writer.WriteAttributeString(name, value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        public static void WriteAttribute(this XmlWriter writer, Enum name, double value)
+        {
+            writer.WriteAttributeString(name, value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
+        }
+
+        public static void WriteAttribute(this XmlWriter writer, Enum name, float value)
+        {
+            writer.WriteAttributeString(name, value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
+        }
+
+        public static void WriteStartElement(this XmlWriter writer, Enum name)
+        {
+// ReSharper disable SpecifyACultureInStringConversionExplicitly
+            writer.WriteStartElement(name.ToString());
+// ReSharper restore SpecifyACultureInStringConversionExplicitly
+        }
+
+        public static void WriteAttributeNullable<TStruct>(this XmlWriter writer, string name, TStruct? value)
+            where TStruct : struct
+        {
+            if (value.HasValue)
+                writer.WriteAttributeString(name, value.ToString());
+        }
+
+        /// <summary>
+        /// Always writes a bool value, if one is present, or nothing for a null value.
+        /// </summary>
+        public static void WriteAttributeNullable(this XmlWriter writer, string name, bool? value)
+        {
+            if (value.HasValue)
+                writer.WriteAttribute(name, value.Value, !value.Value);
+        }
+
+        public static void WriteAttributeNullable(this XmlWriter writer, string name, int? value)
+        {
+            if (value.HasValue)
+                writer.WriteAttribute(name, value.Value);
+        }
+
+        public static void WriteAttributeNullable(this XmlWriter writer, string name, float? value)
+        {
+            if (value.HasValue)
+                writer.WriteAttribute(name, value.Value);
+        }
+
+        public static void WriteAttributeNullable(this XmlWriter writer, string name, double? value)
+        {
+            if (value.HasValue)
+                writer.WriteAttribute(name, value.Value);
+        }
+
+        public static void WriteAttributeIfString(this XmlWriter writer, string name, string value)
+        {
+            if (!string.IsNullOrEmpty(value))
+                writer.WriteAttributeString(name, value);
+        }
+
+        public static void WriteAttribute<TAttr>(this XmlWriter writer, string name, TAttr value)
+        {
+            writer.WriteAttributeString(name, value.ToString());
+        }
+
+        public static void WriteAttribute<TAttr>(this XmlWriter writer, string name, TAttr value, TAttr defaultValue)
+        {
+            if (!Equals(value, defaultValue))
+                writer.WriteAttributeString(name, value.ToString());
+        }
+
+        public static void WriteAttribute(this XmlWriter writer, string name, bool value)
+        {
+            WriteAttribute(writer, name, value, false);
+        }
+
+        public static void WriteAttribute(this XmlWriter writer, string name, bool value, bool defaultValue)
+        {
+            if (value != defaultValue)
+                writer.WriteAttributeString(name, value.ToString(CultureInfo.InvariantCulture).ToLowerInvariant());
+        }
+
+        public static void WriteAttribute(this XmlWriter writer, string name, int value)
+        {
+            writer.WriteAttributeString(name, value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        public static void WriteAttribute(this XmlWriter writer, string name, TypedMass value)
+        {
+            writer.WriteAttributeString(name, value.Value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
+        }
+
+        public static void WriteAttribute(this XmlWriter writer, string name, double value)
+        {
+            writer.WriteAttributeString(name, value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
+        }
+
+        public static void WriteAttribute(this XmlWriter writer, string name, float value)
+        {
+            writer.WriteAttributeString(name, value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
+        }
+
+        public static void WriteElement<TChild>(this XmlWriter writer, TChild child)
+            where TChild : IXmlSerializable
+        {
+            var helper = new XmlElementHelper<TChild>();
+            writer.WriteElement(helper.ElementNames[0], child);
+        }
+
+        public static void WriteElementString(this XmlWriter writer, Enum name, double child)
+        {
+            writer.WriteElementString(name, child.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
+        }
+
+        public static void WriteElementString(this XmlWriter writer, Enum name, float child)
+        {
+            writer.WriteElementString(name, child.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
+        }
+
+        public static void WriteElementString<TChild>(this XmlWriter writer, Enum name, TChild child)
+        {
+            writer.WriteStartElement(name);
+            writer.WriteString(child.ToString());
+            writer.WriteEndElement();
+        }
+
+        public static void WriteElementString(this XmlWriter writer, string name, double child)
+        {
+            writer.WriteElementString(name, child.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
+        }
+
+        public static void WriteElementString(this XmlWriter writer, string name, float child)
+        {
+            writer.WriteElementString(name, child.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
+        }
+
+        public static void WriteElementString<TChild>(this XmlWriter writer, string name, TChild child)
+        {
+            writer.WriteStartElement(name);
+            writer.WriteString(child.ToString());
+            writer.WriteEndElement();
+        }
+
+        public static void WriteElement(this XmlWriter writer, Enum name, IXmlSerializable child)
+        {
+// ReSharper disable SpecifyACultureInStringConversionExplicitly
+            writer.WriteElement(name.ToString(), child);
+// ReSharper restore SpecifyACultureInStringConversionExplicitly
+        }
+
+        public static void WriteElement(this XmlWriter writer, string name, IXmlSerializable child)
+        {
+            writer.WriteStartElement(name);
+            child.WriteXml(writer);
+            writer.WriteEndElement();
+        }
+
+        public static void WriteElementList<TItem>(this XmlWriter writer, Enum name, string nameItem,
+                                                   IEnumerable<TItem> list)
+            where TItem : IXmlSerializable
+        {
+            writer.WriteStartElement(name);
+            foreach (TItem item in list)
+                writer.WriteElement(nameItem, item);
+            writer.WriteEndElement();            
+        }
+
+        public static void WriteElementList<TItem>(this XmlWriter writer, Enum name, IEnumerable<TItem> list)
+            where TItem : IXmlSerializable
+        {
+            writer.WriteElementList(name, list, new XmlElementHelper<TItem>());
+        }
+
+        public static void WriteElementList<TItem>(this XmlWriter writer, Enum name, IEnumerable<TItem> list,
+            params IXmlElementHelper<TItem>[] helpers)
+            where TItem : IXmlSerializable
+        {
+            writer.WriteStartElement(name);
+            writer.WriteElements(list, helpers);
+            writer.WriteEndElement();
+        }
+
+        public static void WriteElements<TItem>(this XmlWriter writer, IEnumerable<TItem> list)
+            where TItem : IXmlSerializable
+        {
+            writer.WriteElements(list, new XmlElementHelper<TItem>());
+        }
+
+        public static void WriteElements<TItem>(this XmlWriter writer, IEnumerable<TItem> list,
+            params IXmlElementHelper<TItem>[] helpers)
+            where TItem : IXmlSerializable
+        {
+            foreach (TItem item in list)
+            {
+                if (Equals(item, default(TItem)))
+                    throw new InvalidDataException(UtilResources.XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element);
+                IXmlElementHelper<TItem> helper = FindHelper(item, helpers);
+                if (helper == null)
+                    throw new InvalidOperationException(string.Format(UtilResources.XmlUtil_WriteElements_Attempt_to_serialize_list_containing_invalid_type__0__, typeof(TItem)));
+                writer.WriteElement(helper.ElementNames[0], item);
+            }
+        }
+
+        public static IXmlElementHelper<TItem> FindHelper<TItem>(TItem item, IXmlElementHelper<TItem>[] helpers)
+        {
+            foreach (IXmlElementHelper<TItem> helper in helpers)
+            {
+                if (helper.IsType(item))
+                    return helper;
+            }
+            return null;
+        }
+
+        public static string GetAttribute(this XmlReader reader, Enum name)
+        {
+// ReSharper disable SpecifyACultureInStringConversionExplicitly
+            return reader.GetAttribute(name.ToString());
+// ReSharper restore SpecifyACultureInStringConversionExplicitly
+        }
+
+        public static TOutput? GetAttribute<TOutput>(this XmlReader reader, Enum name,
+                                                     Converter<string, TOutput> converter)
+            where TOutput : struct
+        {
+            string value = reader.GetAttribute(name);
+            if (value == null)
+                return null;
+            try
+            {
+                return converter(value);
+            }
+            catch (Exception x)
+            {
+                throw new InvalidDataException(string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__, value, name), x);
+            }
+        }
+
+        public static TOutput? GetAttribute<TOutput>(this XmlReader reader, string name,
+                                                     Converter<string, TOutput> converter)
+            where TOutput : struct
+        {
+            string value = reader.GetAttribute(name);
+            if (value == null)
+                return null;
+            try
+            {
+                return converter(value);
+            }
+            catch (Exception x)
+            {
+                throw new InvalidDataException(string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__, value, name), x);
+            }
+        }
+
+        private static bool ConvertToBoolean(string attribute)
+        {
+            return Convert.ToBoolean(attribute, CultureInfo.InvariantCulture);
+        }
+
+        public static bool? GetNullableBoolAttribute(this XmlReader reader, Enum name)
+        {
+            return reader.GetAttribute(name, ConvertToBoolean);
+        }
+
+        public static bool GetBoolAttribute(this XmlReader reader, Enum name)
+        {
+            return reader.GetBoolAttribute(name, false);
+        }
+
+        public static bool GetBoolAttribute(this XmlReader reader, Enum name, bool defaultValue)
+        {
+            return reader.GetNullableBoolAttribute(name) ?? defaultValue;
+        }
+
+        public static bool? GetNullableBoolAttribute(this XmlReader reader, string name)
+        {
+            return reader.GetAttribute(name, ConvertToBoolean);
+        }
+
+        public static bool GetBoolAttribute(this XmlReader reader, string name)
+        {
+            return reader.GetBoolAttribute(name, false);
+        }
+
+        public static bool GetBoolAttribute(this XmlReader reader, string name, bool defaultValue)
+        {
+            return reader.GetNullableBoolAttribute(name) ?? defaultValue;
+        }
+
+        private static int ConvertToInt32(string attribute)
+        {
+            return Convert.ToInt32(attribute, CultureInfo.InvariantCulture);
+        }
+
+        public static int? GetNullableIntAttribute(this XmlReader reader, Enum name)
+        {
+            return reader.GetAttribute(name, ConvertToInt32);
+        }
+
+        public static int GetIntAttribute(this XmlReader reader, Enum name)
+        {
+            return reader.GetIntAttribute(name, 0);
+        }
+
+        public static int GetIntAttribute(this XmlReader reader, Enum name, int defaultValue)
+        {
+            return reader.GetNullableIntAttribute(name) ?? defaultValue;
+        }
+
+        public static int? GetNullableIntAttribute(this XmlReader reader, string name)
+        {
+            return reader.GetAttribute(name, ConvertToInt32);
+        }
+
+        public static int GetIntAttribute(this XmlReader reader, string name)
+        {
+            return reader.GetIntAttribute(name, 0);
+        }
+
+        public static int GetIntAttribute(this XmlReader reader, string name, int defaultValue)
+        {
+            return reader.GetNullableIntAttribute(name) ?? defaultValue;
+        }
+
+        private static double ConvertToDouble(string attribute)
+        {
+            return Convert.ToDouble(attribute, CultureInfo.InvariantCulture);
+        }
+
+        public static double? GetNullableDoubleAttribute(this XmlReader reader, Enum name)
+        {
+            return reader.GetAttribute(name, ConvertToDouble);
+        }
+
+        public static double GetDoubleAttribute(this XmlReader reader, Enum name)
+        {
+            return reader.GetDoubleAttribute(name, 0.0);
+        }
+
+        public static double GetDoubleAttribute(this XmlReader reader, Enum name, double defaultValue)
+        {
+            return reader.GetNullableDoubleAttribute(name) ?? defaultValue;
+        }
+
+        public static double? GetNullableDoubleAttribute(this XmlReader reader, string name)
+        {
+            return reader.GetAttribute(name, ConvertToDouble);
+        }
+
+        public static double GetDoubleAttribute(this XmlReader reader, string name)
+        {
+            return reader.GetDoubleAttribute(name, 0.0);
+        }
+
+        public static double GetDoubleAttribute(this XmlReader reader, string name, double defaultValue)
+        {
+            return reader.GetNullableDoubleAttribute(name) ?? defaultValue;
+        }
+
+        private static float ConvertToSingle(string attribute)
+        {
+            return Convert.ToSingle(attribute, CultureInfo.InvariantCulture);
+        }
+
+        public static float? GetNullableFloatAttribute(this XmlReader reader, Enum name)
+        {
+            return reader.GetAttribute(name, ConvertToSingle);
+        }
+
+        public static float GetFloatAttribute(this XmlReader reader, Enum name)
+        {
+            return reader.GetFloatAttribute(name, 0.0f);
+        }
+
+        public static float GetFloatAttribute(this XmlReader reader, Enum name, float defaultValue)
+        {
+            return reader.GetNullableFloatAttribute(name) ?? defaultValue;
+        }
+
+        public static float? GetNullableFloatAttribute(this XmlReader reader, string name)
+        {
+            return reader.GetAttribute(name, ConvertToSingle);
+        }
+
+        public static float GetFloatAttribute(this XmlReader reader, string name)
+        {
+            return reader.GetFloatAttribute(name, 0.0f);
+        }
+
+        public static float GetFloatAttribute(this XmlReader reader, string name, float defaultValue)
+        {
+            return reader.GetNullableFloatAttribute(name) ?? defaultValue;
+        }
+
+        public enum EnumCase { unkown, lower, upper }
+
+        public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, Enum name, TAttr defaultValue)
+        {
+            return reader.GetEnumAttribute(name, defaultValue, EnumCase.unkown);
+        }
+
+        public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, Enum name, TAttr defaultValue, EnumCase enumCase)
+        {
+            string value = reader.GetAttribute(name);
+            if (!string.IsNullOrEmpty(value))
+            {
+                try
+                {
+                    return (TAttr)Enum.Parse(typeof(TAttr), GetEnumString(value, enumCase));
+                }
+                catch (ArgumentException x)
+                {
+                    throw new InvalidDataException(string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__, value, name), x);
+                }
+            }
+            return defaultValue;
+        }
+
+        public static TAttr GetRequiredEnumAttribute<TAttr>(this XmlReader reader, Enum name, EnumCase enumCase)
+        {
+            string value = reader.GetAttribute(name);
+            if (!string.IsNullOrEmpty(value))
+            {
+                try
+                {
+                    return (TAttr)Enum.Parse(typeof(TAttr), GetEnumString(value, enumCase));
+                }
+                catch (ArgumentException x)
+                {
+                    throw new InvalidDataException(string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__, value, name), x);
+                }
+            }
+
+            throw new InvalidDataException(string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__, value ?? @"<null>", name));
+        }
+
+        public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, string name, TAttr defaultValue)
+        {
+            return reader.GetEnumAttribute(name, defaultValue, EnumCase.unkown);
+        }
+
+        public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, string name, TAttr defaultValue, EnumCase enumCase)
+        {
+            return reader.GetEnumAttribute(name, null, defaultValue, enumCase);
+        }
+
+        public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, string name, IDictionary<string, TAttr> lookup, TAttr defaultValue, EnumCase enumCase)
+        {
+            string value = reader.GetAttribute(name);
+            if (!string.IsNullOrEmpty(value))
+            {
+                TAttr cached;
+                if (lookup != null && lookup.TryGetValue(value, out cached))
+                    return cached;
+
+                try
+                {
+                    return (TAttr)Enum.Parse(typeof(TAttr), GetEnumString(value, enumCase));
+                }
+                catch (ArgumentException x)
+                {
+                    throw new InvalidDataException(string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__, value, name), x);
+                }
+            }
+            return defaultValue;
+        }
+
+        private static string GetEnumString(string value, EnumCase enumCase)
+        {
+            switch (enumCase)
+            {
+                case EnumCase.lower:
+                    return value.ToLowerInvariant();
+                case EnumCase.upper:
+                    return value.ToUpperInvariant();
+                default:
+                    return value;
+            }
+        }
+
+        public static Dictionary<string, TAttr> GetEnumLookupDictionary<TAttr>(params TAttr[] attrs)
+        {
+            var dict = new Dictionary<string, TAttr>();
+            foreach (var attr in attrs)
+            {
+                dict.Add(GetEnumString(attr.ToString(), EnumCase.lower), attr);
+                dict.Add(GetEnumString(attr.ToString(), EnumCase.upper), attr);
+            }
+            return dict;
+        }
+
+        public static Type GetTypeAttribute(this XmlReader reader, Enum name)
+        {
+            var type = reader.GetAttribute(name);
+            if (type == null)
+                throw new InvalidDataException();
+            return Type.GetType(type);
+        }
+
+        public static bool IsStartElement(this XmlReader reader, string[] names)
+        {
+            foreach (var name in names)
+            {
+                if (reader.IsStartElement(name))
+                    return true;
+            }
+            return false;
+        }
+
+        public static bool IsStartElement(this XmlReader reader, Enum name)
+        {
+// ReSharper disable SpecifyACultureInStringConversionExplicitly
+            return reader.IsStartElement(name.ToString());
+// ReSharper restore SpecifyACultureInStringConversionExplicitly
+        }
+
+        public static void ReadStartElement(this XmlReader reader, Enum name)
+        {
+// ReSharper disable SpecifyACultureInStringConversionExplicitly
+            reader.ReadStartElement(name.ToString());
+// ReSharper restore SpecifyACultureInStringConversionExplicitly
+        }
+
+        public static double ReadElementContentAsDoubleInvariant(this XmlReader reader)
+        {
+            return Convert.ToDouble(reader.ReadElementContentAsString(), CultureInfo.InvariantCulture);
+        }
+
+        public static void ReadElementList<TItem>(this XmlReader reader, Enum name, List<TItem> list)
+        {
+            reader.ReadElementList(name, list, new XmlElementHelper<TItem>());
+        }
+
+        public static void ReadElementList<TItem>(this XmlReader reader, Enum name, List<TItem> list,
+            params IXmlElementHelper<TItem>[] helpers)
+        {
+            if (reader.IsStartElement(name))
+            {
+                if (reader.IsEmptyElement)
+                    reader.ReadStartElement(name);
+                else
+                {
+
+                    reader.ReadStartElement(name);
+                    reader.ReadElements(list, helpers);
+                    reader.ReadEndElement();
+                }
+            }            
+        }
+
+        public static void ReadElements<TItem>(this XmlReader reader, List<TItem> list)
+        {
+            reader.ReadElements(list, new XmlElementHelper<TItem>());
+        }
+
+        public static void ReadElements<TItem>(this XmlReader reader, List<TItem> list,
+            params IXmlElementHelper<TItem>[] helpers)
+        {
+            IXmlElementHelper<TItem> helper;
+            while ((helper = reader.FindHelper(helpers)) != null)
+                list.Add(helper.Deserialize(reader));            
+        }
+
+        public static IXmlElementHelper<TItem> FindHelper<TItem>(this XmlReader reader,
+            IEnumerable<IXmlElementHelper<TItem>> helpers)
+        {
+            foreach (IXmlElementHelper<TItem> helper in helpers)
+            {
+                if (reader.IsStartElement(helper.ElementNames))
+                    return helper;
+            }
+            return null;
+        }
+
+        public static TObj Deserialize<TObj>(this XmlReader reader, TObj objNew)
+            where TObj : IXmlSerializable
+        {
+            objNew.ReadXml(reader);
+            return objNew;
+        }
+
+        public static TObj DeserializeElement<TObj>(this XmlReader reader)
+            where TObj : class
+        {
+            return DeserializeElement<TObj>(reader, null);
+        }
+
+        public static TObj DeserializeElement<TObj>(this XmlReader reader, Enum name)
+            where TObj : class
+        {
+// ReSharper disable SpecifyACultureInStringConversionExplicitly
+            var helper = new XmlElementHelper<TObj>(name == null ? null : name.ToString());
+// ReSharper restore SpecifyACultureInStringConversionExplicitly
+            if (reader.IsStartElement(helper.ElementNames))
+                return helper.Deserialize(reader);
+            return null;
+        }
+
+        /// <summary>
+        /// Converts non-printable characters to escaped strings,
+        /// such as '0x01' -> "\x01". Although the XmlReader correctly
+        /// escapes characters using the ampersand semicolon format,
+        /// (most) non-printable characters are simply not allowed in xml 1.0.
+        ///
+        /// This is necessary since FASTA sequences might contain
+        /// non-printable characters. (<see cref="PeptideGroupBuilder"/>)
+        /// </summary>
+        /// <param name="str">string to escape</param>
+        /// <returns>escaped string</returns>
+        public static string EscapeNonPrintableChars(this string str)
+        {
+            if (!str.Contains(IsUnprintable))
+                return str;
+
+            var sb = new StringBuilder();
+            foreach (var c in str)
+            {
+                if (IsUnprintable(c))
+                    // ReSharper disable LocalizableElement
+                    sb.Append("\\x").Append(((int)c).ToString("X" + sizeof(char) * 2));
+                    // ReSharper restore LocalizableElement
+                else
+                    sb.Append(c);
+            }
+            return sb.ToString();
+        }
+
+        private static bool IsUnprintable(char c)
+        {
+            return c < 0x20 && c != '\r' && c != '\n' && c != '\t';
+        }
+
+        /// <summary>
+        /// Replaces all instancs of escaped characters in the
+        /// given string with their corresponding character.
+        /// </summary>
+        /// <param name="str">string to unescape</param>
+        /// <returns>unescaped string</returns>
+        public static string UnescapeNonPrintableChars(this string str)
+        {
+            // ReSharper disable LocalizableElement
+            if (str.IndexOf("\\x", StringComparison.Ordinal) == -1)
+                return str;
+            // ReSharper restore LocalizableElement
+            const int charLen = sizeof(char) * 2;
+            var sb = new StringBuilder();
+            for (var i = 0; i < str.Length; ++i)
+            {
+                var index = i;
+                if (str[index++] == '\\')
+                {
+                    if (index < str.Length && str[index++] == 'x')
+                    {
+                        if (index + charLen < str.Length)
+                        {
+                            var num = str.Substring(index, charLen);
+                            int characterValue;
+                            if (int.TryParse(num, out characterValue))
+                            {
+                                sb.Append((char)characterValue);
+                                i += index + charLen;
+                                continue;
+                            }
+                        }
+                    }
+                }
+
+                sb.Append(str[i]);
+            }
+            return sb.ToString();
+        }
+
+        public static string GetInvalidDataMessage(string path, Exception x)
+        {
+            StringBuilder sb = new StringBuilder();
+            int line, column;
+            if (!TryGetXmlLineColumn(x.Message, out line, out column))
+                sb.Append(x.Message);
+            else
+            {
+                if (line != 0)
+                    sb.Append(
+                        string.Format(
+                            Resources.
+                                XmlUtil_GetInvalidDataMessage_The_file_contains_an_error_on_line__0__at_column__1__,
+                            line, column));
+                else
+                {
+                    if (column == 0 && IsSmallAndWhiteSpace(path))
+                    {
+                        var message = TextUtil.LineSeparate(UtilResources.XmlUtil_GetInvalidDataMessage_The_file_is_empty,
+                            UtilResources.XmlUtil_GetInvalidDataMessage_It_may_have_been_truncated_during_file_transfer);
+                        return message;
+                    }
+
+                    return UtilResources.XmlUtil_GetInvalidDataMessage_The_file_does_not_appear_to_be_valid_XML;
+                }
+            }
+            while (x != null)
+            {
+                if (x is InvalidDataException)
+                {
+                    sb.AppendLine().Append(x.Message);
+                    break;
+                }
+                else if (x is VersionNewerException)
+                {
+                    sb = new StringBuilder(x.Message);
+                    break;
+                }
+                x = x.InnerException;
+            }
+            return sb.ToString();
+        }
+
+        public static readonly Regex REGEX_XML_ERROR = new Regex(@"\((\d+), ?(\d+)\)");
+
+        public static bool TryGetXmlLineColumn(string message, out int line, out int column)
+        {
+            line = column = 0;
+
+            if (!message.Contains(@"XML"))
+                return false;
+
+            Match match = REGEX_XML_ERROR.Match(message);
+            if (!match.Success)
+                return false;
+            if (!int.TryParse(match.Groups[1].Value, out line))
+                return false;
+            if (!int.TryParse(match.Groups[2].Value, out column))
+                return false;
+            return true;
+        }
+
+        /// <summary>
+        /// Returns true, if a file is less than or equal to 10 characters and
+        /// all whitespace, or empty.
+        /// </summary>
+        /// <param name="path">Path to the file</param>
+        /// <returns>True if small and whitespace</returns>
+        private static bool IsSmallAndWhiteSpace(string path)
+        {
+            if (new FileInfo(path).Length > 10)
+                return false;
+            try
+            {
+                string text = File.ReadAllText(path);
+                foreach (char c in text)
+                {
+                    if (!char.IsWhiteSpace(c))
+                        return false;
+                }
+            }
+            catch (Exception)
+            {
+                return false;   // Can't tell, really
+            }
+            return true;
+        }
+    }
+
+    public static class XElementUtil
+    {
+        public static IEnumerable<XElement> Elements(this XElement xElement, Enum name)
+        {
+            return xElement.Elements(name.ToString());
+        }
+
+        public static XAttribute Attribute(this XElement xElement, Enum name)
+        {
+            return xElement.Attribute(name.ToString());
+        }
+
+        public static double? GetNullableDouble(this XElement xElement, Enum name)
+        {
+            XAttribute attr = xElement.Attribute(name);
+            if (attr == null)
+            {
+                return null;
+            }
+
+            return Convert.ToDouble(attr.Value, CultureInfo.InvariantCulture);
+        }
+
+        public static int? GetNullableInt(this XElement xElement, Enum name)
+        {
+            XAttribute attr = xElement.Attribute(name);
+            if (attr == null)
+            {
+                return null;
+            }
+
+            return Convert.ToInt32(attr.Value, CultureInfo.InvariantCulture);
+        }
+    }
+
+    public interface IXmlElementHelper<out TElem>
+    {
+        string[] ElementNames { get; }
+
+        TElem Deserialize(XmlReader reader);
+
+        bool IsType(object item);
+    }
+
+    /// <summary>
+    /// Helper for reading and writing XML elements in <see cref="IXmlSerializable"/>
+    /// implementations.  If the type supplied has the <see cref="XmlRootAttribute"/>
+    /// then it is self-naming.  Otherwise a name for the element must be supplied.
+    /// </summary>
+    /// <typeparam name="TElem">Type for which this helper is used</typeparam>
+    public sealed class XmlElementHelper<TElem> : IXmlElementHelper<TElem>
+    {
+        /// <summary>
+        /// Constructor for self-named types that have the
+        /// <see cref="XmlRootAttribute"/>.
+        /// </summary>
+        public XmlElementHelper()
+            : this(null)
+        {
+        }
+
+        /// <summary>
+        /// Constructor for types that are not self-naming.
+        /// </summary>
+        /// <param name="elementName">The element name to use</param>
+        public XmlElementHelper(string elementName)
+        {
+            if (elementName != null)
+                ElementNames = new[] {elementName};
+            else
+            {
+                Type type = typeof(TElem);
+                XmlRootAttribute[] attrs = (XmlRootAttribute[])
+                    type.GetCustomAttributes(typeof(XmlRootAttribute), false);
+
+                if (attrs.Length < 1)
+                    throw new InvalidOperationException(
+                        string.Format(UtilResources.XmlElementHelper_XmlElementHelper_The_class__0__has_no__1__,
+                                      type.FullName, typeof (XmlRootAttribute).Name));
+
+                XmlRootAliasAttribute[] aliases = (XmlRootAliasAttribute[])
+                    type.GetCustomAttributes(typeof(XmlRootAliasAttribute), false);
+
+                int len = attrs.Length + aliases.Length;
+                ElementNames = new string[len];
+                int i = 0;
+                foreach (var attr in attrs)
+                    ElementNames[i++] = attr.ElementName;
+                foreach (var alias in aliases)
+                    ElementNames[i++] = alias.ElementName;
+            }
+        }
+
+        /// <summary>
+        /// The element name for this type
+        /// </summary>
+        public string[] ElementNames { get; private set; }
+
+        /// <summary>
+        /// Deserializes an instance of this type from a <see cref="XmlReader"/>.
+        /// </summary>
+        /// <param name="reader">The reader from which to deserialize</param>
+        /// <returns>An instance of the supported type</returns>
+        public TElem Deserialize(XmlReader reader)
+        {
+            // Unit tests depend on exceptions being thrown.
+//            try
+//            {
+                return (TElem)typeof(TElem).InvokeMember(@"Deserialize",
+                                                 BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod,
+                                                 null, null, new object[] { reader }, CultureInfo.InvariantCulture); 
+//            }
+//            catch (TargetInvocationException)
+//            {
+//                Debug.Assert(false, string.Format("Failed calling Deserialize() method for {0} element.", ElementName));
+//                throw;
+//            }
+        }
+
+        /// <summary>
+        /// Checks for exact type match with the type for which the helper is
+        /// created.
+        /// </summary>
+        /// <param name="item">An item to be serialized</param>
+        /// <returns>True if this helper can serialize it</returns>
+        public bool IsType(object item)
+        {
+            return typeof(TElem) == item.GetType();
+        }
+    }
+
+    public sealed class XmlElementHelperSuper<TElem, TSup> : IXmlElementHelper<TSup>
+        where TElem : TSup
+    {
+        private readonly XmlElementHelper<TElem> _helper;
+
+        public XmlElementHelperSuper()
+        {
+            _helper = new XmlElementHelper<TElem>();
+        }
+
+        public string[] ElementNames
+        {
+            get { return _helper.ElementNames; }
+        }
+
+        public TSup Deserialize(XmlReader reader)
+        {
+            return _helper.Deserialize(reader);
+        }
+
+        public bool IsType(object item)
+        {
+            return _helper.IsType(item);
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
+    internal sealed class XmlRootAliasAttribute : Attribute
+    {
+        public XmlRootAliasAttribute()
+        {
+        }
+
+        public XmlRootAliasAttribute(string elementName)
+        {
+            ElementName = elementName;
+        }
+
+        public string ElementName { get; set; }
+    }
+
+    /// <summary>
+    /// For writing XML to memory with UTF8 encoding, because <see cref="StringWriter.Encoding"/>
+    /// is read-only.
+    /// </summary>
+    public sealed class XmlStringWriter : StringWriter
+    {
+        public override Encoding Encoding { get { return Encoding.UTF8; } }
+    }
+
+
+    public class VersionNewerException : Exception
+    {
+        public VersionNewerException(string message)
+            : base(message)
+        {
+        }
+    }
+}

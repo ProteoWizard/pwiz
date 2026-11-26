@@ -131,6 +131,7 @@ namespace pwiz.SkylineTest
                 "XfWhr","XfY9w","xlt5k","XPCHC","XxgDy","Zdrnb","zXdQ1"
             };
             AssertEx.ComparerWellBehaved(Comparer<string>.Create(NaturalStringComparer.Compare), orderedSample);
+            AssertEx.ComparerWellBehaved(Comparer<string>.Create(NaturalFilenameComparer.CompareLogical), orderedSample);
             AssertEx.ComparerWellBehaved(Comparer<string>.Create(NaturalFilenameComparer.Compare), orderedSample);
             var orderedSampleFilename = orderedSample.Select(s => s.Replace("30561n", "356n")).ToList(); // Make it amenable to windows filename sort tradtiion
 
@@ -170,6 +171,30 @@ namespace pwiz.SkylineTest
                     (misOrdered[loc], misOrdered[a]) = (misOrdered[a], misOrdered[loc]);
                 }
                 return misOrdered;
+            }
+        }
+
+        /// <summary>
+        /// The managed comparer stands in for StrCmpLogicalW off Windows, and only a Windows run
+        /// can check that the two agree.
+        /// </summary>
+        [TestMethod]
+        public void TestNaturalFilenameCompareMatchesWindows()
+        {
+            var samples = new[]
+            {
+                "S1", "S01", "S001", "S2", "S10", "s1", "a01c", "a1b", "a01b2", "a1b1", "x", "x0", "x00",
+                "Skyline-64_1_4_0_4421.zip", "Skyline-64_2_5_0_5675.zip", "Skyline-64_20_1_0_155.zip",
+                "1AC6", "1AC66", "1AC7", "4C47", "abc", "ABC", "abc1", ""
+            };
+            foreach (var x in samples)
+            {
+                foreach (var y in samples)
+                {
+                    Assert.AreEqual(Math.Sign(NaturalFilenameComparer.Compare(x, y)),
+                        Math.Sign(NaturalFilenameComparer.CompareLogical(x, y)),
+                        string.Format(@"Comparing ""{0}"" with ""{1}""", x, y));
+                }
             }
         }
 

@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             // btnDeleteRule
             //
             this.btnDeleteRule.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnDeleteRule.Image = global::pwiz.Skyline.Properties.Resources.Delete;
+            this.btnDeleteRule.Image = global::pwiz.Skyline.Properties.ImageResources.Delete;
             this.btnDeleteRule.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnDeleteRule.Name = "btnDeleteRule";
             this.btnDeleteRule.Size = new System.Drawing.Size(23, 20);
@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             // btnMoveRuleUp
             //
             this.btnMoveRuleUp.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnMoveRuleUp.Image = global::pwiz.Skyline.Properties.Resources.up_pro32;
+            this.btnMoveRuleUp.Image = global::pwiz.Skyline.Properties.ImageResources.up_pro32;
             this.btnMoveRuleUp.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnMoveRuleUp.Name = "btnMoveRuleUp";
             this.btnMoveRuleUp.Size = new System.Drawing.Size(23, 20);
@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             // btnMoveRuleDown
             //
             this.btnMoveRuleDown.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnMoveRuleDown.Image = global::pwiz.Skyline.Properties.Resources.down_pro32;
+            this.btnMoveRuleDown.Image = global::pwiz.Skyline.Properties.ImageResources.down_pro32;
             this.btnMoveRuleDown.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnMoveRuleDown.Name = "btnMoveRuleDown";
             this.btnMoveRuleDown.Size = new System.Drawing.Size(23, 20);

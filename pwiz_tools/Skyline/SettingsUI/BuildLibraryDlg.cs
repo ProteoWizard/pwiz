@@ -57,7 +57,7 @@ namespace pwiz.Skyline.SettingsUI
     {
         public BuildLibraryGridView Grid { get; }
         public static string[] RESULTS_EXTS =>
-            Program.ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules ? RESULTS_EXTS_SMALL_MOL : RESULTS_EXTS_PEPTIDES;
+            ProgramContext.ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules ? RESULTS_EXTS_SMALL_MOL : RESULTS_EXTS_PEPTIDES;
 
         public static readonly string[] RESULTS_EXTS_PEPTIDES =
         {
@@ -135,7 +135,7 @@ namespace pwiz.Skyline.SettingsUI
             // (issue #4599): size the grid below its label and left of the buttons by hand.
             DpiUtil.FillTabPage(tabFiles, gridInputFiles, tabFiles.ClientSize.Width - gridInputFiles.Right);
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             _skylineWindow = skylineWindow;
             _documentUiContainer = skylineWindow;
@@ -215,7 +215,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (!Settings.Default.IrtStandardList.Contains(IrtStandard.AUTO))
             {
-                Settings.Default.IrtStandardList.Insert(0, IrtStandard.AUTO);
+                Settings.Default.IrtStandardList = Settings.Default.IrtStandardList.ChangeInsert(0, IrtStandard.AUTO);
             }
         }
 
@@ -1564,12 +1564,12 @@ namespace pwiz.Skyline.SettingsUI
                 tabControlDataSource.SelectedIndex = (int)DataSourcePages.files;
                 if (!Settings.Default.IrtStandardList.Contains(IrtStandard.AUTO))
                 {
-                    Settings.Default.IrtStandardList.Insert(1, IrtStandard.AUTO);
+                    Settings.Default.IrtStandardList = Settings.Default.IrtStandardList.ChangeInsert(1, IrtStandard.AUTO);
                 }
             }
             else
             {
-                Settings.Default.IrtStandardList.Remove(IrtStandard.AUTO);
+                Settings.Default.IrtStandardList = Settings.Default.IrtStandardList.ChangeRemove(IrtStandard.AUTO);
 
                 if (radioAlphaSource.Checked)
                 {

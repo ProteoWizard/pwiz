@@ -1006,8 +1006,8 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() =>
             {
-                Settings.Default.StaticModList.Clear();
-                Settings.Default.StaticModList.Add(phosphoLossMod.ChangeExplicit(false));
+                Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeClear();
+                Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeAdd(phosphoLossMod.ChangeExplicit(false));
             });
 
             var phosphoNotVariable = SkylineWindow.Document.Settings.ChangePeptideModifications(
@@ -1107,7 +1107,7 @@ namespace pwiz.SkylineTestFunctional
                 mods.ChangeStaticModifications(new StaticMod[0]));
             RunUI(() => SkylineWindow.ModifyDocument("Change static mods", doc =>
                 doc.ChangeSettings(pepModsNoMods3)));
-            RunUI(() => Settings.Default.StaticModList.Clear());
+            RunUI(() => Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeClear());
             RelaunchLibExplorer(true, true, ANL_COMBINED);
             RunUI(() => _viewLibUI.AddPeptide(true));
             Assert.AreEqual(0, Settings.Default.StaticModList.Count); // TODO
@@ -1128,14 +1128,14 @@ namespace pwiz.SkylineTestFunctional
                 doc.ChangeSettings(pepModsNoMods4)));
             RunUI(() =>
             {
-                Settings.Default.StaticModList.Clear();
-                Settings.Default.StaticModList.AddRange(Settings.Default.StaticModList.GetDefaults());
+                Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeClear();
+                Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeAddRange(Settings.Default.StaticModList.GetDefaults());
             });
             RelaunchLibExplorer(false, false, YEAST);
             WaitForConditionUI(() => !_viewLibUI.HasUnmatchedPeptides);
 
             // Test removing mod from doc does not remove matches
-            Settings.Default.StaticModList.Clear();
+            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeClear();
             var pepModsNone = SkylineWindow.Document.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeStaticModifications(new StaticMod[0]));
             RunUI(() => SkylineWindow.ModifyDocument("Change static mods", doc =>
@@ -1156,7 +1156,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => _viewLibUI.HasUnmatchedPeptides);
 
             // Test adding mod to doc affects matches
-            RunUI(() => Settings.Default.StaticModList.AddRange(Settings.Default.StaticModList.GetDefaults()));
+            RunUI(() => Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeAddDefaults());
             var pepModsDefault = SkylineWindow.Document.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeStaticModifications(Settings.Default.StaticModList.Select(mod =>
                     mod.ChangeExplicit(false)).ToArray()));

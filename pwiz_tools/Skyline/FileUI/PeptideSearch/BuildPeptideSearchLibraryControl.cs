@@ -408,12 +408,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             BuildLibrarySettings.LibraryName = docLibSpec.Name;
             if (isFeatureDetection)
             {
-                Settings.Default.SpectralLibraryList.Add(docLibSpec); // Won't displace the current document library
+                Settings.Default.SpectralLibraryList = Settings.Default.SpectralLibraryList.ChangeAdd(docLibSpec); // Won't displace the current document library
             }
             else
             {
                 docLibSpec = builder.LibrarySpec.ChangeDocumentLibrary(true);
-                Settings.Default.SpectralLibraryList.Insert(0, docLibSpec);
+                Settings.Default.SpectralLibraryList = Settings.Default.SpectralLibraryList.ChangeInsert(0, docLibSpec);
             }
 
             // Go ahead and load the library - we'll need it for 
@@ -463,7 +463,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 // whatever earlier registration of the same file the library list may hold.
                 docLibSpec = new BiblioSpecLiteSpec(Path.GetFileNameWithoutExtension(DocumentContainer.DocumentFilePath), libraryPath)
                     .ChangeDocumentLibrary(true);
-                Settings.Default.SpectralLibraryList.Insert(0, docLibSpec);
+                Settings.Default.SpectralLibraryList = Settings.Default.SpectralLibraryList.ChangeInsert(0, docLibSpec);
             }
             else if (docLibSpec == null)
             {
@@ -482,7 +482,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         MessageDlg.Show(WizardForm, string.Format(Resources.EditLibraryDlg_OkDialog_The_file__0__is_not_a_supported_spectral_library_file_format, libraryPath));
                         return false;
                     }
-                    Settings.Default.SpectralLibraryList.SetValue(docLibSpec);
+                    Settings.Default.SpectralLibraryList = Settings.Default.SpectralLibraryList.ChangeValue(docLibSpec);
                 }
             }
             if (!LoadPeptideSearchLibrary(docLibSpec))

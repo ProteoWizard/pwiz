@@ -649,12 +649,6 @@ Here are the last 3 errors:
   <data name="RegressionGraphPane_RegressionGraphPane_Values" xml:space="preserve">
     <value>Values</value>
   </data>
-  <data name="RegressionUnconversion_CalculatorScoreFormat" xml:space="preserve">
-    <value>{0} Score</value>
-  </data>
-  <data name="RegressionUnconversion_CalculatorScoreValueFormat" xml:space="preserve">
-    <value>{0} Score ({1})</value>
-  </data>
   <data name="ReplicateGroupOp_ReplicateAxisTitle" xml:space="preserve">
     <value>Replicate</value>
   </data>

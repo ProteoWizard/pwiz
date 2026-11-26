@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Alerts
                 Console.WriteLine(exceptionInfo);
             }
 
-            if (forced || !Program.FunctionalTest)
+            if (forced || !ProgramContext.FunctionalTest)
             {
                 var exceptionInfo2 = new StringBuilder();
                 exceptionInfo2.AppendLine(exception.GetType().FullName);

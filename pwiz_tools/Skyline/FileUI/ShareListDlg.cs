@@ -119,13 +119,8 @@ namespace pwiz.Skyline.FileUI
 
         public void OkDialog(string fileName)
         {
-            ICollection<TItem> listSave = List.CreateEmptyList();
-            foreach (string itemName in listboxListItems.CheckedItems)
-            {
-                TItem item = GetItem(itemName);
-                if (!Equals(item, default(TItem)))
-                    listSave.Add(item);
-            }
+            var listSave = List.CreateList(listboxListItems.CheckedItems.Cast<string>()
+                .Select(GetItem).Where(item => !Equals(item, default(TItem))));
             try
             {
                 XmlSerializer xmlSerializer = new XmlSerializer(List.SerialType);
@@ -203,12 +198,16 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        /// <summary>
+        /// Imports the items in a file into <paramref name="listDest"/>, which must be a list the
+        /// settings hold, storing the list with them into the settings.
+        /// </summary>
         public static bool ImportFile(Form parent, TList listDest, string fileName)
         {
-            bool sucess;
+            SerializableSettingsList<TItem> listImported;
             try
             {
-                sucess = listDest.ImportFile(fileName, e => ResolveImportConflicts(parent, e));
+                listImported = listDest.ImportFile(fileName, e => ResolveImportConflicts(parent, e));
             }
             catch (Exception x)
             {
@@ -216,7 +215,10 @@ namespace pwiz.Skyline.FileUI
                                                                  fileName, x.InnerException);
                 return false;
             }
-            return sucess;
+            if (listImported == null)
+                return false;
+            Settings.Default.SetSettingsList(listImported);
+            return true;
         }
 
         private static IList<string> ResolveImportConflicts(Form parent, IList<string> existing)

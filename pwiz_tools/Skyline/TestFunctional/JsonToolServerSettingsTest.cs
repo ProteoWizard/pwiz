@@ -139,9 +139,9 @@ namespace pwiz.SkylineTestFunctional
 
             // Create a new enzyme, serialize via the same path as GetSettingsListItem
             var enzyme = new Enzyme(@"TestMcpEnzyme", @"KR", @"P");
-            Settings.Default.EnzymeList.Add(enzyme);
+            Settings.Default.EnzymeList = Settings.Default.EnzymeList.ChangeAdd(enzyme);
             string enzymeXml = server.GetSettingsListItem(enzymesName, enzyme.GetKey());
-            Settings.Default.EnzymeList.Remove(enzyme);
+            Settings.Default.EnzymeList = Settings.Default.EnzymeList.ChangeRemove(enzyme);
 
             // Add via AddSettingsListItem and verify typed roundtrip
             server.AddSettingsListItem(enzymesName, enzymeXml);
@@ -178,9 +178,9 @@ namespace pwiz.SkylineTestFunctional
             // Add a structural modification to verify a second list type works
             string structModsName = JsonToolServer.GetSettingsListName<StaticModList>();
             var mod = new StaticMod(@"TestMcpMod", @"C", null, @"C2H3NO");
-            Settings.Default.StaticModList.Add(mod);
+            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeAdd(mod);
             string modXml = server.GetSettingsListItem(structModsName, mod.GetKey());
-            Settings.Default.StaticModList.Remove(mod);
+            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeRemove(mod);
 
             server.AddSettingsListItem(structModsName, modXml);
             AssertEx.IsTrue(Settings.Default.StaticModList.TryGetValue(mod.GetKey(), out var retrievedMod));

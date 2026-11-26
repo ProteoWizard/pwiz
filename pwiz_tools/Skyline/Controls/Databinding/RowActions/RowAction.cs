@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
 
         protected SkylineWindow GetSkylineWindow(BoundDataGridView dataGridView)
         {
-            return ((SkylineDataSchema)((BindingListSource)dataGridView.DataSource).ViewContext.DataSchema).SkylineWindow;
+            return ((SkylineDataSchema)((BindingListSource)dataGridView.DataSource).ViewContext.DataSchema).GetSkylineWindow();
         }
     }
 }

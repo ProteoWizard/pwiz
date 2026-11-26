@@ -44,7 +44,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             InitializeComponent();
             DpiUtil.DeferBottomAnchors(this, tabPageEditable, tabPageCalculated);
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
             checkedListBoxAppliesTo.Items.Clear();
             comboAppliesTo.Items.Clear();
             foreach (var annotationTarget in new[]

@@ -22,7 +22,7 @@ using System.Threading;
 
 namespace pwiz.Common.DataBinding.Internal
 {
-    internal class ForegroundQuery : AbstractQuery
+    public class ForegroundQuery : AbstractQuery
     {
         private CancellationToken _cancellationToken;
 

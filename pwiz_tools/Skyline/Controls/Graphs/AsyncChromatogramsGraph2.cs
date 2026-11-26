@@ -687,7 +687,7 @@ namespace pwiz.Skyline.Controls.Graphs
         protected override void CreateHandle()
         {
             Assume.IsFalse(_inCreateHandle);
-            if (Program.FunctionalTest && Program.MainWindow != null && Program.MainWindow.InvokeRequired)
+            if (ProgramContext.FunctionalTest && Program.MainWindow != null && Program.MainWindow.InvokeRequired)
             {
                 throw new ApplicationException(@"AsynchChromatogramsGraph2.CreateHandle called on wrong thread");
             }

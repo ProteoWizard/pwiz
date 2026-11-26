@@ -92,7 +92,7 @@ namespace pwiz.SkylineTestFunctional
             string ospreyExe = OspreyTestUtil.EnsureOsprey(TestContext);
             // The additional settings start at Osprey's defaults, whatever an earlier wizard on this machine left
             Settings.Default.OspreyAdditionalSettings = null;
-            Settings.Default.OspreySettingsPresets.RemoveKey(PRESET_NAME);
+            Settings.Default.OspreySettingsPresets = Settings.Default.OspreySettingsPresets.ChangeRemoveKey(PRESET_NAME);
             OspreyProperties.ClearCache();
             VerifyLatestBuildOnTeamCity();
             PrepareDocument(TestFilesDir.GetTestPath("OspreySearchTest.sky"));

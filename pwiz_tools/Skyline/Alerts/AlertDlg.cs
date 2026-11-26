@@ -27,10 +27,10 @@ namespace pwiz.Skyline.Alerts
 {
     public class AlertDlg : CommonAlertDlg
     {
-        private Helpers.ModeUIAwareFormHelper _modeUIHelper;
-        public Helpers.ModeUIExtender ModeUIExtender; // Allows UI mode management in Designer
+        private ModeUIHelpers.ModeUIAwareFormHelper _modeUIHelper;
+        public ModeUIHelpers.ModeUIExtender ModeUIExtender; // Allows UI mode management in Designer
         private Container _components; // For IExtender use
-        public Helpers.ModeUIAwareFormHelper GetModeUIHelper() // Method instead of property so it doesn't show up in Designer
+        public ModeUIHelpers.ModeUIAwareFormHelper GetModeUIHelper() // Method instead of property so it doesn't show up in Designer
         {
             return _modeUIHelper;
         }
@@ -63,8 +63,8 @@ namespace pwiz.Skyline.Alerts
         private void InitializeComponent()
         {
             _components = new Container();
-            ModeUIExtender = new Helpers.ModeUIExtender(_components);
-            _modeUIHelper = new Helpers.ModeUIAwareFormHelper(ModeUIExtender);
+            ModeUIExtender = new ModeUIHelpers.ModeUIExtender(_components);
+            _modeUIHelper = new ModeUIHelpers.ModeUIAwareFormHelper(ModeUIExtender);
         }
         #endregion
 

@@ -39,6 +39,7 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -106,7 +107,7 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            Settings.Default.PeakScoringModelList.Clear();
+            Settings.Default.PeakScoringModelList = Settings.Default.PeakScoringModelList.ChangeClear();
 
             // Open the file
             RunUI(() => SkylineWindow.OpenFile(GetTestPath("SRMCourse_DosR-hDP__20130501-tutorial-empty.sky")));

@@ -19,10 +19,13 @@
 
 using System;
 using System.IO.Pipes;
+using System.Runtime.Versioning;
 using System.Reflection;
 
 namespace SkylineTool
 {
+    // Message-mode named pipes exist only on Windows, where Skyline hosts its tools
+    [SupportedOSPlatform("windows")]
     public class RemoteClient : RemoteBase
     {
         public RemoteClient(string connectionName)

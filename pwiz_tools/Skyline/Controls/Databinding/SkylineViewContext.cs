@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Controls.Databinding
         private ViewChangeListener _viewChangeListener;
         public SkylineViewContext(SkylineDataSchema dataSchema, IEnumerable<RowSourceInfo> rowSources) : base(dataSchema, rowSources)
         {
-            ApplicationIcon = Resources.Skyline;
+            ApplicationIcon = ImageResources.Skyline;
         }
 
         public SkylineViewContext(ColumnDescriptor parentColumn, IRowSource rowSource)
@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 parentColumn.DataSchema,
                 new[] {new RowSourceInfo(rowSource, GetDefaultViewInfo(parentColumn))})
         {
-            ApplicationIcon = Resources.Skyline;
+            ApplicationIcon = ImageResources.Skyline;
         }
 
         public override IEnumerable<ViewGroup> ViewGroups
@@ -174,7 +174,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     return new ViewSpecList(newDocViews, newLayouts);
                 });
 
-                var skylineWindow = SkylineDataSchema.SkylineWindow;
+                var skylineWindow = SkylineDataSchema.GetSkylineWindow();
                 if (skylineWindow != null)
                 {
                     skylineWindow.ModifyDocument(DatabindingResources.SkylineViewContext_SaveViewSpecList_Change_Document_Reports, doc =>
@@ -195,7 +195,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         protected void ChangeDocumentViewSpecList(Func<ViewSpecList, ViewSpecList> changeViewSpecFunc)
         {
-            var skylineWindow = SkylineDataSchema.SkylineWindow;
+            var skylineWindow = SkylineDataSchema.GetSkylineWindow();
             if (skylineWindow != null)
             {
                 skylineWindow.ModifyDocument(DatabindingResources.SkylineViewContext_ChangeDocumentViewSpec_Change_Document_Reports, doc =>
@@ -492,15 +492,15 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             return new []
             {
-                Resources.Folder,
-                Resources.Protein,
-                Resources.Peptide,
-                Resources.TransitionGroup,
-                Resources.Fragment,
-                Resources.Replicate,
-                Resources.MoleculeList,
-                Resources.Molecule,
-                Resources.AuditLog,
+                ImageResources.Folder,
+                ImageResources.Protein,
+                ImageResources.Peptide,
+                ImageResources.TransitionGroup,
+                ImageResources.Fragment,
+                ImageResources.Replicate,
+                ImageResources.MoleculeList,
+                ImageResources.Molecule,
+                ImageResources.AuditLog,
             };
         }
 
@@ -613,20 +613,20 @@ namespace pwiz.Skyline.Controls.Databinding
 
         protected void DeleteSkylineDocNodes(BoundDataGridView dataGridView, IEnumerable<SkylineDocNode> docNodes)
         {
-            DeleteNodesAction.DeleteSkylineDocNodes(SkylineDataSchema.SkylineWindow, dataGridView, docNodes);
+            DeleteNodesAction.DeleteSkylineDocNodes(SkylineDataSchema.GetSkylineWindow(), dataGridView, docNodes);
         }
 
         public override IEnumerable<IUiModeInfo> AvailableUiModes
         {
             get
             {
-                var skylineWindow = SkylineDataSchema.SkylineWindow;
+                var skylineWindow = SkylineDataSchema.GetSkylineWindow();
                 if (skylineWindow == null)
                 {
-                    return UiModes.AllModes;
+                    return UiModeChoices.AllModes;
                 }
 
-                return UiModes.AvailableModes(SkylineDataSchema.SkylineWindow.ModeUI);
+                return UiModeChoices.AvailableModes(SkylineDataSchema.GetSkylineWindow().ModeUI);
             }
         }
 

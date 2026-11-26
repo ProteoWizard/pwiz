@@ -34,7 +34,7 @@ namespace pwiz.Skyline.FileUI
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             SimpleGridViewDriver<TransitionImportErrorInfo> compareGridViewDriver = new ImportErrorGridViewDriver(
                 dataGridViewErrors,

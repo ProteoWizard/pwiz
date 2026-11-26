@@ -42,18 +42,18 @@ namespace pwiz.SkylineTestFunctional
             testForm.BeginInvoke(testForm.Close);
             WaitForClosedForm<BackgroundEventThreadsTestForm>();
 
-            Assert.AreEqual(0, Program.TestExceptions.Count);
+            Assert.AreEqual(0, ProgramContext.TestExceptions.Count);
             BackgroundEventThreads.ShowFormOnBackgroundThread(() =>
             {
                 var form = new BackgroundEventThreadsTestForm();
                 form.HandleCreated += (sender, args) => throw new TestException();
                 return form;
             });
-            WaitForCondition(10000, ()=>Program.TestExceptions.Any(), 
+            WaitForCondition(10000, ()=>ProgramContext.TestExceptions.Any(), 
                 "Waiting for exception to be thrown", true, false);
-            Assert.AreEqual(1, Program.TestExceptions.Count);
-            Assert.IsInstanceOfType(Program.TestExceptions.First(), typeof(TestException));
-            Program.TestExceptions.Clear();
+            Assert.AreEqual(1, ProgramContext.TestExceptions.Count);
+            Assert.IsInstanceOfType(ProgramContext.TestExceptions.First(), typeof(TestException));
+            ProgramContext.TestExceptions.Clear();
             testForm = WaitForOpenForm<BackgroundEventThreadsTestForm>();
             Assert.IsNotNull(testForm);
             testForm.BeginInvoke(testForm.Close);

@@ -68,7 +68,7 @@ namespace pwiz.Skyline.EditUI
 
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             // Set initial decoys number
             textNumberOfDecoys.Text = RefinementSettings.SuggestDecoyCount(document).ToString(LocalizationHelper.CurrentCulture);

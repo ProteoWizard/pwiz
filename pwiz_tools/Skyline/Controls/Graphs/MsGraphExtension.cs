@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Controls.Graphs
             CloseButton = new ToolStripButton()
             {
                 Alignment = ToolStripItemAlignment.Right,
-                Image = Resources.Close,
+                Image = ImageResources.Close,
                 ImageTransparentColor = Color.Magenta,
                 DisplayStyle = ToolStripItemDisplayStyle.Image,
                 Tag = @"Close button"

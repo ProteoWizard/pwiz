@@ -65,12 +65,12 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Handles "peptide" -> "molecule" translation as required by current UI mode
         /// </summary>
-        protected Helpers.ModeUIAwareFormHelper ModeUIHelper
+        protected ModeUIHelpers.ModeUIAwareFormHelper ModeUIHelper
         {
             get
             {
                 var formex = MessageParent as FormEx;
-                return formex?.GetModeUIHelper() ?? Helpers.ModeUIAwareFormHelper.DEFAULT;
+                return formex?.GetModeUIHelper() ?? ModeUIHelpers.ModeUIAwareFormHelper.DEFAULT;
             }
         }
 

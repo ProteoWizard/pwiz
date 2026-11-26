@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Alerts
             // 
             this.imageListModeUI.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageListModeUI.ImageStream")));
             this.imageListModeUI.TransparentColor = System.Drawing.Color.Transparent;
-            this.modeUIHandler.SetUIMode(this.imageListModeUI, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
+            this.modeUIHandler.SetUIMode(this.imageListModeUI, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
             this.imageListModeUI.Images.SetKeyName(0, "Proteomic");
             this.imageListModeUI.Images.SetKeyName(1, "Molecules");
             this.imageListModeUI.Images.SetKeyName(2, "Mixed");
@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Alerts
             this.imageListBoxItemMolecule,
             this.imageListBoxItemMixed});
             this.listBoxModeUI.Name = "listBoxModeUI";
-            this.modeUIHandler.SetUIMode(this.listBoxModeUI, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
+            this.modeUIHandler.SetUIMode(this.listBoxModeUI, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
             // 
             // imageListBoxItemProteomics
             // 

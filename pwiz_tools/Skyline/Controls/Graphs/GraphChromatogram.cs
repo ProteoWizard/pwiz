@@ -213,7 +213,7 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.GraphPane = new MSGraphPane();
             _graphHelper = GraphHelper.Attach(graphControl, ZoomSynchronizer.INSTANCE);
             NameSet = name;
-            Icon = Resources.SkylineData;
+            Icon = ImageResources.SkylineData;
 
             _nameChromatogramSet = name;
             _documentContainer = documentContainer;

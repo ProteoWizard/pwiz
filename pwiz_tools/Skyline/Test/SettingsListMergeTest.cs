@@ -22,6 +22,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -82,7 +83,7 @@ namespace pwiz.SkylineTest
         private static ToolList CreateList(params ToolDescription[] tools)
         {
             var list = new ToolList();
-            list.AddRange(tools);
+            list = list.ChangeAddRange(tools);
             return list;
         }
     }

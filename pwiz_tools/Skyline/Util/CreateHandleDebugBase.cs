@@ -267,7 +267,7 @@ namespace pwiz.Skyline.Util
         /* Uncomment this for debugging purposes
         protected override void CreateHandle()
         {
-            if (Program.FunctionalTest)
+            if (ProgramContext.FunctionalTest)
                 FormCreateHandle();
             else
                 base.CreateHandle();

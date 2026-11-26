@@ -292,7 +292,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (!string.IsNullOrEmpty(input.BrukerTemplateFileValue))
                 {
-                    IPointList brukerPoints = null;
+                    IList<(double X, double Y)> brukerPoints = null;
                     if (input.BrukerMetrics != null)
                     {
                         brukerPoints = input.BrukerMetrics.Get(input.BrukerMetricType);
@@ -313,7 +313,9 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                     }
 
-                    return brukerPoints;
+                    return brukerPoints == null
+                        ? null
+                        : new PointPairList(brukerPoints.Select(pt => new PointPair(pt.X, pt.Y)).ToList());
                 }
 
                 var predict = document.Settings.PeptideSettings.Prediction;

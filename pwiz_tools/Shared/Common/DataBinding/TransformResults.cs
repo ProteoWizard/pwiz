@@ -20,7 +20,7 @@ using pwiz.Common.DataBinding.Layout;
 
 namespace pwiz.Common.DataBinding
 {
-    internal class TransformResults
+    public class TransformResults
     {
         public static readonly TransformResults EMPTY = new TransformResults {PivotedRows = ReportResults.EMPTY};
         public TransformResults(TransformResults parent, IRowTransform transform, ReportResults pivotedRows)

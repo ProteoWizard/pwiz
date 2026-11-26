@@ -47,7 +47,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
-            Program.ExtraRawFileSearchFolder = TestFilesDir.PersistentFilesDir;
+            ProgramContext.ExtraRawFileSearchFolder = TestFilesDir.PersistentFilesDir;
             TestSmallDocument();
             TestMediumDocument();
         }

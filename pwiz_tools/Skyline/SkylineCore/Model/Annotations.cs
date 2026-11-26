@@ -1,0 +1,426 @@
+/*
+ * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Serialization;
+using pwiz.Skyline.Properties;
+
+namespace pwiz.Skyline.Model
+{
+    /// <summary>
+    /// Collection of annotation values (and the Note) found on a document node, 
+    /// or a ChromInfo.
+    /// </summary>
+    public sealed class Annotations
+    {
+        public static readonly List<Color> COLORS = new List<Color> {
+                    Color.OrangeRed,
+                    Color.Brown,
+                    /*Pink*/ Color.FromArgb(255, 128, 255),
+                    /*Dark Yellow*/ Color.FromArgb(206, 206, 0),
+                    /*Bright Green*/ Color.FromArgb(0, 255, 0),
+                    Color.Green,
+                    /*Bright Blue*/ Color.FromArgb(3, 184, 252),
+                    Color.Blue,
+                    Color.Black,
+                    /*Purple*/ Color.FromArgb(128, 0, 255)
+        };
+
+        public static readonly Annotations EMPTY = new Annotations(null, null, -1);
+        private readonly IDictionary<string, string> _annotations;
+        
+        public Annotations(String note, IEnumerable<KeyValuePair<string, string>> annotations, int colorIndex)
+        {
+            ColorIndex = colorIndex;
+            Note = note == string.Empty ? null : note;
+            if (annotations != null)
+            {
+                var annotationsDict = new Dictionary<string, string>();
+                foreach (var entry in annotations)
+                {
+                    if (!string.IsNullOrEmpty(entry.Value))
+                    {
+                        annotationsDict.Add(entry.Key, entry.Value);
+                    }
+                }
+                if (annotationsDict.Count > 0 )
+                {
+                    _annotations = annotationsDict;
+                }
+            }
+        }
+
+        [Track(defaultValues:typeof(DefaultValuesNull))]
+        public String Note { get; private set; }
+
+        public int ColorIndex { get; private set; }
+
+        private class DefaultValuesBrush : DefaultValues
+        {
+            public override bool IsDefault(object obj, object parentObject)
+            {
+                var annotations = parentObject as Annotations;
+                return annotations != null && annotations.ColorIndex == -1;
+            }
+        }
+
+        // Named ColorBrush, though a Color, because audit logs saved in .skyl files refer to the property by name
+        [Track(defaultValues:typeof(DefaultValuesBrush))]
+        public Color ColorBrush
+        {
+            get { return COLORS[Math.Max(0, Math.Min(COLORS.Count - 1, ColorIndex))]; }
+        }
+
+        public bool IsEmpty
+        { 
+            get
+            {
+                return Note == null && _annotations == null;
+            }
+        }
+
+        public class Annotation : IAuditLogObject
+        {
+            private string _value;
+            public Annotation(KeyValuePair<string, string> annotation)
+            {
+                Name = annotation.Key;
+                Value = annotation.Value;
+
+                AnnotationDef = Settings.Default.AnnotationDefList.FirstOrDefault(a => a.Name == Name);
+            }
+
+            
+            public string Name { get; private set; }
+
+            [Track(ignoreName:true)]
+            public string Value
+            {
+                get {
+                    if (AnnotationDef != null && AnnotationDef.Type == AnnotationDef.AnnotationType.true_false)
+                        return !string.IsNullOrEmpty(_value) ? @"{2:True}" : @"{2:False}";
+
+                    return _value;
+                }
+                set { _value = value; }
+            }
+
+            public AnnotationDef AnnotationDef { get; private set; }
+
+            public string AuditLogText { get { return Name; } }
+            public bool IsName { get { return true; } }
+
+            protected bool Equals(Annotation other)
+            {
+                return string.Equals(Name, other.Name) && string.Equals(Value, other.Value);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((Annotation) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ (Value != null ? Value.GetHashCode() : 0);
+                }
+            }
+        }
+
+        [TrackChildren(ignoreName:true)]
+        public IEnumerable<Annotation> AnnotationsEnumerable
+        {
+            get
+            {
+                return ListAnnotations().Select(kvp => new Annotation(kvp));
+            }
+        }
+
+        public KeyValuePair<string,string>[] ListAnnotations()
+        {
+            if (_annotations == null)
+            {
+                return new KeyValuePair<string, string>[0];
+            }
+            return _annotations.ToArray();
+        }
+        public String GetAnnotation(String name)
+        {           
+            string value;
+            if (_annotations == null || !_annotations.TryGetValue(name, out value))
+            {
+                return null;
+            }
+            return value;
+        }
+        public object GetAnnotation(AnnotationDef annotationDef)
+        {
+            return annotationDef.ParsePersistedString(GetAnnotation(annotationDef.Name));
+        }
+        public Annotations ChangeNote(String note)
+        {
+            if (note == string.Empty)
+            {
+                note = null;
+            }
+            return new Annotations(note, _annotations, ColorIndex);
+        }
+
+        public Annotations ChangeAnnotation(string name, string value)
+        {
+            var newAnnotations = (_annotations != null ?
+                new Dictionary<string, string>(_annotations) :
+                new Dictionary<string, string>());
+            newAnnotations[name] = value;      
+            return new Annotations(Note, newAnnotations, ColorIndex);
+        }
+
+        public Annotations RemoveAnnotation(string name)
+        {
+            if (_annotations == null || !_annotations.ContainsKey(name))
+                return this;
+            Dictionary<string, string> newAnnotations = null;
+            if (_annotations.Count > 1)
+            {
+                newAnnotations = new Dictionary<string, string>(_annotations);
+                newAnnotations.Remove(name);
+            }
+            var result = new Annotations(Note, newAnnotations, ColorIndex);
+            if (result.IsEmpty)
+                result = EMPTY;
+            return result;
+        }
+
+        public Annotations ChangeAnnotation(AnnotationDef annotationDef, object value)
+        {
+            return ChangeAnnotation(annotationDef.Name, annotationDef.ToPersistedString(value));
+        }
+
+        public Annotations MergeNewAnnotations(string newText, int newColorIndex, IList<KeyValuePair<string, string>> newAnnotations)
+        {
+            IList<KeyValuePair<string, string>> listNodeAnnotations =
+                new List<KeyValuePair<string, string>>(ListAnnotations());
+            var dictNodeAnnotations = listNodeAnnotations.ToDictionary(
+                nodeAnnotation => nodeAnnotation.Key,
+                nodeAnnotation => nodeAnnotation.Value);
+            if (newAnnotations != null)
+            {
+                foreach (KeyValuePair<string, string> annotation in newAnnotations)
+                {
+                    dictNodeAnnotations[annotation.Key] = annotation.Value;
+                }
+            }
+            newColorIndex = newColorIndex != -1 ? newColorIndex : ColorIndex;
+            newText = newText ?? Note;
+            var annotations = new Annotations(newText, dictNodeAnnotations, newColorIndex);
+            if (annotations.IsEmpty)
+                annotations.ColorIndex = -1;
+            return annotations;
+        }
+
+        public Annotations Merge(Annotations annotations)
+        {
+            string note = Note;
+            if (string.IsNullOrEmpty(note))
+                note = annotations.Note;
+            else if (!string.IsNullOrEmpty(annotations.Note))
+            {
+                // Be careful not to creat repetitive notes during document merging
+                var newNoteBuilder = new StringBuilder();
+                foreach(var notePart in SplitNotes(note).Union(SplitNotes(annotations.Note)))
+                {
+                    if (newNoteBuilder.Length > 0)
+                        newNoteBuilder.AppendLine().AppendLine();
+                    newNoteBuilder.Append(notePart);
+                }
+                note = newNoteBuilder.ToString();
+            }
+            var annotationsNew = _annotations;
+            if (annotationsNew == null)
+                annotationsNew = annotations._annotations;
+            else if (annotations._annotations != null)
+            {
+                // With annotations implemented as only a set of name, value pairs
+                // there is no way to know in this code which annotations are full-text,
+                // an so no way to do annotation merging as above.
+                annotationsNew = new Dictionary<string, string>(annotationsNew);
+                foreach (var annotation in annotations._annotations)
+                {
+                    if (annotationsNew.TryGetValue(annotation.Key, out var value))
+                    {
+                        if (Equals(annotation.Value, value))
+                            continue;
+                        throw new InvalidDataException(string.Format(ModelResources.Annotations_Merge_Annotation_conflict_for__0__found_attempting_to_merge_annotations,
+                                                                     annotation.Key));
+                    }
+                    annotationsNew.Add(annotation);
+                }
+            }
+            int colorIndex = (ColorIndex != -1 ? ColorIndex : annotations.ColorIndex);
+            var merged = new Annotations(note, annotationsNew, colorIndex);
+            if (Equals(merged, this))
+                return this;
+            if (Equals(merged, annotations))
+                return annotations;
+            return merged;
+        }
+
+        private static IEnumerable<string> SplitNotes(string note)
+        {
+            // ReSharper disable LocalizableElement
+            return note.Split(new[] {"\r\n\r\n"}, StringSplitOptions.RemoveEmptyEntries);
+            // ReSharper restore LocalizableElement
+        }
+
+        public bool Equals(Annotations other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return EqualsDict(other._annotations, _annotations) && Equals(other.Note, Note) 
+                && Equals(other.ColorIndex, ColorIndex);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as Annotations);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return GetHashCodeDict(_annotations) * 397 + (Note != null ? Note.GetHashCode() : 0);
+            }
+        }
+
+        private static int GetHashCodeDict<TK,TV>(IEnumerable<KeyValuePair<TK, TV>> dictionary)
+        {
+            if (dictionary == null)
+            {
+                return 0;
+            }
+            var result = 0;
+            foreach (var entry in dictionary)
+            {
+                result += GetHashCode(entry.Key)*31 + GetHashCode(entry.Value);
+            }
+            return result;
+        }
+        private static int GetHashCode<TVal>(TVal value)
+        {
+            return Equals(value, default(TVal)) ? 0 : value.GetHashCode();
+        }
+        private static bool EqualsDict<TK,TV>(ICollection<KeyValuePair<TK, TV>> dictionary1, IDictionary<TK,TV> dictionary2)
+        {
+            if (ReferenceEquals(dictionary1, dictionary2))
+            {
+                return true;
+            }
+            if (dictionary1 == null || dictionary2 == null)
+            {
+                return false;
+            }
+            if (dictionary1.Count != dictionary2.Count)
+            {
+                return false;
+            }
+            foreach (var entry in dictionary1)
+            {
+                TV value;
+                if (!dictionary2.TryGetValue(entry.Key, out value))
+                {
+                    return false;
+                }
+                if (!Equals(entry.Value, value))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public SkylineDocumentProto.Types.Annotations ToProtoAnnotations()
+        {
+            if (IsEmpty)
+            {
+                return null;
+            }
+            SkylineDocumentProto.Types.Annotations protoAnnotations = new SkylineDocumentProto.Types.Annotations
+            {
+                Note = Note ?? string.Empty,
+                Color = ColorIndex
+            };
+            if (_annotations != null)
+            {
+                foreach (var annotation in _annotations)
+                {
+                    protoAnnotations.Values.Add(new SkylineDocumentProto.Types.AnnotationValue()
+                    {
+                        Name = annotation.Key,
+                        TextValue = annotation.Value
+                    });
+                }
+            }
+            return protoAnnotations;
+        }
+
+        public static Annotations FromProtoAnnotations(SkylineDocumentProto.Types.Annotations protoAnnotations)
+        {
+            if (protoAnnotations == null)
+            {
+                return EMPTY;
+            }
+            return new Annotations(protoAnnotations.Note, protoAnnotations.Values
+                .Select(value=>new KeyValuePair<string, string>(
+                    value.Name, 
+                    value.TextValue)), 
+                    protoAnnotations.Color);
+        }
+
+        /// <summary>
+        /// Removes all annotation values whose names are not in the specified Set.
+        /// </summary>
+        public Annotations RetainAnnotationNames(HashSet<string> namesToRetain)
+        {
+            if (_annotations == null)
+            {
+                return this;
+            }
+
+            var newAnnotations = _annotations.Where(kvp => namesToRetain.Contains(kvp.Key)).ToArray();
+            if (newAnnotations.Length == _annotations.Count)
+            {
+                return this;
+            }
+
+            return new Annotations(Note, newAnnotations, ColorIndex);
+        }
+    }
+}

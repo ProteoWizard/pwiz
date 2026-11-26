@@ -61,13 +61,13 @@ namespace pwiz.Skyline.Util
                 try
                 {
                     Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-                    Application.ThreadException += (sender, args) => Program.ReportException(args.Exception);
+                    Application.ThreadException += (sender, args) => ProgramContext.ReportException(args.Exception);
                     LocalizationHelper.InitThread();
                     action();
                 }
                 catch (Exception e)
                 {
-                    Program.ReportException(e);
+                    ProgramContext.ReportException(e);
                 }
                 finally
                 {

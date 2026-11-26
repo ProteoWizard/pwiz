@@ -38,7 +38,7 @@ namespace pwiz.Skyline.ToolsUI
         public EditServerDlg(IEnumerable<Server> existing)
         {
             _existing = existing;
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
             InitializeComponent();
         }
 

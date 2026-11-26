@@ -162,7 +162,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             // Use a different timespan when running tests. 
             // CONSIDER: should tests configure this directly?
-            var timeSpan = Program.FunctionalTest ? TimeSpan.FromMilliseconds(500) : TimeSpan.FromSeconds(3);
+            var timeSpan = ProgramContext.FunctionalTest ? TimeSpan.FromMilliseconds(500) : TimeSpan.FromSeconds(3);
             HealthMonitor = new FileSystemHealthMonitor(timeSpan);
             HealthMonitor.PathAvailabilityChanged += OnPathAvailabilityChanged;
         }
@@ -383,7 +383,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 // Silently ignore expected FSW exceptions (IOException from network disconnects, etc.).
                 // Files view is auxiliary UI; its background processing should never interrupt user workflow.
                 if (ExceptionUtil.IsProgrammingDefect(ex))
-                    Program.ReportException(ex);
+                    ProgramContext.ReportException(ex);
             }
         }
 

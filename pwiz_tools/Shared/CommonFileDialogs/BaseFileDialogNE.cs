@@ -59,7 +59,7 @@ namespace pwiz.CommonFileDialogs
         /// <param name="remoteAccounts">For UNIFI</param>
         /// <param name="specificDataSourceFilter">Optional list of specific files the user needs to located, ignoring the rest</param>
         /// <param name="isRemote">Indicates that this dialog is for remote accounts only and local drives and folders should be hidden</param>
-        public BaseFileDialogNE(string[] sourceTypes, IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null, bool isRemote = false)
+        public BaseFileDialogNE(string[] sourceTypes, IEnumerable<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null, bool isRemote = false)
         {
             InitializeComponent();
             _remoteAccounts = new List<RemoteAccount>(remoteAccounts);
@@ -174,7 +174,7 @@ namespace pwiz.CommonFileDialogs
         public void RestoreState(string documentPath, OpenDataSourceState state)
         {
             if (state != null)
-                Size = state.WindowSize;
+                Size = new Size(state.WindowSize.Width, state.WindowSize.Height);
 
             string initialDir = state?.InitialDirectory;
             // If the saved initial directory is not for the same document, then start
@@ -196,8 +196,8 @@ namespace pwiz.CommonFileDialogs
             {
                 if (SourceTypeName != null)
                     SourceTypeName = state.SourceTypeName;
-                ListView = state.ListView;
-                SetListViewSort(state.ListSortColumnIndex, state.ListSortOrder);
+                ListView = (View) state.ListView;
+                SetListViewSort(state.ListSortColumnIndex, (SortOrder) state.ListSortOrder);
             }
         }
 
@@ -208,10 +208,10 @@ namespace pwiz.CommonFileDialogs
                 DocumentPath = documentPath,
                 InitialDirectory = CurrentDirectory.ToString(),
                 SourceTypeName = SourceTypeName,
-                ListView = ListView,
+                ListView = (FileListView) ListView,
                 ListSortColumnIndex = ListSortColumnIndex,
-                ListSortOrder = ListSortOrder,
-                WindowSize = Size
+                ListSortOrder = (FileListSortOrder) ListSortOrder,
+                WindowSize = new FileDialogSize { Width = Size.Width, Height = Size.Height }
             };
         }
 
@@ -1755,7 +1755,7 @@ namespace pwiz.CommonFileDialogs
         /// Must be overridden in application-specific subclasses to provide account editing UI.
         /// Returns the updated list of accounts, or null if the user cancelled.
         /// </summary>
-        protected virtual IList<RemoteAccount> OnEditAccounts(IWin32Window owner)
+        protected virtual IEnumerable<RemoteAccount> OnEditAccounts(IWin32Window owner)
         {
             return null;
         }

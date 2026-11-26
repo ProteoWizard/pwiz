@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             InitializeComponent();
             ImageListScaler.ScaleToDpi(this, imageList1);   // 16x16 icons are a 96-DPI design (issue #4599)
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
             _skylineWindow = skylineWindow;
             Debug.Assert(indexLocalizedLanguage == comboLanguage.Items.Count);
             comboLanguage.Items.Add(CultureInfo.CurrentUICulture.DisplayName);
@@ -121,8 +121,8 @@ namespace pwiz.Skyline.Controls.Databinding
                         DataSchemaLocalizer.INVARIANT));
                 _viewContext.ViewsChanged += OnViewsChanged;
                 imageList1.Images.Clear();
-                ImageListScaler.AddScaled(imageList1, Resources.Folder);
-                ImageListScaler.AddScaled(imageList1, Resources.Blank);
+                ImageListScaler.AddScaled(imageList1, ImageResources.Folder);
+                ImageListScaler.AddScaled(imageList1, ImageResources.Blank);
                 ImageListScaler.AddRangeScaled(imageList1, _viewContext.GetImageList());
                 _rowFactories = RowFactories.GetRowFactories(CancellationToken.None, _viewContext.SkylineDataSchema);
                 Repopulate();

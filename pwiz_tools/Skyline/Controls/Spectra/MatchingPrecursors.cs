@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 
@@ -47,7 +48,7 @@ namespace pwiz.Skyline.Controls.Spectra
 
         public void LinkValueOnClick(object sender, EventArgs args)
         {
-            var skylineWindow = DataSchema.SkylineWindow;
+            var skylineWindow = DataSchema.GetSkylineWindow();
             if (null == skylineWindow)
             {
                 return;

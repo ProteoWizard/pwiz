@@ -70,7 +70,7 @@ namespace pwiz.SkylineTestData
                 AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.peptide, AnnotationDef.AnnotationTarget.replicate),
                 AnnotationDef.AnnotationType.value_list, annotationValuesArray);
             CollectionAssert.Contains(doc.Settings.DataSettings.AnnotationDefs.ToList(), peptideQualityAnnotation);
-            CollectionAssert.Contains(Settings.Default.AnnotationDefList, peptideQualityAnnotation);
+            CollectionAssert.Contains(Settings.Default.AnnotationDefList.ToList(), peptideQualityAnnotation);
             // Test default behavior of resolving environment conflicts through overwriting
             output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
@@ -125,7 +125,7 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(1, doc.Settings.DataSettings.AnnotationDefs.Count);
             // Assert that the definition matches the one we defined
             CollectionAssert.Contains(doc.Settings.DataSettings.AnnotationDefs.ToList(), peptideQualityAnnotation);
-            CollectionAssert.Contains(Settings.Default.AnnotationDefList, peptideQualityAnnotation);
+            CollectionAssert.Contains(Settings.Default.AnnotationDefList.ToList(), peptideQualityAnnotation);
         }
 
         [TestMethod]
@@ -211,12 +211,12 @@ namespace pwiz.SkylineTestData
                 AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.peptide),
                 AnnotationDef.AnnotationType.value_list, annotationValuesArray);
             CollectionAssert.Contains(doc.Settings.DataSettings.AnnotationDefs.ToList(), peptideQualityAnnotation);
-            CollectionAssert.Contains(Settings.Default.AnnotationDefList, peptideQualityAnnotation);
+            CollectionAssert.Contains(Settings.Default.AnnotationDefList.ToList(), peptideQualityAnnotation);
             var bioReplicateAnnotation = new AnnotationDef("BioReplicate",
                 AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate),
                 AnnotationDef.AnnotationType.number, null);
             CollectionAssert.Contains(doc.Settings.DataSettings.AnnotationDefs.ToList(), bioReplicateAnnotation);
-            CollectionAssert.Contains(Settings.Default.AnnotationDefList, bioReplicateAnnotation);
+            CollectionAssert.Contains(Settings.Default.AnnotationDefList.ToList(), bioReplicateAnnotation);
             // Test error (.xml file with incorrect formatting)
             output = RunCommand("--new=" + newDocumentPath, // Create a document (without annotations)
                 "--overwrite", // Overwrite, as the file may already exist in the bin

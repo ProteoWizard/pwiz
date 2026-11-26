@@ -32,7 +32,7 @@ namespace pwiz.Skyline.FileUI
         /// File picker for WatersConnect method files
         /// </summary>
         /// <param name="remoteAccounts">Waters Connect accounts</param>
-        public WatersConnectSelectMethodFileDialog(IList<RemoteAccount> remoteAccounts)
+        public WatersConnectSelectMethodFileDialog(IEnumerable<RemoteAccount> remoteAccounts)
             : base( remoteAccounts )
         {
             Text = string.Format(FileUIResources.OpenFileDialogNEWatersConnectMethod_Select_Template, InstrumentType);

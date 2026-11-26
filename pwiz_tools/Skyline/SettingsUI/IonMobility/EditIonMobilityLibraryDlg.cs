@@ -71,7 +71,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
             var smallMoleculeUI = Program.MainWindow.Document.HasSmallMolecules || Program.MainWindow.ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic;
 
             var targetResolver = TargetResolver.MakeTargetResolver(Program.ActiveDocumentUI);

@@ -24,6 +24,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -47,9 +48,9 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
                             doc => doc.ChangeSettings(SrmSettingsList.GetDefault())));
 
-            Settings.Default.HeavyModList.Clear();
-            Settings.Default.StaticModList.Clear();
-            Settings.Default.StaticModList.AddRange(StaticModList.GetDefaultsOn());
+            Settings.Default.HeavyModList = Settings.Default.HeavyModList.ChangeClear();
+            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeClear();
+            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeAddRange(StaticModList.GetDefaultsOn());
 
             // Show dialog asking user if text is FASTA or peptide list
             RunDlg<PasteTypeDlg>(() => SkylineWindow.Paste(TextUtil.LineSeparate("QFVLSCVILQFVLSCVILQFVLSCVILQFVLSCVILR",

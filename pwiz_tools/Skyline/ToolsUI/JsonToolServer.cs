@@ -251,7 +251,7 @@ namespace pwiz.Skyline.ToolsUI
             try
             {
                 var process = Process.GetProcessById(processId);
-                return Program.FunctionalTest ||
+                return ProgramContext.FunctionalTest ||
                        process.ProcessName.StartsWith(@"Skyline", StringComparison.OrdinalIgnoreCase);
             }
             catch (ArgumentException)
@@ -1328,11 +1328,16 @@ namespace pwiz.Skyline.ToolsUI
                     itemName.SingleQuote(), listType));
             }
 
-            // MappedList.InsertItem handles upsert (removes existing key before inserting)
-            var addMethod = value.GetType().GetMethod(@"Add", new[] { itemType });
-            if (addMethod == null)
-                throw new InvalidOperationException(LlmInstruction.SpaceSeparate(@"No Add method found on:", value.GetType().Name));
-            addMethod.Invoke(value, new[] { item });
+            // Adding replaces any item with the same key
+            var changeAdd = typeof(JsonToolServer).GetMethod(nameof(ChangeAdd), BindingFlags.NonPublic | BindingFlags.Static);
+            // ReSharper disable once PossibleNullReferenceException
+            prop.SetValue(Settings.Default, changeAdd.MakeGenericMethod(itemType).Invoke(null, new[] { value, item }));
+        }
+
+        private static SettingsListBase<TItem> ChangeAdd<TItem>(SettingsListBase<TItem> list, TItem item)
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return list.ChangeItemsWith(items => items.Add(item));
         }
 
         public string[] GetSettingsListSelectedItems(string listType)

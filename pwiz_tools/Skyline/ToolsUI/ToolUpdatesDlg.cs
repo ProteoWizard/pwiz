@@ -43,7 +43,7 @@ namespace pwiz.Skyline.ToolsUI
             InitializeComponent();
 
             checkedListBoxTools.Height += labelOperation.Bottom - checkedListBoxTools.Bottom;
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             _parent = parent;
             _tools = new Dictionary<ToolUpdateInfo, ICollection<ToolDescription>>();
@@ -150,7 +150,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (Exception e)
             {
-                ExceptionUtil.DisplayOrReportException(this, e);
+                ExceptionUtilUI.DisplayOrReportException(this, e);
                 return false;
             }
 

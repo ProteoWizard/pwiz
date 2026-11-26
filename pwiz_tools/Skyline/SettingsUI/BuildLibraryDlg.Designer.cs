@@ -231,7 +231,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.iRTPeptidesLabel, "iRTPeptidesLabel");
             this.iRTPeptidesLabel.Name = "iRTPeptidesLabel";
-            this.modeUIHandler.SetUIMode(this.iRTPeptidesLabel, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.iRTPeptidesLabel, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // dataSourceGroupBox
             // 
@@ -242,7 +242,7 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.dataSourceGroupBox, "dataSourceGroupBox");
             this.dataSourceGroupBox.Name = "dataSourceGroupBox";
             this.dataSourceGroupBox.TabStop = false;
-            this.modeUIHandler.SetUIMode(this.dataSourceGroupBox, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.dataSourceGroupBox, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // radioFilesSource
             // 
@@ -281,7 +281,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboStandards.FormattingEnabled = true;
             resources.ApplyResources(this.comboStandards, "comboStandards");
             this.comboStandards.Name = "comboStandards";
-            this.modeUIHandler.SetUIMode(this.comboStandards, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.comboStandards, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.comboStandards.SelectedIndexChanged += new System.EventHandler(this.comboStandards_SelectedIndexChanged);
             // 
             // textPath

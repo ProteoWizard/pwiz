@@ -254,7 +254,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 if (Equals(Settings.Default.TextZoom, TreeViewMS.XLRG_TEXT_FACTOR))
                     zoomFactor = 2;
                 int annotationWidth = DpiUtil.Scale(g, ANNOTATION_WIDTH + zoomFactor);
-                g.FillPolygon(Model.Annotations.ColorBrush, new[]
+                g.FillPolygon(AnnotationBrushes.Get(Model.Annotations.ColorBrush), new[]
                     {
                         new Point(bounds.Right, bounds.Top),
                         new Point(bounds.Right - annotationWidth, bounds.Top),

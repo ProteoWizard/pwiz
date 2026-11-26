@@ -34,7 +34,7 @@ namespace pwiz.Skyline.EditUI
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
         }
 
         public int ColorIndex { get; set; }
@@ -247,7 +247,7 @@ namespace pwiz.Skyline.EditUI
         {
             var rectangle = e.ClipRectangle;
             var colorIndex = toolStrip1.Items.IndexOf((ToolStripButton) sender);
-            e.Graphics.FillRectangle(Annotations.COLOR_BRUSHES[colorIndex], rectangle.X + 5, rectangle.Y + 5, rectangle.Width - 10, rectangle.Height - 10);
+            e.Graphics.FillRectangle(AnnotationBrushes.Get(Annotations.COLORS[colorIndex]), rectangle.X + 5, rectangle.Y + 5, rectangle.Width - 10, rectangle.Height - 10);
         }
 
         public void OkDialog()

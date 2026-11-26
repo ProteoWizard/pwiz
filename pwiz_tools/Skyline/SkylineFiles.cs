@@ -71,11 +71,6 @@ namespace pwiz.Skyline
 {
     public partial class SkylineWindow
     {
-        public static string GetViewFile(string fileName)
-        {
-            return fileName + EXT_VIEW;
-        }
-
         private void fileMenu_DropDownOpening(object sender, EventArgs e)
         {
             ToolStripMenuItem menu = fileToolStripMenuItem;
@@ -950,7 +945,7 @@ namespace pwiz.Skyline
                 if (newServer == null)
                     return;
 
-                servers.Add(newServer);
+                Settings.Default.ServerList = servers = servers.ChangeAdd(newServer);
             }
 
             var panoramaServers = servers.Cast<PanoramaServer>().ToList();
@@ -1040,7 +1035,7 @@ namespace pwiz.Skyline
             }
             catch (Exception e)
             {
-                ExceptionUtil.DisplayOrReportException(this, e);
+                ExceptionUtilUI.DisplayOrReportException(this, e);
             }
         }
 
@@ -1289,7 +1284,7 @@ namespace pwiz.Skyline
 
             try
             {
-                SaveLayout(GetViewFile(fileName));
+                SaveLayout(Model.Files.SkylineViewFile.GetViewFile(fileName));
 
                 if (includingCacheFile)
                 {
@@ -1310,7 +1305,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 if (ExceptionUtil.IsProgrammingDefect(x))
-                    Program.ReportException(x);
+                    ProgramContext.ReportException(x);
             }
 
             // CONSIDER: it might be possible to remove the DocumentSaved event by moving DocumentFilePath into SrmSettings.
@@ -1487,10 +1482,9 @@ namespace pwiz.Skyline
             }
         }
 
-        public const string EXT_VIEW = ".view";
         public static string FILTER_VIEW
         {
-            get { return TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files, EXT_VIEW); }
+            get { return TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files, Model.Files.SkylineViewFile.EXT_VIEW); }
         }
 
         /// <summary>
@@ -1520,9 +1514,9 @@ namespace pwiz.Skyline
                 dlg.Title = SkylineResources.SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout;
                 dlg.Filter = FILTER_VIEW;
                 dlg.InitialDirectory = GetLayoutDirectory();
-                dlg.DefaultExt = EXT_VIEW;
+                dlg.DefaultExt = Model.Files.SkylineViewFile.EXT_VIEW;
                 if (!string.IsNullOrEmpty(DocumentFilePath))
-                    dlg.FileName = Path.GetFileName(GetViewFile(DocumentFilePath));
+                    dlg.FileName = Path.GetFileName(Model.Files.SkylineViewFile.GetViewFile(DocumentFilePath));
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return;
                 ExportLayout(dlg.FileName);
@@ -1714,12 +1708,12 @@ namespace pwiz.Skyline
                     {
                         var tempDocumentPath = Path.Combine(sharing.EnsureTempDir().DirPath,
                             sharing.GetDocumentFileName());
-                        sharing.ViewFilePath = GetViewFile(tempDocumentPath);
+                        sharing.ViewFilePath = Model.Files.SkylineViewFile.GetViewFile(tempDocumentPath);
                         SaveLayout(sharing.ViewFilePath);
                     }
                     else if (DocumentFilePath != null)
                     {
-                        string viewFilePath = GetViewFile(DocumentFilePath);
+                        string viewFilePath = Model.Files.SkylineViewFile.GetViewFile(DocumentFilePath);
                         if (File.Exists(viewFilePath))
                         {
                             sharing.ViewFilePath = viewFilePath;
@@ -2626,12 +2620,12 @@ namespace pwiz.Skyline
                 SequenceTree.SelectedPath = selectPath;
             if (retentionTimeRegressionStore != null)
             {
-                Settings.Default.RetentionTimeList.Add(retentionTimeRegressionStore);
-                Settings.Default.RTScoreCalculatorList.Add(retentionTimeRegressionStore.Calculator);
+                Settings.Default.RetentionTimeList = Settings.Default.RetentionTimeList.ChangeAdd(retentionTimeRegressionStore);
+                Settings.Default.RTScoreCalculatorList = Settings.Default.RTScoreCalculatorList.ChangeAdd(retentionTimeRegressionStore.Calculator);
             }
             if (docLibrarySpec != null)
             {
-                Settings.Default.SpectralLibraryList.Insert(0, docLibrarySpec);
+                Settings.Default.SpectralLibraryList = Settings.Default.SpectralLibraryList.ChangeInsert(0, docLibrarySpec);
             }
         }
 
@@ -2688,7 +2682,7 @@ namespace pwiz.Skyline
                 if (calcIrt == null)
                 {
                     // If there is no iRT calculator, ask the user to create one
-                    using (var dlg = new CreateIrtCalculatorDlg(doc, DocumentFilePath, Settings.Default.RTScoreCalculatorList, peptideGroups))
+                    using (var dlg = new CreateIrtCalculatorDlg(doc, DocumentFilePath, Settings.Default.RTScoreCalculatorList.ToArray(), peptideGroups))
                     {
                         if (dlg.ShowDialog(this) != DialogResult.OK)
                             return false;
@@ -2994,8 +2988,6 @@ namespace pwiz.Skyline
                                                 resultsAction,
                                                 mergePeptides,
                                                 FindSpectralLibrary,
-                                                Settings.Default.StaticModList,
-                                                Settings.Default.HeavyModList,
                                                 to,
                                                 out firstAddedForFile,
                                                 out nextAdd,
@@ -3837,9 +3829,9 @@ namespace pwiz.Skyline
                     if (choice == DialogResult.Yes)
                     {
                         if (Settings.Default.SearchToolList.ContainsKey(SearchToolType.DIANN))
-                            Settings.Default.SearchToolList.Remove(
+                            Settings.Default.SearchToolList = Settings.Default.SearchToolList.ChangeRemove(
                                 Settings.Default.SearchToolList[SearchToolType.DIANN]);
-                        Settings.Default.SearchToolList.Add(new SearchTool(SearchToolType.DIANN,
+                        Settings.Default.SearchToolList = Settings.Default.SearchToolList.ChangeAdd(new SearchTool(SearchToolType.DIANN,
                             registered, string.Empty, Path.GetDirectoryName(registered), false));
                     }
                     // choice == DialogResult.No: fall through to the download dialog
@@ -3974,7 +3966,7 @@ namespace pwiz.Skyline
             }
             catch (Exception e)
             {
-                ExceptionUtil.DisplayOrReportException(this, e);
+                ExceptionUtilUI.DisplayOrReportException(this, e);
             }
         }
 
@@ -4049,7 +4041,7 @@ namespace pwiz.Skyline
                 if (newServer == null)
                     return;
 
-                servers.Add(newServer);
+                Settings.Default.ServerList = servers = servers.ChangeAdd(newServer);
             }
             if (!servers.Any(server => server.HasUserAccount())) // None of the servers have a user account
             {
@@ -4081,7 +4073,7 @@ namespace pwiz.Skyline
                             alertDlg.ShowAndDispose(this);
                             return;
                         }
-                        servers[0] = editedServer; // Replace with edited server
+                        Settings.Default.ServerList = servers = servers.ChangeItemAt(0, editedServer); // Replace with edited server
                     }
                     else
                     {
@@ -4102,7 +4094,7 @@ namespace pwiz.Skyline
                         alertDlg.ShowAndDispose(this);
                         return;
                     }
-                    servers.Add(newServer);
+                    Settings.Default.ServerList = servers = servers.ChangeAdd(newServer);
                 }
             }
 
@@ -4118,7 +4110,7 @@ namespace pwiz.Skyline
                 }
                 catch (Exception e)
                 {
-                    ExceptionUtil.DisplayOrReportException(this, e);
+                    ExceptionUtilUI.DisplayOrReportException(this, e);
                     return;
                 }
             }

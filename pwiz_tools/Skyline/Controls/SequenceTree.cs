@@ -150,46 +150,46 @@ namespace pwiz.Skyline.Controls
             // The 16x16 icons are a 96-DPI design: each is added at the pixel size for
             // this DPI by DpiUtil.GetIcon (issue #4599)
             ImageListScaler.PrepareForDpi(this, ImageList);
-            AddNodeImage(nameof(Resources.Blank), Resources.Blank);      // 1bpp
-            AddNodeImage(nameof(Resources.Protein), Resources.Protein);    // 16bpp
-            AddNodeImage(nameof(Resources.Peptide), Resources.Peptide);    // 4bpp
-            AddNodeImage(nameof(Resources.TransitionGroup), Resources.TransitionGroup); // 8bpp
-            AddNodeImage(nameof(Resources.Fragment), Resources.Fragment);   // 8bpp
-            AddNodeImage(nameof(Resources.PeptideLib), Resources.PeptideLib); // 4bpp
-            AddNodeImage(nameof(Resources.PeptideIrt), Resources.PeptideIrt); // 4bpp
-            AddNodeImage(nameof(Resources.PeptideIrtLib), Resources.PeptideIrtLib); // 4bpp
-            AddNodeImage(nameof(Resources.PeptideStandard), Resources.PeptideStandard); // 4bpp
-            AddNodeImage(nameof(Resources.PeptideStandardLib), Resources.PeptideStandardLib); // 4bpp
-            AddNodeImage(nameof(Resources.PeptideQc), Resources.PeptideQc);  // 4bpp
-            AddNodeImage(nameof(Resources.PeptideQcLib), Resources.PeptideQcLib); // 4bpp
-            AddNodeImage(nameof(Resources.TransitionGroupLib), Resources.TransitionGroupLib); // 8bpp
-            AddNodeImage(nameof(Resources.FragmentLib), Resources.FragmentLib); // 8bpp
-            AddNodeImage(nameof(Resources.PeptideDecoy), Resources.PeptideDecoy); // 4bpp
-            AddNodeImage(nameof(Resources.TransitionGroupDecoy), Resources.TransitionGroupDecoy); // 8bpp
-            AddNodeImage(nameof(Resources.FragmentDecoy), Resources.FragmentDecoy); // 8bpp
-            AddNodeImage(nameof(Resources.ProteinDecoy), Resources.ProteinDecoy); // 24bpp
-            AddNodeImage(nameof(Resources.PeptideDecoyLib), Resources.PeptideDecoyLib); // 4bpp
-            AddNodeImage(nameof(Resources.TransitionGroupLibDecoy), Resources.TransitionGroupLibDecoy); // 8bpp
-            AddNodeImage(nameof(Resources.FragmentLibDecoy), Resources.FragmentLibDecoy); // 8bpp
-            AddNodeImage(nameof(Resources.Molecule), Resources.Molecule);   // 24bpp
-            AddNodeImage(nameof(Resources.MoleculeLib), Resources.MoleculeLib); // 24bpp
-            AddNodeImage(nameof(Resources.MoleculeIrt), Resources.MoleculeIrt); // 24bpp
-            AddNodeImage(nameof(Resources.MoleculeIrtLib), Resources.MoleculeIrtLib); // 24bpp
-            AddNodeImage(nameof(Resources.MoleculeStandard), Resources.MoleculeStandard); // 24bpp
-            AddNodeImage(nameof(Resources.MoleculeStandardLib), Resources.MoleculeStandardLib); // 24bpp
-            AddNodeImage(nameof(Resources.MoleculeList), Resources.MoleculeList); // 16bpp
-            AddNodeImage(nameof(Resources.PeptideList), Resources.PeptideList); // 16bpp
-            AddNodeImage(nameof(Resources.EmptyList), Resources.EmptyList);  // 16bpp
+            AddNodeImage(nameof(ImageResources.Blank), ImageResources.Blank);      // 1bpp
+            AddNodeImage(nameof(ImageResources.Protein), ImageResources.Protein);    // 16bpp
+            AddNodeImage(nameof(ImageResources.Peptide), ImageResources.Peptide);    // 4bpp
+            AddNodeImage(nameof(ImageResources.TransitionGroup), ImageResources.TransitionGroup); // 8bpp
+            AddNodeImage(nameof(ImageResources.Fragment), ImageResources.Fragment);   // 8bpp
+            AddNodeImage(nameof(ImageResources.PeptideLib), ImageResources.PeptideLib); // 4bpp
+            AddNodeImage(nameof(ImageResources.PeptideIrt), ImageResources.PeptideIrt); // 4bpp
+            AddNodeImage(nameof(ImageResources.PeptideIrtLib), ImageResources.PeptideIrtLib); // 4bpp
+            AddNodeImage(nameof(ImageResources.PeptideStandard), ImageResources.PeptideStandard); // 4bpp
+            AddNodeImage(nameof(ImageResources.PeptideStandardLib), ImageResources.PeptideStandardLib); // 4bpp
+            AddNodeImage(nameof(ImageResources.PeptideQc), ImageResources.PeptideQc);  // 4bpp
+            AddNodeImage(nameof(ImageResources.PeptideQcLib), ImageResources.PeptideQcLib); // 4bpp
+            AddNodeImage(nameof(ImageResources.TransitionGroupLib), ImageResources.TransitionGroupLib); // 8bpp
+            AddNodeImage(nameof(ImageResources.FragmentLib), ImageResources.FragmentLib); // 8bpp
+            AddNodeImage(nameof(ImageResources.PeptideDecoy), ImageResources.PeptideDecoy); // 4bpp
+            AddNodeImage(nameof(ImageResources.TransitionGroupDecoy), ImageResources.TransitionGroupDecoy); // 8bpp
+            AddNodeImage(nameof(ImageResources.FragmentDecoy), ImageResources.FragmentDecoy); // 8bpp
+            AddNodeImage(nameof(ImageResources.ProteinDecoy), ImageResources.ProteinDecoy); // 24bpp
+            AddNodeImage(nameof(ImageResources.PeptideDecoyLib), ImageResources.PeptideDecoyLib); // 4bpp
+            AddNodeImage(nameof(ImageResources.TransitionGroupLibDecoy), ImageResources.TransitionGroupLibDecoy); // 8bpp
+            AddNodeImage(nameof(ImageResources.FragmentLibDecoy), ImageResources.FragmentLibDecoy); // 8bpp
+            AddNodeImage(nameof(ImageResources.Molecule), ImageResources.Molecule);   // 24bpp
+            AddNodeImage(nameof(ImageResources.MoleculeLib), ImageResources.MoleculeLib); // 24bpp
+            AddNodeImage(nameof(ImageResources.MoleculeIrt), ImageResources.MoleculeIrt); // 24bpp
+            AddNodeImage(nameof(ImageResources.MoleculeIrtLib), ImageResources.MoleculeIrtLib); // 24bpp
+            AddNodeImage(nameof(ImageResources.MoleculeStandard), ImageResources.MoleculeStandard); // 24bpp
+            AddNodeImage(nameof(ImageResources.MoleculeStandardLib), ImageResources.MoleculeStandardLib); // 24bpp
+            AddNodeImage(nameof(ImageResources.MoleculeList), ImageResources.MoleculeList); // 16bpp
+            AddNodeImage(nameof(ImageResources.PeptideList), ImageResources.PeptideList); // 16bpp
+            AddNodeImage(nameof(ImageResources.EmptyList), ImageResources.EmptyList);  // 16bpp
 
             StateImageList = new ImageList
             {
                 ColorDepth = ColorDepth.Depth24Bit
             };
             ImageListScaler.PrepareForDpi(this, StateImageList);
-            AddStateImage(nameof(Resources.Peak), Resources.Peak);  // 8bpp
-            AddStateImage(nameof(Resources.Keep), Resources.Keep);  // 24bpp
-            AddStateImage(nameof(Resources.NoPeak), Resources.NoPeak); // 24bpp
-            AddStateImage(nameof(Resources.PeakBlank), Resources.PeakBlank); // 8bpp
+            AddStateImage(nameof(ImageResources.Peak), ImageResources.Peak);  // 8bpp
+            AddStateImage(nameof(ImageResources.Keep), ImageResources.Keep);  // 24bpp
+            AddStateImage(nameof(ImageResources.NoPeak), ImageResources.NoPeak); // 24bpp
+            AddStateImage(nameof(ImageResources.PeakBlank), ImageResources.PeakBlank); // 8bpp
 
             // Add the editable node at the end
             Nodes.Add(new EmptyNode());
@@ -919,7 +919,7 @@ namespace pwiz.Skyline.Controls
 
         protected Image DropImage
         {
-            get { return _dropImage ?? (_dropImage = Resources.DropImage); }
+            get { return _dropImage ?? (_dropImage = ImageResources.DropImage); }
         }
 
         protected TreeNode NodeCapture

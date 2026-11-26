@@ -84,23 +84,23 @@ namespace pwiz.Skyline.Controls.FilesTree
                 ColorDepth = ColorDepth.Depth32Bit
             };
             ImageListScaler.PrepareForDpi(this, ImageList);
-            AddNodeImage(nameof(Resources.Blank), Resources.Blank);              // 1bpp
-            AddNodeImage(nameof(Resources.Folder), Resources.Folder);             // 32bpp
-            AddNodeImage(nameof(Resources.FolderMissing), Resources.FolderMissing);      // 32bpp
-            AddNodeImage(nameof(Resources.File), Resources.File);               // 8bpp
-            AddNodeImage(nameof(Resources.FileMissing), Resources.FileMissing);        // 32bpp
-            AddNodeImage(nameof(Resources.Replicate), Resources.Replicate);          // 24bpp
-            AddNodeImage(nameof(Resources.ReplicateMissing), Resources.ReplicateMissing);   // 24bpp // CONSIDER: improve icon?
-            AddNodeImage(nameof(Resources.DataProcessing), Resources.DataProcessing);     // 8bpp
-            AddNodeImage(nameof(Resources.PeptideLib), Resources.PeptideLib);         // 4bpp
-            AddNodeImage(nameof(Resources.Skyline_FilesTree), Resources.Skyline_FilesTree);  // 24bpp
-            AddNodeImage(nameof(Resources.AuditLog), Resources.AuditLog);           // 32bpp
-            AddNodeImage(nameof(Resources.CacheFile), Resources.CacheFile);          // 32bpp
-            AddNodeImage(nameof(Resources.ViewFile), Resources.ViewFile);           // 32bpp
-            AddNodeImage(nameof(Resources.ProtDB), Resources.ProtDB);             // 32bpp
-            AddNodeImage(nameof(Resources.ImsDB), Resources.ImsDB);              // 32bpp
-            AddNodeImage(nameof(Resources.OptDB), Resources.OptDB);              // 32bpp
-            AddNodeImage(nameof(Resources.IrtCalculator), Resources.IrtCalculator);      // 32bpp
+            AddNodeImage(nameof(ImageResources.Blank), ImageResources.Blank);              // 1bpp
+            AddNodeImage(nameof(ImageResources.Folder), ImageResources.Folder);             // 32bpp
+            AddNodeImage(nameof(ImageResources.FolderMissing), ImageResources.FolderMissing);      // 32bpp
+            AddNodeImage(nameof(ImageResources.File), ImageResources.File);               // 8bpp
+            AddNodeImage(nameof(ImageResources.FileMissing), ImageResources.FileMissing);        // 32bpp
+            AddNodeImage(nameof(ImageResources.Replicate), ImageResources.Replicate);          // 24bpp
+            AddNodeImage(nameof(ImageResources.ReplicateMissing), ImageResources.ReplicateMissing);   // 24bpp // CONSIDER: improve icon?
+            AddNodeImage(nameof(ImageResources.DataProcessing), ImageResources.DataProcessing);     // 8bpp
+            AddNodeImage(nameof(ImageResources.PeptideLib), ImageResources.PeptideLib);         // 4bpp
+            AddNodeImage(nameof(ImageResources.Skyline_FilesTree), ImageResources.Skyline_FilesTree);  // 24bpp
+            AddNodeImage(nameof(ImageResources.AuditLog), ImageResources.AuditLog);           // 32bpp
+            AddNodeImage(nameof(ImageResources.CacheFile), ImageResources.CacheFile);          // 32bpp
+            AddNodeImage(nameof(ImageResources.ViewFile), ImageResources.ViewFile);           // 32bpp
+            AddNodeImage(nameof(ImageResources.ProtDB), ImageResources.ProtDB);             // 32bpp
+            AddNodeImage(nameof(ImageResources.ImsDB), ImageResources.ImsDB);              // 32bpp
+            AddNodeImage(nameof(ImageResources.OptDB), ImageResources.OptDB);              // 32bpp
+            AddNodeImage(nameof(ImageResources.IrtCalculator), ImageResources.IrtCalculator);      // 32bpp
         }
 
         private void AddNodeImage(string name, Image image)

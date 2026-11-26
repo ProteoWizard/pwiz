@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Controls.Clustering
         protected override void CreateHandle()
         {
             Assume.IsFalse(_inCreateHandle);
-            if (Program.FunctionalTest && Program.MainWindow != null && Program.MainWindow.InvokeRequired)
+            if (ProgramContext.FunctionalTest && Program.MainWindow != null && Program.MainWindow.InvokeRequired)
             {
                 throw new ApplicationException(@"DebugZedGraphControl.CreateHandle called on wrong thread");
             }

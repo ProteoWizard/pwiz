@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.ComponentModel;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -177,16 +178,16 @@ namespace pwiz.Skyline.SettingsUI
             _documentUiContainer.ListenUI(OnDocumentChange);
 
             _driverLibraries = new SettingsListComboDriver<LibrarySpec>(comboLibrary, Settings.Default.SpectralLibraryList);
-            Settings.Default.SpectralLibraryList.ListChanged += SpectralLibraryList_ListChanged;
+            Settings.Default.PropertyChanged += Settings_PropertyChanged;
 
             GraphSettings = new GraphSpectrumSettings(UpdateGraphs);
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
             ModFonts = new ModFontHolder(listPeptide);
             _originalFileLabelText = labelFilename.Text;
             // The 16x16 icons are drawn at the row height scaled above, so get them at that size
-            _peptideImg = (Bitmap) DpiUtil.GetIcon(this, nameof(Resources.PeptideLib), Resources.PeptideLib);
-            _moleculeImg = (Bitmap) DpiUtil.GetIcon(this, nameof(Resources.MoleculeLib), Resources.MoleculeLib);
+            _peptideImg = (Bitmap) DpiUtil.GetIcon(this, nameof(ImageResources.PeptideLib), ImageResources.PeptideLib);
+            _moleculeImg = (Bitmap) DpiUtil.GetIcon(this, nameof(ImageResources.MoleculeLib), ImageResources.MoleculeLib);
 
             // Tip for peptides in list
             _nodeTip = new NodeTip(this) {Parent = this};
@@ -222,8 +223,10 @@ namespace pwiz.Skyline.SettingsUI
             (Owner as SkylineWindow)?.UpdateSpectrumGraph(selectionChanged);
         }
 
-        private void SpectralLibraryList_ListChanged(object sender, EventArgs e)
+        private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            if (e.PropertyName != nameof(Settings.SpectralLibraryList))
+                return;
             // Not necessary to remember this change, if it is the combo box doing the changing.
             _libraryListChanged = !_driverLibraries.IsInSelectedIndexChangedEvent;
         }
@@ -496,7 +499,7 @@ namespace pwiz.Skyline.SettingsUI
                 _selectedLibrary.ReadStream.CloseStream();
             _documentUiContainer.UnlistenUI(OnDocumentChange);
 
-            Settings.Default.SpectralLibraryList.ListChanged -= SpectralLibraryList_ListChanged;
+            Settings.Default.PropertyChanged -= Settings_PropertyChanged;
 
             base.OnHandleDestroyed(e);
         }

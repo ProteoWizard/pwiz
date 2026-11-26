@@ -430,7 +430,7 @@ namespace pwiz.Skyline.EditUI
             this.btnError.Cursor = System.Windows.Forms.Cursors.Hand;
             resources.ApplyResources(this.btnError, "btnError");
             this.btnError.FlatAppearance.BorderSize = 0;
-            this.btnError.Image = global::pwiz.Skyline.Properties.Resources.Error;
+            this.btnError.Image = global::pwiz.Skyline.Properties.ImageResources.Error;
             this.btnError.Name = "btnError";
             this.btnError.UseVisualStyleBackColor = true;
             this.btnError.Click += new System.EventHandler(this.btnError_Click);

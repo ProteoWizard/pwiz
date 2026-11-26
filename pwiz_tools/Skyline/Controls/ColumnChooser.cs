@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Controls
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
         }
 
         public void SetColumns(IList<string> nameList, IList<bool> checkedList)

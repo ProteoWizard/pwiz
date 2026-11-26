@@ -27,6 +27,7 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 using Transition = pwiz.Skyline.Model.Databinding.Entities.Transition;
@@ -163,7 +164,7 @@ namespace pwiz.SkylineTest.Reporting
         private static ReportSpec GetDefaultReport(string name)
         {
             var reportSpecList = new ReportSpecList();
-            reportSpecList.AddDefaults();
+            reportSpecList = reportSpecList.ChangeAddDefaults();
             return reportSpecList.First(reportSpec => name == reportSpec.Name);
         }
 

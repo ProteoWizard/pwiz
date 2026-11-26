@@ -18,6 +18,7 @@
  */
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -29,7 +30,7 @@ namespace pwiz.SkylineTest
         public void TestMeasuredIonRoundTrip()
         {
             var measuredIonList = new MeasuredIonList();
-            measuredIonList.AddDefaults();
+            measuredIonList = measuredIonList.ChangeAddDefaults();
             Assert.AreNotEqual(0, measuredIonList.Count);
             foreach (var measuredIon in measuredIonList)
             {

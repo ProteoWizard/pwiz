@@ -35,7 +35,7 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.Skyline.SettingsUI
 {
     public partial class EditListDlg<TList, TItem> : FormEx
-        where TList : ICollection<TItem>, IListDefaults<TItem>, IListEditorSupport
+        where TList : IEnumerable<TItem>, IListDefaults<TItem>, IListEditorSupport
         where TItem : IKeyContainer<string>
     {
         private readonly TList _model;
@@ -47,7 +47,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             _model = model;
             _list = model.ToList();
-            _editor = model as IItemEditor<TItem>;
+            _editor = SettingsListEditors.GetItemEditor<TItem>(model);
 
             TagEx = tag;
 
@@ -65,7 +65,7 @@ namespace pwiz.Skyline.SettingsUI
             pnlButtons.Controls.Add(spacerAfterDown);
             pnlButtons.Controls.SetChildIndex(spacerAfterDown, pnlButtons.Controls.IndexOf(btnReset));
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
             Text = model.Title;
             labelListName.Text = model.Label;
 
@@ -89,7 +89,7 @@ namespace pwiz.Skyline.SettingsUI
             // Import/Share available only for lists whose SerialType represents a collection
             // (SerializableSettingsList has correct semantics; other IListSerializer implementers use item types)
             bool canSerialize = model is IListSerializer<TItem> serializer &&
-                                typeof(ICollection<TItem>).IsAssignableFrom(serializer.SerialType);
+                                typeof(IEnumerable<TItem>).IsAssignableFrom(serializer.SerialType);
             if (!canSerialize)
             {
                 pnlButtons.Controls.Remove(btnImport);
@@ -393,7 +393,7 @@ namespace pwiz.Skyline.SettingsUI
                 using (var stream = File.OpenRead(filePath))
                 {
                     var xmlSerializer = new XmlSerializer(serializer.DeserialType);
-                    loadedItems = ((ICollection<TItem>)xmlSerializer.Deserialize(stream)).ToList();
+                    loadedItems = ((IEnumerable<TItem>)xmlSerializer.Deserialize(stream)).ToList();
                 }
             }
             catch (Exception ex)
@@ -464,12 +464,7 @@ namespace pwiz.Skyline.SettingsUI
 
             try
             {
-                var exportList = serializer.CreateEmptyList();
-                foreach (var item in _list)
-                {
-                    if (itemNames == null || itemNames.Contains(item.GetKey()))
-                        exportList.Add(item);
-                }
+                var exportList = serializer.CreateList(_list.Where(item => itemNames == null || itemNames.Contains(item.GetKey())));
 
                 using (var stream = File.Create(filePath))
                 {

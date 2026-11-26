@@ -109,7 +109,7 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             var registered = tools[SearchToolType.Osprey];
             if (!File.Exists(registered.Path))
-                tools.Remove(registered);
+                Settings.Default.SearchToolList = tools.ChangeRemove(registered);
         }
     }
 }

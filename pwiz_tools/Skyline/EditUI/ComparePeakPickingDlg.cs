@@ -72,7 +72,7 @@ namespace pwiz.Skyline.EditUI
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             // On .NET an anchored ZedGraphControl inside a TabPage comes out far too small at
             // high DPI (measured 422x362 at 150% whatever its designer size); sizing it below the

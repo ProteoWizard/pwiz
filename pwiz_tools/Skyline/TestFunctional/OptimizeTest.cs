@@ -294,8 +294,8 @@ namespace pwiz.SkylineTestFunctional
             const string heavyR = "Heavy R";
             RunUI(() =>
             {
-                Settings.Default.HeavyModList.Add(new StaticMod(heavyK, "K", ModTerminus.C, null, labelAtoms, null, null));
-                Settings.Default.HeavyModList.Add(new StaticMod(heavyR, "R", ModTerminus.C, null, labelAtoms, null, null));
+                Settings.Default.HeavyModList = Settings.Default.HeavyModList.ChangeAdd(new StaticMod(heavyK, "K", ModTerminus.C, null, labelAtoms, null, null));
+                Settings.Default.HeavyModList = Settings.Default.HeavyModList.ChangeAdd(new StaticMod(heavyR, "R", ModTerminus.C, null, labelAtoms, null, null));
             });
 
             docCurrent = SkylineWindow.Document;

@@ -180,7 +180,7 @@ namespace pwiz.Common.SystemUtil
             {
                 return path;
             }
-            else if (Environment.OSVersion.Version.Major >= 6)
+            else if (OperatingSystem.IsWindows() && Environment.OSVersion.Version.Major >= 6)
             {
                 path = Shell32.GetDownloadsFolder();
                 if (path != null)
@@ -566,9 +566,9 @@ namespace pwiz.Common.SystemUtil
                 return path;
             }
 
-            // Check for non-printable or non-ASCII characters
+            // Check for non-printable or non-ASCII characters. Only Windows has 8.3 names.
             var hasNonAscii = path.Any(c => c < 32 || c > 126);
-            if (!hasNonAscii)
+            if (!hasNonAscii || !OperatingSystem.IsWindows())
             {
                 return path;
             }

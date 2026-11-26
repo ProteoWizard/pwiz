@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Alerts
             }
             else
             {
-                labelRelease.Text = string.Format(labelRelease.Text, Program.Name, versionText ?? string.Empty);
+                labelRelease.Text = string.Format(labelRelease.Text, ProgramContext.Name, versionText ?? string.Empty);
             }
 
             cbAtStartup.Checked = UpgradeManager.CheckAtStartup;

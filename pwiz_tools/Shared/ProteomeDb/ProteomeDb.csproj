@@ -1,17 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- ProteomeDb — multi-target net472 + net10.0-windows. Depends on Common +
-       CommonUtil. NHibernate + SQLite proteome layer. -->
+  <!-- ProteomeDb - NHibernate + SQLite proteome layer. Depends on Common + CommonUtil.
+       PLAIN net10.0 (no -windows, no WinForms): SkylineCore references it, and SkylineCore
+       must run on Linux. -->
   <PropertyGroup>
     <ProjectGuid>{09FC3CB3-FCCD-4906-A370-160B28725936}</ProjectGuid>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>pwiz.ProteomeDatabase</RootNamespace>
     <AssemblyName>ProteomeDb</AssemblyName>
-    <UseWindowsForms>true</UseWindowsForms>
     <Company>University of Washington</Company>
     <Product>ProteomeDb</Product>
     <AssemblyTitle>ProteomeDb</AssemblyTitle>
@@ -44,7 +44,7 @@
   </ItemGroup>
 
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
+  <ItemGroup>
     <PackageReference Include="Google.Protobuf" Version="3.27.3" />
     <PackageReference Include="NHibernate" Version="5.5.2" />
     <PackageReference Include="Iesi.Collections" Version="4.0.5" />

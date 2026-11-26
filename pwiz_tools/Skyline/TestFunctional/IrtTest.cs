@@ -644,7 +644,7 @@ namespace pwiz.SkylineTestFunctional
             // the iRT databases are loaded into memory during initialization.
             // So, create a new calculator with a bogus path.
             const string irtCalcMissing = "iRT-C18-missing";
-            Settings.Default.RTScoreCalculatorList.SetValue(new RCalcIrt(irtCalcMissing, testFilesDir.GetTestPath("irt-c18-missing.irtdb")));
+            Settings.Default.RTScoreCalculatorList = Settings.Default.RTScoreCalculatorList.ChangeValue(new RCalcIrt(irtCalcMissing, testFilesDir.GetTestPath("irt-c18-missing.irtdb")));
 
             var peptideSettingsDlg5 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var editRT5 = ShowDialog<EditRTDlg>(peptideSettingsDlg5.AddRTRegression);

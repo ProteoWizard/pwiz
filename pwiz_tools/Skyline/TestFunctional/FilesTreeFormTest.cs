@@ -306,7 +306,7 @@ namespace pwiz.SkylineTestFunctional
             AssertFileState(FileState.available, tree.Root.NodeAt(0));
 
             // View Layout (.sky.view)
-            Assert.AreEqual(SkylineWindow.GetViewFile(monitoredPath), tree.Root.NodeAt(1).LocalFilePath);
+            Assert.AreEqual(SkylineViewFile.GetViewFile(monitoredPath), tree.Root.NodeAt(1).LocalFilePath);
             AssertFileState(FileState.available, tree.Root.NodeAt(1));
         }
 
@@ -1288,7 +1288,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     SkylineWindow.Undo();
                     // Restore Settings.Default to original state, since leaving it will cause problems for other tests
-                    Settings.Default.SpectralLibraryList[0] = SkylineWindow.DocumentUI.Settings.PeptideSettings.Libraries.LibrarySpecs[0];
+                    Settings.Default.SpectralLibraryList = Settings.Default.SpectralLibraryList.ChangeItemAt(0, SkylineWindow.DocumentUI.Settings.PeptideSettings.Libraries.LibrarySpecs[0]);
                 });
             }
 

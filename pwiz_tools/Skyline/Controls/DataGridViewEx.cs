@@ -129,7 +129,7 @@ namespace pwiz.Skyline.Controls
             }
             catch (Exception exception)
             {
-                ExceptionUtil.HandleProcessKeyException(this, exception, e.KeyData);
+                ExceptionUtilUI.HandleProcessKeyException(this, exception, e.KeyData);
                 return true;
             }
         }

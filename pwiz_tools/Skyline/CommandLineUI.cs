@@ -25,6 +25,7 @@ using pwiz.CommonMsData;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline
 {
@@ -45,8 +46,8 @@ namespace pwiz.Skyline
                 return;
             }
 
-            Program.UnitTest = Program.FunctionalTest = true;
-            Program.TestExceptions = new List<Exception>();
+            ProgramContext.UnitTest = ProgramContext.FunctionalTest = true;
+            ProgramContext.TestExceptions = new List<Exception>();
             Program.NoSaveSettings = true;
             Program.DisableJoining = _commandArgs.ImportDisableJoining;
             Program.NoAllChromatogramsGraph = _commandArgs.NoAllChromatogramsGraph;
@@ -55,11 +56,11 @@ namespace pwiz.Skyline
 
             // Run test in new thread (Skyline on main thread).
             Program.Init();
-            Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
+            Settings.Default.SrmSettingsList = Settings.Default.SrmSettingsList.ChangeItemAt(0, SrmSettingsList.GetDefault());
             // Reset defaults with names from resources for testing different languages
-            Settings.Default.BackgroundProteomeList[0] = BackgroundProteomeList.GetDefault();
-            Settings.Default.DeclusterPotentialList[0] = DeclusterPotentialList.GetDefault();
-            Settings.Default.RetentionTimeList[0] = RetentionTimeList.GetDefault();
+            Settings.Default.BackgroundProteomeList = Settings.Default.BackgroundProteomeList.ChangeItemAt(0, BackgroundProteomeList.GetDefault());
+            Settings.Default.DeclusterPotentialList = Settings.Default.DeclusterPotentialList.ChangeItemAt(0, DeclusterPotentialList.GetDefault());
+            Settings.Default.RetentionTimeList = Settings.Default.RetentionTimeList.ChangeItemAt(0, RetentionTimeList.GetDefault());
             Settings.Default.ShowStartupForm = false;
 
             var threadTest = new Thread(Run);

@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Menus
     public class SkylineControl : UserControl
     {
         private Container _components; // For IExtender use
-        protected Helpers.ModeUIExtender modeUIHandler; // Allows UI mode management in Designer
+        protected ModeUIHelpers.ModeUIExtender modeUIHandler; // Allows UI mode management in Designer
         public SkylineControl()
         {
             InitializeComponent();
@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Menus
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public Helpers.ModeUIExtender ModeUiHandler
+        public ModeUIHelpers.ModeUIExtender ModeUiHandler
         {
             get { return modeUIHandler; }
         }
@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Menus
         private void InitializeComponent()
         {
             _components = new Container();
-            modeUIHandler = new Helpers.ModeUIExtender(_components);
+            modeUIHandler = new ModeUIHelpers.ModeUIExtender(_components);
         }
 
         [Browsable(false)]

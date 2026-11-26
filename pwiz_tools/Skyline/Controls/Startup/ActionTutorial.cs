@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Controls.Startup
             }
             catch (Exception exception)
             {
-                ExceptionUtil.DisplayOrReportException(Program.MainWindow, exception);
+                ExceptionUtilUI.DisplayOrReportException(Program.MainWindow, exception);
             }
             finally
             {

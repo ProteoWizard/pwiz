@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Alerts
         {
             base.CreateHandle();
 
-            Text = Program.Name;
+            Text = ProgramContext.Name;
         }
 
         public string Message { get; private set; }

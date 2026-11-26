@@ -38,9 +38,9 @@ namespace pwiz.Skyline.Alerts
             // N.B. the Imagelist we use here is all blanks, which we then replace here in the ctor. This is done
             // so that if we ever update the proteomic/molecules/mixed bitmaps we don't have to remake this ImageList.
             var imageList = listBoxModeUI.ImageList;
-            imageList.Images[imageListBoxItemProteomics.ImageIndex] = new Bitmap(Resources.UIModeProteomic);
-            imageList.Images[imageListBoxItemMolecule.ImageIndex] = new Bitmap(Resources.UIModeSmallMolecules);
-            imageList.Images[imageListBoxItemMixed.ImageIndex] = new Bitmap(Resources.UIModeMixed);
+            imageList.Images[imageListBoxItemProteomics.ImageIndex] = new Bitmap(ImageResources.UIModeProteomic);
+            imageList.Images[imageListBoxItemMolecule.ImageIndex] = new Bitmap(ImageResources.UIModeSmallMolecules);
+            imageList.Images[imageListBoxItemMixed.ImageIndex] = new Bitmap(ImageResources.UIModeMixed);
             ImageListScaler.ScaleToDpi(this, imageList);   // 16x16 icons are a 96-DPI design (issue #4599)
 
             if (DpiUtil.IsScaled(this))

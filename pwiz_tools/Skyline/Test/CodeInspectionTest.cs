@@ -189,7 +189,7 @@ namespace pwiz.SkylineTest
                 string.Empty, // No file content required for inspection
                 @"new Thread\(", // Forbidden pattern - match "new Thread("
                 true, // Pattern is a regular expression
-                @"use ActionUtil.RunAsync() instead - this ensures proper exception handling (exceptions are reported via Program.ReportException) and localization initialization (LocalizationHelper.InitThread). If this really is a legitimate use (e.g., in ActionUtil itself) add this comment to the offending line: '" + newThreadExemptionComment + @"'", // Explanation for prohibition, appears in report
+                @"use ActionUtil.RunAsync() instead - this ensures proper exception handling (exceptions are reported via ProgramContext.ReportException) and localization initialization (LocalizationHelper.InitThread). If this really is a legitimate use (e.g., in ActionUtil itself) add this comment to the offending line: '" + newThreadExemptionComment + @"'", // Explanation for prohibition, appears in report
                 newThreadExemptionComment, // Exemption comment to look for
                 21); // Tolerate 21 existing incidents (legitimate uses in infrastructure, tests, and other components)
             */
@@ -639,7 +639,7 @@ namespace pwiz.SkylineTest
 
             Dictionary<string, string> ExtractSettingsSettings()
             {
-                var settingsPath = Path.Combine(root, @"Properties\Settings.settings");
+                var settingsPath = Path.Combine(root, @"SkylineCore\Properties\Settings.settings");
                 var doc = XDocument.Load(settingsPath);
                 var settings = new Dictionary<string, string>();
                 XNamespace settingsNamespace = "http://schemas.microsoft.com/VisualStudio/2004/01/settings";
@@ -956,21 +956,23 @@ namespace pwiz.SkylineTest
         /// </summary>
         void InspectMisplacedResources(string root, List<string> errors) 
         {
-            // Look for any .csproj in the immediate subfolder of the main project
-            // Strings which are referenced by these other .csproj files will not get moved
-            var otherProjectPaths = new List<string>();
+            // The main Resources.resx is SkylineCore's. Look for any other .csproj in the immediate
+            // subfolders of Skyline, and Skyline.csproj itself: strings which are referenced by these
+            // other .csproj files will not get moved
+            var coreRoot = Path.Combine(root, "SkylineCore");
+            var otherProjectPaths = new List<string> { Path.Combine(root, "Skyline.csproj") };
             // ReSharper disable once AssignNullToNotNullAttribute
             foreach (var subfolder in Directory.GetDirectories(root))
             {
                 var otherProjectPath = Path.Combine(subfolder, Path.GetFileNameWithoutExtension(subfolder) + ".csproj");
-                if (File.Exists(otherProjectPath))
+                if (File.Exists(otherProjectPath) && !Equals(subfolder, coreRoot))
                 {
                     otherProjectPaths.Add(otherProjectPath);
                 }
             }
 
-            var resourceFilePath = Path.Combine(root, "Properties\\Resources.resx");
-            var csProjPath = Path.Combine(root, "Skyline.csproj");
+            var resourceFilePath = Path.Combine(coreRoot, "Properties\\Resources.resx");
+            var csProjPath = Path.Combine(coreRoot, "SkylineCore.csproj");
             var resourceAssorter = new ResourceAssorter(csProjPath, resourceFilePath, true, otherProjectPaths.ToArray());
             var initialErrors = errors.Count;
             resourceAssorter.DoWork(errors);
@@ -1276,6 +1278,7 @@ namespace pwiz.SkylineTest
                 filenames.AddRange(Directory.GetFiles(Path.Combine(root, @"..", @"Shared", @"Common"), fileMask, SearchOption.AllDirectories));
                 filenames.AddRange(Directory.GetFiles(Path.Combine(root, @"..", @"Shared", @"CommonUtil"), fileMask, SearchOption.AllDirectories));
                 filenames.AddRange(Directory.GetFiles(Path.Combine(root, @"..", @"Shared", @"CommonBaseUI"), fileMask, SearchOption.AllDirectories));
+                filenames.AddRange(Directory.GetFiles(Path.Combine(root, @"..", @"Shared", @"CommonUI"), fileMask, SearchOption.AllDirectories));
 
                 foreach (var filename in filenames)
                 {
@@ -1570,6 +1573,7 @@ namespace pwiz.SkylineTest
                 @"SystemUtil\PInvoke",
                 @"TestRunnerLib\PInvoke",
                 @"Test\CodeInspectionTest.cs",
+                @"Test\PlatformNeutralPInvokeTest.cs",
                 
                 // Classes allowed limited use of the [DllImport] attribute outside the PInvoke API.
                 // To be added to this list, a class must:

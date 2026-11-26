@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
@@ -72,7 +73,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 _bindingListSource.AllRowsChanged += BindingListSourceAllRowsChanged;
                 if (_skylineWindow == null)
                 {
-                    _skylineWindow = ((SkylineDataSchema) _bindingListSource.ViewInfo.DataSchema).SkylineWindow;
+                    _skylineWindow = ((SkylineDataSchema) _bindingListSource.ViewInfo.DataSchema).GetSkylineWindow();
                     if (_skylineWindow != null)
                     {
                         _skylineWindow.SequenceTree.AfterSelect += SequenceTreeOnAfterSelect;

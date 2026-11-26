@@ -1,11 +1,11 @@
-# pwiz.Common icon sources (Shared/Common/Resources). Same format as icons.manifest:
+# pwiz.Common icon sources (Shared/CommonUI/Resources). Same format as icons.manifest:
 #   Name kind sizes, with kind vector (Icons/Vector/Common/Name.xaml) or raster
-#   (Icons/Raster/Common/Name.W.H.png). Names are pwiz.Common Resources.resx property names.
+#   (Icons/Raster/Common/Name.W.H.png). Names are CommonUI Resources.resx property names.
 # MatchCase is 15 px native; it uses the 16 px size set like the loader does.
 # DropImageNoBackground (10x4) is recolored at run time by LiteDropDownList and is not listed.
 @vector Icons\Vector\Common
 @raster Icons\Raster\Common
-@output ..\..\..\..\Shared\Common\Resources\Icons
+@output ..\..\..\..\Shared\CommonUI\Resources\Icons
 
 Alphabetical               vector  20,24,32
 BoolColumn                 vector  20,24,32

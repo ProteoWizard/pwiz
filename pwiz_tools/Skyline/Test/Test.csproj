@@ -151,8 +151,10 @@
     <ProjectReference Include="..\..\Shared\CommonFileDialogs\CommonFileDialogs.csproj" />
     <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj" />
     <ProjectReference Include="..\..\Shared\Common\Common.csproj" />
+    <ProjectReference Include="..\..\Shared\CommonUI\CommonUI.csproj" />
     <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj" />
     <ProjectReference Include="..\..\Shared\PanoramaClient\PanoramaClient.csproj" />
+    <ProjectReference Include="..\..\Shared\PanoramaClientUI\PanoramaClientUI.csproj" />
     <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj" />
     <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj" />
     <ProjectReference Include="..\..\Shared\zedgraph\ZedGraph.csproj" />
@@ -188,8 +190,8 @@
           AfterTargets="Build">
     <!-- Same platform-dependent folder as Skyline.csproj's _DeploySkylineCmd -->
     <PropertyGroup>
-      <_SkylineCmdBin Condition="'$(PlatformName)' == 'AnyCPU'">..\SkylineCmd\bin\$(Configuration)\net10.0-windows\</_SkylineCmdBin>
-      <_SkylineCmdBin Condition="'$(PlatformName)' != 'AnyCPU'">..\SkylineCmd\bin\$(PlatformName)\$(Configuration)\net10.0-windows\</_SkylineCmdBin>
+      <_SkylineCmdBin Condition="'$(PlatformName)' == 'AnyCPU'">..\SkylineCmd\bin\$(Configuration)\net10.0\</_SkylineCmdBin>
+      <_SkylineCmdBin Condition="'$(PlatformName)' != 'AnyCPU'">..\SkylineCmd\bin\$(PlatformName)\$(Configuration)\net10.0\</_SkylineCmdBin>
     </PropertyGroup>
     <ItemGroup>
       <_SkylineCmdOutput Include="$(_SkylineCmdBin)SkylineCmd.*" />

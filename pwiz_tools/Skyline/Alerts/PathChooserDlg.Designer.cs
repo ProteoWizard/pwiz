@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Alerts
             this.Controls.Add(this.labelMessage);
             this.Controls.Add(this.btnCancel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.Icon = global::pwiz.Skyline.Properties.Resources.Skyline;
+            this.Icon = global::pwiz.Skyline.Properties.ImageResources.Skyline;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "PathChooserDlg";

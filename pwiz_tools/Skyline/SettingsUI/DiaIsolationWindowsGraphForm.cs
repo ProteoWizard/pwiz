@@ -52,7 +52,7 @@ namespace pwiz.Skyline.SettingsUI
         public DiaIsolationWindowsGraphForm(List<IsolationWindow> isolationWindows, bool usesMargins, object deconv, int windowsPerScan)
         {
             InitializeComponent();
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
             if (isolationWindows.Count == 0) 
                 return;
 

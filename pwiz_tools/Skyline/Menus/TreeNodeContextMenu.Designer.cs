@@ -97,28 +97,28 @@ namespace pwiz.Skyline.Menus
             // 
             // cutContextMenuItem
             // 
-            this.cutContextMenuItem.Image = global::pwiz.Skyline.Properties.Resources.Cut;
+            this.cutContextMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.Cut;
             resources.ApplyResources(this.cutContextMenuItem, "cutContextMenuItem");
             this.cutContextMenuItem.Name = "cutContextMenuItem";
             this.cutContextMenuItem.Click += new System.EventHandler(this.cutContextMenuItem_Click);
             // 
             // copyContextMenuItem
             // 
-            this.copyContextMenuItem.Image = global::pwiz.Skyline.Properties.Resources.Copy;
+            this.copyContextMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.Copy;
             resources.ApplyResources(this.copyContextMenuItem, "copyContextMenuItem");
             this.copyContextMenuItem.Name = "copyContextMenuItem";
             this.copyContextMenuItem.Click += new System.EventHandler(this.copyContextMenuItem_Click);
             // 
             // pasteContextMenuItem
             // 
-            this.pasteContextMenuItem.Image = global::pwiz.Skyline.Properties.Resources.Paste;
+            this.pasteContextMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.Paste;
             resources.ApplyResources(this.pasteContextMenuItem, "pasteContextMenuItem");
             this.pasteContextMenuItem.Name = "pasteContextMenuItem";
             this.pasteContextMenuItem.Click += new System.EventHandler(this.pasteContextMenuItem_Click);
             // 
             // deleteContextMenuItem
             // 
-            this.deleteContextMenuItem.Image = global::pwiz.Skyline.Properties.Resources.Delete;
+            this.deleteContextMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.Delete;
             resources.ApplyResources(this.deleteContextMenuItem, "deleteContextMenuItem");
             this.deleteContextMenuItem.Name = "deleteContextMenuItem";
             this.deleteContextMenuItem.Click += new System.EventHandler(this.deleteContextMenuItem_Click);
@@ -269,7 +269,7 @@ namespace pwiz.Skyline.Menus
             // 
             // editNoteContextMenuItem
             // 
-            this.editNoteContextMenuItem.Image = global::pwiz.Skyline.Properties.Resources.Comment;
+            this.editNoteContextMenuItem.Image = global::pwiz.Skyline.Properties.ImageResources.Comment;
             resources.ApplyResources(this.editNoteContextMenuItem, "editNoteContextMenuItem");
             this.editNoteContextMenuItem.Name = "editNoteContextMenuItem";
             this.editNoteContextMenuItem.Click += new System.EventHandler(this.editNoteContextMenuItem_Click);

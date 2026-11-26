@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -194,7 +195,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         var updatedItem = Settings.Default.SearchToolList.EditItem(this, missingTool, allTools, null);
                         if (updatedItem == null)
                             return false; // user canceled
-                        Settings.Default.SearchToolList.Add(updatedItem);
+                        Settings.Default.SearchToolList = Settings.Default.SearchToolList.ChangeAdd(updatedItem);
                     }
                 }
                 else
@@ -390,7 +391,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 _initializingEngine = false;
             }
-            pBLogo.Image = ImportPeptideSearch.SearchEngine.SearchEngineLogo;
+            pBLogo.Image = GetSearchEngineLogo(ImportPeptideSearch.SearchEngine);
             labelCutoff.Text = ImportPeptideSearch.SearchEngine.CutoffScoreLabel + @":";
             HandleSearchEngineBlurb();
             btnAdditionalSettings.Enabled = ImportPeptideSearch.SearchEngine.AdditionalSettings != null;
@@ -406,6 +407,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 txtMS2Tolerance.Text = string.Empty;
 
             ImportPeptideSearch.RemainingStepsInSearch = ImportPeptideSearch.IsFeatureDetection ? 2 : 1; // Hardklor is followed by one or more BullseyeSharp calls
+        }
+
+        private static Image GetSearchEngineLogo(AbstractDdaSearchEngine searchEngine)
+        {
+            switch (searchEngine)
+            {
+                case HardklorSearchEngine _:
+                    return ImageResources.HardklorLogo;
+                case MSAmandaSearchWrapper _:
+                    return ImageResources.MSAmandaLogo;
+                default:
+                    return null;
+            }
         }
 
         // Arrange and populate the search engine blurb, if any, below the search engine logo
@@ -779,7 +793,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             false, MessageBoxButtons.YesNo);
                         if (result != DialogResult.Yes)
                             return;
-                        Settings.Default.SearchSettingsPresets.Remove(existingPreset);
+                        Settings.Default.SearchSettingsPresets = Settings.Default.SearchSettingsPresets.ChangeRemove(existingPreset);
                     }
 
                     _documentContainer.AddImportedPreset(preset);

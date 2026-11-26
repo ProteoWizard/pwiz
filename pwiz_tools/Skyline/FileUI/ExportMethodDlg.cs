@@ -191,7 +191,7 @@ namespace pwiz.Skyline.FileUI
             XICWidth = Settings.Default.ExportMethodXICWidth;
             RunLength = Settings.Default.ExportMethodRunLength;
 
-            Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, document.DocumentType); // Use terminology like "Molecule List" instead of "Protein" if appropriate to document
+            ModeUIHelpers.FormTextMapper.TranslateForm(this, document.DocumentType); // Use terminology like "Molecule List" instead of "Protein" if appropriate to document
 
             // For documents with mixed polarity, offer to emit two different lists or just one polarity
             var isMixedPolarity = document.IsMixedPolarity();
@@ -1423,7 +1423,7 @@ namespace pwiz.Skyline.FileUI
                 Settings.Default.ExportThermoTriggerRef = AddTriggerReference;
             }
             if (_fileType == ExportFileType.Method)
-                Settings.Default.ExportMethodTemplateList.SetValue(new MethodTemplateFile(_instrumentType, templateName));
+                Settings.Default.ExportMethodTemplateList = Settings.Default.ExportMethodTemplateList.ChangeValue(new MethodTemplateFile(_instrumentType, templateName));
             if (cbExportMultiQuant.Visible)
                 Settings.Default.ExportMultiQuant = ExportMultiQuant;
             if (cbSureQuant.Visible)

@@ -21,6 +21,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -37,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
         // Also tested in ConfigureToolsDlgTest
         protected override void DoTest()
         {
-            Settings.Default.ToolList.Clear();
+            Settings.Default.ToolList = Settings.Default.ToolList.ChangeClear();
 
             TestToolAdd();
         }

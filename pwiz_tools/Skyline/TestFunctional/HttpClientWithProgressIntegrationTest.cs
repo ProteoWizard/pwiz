@@ -572,7 +572,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                     catch (TEx x)
                     {
-                        ExceptionUtil.DisplayOrReportException(SkylineWindow, x);
+                        ExceptionUtilUI.DisplayOrReportException(SkylineWindow, x);
                     }
                 },
                 dlg =>

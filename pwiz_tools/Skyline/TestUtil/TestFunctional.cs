@@ -382,7 +382,7 @@ namespace pwiz.SkylineTestUtil
                 // with frames added at the scaled title bar sizes (DpiFormIcons).
                 RunUI(() =>
                 {
-                    using var skylineIcon = Resources.Skyline;
+                    using var skylineIcon = ImageResources.Skyline;
                     var isSkylineIcon = AreIconsEqual(dlg.Icon, skylineIcon) ||
                                         AreIconsEqual(dlg.Icon, DpiFormIcons.GetIcon(dlg, skylineIcon));
                     if (isSkylineIcon && !AreIconsEqual(dlg.Icon, SkylineWindow.Icon))
@@ -978,7 +978,7 @@ namespace pwiz.SkylineTestUtil
             int waitCycles = GetWaitCycles(millis);
             for (int i = 0; i < waitCycles; i++)
             {
-                Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
+                Assert.IsFalse(ProgramContext.TestExceptions.Any(), "Exception while running test");
 
                 Form tForm = FindOpenForm(formType);
                 if (tForm != null)
@@ -1039,7 +1039,7 @@ namespace pwiz.SkylineTestUtil
             int waitCycles = GetWaitCycles(millis);
             for (int i = 0; i < waitCycles; i++)
             {
-                Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
+                Assert.IsFalse(ProgramContext.TestExceptions.Any(), "Exception while running test");
                 foreach (var form in FindOpenForms<MultiButtonMsgDlg>())
                 {
                     var message = form.Message;
@@ -1104,7 +1104,7 @@ namespace pwiz.SkylineTestUtil
             var formDetail = string.Empty;
             for (int i = 0; i < waitCycles; i++)
             {
-                Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
+                Assert.IsFalse(ProgramContext.TestExceptions.Any(), "Exception while running test");
 
                 bool isOpen = true;
                 SkylineInvoke(() =>
@@ -1339,7 +1339,7 @@ namespace pwiz.SkylineTestUtil
             for (int i = 0; i < waitCycles; i++)
             {
                 if (throwOnProgramException)
-                    Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
+                    Assert.IsFalse(ProgramContext.TestExceptions.Any(), "Exception while running test");
 
                 if (func())
                     return true;
@@ -1420,7 +1420,7 @@ namespace pwiz.SkylineTestUtil
             for (int i = 0; i < waitCycles; i++)
             {
                 if (throwOnProgramException)
-                    Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
+                    Assert.IsFalse(ProgramContext.TestExceptions.Any(), "Exception while running test");
 
                 bool isCondition = false;
                 hangDetection.InterruptAfter(
@@ -2519,31 +2519,31 @@ namespace pwiz.SkylineTestUtil
 
             RunFunctionalTestAttempt(defaultUiMode);
 
-            if (Program.TestExceptions.Count > 0 && RetryDataDownloads)
+            if (ProgramContext.TestExceptions.Count > 0 && RetryDataDownloads)
             {
                 try
                 {
                     if (FreshenTestDataDownloads())
                     {
                         // Clear exceptions and run tests again with the fresh downloads
-                        Program.TestExceptions.Clear();
+                        ProgramContext.TestExceptions.Clear();
 
                         RunFunctionalTestAttempt(defaultUiMode);
                     }
                 }
                 catch (Exception x)
                 {
-                    Program.AddTestException(x); // Some trouble with data download, make a note of it
+                    ProgramContext.AddTestException(x); // Some trouble with data download, make a note of it
                 }
             }
 
-            if (Program.TestExceptions.Count > 0)
+            if (ProgramContext.TestExceptions.Count > 0)
             {
-                //Log<AbstractFunctionalTest>.Exception(@"Functional test exception", Program.TestExceptions[0]);
+                //Log<AbstractFunctionalTest>.Exception(@"Functional test exception", ProgramContext.TestExceptions[0]);
                 const string errorSeparator = "------------------------------------------------------";
                 Assert.Fail(new StringBuilder().AppendLine().AppendLine()
                     .AppendLine(errorSeparator)
-                    .AppendLine(Program.TestExceptions[0].ToString())
+                    .AppendLine(ProgramContext.TestExceptions[0].ToString())
                     .AppendLine(errorSeparator).ToString());
             }
 
@@ -2595,10 +2595,10 @@ namespace pwiz.SkylineTestUtil
             }
             catch (Exception x)
             {
-                Program.AddTestException(x);
+                ProgramContext.AddTestException(x);
             }
 
-            Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
+            Settings.Default.SrmSettingsList = Settings.Default.SrmSettingsList.ChangeItemAt(0, SrmSettingsList.GetDefault()); // Release memory held in settings
 
             // Delete unzipped test files.
             if (TestFilesDirs != null)
@@ -2615,7 +2615,7 @@ namespace pwiz.SkylineTestUtil
                     }
                     catch (Exception x)
                     {
-                        Program.AddTestException(x);
+                        ProgramContext.AddTestException(x);
                         FileStreamManager.Default.CloseAllStreams();
                     }
                 }
@@ -2624,9 +2624,9 @@ namespace pwiz.SkylineTestUtil
 
         protected void RunFunctionalTestOrThrow(string defaultUiMode)
         {
-            Program.FunctionalTest = true;
+            ProgramContext.FunctionalTest = true;
             Program.DefaultUiMode = defaultUiMode;
-            Program.TestExceptions = new List<Exception>();
+            ProgramContext.TestExceptions = new List<Exception>();
             Program.GcTracker = new GcTrackerAdapter();
             LocalizationHelper.InitThread();
 
@@ -2669,11 +2669,11 @@ namespace pwiz.SkylineTestUtil
             Settings.Default.SettingsUpgradeRequired = false; // do not restore settings from older versions
             Settings.Default.ImportResultsAutoCloseWindow = true;
             Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many;    // use maximum threads for multiple file import
-            Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
+            Settings.Default.SrmSettingsList = Settings.Default.SrmSettingsList.ChangeItemAt(0, SrmSettingsList.GetDefault());
             // Reset defaults with names from resources for testing different languages
-            Settings.Default.BackgroundProteomeList[0] = BackgroundProteomeList.GetDefault();
-            Settings.Default.DeclusterPotentialList[0] = DeclusterPotentialList.GetDefault();
-            Settings.Default.RetentionTimeList[0] = RetentionTimeList.GetDefault();
+            Settings.Default.BackgroundProteomeList = Settings.Default.BackgroundProteomeList.ChangeItemAt(0, BackgroundProteomeList.GetDefault());
+            Settings.Default.DeclusterPotentialList = Settings.Default.DeclusterPotentialList.ChangeItemAt(0, DeclusterPotentialList.GetDefault());
+            Settings.Default.RetentionTimeList = Settings.Default.RetentionTimeList.ChangeItemAt(0, RetentionTimeList.GetDefault());
             Settings.Default.ShowStartupForm = ShowStartPage;
             Settings.Default.MruList = SetMru;
             // For automated demos, start with the main window maximized
@@ -3033,7 +3033,7 @@ namespace pwiz.SkylineTestUtil
             {
                 // Save exception for reporting from main thread, naming the locking process if that is the issue.
                 // The exception message carries a full path here, so no containing directory is needed.
-                Program.AddTestException(FileLockingProcessFinder.ToFileLockingException(x, null));
+                ProgramContext.AddTestException(FileLockingProcessFinder.ToFileLockingException(x, null));
             }
 
             EndTest();
@@ -3140,7 +3140,7 @@ namespace pwiz.SkylineTestUtil
                     {
                         // Screenshots should be taken with release icon and "Skyline" in the window title,
                         // with frames at the scaled title bar sizes above 100%
-                        SkylineWindow.Icon = DpiFormIcons.GetIcon(SkylineWindow, Resources.Skyline_Release1);
+                        SkylineWindow.Icon = DpiFormIcons.GetIcon(SkylineWindow, ImageResources.Skyline_Release1);
                     }
                 });
                  
@@ -3225,7 +3225,7 @@ namespace pwiz.SkylineTestUtil
                 {
                     var message = TextUtil.LineSeparate("Streams left open:", string.Empty, report);
                     Console.WriteLine(message);
-                    Program.AddTestException(new IOException(message));
+                    ProgramContext.AddTestException(new IOException(message));
                 }
                 // Wait for FileSystemWatchers to be completely shut down before test cleanup
                 // This prevents race conditions where watchers might access directories during cleanup
@@ -3235,7 +3235,7 @@ namespace pwiz.SkylineTestUtil
                 // Restore minimal View to close dock windows.
                 RestoreMinimalView();
 
-                if (Program.TestExceptions.Count == 0)
+                if (ProgramContext.TestExceptions.Count == 0)
                 {
                     // Short wait for anything else
                     WaitForConditionUI(5000, () => OpenForms.Count() == 1);
@@ -3244,7 +3244,7 @@ namespace pwiz.SkylineTestUtil
             catch (Exception x)
             {
                 // An exception occurred outside RunTest
-                Program.AddTestException(x);
+                ProgramContext.AddTestException(x);
             }
 
             CloseOpenForms(typeof(SkylineWindow));
@@ -3332,7 +3332,7 @@ namespace pwiz.SkylineTestUtil
             {
                 // Same reasoning as the ToolStrip.ToolTip / ToolTip._timer check below: a silent return
                 // here is indistinguishable from "no ToolStrip on this thread", and the leak comes back.
-                Program.AddTestException(new MissingMemberException(
+                ProgramContext.AddTestException(new MissingMemberException(
                     @"WinForms no longer has ToolStripManager.t_activeToolStrips (or the older " +
                     @"t_toolStripWeakArrayList), so tool tip timers left armed by a test can no longer " +
                     @"be found. See ReleaseToolStripToolTips."));
@@ -3344,7 +3344,7 @@ namespace pwiz.SkylineTestUtil
             // net8: ArrayList-derived (IList). net10: WeakRefCollection<ToolStrip>, IEnumerable only.
             if (toolStripsValue is not System.Collections.IEnumerable toolStrips)
             {
-                Program.AddTestException(new MissingMemberException(
+                ProgramContext.AddTestException(new MissingMemberException(
                     @"ToolStripManager's ToolStrip list is no longer enumerable (" +
                     toolStripsValue.GetType().FullName + @"), so tool tip timers left armed by a test " +
                     @"can no longer be stopped. See ReleaseToolStripToolTips."));
@@ -3357,7 +3357,7 @@ namespace pwiz.SkylineTestUtil
                 // Say so rather than quietly doing nothing: without these the leak comes back, and a
                 // GC-leak failure in some unrelated test is a long way from the rename that caused it.
                 // Reported rather than thrown - this runs during teardown, which has to finish.
-                Program.AddTestException(new MissingMemberException(
+                ProgramContext.AddTestException(new MissingMemberException(
                     @"WinForms no longer has ToolStrip.ToolTip or ToolTip._timer, so tool tip timers " +
                     @"left armed by a test can no longer be stopped. See ReleaseToolStripToolTips."));
                 return;
@@ -3382,7 +3382,7 @@ namespace pwiz.SkylineTestUtil
         {
             // Actually throwing an exception can cause an infinite loop in MSTest
             var openForms = OpenForms.Where(form => form.GetType() != exceptType).ToList();
-            Program.TestExceptions.AddRange(
+            ProgramContext.TestExceptions.AddRange(
                 from form in openForms
                 select new AssertFailedException(
                     String.Format(@"Form of type {0} left open at end of test", form.GetType())));
@@ -3422,7 +3422,7 @@ namespace pwiz.SkylineTestUtil
                     // ReSharper disable LocalizableElement
                     Console.WriteLine("\n\nDismissing open ThreadExceptionDialog during teardown\n"); // Not L10N
                     // ReSharper restore LocalizableElement
-                    Program.AddTestException(new InvalidOperationException(
+                    ProgramContext.AddTestException(new InvalidOperationException(
                         @"ThreadExceptionDialog was open at end of test - earlier exception escaped Application.ThreadException handler"));
                     RunUI(() =>
                     {

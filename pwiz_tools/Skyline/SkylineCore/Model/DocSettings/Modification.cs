@@ -1,0 +1,1881 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Xml;
+using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Crosslinking;
+using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
+
+namespace pwiz.Skyline.Model.DocSettings
+{
+// ReSharper disable InconsistentNaming
+    public enum ModTerminus { C, N };
+
+    [Flags]
+    public enum LabelAtoms
+    {
+        None = 0,
+        C13 = 0x1,
+        N15 = 0x2,
+        O18 = 0x4,
+        H2 = 0x8,
+        LabelsAA = C13 | N15 | O18 | H2, // Labels that affect amino acids
+        Cl37 = 0x10,
+        Br81 = 0x20,
+        P32 = 0x40,
+        S34 = 0x80
+    }
+
+    public enum RelativeRT { Matching, Overlapping, Preceding, Unknown }
+
+    public static class RelativeRTExtension
+    {
+        private static string[] LOCALIZED_VALUES
+        {
+            get
+            {
+                return new[]
+                {
+                    DocSettingsResources.RelativeRTExtension_LOCALIZED_VALUES_Matching,
+                    DocSettingsResources.RelativeRTExtension_LOCALIZED_VALUES_Overlapping,
+                    DocSettingsResources.RelativeRTExtension_LOCALIZED_VALUES_Preceding,
+                    DocSettingsResources.RelativeRTExtension_LOCALIZED_VALUES_Unknown
+                };
+            }
+        }
+
+        public static string GetLocalizedString(this RelativeRT val)
+        {
+            return LOCALIZED_VALUES[(int) val];
+        }
+
+        public static RelativeRT GetEnum(string enumValue)
+        {
+            return Helpers.EnumFromLocalizedString<RelativeRT>(enumValue, LOCALIZED_VALUES);
+        }
+
+        public static RelativeRT GetEnum(string enumValue, RelativeRT defaultEnum)
+        {
+            return Helpers.EnumFromLocalizedString(enumValue, LOCALIZED_VALUES, defaultEnum);
+        }
+
+    }
+
+// ReSharper restore InconsistentNaming
+
+    public class DefaultValuesRelativeRtMatching : DefaultValues
+    {
+        protected override IEnumerable<object> _values
+        {
+            get { yield return RelativeRT.Matching; }
+        }
+    }
+
+
+    /// <summary>
+    /// Represents a document-wide  or explicit static modification that applies
+    /// to all amino acids of a specific type or a single amino acid, or all peptides in the
+    /// case of C-terminal or N-terminal modifications.
+    /// </summary>
+    [XmlRoot("static_modification")]
+    public sealed class StaticMod : XmlNamedElement, IAuditLogComparable, IHasItemDescription, IValidating
+    {
+        private ImmutableList<FragmentLoss> _losses;
+        public static StaticMod EMPTY = new StaticMod();
+
+        public StaticMod(string name, string aas, ModTerminus? term, string formula)
+            : this(name, aas, term, formula, LabelAtoms.None, null, null)
+        {            
+        }
+
+        public StaticMod(string name, string aas, ModTerminus? term, LabelAtoms labelAtoms)
+            : this(name, aas, term, null, labelAtoms, null, null)
+        {
+        }
+
+        public StaticMod(string name, string aas, ModTerminus? term,
+            string formula, LabelAtoms labelAtoms, double? monoMass, double? avgMass)
+            : this(name, aas, term, false, formula, labelAtoms, RelativeRT.Matching, monoMass, avgMass, null, null, null)
+        {
+            
+        }
+
+        public StaticMod(string name, string aas, ModTerminus? term, bool isVariable, string formula,
+                         LabelAtoms labelAtoms, RelativeRT relativeRT, double? monoMass, double? avgMass, IList<FragmentLoss> losses)
+            : this(name, aas, term, isVariable, formula, labelAtoms, relativeRT, monoMass, avgMass, losses, null, null)
+        {
+            
+        }
+
+        public StaticMod(string name,
+                         string aas,
+                         ModTerminus? term,
+                         bool isVariable,
+                         string formula,
+                         LabelAtoms labelAtoms,
+                         RelativeRT relativeRT,
+                         double? monoMass,
+                         double? avgMass,
+                         IList<FragmentLoss> losses,
+                         int? uniModId,
+                         string shortName)
+            : base(name)
+        {
+            AAs = aas;
+            Terminus = term;
+            IsVariable = IsExplicit = isVariable;   // All variable mods are explicit
+            ParsedMolecule = string.IsNullOrEmpty(formula) ? null : ParsedMolecule.Create(formula);
+            LabelAtoms = labelAtoms;
+            RelativeRT = relativeRT;
+            MonoisotopicMass = monoMass;
+            AverageMass = avgMass;                
+
+            Losses = losses;
+
+            UnimodId = uniModId;
+            ShortName = shortName;
+
+            DoValidate();
+        }
+
+        [Track]
+        public string AAs { get; private set; }
+
+        [Track]
+        public ModTerminus? Terminus { get; private set; }
+
+        [Track]
+        public bool IsVariable { get; private set; }
+
+        [Track]
+        public string Formula => ParsedMolecule?.ToString();
+
+        public ParsedMolecule ParsedMolecule { get; private set; } // Using ParsedMolecule because we want to retain serialized element order
+
+        [Track]
+        public double? MonoisotopicMass { get; private set; }
+        [Track]
+        public double? AverageMass { get; private set; }
+
+        public LabelAtoms LabelAtoms { get; private set; }
+        [Track]
+        public bool Label13C { get { return (LabelAtoms & LabelAtoms.C13) != 0; } }
+        [Track]
+        public bool Label15N { get { return (LabelAtoms & LabelAtoms.N15) != 0; } }
+        [Track]
+        public bool Label18O { get { return (LabelAtoms & LabelAtoms.O18) != 0; } }
+        [Track]
+        public bool Label2H { get { return (LabelAtoms & LabelAtoms.H2) != 0; } }
+        [Track]
+        public bool Label37Cl { get { return (LabelAtoms & LabelAtoms.Cl37) != 0; } }
+        [Track]
+        public bool Label81Br { get { return (LabelAtoms & LabelAtoms.Br81) != 0; } }
+        [Track]
+        public bool Label32P { get { return (LabelAtoms & LabelAtoms.P32) != 0; } }
+        [Track]
+        public bool Label34S { get { return (LabelAtoms & LabelAtoms.S34) != 0; } }
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return new StaticMod();
+        }
+
+        public double IonLabelMassDiff
+        {
+            get
+            {
+                var massdiff = 0.0;
+                if (Label13C)
+                    massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C13) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C);
+                if (Label15N)
+                    massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.N15) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.N);
+                if (Label18O)
+                    massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.O18) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.O);
+                if (Label2H)
+                    massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.H2) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.H);
+                if (Label37Cl)
+                    massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.Cl37) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.Cl);
+                if (Label81Br)
+                    massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.Br81) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.Br);
+                if (Label32P)
+                    massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.P32) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.P);
+                if (Label34S)
+                    massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.S34) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.S);
+                return massdiff;
+            }
+        }
+
+        public List<string> LabelNames
+        {
+            get
+            {
+                var names = new List<string>();
+                if (Label13C)
+                    names.Add(BioMassCalc.C13);
+                if (Label15N)
+                    names.Add(BioMassCalc.N15);
+                if (Label18O)
+                    names.Add(BioMassCalc.O18);
+                if (Label2H)
+                    names.Add(BioMassCalc.H2);
+                if (Label37Cl)
+                    names.Add(BioMassCalc.Cl37);
+                if (Label81Br)
+                    names.Add(BioMassCalc.Br81);
+                if (Label32P)
+                    names.Add(BioMassCalc.P32);
+                if (Label34S)
+                    names.Add(BioMassCalc.S34);
+                return names;
+            }
+        }
+
+        [Track(defaultValues: typeof(DefaultValuesRelativeRtMatching))]
+        public RelativeRT RelativeRT { get; private set; }
+
+        [TrackChildren]
+        public IList<FragmentLoss> Losses
+        {
+            get { return _losses; }
+            private set
+            {
+                _losses = (value != null ? MakeReadOnly(FragmentLoss.SortByMz(value)) : null);
+            }
+        }
+
+        public IEnumerable<char> AminoAcids
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(AAs))
+                    yield break;
+
+                foreach (var aaPart in AAs.Split(','))
+                    yield return aaPart.Trim()[0];
+            }
+        }
+
+        public int? UnimodId { get; private set; }
+
+        /// <summary>
+        /// True if the modification must be declared on a peptide to have
+        /// any effect.  Modifications on the document settings with this
+        /// value off apply to all peptides without explicit modifications.
+        /// <para>
+        /// This value is always off for explicit modifications in the
+        /// document tree, where it is not necessary, in order to support
+        /// reliable equality checks.</para>
+        /// </summary>
+        public bool IsExplicit { get; private set; }
+
+        /// <summary>
+        /// Because variable modifications are now also set as "explicit",
+        /// the IsUserSet field was added to destinguish between explict
+        /// variable modification and explicit user set modifications.
+        /// </summary>
+        public bool IsUserSet { get { return IsExplicit && !IsVariable; } }
+
+        public bool IsVariablePossible { get { return Terminus.HasValue || AAs != null; } }
+
+        public bool IsMod(string sequence)
+        {
+            if (sequence == null) // As when looking at a non-peptide molecule
+                return false;
+
+            for (int i = 0; i < sequence.Length; i++)
+            {
+                if (IsMod(sequence[i], i, sequence.Length))
+                    return true;
+            }
+            return false;
+        }
+
+        public bool IsMod(char aa, int indexAA, int len)
+        {
+            return IsApplicable(aa, indexAA, len) && HasMod;
+        }
+
+        public bool IsApplicableMod(string sequence, int indexAA)
+        {
+            return IsApplicable(sequence, indexAA); // allow loss-only mods in EditPepModsDlg - && HasMod;
+        }
+
+        public bool IsApplicableCrosslink(string sequence, int indexAA)
+        {
+            return IsApplicable(sequence, indexAA) && null != CrosslinkerSettings;
+        }
+
+        /// <summary>
+        /// True if this modification impacts the precursor mass value.
+        /// </summary>
+        public bool HasMod
+        {
+            get { return (ParsedMolecule != null || LabelAtoms != LabelAtoms.None || MonoisotopicMass.HasValue); }
+        }
+
+        public bool IsLoss(char aa, int indexAA, int len)
+        {
+            return IsApplicable(aa, indexAA, len) && HasLoss;
+        }
+
+        private bool IsApplicable(char aa, int indexAA, int len)
+        {
+            if (AAs != null && !AAs.Contains(aa))
+                return false;
+            if (Terminus.HasValue)
+            {
+                if (Terminus.Value == ModTerminus.N && indexAA != 0)
+                    return false;
+                if (Terminus.Value == ModTerminus.C && indexAA != len - 1)
+                    return false;                
+            }
+            return true;
+        }
+
+        private bool IsApplicable(string sequence, int indexAA)
+        {
+            if (indexAA < 0 || indexAA >= sequence.Length)
+            {
+                return false;
+            }
+
+            return IsApplicable(sequence[indexAA], indexAA, sequence.Length);
+        }
+
+        /// <summary>
+        /// True if this modification impacts fragment mass values different
+        /// from the precursor modification through neutral loss.
+        /// </summary>
+        public bool HasLoss
+        {
+            get { return Losses != null; }
+        }
+
+        public string ShortName { get; private set; }
+
+        public CrosslinkerSettings CrosslinkerSettings { get; private set; }
+
+        public MoleculeMassOffset GetMoleculeMassOffset()
+        {
+            if (ParsedMolecule.IsNullOrEmpty(ParsedMolecule))
+            {
+                return MoleculeMassOffset.Create(Molecule.Empty, MonoisotopicMass ?? 0, AverageMass ?? 0);
+            }
+
+            return MoleculeMassOffset.Create(ParsedMolecule.Molecule, 0, 0);
+        }
+        public ItemDescription ItemDescription
+        {
+            get
+            {
+                var lines = new List<string>();
+                if (!string.IsNullOrEmpty(AAs))
+                {
+                    lines.Add(TextUtil.ColonSeparate(PropertyNames.StaticMod_AAs, AAs));
+                }
+
+                if (Terminus != null)
+                {
+                    lines.Add(TextUtil.ColonSeparate(PropertyNames.StaticMod_Terminus, Terminus.ToString()));
+                }
+
+                // TODO: "Variable" is only interesting to include in the description if the modification is
+                // also implicit, which this object does not know
+                // if (IsVariable)
+                // {
+                //     lines.Add(PropertyNames.StaticMod_IsVariable);
+                // }
+
+                if (IsCrosslinker)
+                {
+                    lines.Add(PropertyNames.StaticMod_IsCrosslinker);
+                }
+
+                var labelDescriptions = new List<string>();
+                if (Label2H)
+                {
+                    labelDescriptions.Add(PropertyNames.StaticMod_Label2H);
+                }
+
+                if (Label13C)
+                {
+                    labelDescriptions.Add(PropertyNames.StaticMod_Label13C);
+                }
+
+                if (Label15N)
+                {
+                    labelDescriptions.Add(PropertyNames.StaticMod_Label15N);
+                }
+
+                if (Label18O)
+                {
+                    labelDescriptions.Add(PropertyNames.StaticMod_Label18O);
+                }
+
+                if (Label32P)
+                {
+                    labelDescriptions.Add(PropertyNames.StaticMod_Label32P);
+                }
+
+                if (Label34S)
+                {
+                    labelDescriptions.Add(PropertyNames.StaticMod_Label32P);
+                }
+
+                if (Label37Cl)
+                {
+                    labelDescriptions.Add(PropertyNames.StaticMod_Label37Cl);
+                }
+
+                if (Label81Br)
+                {
+                    labelDescriptions.Add(PropertyNames.StaticMod_Label81Br);
+                }
+
+                string summary = null;
+                if (labelDescriptions.Any())
+                {
+                    lines.Add(summary = TextUtil.SpaceSeparate(labelDescriptions));
+                }
+                else
+                {
+                    if (HasMod || !HasLoss)
+                    {
+                        lines.Add(summary = FormatFormulaOrMass(ParsedMolecule, MonoisotopicMass, AverageMass));
+                    }
+                }
+
+                if (RelativeRT != RelativeRT.Matching)
+                {
+                    lines.Add(TextUtil.ColonSeparate(PropertyNames.StaticMod_RelativeRT, RelativeRT.GetLocalizedString()));
+                }
+
+                if (Losses?.Count > 0)
+                {
+                    if (Losses.Count == 1)
+                    {
+                        string lossDescription;
+                        if (Losses[0].Charge == 0)
+                        {
+                            lossDescription = TextUtil.ColonSeparate(DocSettingsResources.StaticMod_ItemDescription_Neutral_loss, Losses[0].ItemDescription.Summary);
+                        }
+                        else
+                        {
+                            lossDescription = TextUtil.ColonSeparate(DocSettingsResources.StaticMod_ItemDescription_Loss, Losses[0].ItemDescription.Summary);
+                        }
+
+                        lines.Add(lossDescription);
+                        summary ??= lossDescription;
+                    }
+                    else
+                    {
+                        if (Losses.All(loss => loss.Charge == 0))
+                        {
+                            lines.Add(TextUtil.AppendColon(DocSettingsResources.StaticMod_ItemDescription_Neutral_losses));
+                            summary ??= string.Format(DocSettingsResources.StaticMod_ItemDescription__0__neutral_losses, Losses.Count);
+                        }
+                        else
+                        {
+                            lines.Add(TextUtil.AppendColon(DocSettingsResources.StaticMod_ItemDescription_Losses));
+                            summary ??= string.Format(DocSettingsResources.StaticMod_ItemDescription__0__losses, Losses.Count);
+                        }
+
+                        const string indent = @"    ";
+                        foreach (var fragmentLoss in Losses)
+                        {
+                            lines.Add(indent + fragmentLoss.ItemDescription.Summary);
+                        }
+                    }
+                }
+
+                summary ??= DocSettingsResources.StaticMod_ItemDescription_Empty;
+                return new ItemDescription(summary).ChangeTitle(Name).ChangeDetailLines(lines);
+            }
+        }
+
+        /// <summary>
+        /// If the formula is not blank, return the formula followed by the mono mass in parentheses formatted to one decimal place.
+        /// For example: H2O (-18)
+        /// If the formula is blank then return <see cref="FormatMass"/>
+        /// </summary>
+        public static string FormatFormulaOrMass(ParsedMolecule formula, double? monoMass, double? averageMass)
+        {
+            if (!ParsedMolecule.IsNullOrEmpty(formula))
+            {
+                var parts = new List<string> { formula.ToString() };
+                if (monoMass.HasValue)
+                {
+                    var massString = monoMass.Value.ToString(@"0.#");
+                    if (monoMass.Value > 0)
+                    {
+                        massString = @"+" + massString;
+                    }
+
+                    parts.Add(string.Format(DocSettingsResources.StaticMod_FormatFormulaOrMass___0__Da_, massString));
+                }
+
+                return TextUtil.SpaceSeparate(parts);
+            }
+
+            return FormatMass(monoMass, averageMass);
+        }
+
+        /// <summary>
+        /// If the mono and average masses are the same then return "Mass: &lt;mass>".
+        /// Otherwise return something saying what the mono and average masses are.
+        /// </summary>
+        public static string FormatMass(double? monoMass, double? averageMass)
+        {
+            var massDescriptions = new List<string>();
+            if (monoMass.HasValue)
+            {
+                if (Equals(monoMass, averageMass))
+                {
+                    return TextUtil.ColonSeparate(DocSettingsResources.StaticMod_FormatMass_Mass, monoMass.Value.ToString(Formats.RoundTrip));
+                }
+                massDescriptions.Add(TextUtil.ColonSeparate(PropertyNames.StaticMod_MonoisotopicMass,
+                    monoMass.Value.ToString(Formats.RoundTrip)));
+            }
+
+            if (averageMass.HasValue)
+            {
+                massDescriptions.Add(TextUtil.ColonSeparate(PropertyNames.StaticMod_AverageMass, averageMass.Value.ToString(Formats.RoundTrip)));
+            }
+
+            if (massDescriptions.Any())
+            {
+                return TextUtil.SpaceSeparate(massDescriptions);
+            }
+
+            // Should not happen
+            return DocSettingsResources.StaticMod_FormatMass_Unknown_mass;
+        }
+
+        #region Property change methods
+
+        public StaticMod ChangeExplicit(bool prop)
+        {
+            return ChangeProp(ImClone(this), im =>
+                                                 {
+                                                     im.IsExplicit = prop;
+                                                     im.IsVariable = false;
+                                                 });
+        }
+
+        public StaticMod ChangeVariable(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.IsVariable = im.IsExplicit = prop);
+        }
+
+        public StaticMod ChangeFormula(ParsedMolecule prop)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.LabelAtoms = LabelAtoms.None;
+                im.ParsedMolecule = prop;
+            });
+        }
+
+        public StaticMod ChangeLabelAtoms(LabelAtoms prop)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.ParsedMolecule = ParsedMolecule.EMPTY;
+                im.LabelAtoms = prop;
+            });
+        }
+
+        public StaticMod ChangeRelativeRT(RelativeRT prop)
+        {
+            return ChangeProp(ImClone(this), im => im.RelativeRT = prop);
+        }
+
+        public StaticMod ChangeLosses(IList<FragmentLoss> prop)
+        {
+            return ChangeProp(ImClone(this), im => im.Losses = prop);
+        }
+
+        public StaticMod MatchVariableAndLossInclusion(StaticMod mod)
+        {
+            // Only allowed if the mods are equivalent
+            Assume.IsTrue(Equivalent(mod));
+
+            var result = this;
+            if (!Equals(result.IsVariable, mod.IsVariable))
+                result = result.ChangeVariable(mod.IsVariable);
+            if (result.Losses != null && !ArrayUtil.EqualsDeep(result.Losses, mod.Losses))
+            {
+                int len = result.Losses.Count;
+                var newLosses = new FragmentLoss[len];
+                for (int i = 0; i < len; i++)
+                {
+                    newLosses[i] = result.Losses[i].ChangeInclusion(mod.Losses[i].Inclusion);
+                }
+                result = result.ChangeLosses(newLosses);
+            }
+            return result;
+        }
+        public StaticMod ChangeCrosslinkerSettings(CrosslinkerSettings crosslinkerSettings)
+        {
+            return ChangeProp(ImClone(this), im => im.CrosslinkerSettings = crosslinkerSettings);
+        }
+
+        [Track(defaultValues:typeof(DefaultValuesFalse))]
+        public bool IsCrosslinker
+        {
+            get { return null != CrosslinkerSettings; }
+        }
+        #endregion
+
+        #region Implementation of IXmlSerializable
+
+        /// <summary>
+        /// For serialization
+        /// </summary>
+        private StaticMod()
+        {
+        }
+
+        private enum ATTR
+        {
+            aminoacid,
+            terminus,
+            variable,
+            formula,
+// ReSharper disable InconsistentNaming
+            label_13C,
+            label_15N,
+            label_18O,
+            label_2H,
+// ReSharper restore InconsistentNaming
+            relative_rt,
+            massdiff_monoisotopic,
+            massdiff_average,
+            explicit_decl, 
+            unimod_id,
+            short_name,
+// ReSharper disable InconsistentNaming
+// NOT YET  -- Brendan wants to wait and see if there is actual user demand for whole-organism Cl or Br labeling 7/21/17
+//            label_37Cl,
+//            label_81Br,
+// ReSharper restore InconsistentNaming
+        }
+
+        private enum EL
+        {
+            crosslinker
+        }
+
+        void IValidating.Validate()
+        {
+            // This function is called during property changes. So, clear and recalculate
+            // cached masses to avoid throwing an exception having them present when they
+            // can be calculated.
+            if (!ParsedMolecule.IsNullOrEmpty(ParsedMolecule) || LabelAtoms != LabelAtoms.None)
+            {
+                AverageMass = MonoisotopicMass = null;
+            }
+
+            DoValidate();
+        }
+
+        private void DoValidate()
+        {
+            if (IsVariable)
+            {
+                // It is now valid to specify modifications that apply to every amino acid.
+                // This is important for 15N labeling, and reasonable for an explicit
+                // static modification... but not for variable modifications.
+                if (!Terminus.HasValue && AAs == null)
+                    throw new InvalidDataException(DocSettingsResources.StaticMod_Validate_Variable_modifications_must_specify_amino_acid_or_terminus);
+                // Nor can isotope modifications be variable. Though, isotope labeled amino acids are the only type
+                // that can be detected here
+                if (LabelAtoms != LabelAtoms.None)
+                    throw new InvalidDataException(DocSettingsResources.StaticMod_DoValidate_Isotope_modifications_may_not_be_variable_);
+            }
+            if (AAs != null)
+            {
+                foreach (string aaPart in AAs.Split(','))
+                {
+                    string aa = aaPart.Trim();
+                    if (aa.Length != 1 || !AminoAcid.IsAA(aa[0]))
+                        throw new InvalidDataException(string.Format(DocSettingsResources.StaticMod_Validate_Invalid_amino_acid___0___, aa));
+                }
+            }
+            else if (Terminus.HasValue && LabelAtoms != LabelAtoms.None)
+            {
+                throw new InvalidDataException(DocSettingsResources.StaticMod_Validate_Terminal_modification_with_labeled_atoms_not_allowed);
+            }
+            if (ParsedMolecule.IsNullOrEmpty(ParsedMolecule) && LabelAtoms == LabelAtoms.None)
+            {
+                if (MonoisotopicMass == null || AverageMass == null)
+                {
+                    // Allow a modification that just specifies potential neutral losses
+                    // from unmodified amino acid residues.
+                    if (Losses == null)
+                        throw new InvalidDataException(DocSettingsResources.StaticMod_Validate_Modification_must_specify_a_formula_labeled_atoms_or_valid_monoisotopic_and_average_masses);
+                    if (IsVariable)
+                        throw new InvalidDataException(DocSettingsResources.StaticMod_Validate_Loss_only_modifications_may_not_be_variable);
+                }
+            }
+            else
+            {
+                // No explicit masses with formula or label atoms
+                if (MonoisotopicMass != null || AverageMass != null)
+                    throw new InvalidDataException(DocSettingsResources.StaticMod_Validate_Modification_with_a_formula_may_not_specify_modification_masses);
+                if (ParsedMolecule != null)
+                {
+                    if (ParsedMolecule.IsNullOrEmpty(ParsedMolecule))
+                        throw new InvalidDataException(DocSettingsResources.StaticMod_Validate_Modification_formula_may_not_be_empty);
+                    if (LabelAtoms != LabelAtoms.None)
+                        throw new InvalidDataException(DocSettingsResources.StaticMod_Validate_Formula_not_allowed_with_labeled_atoms);
+                    // Cache mass values to improve performance of variable modifications
+                    // Throws an exception, if given an invalid formula.
+                    MonoisotopicMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, ParsedMolecule, SequenceMassCalc.MassPrecision);
+                    AverageMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, ParsedMolecule, SequenceMassCalc.MassPrecision);
+                }
+                else if (LabelAtoms != LabelAtoms.None)
+                {
+                    // If specifically labeling a single AA, cache mass values
+                    if (AAs is { Length: 1 })
+                    {
+                        MonoisotopicMass = new SequenceMassCalc(MassType.Monoisotopic).GetModMass(AAs[0], this);
+                        AverageMass = new SequenceMassCalc(MassType.Average).GetModMass(AAs[0], this);
+                    }
+                }
+            }
+
+            // We no longer validate or guarantee that the Unimod ID is correct.  Previously, we checked the ID and
+            // removed it if we didn't think it was correct, but that strategy is of dubious value.  Maybe someone
+            // knows better than we do.
+            //if (!UniMod.ValidateID(this))
+            //    UnimodId = null;
+        }
+
+        private static ModTerminus ToModTerminus(String value)
+        {
+            try
+            {
+                return (ModTerminus)Enum.Parse(typeof(ModTerminus), value, true);
+            }
+            catch (ArgumentException)
+            {
+                throw new ArgumentException(string.Format(DocSettingsResources.StaticMod_ToModTerminus_Invalid_terminus__0__, value));
+            }            
+        }
+
+        public static StaticMod Deserialize(XmlReader reader)
+        {
+            return reader.Deserialize(new StaticMod());
+        }
+
+        public override void ReadXml(XmlReader reader)
+        {
+            // Read tag attributes
+            base.ReadXml(reader);
+            string aas = reader.GetAttribute(ATTR.aminoacid);
+            if (!string.IsNullOrEmpty(aas))
+            {                
+                AAs = aas;
+                // Support v0.1 format.
+                if (AAs[0] == '\0') 
+                    AAs = null;
+            }
+
+            Terminus = reader.GetAttribute(ATTR.terminus, ToModTerminus);
+            IsVariable = IsExplicit = reader.GetBoolAttribute(ATTR.variable);
+            var formula = reader.GetAttribute(ATTR.formula);
+            ParsedMolecule = string.IsNullOrEmpty(formula) ? null : ParsedMolecule.Create(formula);
+            if (reader.GetBoolAttribute(ATTR.label_13C))
+                LabelAtoms |= LabelAtoms.C13;
+            if (reader.GetBoolAttribute(ATTR.label_15N))
+                LabelAtoms |= LabelAtoms.N15;
+            if (reader.GetBoolAttribute(ATTR.label_18O))
+                LabelAtoms |= LabelAtoms.O18;
+            if (reader.GetBoolAttribute(ATTR.label_2H))
+                LabelAtoms |= LabelAtoms.H2;
+// NOT YET - Brendan wants to wait and see if there is actual user demand for whole-organism Cl or Br labeling 7/21/17
+//            if (reader.GetBoolAttribute(ATTR.label_37Cl))
+//                LabelAtoms |= LabelAtoms.Cl37;
+//            if (reader.GetBoolAttribute(ATTR.label_81Br))
+//                LabelAtoms |= LabelAtoms.Br81;
+            RelativeRT = reader.GetEnumAttribute(ATTR.relative_rt, RelativeRT.Matching);
+
+            // Allow specific masses always, but they will generate an error,
+            // in Validate() if there is already a formula.
+            MonoisotopicMass = reader.GetNullableDoubleAttribute(ATTR.massdiff_monoisotopic);
+            AverageMass = reader.GetNullableDoubleAttribute(ATTR.massdiff_average);
+
+            if (!IsVariable)
+                IsExplicit = reader.GetBoolAttribute(ATTR.explicit_decl);
+
+            UnimodId = reader.GetNullableIntAttribute(ATTR.unimod_id);
+            // Backward compatibility with early code that assigned -1 to some custom modifications
+            if (UnimodId.HasValue && UnimodId.Value == -1)
+                UnimodId = null;
+
+            ShortName = reader.GetAttribute(ATTR.short_name);
+
+            bool empty = reader.IsEmptyElement;
+            // Consume tag
+            reader.Read();
+            if (!empty)
+            {
+                var listLosses = new List<FragmentLoss>();
+                reader.ReadElements(listLosses);
+                if (listLosses.Count > 0)
+                {
+                    Losses = listLosses.ToArray();
+                }
+
+                if (reader.IsStartElement(EL.crosslinker))
+                {
+                    CrosslinkerSettings = CrosslinkerSettings.EMPTY;
+                    reader.Read();
+                }
+                reader.ReadEndElement();
+            }
+
+            DoValidate();
+        }
+
+        public override void WriteXml(XmlWriter writer)
+        {
+            // Write tag attributes
+            base.WriteXml(writer);
+            writer.WriteAttributeIfString(ATTR.aminoacid, AAs);
+            writer.WriteAttributeNullable(ATTR.terminus, Terminus);
+            writer.WriteAttribute(ATTR.variable, IsVariable);
+            writer.WriteAttributeIfString(ATTR.formula, ParsedMolecule.IsNullOrEmpty(ParsedMolecule) ? null : ParsedMolecule.ToString());
+            writer.WriteAttribute(ATTR.label_13C, Label13C);
+            writer.WriteAttribute(ATTR.label_15N, Label15N);
+            writer.WriteAttribute(ATTR.label_18O, Label18O);
+            writer.WriteAttribute(ATTR.label_2H, Label2H);
+// NOT YET - Brendan wants to wait and see if there is actual user demand for whole-organism Cl or Br labeling 7/21/17
+//            writer.WriteAttribute(ATTR.label_37Cl, Label37Cl);
+//            writer.WriteAttribute(ATTR.label_81Br, Label81Br);
+            writer.WriteAttribute(ATTR.relative_rt, RelativeRT, RelativeRT.Matching);
+            if (ParsedMolecule.IsNullOrEmpty(ParsedMolecule) && LabelAtoms == LabelAtoms.None)
+            {
+                writer.WriteAttributeNullable(ATTR.massdiff_monoisotopic, MonoisotopicMass);
+                writer.WriteAttributeNullable(ATTR.massdiff_average, AverageMass);
+            }
+            if (!IsVariable)
+                writer.WriteAttribute(ATTR.explicit_decl, IsExplicit);
+
+            writer.WriteAttributeNullable(ATTR.unimod_id, UnimodId);
+
+            writer.WriteAttributeIfString(ATTR.short_name, ShortName);
+
+            if (Losses != null)
+                writer.WriteElements(Losses);
+            if (CrosslinkerSettings != null)
+            {
+                writer.WriteStartElement(EL.crosslinker);
+                writer.WriteEndElement();
+            }
+        }
+
+        #endregion
+
+        #region object overrides
+
+        /// <summary>
+        /// Equality minus the <see cref="IsExplicit"/> flag.
+        /// </summary>
+        public bool EquivalentAll(StaticMod obj)
+        {
+            return Equivalent(obj) 
+                && base.Equals(obj) 
+                && obj.LabelAtoms == LabelAtoms
+                // Formulas don't have to be identical, but their presence or absence must match
+                && (obj.Formula == null) == (Formula == null)
+                && obj.IsVariable.Equals(IsVariable) 
+                && Equals(obj.UnimodId, UnimodId)
+                && Equals(obj.ShortName, ShortName)
+                && ArrayUtil.EqualsDeep(obj._losses, _losses);
+        }
+
+        /// <summary>
+        /// Equality minus <see cref="IsExplicit"/>, <see cref="UnimodId"/>, <see cref="IsVariable"/> and <see cref="XmlNamedElement.Equals(object)"/>.
+        /// Used checking for matches between user defined modifications and UniMod modifications.
+        /// </summary>
+        public bool Equivalent(StaticMod obj)
+        {
+            if (!Equals(obj.AAs, AAs) ||
+                !obj.Terminus.Equals(Terminus) ||
+                !Equals(obj.RelativeRT, RelativeRT) ||
+                !Equals(obj.CrosslinkerSettings, CrosslinkerSettings))
+            {
+                return false;
+            }
+
+            // If both objects have a cached mass and the cached masses are not equal,
+            // then they are not equivalent.
+            if ((!obj.AverageMass.Equals(AverageMass) && obj.AverageMass.HasValue && AverageMass.HasValue) ||
+                (!obj.MonoisotopicMass.Equals(MonoisotopicMass) && obj.MonoisotopicMass.HasValue && MonoisotopicMass.HasValue))
+            {
+                return false;
+            }
+
+            if (!ArrayUtil.EqualsDeep(obj._losses, _losses))
+            {
+                if (obj._losses != null && _losses != null)
+                {
+                    if (obj._losses.Count != _losses.Count)
+                        return false;
+
+                    var losses1 = _losses.OrderBy(l => l.MonoisotopicMass).ToArray();
+                    var losses2 = obj._losses.OrderBy(l => l.MonoisotopicMass).ToArray();
+                    if (losses1.Where((t, i) => !EquivalentFormulas(t, losses2[i])).Any())
+                    {
+                        return false;
+                    }
+                }
+                else if (obj._losses == null || _losses == null)
+                {
+                    return false;
+                }
+            }
+
+            if (AAs != null)
+            {
+                foreach (var aa in AminoAcids)
+                {
+                    if (!EquivalentFormulas(aa, obj))
+                        return false;
+                }                
+            }
+            else if (Terminus != null)
+            {
+                return EquivalentFormulas('\0', obj);
+            }
+            else
+            {
+                // Label all amino acids with this label
+                for (char aa = 'A'; aa <= 'Z'; aa++)
+                {
+                    if (AminoAcid.IsAA(aa) && !EquivalentFormulas(aa, obj))
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool EquivalentFormulas(FragmentLoss loss1, FragmentLoss loss2)
+        {
+            return loss1.ParsedMolecule.Equals(loss2.ParsedMolecule);
+        }
+
+        private bool EquivalentFormulas(char aa, StaticMod obj)
+        {
+            SequenceMassCalc modCalc = new SequenceMassCalc(MassType.Monoisotopic);
+
+            var formulaThis = modCalc.GetModFormula(aa, this);
+            var formulaObj = modCalc.GetModFormula(aa, obj);
+
+            return formulaThis.Equals(formulaObj);
+        }
+
+
+        public bool Equals(StaticMod obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return EquivalentAll(obj) &&
+                obj.IsExplicit.Equals(IsExplicit);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return Equals(obj as StaticMod);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = base.GetHashCode();
+                result = (result*397) ^ (AAs != null ? AAs.GetHashCode() : 0);
+                result = (result*397) ^ (Terminus.HasValue ? Terminus.Value.GetHashCode() : 0);
+                result = (result*397) ^ IsVariable.GetHashCode();
+                result = (result*397) ^ (AverageMass.HasValue ? AverageMass.Value.GetHashCode() : 0);
+                result = (result*397) ^ (ParsedMolecule != null ? ParsedMolecule.GetHashCode() : 0);
+                result = (result*397) ^ IsExplicit.GetHashCode();
+                result = (result*397) ^ LabelAtoms.GetHashCode();
+                result = (result*397) ^ RelativeRT.GetHashCode();
+                result = (result*397) ^ (MonoisotopicMass.HasValue ? MonoisotopicMass.Value.GetHashCode() : 0);
+                result = (result*397) ^ (_losses != null ? _losses.GetHashCodeDeep() : 0);
+                result = (result*397) ^ (ShortName != null ? ShortName.GetHashCode() : 0);
+                result = (result*397) ^ (CrosslinkerSettings != null ? CrosslinkerSettings.GetHashCode() : 0);
+                return result;
+            }
+        }
+
+        #endregion
+
+        public static bool EquivalentImplicitMods(IEnumerable<StaticMod> mods1, IEnumerable<StaticMod> mods2)
+        {
+            var modsImp1 = new List<StaticMod>(from mod1 in mods1 where !mod1.IsExplicit select mod1);
+            var modsImp2 = new List<StaticMod>(from mod2 in mods2 where !mod2.IsExplicit select mod2);
+            return ArrayUtil.ReferencesEqual(modsImp1, modsImp2);
+        }
+    }
+
+    public sealed class TypedModifications : Immutable, IAuditLogObject
+    {
+        public TypedModifications(IsotopeLabelType labelType, IList<StaticMod> modifications)
+        {
+            LabelType = labelType;
+            Modifications = MakeReadOnly(modifications);
+        }
+
+        public IsotopeLabelType LabelType { get; private set; }
+        [TrackChildren(ignoreName: true)]
+        public ImmutableList<StaticMod> Modifications { get; private set; }
+
+        public bool HasImplicitModifications
+        {
+            get { return Modifications.Contains(mod => !mod.IsExplicit); }
+        }
+
+        #region object overrides
+
+        public bool Equals(TypedModifications other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other.LabelType, LabelType) &&
+                ArrayUtil.EqualsDeep(other.Modifications, Modifications);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof(TypedModifications)) return false;
+            return Equals((TypedModifications)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (LabelType.GetHashCode() * 397) ^ Modifications.GetHashCodeDeep();
+            }
+        }
+
+        /// <summary>
+        /// Label type combo box in peptide settings Modifications tab depends on this
+        /// </summary>
+        public override string ToString()
+        {
+            return LabelType.ToString();
+        }
+
+        #endregion
+
+        public string AuditLogText { get { return LabelType.ToString(); } }
+        public bool IsName { get { return true; }}
+    }
+
+    public sealed class ExplicitMods : Immutable
+    {
+        public static readonly ExplicitMods EMPTY = new ExplicitMods(null, null, null); // Used for small molecules, which get label info from adducts instead of mods
+        public static bool IsNullOrEmpty(ExplicitMods mods)
+        {
+            return mods == null || ReferenceEquals(mods, EMPTY);
+        }
+
+        private ImmutableList<TypedExplicitModifications> _modifications;
+
+        /// <summary>
+        /// Create a new set of explicit or variable modifications.  Assumes that
+        /// static modifications have already been added to the heavy mods.
+        /// </summary>
+        public ExplicitMods(Peptide peptide, IList<ExplicitMod> staticMods,
+            IEnumerable<TypedExplicitModifications> heavyMods, bool isVariable = false)
+        {
+            CrosslinkStructure = CrosslinkStructure.EMPTY;
+            Peptide = peptide;
+            IsVariableStaticMods = isVariable;
+
+            var modifications = new List<TypedExplicitModifications>();
+            // Add static mods, if applicable
+            if (staticMods != null)
+            {
+                modifications.Add(new TypedExplicitModifications(peptide,
+                    IsotopeLabelType.light, staticMods));
+            }
+            // Add isotope mods
+            if (heavyMods != null)
+            {
+                modifications.AddRange(heavyMods);
+            }
+            _modifications = MakeReadOnly(modifications.ToArray());
+        }
+
+        /// <summary>
+        /// Create a new set of explicit modifications on a peptide from a list of desired
+        /// modifications of each type, and the global lists of available modifications.
+        /// </summary>
+        /// <param name="nodePep">The peptide to modify</param>
+        /// <param name="staticMods">Static modifications to be applied</param>
+        /// <param name="listStaticMods">Global static modifications</param>
+        /// <param name="heavyMods">All sets of isotope labeled mods to be applied</param>
+        /// <param name="listHeavyMods">Global isotope labeled mods</param>
+        /// <param name="implicitOnly">True to create an explicit expression of the implicit modifications</param>
+        public ExplicitMods(PeptideDocNode nodePep,
+            IList<StaticMod> staticMods, IReadOnlyMappedList<string, StaticMod> listStaticMods,
+            IEnumerable<TypedModifications> heavyMods, IReadOnlyMappedList<string, StaticMod> listHeavyMods,
+            bool implicitOnly = false)
+        {
+            CrosslinkStructure = CrosslinkStructure.EMPTY;
+            Peptide = nodePep.Peptide;
+
+            var modifications = new List<TypedExplicitModifications>();
+            TypedExplicitModifications staticTypedMods = null;
+            // Add static mods, if applicable
+            if (staticMods != null)
+            {
+                IList<ExplicitMod> explicitMods = GetImplicitMods(staticMods, listStaticMods);
+                // If the peptide has variable modifications, make them all override
+                // the modification state of the default implicit mods
+                if (!implicitOnly && nodePep.HasVariableMods)
+                {
+                    explicitMods = MergeExplicitMods(nodePep.ExplicitMods.StaticModifications,
+                        explicitMods, staticMods);
+                }
+                staticTypedMods = new TypedExplicitModifications(Peptide,
+                    IsotopeLabelType.light, explicitMods);
+                modifications.Add(staticTypedMods);
+            }
+            foreach (TypedModifications typedMods in heavyMods)
+            {
+                var explicitMods = GetImplicitMods(typedMods.Modifications, listHeavyMods);
+                var typedHeavyMods = new TypedExplicitModifications(Peptide,
+                    typedMods.LabelType, explicitMods);
+                modifications.Add(typedHeavyMods.AddModMasses(staticTypedMods));
+            }
+            _modifications = MakeReadOnly(modifications.ToArray());
+        }
+
+        private static IList<ExplicitMod> MergeExplicitMods(IList<ExplicitMod> modsPrimary,
+            IList<ExplicitMod> modsSecondary, IList<StaticMod> modifications)
+        {
+            var listExplicitMods = new List<ExplicitMod>();
+            int iPrimary = 0, iSecondary = 0;
+            while (iPrimary < modsPrimary.Count || iSecondary < modsSecondary.Count)
+            {
+                if (iSecondary >= modsSecondary.Count)
+                    MergeMod(modsPrimary[iPrimary++], modifications, listExplicitMods);
+                else if (iPrimary >= modsPrimary.Count)
+                    MergeMod(modsSecondary[iSecondary++], modifications, listExplicitMods);
+                else if (modsPrimary[iPrimary].IndexAA < modsSecondary[iSecondary].IndexAA)
+                    MergeMod(modsPrimary[iPrimary++], modifications, listExplicitMods);
+                else if (modsPrimary[iPrimary].IndexAA > modsSecondary[iSecondary].IndexAA)
+                    MergeMod(modsSecondary[iSecondary++], modifications, listExplicitMods);
+                else  // Equal
+                {
+                    MergeMod(modsPrimary[iPrimary++], modifications, listExplicitMods);
+                    iSecondary++;
+                }
+            }
+            return listExplicitMods.ToArray();
+        }
+
+        private static void MergeMod(ExplicitMod explicitMod, IEnumerable<StaticMod> docMods,
+            ICollection<ExplicitMod> explicitMods)
+        {
+            if (docMods.Contains(explicitMod.Modification))
+                explicitMods.Add(explicitMod);
+        }
+
+
+        /// <summary>
+        /// Builds a list of <see cref="ExplicitMod"/> objects from the implicit modifications
+        /// on the document.
+        /// </summary>
+        /// <param name="mods">Implicit modifications on the document</param>
+        /// <param name="listSettingsMods">All modifications available in the settings</param>
+        /// <returns>List of <see cref="ExplicitMod"/> objects for the implicit modifications</returns>
+        private ExplicitMod[] GetImplicitMods(IList<StaticMod> mods, IReadOnlyMappedList<string, StaticMod> listSettingsMods)
+        {
+            List<ExplicitMod> listImplicitMods = new List<ExplicitMod>();
+
+            if (!Peptide.IsCustomMolecule)
+            {
+                string seq = Peptide.Sequence;
+                for (int i = 0; i < seq.Length; i++)
+                {
+                    char aa = seq[i];
+                    foreach (StaticMod mod in mods)
+                    {
+                        if (mod.CrosslinkerSettings != null)
+                        {
+                            // Crosslinkers never get implicitly added
+                            continue;
+                        }
+                        // Skip explicit mods, since only considering implicit
+                        if (mod.IsExplicit || !mod.IsMod(aa, i, seq.Length))
+                            continue;
+                        // Always use the modification from the settings to ensure expected
+                        // equality comparisons.
+                        StaticMod modAdd;
+                        if (listSettingsMods.TryGetValue(mod.Name, out modAdd))
+                            listImplicitMods.Add(new ExplicitMod(i, modAdd));
+                    }
+                }
+            }
+
+            return listImplicitMods.ToArray();
+        }
+
+        public Peptide Peptide { get; private set; }
+
+        /// <summary>
+        /// True if the static (i.e. light) modifications were not chosen by the user, but
+        /// were put there by Skyline permuting the Document's variable modifications.
+        /// </summary>
+        public bool IsVariableStaticMods { get; private set; }
+
+        public bool HasNeutralLosses { get { return StaticModifications != null && StaticModifications.Any(mod => mod.Modification.HasLoss); } }
+        public bool HasIsotopeLabels { get { return StaticModifications != null && StaticModifications.Any(mod => mod.Modification.LabelAtoms != 0); } }
+
+        public IEnumerable<ExplicitMod> NeutralLossModifications
+        {
+            get
+            {
+                if (StaticModifications != null)
+                {
+                    foreach (var mod in StaticModifications)
+                    {
+                        if (mod.Modification.HasLoss)
+                            yield return mod;
+                    }
+                }
+            }
+        }
+
+        public IList<ExplicitMod> StaticModifications
+        {
+            get { return GetModifications(IsotopeLabelType.light); }
+        }
+
+        public IList<ExplicitMod> HeavyModifications
+        {
+            get { return GetModifications(IsotopeLabelType.heavy); }
+        }
+
+        [TrackChildren(defaultValues:typeof(CrosslinkStructure.DefaultValuesEmpty))]
+        public CrosslinkStructure CrosslinkStructure
+        {
+            get; private set;
+        }
+
+        public PeptideStructure GetPeptideStructure()
+        {
+            return new PeptideStructure(Peptide, this);
+        }
+
+        public ExplicitMods ChangeCrosslinkStructure(CrosslinkStructure crosslinks)
+        {
+            crosslinks = crosslinks ?? CrosslinkStructure.EMPTY;
+            ExplicitMods explicitMods = this;
+            if (crosslinks.HasCrosslinks && explicitMods.StaticModifications == null)
+            {
+                explicitMods = new ExplicitMods(explicitMods.Peptide, ImmutableList.Empty<ExplicitMod>(), explicitMods.GetHeavyModifications());
+            }
+
+            return ChangeProp(ImClone(explicitMods), im => im.CrosslinkStructure = crosslinks);
+        }
+
+        private ExplicitMods UpdateCrosslinkStructure(SrmSettings settingsNew)
+        {
+            var newCrosslinkStructure = CrosslinkStructure.ChangeGlobalMods(settingsNew);
+            if (ReferenceEquals(newCrosslinkStructure, CrosslinkStructure))
+            {
+                return this;
+            }
+
+            return ChangeCrosslinkStructure(newCrosslinkStructure);
+        }
+
+        public bool HasCrosslinks
+        {
+            get { return !CrosslinkStructure.IsEmpty; }
+        }
+
+        public IList<ExplicitMod> GetModifications(IsotopeLabelType labelType)
+        {
+            int index = GetModIndex(labelType);
+            return (index != -1 ? _modifications[index].Modifications : null);
+        }
+
+        public IList<ExplicitMod> GetStaticBaseMods(IsotopeLabelType labelType)
+        {
+            int index = GetModIndex(labelType);
+            return (index != -1 ? _modifications[index].StaticBaseMods : null);
+        }
+
+        private int GetModIndex(IsotopeLabelType labelType)
+        {
+            return _modifications.IndexOf(mod => ReferenceEquals(labelType, mod.LabelType));
+        }
+
+        public IEnumerable<TypedExplicitModifications> GetHeavyModifications()
+        {
+            return _modifications.Where(typedMods => !typedMods.LabelType.IsLight);
+        }
+
+        public bool IsModified(IsotopeLabelType labelType)
+        {
+            return GetModIndex(labelType) != -1;
+        }
+
+        public bool HasHeavyModifications
+        {
+            get { return GetHeavyModifications().Contains(mods => mods.Modifications.Count > 0); }
+        }
+
+        public bool HasModifications(IsotopeLabelType labelType)
+        {
+            return _modifications.Contains(mods =>
+                Equals(labelType, mods.LabelType) && mods.Modifications.Count > 0);
+        }
+
+        public IList<double> GetModMasses(MassType massType, IsotopeLabelType labelType)
+        {
+            var index = GetModIndex(labelType);
+            // This will throw, if the modification type is not found.
+            return _modifications[index].GetModMasses(massType);
+        }
+
+        public ExplicitMods ChangeGlobalMods(SrmSettings settingsNew)
+        {
+            var modSettings = settingsNew.PeptideSettings.Modifications;
+            IList<StaticMod> heavyMods = null;
+            List<StaticMod> heavyModsList = null;
+            foreach (var typedMods in modSettings.GetHeavyModifications())
+            {
+                if (heavyMods == null)
+                    heavyMods = typedMods.Modifications;
+                else
+                {
+                    if (heavyModsList == null)
+                        heavyModsList = new List<StaticMod>(heavyMods);
+                    heavyModsList.AddRange(typedMods.Modifications);
+                }
+            }
+            heavyMods = heavyModsList ?? heavyMods ?? new StaticMod[0];
+            return ChangeGlobalMods(modSettings.StaticModifications, heavyMods,
+                    modSettings.GetHeavyModificationTypes().ToArray())
+                ?.UpdateCrosslinkStructure(settingsNew);
+        }
+
+        public ExplicitMods ChangeGlobalMods(IList<StaticMod> staticMods, IList<StaticMod> heavyMods,
+            IList<IsotopeLabelType> heavyLabelTypes)
+        {
+            var modifications = new List<TypedExplicitModifications>();
+            int index = GetModIndex(IsotopeLabelType.light);
+            TypedExplicitModifications typedStaticMods = (index != -1 ? _modifications[index] : null);
+            if (typedStaticMods != null)
+            {
+                IList<ExplicitMod> staticExplicitMods = ChangeGlobalMods(staticMods, typedStaticMods.Modifications);
+                if (!ReferenceEquals(staticExplicitMods, typedStaticMods.Modifications))
+                    typedStaticMods = new TypedExplicitModifications(Peptide, IsotopeLabelType.light, staticExplicitMods);
+                modifications.Add(typedStaticMods);
+            }
+
+            foreach (TypedExplicitModifications typedMods in GetHeavyModifications())
+            {
+                // Discard explicit modifications for label types that no longer exist
+                if (!heavyLabelTypes.Contains(typedMods.LabelType))
+                    continue;
+
+                var heavyExplicitMods = ChangeGlobalMods(heavyMods, typedMods.Modifications);
+                var typedHeavyMods = typedMods;
+                if (!ReferenceEquals(heavyExplicitMods, typedMods.Modifications))
+                {
+                    typedHeavyMods = new TypedExplicitModifications(Peptide, typedMods.LabelType, heavyExplicitMods);
+                    typedHeavyMods = typedHeavyMods.AddModMasses(typedStaticMods);
+                }
+                modifications.Add(typedHeavyMods);                
+            }
+
+            if (ArrayUtil.ReferencesEqual(modifications, _modifications))
+                return this;
+            if (modifications.Count == 0 && CrosslinkStructure.IsEmpty)
+                return null;
+            return ChangeProp(ImClone(this), im =>
+            {
+                im._modifications = ImmutableList.ValueOf(modifications);
+            });
+        }
+
+        /// <summary>
+        /// Replaces the <see cref="StaticMod"/> objects in a list of <see cref="ExplicitMod"/>
+        /// objects.
+        /// </summary>
+        /// <param name="staticMods">The new <see cref="StaticMod"/> objects</param>
+        /// <param name="explicitMods">The original <see cref="ExplicitMod"/> objects</param>
+        /// <returns>A new list of <see cref="ExplicitMod"/> objects with <see cref="StaticMod"/> objects updated</returns>
+        public IList<ExplicitMod> ChangeGlobalMods(IList<StaticMod> staticMods, IList<ExplicitMod> explicitMods)
+        {
+            var modsNew = new List<ExplicitMod>();
+            if (!Peptide.IsCustomMolecule)
+            {
+                foreach (var mod in explicitMods)
+                {
+                    string name = mod.Modification.Name;
+                    int iStaticMod = staticMods.IndexOf(mg => Equals(name, mg.Name));
+                    // If the modification by this name has been removed, then remove
+                    // it from the modification list.
+                    if (iStaticMod == -1)
+                        continue;
+                    var staticMod = staticMods[iStaticMod];
+                    if(!staticMod.IsApplicableMod(Peptide.Sequence, mod.IndexAA))
+                        continue;
+                    modsNew.Add(mod.Modification.EquivalentAll(staticMod)
+                        ? mod
+                        : mod.ChangeModification(staticMod));
+                }
+            }
+            ArrayUtil.AssignIfEqualsDeep(modsNew, explicitMods);
+            if (ArrayUtil.ReferencesEqual(modsNew, explicitMods))
+                return explicitMods;
+            return modsNew;
+        }
+
+        
+
+        #region Property change methods
+
+        public ExplicitMods ChangePeptide(Peptide prop)
+        {
+            return ChangeProp(ImClone(this), im => im.Peptide = prop);
+        }
+
+        public ExplicitMods ChangeStaticModifications(IList<ExplicitMod> prop)
+        {
+            return ChangeModifications(IsotopeLabelType.light, prop);
+        }
+
+        public ExplicitMods ChangeHeavyModifications(IList<ExplicitMod> prop)
+        {
+            return ChangeModifications(IsotopeLabelType.heavy, prop);
+        }
+
+        public ExplicitMods ChangeModifications(IsotopeLabelType labelType, IList<ExplicitMod> prop)
+        {
+            int index = GetModIndex(labelType);
+            if (index == -1)
+                throw new IndexOutOfRangeException(string.Format(DocSettingsResources.ExplicitMods_ChangeModifications_Modification_type__0__not_found, labelType));
+            var modifications = _modifications.ToArrayStd();
+            var typedMods = new TypedExplicitModifications(Peptide, labelType, prop);
+            if (index != 0)
+                typedMods = typedMods.AddModMasses(modifications[0]);
+            modifications[index] = typedMods;
+            return ChangeProp(ImClone(this), im => im._modifications = MakeReadOnly(modifications));
+        }
+
+        /// <summary>
+        /// Allow the variable modification flag to be cleared for consistent
+        /// <see cref="PeptideSequenceModKey"/> keys.
+        /// </summary>
+        public ExplicitMods ChangeIsVariableStaticMods(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.IsVariableStaticMods = prop);
+        }
+
+        #endregion
+
+        #region object overrides
+
+        public bool Equals(ExplicitMods obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return ArrayUtil.EqualsDeep(obj._modifications, _modifications) &&
+                   Equals(obj.CrosslinkStructure, CrosslinkStructure) &&
+                   Equals(obj.Peptide?.Target, Peptide?.Target);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof (ExplicitMods)) return false;
+            return Equals((ExplicitMods) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = _modifications.GetHashCodeDeep();
+                if (Peptide != null)
+                {
+                    result = (result*397) ^ Peptide.Target.GetHashCode();
+                }
+
+                result = (result * 397) ^ CrosslinkStructure.GetHashCode();
+                return result;
+            }
+        }
+
+        #endregion
+
+        #region v20.2 crosslink format
+        /// <summary>
+        /// Convert from the Version 20.2 format where crosslinks were represented on the <see cref="ExplicitMod.LinkedPeptide"/> elements
+        /// instead of <see cref="CrosslinkStructure"/>
+        /// </summary>
+        public ExplicitMods ConvertFromLegacyCrosslinkStructure()
+        {
+            if (null == StaticModifications || StaticModifications.All(mod => null == mod.LinkedPeptide))
+            {
+                return this;
+            }
+            var sitePaths = new List<ImmutableList<ModificationSite>>();
+            var linkedPeptides = new List<Peptide>();
+            var linkedExplicitMods = new List<ExplicitMods>();
+            var crosslinks = new List<Crosslink>();
+            var queue = new List<Tuple<int, ExplicitMod, ImmutableList<ModificationSite>>>();
+            queue.AddRange(StaticModifications.Where(mod => mod.LinkedPeptide != null).Select(mod => Tuple.Create(0, mod, ImmutableList.Singleton(mod.ModificationSite))));
+            while (queue.Any())
+            {
+                var tuple = queue[0];
+                queue.RemoveAt(0);
+                var explicitMod = tuple.Item2;
+                var linkedPeptide = explicitMod.LinkedPeptide;
+                if (linkedPeptide.Peptide == null)
+                {
+                    crosslinks.Add(Crosslink.Looplink(explicitMod.Modification, tuple.Item1, explicitMod.IndexAA, linkedPeptide.IndexAa));
+                    continue;
+                }
+
+                int peptideIndex = linkedPeptides.Count + 1;
+                linkedPeptides.Add(linkedPeptide.Peptide);
+                crosslinks.Add(new Crosslink(explicitMod.Modification,
+                    new[]
+                    {
+                        new CrosslinkSite(tuple.Item1, explicitMod.IndexAA),
+                        new CrosslinkSite(peptideIndex, linkedPeptide.IndexAa)
+                    }));
+                sitePaths.Add(tuple.Item3);
+                var explicitMods = linkedPeptide.ExplicitMods;
+                if (explicitMods != null)
+                {
+                    queue.AddRange(linkedPeptide.ExplicitMods.StaticModifications.Where(mod => mod.LinkedPeptide != null).Select(mod => Tuple.Create(peptideIndex, mod, ImmutableList.ValueOf(tuple.Item3.Append(mod.ModificationSite)))));
+                    explicitMods =
+                        explicitMods.ChangeStaticModifications(
+                            explicitMods.StaticModifications.Where(mod => mod.LinkedPeptide == null).ToList());
+                }
+                linkedExplicitMods.Add(explicitMods);
+            }
+
+            if (!crosslinks.Any())
+            {
+                return this;
+            }
+            var crosslinkStructure = new CrosslinkStructure(linkedPeptides, linkedExplicitMods, crosslinks);
+            return new ExplicitMods(Peptide,
+                    StaticModifications.Where(mod => mod.LinkedPeptide == null).ToList(),
+                    GetHeavyModifications(), IsVariableStaticMods)
+                {
+                    LegacyCrosslinkMap = ImmutableList.ValueOf(sitePaths),
+                }
+                .ChangeCrosslinkStructure(crosslinkStructure);
+        }
+        // Code for dealing with the way crosslinks were represented in Version 20.2
+        public ImmutableList<ImmutableList<ModificationSite>> LegacyCrosslinkMap { get; private set; }
+
+        public ExplicitMods RemoveLegacyCrosslinkMap()
+        {
+            if (LegacyCrosslinkMap == null)
+            {
+                return this;
+            }
+
+            return ChangeProp(ImClone(this), im => im.LegacyCrosslinkMap = null);
+        }
+
+        /// <summary>
+        /// Throws an exception if this object has any old-format crosslinks that should have been converted to the new format.
+        /// </summary>
+        public bool VerifyNoLegacyData()
+        {
+            Assume.IsNull(LegacyCrosslinkMap);
+            if (StaticModifications != null)
+            {
+                Assume.IsFalse(StaticModifications.Any(mod=>null != mod.LinkedPeptide));
+            }
+
+            return true;
+        }
+        #endregion
+    }
+
+    public sealed class ExplicitMod : Immutable
+    {
+        public ExplicitMod(int indexAA, StaticMod modification)
+        {
+            IndexAA = indexAA;
+            // In the document context, all static non-variable mods must have the explicit
+            // flag off to behave correctly for equality checks.  Only in the
+            // settings context is the explicit flag necessary to distinguish
+            // between the global implicit modifications and the explicit modifications
+            // which do not apply to everything.
+            if (modification.IsUserSet)
+                modification = modification.ChangeExplicit(false);
+            Modification = modification;
+        }
+
+        public int IndexAA { get; private set; }
+        public StaticMod Modification { get; private set; }
+
+        public ModificationSite ModificationSite
+        {
+            get { return new ModificationSite(IndexAA, Modification.Name); }
+        }
+        #region Property change methods
+
+        public ExplicitMod ChangeModification(StaticMod prop)
+        {
+            if (prop.IsExplicit)
+                prop = prop.ChangeExplicit(false);
+            return ChangeProp(ImClone(this), (im, v) => im.Modification = v, prop);
+        }
+
+        #endregion
+
+        #region object overrides
+
+        public bool Equals(ExplicitMod obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj.IndexAA == IndexAA &&
+                Equals(obj.Modification, Modification) &&
+                Equals(obj.LinkedPeptide, LinkedPeptide);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof (ExplicitMod)) return false;
+            return Equals((ExplicitMod) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = IndexAA;
+                result = (result*397) ^ Modification.GetHashCode();
+                result = (result * 397) ^ (LinkedPeptide == null ? 0 : LinkedPeptide.GetHashCode());
+                return result;
+            }
+        }
+
+        #endregion
+        #region v20.2 crosslink format
+        // Code for dealing with the way crosslinks were represented in Version 20.2
+        public LegacyLinkedPeptide LinkedPeptide { get; private set; }
+
+        public ExplicitMod ChangeLinkedPeptide(LegacyLinkedPeptide linkedPeptide)
+        {
+            return ChangeProp(ImClone(this), im => im.LinkedPeptide = linkedPeptide);
+        }
+        #endregion
+    }
+
+    public class LoggableExplicitMod : IAuditLogObject, IAuditLogComparable
+    {
+        public LoggableExplicitMod(ExplicitMod explicitMod, string peptideSeq)
+        {
+            ExplicitMod = explicitMod;
+            PeptideSequence = peptideSeq;
+        }
+
+        [TrackChildren(ignoreName: true)]
+        public ExplicitMod ExplicitMod { get; private set; }
+
+        public string PeptideSequence { get; private set; }
+
+        public string AuditLogText
+        {
+            get
+            {
+                return string.Format(AuditLogStrings.LoggableExplicitMod_AuditLogText__0__residue__1__at_position__2_, ExplicitMod.Modification.Name,
+                    PeptideSequence[ExplicitMod.IndexAA], ExplicitMod.IndexAA + 1);
+            }
+        }
+
+        public bool IsName
+        {
+            get { return true; }
+        }
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return new LoggableExplicitMod(new ExplicitMod(-1, StaticMod.EMPTY), null);
+        }
+    }
+
+    public class LoggableExplicitModList : IAuditLogObject
+    {
+        public LoggableExplicitModList(IsotopeLabelType labelType, IList<LoggableExplicitMod> modifications)
+        {
+            LabelType = labelType;
+            Modifications = modifications;
+        }
+
+        public IsotopeLabelType LabelType { get; private set; }
+
+        [TrackChildren(ignoreName: true, defaultValues: typeof(DefaultValuesNullOrEmpty))]
+        public IList<LoggableExplicitMod> Modifications { get; private set; }
+        public string AuditLogText
+        {
+            get
+            {
+                return LabelType.Name;
+            }
+        }
+
+        public bool IsName
+        {
+            get { return true; }
+        }
+    }
+
+    public sealed class TypedExplicitModifications : Immutable
+    {
+        // Cached masses for faster calculation
+        private ImmutableList<double> _modMassesMono;
+        private ImmutableList<double> _modMassesAvg;
+        private TypedExplicitModifications _typedStaticMods;
+
+        public TypedExplicitModifications(Peptide peptide, IsotopeLabelType labelType,
+            IList<ExplicitMod> modifications)
+        {
+            LabelType = labelType;
+            Modifications = MakeReadOnly(modifications);
+
+            // Cache modification masses
+            var modMassesMono = CalcModMasses(peptide, Modifications, SrmSettings.MonoisotopicMassCalc);
+            _modMassesMono = MakeReadOnly(modMassesMono);
+            var modMassesAvg = CalcModMasses(peptide, Modifications, SrmSettings.AverageMassCalc);
+            _modMassesAvg = MakeReadOnly(modMassesAvg);
+        }
+
+        public IsotopeLabelType LabelType { get; private set; }
+        public IList<ExplicitMod> Modifications { get; private set; }
+        public IList<ExplicitMod> StaticBaseMods
+        {
+            get
+            {
+                return _typedStaticMods != null ? _typedStaticMods.Modifications : null;
+            }
+        }
+
+        public IList<double> GetModMasses(MassType massType)
+        {
+            return (massType.IsMonoisotopic() ? _modMassesMono : _modMassesAvg);
+        }
+
+        private static double[] CalcModMasses(Peptide peptide, IEnumerable<ExplicitMod> mods,
+            SequenceMassCalc massCalc)
+        {
+            double[] masses = new double[peptide.Length];
+            if (peptide.IsCustomMolecule)
+                return masses;
+            string seq = peptide.Sequence;
+            foreach (ExplicitMod mod in mods)
+                masses[mod.IndexAA] += massCalc.GetModMass(seq[mod.IndexAA], mod.Modification);
+            return masses;
+        }
+
+        public TypedExplicitModifications AddModMasses(TypedExplicitModifications typedStaticMods)
+        {
+            if (typedStaticMods == null)
+                return this;
+            if (_typedStaticMods != null)
+                throw new InvalidOperationException(DocSettingsResources.TypedExplicitModifications_AddModMasses_Static_mod_masses_have_already_been_added_for_this_heavy_type);
+            if (LabelType.IsLight)
+                throw new InvalidOperationException(DocSettingsResources.TypedExplicitModifications_AddModMasses_Static_mod_masses_may_not_be_added_to_light_type);
+
+            var im = ImClone(this);
+            im._typedStaticMods = typedStaticMods;
+            im._modMassesMono = AddModMasses(im._modMassesMono, typedStaticMods._modMassesMono);
+            im._modMassesAvg = AddModMasses(im._modMassesAvg, typedStaticMods._modMassesAvg);
+            return im;
+        }
+
+        private static ImmutableList<double> AddModMasses(IList<double> modMasses1, IList<double> modMasses2)
+        {
+            double[] masses = modMasses1.ToArrayStd();
+            for (int i = 0, count = Math.Min(masses.Length, modMasses2.Count); i < count; i++)
+                masses[i] += modMasses2[i];
+            return MakeReadOnly(masses);
+        }
+
+        #region object overrides
+
+        public bool Equals(TypedExplicitModifications other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other.LabelType, LabelType) &&
+                ArrayUtil.EqualsDeep(other.Modifications, Modifications);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof(TypedExplicitModifications)) return false;
+            return Equals((TypedExplicitModifications)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (LabelType.GetHashCode() * 397) ^ Modifications.GetHashCodeDeep();
+            }
+        }
+
+        #endregion
+    }
+}

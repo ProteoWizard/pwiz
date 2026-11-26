@@ -33,13 +33,13 @@ namespace pwiz.Skyline.Controls.Databinding.AuditLog
 
         public AuditLogColumn()
         {
-            var undoRedoImage = new Bitmap(Resources.Edit_Undo);
+            var undoRedoImage = new Bitmap(ImageResources.Edit_Undo);
             undoRedoImage.MakeTransparent(Color.Magenta);
-            var undoRedoMultipleImage = new Bitmap(Resources.Edit_Undo_Multiple);
+            var undoRedoMultipleImage = new Bitmap(ImageResources.Edit_Undo_Multiple);
             undoRedoMultipleImage.MakeTransparent(Color.Magenta);
             _images = new Image[]
             {
-                Resources.magnifier_zoom_in,
+                ImageResources.magnifier_zoom_in,
                 undoRedoImage,
                 undoRedoMultipleImage,
             };

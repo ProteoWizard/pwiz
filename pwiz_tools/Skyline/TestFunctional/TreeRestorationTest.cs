@@ -23,6 +23,7 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model.Files;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -116,11 +117,11 @@ namespace pwiz.SkylineTestFunctional
                 {
                     SelectNode(SkylineWindow.SequenceTree.Nodes[1], null);
                     SkylineWindow.SaveDocument(_documentFile);
-                    System.IO.File.Copy(SkylineWindow.GetViewFile(_documentFile), _documentFile + ".copy");
+                    System.IO.File.Copy(SkylineViewFile.GetViewFile(_documentFile), _documentFile + ".copy");
                     SkylineWindow.EditDelete();
                     CheckStateMaintained();
-                    System.IO.File.Delete(SkylineWindow.GetViewFile(_documentFile));
-                    System.IO.File.Copy(_documentFile + ".copy", SkylineWindow.GetViewFile(_documentFile));
+                    System.IO.File.Delete(SkylineViewFile.GetViewFile(_documentFile));
+                    System.IO.File.Copy(_documentFile + ".copy", SkylineViewFile.GetViewFile(_documentFile));
                     SkylineWindow.OpenFile(_documentFile);
                 });
 

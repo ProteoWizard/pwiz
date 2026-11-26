@@ -299,7 +299,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.matchModificationsPage.Controls.Add(this.addModsTitlePanel);
             resources.ApplyResources(this.matchModificationsPage, "matchModificationsPage");
             this.matchModificationsPage.Name = "matchModificationsPage";
-            this.modeUIHandler.SetUIMode(this.matchModificationsPage, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.matchModificationsPage, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.matchModificationsPage.UseVisualStyleBackColor = true;
             // 
             // addModsTitlePanel
@@ -321,7 +321,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.transitionSettingsUiPage.Controls.Add(this.panel1);
             resources.ApplyResources(this.transitionSettingsUiPage, "transitionSettingsUiPage");
             this.transitionSettingsUiPage.Name = "transitionSettingsUiPage";
-            this.modeUIHandler.SetUIMode(this.transitionSettingsUiPage, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.transitionSettingsUiPage, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.transitionSettingsUiPage.UseVisualStyleBackColor = true;
             // 
             // panel1
@@ -364,7 +364,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.importFastaPage.Controls.Add(this.importFASTATitlePanel);
             resources.ApplyResources(this.importFastaPage, "importFastaPage");
             this.importFastaPage.Name = "importFastaPage";
-            this.modeUIHandler.SetUIMode(this.importFastaPage, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.modeUIHandler.SetUIMode(this.importFastaPage, pwiz.Skyline.Util.ModeUIHelpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.importFastaPage.UseVisualStyleBackColor = true;
             // 
             // importFASTATitlePanel

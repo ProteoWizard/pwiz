@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace pwiz.Common.DataBinding.Internal
 {
-    internal interface IQueryRequest
+    public interface IQueryRequest
     {
         QueryLock QueryLock { get; }
         CancellationToken CancellationToken { get; }

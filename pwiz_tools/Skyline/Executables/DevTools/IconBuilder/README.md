@@ -38,7 +38,7 @@ AllIonsStatusButton        vector  18,21,28
 
 Change an icon's source kind by editing its line; nothing else references the kind.
 
-`common.manifest` lists pwiz.Common's icons (`Shared/Common/Resources`) in the same format. It
+`common.manifest` lists pwiz.Common's icons (`Shared/CommonUI/Resources`) in the same format. It
 starts with directives, relative to the manifest's folder, that say where its sources live and
 where its outputs go; `icons.manifest` uses the defaults (`Icons/Vector`, `Icons/Raster`,
 `pwiz_tools/Skyline/Resources/Icons`):
@@ -46,7 +46,7 @@ where its outputs go; `icons.manifest` uses the defaults (`Icons/Vector`, `Icons
 ```
 @vector Icons\Vector\Common
 @raster Icons\Raster\Common
-@output ..\..\..\..\Shared\Common\Resources\Icons
+@output ..\..\..\..\Shared\CommonUI\Resources\Icons
 ```
 
 ## Usage
@@ -58,7 +58,7 @@ dotnet run -c Release -- Save Copy Paste   # just these icons
 dotnet run -c Release -- --manifest icons.manifest --out <dir>   # one manifest, somewhere else
 ```
 
-Icon names in the manifest are the `Resources.resx` property names (`add_pro32`, `HomeIcon1`,
+Icon names in the manifest are the `Properties/ImageResources.resx` property names (`add_pro32`, `HomeIcon1`,
 `Properties_Button`), not the bitmap file names, because that is how callers ask for them.
 
 Requires the .NET 10 SDK. The tool finds `icons.manifest` by walking up from the current
@@ -95,7 +95,7 @@ in. `Skyline.csproj` embeds the folder with one wildcard, and the DPI-aware load
 `DpiUtil.GetIcon(control, nameof(Resources.X), Resources.X, key)` (added with the system-DPI
 awareness work, issue #4599) returns the size the control's DPI calls for, or the native bitmap
 at 100%; without an embedded file it falls back to resampling the native. `IconResourcesTest`
-fails when any small icon in `Resources.resx` is missing one of its sizes, so re-run this tool
+fails when any small icon in `ImageResources.resx` is missing one of its sizes, so re-run this tool
 after adding an icon.
 
 Consumers must put the results in 32-bit image lists with `TransparentColor =

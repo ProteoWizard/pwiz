@@ -1458,7 +1458,7 @@ namespace pwiz.Skyline.FileUI
                 }
                 catch (Exception exception)
                 {
-                    ExceptionUtil.DisplayOrReportException(this, exception);
+                    ExceptionUtilUI.DisplayOrReportException(this, exception);
                     Assume.IsTrue(errorCheckCanceled);
                 }
             }

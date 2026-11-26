@@ -99,6 +99,7 @@ namespace pwiz.Skyline
             IProgressMonitor,
             IToolMacroProvider,
             IModifyDocumentContainer,
+            ISkylineDocumentWindow,
             IRetentionScoreSource,
             IRemoteAccountUserInteraction,
             IRemoteAccountStorage
@@ -666,7 +667,7 @@ namespace pwiz.Skyline
                 return;
 
             var model = DocumentUI.Settings.PeptideSettings.Integration.PeakScoringModel;
-            Settings.Default.PeakScoringModelList.Add(model);
+            Settings.Default.PeakScoringModelList = Settings.Default.PeakScoringModelList.ChangeAdd(model);
 
             if (Equals(trainedType, PeptideIntegration.AutoTrainType.default_model))
                 return; // don't show dialog when auto trained model is the default model
@@ -676,7 +677,7 @@ namespace pwiz.Skyline
             if (newModel == null || model.Equals(newModel))
                 return;
 
-            Settings.Default.PeakScoringModelList[modelIndex] = newModel;
+            Settings.Default.PeakScoringModelList = Settings.Default.PeakScoringModelList.ChangeItemAt(modelIndex, newModel);
             SrmDocument docCurrent, docNew;
             do
             {
@@ -770,7 +771,7 @@ namespace pwiz.Skyline
 
         public void ModifyDocument(string description, [InstantHandle] Func<SrmDocument, SrmDocument> act)
         {
-            if (!Program.FunctionalTest)
+            if (!ProgramContext.FunctionalTest)
                 throw new Exception(@"Function only to be used in testing, use overload with log function");
 
             // Create an empty entry so that tests that rely on there being an undo-redo record don't break
@@ -901,7 +902,7 @@ namespace pwiz.Skyline
             while (!SetDocument(docNew, docOriginal));
 
             if (lastException != null)
-                Program.ReportException(lastException);
+                ProgramContext.ReportException(lastException);
 
             return true;
         }
@@ -1087,11 +1088,11 @@ namespace pwiz.Skyline
         {
             string filePath = DocumentFilePath;
             if (string.IsNullOrEmpty(filePath))
-                Text = Program.Name;
+                Text = ProgramContext.Name;
             else
             {
                 string dirtyMark = (Dirty ? @" *" : string.Empty);
-                Text = string.Format(@"{0} - {1}{2}", Program.Name, Path.GetFileName(filePath), dirtyMark);
+                Text = string.Format(@"{0} - {1}{2}", ProgramContext.Name, Path.GetFileName(filePath), dirtyMark);
             }
         }
 
@@ -1099,7 +1100,7 @@ namespace pwiz.Skyline
         {
             if (_sequenceTreeForm != null && !_sequenceTreeForm.IsFloating)
             {
-                if (!Program.FunctionalTest || Program.PauseSeconds == 0)  // Avoid doing this during screenshots
+                if (!ProgramContext.FunctionalTest || Program.PauseSeconds == 0)  // Avoid doing this during screenshots
                     FocusDocument();
             }
         }
@@ -1221,7 +1222,7 @@ namespace pwiz.Skyline
                 RemoteSession.RemoteAccountUserInteraction = null;
             }
 
-            if (!Program.FunctionalTest)
+            if (!ProgramContext.FunctionalTest)
                 // ReSharper disable LocalizableElement
                 LogManager.GetLogger(typeof(SkylineWindow)).Info("Skyline closed.\r\n-----------------------");
             // ReSharper restore LocalizableElement
@@ -1235,7 +1236,7 @@ namespace pwiz.Skyline
 
             base.OnHandleDestroyed(e);
 
-            if (!Program.FunctionalTest)
+            if (!ProgramContext.FunctionalTest)
             {
                 // HACK: Kill the process to avoid "invalid string binding" errors from
                 // native instrument vendor DLLs during shutdown. This means nothing after
@@ -1404,17 +1405,6 @@ namespace pwiz.Skyline
         public void EditDelete()
         {
             EditMenu.EditDelete();
-        }
-
-        public static AuditLogEntry CreateDeleteNodesEntry(SrmDocumentPair docPair, IEnumerable<string> items, int? count)
-        {
-            var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.deleted_target,
-                MessageType.deleted_targets, docPair.OldDocumentType, items, count);
-
-            if (count > 1)
-                entry = entry.Merge(AuditLogEntry.DiffDocNodes(MessageType.none, docPair), false);
-
-            return entry;
         }
 
         public void SelectAll()
@@ -1861,7 +1851,7 @@ namespace pwiz.Skyline
             {
                 if (editDlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    Settings.Default.GroupComparisonDefList.Add(editDlg.GroupComparisonDef);
+                    Settings.Default.GroupComparisonDefList = Settings.Default.GroupComparisonDefList.ChangeAdd(editDlg.GroupComparisonDef);
                     ModifyDocument(Resources.SkylineWindow_AddGroupComparison_Add_Fold_Change,
                         doc => doc.ChangeSettings(
                             doc.Settings.ChangeDataSettings(
@@ -1878,7 +1868,7 @@ namespace pwiz.Skyline
                 if (editDlg.ShowDialog(this) == DialogResult.OK)
                 {
                     var listDef = editDlg.GetListDef();
-                    Settings.Default.ListDefList.Add(listDef);
+                    Settings.Default.ListDefList = Settings.Default.ListDefList.ChangeAdd(listDef);
                     ModifyDocument(Resources.SkylineWindow_AddGroupComparison_Add_Fold_Change,
                         doc => doc.ChangeSettings(
                             doc.Settings.ChangeDataSettings(
@@ -2049,16 +2039,15 @@ namespace pwiz.Skyline
                 SrmSettingsList list = Settings.Default.SrmSettingsList;
                 SrmSettings settingsDefault = list[0];
                 SrmSettings settingsCurrent = DocumentUI.Settings;
-                list.Clear();
-                list.Add(settingsDefault); // Add back default settings.
-                list.AddRange(listNew);
+                list = list.ChangeItems(new[] { settingsDefault }.Concat(listNew)); // Add back default settings.
                 if (!list.TryGetValue(settingsCurrent.GetKey(), out _))
                 {
                     // If the current settings were removed, then make
                     // them the default, and use them to avoid a shift
                     // to some random settings values.
-                    list[0] = settingsCurrent.MakeSavable(SrmSettingsList.DefaultName);
+                    list = list.ChangeItemAt(0, settingsCurrent.MakeSavable(SrmSettingsList.DefaultName));
                 }
+                Settings.Default.SrmSettingsList = list;
             }
         }
 
@@ -2178,8 +2167,6 @@ namespace pwiz.Skyline
                             MeasuredResults.MergeAction.remove,
                             false,
                             FindSpectralLibrary,
-                            Settings.Default.StaticModList,
-                            Settings.Default.HeavyModList,
                             Document.Children.Any() ? new IdentityPath(Document.Children.First().Id) : null,
                             out firstAdded,
                             out _,
@@ -2324,7 +2311,7 @@ namespace pwiz.Skyline
                                                     }, AuditLogEntry.SkipChange);
 
                 if (settingsNew != null)
-                    Settings.Default.SrmSettingsList.Add(settingsNew.MakeSavable(ss.SaveName));
+                    Settings.Default.SrmSettingsList = Settings.Default.SrmSettingsList.ChangeAdd(settingsNew.MakeSavable(ss.SaveName));
 
                 return true;
             }
@@ -2516,7 +2503,7 @@ namespace pwiz.Skyline
             // other than to the default name is SaveSettings().
             string defaultName = SrmSettingsList.DefaultName;
             // MakeSavable will also remove any results information
-            Settings.Default.SrmSettingsList[0] = settings.MakeSavable(defaultName);
+            Settings.Default.SrmSettingsList = Settings.Default.SrmSettingsList.ChangeItemAt(0, settings.MakeSavable(defaultName));
             // Document must have the same name as the saved version.
             if (!Equals(settings.Name, defaultName))
                 settings = (SrmSettings)settings.ChangeName(defaultName);
@@ -2711,7 +2698,7 @@ namespace pwiz.Skyline
                         {
                             item = new ToolStripMenuItem(spliced[i])
                                 {
-                                    Image = tool.UpdateAvailable ? Resources.ToolUpdateAvailable : null,
+                                    Image = tool.UpdateAvailable ? ImageResources.ToolUpdateAvailable : null,
                                     ImageTransparentColor = Color.Fuchsia
                                 };
                             if (current == toolsMenu)
@@ -2734,7 +2721,7 @@ namespace pwiz.Skyline
                     ToolMenuItem menuItem = new ToolMenuItem(tool, this)
                         {
                             Text = tool.Title, 
-                            Image = tool.UpdateAvailable ? Resources.ToolUpdateAvailable : null,
+                            Image = tool.UpdateAvailable ? ImageResources.ToolUpdateAvailable : null,
                             ImageTransparentColor = Color.Fuchsia
                         };
                     toolsMenu.DropDownItems.Insert(lastInsertIndex++ , menuItem);
@@ -4012,10 +3999,10 @@ namespace pwiz.Skyline
                 innerException = innerException.InnerException;
             if (innerException is OutOfMemoryException)
             {
-                message = string.Format(Resources.SkylineWindow_CompleteProgressUI_Ran_Out_Of_Memory, Program.Name);
+                message = string.Format(Resources.SkylineWindow_CompleteProgressUI_Ran_Out_Of_Memory, ProgramContext.Name);
                 if (!Install.Is64Bit && Environment.Is64BitOperatingSystem)
                 {
-                    message += string.Format(Resources.SkylineWindow_CompleteProgressUI_version_issue, Program.Name);
+                    message += string.Format(Resources.SkylineWindow_CompleteProgressUI_version_issue, ProgramContext.Name);
                 }
             }
 
@@ -4734,7 +4721,7 @@ namespace pwiz.Skyline
 
         private void submitErrorReportMenuItem_Click(object sender, EventArgs e)
         {
-            Program.ReportException(new ApplicationException(SkylineResources.SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report));
+            ProgramContext.ReportException(new ApplicationException(SkylineResources.SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report));
         }
 
         private void crashSkylineMenuItem_Click(object sender, EventArgs e)

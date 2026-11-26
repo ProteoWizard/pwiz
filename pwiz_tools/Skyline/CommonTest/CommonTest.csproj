@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\Common\Common.csproj" />
+    <ProjectReference Include="..\..\Shared\CommonUI\CommonUI.csproj" />
     <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj" />
     <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj" />
     <ProjectReference Include="..\TestUtil\TestUtil.csproj" />

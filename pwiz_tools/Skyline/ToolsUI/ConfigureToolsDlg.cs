@@ -901,7 +901,8 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     int spot = listTools.SelectedIndex;
                     ToolDescription td = ToolList[spot];
-                    ToolMacroInfo tmi = new ToolMacroInfo(SkylineWindowParent, td);
+                    ToolMacroInfo tmi = new ToolMacroInfo(SkylineWindowParent, td.Title, td.ReportTitle,
+                        SkylineWindowParent.Document, SkylineWindowParent, null, td.ToolDirPath);
                     string content;
                     if (menuItem.Text == Resources.ToolMacros__listArguments_Input_Report_Temp_Path)
                     {
@@ -1030,10 +1031,14 @@ namespace pwiz.Skyline.ToolsUI
 
             private void RepopulateLiveReportList()
             {
-                _liveReportDriver.List.Clear();
                 var documentGridViewContext = DocumentGridViewContext.CreateDocumentGridViewContext(null, DataSchemaLocalizer.INVARIANT);
-                _liveReportDriver.List.AddRange(documentGridViewContext.GetViewSpecList(PersistedViews.ExternalToolsGroup.Id)
-                    .ViewSpecLayouts.Select(view => new ReportOrViewSpec(view)));
+                var reports = documentGridViewContext.GetViewSpecList(PersistedViews.ExternalToolsGroup.Id)
+                    .ViewSpecLayouts.Select(view => new ReportOrViewSpec(view)).ToArray();
+                _liveReportDriver.List = _liveReportDriver.List.ChangeItemsWith(items =>
+                {
+                    items.Clear();
+                    items.AddRange(reports);
+                });
             }
 
             public void LoadList(string selectedItemLast)

@@ -51,7 +51,7 @@ namespace pwiz.Skyline.FileUI
         public MinimizeResultsDlg(IDocumentUIContainer documentUIContainer)
         {
             InitializeComponent();
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
             _minimizeResults = new MinimizeResults(documentUIContainer, OnProgress);
             Settings = _minimizeResults.Settings
                 .ChangeDiscardUnmatchedChromatograms(true);

@@ -41,7 +41,51 @@ namespace pwiz.Common.Collections
         // Compare strings with natural sort
         public static int Compare(string x, string y)
         {
-            return Shlwapi.StrCmpLogicalW(x, y);
+            if (OperatingSystem.IsWindows())
+                return Shlwapi.StrCmpLogicalW(x, y);
+            return CompareLogical(x ?? string.Empty, y ?? string.Empty);
+        }
+
+        /// <summary>
+        /// What StrCmpLogicalW does, for platforms without it: runs of digits compare by their
+        /// value, and the text between them compares ignoring case. Of two runs with the same value,
+        /// the one with more leading zeros sorts first, so "S01" precedes "S1" as it does on Windows.
+        /// </summary>
+        public static int CompareLogical(string x, string y)
+        {
+            int ix = 0, iy = 0;
+            while (ix < x.Length && iy < y.Length)
+            {
+                int result;
+                if (char.IsDigit(x[ix]) && char.IsDigit(y[iy]))
+                {
+                    var runX = TakeRun(x, ref ix, true);
+                    var runY = TakeRun(y, ref iy, true);
+                    var digitsX = runX.TrimStart('0');
+                    var digitsY = runY.TrimStart('0');
+                    result = digitsX.Length != digitsY.Length
+                        ? digitsX.Length.CompareTo(digitsY.Length)
+                        : string.CompareOrdinal(digitsX, digitsY);
+                    if (result == 0)
+                        result = runY.Length.CompareTo(runX.Length);
+                }
+                else
+                {
+                    result = string.Compare(TakeRun(x, ref ix, false), TakeRun(y, ref iy, false),
+                        StringComparison.CurrentCultureIgnoreCase);
+                }
+                if (result != 0)
+                    return result;
+            }
+            return (x.Length - ix).CompareTo(y.Length - iy);
+        }
+
+        private static string TakeRun(string s, ref int i, bool digits)
+        {
+            int start = i;
+            while (i < s.Length && char.IsDigit(s[i]) == digits)
+                i++;
+            return s.Substring(start, i - start);
         }
         // Implement IComparer<string>
         int IComparer<string>.Compare(string x, string y)

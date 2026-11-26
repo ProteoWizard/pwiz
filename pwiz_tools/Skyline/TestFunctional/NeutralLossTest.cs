@@ -63,11 +63,11 @@ namespace pwiz.SkylineTestFunctional
             var variableLossMod = new StaticMod("Methionine Oxidized Loss", "M", null, true, "O",
                 LabelAtoms.None, RelativeRT.Matching, null, null, new[] { new FragmentLoss("CH3O") });
 
-            Settings.Default.HeavyModList.Clear();
-            Settings.Default.HeavyModList.Add(aquaMod);
-            Settings.Default.StaticModList.Clear();
-            Settings.Default.StaticModList.AddRange(StaticModList.GetDefaultsOn());
-            Settings.Default.StaticModList.Add(variableLossMod);
+            Settings.Default.HeavyModList = Settings.Default.HeavyModList.ChangeClear();
+            Settings.Default.HeavyModList = Settings.Default.HeavyModList.ChangeAdd(aquaMod);
+            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeClear();
+            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeAddRange(StaticModList.GetDefaultsOn());
+            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeAdd(variableLossMod);
 
             // Bump up the max mz a bit
             var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
@@ -182,7 +182,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.Serializable(docAfterAlways);
                 // Undo and revert to original phospo loss modification definition
                 RunUI(SkylineWindow.Undo);
-                Settings.Default.StaticModList.SetValue(phosphoLossMod);
+                Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeValue(phosphoLossMod);
             }
 
             // Show losses in the pick list

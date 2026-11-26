@@ -160,7 +160,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (Exception ex)
             {
-                ExceptionUtil.DisplayOrReportException(this, ex);
+                ExceptionUtilUI.DisplayOrReportException(this, ex);
                 return false; // Stay on form, allow retry
             }
         }
@@ -279,7 +279,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (Exception ex)
             {
-                ExceptionUtil.DisplayOrReportException(this, ex);
+                ExceptionUtilUI.DisplayOrReportException(this, ex);
                 return false;
             }
         }
@@ -425,7 +425,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (Exception ex)
             {
-                ExceptionUtil.DisplayOrReportException(this, ex);
+                ExceptionUtilUI.DisplayOrReportException(this, ex);
                 return false; // Stay on form, allow retry
             }
             return true;

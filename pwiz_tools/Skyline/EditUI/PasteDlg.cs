@@ -51,7 +51,7 @@ namespace pwiz.Skyline.EditUI
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             DocumentUiContainer = documentUiContainer;
             _entryCreators = new AuditLogEntryCreatorList();

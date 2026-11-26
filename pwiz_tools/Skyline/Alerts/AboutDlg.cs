@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Alerts
 
             // Designer has problems getting images from resources
             pictureSkylineIcon.Image = Program.SkylineImage;
-            pictureProteoWizardIcon.Image = Resources.ProteoWizard;
+            pictureProteoWizardIcon.Image = ImageResources.ProteoWizard;
         }
 
         private void linkProteome_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

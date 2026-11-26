@@ -80,7 +80,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             //Initialize window type combo box
             comboWindowType.Items.AddRange(new object[]

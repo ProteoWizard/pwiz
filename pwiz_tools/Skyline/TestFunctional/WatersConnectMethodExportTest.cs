@@ -39,6 +39,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -59,7 +60,7 @@ namespace pwiz.SkylineTestFunctional
             // suffices. The request-level mock routes every request by URL and HTTP method;
             // HttpClientTestHelper saves any enclosing behavior and restores it on dispose,
             // scoping the mock to this test.
-            Settings.Default.RemoteAccountList.Add(RemoteAccountType.WATERS_CONNECT.GetEmptyAccount());
+            Settings.Default.RemoteAccountList = Settings.Default.RemoteAccountList.ChangeAdd(RemoteAccountType.WATERS_CONNECT.GetEmptyAccount());
             _methodsResponse = BuildMethodsResponse();
             using var testBehavior = new HttpClientTestHelper(new HttpClientTestBehavior { RequestResponseFactory = HandleWcRequest });
 

@@ -50,12 +50,12 @@ namespace pwiz.SkylineTestFunctional
             // failure to start
             {
                 var process = Process.Start(GetProcessStartInfo("--invalidargument"));
-                WaitForExit(process, Program.EXIT_CODE_FAILURE_TO_START);
+                WaitForExit(process, ProgramContext.EXIT_CODE_FAILURE_TO_START);
             }
             // ran with errors
             {
                 var process = Process.Start(GetProcessStartInfo("\"--in=" + TestFilesDir.GetTestPath("invalidpath.sky") + "\""));
-                WaitForExit(process, Program.EXIT_CODE_RAN_WITH_ERRORS);
+                WaitForExit(process, ProgramContext.EXIT_CODE_RAN_WITH_ERRORS);
             }
             // mass spec data file instead of skyline document
             {
@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestFunctional
                 var massSpecLogFile = TestFilesDir.GetTestPath("massspec.log");
                 var process = Process.Start(GetProcessStartInfo(
                     "\"--in=" + mzmlFile + "\" --log-file=\"" + massSpecLogFile + "\""));
-                WaitForExit(process, Program.EXIT_CODE_RAN_WITH_ERRORS);
+                WaitForExit(process, ProgramContext.EXIT_CODE_RAN_WITH_ERRORS);
                 Assert.IsTrue(File.Exists(massSpecLogFile), string.Format("Missing log file {0}", massSpecLogFile));
                 var massSpecLogText = File.ReadAllText(massSpecLogFile, Encoding.UTF8);
                 AssertEx.Contains(massSpecLogText,
@@ -76,7 +76,7 @@ namespace pwiz.SkylineTestFunctional
             string logFile = TestFilesDir.GetTestPath("success.log");
             {
                 var process = Process.Start(GetProcessStartInfo("\"--in=" + validFile + "\" --log-file=\"" + logFile + "\""));
-                WaitForExit(process, Program.EXIT_CODE_SUCCESS);
+                WaitForExit(process, ProgramContext.EXIT_CODE_SUCCESS);
                 Assert.IsTrue(File.Exists(logFile), string.Format("Missing log file {0}", logFile));
                 string logText = File.ReadAllText(logFile, Encoding.UTF8);
                 AssertEx.Contains(logText, Resources.CommandLine_OpenSkyFile_Opening_file___,
@@ -105,8 +105,8 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// Tests running SkylineCmd.exe when it is not in the same folder as Skyline.exe, in which
-        /// case it fails.
+        /// Tests running SkylineCmd.exe when it is not in the same folder as SkylineCore.dll, in
+        /// which case it fails, naming the assembly it could not load.
         /// </summary>
         [TestMethod]
         public void TestSkylineCmdInEmptyDirectory()
@@ -116,9 +116,8 @@ namespace pwiz.SkylineTestFunctional
             var destFileName = Path.Combine(tempPath, "SkylineCmd.exe");
             var skylineCmdExe = FindSkylineCmdExe();
             File.Copy(skylineCmdExe, destFileName);
-            // On net8 SkylineCmd.exe is a native apphost that needs its managed companions beside it
-            // to bootstrap; copy them (but NOT Skyline*.dll, which the test expects to be missing) so
-            // the managed entry point runs and reports the missing Skyline.dll from tempPath.
+            // SkylineCmd.exe is a native apphost that needs its managed companions beside it to
+            // start; copy them, but not SkylineCore.dll, which the test expects to be missing.
             foreach (var companion in new[] { "SkylineCmd.dll", "SkylineCmd.runtimeconfig.json", "SkylineCmd.deps.json" })
             {
                 var companionSrc = Path.Combine(Path.GetDirectoryName(skylineCmdExe) ?? string.Empty, companion);
@@ -139,12 +138,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 output = ioException.Message;
             }
-            // Make sure the error message says it tries loading the Skyline managed assembly from
-            // the same directory as SkylineCmd.exe. On net8 that is the .dll (the .exe is a native
-            // apphost that Assembly.LoadFrom can't load); on net472 it is the .exe.
-            StringAssert.Contains(output, "Skyline.dll");
-            StringAssert.Contains(output, "Skyline-daily.dll"); // Keep -daily
-            StringAssert.Contains(output, tempPath);
+            // The failure names the assembly that could not be loaded
+            StringAssert.Contains(output, "SkylineCore");
         }
 
 

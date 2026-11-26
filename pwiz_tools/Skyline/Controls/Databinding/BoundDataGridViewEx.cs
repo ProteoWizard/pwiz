@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             catch (Exception exception)
             {
-                ExceptionUtil.HandleProcessKeyException(this, exception, e.KeyData);
+                ExceptionUtilUI.HandleProcessKeyException(this, exception, e.KeyData);
                 return true;
             }
         }

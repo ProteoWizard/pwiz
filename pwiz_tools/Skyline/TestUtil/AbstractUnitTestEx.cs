@@ -76,8 +76,8 @@ namespace pwiz.SkylineTestUtil
         {
             string message = null;
             // Make sure exist status and text error reporting match
-            if (exitStatus == Program.EXIT_CODE_SUCCESS && errorReported ||
-                exitStatus != Program.EXIT_CODE_SUCCESS && !errorReported)
+            if (exitStatus == ProgramContext.EXIT_CODE_SUCCESS && errorReported ||
+                exitStatus != ProgramContext.EXIT_CODE_SUCCESS && !errorReported)
             {
                 message = string.Format("{0} reported but exit status was {1}.",
                     errorReported ? "Error" : "No error", exitStatus);
@@ -85,9 +85,9 @@ namespace pwiz.SkylineTestUtil
             else if (expectSuccess.HasValue)
             {
                 // Make sure expected exit status matches actual
-                if (expectSuccess.Value && exitStatus != Program.EXIT_CODE_SUCCESS)
+                if (expectSuccess.Value && exitStatus != ProgramContext.EXIT_CODE_SUCCESS)
                     message = string.Format("Expecting successful command-line execution but got {0} exit code.", exitStatus);
-                else if (!expectSuccess.Value && exitStatus == Program.EXIT_CODE_SUCCESS)
+                else if (!expectSuccess.Value && exitStatus == ProgramContext.EXIT_CODE_SUCCESS)
                     message = "Expecting command-line error but execution was successful.";
             }
 

@@ -22,6 +22,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -42,9 +43,9 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.MruList.Add(@"D:\path\to\another\file.sky");
             Assert.AreEqual(3, Settings.Default.MruList.Count);
             Settings.Default.AnnotationColor = 5;
-            Settings.Default.StaticModList.Add(UniMod.GetModification("Oxidation (M)", true));
+            Settings.Default.StaticModList = Settings.Default.StaticModList.ChangeAdd(UniMod.GetModification("Oxidation (M)", true));
             Assert.AreEqual(2, Settings.Default.StaticModList.Count);
-            Settings.Default.HeavyModList.Add(UniMod.GetModification("Label:13C(6) (C-term K)", false));
+            Settings.Default.HeavyModList = Settings.Default.HeavyModList.ChangeAdd(UniMod.GetModification("Label:13C(6) (C-term K)", false));
             Assert.AreEqual(1, Settings.Default.HeavyModList.Count);
 
             var toolsOptions = ShowDialog<ToolOptionsUI>(SkylineWindow.ShowToolOptionsUI);

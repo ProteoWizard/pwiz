@@ -52,7 +52,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             InitializeComponent();
 
-            Icon = Resources.Skyline;
+            Icon = ImageResources.Skyline;
 
             _regressionGraphData = new Dictionary<DataGridViewRow, RegressionGraphData[]>();
 
