@@ -66,7 +66,7 @@ namespace pwiz.Common.SystemUtil
     /// flow's narrative into the file's own buffer and makes the file the ambient
     /// <see cref="Current"/> scope (flowing into an inner <c>Parallel.For</c> via
     /// ExecutionContext). The phase code advances segments through
-    /// <see cref="FileScope.BeginSegment"/>; <see cref="ProgressReporter"/> finds the
+    /// <see cref="FileScope.BeginSegment()"/>; <see cref="ProgressReporter"/> finds the
     /// active segment sink through <see cref="CurrentSink"/> with no signature
     /// changes through the caller's IO / scoring stack. Disposing the file handle flushes
     /// its block and drops it from the aggregate line.
@@ -143,7 +143,7 @@ namespace pwiz.Common.SystemUtil
         /// <summary>
         /// <see cref="BeginFile(int,int)"/> with phases of unequal length:
         /// <paramref name="segmentWeights"/> gives each phase's share of the file's percent,
-        /// in the order <see cref="FileScope.BeginSegment"/> opens them. Weight a phase by the
+        /// in the order <see cref="FileScope.BeginSegment()"/> opens them. Weight a phase by the
         /// time it takes, so one visible percent costs about the same wall time throughout
         /// the file; equal slices make the longest phase the slowest to show motion.
         /// </summary>
@@ -240,7 +240,7 @@ namespace pwiz.Common.SystemUtil
 
         /// <summary>
         /// A live per-file scope: owns the file's narrative buffer and its segment
-        /// cursor. Phase code advances segments with <see cref="BeginSegment"/>; the
+        /// cursor. Phase code advances segments with <see cref="BeginSegment()"/>; the
         /// active segment's <see cref="IProgressSink"/> maps an inner reporter's
         /// 0..100 into that segment's equal-weight slice of the file's 0..100.
         /// Disposing flushes the buffered block and removes the file from the
