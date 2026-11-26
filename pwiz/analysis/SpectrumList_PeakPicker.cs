@@ -30,10 +30,6 @@ public sealed class SpectrumList_PeakPicker : SpectrumListWrapper
     private readonly string _mode;
     private readonly DataProcessing _dp;
 
-    // cpp minDetailLevel_: raised for good the first time a spectrum read at a lower level lacks
-    // its profile/centroid term, so later reads go straight to a level that carries it.
-    private volatile DetailLevel _minDetailLevel = DetailLevel.InstantMetadata;
-
     /// <summary>MS levels this detector targets (anything outside passes through).</summary>
     public IntegerSet MsLevels => _msLevels;
 
@@ -174,24 +170,27 @@ public sealed class SpectrumList_PeakPicker : SpectrumListWrapper
     /// </remarks>
     public override Spectrum GetSpectrum(int index, DetailLevel detailLevel)
     {
-        if (detailLevel < _minDetailLevel)
-            detailLevel = _minDetailLevel;
-
         var spec = _vendorCentroidPath is not null
             ? _vendorCentroidPath(index, detailLevel)
-            : Inner.GetSpectrum(index, detailLevel >= DetailLevel.FullData);
+            : Inner.GetSpectrum(index, detailLevel);
 
         int msLevel = spec.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0);
         if (!_msLevels.Contains(msLevel)) return spec;
 
+        // A list that keeps its spectra hands out the stored instance, peaks included, and the
+        // spectrum is relabelled and picked in place below. Relabelling it without picking would
+        // leave its unpicked peaks under a centroid term for every later read, so it is picked
+        // now; its peaks are already in memory.
+        if (spec.RetainedByList && detailLevel < DetailLevel.FullMetadata)
+            detailLevel = DetailLevel.FullMetadata;
+
+        // A spectrum read below full metadata may not say yet whether it is profile or centroid
+        // (Agilent learns that from the read that also returns the peaks). cpp raises the level
+        // for good until the term appears (minDetailLevel_), which turned every metadata request
+        // into a full-metadata read for such a reader. Nothing below full metadata depends on the
+        // term - Skyline reads it at full metadata - so the spectrum is returned unrelabelled.
         if (detailLevel < DetailLevel.FullMetadata && !spec.Params.HasCVParamChild(CVID.MS_spectrum_representation))
-        {
-            // Only ever raised: a concurrent read that started lower must not undo another's raise.
-            var raised = detailLevel + 1;
-            if (raised > _minDetailLevel)
-                _minDetailLevel = raised;
-            return GetSpectrum(index, raised);
-        }
+            return spec;
 
         bool isCentroid = spec.Params.HasCVParam(CVID.MS_centroid_spectrum);
         if (isCentroid)
@@ -223,9 +222,15 @@ public sealed class SpectrumList_PeakPicker : SpectrumListWrapper
         spec.Params.Set(CVID.MS_centroid_spectrum);
         spec.DataProcessing = _dp;
 
-        // Unlike cpp, no return here below full metadata: the inner list may have been read at
-        // full metadata anyway (the non-vendor path, and vendors serving the bool overload), and
-        // its defaultArrayLength would then be the profile count under a centroid term.
+        // cpp returns here below full metadata too, but only after reading the inner spectrum at
+        // full data on its non-vendor path, so a metadata request cost a decode of every
+        // spectrum. Nothing is picked below full metadata, so no count is known: an inner count
+        // would be the profile one under a centroid term.
+        if (detailLevel < DetailLevel.FullMetadata)
+        {
+            spec.DefaultArrayLength = 0;
+            return spec;
+        }
 
         // In vendor-prefer mode, the vendor list may decline to centroid some spectra
         // (e.g. Thermo only has a centroid stream for FTMS analyzers). Those come back with
