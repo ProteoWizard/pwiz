@@ -353,7 +353,6 @@ internal sealed class CompassXtractData : IBrukerData
     {
         ArgumentNullException.ThrowIfNull(spec);
         ArgumentNullException.ThrowIfNull(entry);
-        bool getBinaryData = detailLevel >= DetailLevel.FullData;
         ObjectDisposedException.ThrowIf(_disposed, this);
         _ = sortAndJitter;          // TDF combined-frame only
         _ = includeIsolationArrays; // TDF diaPASEF whole-frame only
@@ -366,7 +365,7 @@ internal sealed class CompassXtractData : IBrukerData
                 try
                 {
                     analysis = OpenFid(fidDirectory, out EDAL.IMSSpectrum fidSpectrum);
-                    FillFromSpectrum(spec, fidSpectrum, getBinaryData, preferCentroid);
+                    FillFromSpectrum(spec, fidSpectrum, detailLevel, preferCentroid);
                 }
                 finally
                 {
@@ -382,11 +381,11 @@ internal sealed class CompassXtractData : IBrukerData
             if (scan < 1 || scan > _spectrumCount)
                 throw new ArgumentOutOfRangeException(nameof(entry),
                     $"[CompassXtract] scan number {scan} is out of range.");   // CompassData.cpp:569-570
-            FillFromSpectrum(spec, _spectra[scan], getBinaryData, preferCentroid);
+            FillFromSpectrum(spec, _spectra[scan], detailLevel, preferCentroid);
         }
     }
 
-    private void FillFromSpectrum(Spectrum spec, EDAL.IMSSpectrum spectrum, bool getBinaryData, bool preferCentroid)
+    private void FillFromSpectrum(Spectrum spec, EDAL.IMSSpectrum spectrum, DetailLevel detailLevel, bool preferCentroid)
     {
         int msLevel = spectrum.MSMSStage;
         spec.Params.Set(CVID.MS_ms_level, msLevel);
@@ -427,7 +426,12 @@ internal sealed class CompassXtractData : IBrukerData
         if (msLevel > 1)
             AddPrecursor(spec, spectrum, cache, parameters);
 
-        FillPeaks(spec, spectrum, getBinaryData, preferCentroid);
+        // Profile or centroid is known only by reading the peaks, so it waits for full metadata
+        // along with the peak count, as in cpp (SpectrumList_Bruker.cpp:377, :511).
+        if (detailLevel < DetailLevel.FullMetadata)
+            return;
+
+        FillPeaks(spec, spectrum, detailLevel >= DetailLevel.FullData, preferCentroid);
     }
 
     /// <summary>
