@@ -203,7 +203,7 @@ namespace pwiz.Osprey
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_GENERAL_IO =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_General_IO, true,
                 ARG_INPUT, ARG_INPUT_LIST, ARG_LIBRARY, ARG_OUTPUT, ARG_WORK_DIR, ARG_OUTPUT_DIR, ARG_CACHE_DIR,
-                ARG_KEEP_SCORES_PARQUET, ARG_EXPORT_LIBRARY);
+                ARG_EXPORT_LIBRARY);
 
         // --- Library Build ----------------------------------------------------------------
         // The one command from a protein FASTA to a .blib: --fasta predicts the library with
@@ -509,7 +509,7 @@ namespace pwiz.Osprey
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_FDR =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_FDR_Protein_Inference, true,
                 ARG_RUN_FDR, ARG_EXPERIMENT_FDR, ARG_RECONCILIATION_COMPACTION_FDR, ARG_PROTEIN_FDR, ARG_FDR_LEVEL, ARG_SHARED_PEPTIDES,
-                ARG_PROTEIN_BOOST, ARG_FEATURE_SET, ARG_FDRBENCH, ARG_FDRBENCH_PER_RUN, ARG_FDRBENCH_PASS);
+                ARG_PROTEIN_BOOST, ARG_FEATURE_SET);
 
         // --- Decoys -----------------------------------------------------------------------
         public static readonly OspreyArgument ARG_DECOYS_IN_LIBRARY = new OspreyArgument(OspreyArgNames.DECOYS_IN_LIBRARY,
@@ -716,7 +716,8 @@ namespace pwiz.Osprey
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_INFO =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Diagnostics_Info, true,
-                ARG_MODEL_DIAGNOSTICS, ARG_HELP, ARG_HELP_ENV, ARG_VERSION, ARG_INTERNAL_CULTURE);
+                ARG_MODEL_DIAGNOSTICS, ARG_KEEP_SCORES_PARQUET, ARG_FDRBENCH, ARG_FDRBENCH_PER_RUN, ARG_FDRBENCH_PASS,
+                ARG_HELP, ARG_HELP_ENV, ARG_VERSION, ARG_INTERNAL_CULTURE);
 
         public static IEnumerable<IUsageBlock> UsageBlocks
         {

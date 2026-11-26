@@ -273,9 +273,6 @@ Each is also a `--task` of its own on a cluster (see "The library build on a clu
 | `--fdr-level` | `precursor \| peptide \| both` | `precursor` | Which q-value gates the reported output. (`protein` is not a valid value.) |
 | `--protein-boost` | `best \| compact \| off` | `best`; `compact` at `unit` | How a detection is boosted by the other detections of its protein. `best` trains the first pass with each candidate's best first-round score among the other peptides of its protein in the run; `compact` competes the precursors of the proteins the first pass detected apart from the rest in the second pass, and will be removed once Stellar data is measured on a larger cohort; `off` boosts nothing. See [12](12-second-pass-fdr.md). |
 | `--shared-peptides` | `all \| razor \| unique` | `all` | Shared-peptide handling for protein inference. See [08-protein-parsimony.md](08-protein-parsimony.md). |
-| `--fdrbench` | `path/to/file.tsv` | off | Write an FDRBench-compatible input TSV (every reported target with the raw SVM score) for entrapment true-FDR. Level follows `--fdr-level`. See [fractional-entrapment.md](fractional-entrapment.md). |
-| `--fdrbench-per-run` | — | off | With `--fdrbench`: one row per (precursor, run) using run-level q-values. |
-| `--fdrbench-pass` | `1 \| 2 \| both` | `2` | With `--fdrbench`: which pass to emit (2 = reported second-pass survivors; 1 = full pre-compaction first-pass pool). |
 
 ### Decoys
 
@@ -289,7 +286,6 @@ Each is also a `--task` of its own on a cluster (see "The library build on a clu
 
 | Option | Value | Default | Effect |
 |--------|-------|---------|--------|
-| `--keep-scores-parquet` | - | off | Also write each run's features - every scalar and feature column - beside its stub scores parquet: `<stem>.features.parquet` from the first pass (the Stages 1-4 checkpoint a later `--task FirstPass` re-trains the run's model from without re-scoring) and `<stem>.features-reconciled.parquet` from the second. Adds files and changes none; `--training-export` implies it. See [14](14-intermediate-files.md), section 3. |
 | `--training-export` | - | off | Write `<stem>.training.parquet` per run: every target at run q <= `--training-export-max-q` with its full b/y ladder's observed intensities and per-ion interference evidence. Written by `PerFileRescoring`; adding it to a finished run writes only the exports and re-scores nothing. See [22-training-export.md](22-training-export.md). |
 | `--training-export-max-q` | `<q>` | `--run-fdr` | With `--training-export`: the run precursor q-value a target must reach (second pass where `PerFileRescoring` wrote one, else first; [22](22-training-export.md)). |
 | `--training-export-claimant-q` | `<q>` | 0.01 | With `--training-export`: the run q-value at which another target counts as a claimant of a shared peak. |
@@ -334,6 +330,10 @@ None of these counts enters a validity key or changes an output byte; one lane i
 | Option | Effect |
 |--------|--------|
 | `--model-diagnostics` | Write a self-contained interactive HTML report of the trained scoring model and FDR calibration. |
+| `--keep-scores-parquet` | Also write each run's features - every scalar and feature column - beside its stub scores parquet: `<stem>.features.parquet` from the first pass (the Stages 1-4 checkpoint a later `--task FirstPass` re-trains the run's model from without re-scoring) and `<stem>.features-reconciled.parquet` from the second. Adds files and changes none; `--training-export` implies it. See [14](14-intermediate-files.md), section 3. |
+| `--fdrbench` `path/to/file.tsv` | Write an FDRBench-compatible input TSV (every reported target with the raw SVM score) for entrapment true-FDR. Level follows `--fdr-level`. See [fractional-entrapment.md](fractional-entrapment.md). |
+| `--fdrbench-per-run` | With `--fdrbench`: one row per (precursor, run) using run-level q-values. |
+| `--fdrbench-pass` `1 \| 2 \| both` | With `--fdrbench`: which pass to emit (2 = reported second-pass survivors; 1 = full pre-compaction first-pass pool). Default: `2`. |
 | `-h`, `--help` | Show help. Accepts a format: `[ascii\|unicode\|sections\|html\|<Section>]`. |
 | `--help-env` | Show the `OSPREY_*` environment variables (developer switches), grouped by what they change. Accepts `ascii` or `unicode`. See [Environment variables](#environment-variables). |
 | `-v`, `--version` | Show version. |
