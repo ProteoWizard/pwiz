@@ -176,6 +176,12 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(1, SplitLines(refused).Count(CommandStatusWriter.IsErrorLine), refused);
             StringAssert.Contains(refused, @"OSPREY_PASS2_QVALUE='" + removedMode + @"'");
             Assert.IsFalse(refused.Contains(TaskLine(PerFileScoringTask.TASK_NAME, @"starting")), refused);
+            // A --task-files query is refused the same way, so a harness does not stage files
+            // for nodes that will not start.
+            string refusedQuery = RunOspreyExpecting(SearchArgs(compactDir, Path.Combine(_dataDir, LIBRARY_FILE), OnArgs(compactDir))
+                .Concat(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, SecondPassFdrTask.TASK_NAME,
+                    OspreyCommandArgs.ARG_TASK_FILES.ArgumentText }).ToArray(), compact, Program.EXIT_CODE_FAILURE_TO_START);
+            StringAssert.Contains(refusedQuery, @"OSPREY_PASS2_QVALUE='" + removedMode + @"'");
 
             // The developer arm is a different column.
             var other = new Dictionary<string, string>(ProteinBestVariables()) { [PROTEIN_BEST_SHUFFLE] = @"1" };

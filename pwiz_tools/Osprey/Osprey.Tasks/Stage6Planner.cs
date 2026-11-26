@@ -148,8 +148,6 @@ namespace pwiz.Osprey.Tasks
                     ? new ConsensusRts.Accumulator(
                         config.Reconciliation.ConsensusFdr, config.EffectiveProteinFdr)
                     : null,
-                PassingBaseIds = new HashSet<(uint, byte)>(),
-                PassingPrecursors = new HashSet<(string ModifiedSequence, byte Charge)>(),
                 GlobalBaseIds = new HashSet<uint>(),
             };
 

@@ -1906,12 +1906,6 @@ namespace pwiz.Osprey.Tasks
         /// Why a resume whose per-file sidecars are all current may NOT enter at the compaction
         /// gate, one reason per condition that fails, or an empty list when it may.
         ///
-        /// <para>The gate entry skips the score passes and publishes the persisted model as this
-        /// run's first-pass model, so that model must be of the classifier this run uses. The
-        /// validity key records the FDR method, so a current directory cannot hold the other
-        /// classifier's model except through a defect; refusing here makes such a directory
-        /// recompute instead of publishing it to Stage 6 and the second pass.</para>
-        ///
         /// </summary>
         internal List<string> CompactionGateRefusals(string experimentPath, string validityKey)
         {

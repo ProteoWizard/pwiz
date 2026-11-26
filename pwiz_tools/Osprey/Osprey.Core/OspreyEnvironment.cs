@@ -1656,9 +1656,7 @@ namespace pwiz.Osprey.Core
         /// <para><b>What it is and is not.</b> Both sides call the SAME transfer
         /// (<c>Pass2FdrSidecar.TransferOneFileByScore</c>), so this verifies that the worker's
         /// inputs and the transmission of its answer agree - it cannot see a defect INSIDE that
-        /// function, where both sides would be wrong together. The population and order of a
-        /// run's records are covered instead by
-        /// <c>Pass2FdrSidecar.AssertSidecarDescribesPool</c>, which is cheap and always on.</para>
+        /// function, where both sides would be wrong together.</para>
         ///
         /// <para>Deliberately NOT in any validity key: it changes no output, so including it
         /// would invalidate every cached artifact the moment it was flipped, turning a
