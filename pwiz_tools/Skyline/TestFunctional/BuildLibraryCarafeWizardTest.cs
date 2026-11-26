@@ -81,6 +81,14 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private const double RT_TOLERANCE = 1.0;
 
+        /// <summary>
+        /// The run, experiment and protein FDR of the tuning search. Each subset run is one isolation
+        /// window of under 300 target precursors, and Osprey's q-value, (decoys + 1) / targets, cannot
+        /// reach 1% until 100 targets outscore a run's best decoy, which the untuned first pass
+        /// reaches by a few precursors at best. At 5% it takes 20, and every run keeps over a hundred.
+        /// </summary>
+        private const double TUNING_FDR = 0.05;
+
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestBuildLibraryCarafeWizard()
@@ -230,7 +238,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(0, buildLibraryDlg.ModificationsControl.VariableMods.Count());
             });
 
-            // Search Settings: the Stellar subset is unit resolution
+            // Search Settings: the Stellar subset is unit resolution, and too small for 1% FDR
             NextPage(buildLibraryDlg, BuildLibraryDlg.Pages.search_settings);
             RunUI(() =>
             {
@@ -238,6 +246,8 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.SearchSettingsControl.IsHighResolution = false;
                 AssertEx.IsFalse(buildLibraryDlg.SearchSettingsControl.IsFragmentTolerancePpm);
                 buildLibraryDlg.SearchSettingsControl.Threads = Environment.ProcessorCount;
+                var searchSettings = buildLibraryDlg.SearchSettingsControl;
+                searchSettings.RunFdr = searchSettings.ExperimentFdr = searchSettings.ProteinFdr = TUNING_FDR;
             });
 
             // Additional Settings from the page: a fine-tuned build's every scope, the tuning's
