@@ -182,6 +182,22 @@ namespace pwiz.Skyline.ToolsUI
             return result;
         }
 
+        /// <summary>Whether any native dialog window in this process has the id, whether or not it can be driven:
+        /// shown or hidden, finished or still being built or laid out. <see cref="GetOpenDialogs"/> reports only
+        /// the ones ready to drive, so a dialog this finds and that does not is one to wait for rather than one
+        /// that is gone (see <see cref="JsonUiService.ResolveForm"/>).</summary>
+        public static bool IsAnyOpenWithId(string formId)
+        {
+            var processId = Kernel32.GetCurrentProcessId();
+            return User32.EnumWindows().Any(hwnd =>
+            {
+                User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
+                return windowProcessId == processId
+                       && User32.GetClassName(hwnd) == DIALOG_CLASS_NAME
+                       && TYPE_NAME + @":" + User32.GetWindowTextNoBlock(hwnd) == formId;
+            });
+        }
+
         // ---- Win32 control lookup ----------------------------------------------------------------
 
         /// <summary>The dialog's descendant windows of the given class, in window order -- the dialog's real
