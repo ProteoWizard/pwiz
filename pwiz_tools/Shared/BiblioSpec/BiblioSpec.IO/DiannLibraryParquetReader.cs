@@ -121,13 +121,23 @@ namespace pwiz.BiblioSpec.IO
         public static DiannLibraryParquetReader Open(string path, DiannLibraryColumns columns,
             DiannLibraryColumns optional = DiannLibraryColumns.none)
         {
-            var stream = File.OpenRead(path);
+            return Open(File.OpenRead(path), path, columns, optional);
+        }
+
+        /// <summary>
+        /// As above, over an already-open seekable stream rather than a file of its own, so a
+        /// library stored inside a container can be read in place. <paramref name="label"/> names
+        /// the source in errors. Takes ownership of <paramref name="stream"/>.
+        /// </summary>
+        public static DiannLibraryParquetReader Open(Stream stream, string label,
+            DiannLibraryColumns columns, DiannLibraryColumns optional = DiannLibraryColumns.none)
+        {
             try
             {
                 var reader = RunSync(ParquetReader.CreateAsync(stream));
                 try
                 {
-                    return new DiannLibraryParquetReader(path, stream, reader, columns, optional);
+                    return new DiannLibraryParquetReader(label, stream, reader, columns, optional);
                 }
                 catch
                 {
@@ -158,7 +168,7 @@ namespace pwiz.BiblioSpec.IO
             Require(columns & ~optional);
             foreach (var kv in COLUMN_NAMES)
             {
-                if ((columns & kv.Key) != 0 && _fieldsByName.TryGetValue(kv.Value, out var field))
+                if ((columns & kv.Key) != 0 && TryFindField(kv.Value, out var field))
                     _fields[kv.Key] = field;
             }
             RowCount = reader.Metadata?.NumRows ?? 0;
@@ -187,7 +197,7 @@ namespace pwiz.BiblioSpec.IO
         {
             foreach (var kv in COLUMN_NAMES)
             {
-                if ((columns & kv.Key) != 0 && !_fieldsByName.ContainsKey(kv.Value))
+                if ((columns & kv.Key) != 0 && !TryFindField(kv.Value, out _))
                     throw new DiannLibraryMissingColumnException(Path, kv.Value);
             }
         }
@@ -233,6 +243,17 @@ namespace pwiz.BiblioSpec.IO
             _stream.Dispose();
         }
 
+        /// <summary>
+        /// The field named <paramref name="name"/>, accepting Spectronaut's spelling of the DIA-NN
+        /// column names as well: the same names with underscores where DIA-NN writes dots.
+        /// Spectronaut exports this format but punctuates it differently.
+        /// </summary>
+        private bool TryFindField(string name, out DataField field)
+        {
+            return _fieldsByName.TryGetValue(name, out field)
+                || _fieldsByName.TryGetValue(name.Replace('.', '_'), out field);
+        }
+
         private static KeyValuePair<DiannLibraryColumns, string> Column(DiannLibraryColumns column, string name)
         {
             return new KeyValuePair<DiannLibraryColumns, string>(column, name);
@@ -243,7 +264,7 @@ namespace pwiz.BiblioSpec.IO
             if (!_fields.TryGetValue(column, out var field))
                 return null;
             int rowCount = checked((int)group.RowCount);
-            if (field.ClrType == typeof(string) || field.ClrType == typeof(ReadOnlyMemory<char>))
+            if (IsText(field))
             {
                 var values = new string[rowCount];
                 RunSync(group.ReadAsync(field, values.AsMemory()));
@@ -256,6 +277,15 @@ namespace pwiz.BiblioSpec.IO
             for (int i = 0; i < rowCount; i++)
                 converted[i] = Convert.ToString(boxed[i], CultureInfo.InvariantCulture) ?? string.Empty;
             return converted;
+        }
+
+        /// <summary>
+        /// True for a text column. Parquet.Net 6 types one as ReadOnlyMemory&lt;char&gt;, which
+        /// <see cref="ReadBoxed(ParquetRowGroupReader, DataField)"/> has no type code for.
+        /// </summary>
+        private static bool IsText(DataField field)
+        {
+            return field.ClrType == typeof(string) || field.ClrType == typeof(ReadOnlyMemory<char>);
         }
 
         private float[] ReadFloats(ParquetRowGroupReader group, DiannLibraryColumns column)
@@ -284,6 +314,29 @@ namespace pwiz.BiblioSpec.IO
             if (field.ClrType == typeof(long) && !field.IsNullable)
             {
                 RunSync(group.ReadAsync(field, values.AsMemory()));
+                return values;
+            }
+            // Spectronaut writes Proteotypic as the strings "True"/"False" where DIA-NN writes an
+            // int, so a text column here is read as text and parsed rather than rejected.
+            if (IsText(field))
+            {
+                var text = ReadStrings(group, column);
+                for (int i = 0; i < rowCount; i++)
+                {
+                    if (string.IsNullOrEmpty(text[i]))
+                        values[i] = 0L;          // as a null cell reads zero on the typed paths
+                    else if (bool.TryParse(text[i], out var flag))
+                        values[i] = flag ? 1L : 0L;
+                    else if (long.TryParse(text[i], NumberStyles.Integer, CultureInfo.InvariantCulture,
+                                 out var number))
+                        values[i] = number;
+                    else
+                        // Zeroing an unrecognized value would silently change the column's
+                        // meaning for the whole library, so say so instead.
+                        throw new InvalidDataException(string.Format(CultureInfo.InvariantCulture,
+                            @"Parquet column '{0}' has the value '{1}', which is neither a number nor true/false.",
+                            field.Name, text[i]));
+                }
                 return values;
             }
             var boxed = ReadBoxed(group, field);

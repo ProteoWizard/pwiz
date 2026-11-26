@@ -1415,6 +1415,46 @@ public class BuildTests
             referenceCheckName: "diann2-parquet.check");
     }
 
+    /// <summary>
+    /// Spectronaut's "Skyline" parquet export: DIA-NN's report-lib.parquet / report.parquet
+    /// column set spelled with underscores (plus <c>File_Name</c>, <c>RT_End</c>, no
+    /// <c>Fragment_Charge</c>, string <c>Proteotypic</c>/<c>Q_Value</c>, NaN <c>IM</c>),
+    /// mods written as Unimod titles (<c>[Carbamidomethyl (C)]</c>), and a footer written by
+    /// current Arrow, which stock Parquet.Net 4.25 cannot read. The subset covers charges 1-4,
+    /// N-terminal Acetyl merged with Oxidation/Carbamidomethyl on residue 1, a non-proteotypic
+    /// precursor, three runs and two report-only precursors.
+    /// </summary>
+    [TestMethod]
+    public void Spectronaut_Parquet()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(Spectronaut_Parquet),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-c", "0" },
+            inputFilenames: new[] { "spectronaut-parquet/sgs-sample1_Skyline.lib.parquet" },
+            outputBlibName: "spectronaut-parquet.blib",
+            referenceCheckName: "spectronaut-parquet.check");
+    }
+
+    /// <summary>
+    /// The same export delivered as Spectronaut ships it: a <c>.sn-report.zip</c> holding both
+    /// parquet files stored uncompressed, read through seekable windows rather than extracted.
+    /// It asserts against the same reference as the loose pair above, so any difference between
+    /// reading the parquet from a file and from inside the container shows up as a library
+    /// difference.
+    /// </summary>
+    [TestMethod]
+    public void Spectronaut_SnReport()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(Spectronaut_SnReport),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-c", "0" },
+            inputFilenames: new[] { "spectronaut-parquet/sgs-sample1.sn-report.zip" },
+            outputBlibName: "spectronaut-sn-report.blib",
+            referenceCheckName: "spectronaut-sn-report.check");
+    }
+
     /// <summary>Jamfile.jam:344 — <c>paser-hela-dia</c>.</summary>
     [TestMethod]
     public void Paser_HelaDia()

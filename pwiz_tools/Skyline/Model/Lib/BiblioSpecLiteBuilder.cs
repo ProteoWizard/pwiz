@@ -70,6 +70,7 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT_OPEN_SWATH = ".osw";
         public const string EXT_SPECLIB = ".speclib";
         public const string EXT_PARQUET = ".parquet";
+        public const string EXT_SN_REPORT = ".sn-report.zip";
         // ReSharper restore LocalizableElement
 
         private ReadOnlyCollection<string> _inputFiles;

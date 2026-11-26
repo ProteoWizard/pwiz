@@ -103,13 +103,31 @@ public sealed class DiaNNSpecLibReader : BuildParser
     private IonMobilityType _ionMobilityType = IonMobilityType.None;
     private int _missingFromSpeclibCount;
 
+    /// <summary>A Spectronaut report export: one uncompressed zip holding both of its parquet
+    /// files, rather than the loose pair. See <see cref="StoredZipArchive"/>.</summary>
+    public const string SnReportExtension = ".sn-report.zip";
+
+    /// <summary>Entry-name suffixes Spectronaut gives the two parquet files it exports.</summary>
+    private const string SpectronautLibrarySuffix = ".lib.parquet";
+    private const string SpectronautResultsSuffix = ".search.parquet";
+
+    private static bool IsSnReport(string path) =>
+        path.EndsWith(SnReportExtension, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Error for a report export missing one of the two parquet files it must hold.</summary>
+    private BlibException MissingEntry(string suffix) =>
+        new(true, $"'{_specLibFile}' has no *{suffix} entry; a Spectronaut report export must " +
+                  "hold both its library and its search parquet file.");
+
     /// <summary>Returns true if <paramref name="path"/> is a DIA-NN spectral library —
     /// either the legacy binary <c>.speclib</c> or a <c>.parquet</c> file (DIA-NN v2+
     /// <c>report-lib.parquet</c>, loaded directly via
-    /// <see cref="LoadSpecLibFromParquet"/>). cpp parity: BlibBuild.cpp:199 (PR #4189).</summary>
+    /// <see cref="LoadSpecLibFromParquet"/>) - or a Spectronaut <c>.sn-report.zip</c>.
+    /// cpp parity: BlibBuild.cpp:199 (PR #4189).</summary>
     public static bool AcceptsExtension(string path) =>
         path.EndsWith(".speclib", StringComparison.OrdinalIgnoreCase)
-        || path.EndsWith(".parquet", StringComparison.OrdinalIgnoreCase);
+        || path.EndsWith(".parquet", StringComparison.OrdinalIgnoreCase)
+        || IsSnReport(path);
 
     /// <summary>
     /// Construct a DiaNNSpecLibReader bound to <paramref name="maker"/> and the speclib file at
@@ -149,26 +167,51 @@ public sealed class DiaNNSpecLibReader : BuildParser
     /// </summary>
     public override bool ParseFile()
     {
-        // --- 1) load the spectral library -------------------------------------------------
-        // Prefer DIA-NN v2's report-lib.parquet over the binary .skyline.speclib sibling
-        // (or the user passes the parquet directly). Fall back to the binary path
-        // otherwise. cpp parity: DiaNNSpecLibReader.cpp:978-1004 (PR #4189).
-        string libParquetPath = FindLibParquet();
-        if (!string.IsNullOrEmpty(libParquetPath))
+        // A .sn-report.zip carries both parquet files in one container, so there is no sibling to
+        // locate on disk and no stats.tsv - the two entries are found by name inside it.
+        using var archive = IsSnReport(_specLibFile) ? new StoredZipArchive(_specLibFile) : null;
+
+        IEnumerable<DiannReportRow> reportRows;
+        string reportLabel;
+        string diannStatsFilepath = string.Empty;
+
+        // --- 1) load the spectral library, and locate the report --------------------------
+        if (archive is not null)
         {
-            Verbosity.Status($"Reading library entries from parquet {libParquetPath}.");
-            LoadSpecLibFromParquet(libParquetPath);
+            string libEntry = archive.FindEntry(SpectronautLibrarySuffix)
+                ?? throw MissingEntry(SpectronautLibrarySuffix);
+            string reportEntry = archive.FindEntry(SpectronautResultsSuffix)
+                ?? throw MissingEntry(SpectronautResultsSuffix);
+
+            Verbosity.Status($"Reading library entries from {libEntry} in {_specLibFile}.");
+            LoadSpecLibFromParquet($"{libEntry} in {_specLibFile}", archive.OpenSeekable(libEntry));
+            reportLabel = $"{reportEntry} in {_specLibFile}";
+            reportRows = ReadDiannReportParquetAsync(archive.OpenSeekable(reportEntry), reportLabel)
+                .ToBlockingEnumerable();
         }
         else
         {
-            using var stream = new FileStream(_specLibFile, FileMode.Open, FileAccess.Read, FileShare.Read);
-            using var reader = new BinaryReader(stream);
-            _specLib.Read(reader);
+            // Prefer DIA-NN v2's report-lib.parquet over the binary .skyline.speclib sibling
+            // (or the user passes the parquet directly). Fall back to the binary path
+            // otherwise. cpp parity: DiaNNSpecLibReader.cpp:978-1004 (PR #4189).
+            string libParquetPath = FindLibParquet();
+            if (!string.IsNullOrEmpty(libParquetPath))
+            {
+                Verbosity.Status($"Reading library entries from parquet {libParquetPath}.");
+                LoadSpecLibFromParquet(libParquetPath);
+            }
+            else
+            {
+                using var stream = new FileStream(_specLibFile, FileMode.Open, FileAccess.Read, FileShare.Read);
+                using var reader = new BinaryReader(stream);
+                _specLib.Read(reader);
+            }
+
+            var diannReportFilepath = FindDiannReport(out diannStatsFilepath);
+            reportLabel = Path.GetFileName(diannReportFilepath);
+            reportRows = ReadDiannReport(diannReportFilepath);
         }
         Verbosity.Status($"Read {_specLib.Entries.Count} entries from speclib.");
-
-        // --- 2) find the companion report -------------------------------------------------
-        var diannReportFilepath = FindDiannReport(out var diannStatsFilepath);
 
         // --- 3) optionally parse stats.tsv for File.Name mapping --------------------------
         var diannFilenameByRun = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -234,7 +277,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
         double scoreThreshold = GetScoreThreshold(BuildInput.GenericQValueInput);
         bool hasProteinQValues = false;
 
-        foreach (var row in ReadDiannReport(diannReportFilepath))
+        foreach (var row in reportRows)
         {
             string fileName = row.FileName;
             string proteinGrp = row.ProteinGroup;
@@ -323,7 +366,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
                     if (!_specLib.EntryByName.TryGetValue(precursorIdStr, out var entry))
                         throw new BlibException(false,
                             $"could not find precursorId '{precursorIdStr}' in speclib; is " +
-                            $"'{Path.GetFileName(diannReportFilepath)}' the correct report TSV file?");
+                            $"'{reportLabel}' the correct report?");
 
                     psm.Score = globalQValue;
                     psm.PrecursorQValue = globalQValue;
@@ -341,7 +384,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
             Verbosity.Warn($"Skipped {_missingFromSpeclibCount} report rows whose precursors were not in the spectral library.");
         if (Psms.Count == 0 && _missingFromSpeclibCount > 0)
             throw new BlibException(false,
-                $"no report rows matched the spectral library; is '{Path.GetFileName(diannReportFilepath)}' " +
+                $"no report rows matched the spectral library; is '{reportLabel}' " +
                 $"the correct report file for '{Path.GetFileName(_specLibFile)}'?");
 
         FilteredOutPsmCount = _specLib.Entries.Count - Psms.Count;
@@ -445,7 +488,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
         // File.Name; falls back to Run. The TSV always has File.Name; we mirror by
         // probing for File.Name first.
         int colRun = MustFindColumn(hdrCols, "Run", reportPath);
-        int colFileName = Array.IndexOf(hdrCols, "File.Name");
+        int colFileName = FindColumn(hdrCols, "File.Name");
         if (colFileName < 0) colFileName = colRun;
         int colProteinGroup = MustFindColumn(hdrCols, "Protein.Group", reportPath);
         int colPrecursorId = MustFindColumn(hdrCols, "Precursor.Id", reportPath);
@@ -496,9 +539,27 @@ public sealed class DiaNNSpecLibReader : BuildParser
         return ReadDiannReportParquetAsync(reportPath).ToBlockingEnumerable();
     }
 
+    /// <summary>
+    /// Opens <paramref name="reportPath"/> inside the iterator, so the handle is taken when
+    /// enumeration starts rather than when this is called and cannot leak if the caller never
+    /// enumerates.
+    /// </summary>
     private static async IAsyncEnumerable<DiannReportRow> ReadDiannReportParquetAsync(string reportPath)
     {
-        using var stream = File.OpenRead(reportPath);
+        await foreach (var row in ReadDiannReportParquetAsync(File.OpenRead(reportPath), reportPath)
+                           .ConfigureAwait(false))
+            yield return row;
+    }
+
+    /// <summary>
+    /// Reads the report from an already-open parquet stream, so the source can be either a file or
+    /// a window onto a <c>.sn-report.zip</c> entry. Takes ownership of <paramref name="source"/>;
+    /// <paramref name="reportPath"/> only names the source in errors.
+    /// </summary>
+    private static async IAsyncEnumerable<DiannReportRow> ReadDiannReportParquetAsync(
+        Stream source, string reportPath)
+    {
+        using var stream = source;
         await using var reader = await Parquet.ParquetReader.CreateAsync(stream).ConfigureAwait(false);
 
         var schema = reader.Schema;
@@ -546,15 +607,40 @@ public sealed class DiaNNSpecLibReader : BuildParser
                     Rt: rt[i],
                     RtStart: rtStart[i],
                     RtEnd: rtStop[i],
-                    Im: im[i]);
+                    // Spectronaut writes NaN where DIA-NN writes 0 for runs without ion mobility.
+                    Im: float.IsNaN(im[i]) ? 0f : im[i]);
             }
         }
     }
 
+    /// <summary>
+    /// Column names accepted for a DIA-NN report/library column. Spectronaut's "Skyline"
+    /// parquet export mirrors DIA-NN's columns but spells them with underscores
+    /// (<c>Precursor_Id</c>, <c>Global_Q_Value</c>, ...) and renames two: <c>File_Name</c>
+    /// for <c>Run</c> and <c>RT_End</c> for <c>RT.Stop</c>. The DIA-NN spelling is tried first.
+    /// </summary>
+    private static IEnumerable<string> ColumnNameVariants(string diannName)
+    {
+        yield return diannName;
+        yield return diannName.Replace('.', '_');
+        switch (diannName)
+        {
+            case "Run": yield return "File_Name"; break;
+            case "RT.Stop": yield return "RT_End"; break;
+        }
+    }
+
+    /// <summary>True for a text column: Parquet.Net 6 types one as ReadOnlyMemory&lt;char&gt;,
+    /// 4.x as string. Matches DiannLibraryParquetReader.IsText.</summary>
+    private static bool IsTextColumn(Parquet.Schema.DataField field) =>
+        field.ClrType == typeof(string) || field.ClrType == typeof(ReadOnlyMemory<char>);
+
     private static Parquet.Schema.DataField? FindDataField(Parquet.Schema.ParquetSchema schema, string name)
     {
-        foreach (var df in schema.GetDataFields())
-            if (df.Name == name) return df;
+        var dataFields = schema.GetDataFields();
+        foreach (var variant in ColumnNameVariants(name))
+            foreach (var df in dataFields)
+                if (df.Name == variant) return df;
         return null;
     }
 
@@ -635,6 +721,23 @@ public sealed class DiaNNSpecLibReader : BuildParser
     private static async Task<float[]> ReadFloatColumn(Parquet.ParquetRowGroupReader rgReader, Parquet.Schema.DataField field,
         float nullValue = 0f)
     {
+        // Spectronaut writes the report's Q_Value as a string. Parquet.Net 6 types a string
+        // column as ReadOnlyMemory<char>, which ReadBoxedColumn does not dispatch.
+        if (IsTextColumn(field))
+        {
+            var text = await ReadStringColumn(rgReader, field).ConfigureAwait(false);
+            var parsed = new float[text.Length];
+            for (int i = 0; i < text.Length; i++)
+            {
+                // A cell that will not parse is missing, not zero: zero is the BEST possible
+                // q-value and would make a junk row outscore every real one.
+                if (!float.TryParse(text[i], NumberStyles.Float, CultureInfo.InvariantCulture,
+                                    out parsed[i]))
+                    parsed[i] = nullValue;
+            }
+            return parsed;
+        }
+
         var arr = await ReadBoxedColumn(rgReader, field).ConfigureAwait(false);
         var result = new float[arr.Length];
         for (int i = 0; i < arr.Length; i++)
@@ -669,7 +772,15 @@ public sealed class DiaNNSpecLibReader : BuildParser
         // but actually BE a Parquet container; otherwise fall through to the binary speclib
         // reader (a .parquet-named non-Parquet file is left for the caller to reject).
         if (_specLibFile.EndsWith(".parquet", StringComparison.OrdinalIgnoreCase))
-            return File.Exists(_specLibFile) && IsParquet(_specLibFile) ? _specLibFile : string.Empty;
+        {
+            if (!File.Exists(_specLibFile)) return string.Empty;
+            if (IsParquet(_specLibFile, out var error)) return _specLibFile;
+            // The binary reader will almost certainly fail on a real parquet file, and its
+            // "read beyond the end of the stream" error hides the actual cause (typically a
+            // footer the bundled Parquet.Net cannot parse), so name it here first.
+            Verbosity.Warn($"'{_specLibFile}' could not be opened as Parquet ({error}); trying the binary speclib reader.");
+            return string.Empty;
+        }
 
         if (_specLibFile.EndsWith(".parquet.skyline.speclib", StringComparison.OrdinalIgnoreCase))
         {
@@ -685,7 +796,11 @@ public sealed class DiaNNSpecLibReader : BuildParser
     /// loaded. cpp parity: <c>DiaNNSpecLibReader.cpp:loadSpecLibFromParquet</c>
     /// (PR #4189).
     /// </summary>
-    private void LoadSpecLibFromParquet(string filepath)
+    /// <param name="filepath">Names the source in errors and progress.</param>
+    /// <param name="source">An already-open seekable stream to read instead of opening
+    /// <paramref name="filepath"/> - a window onto a <c>.sn-report.zip</c> entry. Takes
+    /// ownership of it.</param>
+    private void LoadSpecLibFromParquet(string filepath, Stream? source = null)
     {
         // The columns are read through BiblioSpec.IO's DiannLibraryParquetReader, the one
         // definition of the format, which Osprey's library loader reads it through too.
@@ -700,7 +815,9 @@ public sealed class DiaNNSpecLibReader : BuildParser
         DiannLibraryParquetReader reader;
         try
         {
-            reader = DiannLibraryParquetReader.Open(filepath, columns, DiannLibraryColumns.flags);
+            reader = source is null
+                ? DiannLibraryParquetReader.Open(filepath, columns, DiannLibraryColumns.flags)
+                : DiannLibraryParquetReader.Open(source, filepath, columns, DiannLibraryColumns.flags);
         }
         catch (DiannLibraryMissingColumnException ex)
         {
@@ -709,10 +826,11 @@ public sealed class DiaNNSpecLibReader : BuildParser
         using var libraryReader = reader;
         try
         {
-            // Fragment.{Type,Charge,Series.Number,Loss.Type} are read by cpp but discarded
-            // by the C# Product class - we only retain (mz, intensity) per fragment. Requiring
-            // them unread keeps the schema check honest (the columns must be present).
-            reader.Require(DiannLibraryColumns.fragment_type | DiannLibraryColumns.fragment_charge |
+            // Fragment.{Type,Series.Number,Loss.Type} are read by cpp but discarded by the C#
+            // Product class - we only retain (mz, intensity) per fragment. Requiring them unread
+            // keeps the schema check honest (the columns must be present). Fragment.Charge is NOT
+            // required: Spectronaut's export omits it, and nothing here reads it.
+            reader.Require(DiannLibraryColumns.fragment_type |
                 DiannLibraryColumns.fragment_series_number | DiannLibraryColumns.fragment_loss_type);
         }
         catch (DiannLibraryMissingColumnException ex)
@@ -764,7 +882,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
                     currentEntry.Target.Mz = precMz[i];
                     currentEntry.Target.IRT = rt[i];
                     currentEntry.Target.SRT = 0f;
-                    currentEntry.Target.IIM = im[i];
+                    currentEntry.Target.IIM = float.IsNaN(im[i]) ? 0f : im[i];
                     currentEntry.Target.SIM = 0f;
                     currentEntry.Target.LibQValue = qvalue[i];
                     currentEntry.Proteotypic = (int)proteotypic[i];
@@ -836,6 +954,11 @@ public sealed class DiaNNSpecLibReader : BuildParser
         // report-lib.parquet itself, find the report sibling by trimming "-lib".
         if (diannReportFilepath == specLibFile)
             diannReportFilepath = ReplaceLast(specLibFile, "-lib.parquet", ".parquet");
+        // Spectronaut's report export, loose rather than zipped. Its ".lib.parquet" cannot be
+        // confused with DIA-NN's "-lib.parquet" handled above, which is hyphenated.
+        if (diannReportFilepath == specLibFile)
+            diannReportFilepath = ReplaceLast(specLibFile, SpectronautLibrarySuffix,
+                                              SpectronautResultsSuffix);
 
         // cpp parity: DiaNNSpecLibReader.cpp:1021 — FragPipe special-case.
         string specLibFilename = Path.GetFileName(specLibFile);
@@ -958,16 +1081,20 @@ public sealed class DiaNNSpecLibReader : BuildParser
     /// DiaNNSpecLibReader.cpp:731 (<c>ParquetReader::is_parquet</c>, which returns
     /// <c>parquet::arrow::OpenFile(...).ok()</c>).
     /// </summary>
-    private static bool IsParquet(string filepath)
+    private static bool IsParquet(string filepath) => IsParquet(filepath, out _);
+
+    private static bool IsParquet(string filepath, out string? error)
     {
         try
         {
             using var stream = File.OpenRead(filepath);
             _ = Parquet.ParquetReader.CreateAsync(stream).GetAwaiter().GetResult();
+            error = null;
             return true;
         }
-        catch (Exception)
+        catch (Exception e)
         {
+            error = e.Message;
             return false;
         }
     }
@@ -989,9 +1116,9 @@ public sealed class DiaNNSpecLibReader : BuildParser
             var header = sr.ReadLine();
             if (header is null) return false;
             var cols = header.Split('\t');
-            return Array.IndexOf(cols, "Precursor.Id") >= 0
-                && Array.IndexOf(cols, "Global.Q.Value") >= 0
-                && Array.IndexOf(cols, "RT") >= 0;
+            return FindColumn(cols, "Precursor.Id") >= 0
+                && FindColumn(cols, "Global.Q.Value") >= 0
+                && FindColumn(cols, "RT") >= 0;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -999,9 +1126,19 @@ public sealed class DiaNNSpecLibReader : BuildParser
         }
     }
 
+    private static int FindColumn(string[] cols, string name)
+    {
+        foreach (var variant in ColumnNameVariants(name))
+        {
+            int idx = Array.IndexOf(cols, variant);
+            if (idx >= 0) return idx;
+        }
+        return -1;
+    }
+
     private static int MustFindColumn(string[] cols, string name, string filepath)
     {
-        int idx = Array.IndexOf(cols, name);
+        int idx = FindColumn(cols, name);
         if (idx < 0)
             throw new BlibException(false,
                 $"DIA-NN report '{Path.GetFileName(filepath)}' is missing required column '{name}'");
@@ -1133,13 +1270,16 @@ public sealed class DiaNNSpecLibReader : BuildParser
 
                 if (!isUniMod)
                 {
-                    // cpp parity: DiaNNSpecLibReader.cpp:208 — treat as a delta-mass literal.
-                    string potentialMass = name.Substring(i + 1, end - i - 1);
-                    if (potentialMass.IndexOfAny(_nonNumericMod) >= 0)
+                    // cpp parity: DiaNNSpecLibReader.cpp:208 — treat as a delta-mass literal,
+                    // else (Spectronaut) as a Unimod title.
+                    string modText = name.Substring(i + 1, end - i - 1);
+                    double modMass;
+                    if (modText.IndexOfAny(_nonNumericMod) < 0)
+                        modMass = double.Parse(modText, NumberStyles.Float, CultureInfo.InvariantCulture);
+                    else if (!TryGetUnimodDeltaMassByTitle(modText, out modMass))
                         throw new BlibException(false,
-                            $"unable to handle mod in library entry as either a UniMod id or " +
-                            $"delta mass: {potentialMass} in {name}");
-                    double modMass = double.Parse(potentialMass, NumberStyles.Float, CultureInfo.InvariantCulture);
+                            $"unable to handle mod in library entry as a UniMod id, a Unimod title or " +
+                            $"a delta mass: {modText} in {name}");
                     AddOrMergeMod(mods, position, modMass);
                 }
                 else
@@ -1161,6 +1301,10 @@ public sealed class DiaNNSpecLibReader : BuildParser
         return result.ToString();
     }
 
+    /// <summary>Delta mass of each Unimod title already looked up. Unimod.Modification(string)
+    /// scans the whole table, and this runs once per modified residue of every entry.</summary>
+    private static readonly Dictionary<string, double?> _unimodTitleCache = new(StringComparer.Ordinal);
+
     private static readonly char[] _nonNumericMod = { 'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
                                                        'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
                                                        ' ','\t',';',',','/','\\','+','-','(',')','[',']','{','}','<','>','=','!','@','#','$','%','^','&','*' };
@@ -1173,6 +1317,32 @@ public sealed class DiaNNSpecLibReader : BuildParser
     // 7th decimal place). We restore byte-for-byte parity by parsing the composition through
     // the C# Formula type which uses the same element-mass table as cpp pwiz.
     private static readonly Dictionary<int, double> _unimodMassCache = new();
+
+    /// <summary>
+    /// Resolve a Spectronaut modification, written as the Unimod title followed by the site in
+    /// parentheses (<c>Carbamidomethyl (C)</c>, <c>Acetyl (Protein N-term)</c>), to the same
+    /// delta mass the <c>(UniMod:N)</c> path produces. Titles can contain parentheses of their
+    /// own (<c>Label:13C(6)15N(2) (K)</c>), so only the final " (...)" group is the site.
+    /// </summary>
+    private static bool TryGetUnimodDeltaMassByTitle(string modText, out double mass)
+    {
+        string title = modText.Trim();
+        if (title.EndsWith(')'))
+        {
+            int site = title.LastIndexOf(" (", StringComparison.Ordinal);
+            if (site > 0) title = title.Substring(0, site);
+        }
+        if (!_unimodTitleCache.TryGetValue(title, out var cached))
+        {
+            var mod = Unimod.Modification(title);
+            cached = mod is null
+                ? null
+                : GetUnimodDeltaMass((int)mod.Cvid - (int)CVID.UNIMOD_unimod_root_node);
+            _unimodTitleCache[title] = cached;
+        }
+        mass = cached ?? 0;
+        return cached.HasValue;
+    }
 
     private static double GetUnimodDeltaMass(int unimodId)
     {
