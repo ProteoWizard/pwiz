@@ -290,8 +290,8 @@ namespace pwiz.Osprey.IO
                 // And the length must match the header's own entry_count, exactly as TryRead,
                 // TryReadOverlay, ReadRecords and PatchProteinQvalues all require. Without it
                 // this pre-flight passed a file truncated mid-record - which is precisely what
-                // ReadScalars throws on, so the caller that added this gate to refuse BEFORE
-                // mutating any survivor would still have thrown mid-stream with the pool half
+                // a reader rejects, so a caller that asks this gate BEFORE
+                // mutating any survivor would still have failed mid-stream with the pool half
                 // written. A gate that admits what the reader rejects is not a gate.
                 return TryComputeExpectedLen(header, out _, out long expectedLen) && info.Length == expectedLen;
             }
@@ -335,102 +335,6 @@ namespace pwiz.Osprey.IO
             string parent = ArtifactPaths.ResolveOutputDir(inputPath);
             string filename = string.Format(@"{0}.{1}{2}", stem, passLabel, EXT);
             return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
-        }
-
-        /// <summary>
-        /// Read every record's (entry_id, raw SVM score) from a scores sidecar into flat
-        /// arrays, in file (write) order, and additionally decode the FULL record for the
-        /// subset <paramref name="selectRecord"/> accepts into <paramref name="selected"/>.
-        ///
-        /// <para>entry_id is unique per file (one FdrEntry per precursor per file), so callers
-        /// can key by (file, entry_id). Validates magic, version, the
-        /// <paramref name="expectedPass"/> byte, and that the payload is a whole number of
-        /// records - the same checks every other reader here makes. The version check was
-        /// cosmetic while the record width was fixed, but <see cref="RecordLength"/> changed at
-        /// v4, so a stale v3 sidecar left in an output directory would otherwise be re-cut at
-        /// the new width and yield plausible-looking garbage instead of a rejection.</para>
-        ///
-        /// <para>One traversal serving both. The frozen second pass wants three things off each
-        /// file's 1st-pass sidecar - the whole-population (entry_id, score) arrays its
-        /// competition streams, the Score / Pep / ExperimentAggregateScore its survivors are
-        /// seeded from, and the experiment q-values its off-stratum peaks carry forward - and
-        /// read them in three separate passes over the same 68-byte records. That is ~204 MB
-        /// per file re-read twice, on the largest artifact class in the run (52.3 GB of 1st-pass
-        /// sidecars at 257 files, #4486).</para>
-        ///
-        /// <para>The subset is the caller's survivor set, not the whole file: a selector that
-        /// accepts everything makes <paramref name="selected"/> O(pre-compaction population)
-        /// and defeats the point. <paramref name="selected"/> is CLEARED first, so a caller can
-        /// reuse one list across files.</para>
-        /// </summary>
-        public static void ReadScalars(string path, Pass expectedPass, out uint[] entryIds,
-            out double[] scores, Func<uint, bool> selectRecord, List<FdrScoreRecord> selected)
-        {
-            if (path == null) throw new ArgumentNullException(nameof(path));
-            if (selectRecord != null && selected == null)
-                throw new ArgumentNullException(nameof(selected));
-            selected?.Clear();
-            using (var fs = BlockReadStream.OpenRead(path))
-            {
-                long len = fs.Length;
-                if (len < HeaderLength)
-                    throw new IOException(string.Format(
-                        OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged__only__0__bytes____1_, len, path));
-                var header = new byte[HeaderLength];
-                if (!ReadFully(fs, header, HeaderLength))
-                    throw new IOException(string.Format(OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged__its_header_is_cut_short___, path));
-                // Reject a payload that is not a whole number of records instead of flooring.
-                // Flooring silently drops a trailing partial record, so a truncated sidecar
-                // returns fewer scalars than it has entries and reads as a short file rather
-                // than a corrupt one. The feature sums and validity stamp after the records are
-                // not payload.
-                long payload = len - HeaderLength - BinarySidecarStamp.ReadExtensionLength(header) -
-                               BinarySidecarStamp.ReadLength(header);
-                if (payload < 0 || payload % RecordLength != 0)
-                {
-                    throw new IOException(string.Format(
-                        OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged___0__bytes_of_records_is_not_a_whole_number_of__1__byte_,
-                        payload, RecordLength, path));
-                }
-                int n = (int)(payload / RecordLength);
-                entryIds = new uint[n];
-                scores = new double[n];
-                for (int i = 0; i < Magic.Length; i++)
-                {
-                    if (header[i] != Magic[i])
-                        throw new IOException(string.Format(OspreyIOResources.Pass_ReadScalars_The_file_is_not_an_Osprey_intermediate_file__, path));
-                }
-                if (header[8] != FormatVersion)
-                {
-                    throw new IOException(string.Format(
-                        OspreyIOResources.Pass_ReadScalars_The_intermediate_file_was_written_by_a_different_Osprey_version__format__0___expected__1__,
-                        header[8], FormatVersion, path));
-                }
-                // Every other reader here checks the pass byte; this one did not, so a 2nd-pass
-                // sidecar handed to the 1st-pass caller decoded cleanly and fed post-Stage-6
-                // scalars into transfer-compete, which is exactly the mix-up that silently
-                // changes q values rather than failing.
-                if (header[9] != (byte)expectedPass)
-                {
-                    throw new IOException(string.Format(
-                        OspreyIOResources.Pass_ReadScalars_The_intermediate_file_belongs_to_the_other_FDR_pass__pass__0___expected__1_____2_,
-                        header[9], (byte)expectedPass, path));
-                }
-                var rec = new byte[RecordLength];
-                for (int i = 0; i < n; i++)
-                {
-                    if (!ReadFully(fs, rec, RecordLength))
-                        throw new IOException(string.Format(
-                            OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged__cut_short_at_record__0_____1_, i, path));
-                    entryIds[i] = BitConverter.ToUInt32(rec, 0);
-                    scores[i] = BitConverter.ToDouble(rec, 4);
-                    // Decoded only for the selected subset. The other ~82% of a file's records
-                    // belong to precursors compaction dropped, and decoding their seven trailing
-                    // doubles to discard them is what the separate passes used to pay for.
-                    if (selectRecord != null && selectRecord(entryIds[i]))
-                        selected.Add(DecodeRecord(rec));
-                }
-            }
         }
 
         /// <summary>
@@ -914,8 +818,7 @@ namespace pwiz.Osprey.IO
         /// result in the identical order with nothing on the large object heap.</para>
         ///
         /// <para>The per-record delegate is not a new cost of the same kind: every caller
-        /// already pays a dictionary probe per record, which dwarfs it, and
-        /// <see cref="ReadScalars"/> has always taken a per-record predicate. What was removed
+        /// already pays a dictionary probe per record, which dwarfs it. What was removed
         /// is an allocation proportional to the FILE; what was added is proportional to
         /// nothing.</para>
         /// </summary>

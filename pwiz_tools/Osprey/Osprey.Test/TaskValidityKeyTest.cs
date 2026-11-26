@@ -41,7 +41,7 @@ namespace pwiz.Osprey.Test
 {
     /// <summary>
     /// Pins the two flipped defaults - the learned peak pick and the
-    /// protein-compact 2nd-pass q-value mode - into the resume validity key.
+    /// 2nd-pass q-value mode - into the resume validity key.
     ///
     /// The regression this guards against is silent by construction. With a
     /// suffix absent, a run under the NEW defaults computes the same key as a
@@ -89,7 +89,7 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0.5, unitConfig.RtCalibration.MinRtTolerance);
             Assert.AreEqual(0.3, unitConfig.RtCalibration.LoessBandwidth);
             // The second pass is the transfer at every resolution, with or without the protein-best
-            // column; protein-compact is chosen only through OSPREY_PASS2_QVALUE.
+            // column.
             Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, unitConfig.Pass2QValue);
             Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, hramConfig.Pass2QValue);
             var unitProteinBest = new OspreyConfig { ProteinBoost = ProteinBoost.best, ProteinBoostGiven = true };
@@ -399,11 +399,9 @@ namespace pwiz.Osprey.Test
                         ReconciledParquetWriter.BuildReconciliationMetadata(new OspreyConfig(), null), workerStamp),
                     null, @"a.mzML", null, PerFileRescoreTask.TASK_NAME, null, null, true, PinFeatureMask.Hram);
                 current = RunKey(runA);
-                Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(runA),
-                    new Dictionary<uint, (double score, uint entryId)>(), workerStamp);
                 ReconciliationFile.Save(ReconciliationFile.PathForInput(runA),
                     new ReconciliationFile { FormatVersion = ReconciliationFile.CurrentFormatVersion }, workerStamp);
-                Assert.IsTrue(Pass2FdrSidecar.HasWorkerStamp(runA, config), @"the worker's stamp, decoys and plan are the worker's complete second pass");
+                Assert.IsTrue(Pass2FdrSidecar.HasWorkerStamp(runA), @"the worker's stamp and plan are the worker's complete second pass");
                 Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out pass),
                     @"the worker's complete second pass is still not what the export selects on");
                 Assert.AreEqual(FdrScoresSidecar.Pass.FirstPass, pass);
@@ -1136,21 +1134,10 @@ namespace pwiz.Osprey.Test
                 OspreyEnvironment.PickValidityKeySuffix(true, @"other-model.json"),
                 @"an explicit pick model replaces the default model, so it must key differently");
 
-            var modes = new[]
-            {
-                OspreyEnvironment.PASS2_QVALUE_TRANSFER,
-                OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT
-            };
-            for (int i = 0; i < modes.Length; i++)
-            {
-                for (int j = i + 1; j < modes.Length; j++)
-                {
-                    Assert.AreNotEqual(OspreyEnvironment.Pass2QValueValidityKeySuffix(modes[i]),
-                        OspreyEnvironment.Pass2QValueValidityKeySuffix(modes[j]), string.Format(
-                            @"{0} and {1} report different q-values, so they must key differently",
-                            modes[i], modes[j]));
-                }
-            }
+            // The second-pass mode stays in the key though one mode is left, in the bytes it has
+            // always had: an unchanged analysis keeps its key, and a directory written under a
+            // removed mode does not read as this one's.
+            Assert.AreEqual(@";pass2=transfer", OspreyEnvironment.Pass2QValueValidityKeySuffix(new OspreyConfig()));
         }
 
         /// <summary>
@@ -1204,34 +1191,13 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(expectTrain, key.Contains(mask), string.Format(
                     @"{0} must {1} key on the feature mask",
                     task.Name, expectTrain ? @"" : @"NOT "));
-                // The complement's q changed meaning without a byte or mode string moving (issue
-                // #4581), so the two tasks that write it must key on it and the rest must not -
-                // FirstPassFDR least of all, whose re-run costs hours at cohort scale.
-                bool expectStrata = ctx.Config.Pass2ProteinCompact &&
-                                    (task.Name == PerFileRescoreTask.TASK_NAME || task.Name == SecondPassFdrTask.TASK_NAME);
-                Assert.AreEqual(expectStrata, key.Contains(OspreyEnvironment.PASS2_STRATA_TERM), string.Format(
-                    @"{0} must {1} key on the protein-compact complement competition",
-                    task.Name, expectStrata ? @"" : @"NOT "));
-            }
-            var proteinBestConfig = new OspreyConfig { ProteinBoost = ProteinBoost.best };
-            Assert.AreEqual(string.Empty, OspreyEnvironment.Pass2StrataValidityKeySuffix(proteinBestConfig),
-                @"the transfer, the default with protein-best, does not compete a complement, so its outputs keep their key");
-            Assert.AreEqual(string.Empty, OspreyEnvironment.Pass2StrataValidityKeySuffix(new OspreyConfig()),
-                @"the transfer, the default without protein-best too, does not compete a complement");
-            using (OspreyEnvironment.OverrideVariables(new Dictionary<string, string>
-                   {
-                       { @"OSPREY_PASS2_QVALUE", OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT }
-                   }))
-            {
-                Assert.AreEqual(OspreyEnvironment.PASS2_STRATA_TERM, OspreyEnvironment.Pass2StrataValidityKeySuffix(proteinBestConfig),
-                    @"the protein-compact mode carries the complement term");
             }
             AssertReconRefitKeysTheTasksItReaches(tasks, ctx);
             AssertTransferReconciliationSetKeysTheBlibGate(tasks);
         }
 
         /// <summary>
-        /// Under transfer, reconciliation takes only the precursors the blib reports, and the blib
+        /// Reconciliation takes only the precursors the blib reports, and the blib
         /// gates on --fdr-level and --experiment-fdr, which no other key term covers. So
         /// FirstPassFDR (it writes the consensus), PerFileRescoring and SecondPassFDR key on both,
         /// and no other task does: resuming with a looser experiment FDR must not keep the
@@ -1239,23 +1205,10 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private static void AssertTransferReconciliationSetKeysTheBlibGate(IReadOnlyList<OspreyTask> tasks)
         {
-            // With protein-best on, so the transfer is the default.
             var defaultCtx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core, ProteinBoost = ProteinBoost.best }, tasks, null, null, null);
             var looserCtx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core, ProteinBoost = ProteinBoost.best, ExperimentFdr = 0.05 }, tasks, null, null, null);
             var peptideCtx = new PipelineContext(new OspreyConfig { FeatureSet = OspreyFeatureSet.core, ProteinBoost = ProteinBoost.best, FdrLevel = FdrLevel.Peptide }, tasks, null, null, null);
-            using (OspreyEnvironment.OverrideVariables(new Dictionary<string, string>
-                   {
-                       { @"OSPREY_PASS2_QVALUE", OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT }
-                   }))
-            {
-                foreach (var task in tasks)
-                {
-                    Assert.AreEqual(task.ValidityKey(defaultCtx), task.ValidityKey(looserCtx),
-                        string.Format(@"{0} must not key on {1} under protein-compact", task.Name,
-                            OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText));
-                }
-            }
-            // Under the transfer, the three tasks key on the reported set.
+            // The three tasks key on the reported set.
             foreach (var task in tasks)
             {
                 bool expect = task.Name == FirstPassFdrTask.TASK_NAME ||
@@ -1263,10 +1216,10 @@ namespace pwiz.Osprey.Test
                               task.Name == SecondPassFdrTask.TASK_NAME;
                 string key = task.ValidityKey(defaultCtx);
                 Assert.AreEqual(expect, key != task.ValidityKey(looserCtx), string.Format(
-                    @"{0} must {1} key on {2} under transfer", task.Name, expect ? @"" : @"NOT ",
+                    @"{0} must {1} key on {2}", task.Name, expect ? @"" : @"NOT ",
                     OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText));
                 Assert.AreEqual(expect, key != task.ValidityKey(peptideCtx), string.Format(
-                    @"{0} must {1} key on {2} under transfer", task.Name, expect ? @"" : @"NOT ",
+                    @"{0} must {1} key on {2}", task.Name, expect ? @"" : @"NOT ",
                     OspreyCommandArgs.ARG_FDR_LEVEL.ArgumentText));
             }
         }

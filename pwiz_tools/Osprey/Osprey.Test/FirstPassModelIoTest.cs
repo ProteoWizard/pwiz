@@ -169,8 +169,6 @@ namespace pwiz.Osprey.Test
 
             string path = Path.Combine(Path.GetTempPath(),
                 @"osprey_model_roundtrip_" + Guid.NewGuid().ToString(@"N") + @".json");
-            string stratumPath = Path.Combine(Path.GetTempPath(),
-                @"osprey_stratum_roundtrip_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
                 Assert.IsTrue(FirstPassModelIO.Save(path, model, TestStamps.Any),
@@ -185,39 +183,6 @@ namespace pwiz.Osprey.Test
                 // The file still records the experiment-wide aggregation, as it did when
                 // OSPREY_EXPERIMENT_AGG could choose another, so its bytes are unchanged.
                 Assert.AreEqual(@"max", sidecar.ExperimentAgg, @"recorded pass-1 aggregation");
-
-                // The stratum is a SEPARATE artifact, written when protein FDR ends rather than
-                // when training does, so the model file carries none of it. Deliberately
-                // unsorted here, and deliberately not the insertion order a HashSet would
-                // enumerate: the stratum must survive as a SET, and the artifact must be written
-                // in a stable order regardless of how it was built.
-                Assert.IsNull(sidecar.StratumBaseIds, @"model sidecar should carry no stratum");
-                var stratum = new HashSet<uint> { 900, 3, 47, 1, 12345 };
-                Assert.IsTrue(FirstPassModelIO.SaveStratum(stratumPath, stratum, TestStamps.Any),
-                    @"stratum should persist");
-
-                // A SecondPassFDR node cannot rebuild the stratum, so a lossy round trip would
-                // silently constrain the pass-2 competition to the wrong population.
-                var reloadedStratum = FirstPassModelIO.LoadStratum(stratumPath);
-                Assert.IsNotNull(reloadedStratum, @"stratum should survive the round trip");
-                Assert.IsTrue(stratum.SetEquals(reloadedStratum), @"stratum base ids");
-
-                // The written order is sorted, not the set's enumeration order, so the
-                // artifact is diffable and safe to compare byte-wise between runs.
-                CollectionAssert.AreEqual(new[] { 1u, 3u, 47u, 900u, 12345u },
-                    ReadStratumInFileOrder(stratumPath), @"stratum written ascending");
-
-                // An empty stratum is a computed result - no protein had 2 or more detected
-                // peptides - and must come back empty, not missing: PerFileRescoring refuses a
-                // missing stratum, and the run it refused still had precursors to report.
-                Assert.IsTrue(FirstPassModelIO.SaveStratum(stratumPath, new HashSet<uint>(), TestStamps.Any),
-                    @"empty stratum should persist");
-                var reloadedEmpty = FirstPassModelIO.LoadStratum(stratumPath);
-                Assert.IsNotNull(reloadedEmpty, @"empty stratum should load as empty, not missing");
-                Assert.AreEqual(0, reloadedEmpty.Count, @"empty stratum base ids");
-                // No stratum at all is nothing to persist.
-                Assert.IsFalse(FirstPassModelIO.SaveStratum(stratumPath, null, TestStamps.Any),
-                    @"null stratum should not persist");
 
                 AssertLinearFileBytesArePinned();
 
@@ -253,8 +218,6 @@ namespace pwiz.Osprey.Test
             {
                 if (File.Exists(path))
                     File.Delete(path);
-                if (File.Exists(stratumPath))
-                    File.Delete(stratumPath);
             }
         }
 
@@ -455,20 +418,19 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// FirstPassFDR's fast resume enters at the compaction gate on the experiment sidecar of
         /// this run, and on no model: each run trained its own in PerFileScoring, which the gate's
-        /// caller checks with the run's stub. The analysis-wide model and stratum files still load
-        /// paired by their stamps, for the protein-compact second pass.
+        /// caller checks with the run's stub. An analysis-wide model file still loads with its stamp.
         /// </summary>
         [TestMethod]
-        public void TestFirstPassFdrTaskGateAndModelPairing()
+        public void TestFirstPassFdrTaskGateAndModelLoad()
         {
             string dir = Path.Combine(Path.GetTempPath(), @"osprey_model_task_" + Guid.NewGuid().ToString(@"N"));
             Directory.CreateDirectory(dir);
             try
             {
                 AssertGateKeysOnTheExperimentSidecar(dir, AnalysisConfig(dir));
-                string pairingDir = Path.Combine(dir, @"pairing");
-                Directory.CreateDirectory(pairingDir);
-                AssertLoadForAnalysisPairsByStamp(AnalysisConfig(pairingDir));
+                string modelDir = Path.Combine(dir, @"model");
+                Directory.CreateDirectory(modelDir);
+                AssertLoadForAnalysisReadsTheStamp(AnalysisConfig(modelDir));
             }
             finally
             {
@@ -593,32 +555,18 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// <see cref="FirstPassModelIO.LoadForAnalysis"/> pairs the stratum with the model only
-        /// when both carry the same stamp, and otherwise returns the model alone.
+        /// <see cref="FirstPassModelIO.LoadForAnalysis"/> returns the analysis's model with the
+        /// stamp its file carries, or null when there is no model file.
         /// </summary>
-        private static void AssertLoadForAnalysisPairsByStamp(OspreyConfig config)
+        private static void AssertLoadForAnalysisReadsTheStamp(OspreyConfig config)
         {
             Assert.IsNull(FirstPassModelIO.LoadForAnalysis(config), @"no model file: nothing to load");
             Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(config), MakeSvmModel(), TestStamps.Any));
 
-            var modelOnly = FirstPassModelIO.LoadForAnalysis(config);
-            Assert.IsNotNull(modelOnly);
-            Assert.IsNotNull(modelOnly.Model);
-            Assert.IsNull(modelOnly.StratumBaseIds, @"no stratum file: the model alone");
-
-            var stratum = new HashSet<uint> { 7, 11 };
-            Assert.IsTrue(FirstPassModelIO.SaveStratum(FirstPassModelIO.StratumPathFor(config), stratum, TestStamps.Any));
-            var paired = FirstPassModelIO.LoadForAnalysis(config);
-            Assert.IsNotNull(paired);
-            Assert.IsTrue(stratum.SetEquals(paired.StratumBaseIds));
-
-            // A stratum written by another run (another key) is not this model's, so it is not
-            // paired with it.
-            Assert.IsTrue(FirstPassModelIO.SaveStratum(FirstPassModelIO.StratumPathFor(config), stratum,
-                OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, @"another-run")));
-            var unpaired = FirstPassModelIO.LoadForAnalysis(config);
-            Assert.IsNotNull(unpaired);
-            Assert.IsNull(unpaired.StratumBaseIds, @"a stratum stamped by another run must not be paired");
+            var loaded = FirstPassModelIO.LoadForAnalysis(config);
+            Assert.IsNotNull(loaded);
+            Assert.IsNotNull(loaded.Model);
+            Assert.AreEqual(TestStamps.Any.ToString(), loaded.Stamp?.ToString());
         }
 
         private static void AssertGateKeysOnTheExperimentSidecar(string dir, OspreyConfig config)
@@ -629,23 +577,16 @@ namespace pwiz.Osprey.Test
             // An experiment sidecar left by a run under ANOTHER key is not this run's first pass.
             FdrExperimentSidecar.Write(experimentPath, new Dictionary<uint, FdrExperimentRecord>(),
                 FdrScoresSidecar.Pass.FirstPass, OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, @"other-key"));
-            var refusals = task.CompactionGateRefusals(experimentPath, key, config, out _);
+            var refusals = task.CompactionGateRefusals(experimentPath, key);
             Assert.AreEqual(1, refusals.Count, @"an experiment sidecar stamped with another key must not enter at the gate");
 
             FdrExperimentSidecar.Write(experimentPath, new Dictionary<uint, FdrExperimentRecord>(),
                 FdrScoresSidecar.Pass.FirstPass, OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, key));
-            // A model and stratum on disk are no part of the gate.
-            SaveModelAndStratum(config, OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, @"other-key"));
-            refusals = task.CompactionGateRefusals(experimentPath, key, config, out var sidecar);
+            // A model on disk is no part of the gate.
+            Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(config), MakeSvmModel(),
+                OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, @"other-key")));
+            refusals = task.CompactionGateRefusals(experimentPath, key);
             Assert.AreEqual(0, refusals.Count, string.Join(@"; ", refusals));
-            Assert.IsNull(sidecar, @"no analysis-wide model enters at the gate");
-        }
-
-        private static void SaveModelAndStratum(OspreyConfig config, ArtifactStamp stamp)
-        {
-            Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(config), MakeSvmModel(), stamp));
-            Assert.IsTrue(FirstPassModelIO.SaveStratum(FirstPassModelIO.StratumPathFor(config),
-                new HashSet<uint> { 1, 2, 3 }, stamp));
         }
 
         private static FirstPassFdrTask FirstPassTask()
@@ -800,13 +741,12 @@ namespace pwiz.Osprey.Test
                 @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0], ""ExperimentAgg"": ""mean-best-2"" }",
                 @"mean-best-2", @"sidecar with a recorded arm");
 
-            // The stratum comes only from its own file. A model file written before the split
-            // carried one inline; that copy is ignored, so it loads as a model with no stratum
-            // and a protein-compact consumer keeps its fail-fast.
-            AssertLoadsWithoutStratum(
+            // A model file written by an old build carried the removed protein-compact stratum
+            // inline; the unknown property is ignored and the model still loads.
+            AssertLoadsWithArm(
                 @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
                 @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0], ""StratumBaseIds"": [4, 9] }",
-                @"model file with an inline stratum");
+                null, @"model file with an inline stratum");
         }
 
         /// <summary>
@@ -906,24 +846,6 @@ namespace pwiz.Osprey.Test
             }
         }
 
-        private static void AssertLoadsWithoutStratum(string json, string what)
-        {
-            string path = Path.Combine(Path.GetTempPath(),
-                @"osprey_model_stratum_" + Guid.NewGuid().ToString(@"N") + @".json");
-            try
-            {
-                File.WriteAllText(path, json);
-                var sidecar = FirstPassModelIO.Load(path, PinFeatureMask.Hram);
-                Assert.IsNotNull(sidecar, what + @" should load");
-                Assert.IsNull(sidecar.StratumBaseIds, what + @" should carry no stratum");
-            }
-            finally
-            {
-                if (File.Exists(path))
-                    File.Delete(path);
-            }
-        }
-
         /// <summary>
         /// Paired targets and decoys carrying every PIN feature, targets higher on each so the
         /// classifier has something to separate. A masked feature gets a value no unmasked one
@@ -957,18 +879,6 @@ namespace pwiz.Osprey.Test
             }
             // In the order the parquet stores its rows, so row i of the load is entries[i].
             return entries.OrderBy(e => e.EntryId).ToList();
-        }
-
-        /// <summary>The StratumBaseIds array as it appears in the written JSON, so the test can
-        /// assert the on-disk ORDER rather than the set it reloads into.</summary>
-        private static List<uint> ReadStratumInFileOrder(string path)
-        {
-            var ids = new List<uint>();
-            var array = (JArray) JObject.Parse(File.ReadAllText(path))[@"StratumBaseIds"];
-            Assert.IsNotNull(array, @"sidecar should carry StratumBaseIds");
-            foreach (var token in array)
-                ids.Add((uint) token);
-            return ids;
         }
     }
 }

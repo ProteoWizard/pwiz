@@ -188,9 +188,9 @@ function Get-DiagnosticsMetrics {
         # change in that separation is a change in how the second pass is built. The counts are
         # pinned beside the score so a drift shows whether it moved the IDs, the decoys, or both.
         Add-Metric "pass$p.coAssign.cutoff"             $(if ($ca) { $ca.experimentCutoff } else { $null })
-        # The two protein-compact boundaries (#4573). Pinned separately from the pooled
-        # cutoff because a regression that collapses them back onto one minimum - or that
-        # loses the stratum and leaves both NaN - is invisible in `cutoff` alone.
+        # The two boundaries of the removed protein-compact second pass (#4573). The report
+        # data still carries the four fields, always NaN / NaN / 0 / 0, so they stay pinned
+        # until the fields go.
         Add-Metric "pass$p.coAssign.cutoffInStratum"    $(if ($ca) { $ca.experimentCutoffInStratum } else { $null })
         Add-Metric "pass$p.coAssign.cutoffOffStratum"   $(if ($ca) { $ca.experimentCutoffOffStratum } else { $null })
         Add-Metric "pass$p.coAssign.acceptedInStratum"  $(if ($ca) { $ca.acceptedInStratum } else { $null })

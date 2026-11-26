@@ -647,13 +647,12 @@ namespace pwiz.Osprey
                 // instead of a full Stage 1-5.
                 if (OspreyEnvironment.Pass2QValueUnrecognized)
                 {
-                    // Why 'percolator' and 'transfer-compete' were removed, with the entrapment
+                    // Why 'percolator', 'transfer-compete' and 'protein-compact' were removed, with the entrapment
                     // numbers, is in docs/12-second-pass-fdr.md and on OspreyEnvironment.Pass2QValueOverride.
                     LogError(string.Format(
-                        @"OSPREY_PASS2_QVALUE='{2}' is not recognized. Use '{0}' or '{1}', or unset it " +
-                        @"for the default ('{1}'). The 'percolator' and 'transfer-compete' modes were removed.",
+                        @"OSPREY_PASS2_QVALUE='{1}' is not recognized. Use '{0}', or unset it for the same. " +
+                        @"The 'percolator', 'transfer-compete' and 'protein-compact' modes were removed.",
                         OspreyEnvironment.PASS2_QVALUE_TRANSFER,
-                        OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT,
                         OspreyEnvironment.Pass2QValueSetting));
                     return EXIT_CODE_FAILURE_TO_START;
                 }
@@ -733,13 +732,6 @@ namespace pwiz.Osprey
                 if (featureSelection.FdrFeatureIndices.Length == 0)
                 {
                     LogError(@"OSPREY_FEATURE_MASK masks every PIN feature, which leaves the FDR classifier nothing to train on.");
-                    return EXIT_CODE_FAILURE_TO_START;
-                }
-                // Refused once the resolution is known, because HRAM data defaults to --protein-boost best.
-                string pass2Err = OspreyEnvironment.ValidatePass2WithProteinBest(config);
-                if (pass2Err != null)
-                {
-                    LogError(pass2Err);
                     return EXIT_CODE_FAILURE_TO_START;
                 }
                 // Abort for the same reason: the transfer's verifier re-scores each run's moved rows
@@ -1477,7 +1469,7 @@ namespace pwiz.Osprey
         /// </summary>
         internal static string VerifyWorkerError(OspreyConfig config)
         {
-            if (!OspreyEnvironment.Pass2VerifyWorker || config.Pass2ProteinCompact ||
+            if (!OspreyEnvironment.Pass2VerifyWorker ||
                 !ScoringTaskShared.RunsStage7Join(config) || PerFileScoringTask.WritesFeaturesCheckpoint(config))
             {
                 return null;

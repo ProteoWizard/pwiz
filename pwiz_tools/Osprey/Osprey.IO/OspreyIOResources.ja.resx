@@ -253,34 +253,6 @@
     <value>プリカーサー候補ピークを書き込み中</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="Pass_ReadScalars_The_file_is_not_an_Osprey_intermediate_file__" xml:space="preserve">
-    <value>このファイルはOsprey中間ファイルではありません：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass_ReadScalars_The_intermediate_file_belongs_to_the_other_FDR_pass__pass__0___expected__1_____2_" xml:space="preserve">
-    <value>この中間ファイルはもう一方のFDRパスのものです（パス{0}、想定{1}）：{2}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass_ReadScalars_The_intermediate_file_is_damaged___0__bytes_of_records_is_not_a_whole_number_of__1__byte_" xml:space="preserve">
-    <value>中間ファイルが破損しています（{0:N0}バイトのレコードが{1}バイトのレコードの整数倍ではありません）：{2}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass_ReadScalars_The_intermediate_file_is_damaged__cut_short_at_record__0_____1_" xml:space="preserve">
-    <value>中間ファイルが破損しています（レコード{0:N0}で途切れています）：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass_ReadScalars_The_intermediate_file_is_damaged__its_header_is_cut_short___" xml:space="preserve">
-    <value>中間ファイルが破損しています（ヘッダーが途切れています）：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass_ReadScalars_The_intermediate_file_is_damaged__only__0__bytes____1_" xml:space="preserve">
-    <value>中間ファイルが破損しています（{0:N0}バイトしかありません）：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass_ReadScalars_The_intermediate_file_was_written_by_a_different_Osprey_version__format__0___expected__1__" xml:space="preserve">
-    <value>中間ファイルは別のバージョンのOspreyで書き込まれています（形式{0}、想定{1}）：{2}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="Pass_ThrowPartialWalk_Reading_the_intermediate_file___0___failed_partway__after__1__records_were_read__The_run_" xml:space="preserve">
     <value>中間ファイル「{0}」の読み取りが、{1:N0}個のレコードを読み取った後に途中で失敗しました。ファイルの値の一部だけで続行せず、ここで実行を停止します。</value>
     <comment>Needs Review:New resource</comment>

@@ -86,7 +86,7 @@ namespace pwiz.Osprey.Tasks
             _refitBandwidth = config.RtCalibration.LoessBandwidth;
             _ctx = ctx;
             _state = new Lazy<State>(() => BuildState(loadConsensus(), perFileCalibrations,
-                perFileIsolationMz, fullLibrary, config.Pass2TransferQ), LazyThreadSafetyMode.ExecutionAndPublication);
+                perFileIsolationMz, fullLibrary), LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
         /// <summary>
@@ -184,7 +184,7 @@ namespace pwiz.Osprey.Tasks
         private static State BuildState(Stage6Consensus consensus,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
             IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
-            IReadOnlyList<LibraryEntry> fullLibrary, bool pass2Transfer)
+            IReadOnlyList<LibraryEntry> fullLibrary)
         {
             var state = new State
             {
@@ -201,12 +201,11 @@ namespace pwiz.Osprey.Tasks
             // lookup they also take is empty and no call on this path reads it.
             IReadOnlyDictionary<string, RTCalibration> noRefitLookup = new Dictionary<string, RTCalibration>();
             BuildGapFillLibraryLookups(fullLibrary, out var libLookup, out var libPrecursorMz);
-            // Transfer carries every decoy's first-pass values forward and competes nothing, so
-            // its decoys stay where the first pass put them; protein-compact re-competes and needs
-            // them moved with their targets.
+            // The second pass carries every decoy's first-pass values forward and competes
+            // nothing, so decoys stay where the first pass put them.
             state.Planner = new ReconciliationPlanner.FilePlanner(
                 state.Consensus.Consensus, state.Consensus.PassingBaseIds, noRefitLookup, perFileCalibrations,
-                reconcileDecoys: !pass2Transfer);
+                reconcileDecoys: false);
             state.GapFiller = new GapFillTargetIdentifier.FileIdentifier(
                 state.Consensus.Consensus, state.Consensus.PassingPrecursors, noRefitLookup, perFileCalibrations,
                 libLookup, libPrecursorMz, perFileIsolationMz);

@@ -153,13 +153,10 @@ namespace pwiz.Osprey.Tasks
                 GlobalBaseIds = new HashSet<uint>(),
             };
 
-            // Transfer keeps every experiment-wide value from the first pass and re-competes
-            // nothing: reconciliation improves only each run's peak, so only the precursors the
-            // blib will report can use a reconciled peak. Protein-compact keeps every precursor
-            // that passed at any level in any run, which its competition reads.
-            var outputSet = config.Pass2TransferQ
-                ? new ExperimentOutputSet(config.FdrLevel, config.ExperimentFdr)
-                : null;
+            // The second pass keeps every experiment-wide value from the first pass and
+            // re-competes nothing: reconciliation improves only each run's peak, so only the
+            // precursors the blib will report can use a reconciled peak.
+            var outputSet = new ExperimentOutputSet(config.FdrLevel, config.ExperimentFdr);
 
             _ctx.LogBlockReads(@"Planning before the consensus pass");
             ProgressReporter.Run(
@@ -179,8 +176,7 @@ namespace pwiz.Osprey.Tasks
                     var fileEntries = loadFileEntries(fileNames[i]);
                     // Counted as the rescore will select them (PerFileRescoreTask).
                     var targets = MultiChargeConsensus.SelectRescoreTargets(fileEntries, config.RunFdr);
-                    if (config.Pass2TransferQ)
-                        targets = MultiChargeConsensus.ReportedOnly(targets, fileEntries, config.FdrLevel, config.ExperimentFdr);
+                    targets = MultiChargeConsensus.ReportedOnly(targets, fileEntries, config.FdrLevel, config.ExperimentFdr);
                     return (Entries: fileEntries, Targets: targets);
                 }, (i, file) =>
                 {
@@ -190,17 +186,7 @@ namespace pwiz.Osprey.Tasks
                     // from its own survivors, so the cross-run map that stood here had no reader.
                     scan.TotalMulticharge += file.Targets.Count;
                     scan.ConsensusAccumulator?.AddFile(fileName, entries);
-                    if (outputSet != null)
-                    {
-                        outputSet.AddFile(entries);
-                    }
-                    else
-                    {
-                        ReconciliationPlanner.CollectPassingBaseIds(
-                            entries, config.Reconciliation.ConsensusFdr, scan.PassingBaseIds);
-                        GapFillTargetIdentifier.CollectPassingPrecursors(
-                            entries, config.Reconciliation.ConsensusFdr, scan.PassingPrecursors);
-                    }
+                    outputSet.AddFile(entries);
                     // The join-wide first-pass passing base_id set. These entries are already
                     // compacted (a base_id passing peptide-q in ANY file is kept in ALL files),
                     // so the distinct base_ids across all files ARE that set.
@@ -209,12 +195,9 @@ namespace pwiz.Osprey.Tasks
                     scanProgress.Report(++done);
                 });
             });
-            if (outputSet != null)
-            {
-                outputSet.Finish(out var precursors, out var baseIds);
-                scan.PassingPrecursors = precursors;
-                scan.PassingBaseIds = baseIds;
-            }
+            outputSet.Finish(out var precursors, out var baseIds);
+            scan.PassingPrecursors = precursors;
+            scan.PassingBaseIds = baseIds;
 
             _ctx.LogInfo(CountText.Format(fileNames.Count,
                 OspreyTasksResources.Stage6Planner_ScanFiles_Multi_charge_consensus___1__charge_states_will_be_re_scored_at_the_peak_boundaries_of_the_,

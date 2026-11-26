@@ -34,20 +34,16 @@ using pwiz.Osprey.IO;
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
-    /// The PER-FILE half of the second-pass competition, run by the rescore worker instead of by
+    /// The PER-FILE half of the second pass, run by the rescore worker instead of by
     /// Stage 7 (issue #4486).
     ///
-    /// <para>One file's run-level competition is computable from that file alone: its own
-    /// 1st-pass sidecar, its own reconciled parquet, and three whole-run constants that already
-    /// ride the analysis-wide <c>.1st-pass.model.json</c> relay. Stage 7 was doing it only because
+    /// <para>One file's run-level q-values are computable from that file alone: its own
+    /// first-pass records and its own reconciled rows. Stage 7 was doing it only because
     /// that is where the code happened to live, and paying for it by holding every file's
     /// survivors resident and re-opening 52.3 GB of 1st-pass sidecars at 257 files.</para>
     ///
-    /// <para><b>What stays in Stage 7:</b> the JOIN. This worker emits NO precomputed
-    /// per-base_id bests and no aggregation. SecondPassFDR folds the bests out of the per-run
-    /// sidecars via <see cref="Pass2FdrSidecar.FileCompetitionFromRecords"/>. Emitting bests here
-    /// would be a partial join in the wrong stage and would freeze the aggregation method into
-    /// Stage 6, making a different aggregation a worker change instead of a Stage 7 change.</para>
+    /// <para><b>What stays in Stage 7:</b> the JOIN. This worker emits no aggregation across
+    /// runs; SecondPassFDR folds the per-run records into the experiment scope.</para>
     ///
     /// <para><b>Absence is a stop, never a default.</b> Phase 1 produced seven defects and six
     /// were one of two shapes: a missing input becoming a plausible value, or the right values
@@ -56,21 +52,17 @@ namespace pwiz.Osprey.Tasks
     /// enclosing scope, is now something the worker must obtain explicitly. So every input it
     /// cannot obtain fails the run rather than being defaulted.</para>
     ///
-    /// <para><b>Every pass-2 mode has a per-file half, and this is where each one runs</b>
-    /// (#4665). protein-compact competes the file over its stratum; <c>transfer</c> re-maps the
-    /// file's run q-values through its own 1st-pass score-to-q table
-    /// (<see cref="Pass2FdrSidecar.TransferOneFile"/>). Transfer does LESS per-file work than the
-    /// competition and used to be the one mode that held every run's survivors resident in
-    /// Stage 7 - not for any reason in its workload, but because its per-file half lived there.
-    /// With both here, PerFileRescoring writes every run's <c>.2nd-pass.fdr_scores.bin</c> and
+    /// <para><b>The per-file half is the transfer</b> (#4665): it re-maps the file's run
+    /// q-values through its own 1st-pass score-to-q table
+    /// (<see cref="Pass2FdrSidecar.TransferOneFile"/>). It used to hold every run's survivors
+    /// resident in Stage 7 - not for any reason in its workload, but because its per-file half
+    /// lived there. With it here, PerFileRescoring writes every run's second-pass records and
     /// SecondPassFDR writes no per-run file.</para>
     /// </summary>
-    internal sealed class Pass2PerFileWorker : IDisposable
+    internal sealed class Pass2PerFileWorker
     {
         private readonly FrozenModelScorer _scorer;
-        private readonly int _nFeatures;
         private readonly PinFeatureSelection _features;
-        private readonly HashSet<uint> _stratumBaseIds;
         private readonly Action<string> _logWarning;
 
         /// <summary>
@@ -78,13 +70,6 @@ namespace pwiz.Osprey.Tasks
         /// protein-best column must carry when the model scores with one; null when it does not.
         /// </summary>
         private readonly ArtifactStamp _firstPassStamp;
-
-        /// <summary>
-        /// True under <c>OSPREY_PASS2_QVALUE=transfer</c>: re-map run q through the file's own
-        /// 1st-pass table instead of competing. There is no competition, so no decoy side is
-        /// written either.
-        /// </summary>
-        private readonly bool _transfer;
 
         /// <summary>The analysis-wide 1st-pass experiment records the transfer carries forward.</summary>
         private readonly IReadOnlyDictionary<uint, FdrExperimentRecord> _pass1Experiment;
@@ -102,88 +87,41 @@ namespace pwiz.Osprey.Tasks
         private long _proteinBestNoRowWouldDiffer;
 
         /// <summary>
-        /// One seeder PER WORKER THREAD, not per file and not one shared.
-        ///
-        /// <para>Per file is the documented anti-pattern: the seeder's index and staging buffer
-        /// are both far past the Large Object Heap threshold at cohort scale (~533 K records per
-        /// file on CHS), the LOH is swept only on a gen2 collection, and a fresh pair per file
-        /// left ~125 MB of dead buffers standing each time - +24 GB over 257 files, which WAS
-        /// that run's global memory peak. Shared is simply wrong: <c>Seed</c>/<c>Apply</c> mutate
-        /// the index and the staging list, and the rescore loop is a <c>Parallel.For</c> over
-        /// files. Thread-local gives back the buffer reuse the single instance had, bounded by
-        /// the loop's degree of parallelism rather than by file count.</para>
+        /// Persists one file's pass-2 answer: the pool-image records. Supplied rather than
+        /// constructed here so the worker owns the COMPUTATION and not the artifact policy -
+        /// which task name the validity sidecar carries, and whether a --task ModelDiagnostics
+        /// run declines the write at all, are the caller's to decide and are already implemented
+        /// once.
         /// </summary>
-        private readonly ThreadLocal<Pass2FdrSidecar.Pass1ScalarSeeder> _seeders;
-
-        /// <summary>Every seeder handed out, so the run-wide summary can aggregate them.</summary>
-        private readonly List<Pass2FdrSidecar.Pass1ScalarSeeder> _allSeeders =
-            new List<Pass2FdrSidecar.Pass1ScalarSeeder>();
-
-        private readonly object _seederListLock = new object();
-
-        /// <summary>
-        /// Persists one file's pass-2 answer: the pool-image records AND the decoy side of the
-        /// competition that produced them. Supplied rather than constructed here so the worker
-        /// owns the COMPUTATION and not the artifact policy - which task name the validity
-        /// sidecar carries, and whether a --task ModelDiagnostics run declines the write at all,
-        /// are the caller's to decide and are already implemented once.
-        ///
-        /// <para>ONE callback for both files, not two. They are two halves of a single answer and
-        /// a node that received one without the other would either fold a competition with an
-        /// empty null or reject the run; making them separate calls would make "wrote one, not
-        /// the other" a reachable state.</para>
-        /// </summary>
-        private readonly Action<string, IReadOnlyList<FdrScoreRecord>,
-            IReadOnlyDictionary<uint, (double score, uint entryId)>> _writeAnswer;
+        private readonly Action<string, IReadOnlyList<FdrScoreRecord>> _writeAnswer;
 
         /// <param name="scorer">The frozen 1st-pass model, or null when each run trained its own
         /// (per-run first-pass models): each run's reconciled parquet then carries every
         /// survivor's second-pass score, a moved row's from the run's own frozen model, and the
         /// transfer reads them from there.</param>
         /// <param name="features">The search's features, as the reconciled parquet holds them.</param>
-        /// <param name="transfer">True for <c>OSPREY_PASS2_QVALUE=transfer</c>, false for the
-        /// protein-compact competition.</param>
-        /// <param name="stratumBaseIds">The protein stratum the competition is constrained to;
-        /// unused by the transfer.</param>
         /// <param name="pass1Experiment">The analysis-wide 1st-pass experiment records.</param>
-        /// <param name="writeAnswer">Persists one file's records, and its competition decoys
-        /// when there was a competition (null under transfer).</param>
+        /// <param name="writeAnswer">Persists one file's records.</param>
         /// <param name="logWarning">Where a per-file warning goes.</param>
         /// <param name="firstPassStamp">The frozen model's stamp, which every run's protein-best
         /// column must carry when the model scores with one (<c>--protein-boost best</c>).</param>
         public Pass2PerFileWorker(
-            FrozenModelScorer scorer, PinFeatureSelection features, bool transfer, HashSet<uint> stratumBaseIds,
+            FrozenModelScorer scorer, PinFeatureSelection features,
             IReadOnlyDictionary<uint, FdrExperimentRecord> pass1Experiment,
-            Action<string, IReadOnlyList<FdrScoreRecord>,
-                IReadOnlyDictionary<uint, (double score, uint entryId)>> writeAnswer,
+            Action<string, IReadOnlyList<FdrScoreRecord>> writeAnswer,
             Action<string> logWarning, ArtifactStamp firstPassStamp = null)
         {
             _firstPassStamp = firstPassStamp;
             _writeAnswer = writeAnswer ?? throw new ArgumentNullException(nameof(writeAnswer));
-            // Only the transfer reads its scores from the reconciled parquet; the competition
-            // scores every survivor with the analysis-wide model.
-            if (scorer == null && !transfer)
-                throw new ArgumentNullException(nameof(scorer));
             _scorer = scorer;
-            _nFeatures = scorer?.InputFeatures ?? 0;
             _features = features ?? throw new ArgumentNullException(nameof(features));
-            _transfer = transfer;
-            _stratumBaseIds = stratumBaseIds;
             _pass1Experiment = pass1Experiment ?? throw new ArgumentNullException(nameof(pass1Experiment));
             _logWarning = logWarning ?? throw new ArgumentNullException(nameof(logWarning));
-            _seeders = new ThreadLocal<Pass2FdrSidecar.Pass1ScalarSeeder>(() =>
-            {
-                var seeder = new Pass2FdrSidecar.Pass1ScalarSeeder(0, pass1Experiment);
-                lock (_seederListLock)
-                    _allSeeders.Add(seeder);
-                return seeder;
-            });
         }
 
         /// <summary>
         /// Compute one file's second-pass answer, stamp its survivors with it, and write the
-        /// file's <c>.2nd-pass.fdr_scores.bin</c> - competing it under protein-compact,
-        /// transferring its run q-values under <c>transfer</c>.
+        /// file's second-pass records, transferring its run q-values.
         ///
         /// <para>Returns the file's answer so the caller can write the sidecar from the same
         /// entries it stamped. The heavy per-entry payload is still live at the call site - the
@@ -199,75 +137,10 @@ namespace pwiz.Osprey.Tasks
             string fileName, string pass1SidecarPath, string effectiveParquetPath,
             List<FdrEntry> survivors)
         {
-            if (_transfer)
-            {
-                var transferred = TransferAndStamp(
-                    fileName, pass1SidecarPath, effectiveParquetPath, survivors);
-                // No decoy side: nothing competed, so there is no null to carry to the join.
-                _writeAnswer(fileName, transferred.Records, null);
-                return transferred;
-            }
-            var result = CompeteAndStamp(
+            var transferred = TransferAndStamp(
                 fileName, pass1SidecarPath, effectiveParquetPath, survivors);
-            // The competition's BestDecoy is serialized as the worker COMPUTED it, never
-            // reassembled from the records, the stratum or the 1st-pass population - see
-            // Pass2CompetitionDecoys. This is the whole of the transmission the join needs and
-            // the pool image cannot carry.
-            _writeAnswer(fileName, result.Records, result.Competition.BestDecoy);
-            return result;
-        }
-
-        private Pass2FileResult CompeteAndStamp(
-            string fileName, string pass1SidecarPath, string effectiveParquetPath,
-            List<FdrEntry> survivors)
-        {
-            // Per-call scratch rather than per-worker: these are the two buffers
-            // ReadOneFilePass2Inputs refills, and the parallel file loop means a worker-level
-            // pair would be shared across concurrent files. They are O(one file's survivors),
-            // so the allocation is bounded by the loop's parallelism, not by file count.
-            var survivorIds = new HashSet<uint>();
-            var pass1Records = new List<FdrScoreRecord>();
-
-            Pass2FdrSidecar.ReadOneFilePass2Inputs(
-                pass1SidecarPath, effectiveParquetPath, survivors,
-                _scorer, _nFeatures, _features, ProteinBestFor(fileName, pass1SidecarPath, survivors), _seeders.Value, _logWarning,
-                survivorIds, pass1Records,
-                out uint[] entryIds, out double[] scores, out var survivorScores);
-
-            // The whole point of step 1 (commit 3593cd2ff6): the filter takes THIS FILE's own
-            // survivor set, because that is all a per-file worker can have. Measured equivalent
-            // to the global union over 8.2 M observations and enforced with a throw in Stage 7
-            // while both sets were still in one place - which is the only reason this call is
-            // safe to make from here at all.
-            var competition = StreamingFdr.CompeteOneFile(
-                entryIds, scores, survivorScores, survivorIds, _stratumBaseIds, fileName);
-
-            // FREE VERIFICATION of the artifact that has no other one. Every decoy best must be
-            // an observation of THIS file at the score it competed on - which is exactly what
-            // entryIds/scores hold, already in memory, so this costs one pass over a map that is
-            // O(distinct base_id) and no I/O at all.
-            //
-            // It is deliberately NOT the gated Stage 7 recompute: that re-reads the 1st-pass
-            // sidecar to answer the same question, and both sides of it call this very function
-            // so it cannot see a defect inside it. This catches the shape that a recompute
-            // cannot - a serialization or aliasing fault between competing and writing.
-            AssertDecoyBestsAreLocalObservations(fileName, competition.BestDecoy, entryIds, scores);
-
-            // Stamp the run q onto the entries the sidecar write will serialize. An entry absent
-            // from the map won no competition in this file and takes 1.0 - the same default the
-            // streamed form filled in centrally, and the value the join relies on being harmless
-            // in a minimum (see FileCompetitionFromRecords).
-            foreach (var e in survivors)
-            {
-                double rq = competition.RunQ.TryGetValue(e.EntryId, out double v) ? v : 1.0;
-                e.RunPrecursorQvalue = rq;
-                // Precursor-level path: keep peptide q in step with precursor q for the reported
-                // set (peptide-level FDR is not the target here).
-                e.RunPeptideQvalue = rq;
-            }
-            return new Pass2FileResult(
-                competition,
-                BuildRecords(survivors, fileName, effectiveParquetPath));
+            _writeAnswer(fileName, transferred.Records);
+            return transferred;
         }
 
         /// <summary>
@@ -347,7 +220,7 @@ namespace pwiz.Osprey.Tasks
             List<FdrEntry> survivors, Pass2FdrSidecar.TransferTally tally)
         {
             AddTally(fileName, pass1SidecarPath, tally);
-            return new Pass2FileResult(null, BuildRecords(survivors, fileName, effectiveParquetPath));
+            return new Pass2FileResult(BuildRecords(survivors, fileName, effectiveParquetPath));
         }
 
         private void AddTally(string fileName, string pass1SidecarPath, Pass2FdrSidecar.TransferTally tally)
@@ -438,50 +311,6 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Every entry in the competition's decoy side must be an observation THIS file holds, at
-        /// the score it competed on.
-        ///
-        /// <para>The decoys artifact is the one thing the join cannot re-derive - that is why it
-        /// is written - so it is also the one thing a downstream consumer must take on trust. This
-        /// makes the trust cheap: <paramref name="entryIds"/> and <paramref name="scores"/> are
-        /// the arrays the competition just reduced, still in memory, so the check is O(distinct
-        /// base_id) with no I/O. A wrong POPULATION is not what this catches (only the mode knows
-        /// which base_ids should be admitted); it catches a wrong VALUE or a wrong entry_id, which
-        /// is the failure a serialization step can introduce and a recompute of the same function
-        /// cannot see.</para>
-        /// </summary>
-        private static void AssertDecoyBestsAreLocalObservations(
-            string fileName, IReadOnlyDictionary<uint, (double score, uint entryId)> bestDecoy,
-            uint[] entryIds, double[] scores)
-        {
-            if (bestDecoy.Count == 0)
-                return;
-            // One pass to index this file's observations, then one pass over the bests. Built
-            // here rather than kept by the competition because it is scratch: it dies with this
-            // call, where a field would live for the length of the run times the thread count.
-            var scoreByEntryId = new Dictionary<uint, double>(entryIds.Length);
-            for (int i = 0; i < entryIds.Length; i++)
-                scoreByEntryId[entryIds[i]] = scores[i];
-            foreach (var kv in bestDecoy)
-            {
-                if (!scoreByEntryId.TryGetValue(kv.Value.entryId, out double competed))
-                {
-                    throw new InvalidOperationException(string.Format(
-                        @"Second-pass competition decoys for '{0}': base_id {1} names entry_id " +
-                        @"{2}, which is not an observation of this file. See issue #4486.",
-                        fileName, kv.Key, kv.Value.entryId));
-                }
-                if (!competed.Equals(kv.Value.score))
-                {
-                    throw new InvalidOperationException(string.Format(
-                        @"Second-pass competition decoys for '{0}': base_id {1} records score {2} " +
-                        @"for entry_id {3}, which competed at {4}. See issue #4486.",
-                        fileName, kv.Key, kv.Value.score, kv.Value.entryId, competed));
-                }
-            }
-        }
-
-        /// <summary>
         /// Serialize this file's pass-2 answer: ONE RECORD PER POOL ENTRY, in pool order.
         ///
         /// <para><b>This artifact's population is not this writer's to choose.</b> The per-run
@@ -527,12 +356,6 @@ namespace pwiz.Osprey.Tasks
         /// leaves the original row ahead of the gap-fill - which is the disposition
         /// <c>KeyLess</c> gives it on the merge side.</para>
         ///
-        /// <para>The join (<see cref="Pass2FdrSidecar.FileCompetitionFromRecords"/>) resolves a
-        /// per-base_id maximum with strict greater-than and takes the FIRST observation at the
-        /// maximum, so the order it reduces over has to be the one <c>CompeteOneFile</c> reduced
-        /// over; both are subsequences of the same canonical order, which is what keeps them
-        /// agreeing on ties.</para>
-        ///
         /// <para><b>No decoy carry-forward.</b> Decoys that are pool entries are emitted like any
         /// other pool entry - the baseline artifact holds 466,055 decoy observations across these
         /// three files, 294,540 of them at run q 1.0, so the null was never short of them.
@@ -560,16 +383,8 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Report what this worker did, ONCE and DETERMINISTICALLY, after the file loop - what
-        /// the transfer moved, or what the competition's seeders restored.
-        ///
-        /// <para>Summed across the thread-local seeders rather than logged per instance, because
-        /// which seeder took which file is decided by which thread happened to take it. Logging
-        /// per instance would emit the same facts with a run-to-run varying split - identical
-        /// inputs producing differing output, which is the invariant this project holds for
-        /// testing and for scientific review. The COMPUTED values were never at risk (each entry
-        /// is seeded from its own file's record, looked up by entry_id), but "the run is
-        /// deterministic" has to include what it says about itself.</para>
+        /// Report what this worker did, ONCE and DETERMINISTICALLY, after the file loop: what
+        /// the transfer moved, summed across the parallel file loop.
         /// </summary>
         public void LogSummary(PipelineContext ctx)
         {
@@ -581,56 +396,26 @@ namespace pwiz.Osprey.Tasks
                     Interlocked.Read(ref _proteinBestNoRowDecoys), Interlocked.Read(ref _proteinBestNoRowWithSibling),
                     Interlocked.Read(ref _proteinBestNoRowWouldDiffer));
             }
-            if (_transfer)
-            {
-                // The transfer seeds nothing - every survivor takes its values from the transfer
-                // itself - so its summary is what the transfer did, not what a seeder restored.
-                Pass2FdrSidecar.TransferTally tally;
-                lock (_transferTallyLock)
-                    tally = _transferTally;
-                ctx.LogInfo(string.Format(
-                    OspreyTasksResources.Pass2PerFileWorker_LogSummary_Second_pass_FDR_over__0__files_kept_the_first_pass_q_values_of__1__peaks__gave__2__peaks_moved_by_cross_run_reconciliation_and__3__missing_peaks_new_run_level_q_values_,
-                    tally.FilesDone, tally.Unchanged, tally.Moved, tally.GapFill));
-                return;
-            }
-            int restored = 0;
-            int filesRead = 0;
-            lock (_seederListLock)
-            {
-                foreach (var seeder in _allSeeders)
-                {
-                    restored += seeder.Restored;
-                    filesRead += seeder.FilesRead;
-                }
-            }
-            Pass2FdrSidecar.Pass1ScalarSeeder.LogSeedSummary(ctx, restored, filesRead);
-        }
-
-        public void Dispose()
-        {
-            _seeders.Dispose();
+            Pass2FdrSidecar.TransferTally tally;
+            lock (_transferTallyLock)
+                tally = _transferTally;
+            ctx.LogInfo(string.Format(
+                OspreyTasksResources.Pass2PerFileWorker_LogSummary_Second_pass_FDR_over__0__files_kept_the_first_pass_q_values_of__1__peaks__gave__2__peaks_moved_by_cross_run_reconciliation_and__3__missing_peaks_new_run_level_q_values_,
+                tally.FilesDone, tally.Unchanged, tally.Moved, tally.GapFill));
         }
     }
 
     /// <summary>
-    /// One file's pass-2 answer: the competition it just ran, and the records that answer is
-    /// written down as.
-    ///
-    /// <para>Both, rather than just the records, because the two have different lifetimes during
-    /// the transition. The RECORDS are the durable artifact the join reads. The COMPETITION is
-    /// what Stage 7 folds today, in process - so keeping it lets the sidecar-fold be introduced
-    /// and proven equal against the in-process value before anything depends on it alone.</para>
+    /// One file's pass-2 answer: the records that answer is written down as, which are the
+    /// durable artifact the join reads.
     /// </summary>
     internal sealed class Pass2FileResult
     {
-        public Pass2FileResult(
-            StreamingFdr.FileCompetition competition, List<FdrScoreRecord> records)
+        public Pass2FileResult(List<FdrScoreRecord> records)
         {
-            Competition = competition;
             Records = records;
         }
 
-        public StreamingFdr.FileCompetition Competition { get; }
         public List<FdrScoreRecord> Records { get; }
     }
 }

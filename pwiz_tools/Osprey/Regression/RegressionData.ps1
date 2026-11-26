@@ -273,7 +273,7 @@ function Invoke-ResumeInvalidation {
 <#
 .SYNOPSIS
     Whether the Osprey binary sidecar at -Path (the OSPRY* family: .fdr_scores.bin,
-    .fdr_decoys.bin, ...) was written by -Task, read from the validity stamp the file
+    .fdr_experiment.bin, ...) was written by -Task, read from the validity stamp the file
     carries after its records.
 
 .DESCRIPTION

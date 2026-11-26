@@ -456,8 +456,6 @@ namespace pwiz.Osprey.Test
                     OspreyTasksResources.PerFileRescoreTask_CreatePass2Worker_Second_pass_FDR_cannot_run__the_saved_first_pass_model_was_trained_with__0___but_this_run_has__1___Run__2__again_with__1__,
                     off, on, OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME)), modelOff);
                 Assert.IsTrue(modelOn.IndexOf(on, StringComparison.Ordinal) < modelOn.IndexOf(off, StringComparison.Ordinal));
-                Assert.AreNotEqual(OspreyTasksResources.Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__,
-                    OspreyTasksResources.PerFileRescoreTask_CreatePass2Worker_Second_pass_FDR_cannot_run__the_saved_first_pass_model_was_trained_with__0___but_this_run_has__1___Run__2__again_with__1__);
             }
             finally
             {

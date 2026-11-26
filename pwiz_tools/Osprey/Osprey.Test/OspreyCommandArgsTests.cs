@@ -209,7 +209,7 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(FdrLevel.Precursor, Parse(OspreyCommandArgs.ARG_FDR_LEVEL, @"bogus").FdrLevel);     // warn -> default unchanged
             Assert.AreEqual(SharedPeptideMode.Razor, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES + @"razor").SharedPeptides);
             Assert.AreEqual(SharedPeptideMode.All, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES, @"bogus").SharedPeptides); // warn -> default
-            // --protein-boost: best, compact and off are its values. Absent, the resolution chooses (best
+            // --protein-boost: best and off are its values. Absent, the resolution chooses (best
             // at both resolutions), so it declares no single default and is the legacy off until
             // a resolution is applied; given, it stands whatever the resolution. The classifier
             // follows the resolution the same way when OSPREY_FDR_MODEL is unset.
@@ -221,7 +221,6 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(ProteinBoost.best, Parse(hramArg).ProteinBoost);
             Assert.AreEqual(ProteinBoost.best, Parse(unitArg).ProteinBoost);
             Assert.AreEqual(ProteinBoost.off, Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"off", hramArg).ProteinBoost);
-            Assert.AreEqual(ProteinBoost.compact, Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"compact", hramArg).ProteinBoost);
             Assert.AreEqual(ProteinBoost.off, Parse(OspreyCommandArgs.ARG_PROTEIN_BOOST + @"off", unitArg).ProteinBoost);
             Assert.AreEqual(FdrClassifier.Gbdt, OspreyCommandArgs.ParseArgs(ArgTokens.Split(hramArg), null).FdrClassifier);
             Assert.AreEqual(FdrClassifier.Gbdt, OspreyCommandArgs.ParseArgs(ArgTokens.Split(unitArg), null).FdrClassifier);
@@ -242,6 +241,8 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, Parse(hramArg).Pass2QValue);
             Assert.AreEqual(OspreyEnvironment.PASS2_QVALUE_TRANSFER, offThenThreads.Pass2QValue);
             Assert.ThrowsException<ValueInvalidException>(() => OspreyCommandArgs.ARG_PROTEIN_BOOST + @"max");
+            // The removed protein-compact second pass took its value with it.
+            Assert.ThrowsException<ValueInvalidException>(() => OspreyCommandArgs.ARG_PROTEIN_BOOST + @"compact");
             Assert.ThrowsException<ValueInvalidException>(() => OspreyCommandArgs.ARG_PROTEIN_BOOST + OspreyArgNames.VALUE_ON);
 
             // FDRBench: --fdrbench records the path, --fdrbench-per-run is a flat flag,

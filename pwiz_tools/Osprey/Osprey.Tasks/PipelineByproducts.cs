@@ -23,7 +23,6 @@
 
 using System;
 using System.Collections.Generic;
-using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -224,22 +223,6 @@ namespace pwiz.Osprey.Tasks
     {
         public bool Value { get; }
         public PlanningPerformed(bool value) { Value = value; }
-    }
-
-    /// <summary>
-    /// Base_ids of the protein-compact stratum (OSPREY_PASS2_QVALUE=protein-compact):
-    /// every library precursor whose peptide maps to a protein detected in the 1st pass
-    /// by &gt;=2 DISTINCT peptides (the honest anchor -- single-hit proteins break the
-    /// independent-filtering assumption; the entrapment prototype showed &gt;=2 restores
-    /// FDP control at full gain). Built in FirstPassFDR (which has the full library + the
-    /// 1st-pass detected-peptide set) and consumed by the pass-2 stratified competition.
-    /// Bounded by the library (not the observation count) -> flat in file count. Only
-    /// published when the mode is set.
-    /// </summary>
-    internal sealed class ProteinCompactStratum
-    {
-        public HashSet<uint> BaseIds { get; }
-        public ProteinCompactStratum(HashSet<uint> baseIds) { BaseIds = baseIds; }
     }
 
     /// <summary>
@@ -472,9 +455,8 @@ namespace pwiz.Osprey.Tasks
         /// against ~79 GB.
         ///
         /// <para>Yields the buffer's own pairs, and the stamps a consumer writes onto them do
-        /// not outlive the yield, which is exactly why the per-file SIDECAR - not the entry - is
-        /// what carries Stage 7's results forward, as <c>ComputePass2TransferCompeteFull</c>
-        /// documents.</para>
+        /// not outlive the yield, which is exactly why the per-run records - not the entry - are
+        /// what carry Stage 7's results forward.</para>
         ///
         /// <para>Re-enumerable: a second pass re-materializes each file from disk. Two passes
         /// are the shape a fold-then-apply step needs (accumulate O(distinct) floors over every
@@ -614,27 +596,5 @@ namespace pwiz.Osprey.Tasks
     {
         public FirstPassSurvivorLoader Value { get; }
         public FirstPassSurvivorSource(FirstPassSurvivorLoader value) { Value = value; }
-    }
-
-    /// <summary>
-    /// The FROZEN 1st-pass Percolator model (fold weights + biases + feature
-    /// standardizer, carried on <see cref="PercolatorResults"/>), captured at
-    /// first-pass FDR time. Published only under the OSPREY_PASS2_QVALUE=transfer
-    /// path so the SecondPassFDR 2nd-pass step can re-score reconciled features with
-    /// this frozen model (TRIC-style confidence transfer) instead of retraining a
-    /// decoy-depleted 2nd-pass SVM. Absent (never published) on the default
-    /// percolator path. See ai/todos/active/TODO-20260710_osprey_pass2_recalibration_fix.md.
-    /// </summary>
-    internal sealed class FirstPassPercolatorModel
-    {
-        public PercolatorResults Results { get; set; }
-
-        /// <summary>
-        /// The stamp of the first pass that produced the model - the one its model file and every
-        /// run's protein-best column carry - or null when it is not known (a model file written
-        /// before the stamp was read back). A second pass that scores with the column refuses a
-        /// run's column stamped by another first pass.
-        /// </summary>
-        public ArtifactStamp Stamp { get; set; }
     }
 }

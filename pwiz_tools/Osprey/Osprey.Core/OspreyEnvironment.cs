@@ -1417,25 +1417,6 @@ namespace pwiz.Osprey.Core
             return null;
         }
 
-        /// <summary>
-        /// Why <paramref name="config"/>'s <c>--protein-boost best</c> and second-pass mode cannot run
-        /// together, or null when they can. The protein-best column and the protein-compact competition
-        /// both credit a precursor for its protein's other detections, so together they count that
-        /// evidence twice: on 3 SEA-AD files a reported q of 1% read 1.47% true FDP, where protein-best
-        /// with the transfer read 0.91%. Checked once the resolution is known, because HRAM data turns
-        /// the column on by default.
-        /// </summary>
-        public static string ValidatePass2WithProteinBest(OspreyConfig config)
-        {
-            if (!config.ProteinBest || !config.Pass2ProteinCompact)
-                return null;
-            return string.Format(@"{0} cannot be used with OSPREY_PASS2_QVALUE={1}: both credit a precursor for its " +
-                                 @"protein's other detections, and together report more false discoveries than their " +
-                                 @"q-values claim. Unset OSPREY_PASS2_QVALUE, or use {2}.",
-                OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.best.ToString()), PASS2_QVALUE_PROTEIN_COMPACT,
-                OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.off.ToString()));
-        }
-
         private static string DescribeProteinBestTopN(int topN)
         {
             return topN == 1
@@ -1573,31 +1554,11 @@ namespace pwiz.Osprey.Core
         /// and map it to a q via the full pre-compaction 1st-pass score-&gt;q table.</summary>
         public const string PASS2_QVALUE_TRANSFER = @"transfer";
 
-        /// <summary>The <see cref="OspreyConfig.Pass2QValue"/> protein-anchored constrained mode: the FROZEN
-        /// 1st-pass model (no retrain), with the target-decoy competition CONSTRAINED to the
-        /// peptides of proteins
-        /// detected in the 1st pass -- included as target+decoy PAIRS so the stratum's null
-        /// stays fair. Removing off-stratum decoys from the null lowers q for stratum
-        /// members (reduced multiple testing / independent filtering; Bourgon 2010), which
-        /// recovers marginal peptides of already-detected proteins. The stratum's COMPLEMENT
-        /// is competed the same way, against its own paired decoys, rather than keeping its
-        /// 1st-pass q: the stratum takes most of the high-scoring targets and few of the
-        /// high-scoring decoys, so the decoys it excludes must still count against the
-        /// complement's targets (issue #4581). The frozen model avoids the two-pass
-        /// retrain's over-separation.</summary>
-        public const string PASS2_QVALUE_PROTEIN_COMPACT = @"protein-compact";
-
-        /// <summary>The <see cref="Pass2StrataValidityKeySuffix"/> term under protein-compact.</summary>
-        public const string PASS2_STRATA_TERM = @";pass2strata=2";
-
         /// <summary>
         /// OSPREY_PASS2_QVALUE: selects how the SecondPassFDR 2nd pass assigns the reported
         /// precursor/peptide q-values AFTER Stage 6 reconciliation. The 2nd-pass peak
         /// RE-SCORING (better peak choices against the consensus) is kept in ALL modes;
-        /// only the q-value step changes.
-        ///   <see cref="PASS2_QVALUE_PROTEIN_COMPACT"/>: frozen 1st-pass model, with
-        ///     the target-decoy competition stratified - the protein stratum and its complement
-        ///     each compete against their own paired decoys.
+        /// only the q-value step changes. One mode is left:
         ///   <see cref="PASS2_QVALUE_TRANSFER"/>: carry the pass-1 q through and recompute ONLY
         ///     the per-run q of the peaks reconciliation MOVED, scoring each with the FROZEN
         ///     1st-pass model and mapping it through THAT FILE'S OWN on-disk
@@ -1607,12 +1568,12 @@ namespace pwiz.Osprey.Core
         ///     NOTE: the per-run-only redesign (#4438) REPLACED the earlier full pre-compaction
         ///     score-&gt;q table, which is why transfer no longer needs the O(files) resident
         ///     pool. Re-adding a resident pool for it is the #4446 regression.
-        /// Null when unset, and <see cref="OspreyConfig.Pass2QValue"/> then follows <c>--protein-boost</c>:
-        /// protein-compact under compact, the transfer otherwise. An unrecognized value is a startup ERROR (see
+        /// Null when unset, and <see cref="OspreyConfig.Pass2QValue"/> is then the transfer too.
+        /// An unrecognized value is a startup ERROR (see
         /// <see cref="Pass2QValueUnrecognized"/>). Re-read on each access, so a command-line
         /// test can set it (<see cref="OverrideVariables"/>).
         ///
-        /// SECOND-PASS RETRAINING IS GONE, and these two modes are what remain. The former
+        /// SECOND-PASS RETRAINING IS GONE, and so is every second-pass competition. The former
         /// default <c>percolator</c> - retrain the 2nd-pass Percolator SVM and recompute a
         /// target/decoy null on the reconciled + COMPACTED pool - was REMOVED, not merely
         /// demoted. Compaction strips most decoys from that pool, so the retrained null is thin
@@ -1624,8 +1585,12 @@ namespace pwiz.Osprey.Core
         /// by base_id pairing - which strips decoys that WON the 1st-pass competition and so
         /// improves pass-2 q with no added evidence. Measured 1.96% true FDP at a nominal 1% on
         /// 82-file SEA-AD against 1.53% for the default, with fewer ids: dominated on both axes.
-        /// See issues #4484 (closed) and #4581 (open, the same bias in the surviving default), and
-        /// docs/12-second-pass-fdr.md, "Why a second-pass null is a problem".
+        /// Last went <c>protein-compact</c>, that default: a competition constrained to the
+        /// precursors of proteins the first pass detected, which read 1.29% true FDP at a nominal
+        /// 1% on the same cohort once entrapment peptides were filed under target proteins, and
+        /// which needs one first-pass model for the analysis where each run now trains its own.
+        /// See issues #4484 and #4581, and docs/12-second-pass-fdr.md, "Why a second-pass null is
+        /// a problem".
         ///
         /// The consequence worth naming, because it simplifies everything downstream: THERE IS
         /// NO SECOND-PASS MODEL. The linear model the 1st-pass SVM trained is the model for
@@ -1641,13 +1606,15 @@ namespace pwiz.Osprey.Core
         /// this variable acquired a non-percolator default.
         /// </summary>
         public static string Pass2QValueOverride =>
-            string.IsNullOrWhiteSpace(Pass2QValueSetting) ? null : NormalizePass2QValue(Pass2QValueSetting);
+            // An unrecognized token reads as the transfer only so the other statics are well-formed;
+            // the run does not get here, because Program aborts at startup on Pass2QValueUnrecognized.
+            string.IsNullOrWhiteSpace(Pass2QValueSetting) ? null : PASS2_QVALUE_TRANSFER;
 
         private static readonly EnvVar ENV_PASS2_QVALUE = new EnvVar(@"OSPREY_PASS2_QVALUE", EnvVarGroup.behavior,
-            @"How the second pass assigns reported q-values: transfer (the default) carries the first-pass q through and " +
-            @"re-scores only moved peaks; protein-compact constrains the competition to detected proteins.")
+            @"How the second pass assigns reported q-values: transfer, the only mode, carries the first-pass q through and " +
+            @"re-scores only moved peaks.")
             {
-                Values = new[] { @"transfer", @"protein-compact" },
+                Values = new[] { @"transfer" },
                 DefaultValue = @"transfer"
             };
 
@@ -1658,8 +1625,8 @@ namespace pwiz.Osprey.Core
         /// <summary>True when OSPREY_PASS2_QVALUE was set to a value that is not one of the
         /// recognized modes. Program startup ABORTS on this rather than falling back: silently
         /// substituting the default would report numbers the caller did not ask for, and the
-        /// removed <c>percolator</c> token in particular is one that existing sweep scripts
-        /// still pass. Checked at startup, not at SecondPassFDR, so the run fails in seconds
+        /// removed <c>percolator</c> and <c>protein-compact</c> tokens are ones that existing
+        /// sweep scripts still pass. Checked at startup, not at SecondPassFDR, so the run fails in seconds
         /// instead of after Stage 1-5.</summary>
         public static bool Pass2QValueUnrecognized => IsUnrecognizedPass2QValue(Pass2QValueSetting);
 
@@ -1673,29 +1640,24 @@ namespace pwiz.Osprey.Core
         /// assert it against the answer the rescore worker wrote (issue #4486). A TEST
         /// INSTRUMENT, off by default.
         ///
-        /// <para><b>Under the q-value transfer</b> (the default and, with per-run first-pass
-        /// models, the only second pass) it re-scores each run's moved, gap-filled and CWT rows
+        /// <para>It re-scores each run's moved, gap-filled and CWT rows
         /// from <c>&lt;stem&gt;.features-reconciled.parquet</c> with the run's own
         /// <c>&lt;stem&gt;.1st-pass.model.json</c>, checks every other row kept its first-pass
         /// score from the run's stub, re-runs the transfer through the run's first-pass table,
         /// and asserts score and both run q-values bit for bit
         /// (<c>Pass2FdrSidecar.VerifyTransferFile</c>). The features are written only with
-        /// <c>--keep-scores-parquet</c>, so the variable without it is refused at startup. The
-        /// paragraphs below describe it on the protein-compact competition.</para>
+        /// <c>--keep-scores-parquet</c>, so the variable without it is refused at startup.</para>
         ///
-        /// <para><b>Why it is not always on.</b> The recompute re-reads each file's 1st-pass
-        /// sidecar and re-runs the frozen rescore - measured at 82 files as 9.2 GB of re-reads
-        /// against the 2.8 GB the join actually needs, inside an 860.8 s Stage 7. That is
-        /// precisely the cost #4486 exists to remove, so leaving it on would hide the whole gain
-        /// behind a check of the code that produces it.</para>
+        /// <para><b>Why it is not always on.</b> The recompute re-reads each run's model,
+        /// features and first-pass scores and re-runs the rescore, which is the cost #4486 moved
+        /// out of Stage 7, so leaving it on would hide the whole gain behind a check of the code
+        /// that produces it.</para>
         ///
-        /// <para><b>What it is and is not.</b> Both sides call the SAME
-        /// <c>StreamingFdr.CompeteOneFile</c>, so this verifies that the worker's inputs and the
-        /// transmission of its answer agree - it cannot see a defect INSIDE that function, where
-        /// both sides would be wrong together. It is also blind to the artifact's POPULATION: a
-        /// gap-fill never competes, so dropping one changes no competition map, which is why 594
-        /// dropped records once passed this check and surfaced only in a diagnostics golden. The
-        /// population and order are covered instead by
+        /// <para><b>What it is and is not.</b> Both sides call the SAME transfer
+        /// (<c>Pass2FdrSidecar.TransferOneFileByScore</c>), so this verifies that the worker's
+        /// inputs and the transmission of its answer agree - it cannot see a defect INSIDE that
+        /// function, where both sides would be wrong together. The population and order of a
+        /// run's records are covered instead by
         /// <c>Pass2FdrSidecar.AssertSidecarDescribesPool</c>, which is cheap and always on.</para>
         ///
         /// <para>Deliberately NOT in any validity key: it changes no output, so including it
@@ -1772,8 +1734,8 @@ namespace pwiz.Osprey.Core
         /// The cache-invalidation suffix for any task whose output depends on the 2nd-pass
         /// q-value mode. UNCONDITIONAL for the same reason as
         /// <see cref="PickValidityKeySuffix(ScoringSettings)"/>: the default moved from the removed
-        /// <c>percolator</c> retrain to <see cref="PASS2_QVALUE_PROTEIN_COMPACT"/>, so an empty
-        /// suffix would let a run adopt the other mode's cached q-values.
+        /// <c>percolator</c> retrain to <c>protein-compact</c> and then to the transfer, so an
+        /// empty suffix would let a run adopt a removed mode's cached q-values.
         ///
         /// This is the tagging the <see cref="OspreyConfig.Pass2QValue"/> remarks used to defer, and it
         /// retires the "use a FRESH --output-dir per mode" limitation they carried.
@@ -1801,12 +1763,10 @@ namespace pwiz.Osprey.Core
         /// level in any run, decoys included, so FirstPassFDR, PerFileRescoring and SecondPassFDR
         /// carry it. The reported set is the blib's experiment gate, so the suffix also names
         /// <see cref="OspreyConfig.FdrLevel"/> and <see cref="OspreyConfig.ExperimentFdr"/>, which
-        /// no other key term covers. Empty under protein-compact, whose outputs are unchanged.
+        /// no other key term covers.
         /// </summary>
         public static string TransferReconciliationValidityKeySuffix(OspreyConfig config)
         {
-            if (!config.Pass2TransferQ)
-                return string.Empty;
             return string.Format(CultureInfo.InvariantCulture,
                 @";reconset=output@{0},{1:R};recondecoys=0;pepfloor=reported",
                 config.FdrLevel, config.ExperimentFdr);
@@ -1852,21 +1812,6 @@ namespace pwiz.Osprey.Core
             if (trainFdr.HasValue)
                 suffix += @";fdrtrain=" + trainFdr.Value.ToString(@"R", CultureInfo.InvariantCulture);
             return suffix;
-        }
-
-        /// <summary>
-        /// Validity-key term for the MEANING of protein-compact's 2nd-pass q (issue #4581): the
-        /// stratum's complement now competes against its own decoys instead of keeping its
-        /// 1st-pass q (an unchanged off-stratum survivor used to take run q 1.0). No byte layout
-        /// and no mode string changed, so without this term a resume or <c>-LinkFrom</c> into an
-        /// output directory written before the change finds the per-run 2nd-pass sidecars and
-        /// the .blib valid and adopts the old answers. Carried by the two tasks that write them,
-        /// PerFileRescoring and SecondPassFDR - not FirstPassFDR, whose outputs did not change.
-        /// Empty under <see cref="PASS2_QVALUE_TRANSFER"/>, which the change does not reach.
-        /// </summary>
-        public static string Pass2StrataValidityKeySuffix(OspreyConfig config)
-        {
-            return config.Pass2ProteinCompact ? PASS2_STRATA_TERM : string.Empty;
         }
 
         /// <summary>
@@ -1917,27 +1862,12 @@ namespace pwiz.Osprey.Core
             return suffix;
         }
 
-        private static string NormalizePass2QValue(string raw)
-        {
-            if (string.IsNullOrWhiteSpace(raw))
-                return PASS2_QVALUE_TRANSFER;
-            string v = raw.Trim().ToLowerInvariant();
-            if (v == PASS2_QVALUE_TRANSFER)
-                return PASS2_QVALUE_TRANSFER;
-            if (v == PASS2_QVALUE_PROTEIN_COMPACT)
-                return PASS2_QVALUE_PROTEIN_COMPACT;
-            // An unrecognized token normalizes to the default only so the other statics are
-            // well-formed; the run does not get here, because Program aborts at startup on
-            // IsUnrecognizedPass2QValue.
-            return PASS2_QVALUE_TRANSFER;
-        }
-
         private static bool IsUnrecognizedPass2QValue(string raw)
         {
             if (string.IsNullOrWhiteSpace(raw))
                 return false;
             string v = raw.Trim().ToLowerInvariant();
-            return v != PASS2_QVALUE_TRANSFER && v != PASS2_QVALUE_PROTEIN_COMPACT;
+            return v != PASS2_QVALUE_TRANSFER;
         }
 
         private static readonly EnvVar ENV_VERSION_OVERRIDE = new EnvVar(OspreyVersion.ENV_OVERRIDE, EnvVarGroup.allowance,

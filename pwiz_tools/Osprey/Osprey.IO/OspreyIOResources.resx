@@ -310,27 +310,6 @@
   <data name="ParquetScoreCache_static_Writing_precursor_candidate_peaks" xml:space="preserve">
     <value>Writing precursor candidate peaks</value>
   </data>
-  <data name="Pass_ReadScalars_The_file_is_not_an_Osprey_intermediate_file__" xml:space="preserve">
-    <value>The file is not an Osprey intermediate file: {0}</value>
-  </data>
-  <data name="Pass_ReadScalars_The_intermediate_file_belongs_to_the_other_FDR_pass__pass__0___expected__1_____2_" xml:space="preserve">
-    <value>The intermediate file belongs to the other FDR pass (pass {0}, expected {1}): {2}</value>
-  </data>
-  <data name="Pass_ReadScalars_The_intermediate_file_is_damaged___0__bytes_of_records_is_not_a_whole_number_of__1__byte_" xml:space="preserve">
-    <value>The intermediate file is damaged ({0:N0} bytes of records is not a whole number of {1}-byte records): {2}</value>
-  </data>
-  <data name="Pass_ReadScalars_The_intermediate_file_is_damaged__cut_short_at_record__0_____1_" xml:space="preserve">
-    <value>The intermediate file is damaged (cut short at record {0:N0}): {1}</value>
-  </data>
-  <data name="Pass_ReadScalars_The_intermediate_file_is_damaged__its_header_is_cut_short___" xml:space="preserve">
-    <value>The intermediate file is damaged (its header is cut short): {0}</value>
-  </data>
-  <data name="Pass_ReadScalars_The_intermediate_file_is_damaged__only__0__bytes____1_" xml:space="preserve">
-    <value>The intermediate file is damaged (only {0:N0} bytes): {1}</value>
-  </data>
-  <data name="Pass_ReadScalars_The_intermediate_file_was_written_by_a_different_Osprey_version__format__0___expected__1__" xml:space="preserve">
-    <value>The intermediate file was written by a different Osprey version (format {0}, expected {1}): {2}</value>
-  </data>
   <data name="Pass_ThrowPartialWalk_Reading_the_intermediate_file___0___failed_partway__after__1__records_were_read__The_run_" xml:space="preserve">
     <value>Reading the intermediate file '{0}' failed partway, after {1:N0} records were read. The run stops here rather than continue with part of the file's values.</value>
   </data>

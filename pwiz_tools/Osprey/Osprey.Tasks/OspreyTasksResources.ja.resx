@@ -297,10 +297,6 @@
     <value>校正レポート：{1:N0}個のファイルのうち{0:N0}個には校正診断がないため、レポートから除外されます：[{2}]</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_BuildProteinCompactStratum__0__proteins_have_2_or_more_detections___1__detected_peptides___their__2__precursor_" xml:space="preserve">
-    <value>{0:N0}個のタンパク質の検出数が2以上です（検出されたペプチド{1:N0}個）。これらの{2:N0}個のプリカーサー候補は第2パスFDRに進みます。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_ComputeFirstPassBaseIds_Cannot_locate_the_first_pass_intermediate_files_for___0___" xml:space="preserve">
     <value>「{0}」の第1パス中間ファイルが見つかりません。</value>
     <comment>Needs Review:New resource</comment>
@@ -419,10 +415,6 @@
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_First_pass__the_scores_of_the_file_were_saved_while_training_and_read_back__so_its_" xml:space="preserve">
     <value>第1パス：このファイルのスコアはトレーニング中に保存されて読み戻されたため、フィーチャーは再読み込みされませんでした。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_Reloaded_the_saved_list_of__0__precursor_candidates_from_proteins_with_2_or_more_" xml:space="preserve">
-    <value>検出数が2以上のタンパク質由来のプリカーサー候補{0:N0}個の保存済みリストを再読み込みしました。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_Resuming___0__of__1__files_already_have_up_to_date_first_pass_intermediate_files__scoring_" xml:space="preserve">
@@ -645,28 +637,12 @@
     <value>{0}には{1}が必要です。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="Pass1ScalarSeeder_Restored_the_first_pass_scores_of__1__kept_precursor_candidate_peaks_across__0__files_" xml:space="preserve">
-    <value>{0:N0}個のファイル全体で、保持された{1:N0}個のプリカーサー候補ピークの第1パススコアを復元しました。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass1ScalarSeeder_Restored_the_first_pass_scores_of__1__kept_precursor_candidate_peaks_in_1_file_" xml:space="preserve">
-    <value>1個のファイルで、保持された{1:N0}個のプリカーサー候補ピークの第1パススコアを復元しました。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="Pass2FdrSidecar_ComputeAndPersist_Computing_second_pass_FDR_scores_for_1_file_" xml:space="preserve">
     <value>1個のファイルの第2パスFDRスコアを計算中。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass2FdrSidecar_ComputeAndPersist_Computing_second_pass_FDR_scores_for__0__files_" xml:space="preserve">
     <value>{0:N0}個のファイルの第2パスFDRスコアを計算中。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__" xml:space="preserve">
-    <value>第2パスFDRを実行できません：保存された第1パスモデル、第1パス中間ファイル、または検出数が2以上のタンパク質由来のプリカーサー候補のリストがないか、読み取れません（原因となるファイルがある場合は、上記の警告にファイル名が記載されています）。{0}を指定せずに、解析を最初から最後まで通して実行してください。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Applied_the_recomputed_q_values_to__0__precursor_candidate_peaks___1__scored_with_the_first_pass_model_" xml:space="preserve">
-    <value>再計算されたQ値を{0:N0}個のプリカーサー候補ピーク（うち{1:N0}個は第1パスモデルでスコアリング）に{2:F1}秒で適用しました。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Collecting_second_pass_precursor_candidates_from_1_file" xml:space="preserve">
@@ -681,46 +657,6 @@
     <value>{1:N0}個の実験レベルのプリカーサー候補Q値のうち{0:N0}個を、最良のランレベル値まで引き上げました。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Recomputing_second_pass_q_values_across__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイル全体で第2パスのQ値を再計算中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Recomputing_second_pass_q_values_for_1_file" xml:space="preserve">
-    <value>1個のファイルの第2パスのQ値を再計算中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Scoring_up_to__0__re_scored_peaks_with_the_first_pass_model__one_file_at_a_time_" xml:space="preserve">
-    <value>最大{0:N0}個の再スコアリングされたピークを、第1パスモデルで1ファイルずつスコアリングします。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR___0__is_not_a_first_pass_intermediate_file_this_version_of_Osprey_can_" xml:space="preserve">
-    <value>第2パスFDR：{0}は、このバージョンのOspreyで読み取れる第1パス中間ファイルではありません（形式{1}）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR__first_pass_intermediate_file_not_found___0_" xml:space="preserve">
-    <value>第2パスFDR：第1パス中間ファイルが見つかりません：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR__no__scores_parquet_file_is_known_for___0____so_its_first_pass_" xml:space="preserve">
-    <value>第2パスFDR：「{0}」に対応する既知の{1}ファイルがないため、その第1パス中間ファイルが見つかりません。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR__no_input_file_matches___0____so_its_second_pass_intermediate_file_cannot_" xml:space="preserve">
-    <value>第2パスFDR：「{0}」に一致する入力ファイルがないため、その第2パス中間ファイルを書き込めません。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR__recomputing_q_values_for__1__precursor_candidates_from_proteins_with_2_" xml:space="preserve">
-    <value>第2パスFDR：検出数が2以上のタンパク質由来の{1:N0}個のプリカーサー候補のQ値を再計算中。その他の候補は第1パスのQ値を維持します。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR__the_saved_first_pass_model_cannot_be_used_" xml:space="preserve">
-    <value>第2パスFDR：保存された第1パスモデルは使用できません。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_over__0__files__recomputing_q_values_for__1__precursor_candidates_from_" xml:space="preserve">
-    <value>{0:N0}個のファイルに対する第2パスFDR：検出数が2以上のタンパク質由来の{1:N0}個のプリカーサー候補のQ値を再計算中。その他の候補は第1パスのQ値を維持します。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_experiment_level_q_values_could_not_be_written_for__0__files____1____Stopping_" xml:space="preserve">
     <value>{0:N0}個のファイルの第2パスの実験レベルQ値を書き込めませんでした：[{1}]。このままではタンパク質FDRが第2パスではない値を読み取るため、停止します。</value>
     <comment>Needs Review:New resource</comment>
@@ -733,18 +669,6 @@
     <value>{0:N0}個のファイルの実験レベルQ値を書き込み中</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="Pass2FdrSidecar_EnsureFrozenFirstPassPublished_Reloaded_the_precursor_candidates_from_proteins_with_2_or_more_detections___0__target_" xml:space="preserve">
-    <value>検出数が2以上のタンパク質由来のプリカーサー候補（{0:N0}個のターゲット-デコイペア）を再読み込みしました。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_EnsureFrozenFirstPassPublished_Reloaded_the_saved_first_pass_model_for_second_pass_FDR__first_pass_experiment_" xml:space="preserve">
-    <value>第2パスFDR用に、保存された第1パスモデルを再読み込みしました（第1パスの実験集約：{0}）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_EnsureFrozenFirstPassPublished_Reusing_the_saved_first_pass_model_" xml:space="preserve">
-    <value>保存された第1パスモデルを再利用します。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="Pass2FdrSidecar_LoadExperimentRecordsFrom_The_whole_experiment_first_pass_intermediate_file_exists_but_could_not_be_read___0_" xml:space="preserve">
     <value>実験全体の第1パス中間ファイルは存在しますが、読み取れませんでした：{0}</value>
     <comment>Needs Review:New resource</comment>
@@ -755,10 +679,6 @@
   </data>
   <data name="Pass2FdrSidecar_OverlayPass2SidecarOntoFile_Failed_to_reload_the_second_pass_intermediate_file_for___0_____1____protein_FDR_will_use_" xml:space="preserve">
     <value>「{0}」の第2パス中間ファイルの再読み込みに失敗しました（{1}）。タンパク質FDRにはその第1パスのQ値を使用します。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ReadOneFilePass2Inputs_Failed_to_reload_peak_features_from__0____1_" xml:space="preserve">
-    <value>{0}からピークフィーチャーの再読み込みに失敗しました：{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass2FdrSidecar_WritePass2ExperimentSidecar_Could_not_read_the_re_scored_results_for__0____1_" xml:space="preserve">
