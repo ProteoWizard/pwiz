@@ -975,10 +975,11 @@ namespace pwiz.Osprey.Test
 
             // --spectra-cache off: each input read in full by a reader running ahead of the lanes,
             // scored from memory with each window freed as it is scored, and read again for the
-            // re-score, gives the cached answer and writes no cache - on one lane, on a lane per file,
-            // and on one lane with a budget of a file and a half, where the reader must wait part-way
-            // through a file for scoring to free windows.
-            foreach (var (lanes, ahead) in new[] { (1, 1.0), (RUN_NAMES.Length, 1.0), (1, 0.5) })
+            // re-score, gives the cached answer and writes no cache - on one lane with no read-ahead
+            // (the default), on one lane and on a lane per file reading a file ahead, and on one lane
+            // with a budget of a file and a half, where the reader must wait part-way through a file
+            // for scoring to free windows.
+            foreach (var (lanes, ahead) in new[] { (1, 0.0), (1, 1.0), (RUN_NAMES.Length, 1.0), (1, 0.5) })
             {
                 string noCacheDir = CreateDir(string.Format(CultureInfo.InvariantCulture, @"no-spectra-cache-{0}-{1}", lanes, ahead));
                 double savedAhead = OspreyEnvironment.ReadAhead;

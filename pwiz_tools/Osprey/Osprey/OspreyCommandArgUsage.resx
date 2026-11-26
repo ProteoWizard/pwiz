@@ -284,7 +284,7 @@
     <value>Spectra cache folder</value>
   </data>
   <data name="_spectra_cache" xml:space="preserve">
-    <value>Write each data file's {0} the first time it is read, so the second-pass re-score and later searches read it instead of the data file (default: on). With {1}, nothing is written and each data file is read again where its spectra are needed: slower, but with no cache on disk, which for Astral data is about 70% of the data files' size. A cache that already exists is read either way. See also {2}.</value>
+    <value>Write each data file's {0} the first time it is read, so the second-pass re-score and later searches read it instead of the data file (default: on). With {1}, nothing is written and each data file is read again where its spectra are needed: slower, and needing more memory, since each file's spectra are held in memory while it is scored, but with no cache on disk, which for Astral data is about 70% of the data files' size. A cache that already exists is read either way. See also {2}.</value>
   </data>
   <data name="_spectra_cache_property" xml:space="preserve">
     <value>Write spectra caches</value>

@@ -447,16 +447,17 @@ namespace pwiz.Osprey.Core
         private static readonly EnvVar ENV_READ_AHEAD = new EnvVar(@"OSPREY_READ_AHEAD", EnvVarGroup.performance,
             @"How many files' spectra the reader of input files without a .spectra.bin may hold beyond one per " +
             @"file lane, measured in the first file's size. 0 reads each file only when its lane asks for it.")
-            { DefaultValue = @"1" };
+            { DefaultValue = @"0" };
 
         /// <summary>
         /// The reader of input files with no <c>.spectra.bin</c> (<c>SpectraPrefetcher</c>) reads them in
         /// order ahead of the lanes that score them, holding back while the resident spectra would exceed
-        /// (lanes + this) times the first file's. Scoring frees each window as it scores it, so with
-        /// one lane and the default of 1 the next file is read while the current one scores, and no
-        /// more than two files' spectra are ever resident.
+        /// (lanes + this) times the first file's. Scoring frees each window as it scores it. The default
+        /// of 0 reads a file only when its lane asks for it, because the per-run first-pass model already
+        /// makes scoring the most memory-hungry stage; 1 reads the next file while the current one scores,
+        /// a little faster for up to one more file's spectra resident.
         /// </summary>
-        public static double ReadAhead { get; set; } = ParseDoubleOrNull(ENV_READ_AHEAD) ?? 1;
+        public static double ReadAhead { get; set; } = ParseDoubleOrNull(ENV_READ_AHEAD) ?? 0;
 
         private static readonly EnvVar ENV_READ_THREADS = new EnvVar(@"OSPREY_READ_THREADS", EnvVarGroup.performance,
             @"How many input files without a .spectra.bin are read at once.")
