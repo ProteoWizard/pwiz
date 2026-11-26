@@ -84,7 +84,7 @@ Measured on the matched 3 files, per run:
 | | Defaults | Recipe (GBDT) |
 |---|---|---|
 | `.scores.parquet` | 1.8-1.9 GB | 3.7-3.9 GB (109 features, float64) |
-| `.scores-reconciled.parquet` | 0.37-0.40 GB (protein-compact) | 0.16-0.17 GB (transfer reconciles only reported precursors) |
+| `.scores-reconciled.parquet` | 0.37-0.40 GB (the since-removed protein-compact second pass) | 0.16-0.17 GB (transfer reconciles only reported precursors) |
 | run directory, 3 files | 7.7 GB | 13 GB |
 
 Both also keep the 4.4 GB `.spectra.bin` cache per run beside the input. DIA-NN 2.7.0 reading the .raw keeps a 74 MB

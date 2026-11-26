@@ -18,7 +18,6 @@ stay. It is a review checklist: run every new or edited user-facing string again
 | entries | **precursor candidates (targets + decoys)** | "entries" is shorthand for a library row, coined for memory assertions ("no O(files x entries)"). |
 | base_id(s) | **precursor candidates** | Same reason; consistency with the line above. |
 | compaction | say what was kept and why | The operation name says nothing about the result. |
-| stratum / protein-compact subset | **precursor candidates from proteins with 2 or more detections** | A noun swap ("set") is as opaque as the original; the phrase names the criterion. "protein-compact subset" is acceptable only where the flag itself is named. "Detections" is the general word for passing the current cutoff. |
 | boundary file pair | **intermediate files** | Do not add "that the next task needs". |
 | bundle / envelope / reconciliation plan | **cross-run reconciliation files** | "Reconciliation files" already implies intermediate; do not stack the two words. |
 | results (for anything written beside an input) | **intermediate file** | "Results" is reserved for the end results a user looks at. |

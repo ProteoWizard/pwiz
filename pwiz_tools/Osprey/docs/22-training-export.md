@@ -111,10 +111,10 @@ One row per exported precursor per run, in ascending `entry_id` order:
   the **first-pass** run q from `<stem>.1st-pass.fdr_scores.bin` (`TrainingExportWriter.RunQPath`);
   the footer's `osprey.training_export.run_q_pass` records it as `1`. The first pass competes the
   whole run in one pool against every decoy - the undepleted, calibrated null a fine-tune should
-  learn from. The second pass's run q is a different statistic: under `protein-compact` it comes
-  from the protein stratum and its complement competing separately, each with its own conservative
-  `+1`, so on a small run a half accepts nothing at 1% (see [12-second-pass-fdr.md](12-second-pass-fdr.md)).
-  Selecting on it, as the export did until #4993 made that competition stratified, left two of the
+  learn from. The second pass's run q is a different statistic: the first pass's, re-mapped for
+  the peaks cross-run reconciliation moved, so it depends on the cohort the run was searched with
+  (see [12-second-pass-fdr.md](12-second-pass-fdr.md)). Under the since-removed `protein-compact`
+  second pass it was worse still: selecting on it left two of the
   three Stellar subset runs with no training rows at all (0 / 102 / 0 of 193 targets, against
   118 / 111 / 121 at 1% in the first pass), and the RT fine-tune with one test row. The export
   therefore reads a sidecar written before any re-scoring, so an export written while re-scoring
