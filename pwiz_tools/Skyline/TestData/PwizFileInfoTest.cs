@@ -32,6 +32,7 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
+using DetailLevel = Pwiz.Data.MsData.Spectra.DetailLevel;
 
 namespace pwiz.SkylineTestData
 {
@@ -439,6 +440,29 @@ namespace pwiz.SkylineTestData
             {
                 Assert.AreEqual("sps", msDataFile.GetScanDescription(0));
             }
+        }
+
+        /// <summary>
+        /// A UV/DAD trace has no ms level at any detail level, and below full metadata the Agilent
+        /// reader gives it no start time either. Asking it for them must not raise the detail level
+        /// that every later spectrum of the file is read at.
+        /// </summary>
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)]
+        public void TestNonMsSpectraKeepMetadataDetailLevels()
+        {
+            if (Skyline.Program.NoVendorReaders)
+                return;
+
+            string path = TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Agilent,
+                "TOFsulfasMS4GHzDualMode+DADSpectra+UVSignal272-NoProfile.d");
+            using var msDataFile = new MsDataFileImpl(path);
+            int count = msDataFile.SpectrumCount;
+            var nonMsIndices = Enumerable.Range(0, count).Where(i => msDataFile.GetMsLevel(i) == 0).ToList();
+            // Not the last spectrum read, so its start time is not answered from the cached spectrum.
+            int nonMsIndex = nonMsIndices.First();
+            Assert.AreNotEqual(count - 1, nonMsIndex);
+            Assert.IsTrue(msDataFile.GetStartTime(nonMsIndex).HasValue);
+            Assert.AreEqual((DetailLevel.InstantMetadata, DetailLevel.InstantMetadata), msDataFile.MetadataDetailLevels);
         }
 
         [TestMethod]

@@ -336,9 +336,9 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
         var ie = _index[index];
         bool getBinaryData = detailLevel >= DetailLevel.FullData;
 
-        if (ie.IsNonMs) return BuildNonMsSpectrum(index, ie, getBinaryData);
+        if (ie.IsNonMs) return BuildNonMsSpectrum(index, ie, detailLevel);
         if (ie.IsImsCombined) return BuildImsCombinedSpectrum(index, ie, detailLevel);
-        if (ie.IsImsDrift) return BuildImsDriftSpectrum(index, ie, getBinaryData);
+        if (ie.IsImsDrift) return BuildImsDriftSpectrum(index, ie, detailLevel);
 
         var rec = _raw.GetScanRecord(ie.RowNumber);
 
@@ -442,18 +442,13 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
         spec.Params.Set(CVID.MS_ms_level, msLevel);
         spec.Params.Set(spectrumType);
 
-        // Past this point the SDK spectrum is required, and fetching it decompresses and
-        // mass-calibrates the whole scan. cpp returns here for anything short of full metadata
-        // (SpectrumList_Agilent.cpp:289); Skyline asks for ms level, retention time and
-        // precursors at InstantMetadata before it reads each spectrum's data.
-        // The all-ions and neutral loss/gain precursor gets its isolation window from the SDK
-        // spectrum's mass range, so it is incomplete here. cpp returns it anyway, but Skyline takes
-        // any non-empty precursor list as final and would never ask again; without one it raises
-        // its precursor request to full metadata, while ms level and start time stay instant.
+        // Everything below needs the spectrum read, peaks included. cpp returns here below full
+        // metadata (SpectrumList_Agilent.cpp:289) with its precursors half built: the charge, the
+        // parent scan and an all-ions window come from that read. Skyline takes the first
+        // precursors any level returns as final, so none are returned until they are complete.
         if (detailLevel < DetailLevel.FullMetadata)
         {
-            if (reportMs2ForAllIons || isNeutralLossOrGain)
-                spec.Precursors.Clear();
+            spec.Precursors.Clear();
             return spec;
         }
 
@@ -588,8 +583,9 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
     /// from the frame's <c>SpectrumDetails</c>; the peaks come from
     /// <c>FrameMs(frame, bin, ZeroBounded)</c> (cpp <c>FrameImpl::getScan</c>).
     /// </summary>
-    private Spectrum BuildImsDriftSpectrum(int index, IndexEntry ie, bool getBinaryData)
+    private Spectrum BuildImsDriftSpectrum(int index, IndexEntry ie, DetailLevel detailLevel)
     {
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
         var reader = _raw.ImsReader ?? throw new IOException(
             $"[SpectrumList_Agilent] {_raw.Path} reports ion-mobility data but MIDAC could not open it");
 
@@ -673,6 +669,17 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
         }
         spec.Params.Set(CVID.MS_ms_level, msLevel);
         spec.Params.Set(spectrumType);
+
+        // Everything below needs the drift scan decoded. cpp returns here below full metadata
+        // (SpectrumList_Agilent.cpp:289). An all-ions or neutral-loss window spans the drift
+        // scan's m/z range, so such a precursor is not complete yet and is left out: Skyline
+        // takes the first precursors any level returns as final.
+        if (detailLevel < DetailLevel.FullMetadata)
+        {
+            if (reportMs2ForAllIons || isNeutralLossOrGain)
+                spec.Precursors.Clear();
+            return spec;
+        }
 
         var driftScan = ReadDriftScan(reader, ie.FrameNumber, ie.DriftBinIndex);
 
@@ -1102,8 +1109,9 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
     /// MS_profile_spectrum, emits wavelength + intensity arrays, computes
     /// MS_lowest/highest_observed_wavelength from the first / last non-zero intensity points.
     /// </summary>
-    private Spectrum BuildNonMsSpectrum(int index, IndexEntry ie, bool getBinaryData)
+    private Spectrum BuildNonMsSpectrum(int index, IndexEntry ie, DetailLevel detailLevel)
     {
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
         var spec = new Spectrum
         {
             Index = index,
@@ -1115,6 +1123,11 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
         spec.ScanList.Set(CVID.MS_no_combination);
         var scan = new Scan { InstrumentConfiguration = _defaultIc };
         spec.ScanList.Scans.Add(scan);
+
+        // Even the start time comes from reading the trace, which cpp does at every level
+        // (getNonMsSpectrum). Below full metadata only what needs no read is returned.
+        if (detailLevel < DetailLevel.FullMetadata)
+            return spec;
 
         var sd = _raw.GetNonMsSpectrumByRow(ie.RowNumber);
         if (sd is null)
