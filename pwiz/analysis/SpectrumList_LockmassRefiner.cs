@@ -9,7 +9,7 @@ using Pwiz.Vendor.Waters;
 namespace Pwiz.Analysis;
 
 /// <summary>
-/// SpectrumList wrapper that routes <see cref="GetSpectrum"/> calls through Waters'
+/// SpectrumList wrapper that routes <see cref="GetSpectrum(int, DetailLevel)"/> calls through Waters'
 /// post-acquisition lockmass correction. Mirrors pwiz C++
 /// <c>pwiz::analysis::SpectrumList_LockmassRefiner</c>.
 /// </summary>
@@ -81,7 +81,15 @@ public sealed class SpectrumList_LockmassRefiner : SpectrumListWrapper
     }
 
     /// <inheritdoc/>
-    public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
+    public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
+        GetSpectrum(index, getBinaryData ? DetailLevel.FullData : DetailLevel.FullMetadata);
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Overridden, as cpp's is, so the detail level reaches the Waters list and a metadata request
+    /// skips its peak reads.
+    /// </remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel)
     {
         var waters = FindInnerWaters(out var picker);
         Spectrum spec;
@@ -89,14 +97,14 @@ public sealed class SpectrumList_LockmassRefiner : SpectrumListWrapper
         {
             // Passthrough — non-Waters source, lockmass refinement isn't meaningful but the
             // wrapper is still semantically valid (matches pwiz C++ which logs a warning).
-            spec = Inner.GetSpectrum(index, getBinaryData);
+            spec = Inner.GetSpectrum(index, detailLevel);
         }
         else if (picker is not null)
         {
             // Outer peak picker: the Waters list emits centroided data via its lockmass-aware
             // GetCentroidSpectrum overload, then the picker no-ops because the spectrum is
             // already marked centroid. Strip any leftover MS_profile_spectrum term.
-            spec = waters.GetCentroidSpectrumWithLockmass(index, getBinaryData, picker.MsLevels,
+            spec = waters.GetCentroidSpectrumWithLockmass(index, detailLevel, picker.MsLevels,
                 _mzPositiveScans, _mzNegativeScans, _tolerance);
             if (spec.Params.HasCVParam(CVID.MS_centroid_spectrum))
             {
@@ -107,7 +115,7 @@ public sealed class SpectrumList_LockmassRefiner : SpectrumListWrapper
         }
         else
         {
-            spec = waters.GetSpectrumWithLockmass(index, getBinaryData,
+            spec = waters.GetSpectrumWithLockmass(index, detailLevel,
                 _mzPositiveScans, _mzNegativeScans, _tolerance);
         }
         spec.DataProcessing = _dp;

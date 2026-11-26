@@ -55,6 +55,11 @@ public sealed class SpectrumList_IonMobility : SpectrumListWrapper
         _ccs = leaf as IIonMobilityCcsConversion;
     }
 
+    /// <inheritdoc/>
+    /// <remarks>Spectra pass through unchanged, so the detail level does too.</remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel) =>
+        Inner.GetSpectrum(index, detailLevel);
+
     /// <summary>The units IM is reported in across this list — see
     /// <see cref="Pwiz.Data.MsData.Spectra.IonMobilityUnits"/>.</summary>
     public IonMobilityUnits IonMobilityUnits { get; }

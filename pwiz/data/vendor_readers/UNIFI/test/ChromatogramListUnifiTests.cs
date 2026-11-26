@@ -73,9 +73,9 @@ public class ChromatogramListUnifiTests
         Assert.IsTrue(c.Params.HasCVParam(CVID.MS_TIC_chromatogram));
         Assert.AreEqual(6, c.DefaultArrayLength); // 3 + 3 entries
         // Pairs sorted by RT: 0, 0.25, 0.5(fn1), 0.5(fn2), 0.75, 1.0.
-        CollectionAssert.AreEqual(new[] { 0.0, 0.25, 0.5, 0.5, 0.75, 1.0 }, c.BinaryDataArrays[0].Data);
+        CollectionAssert.AreEqual(new[] { 0.0, 0.25, 0.5, 0.5, 0.75, 1.0 }, c.BinaryDataArrays[0].Data.ToArray());
         // Intensities follow the matching insertion order; both 0.5 entries come from fn1 then fn2.
-        CollectionAssert.AreEqual(new[] { 100.0, 50.0, 200.0, 60.0, 70.0, 300.0 }, c.BinaryDataArrays[1].Data);
+        CollectionAssert.AreEqual(new[] { 100.0, 50.0, 200.0, 60.0, 70.0, 300.0 }, c.BinaryDataArrays[1].Data.ToArray());
     }
 
     [TestMethod]
@@ -94,8 +94,8 @@ public class ChromatogramListUnifiTests
         var list = new ChromatogramList_UNIFI(src, globalChromatogramsAreMs1Only: true);
         var c = list.GetChromatogram(0, true);
         Assert.AreEqual(1, c.DefaultArrayLength);
-        CollectionAssert.AreEqual(new[] { 0.0 }, c.BinaryDataArrays[0].Data);
-        CollectionAssert.AreEqual(new[] { 1.0 }, c.BinaryDataArrays[1].Data);
+        CollectionAssert.AreEqual(new[] { 0.0 }, c.BinaryDataArrays[0].Data.ToArray());
+        CollectionAssert.AreEqual(new[] { 1.0 }, c.BinaryDataArrays[1].Data.ToArray());
     }
 
     [TestMethod]
@@ -122,8 +122,8 @@ public class ChromatogramListUnifiTests
         Assert.IsTrue(c.Params.HasCVParam(CVID.MS_positive_scan));
         Assert.AreEqual(489.5, c.Precursor.IsolationWindow.CvParam(CVID.MS_isolation_window_target_m_z).ValueAs<double>());
         Assert.AreEqual(120.0, c.Product.IsolationWindow.CvParam(CVID.MS_isolation_window_target_m_z).ValueAs<double>());
-        CollectionAssert.AreEqual(new[] { 0.5, 1.0 }, c.BinaryDataArrays[0].Data);
-        CollectionAssert.AreEqual(new[] { 1234.0, 5678.0 }, c.BinaryDataArrays[1].Data);
+        CollectionAssert.AreEqual(new[] { 0.5, 1.0 }, c.BinaryDataArrays[0].Data.ToArray());
+        CollectionAssert.AreEqual(new[] { 1234.0, 5678.0 }, c.BinaryDataArrays[1].Data.ToArray());
     }
 
     [TestMethod]

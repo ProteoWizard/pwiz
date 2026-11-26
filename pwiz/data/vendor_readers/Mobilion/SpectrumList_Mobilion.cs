@@ -116,9 +116,22 @@ public sealed class SpectrumList_Mobilion : SpectrumListBase, IIonMobilitySpectr
     /// <summary>Pulls spectrum at <paramref name="index"/>, mirroring cpp
     /// <c>SpectrumList_Mobilion::spectrum</c> (SpectrumList_Mobilion.cpp:77-256).</summary>
     public Spectrum GetSpectrum(int index, bool getBinaryData, bool doCentroid)
+        => BuildSpectrum(index, getBinaryData ? DetailLevel.FullData : DetailLevel.FullMetadata);
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Overridden, as cpp's is, so a metadata request does not decode the frame's peaks. The
+    /// levels stop where cpp's do (SpectrumList_Mobilion.cpp:112, :131, :159), except that the
+    /// peak count waits for full metadata, which is where cpp computes it.
+    /// </remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel)
+        => BuildSpectrum(index, detailLevel);
+
+    private Spectrum BuildSpectrum(int index, DetailLevel detailLevel)
     {
         if (index < 0 || index >= _index.Count)
             throw new ArgumentOutOfRangeException(nameof(index));
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
         var ie = _index[index];
 
         var spec = new Spectrum { Index = index, Id = ie.Id };
@@ -135,6 +148,9 @@ public sealed class SpectrumList_Mobilion : SpectrumListBase, IIonMobilitySpectr
 
         // cpp SpectrumList_Mobilion.cpp:109-110: scan_start_time in seconds (UO_second).
         scan.Set(CVID.MS_scan_start_time, frame.TimeSeconds, CVID.UO_second);
+
+        if (detailLevel == DetailLevel.InstantMetadata)
+            return spec;
 
         // Per-frame metadata used both for polarity and as profile-spectrum tag.
         string? polarity = frame.ReadFrameString(MobilionAttr.FRM_POLARITY);
@@ -179,6 +195,9 @@ public sealed class SpectrumList_Mobilion : SpectrumListBase, IIonMobilitySpectr
             precursor.SelectedIons.Add(new SelectedIon(mid));
             spec.Precursors.Add(precursor);
         }
+
+        if (detailLevel < DetailLevel.FullMetadata)
+            return spec;
 
         if (!getBinaryData)
         {

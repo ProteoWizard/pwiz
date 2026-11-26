@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
@@ -33,6 +34,10 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
     private readonly List<IndexEntry> _index = new();
     private readonly Dictionary<string, int> _idToIndex = new(StringComparer.Ordinal);
     private readonly Lazy<(float Lower, float Upper)?> _ddaIsolationOffsets;
+    // Peak count of the last IM-combined block read for each function, used to pre-size the
+    // next block's arrays. Only a sizing hint: a stale or racing value costs at most one list
+    // regrowth, never a wrong result.
+    private readonly ConcurrentDictionary<int, int> _combinedPeakCounts = new();
 
     /// <summary>DataProcessing emitted as the <c>defaultDataProcessingRef</c>.</summary>
     public DataProcessing? Dp { get; set; }
@@ -319,7 +324,11 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
 
     /// <inheritdoc/>
     public Spectrum GetCentroidSpectrum(int index, bool getBinaryData, IntegerSet msLevelsToCentroid) =>
-        GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
+        GetSpectrumImpl(index, ToDetailLevel(getBinaryData), msLevelsToCentroid, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
+
+    /// <inheritdoc/>
+    public Spectrum GetCentroidSpectrum(int index, DetailLevel detailLevel, IntegerSet msLevelsToCentroid) =>
+        GetSpectrumImpl(index, detailLevel, msLevelsToCentroid, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
 
     /// <summary>
     /// Lockmass-aware vendor centroid path — used by <c>SpectrumList_LockmassRefiner</c>
@@ -327,14 +336,27 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
     /// extension surface: not part of <see cref="ISpectrumList"/>, only meaningful when the
     /// inner reader is a <see cref="SpectrumList_Waters"/>.
     /// </summary>
-    public Spectrum GetCentroidSpectrumWithLockmass(int index, bool getBinaryData,
+    public Spectrum GetCentroidSpectrumWithLockmass(int index, DetailLevel detailLevel,
         IntegerSet msLevelsToCentroid,
         double lockmassMzPos, double lockmassMzNeg, double lockmassTolerance) =>
-        GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid, lockmassMzPos, lockmassMzNeg, lockmassTolerance);
+        GetSpectrumImpl(index, detailLevel, msLevelsToCentroid, lockmassMzPos, lockmassMzNeg, lockmassTolerance);
 
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
-        GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid: null, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
+        GetSpectrumImpl(index, ToDetailLevel(getBinaryData), msLevelsToCentroid: null, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Overridden, as cpp's is, so a metadata request skips the scan-stat and peak reads.
+    /// Instant metadata is what the function and index give without a scan stat (type, ms level,
+    /// start time, drift time, polarity, representation), plus the collision energy the MSe
+    /// heuristic needs to settle the ms level, as in cpp (SpectrumList_Waters.cpp:166). Fast
+    /// metadata adds the scan stats and the precursors. The peak count waits for full metadata,
+    /// one level later than cpp's PEAKS_IN_SCAN at fast metadata (:241), so no level below full
+    /// metadata reports a count.
+    /// </remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel) =>
+        GetSpectrumImpl(index, detailLevel, msLevelsToCentroid: null, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
 
     /// <summary>
     /// Lockmass-aware overload — vendor-specific extension surface for the analysis-side
@@ -344,15 +366,19 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
     /// returns is already gain-adjusted) and the SET_MASS scan-stat used for the MS2 isolation
     /// window is corrected via the per-RT gain factor.
     /// </summary>
-    public Spectrum GetSpectrumWithLockmass(int index, bool getBinaryData,
+    public Spectrum GetSpectrumWithLockmass(int index, DetailLevel detailLevel,
         double lockmassMzPos, double lockmassMzNeg, double lockmassTolerance,
         IntegerSet? msLevelsToCentroid = null) =>
-        GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid, lockmassMzPos, lockmassMzNeg, lockmassTolerance);
+        GetSpectrumImpl(index, detailLevel, msLevelsToCentroid, lockmassMzPos, lockmassMzNeg, lockmassTolerance);
 
-    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, IntegerSet? msLevelsToCentroid,
+    private static DetailLevel ToDetailLevel(bool getBinaryData) =>
+        getBinaryData ? DetailLevel.FullData : DetailLevel.FullMetadata;
+
+    private Spectrum GetSpectrumImpl(int index, DetailLevel detailLevel, IntegerSet? msLevelsToCentroid,
         double lockmassMzPos, double lockmassMzNeg, double lockmassTolerance)
     {
         if (index < 0 || index >= _index.Count) throw new ArgumentOutOfRangeException(nameof(index));
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
         var ie = _index[index];
         var spec = new Spectrum { Index = ie.Index, Id = ie.Id };
 
@@ -473,6 +499,9 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
             spec.Params.Set(CVID.MS_centroid_spectrum);
         }
 
+        if (detailLevel == DetailLevel.InstantMetadata)
+            return spec;
+
         // Base peak / TIC / peak count come from per-scan stats (not from the binary data),
         // matching pwiz C++ which fills these from MassLynxScanItem entries directly. Reading
         // a single item via the parameters round-trip (createParameters → getScanItemValue →
@@ -497,7 +526,8 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
                 if (TryParseDouble(bpMass, out double bpMassD)) spec.Params.Set(CVID.MS_base_peak_m_z, bpMassD);
                 if (TryParseDouble(bpInt, out double bpIntD)) spec.Params.Set(CVID.MS_base_peak_intensity, bpIntD);
                 if (TryParseDouble(tic, out double ticD)) spec.Params.Set(CVID.MS_total_ion_current, ticD);
-                if (int.TryParse(peaks, NumberStyles.Integer, CultureInfo.InvariantCulture, out int peaksI))
+                if (detailLevel >= DetailLevel.FullMetadata
+                    && int.TryParse(peaks, NumberStyles.Integer, CultureInfo.InvariantCulture, out int peaksI))
                     spec.DefaultArrayLength = peaksI;
             }
             else // non-combine IMS: per-block TIC, no base peak / peak count
@@ -608,20 +638,47 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
         // Read peaks. Centroid request goes through MassLynx ScanProcessor (or, for DDA, the
         // DDA processor's centroid path). IMS uses readDriftScan for individual bins; combine
         // IMS aggregates across all bins. Otherwise we read the raw scan as-is.
-        if (isMs && ie.Combined)
+        // A combined spectrum without binary data reads no drift bin: DefaultArrayLength stays
+        // the PeaksInScan scan stat set above, as in cpp, which returns before
+        // getCombinedSpectrumData for anything short of full data (SpectrumList_Waters.cpp:347-350).
+        // Decoding every bin just to count peaks made each metadata request cost as much as
+        // reading the spectrum, and Skyline asks for metadata on every spectrum it then skips.
+        if (detailLevel < DetailLevel.FullMetadata)
+            return spec;
+        bool combined = isMs && ie.Combined;
+        if (combined && !getBinaryData && willCentroid)
         {
-            // Combine path: build (mz, intensity, drift_time) arrays across all bins of the
-            // block, regardless of getBinaryData (DefaultArrayLength reflects the merged peak
-            // count). We always read peaks here because the combined spectrum has no useful
-            // scan-stat-driven shortcut.
+            // The PeaksInScan block above is skipped when centroiding. cpp never centroids an IMS
+            // block (SpectrumList_Waters.cpp:229), so it always reports PeaksInScan here; without
+            // it the count stays 0 and defaultArrayLength filters drop every combined spectrum.
+            string peaks = _data.GetScanItem(ie.Function, ie.Block, WatersScanItem.PeaksInScan);
+            if (int.TryParse(peaks, NumberStyles.Integer, CultureInfo.InvariantCulture, out int peaksI))
+                spec.DefaultArrayLength = peaksI;
+        }
+        if (combined && getBinaryData)
+        {
+            // Combine path: concatenate the peaks of all drift bins of the block.
             int numScansInBlock = _data.GetDriftScanCount(ie.Function);
-            var mzList = new List<double>();
-            var intList = new List<double>();
+            // Peaks are appended straight into the spectrum's own arrays, pre-sized from the last
+            // block of the same function, rather than into growing lists that are copied
+            // afterwards. A combined block can hold a million or more peaks, so each avoided copy
+            // and regrowth saves large-object-heap allocations and the full GCs they cause.
             // For non-SONAR IMS we collect drift time per peak. For SONAR we collect the
-            // quadrupole low/high bounds per peak (which become two arrays at the end).
-            var driftList = new List<double>();
-            var qLowList = new List<double>();
-            var qHighList = new List<double>();
+            // quadrupole low/high bounds per peak (two arrays, after m/z and intensity).
+            DetachableList<double>? driftList = null, qLowList = null, qHighList = null;
+            int capacity = GetCombinedCapacityHint(ie.Function);
+            var mzList = AddBinaryDataArray(spec, CVID.MS_m_z_array, CVID.MS_m_z, capacity);
+            var intList = AddBinaryDataArray(spec, CVID.MS_intensity_array, CVID.MS_number_of_detector_counts, capacity);
+            if (isSonar)
+            {
+                qLowList = AddBinaryDataArray(spec, CVID.MS_scanning_quadrupole_position_lower_bound_m_z_array, CVID.MS_m_z, capacity);
+                qHighList = AddBinaryDataArray(spec, CVID.MS_scanning_quadrupole_position_upper_bound_m_z_array, CVID.MS_m_z, capacity);
+            }
+            else
+            {
+                driftList = AddBinaryDataArray(spec, CVID.MS_raw_ion_mobility_array, CVID.UO_millisecond, capacity);
+            }
+            int peakCount = 0;
             for (int s = 0; s < numScansInBlock; s++)
             {
                 double driftTime = isSonar ? 0.0 : _data.GetDriftTime(s);
@@ -639,6 +696,7 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
                     // the MassLynx drift scans carry, which also shrinks defaultArrayLength.
                     if (_ignoreZeroIntensityPoints && binInt[i] == 0)
                         continue;
+                    peakCount++;
                     mzList.Add(binMz[i]);
                     intList.Add(binInt[i]);
                     if (isSonar)
@@ -647,38 +705,16 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
                         // array carries the drift scan index (= SONAR bin number, which Skyline's SONAR
                         // chromatogram filter reads via SonarMzToBinRange), and the upper-bound array is
                         // left zero; otherwise both carry the quadrupole precursor m/z range.
-                        if (_reportSonarBins) { qLowList.Add(s); qHighList.Add(0.0); }
-                        else { qLowList.Add(sonarLow); qHighList.Add(sonarHigh); }
+                        if (_reportSonarBins) { qLowList!.Add(s); qHighList!.Add(0.0); }
+                        else { qLowList!.Add(sonarLow); qHighList!.Add(sonarHigh); }
                     }
-                    else driftList.Add(driftTime);
+                    else driftList!.Add(driftTime);
                 }
             }
-            spec.DefaultArrayLength = mzList.Count;
-
-            if (getBinaryData)
-            {
-                spec.SetMZIntensityArrays(mzList, intList, CVID.MS_number_of_detector_counts);
-                if (isSonar)
-                {
-                    var qLowArr = new BinaryDataArray();
-                    qLowArr.Set(CVID.MS_scanning_quadrupole_position_lower_bound_m_z_array, "", CVID.MS_m_z);
-                    qLowArr.Data.AddRange(qLowList);
-                    spec.BinaryDataArrays.Add(qLowArr);
-                    var qHighArr = new BinaryDataArray();
-                    qHighArr.Set(CVID.MS_scanning_quadrupole_position_upper_bound_m_z_array, "", CVID.MS_m_z);
-                    qHighArr.Data.AddRange(qHighList);
-                    spec.BinaryDataArrays.Add(qHighArr);
-                }
-                else
-                {
-                    var driftArr = new BinaryDataArray();
-                    driftArr.Set(CVID.MS_raw_ion_mobility_array, "", CVID.UO_millisecond);
-                    driftArr.Data.AddRange(driftList);
-                    spec.BinaryDataArrays.Add(driftArr);
-                }
-            }
+            spec.DefaultArrayLength = peakCount;
+            SetCombinedCapacityHint(ie.Function, peakCount);
         }
-        else if (getBinaryData || willCentroid)
+        else if (!combined && (getBinaryData || willCentroid))
         {
             float[] mz, intensity;
             if (ie.Dda)
@@ -698,30 +734,54 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
 
             if (getBinaryData)
             {
-                var mzD = new double[mz.Length];
-                var intD = new double[intensity.Length];
-                for (int i = 0; i < mz.Length; i++) { mzD[i] = mz[i]; intD[i] = intensity[i]; }
-                if (isMs)
+                if (mz.Length != intensity.Length)
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture,
+                        "Waters scan returned {0} m/z values but {1} intensities.", mz.Length, intensity.Length));
+                // Widen float to double straight into the spectrum's own arrays. DiodeArray (EMR):
+                // pwiz C++ swapMZIntensityArrays switches the array CV term to MS_wavelength_array
+                // when the unit is UO_nanometer.
+                var xList = isMs
+                    ? AddBinaryDataArray(spec, CVID.MS_m_z_array, CVID.MS_m_z, mz.Length)
+                    : AddBinaryDataArray(spec, CVID.MS_wavelength_array, CVID.UO_nanometer, mz.Length);
+                var yList = AddBinaryDataArray(spec, CVID.MS_intensity_array, CVID.MS_number_of_detector_counts, mz.Length);
+                for (int i = 0; i < mz.Length; i++)
                 {
-                    spec.SetMZIntensityArrays(mzD, intD, CVID.MS_number_of_detector_counts);
-                }
-                else
-                {
-                    // DiodeArray (EMR): pwiz C++ swapMZIntensityArrays switches the array CV
-                    // term to MS_wavelength_array when the unit is UO_nanometer.
-                    var xArr = new BinaryDataArray();
-                    xArr.Set(CVID.MS_wavelength_array, "", CVID.UO_nanometer);
-                    xArr.Data.AddRange(mzD);
-                    var yArr = new BinaryDataArray();
-                    yArr.Set(CVID.MS_intensity_array, "", CVID.MS_number_of_detector_counts);
-                    yArr.Data.AddRange(intD);
-                    spec.BinaryDataArrays.Add(xArr);
-                    spec.BinaryDataArrays.Add(yArr);
+                    xList.Add(mz[i]);
+                    yList.Add(intensity[i]);
                 }
             }
         }
 
         return spec;
+    }
+
+    /// <summary>
+    /// Adds an empty binary data array to <paramref name="spec"/>, tagged the way
+    /// <see cref="Spectrum.SetMZIntensityArrays"/> tags its arrays, and returns its data buffer
+    /// pre-sized to <paramref name="capacity"/>.
+    /// </summary>
+    private static DetachableList<double> AddBinaryDataArray(Spectrum spec, CVID arrayType, CVID units, int capacity)
+    {
+        var array = new BinaryDataArray();
+        array.Set(arrayType, "", units);
+        array.Data.Capacity = capacity;
+        spec.BinaryDataArrays.Add(array);
+        return array.Data;
+    }
+
+    /// <summary>
+    /// Expected peak count for the next IM-combined block of <paramref name="function"/>: the
+    /// last one seen plus 1/8 headroom, so a slightly larger block does not force a regrowth.
+    /// </summary>
+    private int GetCombinedCapacityHint(int function)
+    {
+        int lastCount = _combinedPeakCounts.GetValueOrDefault(function);
+        return lastCount + lastCount / 8;
+    }
+
+    private void SetCombinedCapacityHint(int function, int peakCount)
+    {
+        _combinedPeakCounts[function] = peakCount;
     }
 
     /// <summary>

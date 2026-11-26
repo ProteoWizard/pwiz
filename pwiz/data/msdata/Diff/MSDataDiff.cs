@@ -91,6 +91,23 @@ public static class MSDataDiff
     }
 
     /// <summary>
+    /// Returns an empty string when the two precursor lists are logically equal under
+    /// <paramref name="config"/>; otherwise a report of the differences. Applies the same
+    /// per-precursor comparison <see cref="DescribeSpectrum"/> uses, for callers that compare
+    /// precursors without the rest of the spectrum.
+    /// </summary>
+    public static string DescribePrecursors(List<Precursor> a, List<Precursor> b, DiffConfig? config = null)
+    {
+        ArgumentNullException.ThrowIfNull(a);
+        ArgumentNullException.ThrowIfNull(b);
+        var ctx = new Context(config ?? new DiffConfig());
+
+        DiffListByIndex(a, b, DiffPrecursor, ctx, "precursor");
+
+        return ctx.Format();
+    }
+
+    /// <summary>
     /// Tolerance mode for the <c>msLevel</c> comparison in <see cref="DescribeSpectraDataOnly"/>.
     /// Captures the well-known lossy defaults each peak-list format applies on read.
     /// </summary>
@@ -513,7 +530,7 @@ public static class MSDataDiff
     }
 
     private static List<(double Mz, double Intensity, double Mobility)> SortedTriples(
-        List<double> mz, List<double> intensity, List<double> mobility)
+        DetachableList<double> mz, DetachableList<double> intensity, DetachableList<double> mobility)
     {
         var triples = new List<(double, double, double)>(mz.Count);
         for (int i = 0; i < mz.Count; i++)
@@ -744,8 +761,8 @@ public static class MSDataDiff
     /// which case the caller should compare them as they are - a length difference is itself the
     /// finding.
     /// </summary>
-    private static bool TryPairPeaks(List<double> aMz, List<double> aIntensity,
-                                     List<double> bMz, List<double> bIntensity,
+    private static bool TryPairPeaks(DetachableList<double> aMz, DetachableList<double> aIntensity,
+                                     DetachableList<double> bMz, DetachableList<double> bIntensity,
                                      double precision,
                                      out List<int> aPaired, out List<int> bPaired)
     {
@@ -797,7 +814,7 @@ public static class MSDataDiff
     /// deterministic. The tie-break matters: a combined ion mobility spectrum holds the same m/z
     /// once per mobility bin, and pairing those by intensity is what lines the two sides up.
     /// </summary>
-    private static int[] StableOrderBy(List<double> values, List<double>? tieBreak = null)
+    private static int[] StableOrderBy(DetachableList<double> values, DetachableList<double>? tieBreak = null)
     {
         var order = new int[values.Count];
         for (int i = 0; i < order.Length; i++)

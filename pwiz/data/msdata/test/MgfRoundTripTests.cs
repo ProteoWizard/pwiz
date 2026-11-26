@@ -103,8 +103,8 @@ public class MgfRoundTripTests
         Assert.AreEqual(2, si.CvParam(CVID.MS_charge_state).ValueAs<int>(), "precursor charge");
 
         // Peaks.
-        CollectionAssert.AreEqual(new[] { 100.5, 200.7, 300.2 }, spec.GetMZArray()!.Data, "m/z array");
-        CollectionAssert.AreEqual(new[] { 50.0, 200.0, 80.0 }, spec.GetIntensityArray()!.Data, "intensity array");
+        CollectionAssert.AreEqual(new[] { 100.5, 200.7, 300.2 }, spec.GetMZArray()!.Data.ToArray(), "m/z array");
+        CollectionAssert.AreEqual(new[] { 50.0, 200.0, 80.0 }, spec.GetIntensityArray()!.Data.ToArray(), "intensity array");
 
         // Retention time + units.
         var rt = spec.ScanList.Scans[0].CvParam(CVID.MS_scan_start_time);

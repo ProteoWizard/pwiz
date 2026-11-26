@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The regression harness's reader of the run-scope records a run keeps in its stub scores
+       parquets (Regression\FdrSidecars.ps1). It reads them through Osprey.IO in a process of its
+       own, because the harness's PowerShell can run on an older .NET than Osprey's net10.0 (the
+       TeamCity agent's pwsh is on .NET 9), and an assembly built for a newer runtime cannot be
+       loaded into it. In Osprey.sln so every build of Osprey builds it. Not shipped. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>pwiz.Osprey.Regression</RootNamespace>
+    <AssemblyName>OspreyStubReader</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Osprey.IO\Osprey.IO.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -272,11 +272,12 @@ internal sealed class Baf2SqlData : IBrukerData
     }
 
     /// <inheritdoc/>
-    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, bool getBinaryData,
+    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, DetailLevel detailLevel,
         bool preferCentroid, bool sortAndJitter, bool includeIsolationArrays = false)
     {
         ArgumentNullException.ThrowIfNull(spec);
         ArgumentNullException.ThrowIfNull(entry);
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
         _ = includeIsolationArrays; // BAF has no diaPASEF isolation arrays.
         var row = (BafRow)entry.Tag;
 
@@ -304,6 +305,20 @@ internal sealed class Baf2SqlData : IBrukerData
 
         if (row.MsLevel > 1 && row.PrecursorMz.HasValue)
             AddPrecursor(spec, row);
+
+        // Everything below decodes the peak arrays. cpp returns before reading them for anything
+        // short of full metadata (SpectrumList_Bruker.cpp:282); Skyline asks for ms level,
+        // retention time and precursors at InstantMetadata before it reads each spectrum's data.
+        // The representation comes from which arrays the row stores, so reporting it decodes
+        // nothing. Only a stored-but-empty profile, which falls back to the line arrays below, is
+        // reported differently once decoded.
+        if (detailLevel < DetailLevel.FullMetadata)
+        {
+            // As decoded below: a row with neither array reads as profile unless centroid was asked for
+            bool lineOnly = preferCentroid || (!row.ProfileIntensityId.HasValue && row.LineIntensityId.HasValue);
+            spec.Params.Set(lineOnly ? CVID.MS_centroid_spectrum : CVID.MS_profile_spectrum);
+            return;
+        }
 
         // Decide profile vs centroid. cpp: prefer profile, fall back to line if profile empty
         // OR if caller asked for line data via msLevelsToCentroid (we pass that as preferCentroid).

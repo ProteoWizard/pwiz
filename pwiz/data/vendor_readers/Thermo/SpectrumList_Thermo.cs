@@ -258,6 +258,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         public MassAnalyzerType MassAnalyzer;
         public ScanModeType ScanMode;
         public PolarityType Polarity;
+        public bool IsProfile;
         public double IsolationMz;
 
         // Controller this scan belongs to. MS scans use Device.MS / 1; PDA-as-spectra entries
@@ -308,6 +309,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
                 MassAnalyzer = filter.MassAnalyzer,
                 ScanMode = filter.ScanMode,
                 Polarity = filter.Polarity,
+                IsProfile = filter.ScanData == ScanDataType.Profile,
             };
             if (entry.MsOrder > MSOrderType.Ms && filter.MassCount > 0)
             {
@@ -385,11 +387,33 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
 
     /// <inheritdoc/>
     public Spectrum GetCentroidSpectrum(int index, bool getBinaryData, IntegerSet msLevelsToCentroid) =>
-        GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid);
+        GetSpectrumImpl(index, ToDetailLevel(getBinaryData), msLevelsToCentroid);
+
+    /// <inheritdoc/>
+    public Spectrum GetCentroidSpectrum(int index, DetailLevel detailLevel, IntegerSet msLevelsToCentroid) =>
+        GetSpectrumImpl(index, detailLevel, msLevelsToCentroid);
 
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
-        GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid: null);
+        GetSpectrumImpl(index, ToDetailLevel(getBinaryData), msLevelsToCentroid: null);
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Overridden, as cpp's is, so a metadata request skips the peak reads cpp skips
+    /// (SpectrumList_Thermo.cpp:263, :645, :743): instant metadata is the ms level, start time,
+    /// polarity and profile/centroid term from the index; fast metadata adds the scan filter and
+    /// the precursors; the precursor
+    /// intensity and the mass list, which read peaks, wait for full metadata. Unlike cpp (:592),
+    /// fast metadata keeps the selected ion and its zoom-scan correction, so its precursors
+    /// match a full read's: MsDataFileImpl.GetPrecursors settles on the first level that returns
+    /// any. The base class turned every level below <see cref="DetailLevel.FullData"/> into a
+    /// full-metadata read, which decoded the scan's peaks to answer a question about its ms level.
+    /// </remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel) =>
+        GetSpectrumImpl(index, detailLevel, msLevelsToCentroid: null);
+
+    private static DetailLevel ToDetailLevel(bool getBinaryData) =>
+        getBinaryData ? DetailLevel.FullData : DetailLevel.FullMetadata;
 
     /// <summary>
     /// Populates a PDA "scan" as an electromagnetic-radiation spectrum (wavelength vs intensity),
@@ -397,8 +421,9 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
     /// the duration of the read and restores Device.MS afterward so subsequent MS reads see the
     /// original state.
     /// </summary>
-    private Spectrum GetPdaSpectrum(int index, IndexEntry ie, bool getBinaryData)
+    private Spectrum GetPdaSpectrum(int index, IndexEntry ie, DetailLevel detailLevel)
     {
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
         var raw = _raw.Raw;
         try
         {
@@ -446,6 +471,11 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
 
             spec.ScanList.Scans.Add(scan);
 
+            // The trace is read, for its point count, only from full metadata up, as an MS scan's
+            // mass list is.
+            if (detailLevel < DetailLevel.FullMetadata)
+                return spec;
+
             // Read the scan data: GetSegmentedScanFromScanNumber returns wavelength positions on
             // PDA controllers (the same call returns m/z on MS controllers — units come from the
             // selected device). Cpp uses raw->getMassList(scan, ...) which is equivalent.
@@ -489,14 +519,15 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         }
     }
 
-    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, IntegerSet? msLevelsToCentroid)
+    private Spectrum GetSpectrumImpl(int index, DetailLevel detailLevel, IntegerSet? msLevelsToCentroid)
     {
         var ie = _index[index];
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
 
         // PDA-as-spectra: separate population path. Cpp SpectrumList_Thermo.cpp:282-317 emits
         // these as MS_EMR_spectrum with wavelength axis (UO_nanometer) and no msLevel.
         if (ie.Controller == Device.Pda)
-            return GetPdaSpectrum(index, ie, getBinaryData);
+            return GetPdaSpectrum(index, ie, detailLevel);
 
         int scanNumber = ie.Scan;
         var raw = _raw.Raw;
@@ -534,6 +565,27 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         // evaluated after the Nl/Ng/Par promotions above, as cpp does. The profile-scan
         // interaction cpp applies at :370-374 is mirrored by `emitCentroid` further down.
         bool preferCentroid = msLevelsToCentroid?.Contains(msLevel) ?? false;
+
+        // cpp SpectrumList_Thermo.cpp:263 returns here at InstantMetadata, before parsing the scan
+        // filter: Skyline asks every spectrum for its ms level and retention time before it reads
+        // the data. Polarity and representation come from the index, so reporting them here parses
+        // nothing.
+        if (detailLevel < DetailLevel.FastMetadata)
+        {
+            var instantScan = new Scan
+            {
+                InstrumentConfiguration = _icByAnalyzer.TryGetValue(ie.MassAnalyzer, out var instantIc) ? instantIc : _defaultIc,
+            };
+            instantScan.Set(CVID.MS_scan_start_time, _raw.RetentionTimeMinutes(scanNumber), CVID.UO_minute);
+            if (ie.Polarity == PolarityType.Positive)
+                spec.Params.Set(CVID.MS_positive_scan);
+            else if (ie.Polarity == PolarityType.Negative)
+                spec.Params.Set(CVID.MS_negative_scan);
+            spec.Params.Set(!ie.IsProfile || preferCentroid ? CVID.MS_centroid_spectrum : CVID.MS_profile_spectrum);
+            spec.ScanList.Set(CVID.MS_no_combination);
+            spec.ScanList.Scans.Add(instantScan);
+            return spec;
+        }
 
         // The scan filter is this method's equivalent of cpp's ScanInfo (SpectrumList_Thermo.cpp:269-275):
         // fetched ONCE per spectrum and reused by every site below (enhanced-resolution flag,
@@ -719,12 +771,15 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
             if (isMsx || hasSpsTrailer)
                 PopulateMultiPrecursor(spec, filter, ie, msLevel);
             else
-                PopulatePrecursor(spec, filter, ie, preferCentroid);
+                PopulatePrecursor(spec, filter, ie, preferCentroid, detailLevel);
         }
 
         // ---- binary data ----
-        // Always retrieve the mass list so defaultArrayLength + lowest/highest observed m/z match
-        // the data even when getBinaryData is false. C++ does the same (see SpectrumList_Thermo.cpp).
+        // From full metadata up, retrieve the mass list so defaultArrayLength + lowest/highest
+        // observed m/z match the data even when getBinaryData is false. C++ does the same, and
+        // reads no mass list below full metadata (SpectrumList_Thermo.cpp:743).
+        if (detailLevel < DetailLevel.FullMetadata)
+            return spec;
         var (mz, intensity) = _raw.GetPeaks(scanNumber, preferCentroid);
         spec.DefaultArrayLength = mz.Length;
         if (mz.Length > 0)
@@ -1021,7 +1076,8 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         return (flags, energies, saFlags, saEnergy);
     }
 
-    private void PopulatePrecursor(Spectrum spec, IScanFilter filter, IndexEntry ie, bool preferCentroid)
+    private void PopulatePrecursor(Spectrum spec, IScanFilter filter, IndexEntry ie, bool preferCentroid,
+        DetailLevel detailLevel)
     {
         // pwiz C++ iterates over filter masses in reverse (innermost first). Each filter mass
         // at index i maps to a precursor at ms level i+1; the innermost (index MassCount-1)
@@ -1124,7 +1180,8 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
             {
                 // Triple-play acquisitions insert a narrow zoom scan between the survey MS1 and
                 // the MSn; the monoisotopic m/z and charge live on THAT scan, not on the MSn.
-                // cpp SpectrumList_Thermo.cpp:596-614.
+                // cpp SpectrumList_Thermo.cpp:596-614. Searched at fast metadata too, though cpp's
+                // :592 skips it there: see GetSpectrum(int, DetailLevel).
                 var zoomScan = FindPrecursorZoomScan(precursorMsLevel, isolationMz, ie.Index);
                 if (zoomScan >= 0)
                 {
@@ -1189,10 +1246,14 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
                 {
                     precursor.SpectrumId = _index[precursorIndex].Id;
                     // ---- peak intensity at the isolation m/z in the precursor scan ----
-                    double queryHalfWidth = isolationHalfWidth > 0 ? 1.5 : 0.0;
-                    double peakIntensity = SumIntensityInWindow(_index[precursorIndex].Scan, isolationMz, queryHalfWidth, preferCentroid);
-                    if (peakIntensity > 0)
-                        selectedIon.Set(CVID.MS_peak_intensity, peakIntensity, CVID.MS_number_of_detector_counts);
+                    // Reads the precursor scan's peaks, so only from full metadata up (cpp :645).
+                    if (detailLevel >= DetailLevel.FullMetadata)
+                    {
+                        double queryHalfWidth = isolationHalfWidth > 0 ? 1.5 : 0.0;
+                        double peakIntensity = SumIntensityInWindow(_index[precursorIndex].Scan, isolationMz, queryHalfWidth, preferCentroid);
+                        if (peakIntensity > 0)
+                            selectedIon.Set(CVID.MS_peak_intensity, peakIntensity, CVID.MS_number_of_detector_counts);
+                    }
                 }
                 // The "Master Scan Number:" trailer can point at a scan of the SAME ms level as
                 // this one (e.g. an ETD scan triggering an HCD scan); cpp records that scan

@@ -60,13 +60,17 @@ public sealed class SpectrumListFilter : SpectrumListWrapper
     }
 
     /// <inheritdoc/>
-    public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
+    public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
+        GetSpectrum(index, getBinaryData ? DetailLevel.FullData : DetailLevel.FullMetadata);
+
+    /// <inheritdoc/>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel)
     {
         // Copy before renumbering, as cpp does (SpectrumList_Filter.cpp:150-151). Stamping the
         // index in place would corrupt the inner list for any implementation that hands out its
         // stored instance - SpectrumListSimple does - leaving the *unfiltered* list reporting
         // filtered positions.
-        var spec = Inner.GetSpectrum(_acceptedIndices[index], getBinaryData).ShallowCopy();
+        var spec = Inner.GetSpectrum(_acceptedIndices[index], detailLevel).ShallowCopy();
         spec.Index = index;
         return spec;
     }

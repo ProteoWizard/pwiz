@@ -360,6 +360,107 @@ public static class VendorReaderTestHarness
     }
 
     /// <summary>
+    /// Checks that what a reader reports below <see cref="DetailLevel.FullMetadata"/> agrees with
+    /// its full-metadata read. A reader may leave the ms level, start time or polarity out at a
+    /// lower level - Skyline then asks again one level up - but a value it does report is taken as
+    /// final, so it must not differ. Precursors are stricter: Skyline escalates only while a level
+    /// returns none, so the first non-empty list is the one it uses, field by field (isolation
+    /// offsets, activation, charge, the polarity that signs the m/z). That list must match the
+    /// full read exactly, except for the selected ion's peak intensity, which readers take from
+    /// the precursor scan's peaks and Skyline does not read. Below full metadata a reader also
+    /// reads no peaks, as cpp's readers do not: a metadata pass over a file must not cost a
+    /// decode of every spectrum in it. Every spectrum is checked, since a reader's metadata path
+    /// can differ by scan type anywhere in a run.
+    /// </summary>
+    private static void AssertLowerDetailLevelsAgree(ISpectrumList list, int first, int last, string referenceFilename)
+    {
+        for (int i = first; i <= last; i++)
+        {
+            var full = list.GetSpectrum(i, DetailLevel.FullMetadata);
+            foreach (var level in new[] { DetailLevel.InstantMetadata, DetailLevel.FastMetadata })
+            {
+                var low = list.GetSpectrum(i, level);
+                string where = $"[{referenceFilename}] spectrum {i} ('{full.Id}') at {level}";
+                AssertNoPeaks(where, low);
+                AssertReportedValueAgrees(where, "ms level",
+                    low.Params.CvParam(CVID.MS_ms_level), full.Params.CvParam(CVID.MS_ms_level));
+                if (low.ScanList.Scans.Count > 0 && full.ScanList.Scans.Count > 0)
+                    AssertReportedValueAgrees(where, "scan start time",
+                        low.ScanList.Scans[0].CvParam(CVID.MS_scan_start_time),
+                        full.ScanList.Scans[0].CvParam(CVID.MS_scan_start_time));
+                if (level == DetailLevel.FastMetadata && full.Params.HasCVParam(CVID.MS_ms_level))
+                    AssertFastMetadataHasMsLevelAndStartTime(where, low, full);
+                AssertPolarityAgrees(where, low, full);
+                if (low.Precursors.Count == 0)
+                    continue;
+                RemovePeakIntensities(low);
+                RemovePeakIntensities(full);
+                string diff = MSDataDiff.DescribePrecursors(full.Precursors, low.Precursors);
+                if (diff.Length > 0)
+                    throw new InvalidOperationException(
+                        $"{where}: precursors differ from FullMetadata (a = full, b = {level}):\n{Indent(diff, 2)}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// A peak count or a populated array below full metadata means the reader read the peaks.
+    /// </summary>
+    private static void AssertNoPeaks(string where, Spectrum low)
+    {
+        int arrayPoints = low.BinaryDataArrays.Sum(a => a.Data.Count);
+        if (low.DefaultArrayLength != 0 || arrayPoints != 0)
+            throw new InvalidOperationException(
+                $"{where}: read peaks (defaultArrayLength {low.DefaultArrayLength}, {arrayPoints} array points)");
+    }
+
+    private static void AssertReportedValueAgrees(string where, string what, CVParam low, CVParam full)
+    {
+        if (!low.IsEmpty && low.Value != full.Value)
+            throw new InvalidOperationException(
+                $"{where}: {what} is {low.Value}, but {(full.IsEmpty ? "absent" : full.Value)} at FullMetadata");
+    }
+
+    /// <summary>
+    /// Skyline asks every spectrum for its ms level and start time from instant metadata up, and
+    /// a level that leaves either out raises that request for the rest of the file. Fast metadata
+    /// is the last level that reads no peaks, so an MS spectrum must report both there.
+    /// </summary>
+    private static void AssertFastMetadataHasMsLevelAndStartTime(string where, Spectrum low, Spectrum full)
+    {
+        if (!low.Params.HasCVParam(CVID.MS_ms_level))
+            throw new InvalidOperationException($"{where}: no ms level, which FullMetadata reports");
+        bool fullHasStartTime = full.ScanList.Scans.Count > 0
+            && full.ScanList.Scans[0].HasCVParam(CVID.MS_scan_start_time);
+        bool lowHasStartTime = low.ScanList.Scans.Count > 0
+            && low.ScanList.Scans[0].HasCVParam(CVID.MS_scan_start_time);
+        if (fullHasStartTime && !lowHasStartTime)
+            throw new InvalidOperationException($"{where}: no scan start time, which FullMetadata reports");
+    }
+
+    /// <summary>
+    /// Skyline signs each precursor m/z with the polarity of the spectrum its precursors came
+    /// from, taking a missing polarity as positive, so a lower level that returns precursors must
+    /// report the full read's polarity; one that returns none may leave it out.
+    /// </summary>
+    private static void AssertPolarityAgrees(string where, Spectrum low, Spectrum full)
+    {
+        var lowPolarity = low.Params.CvParamChild(CVID.MS_scan_polarity);
+        var fullPolarity = full.Params.CvParamChild(CVID.MS_scan_polarity);
+        if ((low.Precursors.Count > 0 || !lowPolarity.IsEmpty) && lowPolarity.Cvid != fullPolarity.Cvid)
+            throw new InvalidOperationException(
+                $"{where}: polarity is {Describe(lowPolarity)}, but {Describe(fullPolarity)} at FullMetadata");
+
+        static string Describe(CVParam polarity) => polarity.IsEmpty ? "absent" : polarity.Name;
+    }
+
+    private static void RemovePeakIntensities(Spectrum spectrum)
+    {
+        foreach (var ion in spectrum.Precursors.SelectMany(p => p.SelectedIons))
+            ion.CVParams.RemoveAll(c => c.Cvid == CVID.MS_peak_intensity);
+    }
+
+    /// <summary>
     /// Head and tail of the run. Both ends matter: Waters interleaves its non-MS DAD spectra from
     /// index 0, while Agilent appends them after the whole MS run, so sampling one end would miss
     /// the other vendor's non-MS spectra entirely.
@@ -572,6 +673,15 @@ public static class VendorReaderTestHarness
             // and without this the failure only identifies the .d directory - which config
             // diverged is left to guesswork.
             throw new InvalidOperationException($"[{referenceFilename}] {diff}");
+
+        // 5a. The reference is written at full data; a metadata-only read must not contradict it.
+        // An IndexRange list holds spectra read at full data, so its range is checked on the list
+        // it was cut from.
+        if (orphanedSpectrumList is not null && config.IndexRange is { } checkedRange)
+            AssertLowerDetailLevelsAgree(orphanedSpectrumList, Math.Max(0, checkedRange.Start),
+                Math.Min(orphanedSpectrumList.Count - 1, checkedRange.End), referenceFilename);
+        else if (msd.Run.SpectrumList is { } spectra)
+            AssertLowerDetailLevelsAgree(spectra, 0, spectra.Count - 1, referenceFilename);
 
         // 6. mzXML round-trip: write to mzXML, parse it back, verify the spectrum data made the
         // round trip. mzXML loses most metadata (instrument config, multi-scan combineIMS,

@@ -9,6 +9,8 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="CarafeSharp.Test" />
+    <!-- CrtEnvironment, for the libtorch settings the Osprey tests make before libtorch loads. -->
+    <InternalsVisibleTo Include="Osprey.Test" />
   </ItemGroup>
 
   <ItemGroup>

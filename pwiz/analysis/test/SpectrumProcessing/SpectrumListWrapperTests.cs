@@ -37,8 +37,8 @@ public class SpectrumListWrapperTests
             intensity: new[] { 1.0, 2.0, 3.0, 4.0, 5.0 }));
         var wrapped = new SpectrumListMzWindow(inner, 100, 200);
         var spec = wrapped.GetSpectrum(0, getBinaryData: true);
-        CollectionAssert.AreEqual(new[] { 100.0, 150.0, 200.0 }, spec.GetMZArray()!.Data);
-        CollectionAssert.AreEqual(new[] { 2.0, 3.0, 4.0 }, spec.GetIntensityArray()!.Data);
+        CollectionAssert.AreEqual(new[] { 100.0, 150.0, 200.0 }, spec.GetMZArray()!.Data.ToArray());
+        CollectionAssert.AreEqual(new[] { 2.0, 3.0, 4.0 }, spec.GetIntensityArray()!.Data.ToArray());
         Assert.AreEqual(3, spec.DefaultArrayLength);
     }
 
@@ -54,7 +54,7 @@ public class SpectrumListWrapperTests
         var wrapped = new SpectrumListMzShift(inner, new MZTolerance(1, MZToleranceUnits.Mz));
         var shifted = wrapped.GetSpectrum(0, getBinaryData: true);
         // m/z array shifted by +1.
-        CollectionAssert.AreEqual(new[] { 101.0, 201.0 }, shifted.GetMZArray()!.Data);
+        CollectionAssert.AreEqual(new[] { 101.0, 201.0 }, shifted.GetMZArray()!.Data.ToArray());
         // Scan-window endpoints shifted.
         var window = shifted.ScanList.Scans[0].ScanWindows[0];
         Assert.AreEqual(51.0, window.CvParam(CVID.MS_scan_window_lower_limit).ValueAs<double>(), 1e-9);

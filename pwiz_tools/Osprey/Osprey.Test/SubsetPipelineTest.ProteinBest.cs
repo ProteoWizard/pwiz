@@ -23,8 +23,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.BiblioSpec.IO;
 using pwiz.Common.SystemUtil;
@@ -44,30 +42,11 @@ namespace pwiz.Osprey.Test
         private const string RETIRED_PROTEIN_BEST = @"OSPREY_PROTEIN_BEST";
 
         /// <summary>
-        /// Both passes' scores and run q-values of the subset analysis with <c>--protein-boost compact</c>,
-        /// as digested by <see cref="AnalysisDigest"/>: the value the default analysis produced at
-        /// c0c2bcd43c, before the column existed, captured there with the same digest. Off must stay
-        /// that analysis bit for bit; a reviewed change to the one-round first pass recaptures it.
-        /// One value per OS: scoring still calls the platform Math.Log10, Math.Exp and Math.Log for
-        /// several features (peak_apex, median polish), which differ by an ulp between the Windows
-        /// and Linux C libraries, so the analysis is reproducible on each OS but not across them.
-        /// The Linux value is this test's on Linux, whose off outputs match c0c2bcd43c's default byte for byte there.
-        /// </summary>
-        private const string PRE_PROTEIN_BEST_DIGEST_WINDOWS = @"484FA69B75AF6301E5B9570419C846170FB71A2288A270D678EC1C2BFEEAF8AE";
-        private const string PRE_PROTEIN_BEST_DIGEST_LINUX = @"0D193CB94A4B6AB2EF20E3F4F3756E6953506091397E1C27CDCE257668093F69";
-
-        private static string PreProteinBestDigest
-        {
-            get { return OperatingSystem.IsWindows() ? PRE_PROTEIN_BEST_DIGEST_WINDOWS : PRE_PROTEIN_BEST_DIGEST_LINUX; }
-        }
-
-        /// <summary>
-        /// The protein-best column (<c>--protein-boost best</c>, off by default) through the whole pipeline
-        /// on the subset: the default, off, reproduces the analysis that preceded the column bit for
-        /// bit; on trains two rounds at the default size; a run with it completes both
-        /// passes under both second-pass modes and writes FDRBench for both passes and a library;
-        /// every arm moves the scores; and a rerun, another lane count, one thread, a resume with
-        /// the second pass deleted, a resume missing one run's column, the stand-alone model
+        /// The protein-best column (<c>--protein-boost best</c>, the default) through the whole pipeline
+        /// on the subset, where each run computes its own column from its own round-1 model: on
+        /// trains two rounds at the default size; a run with it completes both passes and writes
+        /// FDRBench for both passes and a library; every arm moves the scores; and a rerun, another
+        /// lane count, one thread, a resume with the second pass deleted, the stand-alone model
         /// diagnostics and the four-task chain give the same bits. The refusals cost no work.
         /// <see cref="OspreyEnvironment.FdrModel"/> is read once at class load, so the classifier
         /// is set directly, as the gbdt leg above does.
@@ -79,15 +58,14 @@ namespace pwiz.Osprey.Test
             try
             {
                 AssertPrefilterSizeDefault();
-                AssertProteinBestOffIsPreColumnAnalysis();
+                OspreyEnvironment.FdrModel = FdrClassifier.LinearSvm;
                 AssertProteinBestRefusals(FdrClassifier.LinearSvm);
                 AssertLinearProteinBestAnalysis();
                 OspreyEnvironment.FdrModel = FdrClassifier.Gbdt;
                 AssertProteinBestRefusals(FdrClassifier.Gbdt);
                 AssertProteinBestArms();
-                // The four-task chain under the transfer second pass, the only one the column runs
-                // with: the PerFileRescoring nodes score with the columns FirstPassFDR wrote, shipped
-                // to them with the rest.
+                // The four-task chain: the PerFileRescoring nodes score with the run models
+                // PerFileScoring wrote, each carrying its run's column, shipped to them with the rest.
                 AssertHpcChainMatchesStraight(new Subset(_dataDir, LIBRARY_FILE, @"unit", RUN_NAMES, null,
                     ProteinBestArm(), ProteinBestArgs(true)), @"protein-best-default-");
             }
@@ -95,29 +73,6 @@ namespace pwiz.Osprey.Test
             {
                 OspreyEnvironment.FdrModel = savedFdrModel;
             }
-        }
-
-        /// <summary>
-        /// The default, <c>--protein-boost compact</c>, with no two-round training asked for, is the
-        /// one-round first pass that was the default before the column: the same scores and q-values
-        /// in both passes, to the bit, as <see cref="PreProteinBestDigest"/> pins, and no column written.
-        /// </summary>
-        private void AssertProteinBestOffIsPreColumnAnalysis()
-        {
-            string offDir = CreateDir(@"protein-best-pre-column");
-            // With the second-pass defaults the digest was pinned under, before transfer, refit off
-            // and the ratio PEP became the defaults.
-            var variables = new Dictionary<string, string>(Verifier(false))
-            {
-                [PREFILTER_SIZE] = string.Empty,
-                [PASS2_QVALUE] = OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT,
-                [@"OSPREY_RECON_REFIT"] = @"on",
-                [@"OSPREY_PEP_FORMULA"] = @"mixture"
-            };
-            string log = RunAnalysis(offDir, DataInputs(), variables);
-            AssertProteinBestLogged(log, false, variables);
-            Assert.AreEqual(0, ProteinBestColumns(offDir).Length, @"off writes no column");
-            Assert.AreEqual(PreProteinBestDigest, AnalysisDigest(offDir), @"off is the analysis before the column");
         }
 
         /// <summary>
@@ -143,13 +98,13 @@ namespace pwiz.Osprey.Test
 
         private void AssertProteinBestArms()
         {
-            // Off by default, two-round: no column written.
+            // Off, two-round: no run model carries the column.
             string offDir = CreateDir(@"protein-best-off");
-            string log = RunAnalysis(offDir, DataInputs(), ProteinBestVariables(), BenchArgs(offDir));
+            string log = RunAnalysis(offDir, DataInputs(), ProteinBestVariables(), BenchArgs(offDir).Concat(ProteinBestArgs(false)).ToArray());
             AssertProteinBestLogged(log, false, ProteinBestVariables());
             var offScores = FirstPassScores(offDir);
-            Assert.AreEqual(0, ProteinBestColumns(offDir).Length, @"off writes no column");
-            // Spelled out, off is the default: every output stands.
+            Assert.IsFalse(RunModels(offDir).Any(model => model.ScoresProteinBest), @"off trains no run model with the column");
+            // A rerun: every output stands.
             log = RunAnalysis(offDir, DataInputs(), ProteinBestVariables(), BenchArgs(offDir).Concat(ProteinBestArgs(false)).ToArray());
             AssertNoRecompute(log);
             AssertScoresIdentical(offScores, FirstPassScores(offDir), @"off rerun");
@@ -162,15 +117,17 @@ namespace pwiz.Osprey.Test
             string onBlib = Path.Combine(onDir, BLIB_FILE);
             AssertProteinBestAnalysis(onDir);
             string reportPath = Directory.GetFiles(onDir, @"*" + ModelDiagnosticsReport.EXT_HTML).Single();
-            StringAssert.Contains(File.ReadAllText(reportPath), ProteinBestFeature.FEATURE_NAME);
+            // No model view names the column: each run trained its own model, and the report's
+            // model view is of an analysis-wide one.
+            AssertHasRows(reportPath);
             var onScores = FirstPassScores(onDir);
             Assert.AreEqual(offScores.Count, onScores.Count, @"every row is scored");
             AssertScoresDiffer(offScores, onScores, @"the column must move the scores");
             string expectedBlib = Path.Combine(_testDir, @"protein-best-on.blib");
             File.Copy(onBlib, expectedBlib);
 
-            // A rerun: every output stands.
-            log = RunAnalysis(onDir, DataInputs(), ProteinBestVariables(), OnArgs(onDir));
+            // A rerun without --protein-boost, whose default is best: every output stands.
+            log = RunAnalysis(onDir, DataInputs(), ProteinBestVariables(), BenchArgs(onDir));
             AssertNoRecompute(log);
             AssertScoresIdentical(onScores, FirstPassScores(onDir), @"rerun");
             AssertBlibsEqual(expectedBlib, onBlib);
@@ -179,7 +136,7 @@ namespace pwiz.Osprey.Test
             File.Delete(reportPath);
             RunAnalysis(onDir, DataInputs(), ProteinBestVariables(), OnArgs(onDir)
                 .Concat(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, OspreyTaskNames.MODEL_DIAGNOSTICS }).ToArray());
-            StringAssert.Contains(File.ReadAllText(reportPath), ProteinBestFeature.FEATURE_NAME);
+            AssertHasRows(reportPath);
             AssertScoresIdentical(onScores, FirstPassScores(onDir), @"diagnostics only");
 
             // A resume with the first pass on disk and the second pass deleted: PerFileRescoring
@@ -192,18 +149,10 @@ namespace pwiz.Osprey.Test
             AssertTasks(log, new[] { FirstPassFdrTask.TASK_NAME }, new[] { PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME });
             AssertBlibsEqual(expectedBlib, onBlib);
 
-            // A run killed after one run's column was lost: that run is scored again, from the
-            // retrained model (the saved one cannot supply round 1), and the library is the same.
-            File.Delete(ProteinBestColumns(onDir).First());
-            File.Delete(onBlib);
-            log = RunAnalysis(onDir, DataInputs(), ProteinBestVariables(), OnArgs(onDir));
-            AssertTasks(log, Array.Empty<string>(), new[] { FirstPassFdrTask.TASK_NAME });
-            AssertScoresIdentical(onScores, FirstPassScores(onDir), @"resume");
-            AssertBlibsEqual(expectedBlib, onBlib);
-
-            // A resume with the column at its default, off, retrains rather than adopting the on arm's outputs.
-            log = RunAnalysis(onDir, DataInputs(), ProteinBestVariables(), BenchArgs(onDir));
-            AssertTasks(log, Array.Empty<string>(), new[] { FirstPassFdrTask.TASK_NAME });
+            // A resume with the column off retrains each run's model rather than adopting the on
+            // arm's scores.
+            log = RunAnalysis(onDir, DataInputs(), ProteinBestVariables(), BenchArgs(onDir).Concat(ProteinBestArgs(false)).ToArray());
+            AssertTasks(log, Array.Empty<string>(), new[] { PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME });
             AssertScoresIdentical(offScores, FirstPassScores(onDir), @"off over on");
 
             // Another lane count and one thread.
@@ -224,7 +173,8 @@ namespace pwiz.Osprey.Test
                 { [PASS2_QVALUE] = OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT };
             string refused = RunOspreyExpecting(SearchArgs(compactDir, Path.Combine(_dataDir, LIBRARY_FILE), OnArgs(compactDir)),
                 compact, Program.EXIT_CODE_FAILURE_TO_START);
-            StringAssert.Contains(refused, @"cannot be used with OSPREY_PASS2_QVALUE=" + OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT);
+            Assert.AreEqual(1, SplitLines(refused).Count(CommandStatusWriter.IsErrorLine), refused);
+            StringAssert.Contains(refused, @"OSPREY_PASS2_QVALUE=" + OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT);
 
             // The developer arm is a different column.
             var other = new Dictionary<string, string>(ProteinBestVariables()) { [PROTEIN_BEST_SHUFFLE] = @"1" };
@@ -235,10 +185,10 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The linear SVM (the default classifier) with nothing asked for but the column
+        /// The linear SVM (OSPREY_FDR_MODEL=svm) with nothing else asked for but the column
         /// (<c>--protein-boost best</c>): the two-round training at its default size, a complete analysis
-        /// whose saved model is linear and scores with the column, and whose first-pass scores differ
-        /// from the default analysis, with the column off.
+        /// whose run models are linear and score with the column, and whose first-pass scores differ
+        /// from the analysis with the column off.
         /// </summary>
         private void AssertLinearProteinBestAnalysis()
         {
@@ -248,15 +198,14 @@ namespace pwiz.Osprey.Test
                 [PROTEIN_BEST_SHUFFLE] = string.Empty
             };
             string offDir = CreateDir(@"protein-best-svm-off");
-            RunAnalysis(offDir, DataInputs(), defaults);
+            RunAnalysis(offDir, DataInputs(), defaults, ProteinBestArgs(false));
             string onDir = CreateDir(@"protein-best-svm-on");
             string log = RunAnalysis(onDir, DataInputs(), defaults, OnArgs(onDir));
             AssertProteinBestLogged(log, true, defaults);
             StringAssert.Contains(log, OspreyEnvironment.PROTEIN_BEST_PREFILTER_SIZE.ToString(CultureInfo.InvariantCulture));
             AssertProteinBestAnalysis(onDir);
-            var saved = FirstPassModelIO.Load(Directory.GetFiles(onDir, @"*" + FirstPassModelIO.EXT_MODEL).Single(), UnitFeatures);
-            Assert.IsNotNull(saved);
-            Assert.IsFalse(saved.Model.IsGradientBoostedTrees, @"the default classifier trains the linear SVM");
+            foreach (var saved in RunModels(onDir))
+                Assert.IsFalse(saved.Model.IsGradientBoostedTrees, @"OSPREY_FDR_MODEL=svm trains the linear SVM");
             var offScores = FirstPassScores(offDir);
             var onScores = FirstPassScores(onDir);
             Assert.AreEqual(offScores.Count, onScores.Count, @"every row is scored");
@@ -267,24 +216,35 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// A complete protein-best analysis in <paramref name="workDir"/>: a library, FDRBench rows
-        /// for both passes, a column per run, and a saved model that loads and scores with it.
+        /// for both passes, and a model per run that loads and scores with the run's own column,
+        /// whose values its stub scores parquet holds.
         /// </summary>
         private static void AssertProteinBestAnalysis(string workDir)
         {
             Assert.IsTrue(File.Exists(Path.Combine(workDir, BLIB_FILE)), @"the second pass writes the library");
             AssertHasRows(Path.Combine(workDir, @"bench.pass1.tsv"));
             AssertHasRows(Path.Combine(workDir, @"bench.pass2.tsv"));
-            Assert.AreEqual(RUN_NAMES.Length, ProteinBestColumns(workDir).Length, workDir);
-            foreach (string column in ProteinBestColumns(workDir))
-                Assert.IsNotNull(ProteinBestSidecar.Read(column), column);
-            var modelFile = Directory.GetFiles(workDir, @"*" + FirstPassModelIO.EXT_MODEL).Single();
-            StringAssert.Contains(File.ReadAllText(modelFile), ProteinBestFeature.FEATURE_NAME);
-            var saved = FirstPassModelIO.Load(modelFile, UnitFeatures);
-            Assert.IsNotNull(saved, @"a model with the column loads");
-            var scorer = FrozenModelScorer.TryCreate(saved.Model);
-            Assert.IsNotNull(scorer);
-            Assert.IsTrue(scorer.ScoresProteinBest, @"and scores with it");
+            foreach (var saved in RunModels(workDir))
+                Assert.IsTrue(saved.ScoresProteinBest, @"a run model scores with the column");
+            // Each run's column values are a column of its stub scores parquet.
+            foreach (string run in RUN_NAMES)
+            {
+                string stub = Path.Combine(workDir, run + ParquetScoreCache.EXT_SCORES);
+                Assert.IsTrue(ParquetScoreCache.HasColumn(stub, @"protein_best"), stub);
+            }
             AssertBlibProteinBest(Path.Combine(workDir, BLIB_FILE), OspreyArgNames.VALUE_ON);
+        }
+
+        /// <summary>Each run's own first-pass model, loaded as its second pass loads it.</summary>
+        private static RunFirstPassModel[] RunModels(string workDir)
+        {
+            return RUN_NAMES.Select(run =>
+            {
+                string path = Path.Combine(workDir, run + FirstPassModelIO.EXT_MODEL);
+                var model = FirstPassModelIO.LoadRunModel(path, UnitFeatures);
+                Assert.IsNotNull(model, @"no run model loads from " + path);
+                return model;
+            }).ToArray();
         }
 
         /// <summary>
@@ -295,7 +255,7 @@ namespace pwiz.Osprey.Test
         {
             using (EnvVar.OverrideVariables(variables))
             {
-                StringAssert.Contains(log, OspreyEnvironment.DescribeProteinBest(new OspreyConfig { ProteinBoost = on ? ProteinBoost.best : ProteinBoost.compact }));
+                StringAssert.Contains(log, OspreyEnvironment.DescribeProteinBest(new OspreyConfig { ProteinBoost = on ? ProteinBoost.best : ProteinBoost.off }));
             }
         }
 
@@ -323,12 +283,7 @@ namespace pwiz.Osprey.Test
 
         private static string[] ProteinBestArgs(bool on)
         {
-            return new[] { OspreyCommandArgs.ARG_PROTEIN_BOOST.ArgumentText, (on ? ProteinBoost.best : ProteinBoost.compact).ToString() };
-        }
-
-        private static string[] ProteinBestColumns(string workDir)
-        {
-            return Directory.GetFiles(workDir, @"*." + FdrScoresSidecar.LABEL_FIRST_PASS + ProteinBestSidecar.EXT);
+            return new[] { OspreyCommandArgs.ARG_PROTEIN_BOOST.ArgumentText, (on ? ProteinBoost.best : ProteinBoost.off).ToString() };
         }
 
         /// <summary>The on arm with one thread and one lane, which RunAnalysis's common arguments do not allow.</summary>
@@ -383,45 +338,14 @@ namespace pwiz.Osprey.Test
             };
         }
 
-        /// <summary>
-        /// Every first-pass and second-pass record's entry id, score and run q-values, run by run in
-        /// file-name order, hashed: what the analysis concluded, without the provenance stamps.
-        /// </summary>
-        private static string AnalysisDigest(string workDir)
-        {
-            var text = new StringBuilder();
-            foreach (var pass in new[] { FdrScoresSidecar.Pass.FirstPass, FdrScoresSidecar.Pass.SecondPass })
-            {
-                string label = pass == FdrScoresSidecar.Pass.FirstPass
-                    ? FdrScoresSidecar.LABEL_FIRST_PASS
-                    : FdrScoresSidecar.LABEL_SECOND_PASS;
-                var sidecars = Directory.GetFiles(workDir, @"*." + label + @".fdr_scores.bin")
-                    .OrderBy(Path.GetFileName, StringComparer.Ordinal).ToArray();
-                Assert.AreEqual(RUN_NAMES.Length, sidecars.Length, workDir + @" " + label);
-                foreach (string sidecar in sidecars)
-                {
-                    text.Append(Path.GetFileName(sidecar)).Append('\n');
-                    Assert.IsTrue(FdrScoresSidecar.ReadRecords(sidecar, pass, rec => text.Append(rec.EntryId).Append(' ')
-                        .Append(BitConverter.DoubleToInt64Bits(rec.Score)).Append(' ')
-                        .Append(BitConverter.DoubleToInt64Bits(rec.RunPrecursorQvalue)).Append(' ')
-                        .Append(BitConverter.DoubleToInt64Bits(rec.RunPeptideQvalue)).Append('\n')), sidecar);
-                }
-            }
-            using (var sha = SHA256.Create())
-            {
-                return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(text.ToString()))).Replace(@"-", string.Empty);
-            }
-        }
-
-        /// <summary>Every first-pass row's score, by run file name and row, off the per-file sidecars.</summary>
+        /// <summary>Every first-pass row's score, by run and row, off each run's stub scores parquet.</summary>
         private static Dictionary<string, long> FirstPassScores(string workDir)
         {
             var scores = new Dictionary<string, long>();
-            var sidecars = Directory.GetFiles(workDir, @"*.1st-pass.fdr_scores.bin");
-            Assert.AreEqual(RUN_NAMES.Length, sidecars.Length, workDir);
-            foreach (string sidecar in sidecars)
+            foreach (string run in RUN_NAMES)
             {
-                string run = Path.GetFileName(sidecar);
+                // The first-pass path, which a reader serves from the stub that holds its records.
+                string sidecar = Path.Combine(workDir, run + FdrScoresSidecar.EXT_FIRST_PASS);
                 int row = 0;
                 Assert.IsTrue(FdrScoresSidecar.ReadRecords(sidecar, FdrScoresSidecar.Pass.FirstPass, rec =>
                 {

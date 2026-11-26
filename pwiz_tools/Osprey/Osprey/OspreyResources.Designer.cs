@@ -1599,7 +1599,16 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} checks the second pass against the features it was scored from, which are saved with {1}. Add {1}, or unset {0}..
+        /// </summary>
+        public static string Program_VerifyWorkerError__0__checks_the_second_pass_against_the_features_it_was_scored_from__which_are_saved_with__1___Add__1__or_unset__0__ {
+            get {
+                return ResourceManager.GetString("Program_VerifyWorkerError__0__checks_the_second_pass_against_the_features_it_was_scored_from__which_are_saved_with__1___Add__1__or_unset__0__", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to {0} predicts the library with the tuned model {1}, which is not there. Run {2} first..
         /// </summary>
