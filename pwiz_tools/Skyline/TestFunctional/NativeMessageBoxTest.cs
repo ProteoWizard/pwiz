@@ -93,12 +93,18 @@ namespace pwiz.SkylineTestFunctional
             User32.ShowWindow(saveButton, SW_HIDE);
             var showSaveButton = new Thread(() =>
             {
-                Thread.Sleep(300);
+                Thread.Sleep(1000);
                 User32.ShowWindow(saveButton, SW_SHOWNA);
             });
             showSaveButton.Start();
-            AssertComplete(McpConnector.SetFormValue(fileDialogId, @"FileName", savePath));
-            showSaveButton.Join();
+            try
+            {
+                AssertComplete(McpConnector.SetFormValue(fileDialogId, @"FileName", savePath));
+            }
+            finally
+            {
+                showSaveButton.Join();
+            }
             actionResult = McpConnector.DismissWithAcceptButton(fileDialogId);
             Assert.IsFalse(actionResult.Completed);
             Assert.IsNotNull(actionResult.FormId);

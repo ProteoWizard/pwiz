@@ -182,21 +182,17 @@ namespace pwiz.Skyline.ToolsUI
             return result;
         }
 
-        /// <summary>Whether any native dialog window in this process has the id, whether or not it can be driven:
-        /// shown or hidden, finished or still being built or laid out. <see cref="GetOpenDialogs"/> reports only
-        /// the ones ready to drive, so a dialog this finds and that does not is one to wait for rather than one
-        /// that is gone (see <see cref="JsonUiService.ResolveForm"/>).</summary>
+        /// <summary>Whether any shown native dialog in this process has the id, whether or not it can be driven.
+        /// <see cref="GetOpenDialogs"/> reports only the ones ready to drive, so a dialog this finds and that does
+        /// not is one the shell is still laying out: one to wait for rather than one that is gone (see
+        /// <see cref="JsonUiService.ResolveForm"/>).</summary>
         public static bool IsAnyOpenWithId(string formId)
         {
-            var processId = Kernel32.GetCurrentProcessId();
-            return User32.EnumWindows().Any(hwnd =>
-            {
-                User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
-                return windowProcessId == processId
-                       && User32.GetClassName(hwnd) == DIALOG_CLASS_NAME
-                       && TYPE_NAME + @":" + User32.GetWindowTextNoBlock(hwnd) == formId;
-            });
+            return FindDialogHandles().Any(hwnd => GetFormId(User32.GetWindowTextNoBlock(hwnd)) == formId);
         }
+
+        // The id of a native dialog with the given caption.
+        private static string GetFormId(string title) => TYPE_NAME + @":" + title;
 
         // ---- Win32 control lookup ----------------------------------------------------------------
 
@@ -319,7 +315,7 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>The id this dialog is addressed by (see skyline_get_open_forms): "Dialog:Save As". The prefix is
         /// the CONSTANT type, never the kind -- see <see cref="DialogTypeName"/> for why the kind cannot be in an id.</summary>
-        public override string FormId => TYPE_NAME + @":" + Title;
+        public override string FormId => GetFormId(Title);
 
         // A native dialog takes a value only as its file name (a Save dialog, an Open dialog); the base refuses, and
         // the file dialogs override SetValueCore to type the path. The value is typed synchronously and has no
