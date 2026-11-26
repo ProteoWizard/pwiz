@@ -138,10 +138,8 @@ public sealed class SpectrumList_Bruker : SpectrumListBase, IVendorCentroidingSp
     private Spectrum BuildSpectrum(int index, DetailLevel detailLevel, IntegerSet? msLevelsToCentroid)
     {
         var entry = _index[index];
-        // cpp SpectrumList_Bruker.cpp:426 - `getLineData = msLevelsToCentroid.contains(msLevel)`.
-        bool preferCentroid = msLevelsToCentroid?.Contains(entry.MsLevel) ?? false;
         var spec = new Spectrum { Index = index, Id = entry.Id };
-        _data.FillSpectrum(spec, entry, detailLevel, preferCentroid, _sortAndJitter, _includeIsolationArrays);
+        _data.FillSpectrum(spec, entry, detailLevel, msLevelsToCentroid, _sortAndJitter, _includeIsolationArrays);
         return spec;
     }
 

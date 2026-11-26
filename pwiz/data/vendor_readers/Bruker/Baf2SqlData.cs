@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData.Spectra;
+using Pwiz.Util.Misc;
 
 namespace Pwiz.Vendor.Bruker;
 
@@ -273,10 +274,11 @@ internal sealed class Baf2SqlData : IBrukerData
 
     /// <inheritdoc/>
     public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, DetailLevel detailLevel,
-        bool preferCentroid, bool sortAndJitter, bool includeIsolationArrays = false)
+        IntegerSet? msLevelsToCentroid, bool sortAndJitter, bool includeIsolationArrays = false)
     {
         ArgumentNullException.ThrowIfNull(spec);
         ArgumentNullException.ThrowIfNull(entry);
+        bool preferCentroid = msLevelsToCentroid?.Contains(entry.MsLevel) ?? false;
         bool getBinaryData = detailLevel >= DetailLevel.FullData;
         _ = includeIsolationArrays; // BAF has no diaPASEF isolation arrays.
         var row = (BafRow)entry.Tag;
@@ -321,7 +323,7 @@ internal sealed class Baf2SqlData : IBrukerData
         }
 
         // Decide profile vs centroid. cpp: prefer profile, fall back to line if profile empty
-        // OR if caller asked for line data via msLevelsToCentroid (we pass that as preferCentroid).
+        // OR if caller asked for line data at this spectrum's level via msLevelsToCentroid.
         double[] mz = Array.Empty<double>();
         double[] intensity = Array.Empty<double>();
         bool isCentroid = preferCentroid;
