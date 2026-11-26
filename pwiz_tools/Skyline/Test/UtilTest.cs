@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -386,6 +387,43 @@ namespace pwiz.SkylineTest
             // Load balancing 14 files into 2 cycles of 7, , or if not using server GC then 5 cycles (of 3,3,3,3,2) 
             Assert.AreEqual(hasReducedLoadThreadCount ? MultiFileLoader.GetMaxLoadThreadCount() : MultiFileLoader.MAX_PARALLEL_LOAD_FILES/2 + 1,
                 MultiFileLoader.GetOptimalThreadCount(null, MultiFileLoader.MAX_PARALLEL_LOAD_FILES+2, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.many));
+        }
+
+        /// <summary>
+        /// Each loading thread reports its finished file to <see cref="FileLoadCompletionAccumulator"/>,
+        /// and the batch it commits must hold every file, including when files finish together and
+        /// race to queue their completions ahead of the commit queue's end marker.
+        /// </summary>
+        [TestMethod]
+        public void FileLoadCompletionAccumulatorConcurrentCompleteTest()
+        {
+            const int threadCount = 4;
+            const int fileCount = 4;
+            const int iterations = 2000;
+            for (int iteration = 0; iteration < iterations; iteration++)
+            {
+                int committed = 0;
+                using (var allCommitted = new ManualResetEventSlim())
+                using (var start = new Barrier(fileCount))
+                {
+                    var accumulator = new FileLoadCompletionAccumulator(completions =>
+                    {
+                        if (Interlocked.Add(ref committed, completions.Count) == fileCount)
+                            allCommitted.Set();
+                    }, threadCount, fileCount);
+                    var loaders = Enumerable.Range(0, fileCount).Select(i => new Thread(() =>
+                    {
+                        start.SignalAndWait();
+                        accumulator.Complete(null, new ProgressStatus().Complete());
+                    })).ToArray();
+                    foreach (var loader in loaders)
+                        loader.Start();
+                    foreach (var loader in loaders)
+                        loader.Join();
+                    Assert.IsTrue(allCommitted.Wait(TimeSpan.FromSeconds(10)),
+                        $@"Iteration {iteration}: {committed} of {fileCount} completions committed");
+                }
+            }
         }
 
         [TestMethod]

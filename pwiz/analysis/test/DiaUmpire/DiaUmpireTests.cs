@@ -41,6 +41,13 @@ public class DiaUmpireTests
         AssertPseudoMsMsKeysShapeAndIntegrity(dia);
         AssertPseudoMsMsKeysSortedByScanTimeMzCharge(dia);
         AssertSpillFilesCoverEmittedKeys(dia);
+
+        // A reader that completes precursors and the centroid term only at full metadata, as
+        // Agilent and Shimadzu do, must give the same windows.
+        var (msdLate, slLate) = BuildTwoWindowSwath(numCycles: 6, ms2PerCycle: 2,
+            ms1Peaks: new[] { (mz: 500.0, intensity: 1000.0), (mz: 700.0, intensity: 800.0) });
+        using var diaLate = new DiaUmpireProcessor(msdLate, new PrecursorsAtFullMetadataList(slLate), cfg);
+        Assert.AreEqual(dia.PseudoMsMsKeys.Count, diaLate.PseudoMsMsKeys.Count);
     }
 
     [TestMethod]
@@ -248,5 +255,35 @@ public class DiaUmpireTests
 
         msd.Run.SpectrumList = sl;
         return (msd, sl);
+    }
+
+    /// <summary>
+    /// Serves spectra the way the Agilent and Shimadzu readers do below full metadata: the ms
+    /// level and start time, but no profile/centroid term and no precursors.
+    /// </summary>
+    private sealed class PrecursorsAtFullMetadataList : SpectrumListBase
+    {
+        private readonly ISpectrumList _inner;
+
+        public PrecursorsAtFullMetadataList(ISpectrumList inner) => _inner = inner;
+
+        public override int Count => _inner.Count;
+
+        public override SpectrumIdentity SpectrumIdentity(int index) => _inner.SpectrumIdentity(index);
+
+        public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
+            _inner.GetSpectrum(index, getBinaryData);
+
+        public override Spectrum GetSpectrum(int index, DetailLevel detailLevel)
+        {
+            var full = _inner.GetSpectrum(index, detailLevel >= DetailLevel.FullData);
+            if (detailLevel >= DetailLevel.FullMetadata)
+                return full;
+            var low = new Spectrum { Index = full.Index, Id = full.Id };
+            low.Params.Set(CVID.MS_ms_level, full.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0));
+            foreach (var scan in full.ScanList.Scans)
+                low.ScanList.Scans.Add(scan);
+            return low;
+        }
     }
 }

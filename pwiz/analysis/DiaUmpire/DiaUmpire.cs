@@ -509,6 +509,11 @@ public sealed class DiaUmpire : System.IDisposable
             for (int i = 0; i < total; ++i)
             {
                 var s = Sl.GetSpectrum(i, DetailLevel.FastMetadata);
+                // Some readers leave the profile/centroid term, or precursors they cannot complete
+                // without reading the spectrum, for full metadata (Agilent, Bruker, Shimadzu).
+                if (!s.Params.HasCVParamChild(CVID.MS_spectrum_representation)
+                    || (s.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0) > 1 && s.Precursors.Count == 0))
+                    s = Sl.GetSpectrum(i, DetailLevel.FullMetadata);
                 if (s.HasCVParam(CVID.MS_profile_spectrum))
                     throw new System.InvalidOperationException(
                         "[DiaUmpire.BuildDIAWindows] DIA Umpire requires centroided spectra; use the peakPicking filter");

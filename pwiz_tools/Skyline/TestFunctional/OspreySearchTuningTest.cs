@@ -55,6 +55,14 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>The name a test gives the document's fine-tuned model when it adds it to the model list.</summary>
         private const string SAVED_MODEL_NAME = @"Stellar subset, tuned";
 
+        /// <summary>
+        /// The run, experiment and protein FDR of every search here. Each subset run is one isolation
+        /// window of under 300 target precursors, and Osprey's q-value, (decoys + 1) / targets, cannot
+        /// reach 1% until 100 targets outscore a run's best decoy, which the untuned first pass
+        /// reaches by a few precursors at best. At 5% it takes 20, and every run keeps over a hundred.
+        /// </summary>
+        private const double SEARCH_FDR = 0.05;
+
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestOspreySearchTuning()
@@ -159,7 +167,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqualDeep(diaFilePaths, searchDlg.TuningFiles);
             });
 
-            OspreySearchTest.AdvanceToSearchSettings(searchDlg);
+            AdvanceToSubsetSearchSettings(searchDlg);
             VerifyCommandLine(searchDlg, diaFilePaths, diaFilePaths, null);
             string modelPath = RunTuningSearch(searchDlg, TestFilesDir.GetTestPath("OspreySearchControlLog-searched.txt"));
             // The model is the document's, like its library: nothing joins the model list
@@ -226,7 +234,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(overwritePrompt, overwritePrompt.ClickOk);
             RunUI(() => AssertEx.AreEqual(OspreySearchDlg.Pages.modifications_page, searchDlg.CurrentPage));
 
-            OspreySearchTest.AdvanceToSearchSettings(searchDlg);
+            AdvanceToSubsetSearchSettings(searchDlg);
             VerifyCommandLine(searchDlg, searchedRuns, tuningRuns, null);
             string modelPath = RunTuningSearch(searchDlg, TestFilesDir.GetTestPath("OspreySearchControlLog-heldout.txt"));
             // Overwritten: the new training's manifest carries its own save time
@@ -254,7 +262,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(savedModelPath, searchDlg.Model.FilePath);
                 AssertEx.IsTrue(searchDlg.UseExistingModel);
             });
-            OspreySearchTest.AdvanceToSearchSettings(searchDlg);
+            AdvanceToSubsetSearchSettings(searchDlg);
             VerifyCommandLine(searchDlg, diaFilePaths, null, savedModelPath);
             string docBlibPath = BiblioSpecLiteSpec.GetLibraryFileName(docPath);
             string workDir = OspreyHelpers.GetWorkDirectory(docPath);
@@ -288,6 +296,13 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(OspreySearchDlg.Pages.library_model_page, searchDlg.CurrentPage);
             });
             return searchDlg;
+        }
+
+        /// <summary>Moves to the search settings page and sets every FDR to <see cref="SEARCH_FDR"/>.</summary>
+        private static void AdvanceToSubsetSearchSettings(OspreySearchDlg searchDlg)
+        {
+            OspreySearchTest.AdvanceToSearchSettings(searchDlg);
+            RunUI(() => searchDlg.RunFdr = searchDlg.ExperimentFdr = searchDlg.ProteinFdr = SEARCH_FDR);
         }
 
         /// <summary>
