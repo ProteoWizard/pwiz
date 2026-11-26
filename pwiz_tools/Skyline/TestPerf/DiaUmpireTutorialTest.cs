@@ -284,8 +284,10 @@ namespace TestPerf
             }
         }
 
+        private bool IsFullFileset => TestContext.TestName.EndsWith("FullFileset");
+
         // disable audit log comparison for FullFileset tests
-        public override bool AuditLogCompareLogs => !TestContext.TestName.EndsWith("FullFileset");
+        public override bool AuditLogCompareLogs => !IsFullFileset;
 
         private void SetInstrumentType(InstrumentSpecificValues instrumentValues)
         {
@@ -1010,10 +1012,37 @@ namespace TestPerf
             var actualCoefficients = editDlgFromSrm.PeakCalculatorsGrid.Items
                 .Select(item => item.Weight.HasValue ? Math.Round(item.Weight.Value, 4) : (double?)null).ToArray();
             if (IsRecordMode)
+            {
                 expectedCoefficients = actualCoefficients;
-            else
-                AssertEx.AreEqual(string.Join("|", expectedCoefficients), string.Join("|", actualCoefficients));
+                return;
+            }
+
+            var expectedText = string.Join("|", expectedCoefficients);
+            var actualText = string.Join("|", actualCoefficients);
+            if (!IsFullFileset)
+            {
+                AssertEx.AreEqual(expectedText, actualText);
+                return;
+            }
+
+            // The full-fileset models are trained on whole-proteome results, and their coefficients
+            // differ between machines by up to 0.1, so they are compared within a tolerance
+            Assert.AreEqual(expectedCoefficients.Length, actualCoefficients.Length,
+                "Expected coefficients <{0}> do not match actual <{1}>.", expectedText, actualText);
+            for (int i = 0; i < expectedCoefficients.Length; i++)
+            {
+                var expected = expectedCoefficients[i];
+                var actual = actualCoefficients[i];
+                if (expected.HasValue != actual.HasValue ||
+                    (expected.HasValue && Math.Abs(expected.Value - actual.Value) > FULL_FILESET_COEFFICIENT_TOLERANCE))
+                {
+                    Assert.Fail("Expected coefficients <{0}> do not match actual <{1}> within {2}.",
+                        expectedText, actualText, FULL_FILESET_COEFFICIENT_TOLERANCE);
+                }
+            }
         }
+
+        private const double FULL_FILESET_COEFFICIENT_TOLERANCE = 0.15;
 
         private void ValidateMassErrors(MassErrorHistogramGraphPane massErrorPane, int index)
         {
