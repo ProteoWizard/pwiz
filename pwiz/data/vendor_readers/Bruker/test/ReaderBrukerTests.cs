@@ -1,4 +1,8 @@
+using Pwiz.Data.Common.Cv;
+using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Spectra;
 using Pwiz.TestHarness;
+using Pwiz.Util.Misc;
 
 namespace Pwiz.Vendor.Bruker.Tests;
 
@@ -197,13 +201,61 @@ public class ReaderBrukerTests
         // YEP fixture (analysis.yep, HCTultra ion trap) - the only coverage of the CompassXtract
         // path for a single-analysis source. 62 spectra, profile data, no chromatogramList
         // (CompassXtract answers getTIC()/getBPC() with null pointers).
-        // Coverage: base. (No centroid reference mzMLs ship for this fixture.)
+        // Coverage: base, plus vendor centroiding by ms level. (No centroid reference mzMLs ship
+        // for this fixture.)
         var ctx = SetUp("Sample_1-A,1_01_985.d");
         if (ctx is null) return;
 
         ctx.Run(new ReaderTestConfig());
 
         ctx.Check();
+
+        AssertVendorCentroidingFollowsMsLevel("Sample_1-A,1_01_985.d");
+    }
+
+    /// <summary>
+    /// Vendor centroiding for one ms level must centroid exactly the spectra at that level: each
+    /// spectrum read with ms1 only or ms2 and up must match the all-levels centroid read when its
+    /// level is in the set, and the plain profile read when it is not. The point counts tell the
+    /// two reads apart, so the fixture must have spectra at ms1 and ms2 whose counts differ.
+    /// </summary>
+    private static void AssertVendorCentroidingFollowsMsLevel(string fixtureFolderName)
+    {
+        string path = Path.Combine(FindTestDataRoot()!, fixtureFolderName);
+        using var msd = new MSData();
+        try { new Reader_Bruker().Read(path, msd); }
+        catch (Pwiz.Data.MsData.Readers.VendorSupportNotEnabledException)
+        {
+            Assert.Inconclusive("Bruker SDK not compiled into this build.");
+            return;
+        }
+        var list = (SpectrumList_Bruker)msd.Run.SpectrumList!;
+        var allLevels = new IntegerSet(1, int.MaxValue);
+        var levelSets = new[] { new IntegerSet(1), new IntegerSet(2, int.MaxValue) };
+        var distinguishableLevels = new HashSet<int>();
+        var problems = new List<string>();
+        for (int i = 0; i < list.Count; i++)
+        {
+            var profile = list.GetSpectrum(i, DetailLevel.FullData);
+            var centroid = list.GetCentroidSpectrum(i, DetailLevel.FullData, allLevels);
+            int msLevel = profile.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0);
+            if (centroid.DefaultArrayLength != profile.DefaultArrayLength)
+                distinguishableLevels.Add(msLevel);
+            foreach (var levels in levelSets)
+            {
+                var expected = levels.Contains(msLevel) ? centroid : profile;
+                var actual = list.GetCentroidSpectrum(i, DetailLevel.FullData, levels);
+                if (actual.DefaultArrayLength != expected.DefaultArrayLength)
+                {
+                    problems.Add($"{profile.Id} (ms{msLevel}) centroiding [{levels}]: {actual.DefaultArrayLength} points, " +
+                                 $"expected {expected.DefaultArrayLength}");
+                }
+            }
+        }
+        Assert.IsTrue(distinguishableLevels.Contains(1) && distinguishableLevels.Contains(2),
+            $"{fixtureFolderName} needs ms1 and ms2 spectra whose centroid and profile point counts differ; " +
+            $"found them only at ms levels [{string.Join(",", distinguishableLevels)}]");
+        Assert.AreEqual(0, problems.Count, string.Join("\n", problems.Take(10)));
     }
 
     [TestMethod]

@@ -1,4 +1,5 @@
 using Pwiz.Data.MsData.Spectra;
+using Pwiz.Util.Misc;
 
 namespace Pwiz.Vendor.Bruker;
 
@@ -94,9 +95,13 @@ public interface IBrukerData : IDisposable
     /// count that needs a frame decoded, below <see cref="DetailLevel.FullMetadata"/>. The
     /// existing <c>Index</c> / <c>Id</c> on <paramref name="spec"/> are left untouched. When
     /// <paramref name="includeIsolationArrays"/> is true (only meaningful for TDF whole-frame
-    /// diaPASEF spectra), the two scanning-quadrupole isolation m/z arrays are emitted.
+    /// diaPASEF spectra), the two scanning-quadrupole isolation m/z arrays are emitted. Spectra
+    /// whose ms level is in <paramref name="msLevelsToCentroid"/> (null for none) are read as
+    /// vendor-centroided data. The source checks the spectrum's own ms level, as cpp does
+    /// (<c>SpectrumList_Bruker.cpp:426</c>), because CompassXtract learns that level only by
+    /// reading the spectrum.
     /// </summary>
-    void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, DetailLevel detailLevel, bool preferCentroid, bool sortAndJitter, bool includeIsolationArrays);
+    void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, DetailLevel detailLevel, IntegerSet? msLevelsToCentroid, bool sortAndJitter, bool includeIsolationArrays);
 
     /// <summary>
     /// Yields the points of the TIC / BPC chromatograms, honoring
@@ -126,7 +131,9 @@ public sealed class BrukerIndexEntry : SpectrumIdentity
     public object Tag { get; set; } = null!;
 
     /// <summary>1 for MS1, 2 for MSn — exposed so chromatogram callers can build a per-point
-    /// ms-level array without round-tripping through full spectrum metadata.</summary>
+    /// ms-level array without round-tripping through full spectrum metadata. Left at 1 by the
+    /// CompassXtract (YEP / FID) index, which has no chromatograms and does not know a
+    /// spectrum's level until it reads the spectrum.</summary>
     public int MsLevel { get; set; } = 1;
 }
 

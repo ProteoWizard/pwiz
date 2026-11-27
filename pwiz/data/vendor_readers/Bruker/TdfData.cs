@@ -2,6 +2,7 @@ using System.Globalization;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Spectra;
+using Pwiz.Util.Misc;
 
 namespace Pwiz.Vendor.Bruker;
 
@@ -378,10 +379,11 @@ internal sealed class TdfData : IBrukerData
     /// cpp returns before reading peaks at instant and fast metadata (SpectrumList_Bruker.cpp:282,
     /// :377). The rest of the metadata comes from the frame tables and is reported at every level.
     /// </remarks>
-    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, DetailLevel detailLevel, bool preferCentroid, bool sortAndJitter = false, bool includeIsolationArrays = false)
+    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, DetailLevel detailLevel, IntegerSet? msLevelsToCentroid, bool sortAndJitter = false, bool includeIsolationArrays = false)
     {
         ArgumentNullException.ThrowIfNull(spec);
         ArgumentNullException.ThrowIfNull(entry);
+        bool preferCentroid = msLevelsToCentroid?.Contains(entry.MsLevel) ?? false;
         var tag = (Tag)entry.Tag;
         var frame = tag.Frame;
         bool getPeaks = detailLevel >= DetailLevel.FullMetadata;

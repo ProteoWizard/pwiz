@@ -1,6 +1,7 @@
 using System.Globalization;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData.Spectra;
+using Pwiz.Util.Misc;
 
 namespace Pwiz.Vendor.Bruker;
 
@@ -91,10 +92,11 @@ internal sealed class TsfData : IBrukerData
 
     // ---------- spectrum fill ----------
 
-    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, DetailLevel detailLevel, bool preferCentroid, bool sortAndJitter = false, bool includeIsolationArrays = false)
+    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, DetailLevel detailLevel, IntegerSet? msLevelsToCentroid, bool sortAndJitter = false, bool includeIsolationArrays = false)
     {
         ArgumentNullException.ThrowIfNull(spec);
         ArgumentNullException.ThrowIfNull(entry);
+        bool preferCentroid = msLevelsToCentroid?.Contains(entry.MsLevel) ?? false;
         bool getBinaryData = detailLevel >= DetailLevel.FullData;
         _ = includeIsolationArrays; // TSF has no diaPASEF isolation arrays.
         var tag = (Tag)entry.Tag;

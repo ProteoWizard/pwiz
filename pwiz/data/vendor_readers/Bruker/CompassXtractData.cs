@@ -360,7 +360,7 @@ internal sealed class CompassXtractData : IBrukerData
     /// <c>SpectrumList_Bruker::spectrum</c> (<c>SpectrumList_Bruker.cpp:225-540</c>).
     /// </summary>
     public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, DetailLevel detailLevel,
-        bool preferCentroid, bool sortAndJitter, bool includeIsolationArrays)
+        IntegerSet? msLevelsToCentroid, bool sortAndJitter, bool includeIsolationArrays)
     {
         ArgumentNullException.ThrowIfNull(spec);
         ArgumentNullException.ThrowIfNull(entry);
@@ -371,10 +371,10 @@ internal sealed class CompassXtractData : IBrukerData
         // read obtains, and a second thread reading the same scan can hold the same wrapper. The
         // parameter caches are unsynchronized too.
         lock (_readLock)
-            FillSpectrumLocked(spec, entry, detailLevel, preferCentroid);
+            FillSpectrumLocked(spec, entry, detailLevel, msLevelsToCentroid);
     }
 
-    private void FillSpectrumLocked(Spectrum spec, BrukerIndexEntry entry, DetailLevel detailLevel, bool preferCentroid)
+    private void FillSpectrumLocked(Spectrum spec, BrukerIndexEntry entry, DetailLevel detailLevel, IntegerSet? msLevelsToCentroid)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         using (CompassXtractActivationContext.Activate())
@@ -382,7 +382,7 @@ internal sealed class CompassXtractData : IBrukerData
             if (entry.Tag is string fidDirectory)
             {
                 using var fid = new FidSpectrum(fidDirectory);
-                FillFromSpectrum(spec, fid.Spectrum, detailLevel, preferCentroid);
+                FillFromSpectrum(spec, fid.Spectrum, detailLevel, msLevelsToCentroid);
                 return;
             }
 
@@ -396,7 +396,7 @@ internal sealed class CompassXtractData : IBrukerData
             var spectrum = _spectra[scan];
             try
             {
-                FillFromSpectrum(spec, spectrum, detailLevel, preferCentroid);
+                FillFromSpectrum(spec, spectrum, detailLevel, msLevelsToCentroid);
             }
             finally
             {
@@ -405,7 +405,7 @@ internal sealed class CompassXtractData : IBrukerData
         }
     }
 
-    private void FillFromSpectrum(Spectrum spec, EDAL.IMSSpectrum spectrum, DetailLevel detailLevel, bool preferCentroid)
+    private void FillFromSpectrum(Spectrum spec, EDAL.IMSSpectrum spectrum, DetailLevel detailLevel, IntegerSet? msLevelsToCentroid)
     {
         int msLevel = spectrum.MSMSStage;
         spec.Params.Set(CVID.MS_ms_level, msLevel);
@@ -451,6 +451,8 @@ internal sealed class CompassXtractData : IBrukerData
         if (detailLevel < DetailLevel.FullMetadata)
             return;
 
+        // cpp SpectrumList_Bruker.cpp:426 - `getLineData = msLevelsToCentroid.contains(msLevel)`.
+        bool preferCentroid = msLevelsToCentroid?.Contains(msLevel) ?? false;
         FillPeaks(spec, spectrum, detailLevel >= DetailLevel.FullData, preferCentroid);
     }
 
