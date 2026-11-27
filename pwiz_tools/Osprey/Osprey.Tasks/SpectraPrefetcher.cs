@@ -65,6 +65,7 @@ namespace pwiz.Osprey.Tasks
         private readonly List<string> _inputs;
         private readonly double _budgetFiles;
         private readonly PipelineContext _ctx;
+        private readonly CentroidingOptions _centroiding;
         private readonly SpectrumListDemux.Params _demultiplex;
         private readonly object _lock = new object();
         private readonly Dictionary<string, PrefetchedFile> _files = new Dictionary<string, PrefetchedFile>(StringComparer.OrdinalIgnoreCase);
@@ -81,13 +82,16 @@ namespace pwiz.Osprey.Tasks
 
         /// <param name="inputs">The stage's input files, in the order its lanes take them.</param>
         /// <param name="lanes">How many files the stage works on at once.</param>
-        /// <param name="demultiplex">The demultiplexing settings the stage's own read would use, so
-        /// a run is read here exactly as it would be there.</param>
+        /// <param name="centroiding">The Centrix settings the stage's own read would use, or null for
+        /// the vendor's centroids, so a run is read here exactly as it would be there.</param>
+        /// <param name="demultiplex">The demultiplexing settings the stage's own read would use, for
+        /// the same reason.</param>
         /// <param name="ctx">For the read-ahead log lines.</param>
-        public SpectraPrefetcher(IEnumerable<string> inputs, int lanes, SpectrumListDemux.Params demultiplex,
-            PipelineContext ctx)
+        public SpectraPrefetcher(IEnumerable<string> inputs, int lanes, CentroidingOptions centroiding,
+            SpectrumListDemux.Params demultiplex, PipelineContext ctx)
         {
             _inputs = new List<string>(inputs);
+            _centroiding = centroiding;
             _demultiplex = demultiplex;
             _budgetFiles = Math.Max(1, lanes) + Math.Max(0, OspreyEnvironment.ReadAhead);
             _ctx = ctx;
@@ -147,12 +151,13 @@ namespace pwiz.Osprey.Tasks
                 return null;
             }
             unsortedCount = result.UnsortedSpectrumCount;
-            // The warning the stage's own read gives for the same file.
-            if (result.MultiplexedSchemeNotDemultiplexed != null)
+            // The line the stage's own read logs for the same file. A run acquired with overlapping
+            // windows is refused by the caller, as the stage's own read refuses it.
+            if (!double.IsNaN(result.CentroidSigmaMs2))
             {
-                _ctx.LogWarning(string.Format(
-                    OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache__0__was_acquired_with_overlapping_isolation_windows_and_is_searched_as_acquired,
-                    Path.GetFileName(inputFile), OspreyArgNames.Text(OspreyArgNames.DEMUX)));
+                _ctx.LogInfo(string.Format(
+                    OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Centroided_the_profile_spectra_with_Centrix__peak_sigma__0_F3__Th_for_MS1__1_F3__Th_for_MS2,
+                    result.CentroidSigmaMs1, result.CentroidSigmaMs2));
             }
             var index = SpectraWindowIndex.FromSpectra(result.Ms2Spectra, result.Ms1Spectra, loadMs1);
             if (!loadMs1)
@@ -231,7 +236,8 @@ namespace pwiz.Osprey.Tasks
             var sw = Stopwatch.StartNew();
             try
             {
-                file.Result = SpectrumFileReader.LoadAllSpectra(file.Path, _demultiplex, bytes => Reserve(file, bytes), false);
+                file.Result = SpectrumFileReader.LoadAllSpectra(file.Path, _centroiding, _demultiplex,
+                    bytes => Reserve(file, bytes), false);
             }
             catch (AbandonedReadException)
             {

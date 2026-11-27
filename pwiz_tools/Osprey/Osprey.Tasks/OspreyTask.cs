@@ -213,9 +213,10 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="BLIB_READER_TERM"/> is here for the same reason: it changes what every
         /// task reads from a blib library.
         ///
-        /// The demultiplexing settings are here for the same reason: they
-        /// decide the spectra every task's output is computed from. See
-        /// <see cref="DemuxCache.ValidityKeySuffix(OspreyConfig)"/>.
+        /// The demultiplexing and centroiding settings are here for the same
+        /// reason: they decide the spectra every task's output is computed from.
+        /// See <see cref="DemuxCacheBuilder.ValidityKeySuffix(OspreyConfig)"/> and
+        /// <see cref="ProfileCentroiding.ValidityKeySuffix"/>.
         ///
         /// The MS2 m/z calibration method is here for the same reason: it moves every MS2 m/z the
         /// search scores (<see cref="OspreyEnvironment.Ms2CalValidityKeySuffix"/>).
@@ -228,12 +229,13 @@ namespace pwiz.Osprey.Tasks
         /// applied then and no longer does (see <c>PinFeatureMask</c>).
         /// </summary>
         public virtual string ValidityKey(PipelineContext ctx) => string.Format(
-            @"search={0};library={1}{2}{3}{4}{5};xic={6}",
+            @"search={0};library={1}{2}{3}{4}{5}{6};xic={7}",
             ctx.Config.Identity.SearchParameterHash(),
             ctx.Config.Identity.LibraryIdentityHash(),
             OspreyEnvironment.PickValidityKeySuffix(ctx.Config.Scoring),
             ReaderTerm(ctx.Config.LibrarySource?.Format),
-            DemuxCache.ValidityKeySuffix(ctx.Config),
+            DemuxCacheBuilder.ValidityKeySuffix(ctx.Config),
+            ProfileCentroiding.ValidityKeySuffix(ctx.Config),
             OspreyEnvironment.Ms2CalValidityKeySuffix(ctx.Config.ResolutionMode, ctx.Config.FragmentTolerance.Unit),
             ctx.Config.Scoring.XicFragments.ToString(CultureInfo.InvariantCulture));
 

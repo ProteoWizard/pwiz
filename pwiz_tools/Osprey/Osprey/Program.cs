@@ -340,6 +340,8 @@ namespace pwiz.Osprey
                 // (each artifact in its input file's own directory).
                 ArtifactPaths.OutputDir = config.OutputDir;
                 ArtifactPaths.CacheDir = config.CacheDir;
+                // Spectra Osprey centroided itself are cached under their own name.
+                ArtifactPaths.SpectraCacheTag = ProfileCentroiding.CacheTag(config);
 
                 string err = ValidateArgs(config, out var analysis);
                 if (err != null)
@@ -446,30 +448,47 @@ namespace pwiz.Osprey
                     // treats a missing one as "trust the cache". That makes
                     // delete-the-sources-after-caching a supported way to halve the
                     // disk a large cohort needs.
-                    // With --demux auto, so is its demultiplexed cache, but only while its
-                    // descriptor matches. Without the source it cannot be rebuilt, and the
-                    // .spectra.bin of a multiplexed run cannot stand in for it, so that case is
-                    // reported here, at start-up, rather than searched as acquired. So is a
-                    // refused demultiplexed cache with no .spectra.bin at all.
-                    var demuxRejection = DemuxCache.Check(inputFile, config);
-                    if (demuxRejection == SpectraCacheRejection.None)
+                    // ProteoWizard's demultiplexer (OSPREY_DEMUX_ENGINE=pwiz) reads a multiplexed run
+                    // demultiplexed from its source, so its demultiplexed cache stands in only while its
+                    // descriptor matches, and the .spectra.bin of a multiplexed run cannot stand in at all.
+                    // That is reported here, at start-up, rather than failing on the missing source.
+                    if (DemuxCacheBuilder.UsesPwizEngine(config))
                     {
-                        cacheOnlyInputs++;
-                        continue;
-                    }
-                    bool unrebuildableDemuxCache = demuxRejection != SpectraCacheRejection.Absent &&
-                                                   !File.Exists(SpectraCache.GetCachePath(inputFile));
-                    if (unrebuildableDemuxCache || DemuxCache.IsDemultiplexedRun(inputFile, config))
-                    {
-                        LogError(string.Format(
-                            OspreyResources.Program_Run_Input_file_not_found__and_its_demultiplexed_spectra_cache_cannot_stand_in_for_it___0____1____It_can_be_rebuilt_only_from_the_source_file__restore_it_,
-                            inputFile, SpectraCacheException.Describe(demuxRejection)));
-                        return EXIT_CODE_FAILURE_TO_START;
+                        var pwizRejection = DemuxCacheBuilder.CheckDemuxCache(inputFile, config);
+                        if (pwizRejection == SpectraCacheRejection.None)
+                        {
+                            cacheOnlyInputs++;
+                            continue;
+                        }
+                        bool unrebuildable = pwizRejection != SpectraCacheRejection.Absent &&
+                                             !File.Exists(SpectraCache.GetCachePath(inputFile));
+                        if (unrebuildable || PwizDemuxCache.IsDemultiplexedRun(inputFile, config))
+                        {
+                            LogError(string.Format(
+                                OspreyResources.Program_Run_Input_file_not_found__and_its_demultiplexed_spectra_cache_cannot_stand_in_for_it___0____1____It_can_be_rebuilt_only_from_the_source_file__restore_it_,
+                                inputFile, SpectraCacheException.Describe(pwizRejection)));
+                            return EXIT_CODE_FAILURE_TO_START;
+                        }
                     }
                     if (File.Exists(SpectraCache.GetCachePath(inputFile)))
                     {
                         cacheOnlyInputs++;
                         continue;
+                    }
+                    // With --demux, the demultiplexed cache alone is enough to search from,
+                    // but only while its descriptor matches. With neither the source nor the
+                    // .spectra.bin, one written by other demux settings or another demux
+                    // algorithm version cannot be rebuilt, so it is checked here, at start-up,
+                    // rather than failing on the missing source hours in.
+                    var demuxRejection = SpectraCacheRejection.Absent;
+                    if (config.DemuxMode != DemuxMode.off)
+                    {
+                        demuxRejection = DemuxCacheBuilder.CheckDemuxCache(inputFile, config);
+                        if (demuxRejection == SpectraCacheRejection.None)
+                        {
+                            cacheOnlyInputs++;
+                            continue;
+                        }
                     }
                     // ...and so is an absent source with no cache, once its SCORES exist.
                     // A join node is shipped parquets and sidecars and nothing else - that
@@ -497,6 +516,13 @@ namespace pwiz.Osprey
                     {
                         artifactOnlyInputs++;
                         continue;
+                    }
+                    if (demuxRejection != SpectraCacheRejection.Absent)
+                    {
+                        LogError(string.Format(
+                            OspreyResources.Program_Run_Input_file_not_found__and_its_demultiplexed_spectra_cache_cannot_stand_in_for_it___0____1____It_can_,
+                            inputFile, SpectraCacheException.Describe(demuxRejection), SpectraCache.EXT));
+                        return EXIT_CODE_FAILURE_TO_START;
                     }
                     LogError(string.Format(
                         OspreyResources.Program_Run_Input_file_not_found__and_no_spectra_cache_or_intermediate_file_exists_to_stand_in_for_it_, inputFile));

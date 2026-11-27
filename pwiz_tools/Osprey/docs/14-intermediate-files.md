@@ -27,7 +27,8 @@ experiment-wide. There is no third scope: experiment-wide content is written onc
 |---|---|---|---|---|
 | `<stem>.calibration.json` | run | JSON (Newtonsoft) | `Osprey.Chromatography/CalibrationIO.cs` | RT + MS1/MS2 mass calibration parameters, and `model_diagnostics`: the run's row of the report's calibration view (`CalFileRow`) and mass unit, written by `ModelDiagnosticsReport.CalibrationDiagnosticsToJson` on every calibrated run, with or without `--model-diagnostics`, because only Stage 3 holds the calibration matches it is binned from (00, P16). Opaque to `Osprey.Chromatography`, which cannot see the row type |
 | `<stem>.spectra.bin` | run | Custom binary v4 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload - and the only copy once the source is deleted. Not written with `--spectra-cache off` |
-| `<stem>.demux.spectra.bin` | run | Custom binary v4, own magic + descriptor | `Osprey.IO/SpectraCache.cs`, `Osprey.Tasks/DemuxCache.cs` | `--demux auto` on a multiplexed run only: the demultiplexed spectra the search reads in place of `.spectra.bin`, built from the source (section 2, [23-demultiplexing](23-demultiplexing.md)) |
+| `<stem>.acquisition.bin` | run | Custom binary v1 | `Osprey.IO/AcquisitionSidecar.cs` | Each MS2 spectrum's fill time and analyzer, beside the `.spectra.bin`: what `--demux auto` counts ions from. Not written with `--spectra-cache off` |
+| `<stem>.demux.spectra.bin` | run | Custom binary v4, own magic + descriptor | `Osprey.IO/SpectraCache.cs`, `Osprey.Tasks/DemuxCacheBuilder.cs` | `--demux auto` on an overlapping-window run only: the demultiplexed spectra the search reads in place of `.spectra.bin`, derived from the `.spectra.bin`, or with `--spectra-cache off` from the spectra read from the source, and written either way (section 2, [23-demultiplexing](23-demultiplexing.md)) |
 | `<stem>.scores.parquet`, stub | run | Apache Parquet (ZSTD), footer `osprey.feature_columns=stub` | `Osprey.IO/ParquetScoreCache.cs` | The run's only first-pass scores file, written by `PerFileScoring` after the run's own model is trained: boundary scalars, `fragment_coelution_sum` and the run's own first-pass scores, no identity or other feature columns. It holds the run's first-pass records; no `.1st-pass.fdr_scores.bin` is written beside it (section 3, "The stub scores parquet") |
 | `<stem>.features.parquet` | run | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | `--keep-scores-parquet` (or `--training-export`, which implies it) only: the features checkpoint, the full scores layout taken before the run's own model is trained (section 3) |
 | `<stem>.scores-reconciled.parquet`, stub | run | Apache Parquet (ZSTD) | `Osprey.Tasks/ReconciledParquetWriter.cs` | Stage 6 reconciled rewrite (separate file, not in-place), in the stub layout: the run's second-pass records; no `.2nd-pass.fdr_scores.bin` is written beside it. With feature writing on, `<stem>.features-reconciled.parquet` holds the full layout of the same rows |
@@ -244,50 +245,94 @@ skipped precisely because there is nothing left to compare against. So validate 
 against their sources — magic, version, fingerprint, and that the index offset agrees with
 `n_ms2` — **before** deleting either, and treat the caches as data from then on.
 
-### Demultiplexed spectra cache (`<stem>.demux.spectra.bin`)
+### Demultiplexed cache (`<stem>.demux.spectra.bin`)
 
-**C# source**: `Osprey.IO/SpectraCache.cs` (format), `Osprey.Tasks/DemuxCache.cs` (descriptor,
-open, start-up check). Path: `SpectraCache.GetDemuxCachePath` = `<stem>.demux.spectra.bin` in
-`ArtifactPaths.ResolveCacheDir(inputFile)`, beside the `.spectra.bin`. Written only with
-`--demux auto`, and only for a run ProteoWizard detects as multiplexed. Osprey-only; Rust has no
-counterpart. How it is built and searched is in [23-demultiplexing.md](23-demultiplexing.md);
-this section is its bytes.
+**C# source**: `Osprey.Tasks/DemuxCacheBuilder.cs` (build and open), `Osprey.IO/SpectraCache.cs`
+(format). Path: `SpectraCache.GetDemuxCachePath`, beside the `.spectra.bin` it is derived from.
+Written only with `--demux auto`, and only for a run whose isolation windows overlap.
+Osprey-only; Rust has no counterpart. How and when it is built, and what it contains, is in
+[23-demultiplexing.md](23-demultiplexing.md); this section is its bytes.
 
-`SaveSpectraCache` writes it with the same VERSION 4 layout, given a non-null descriptor:
+The same VERSION 4 layout, with two differences:
 
 ```
-[magic:             8 bytes  "OSPRDMX\0"]
-[version:           uint32   = 4]
-[source_size:       uint64   as above]
-[source_mtime:      int64    as above]
-[n_ms2:             uint32   demultiplexed MS2 records]
-[n_ms1:             uint32]
-[descriptor_length: uint32   bytes; above 64 KiB is refused as a truncated header]
-[descriptor:        UTF-8, no terminator, e.g. "pwiz-demux/1;massError=10Ppm;interpolateRT=True;..."]
-[MS2 records, grouped by window]
-[MS1 records, acquisition order]
-[index: n_ms2 x 40 bytes, acquisition order: record_offset:i64, iso_center:f64,
-        iso_lower_offset:f64, iso_upper_offset:f64, retention_time:f64]
-[footer: ms1_section_offset:i64, index_offset:i64]
+[magic:        8 bytes  "OSPRDMX\0"]
+[version, source_size, source_mtime, n_ms2, n_ms1  as above]
+[descriptor_length: uint32]
+[descriptor:   UTF-8, e.g. "osprey-demux/3;block=covered_bins;interpolation=makima;..."]
+[MS2 body, MS1 section, index, footer  as above]
 ```
 
-Everything after the header is addressed by the absolute offsets in the index and footer, so
-`LoadSpectraCache` and `SpectraWindowIndex` decode it unchanged. Each MS2 record is one demux
-window of one acquired spectrum: it keeps its parent's scan number and retention time, and its
-isolation window is the demux window. `TryReadHeader` refuses it with `DemuxSettingsChanged`
-when it is read where a plain cache is expected, when a plain cache is read where a
-demultiplexed one is expected, or when its descriptor differs (ordinal comparison) from
-`DemuxCache.Descriptor` of the current settings. It records the **source** file's fingerprint,
-so a missing source is handled as above.
+Everything after the header is addressed by absolute offsets from the index and footer, so the
+readers decode it unchanged. `TryReadHeader` refuses it with `DemuxSettingsChanged` in three cases:
+- it is read where a plain cache is expected;
+- a plain cache is read where a demultiplexed one is expected;
+- its descriptor differs from the current settings (`DemuxParams.Descriptor`: the algorithm
+  version plus every output-changing setting, but not the thread count).
 
-**Rebuildable only from the source.** Unlike the `.spectra.bin`, a stale demultiplexed cache
-cannot be rebuilt once the source is gone: the start-up check (`DemuxCache.Check`, header only)
-reports it as an error before any task runs.
+It records the *source* file's fingerprint, not the `.spectra.bin`'s, so a missing source is
+handled exactly as above.
 
-`SpectraWindowIndex.IsolationWindows` lists every distinct window of either kind of cache, each
-as its first record's window, sorted by center. It used to stop at the first repeated key (the
-first cycle), which drops the top bin of a demultiplexed run, because that bin first appears
-after the cycle repeats.
+Each MS2 record is one narrow bin of one acquired spectrum. It keeps its parent's scan number
+and retention time, and its isolation window is the bin. Bins are disjoint, so no precursor
+falls in two windows.
+
+`SpectraWindowIndex` lists every distinct window of any cache, plain or demultiplexed. It
+used to take only the first cycle's windows, up to the first repeated key. That is the same
+set for ordinary DIA, but not for demultiplexed data: a bin covered only by the offset window
+set first appears after other bins have repeated. Searching msconvert-demultiplexed data that
+way silently left the top bin unscored.
+
+**Rebuildable from the `.spectra.bin`, cache to cache**, in seconds rather than the minutes a
+vendor parse takes. The `.spectra.bin` is never altered by demultiplexing, so it stays a pure
+function of the raw file.
+
+With `OSPREY_DEMUX_ENGINE=pwiz` (ProteoWizard's demultiplexer, for comparison) the same file is
+written from the source as it is read, with a `pwiz-demux/` descriptor, and is rebuildable only
+from the source (`PwizDemuxCache`).
+
+### Acquisition sidecar (`<stem>.acquisition.bin`)
+
+**C# source**: `Osprey.IO/AcquisitionSidecar.cs`. Path: `AcquisitionSidecar.PathFor`, the
+`.spectra.bin` path with `.acquisition.bin` in place of `.spectra.bin`. Written by
+`EnsureSpectraCache` beside every `.spectra.bin` it writes, from the parse. Osprey-only.
+
+What the spectra cache does not keep and the weighted demultiplexer needs to count each spectrum's
+ions ([23](23-demultiplexing.md#ions-from-the-fill-time)): each MS2 spectrum's ion injection (fill)
+time and its analyzer, the PSI-MS analyzer terms of its instrument configuration. A separate file,
+so the `.spectra.bin` format, and every cache already written, is unchanged.
+
+```
+[magic:        8 bytes  "OSPRACQ\0"]
+[version:      uint32 = 1]
+[source_size:  uint64]   as the .spectra.bin, including the unmeasurable sentinel
+[source_mtime: int64]
+[n_analyzers:  uint8]
+[analyzers:    n_analyzers x length-prefixed UTF-8 strings]
+[n_records:    uint32]
+[records:      n_records x { scan_number: uint32, fill_time_ms: float32 (NaN when not reported),
+                             analyzer: uint8 (index into analyzers) }]
+```
+
+It is refused, as the cache is, when it is missing, of another version, or written for a
+different version of the source. A `--demux auto` run that finds a `.spectra.bin` without a valid
+sidecar (one written before the sidecar existed) reads the fill times from the source's metadata
+alone, without its peaks, and writes the sidecar; with the source gone too, it counts ions at a
+constant 100 per ion and says so in the log. About 9 bytes per MS2 spectrum: 1-4 MB per run.
+
+### Centrix-centroided cache (`<stem>.centrix-<hash>.spectra.bin`)
+
+With `--centroid centrix` the spectra are Osprey's own centroids of the profile, not the vendor's
+([26-profile-centroiding.md](26-profile-centroiding.md)), so they are cached under their own name,
+in the plain VERSION 4 format: `<stem>.centrix-<hash>.spectra.bin`, and with `--demux auto`
+`<stem>.centrix-<hash>.demux.spectra.bin`. The hash is the first 8 hex digits of the SHA-256 of
+the centroiding descriptor (`ProfileCentroiding.Descriptor`: `CentrixCentroider.ALGORITHM_VERSION`
+and every setting), so different settings or a new algorithm version give a different file and
+never reuse an old one. `Program` sets the tag once on `ArtifactPaths.SpectraCacheTag`, and
+`SpectraCache.GetCachePath` / `GetDemuxCachePath` insert it, so every reader (Stage 6's rescore,
+the training export) finds the same file. Each cache stays a function of its source file and its
+settings; the vendor-centroided `<stem>.spectra.bin` beside it is untouched. The descriptor also
+enters every task's validity key (`;centroid=...`).
 
 ---
 
@@ -941,12 +986,14 @@ run:
   whose sources were deleted after staging (the supported way to halve a large cohort's disk),
   this file is not an intermediate at all — it is the data, and deleting it loses the run.
   Prune caches only where the source is still on disk.
-- `<stem>.demux.spectra.bin` — the same rule: recreated by reading the source with
-  `--demux auto`, and only then. It is never derived from the `.spectra.bin`.
+- `<stem>.demux.spectra.bin` — recreated from the `.spectra.bin` by a `--demux auto` run, or from
+  the source when that is gone too. With neither, it is the data, as the `.spectra.bin` is.
 - `<stem>.scores.parquet` / `<stem>.scores-reconciled.parquet` — recreated by re-scoring.
 - `<stem>.1st-pass.model.json` - the run's own model, required by the Stage 6 worker;
   deleting it re-trains the run in `PerFileScoring`.
 - `<stem>.reconciliation.json` — deleting forces a Stage 5 re-join.
+- `<stem>.acquisition.bin` — recreated from the source's metadata by a `--demux auto` run that
+  needs it. Keep it with the `.spectra.bin` on a cohort whose sources are deleted.
 - `<stem>.calibration.json` — small; worth keeping across runs with the same LC-MS setup, but in
   C# recalibration is triggered by the validity stamp inside it, not by its presence alone.
 - `<stem>.training.parquet` - recreated by `--training-export` (or `--task TrainingExport`)
