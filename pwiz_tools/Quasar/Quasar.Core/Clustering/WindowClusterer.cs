@@ -20,7 +20,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using pwiz.Osprey.Chromatography;
 using pwiz.Quasar.Core.Elution;
 
@@ -29,11 +32,16 @@ namespace pwiz.Quasar.Core.Clustering
     /// <summary>The templates and clusters of one isolation window.</summary>
     public sealed class WindowClusterResult
     {
-        public WindowClusterResult(IReadOnlyList<ElutionTemplate> templates, IReadOnlyList<Cluster> clusters)
+        public WindowClusterResult(IReadOnlyList<ElutionTemplate> templates, IReadOnlyList<Cluster> clusters,
+            string profile)
         {
             Templates = templates;
             Clusters = clusters;
+            Profile = profile;
         }
+
+        /// <summary>Where the time went, stage by stage, with the counts each stage produced (diagnostic text).</summary>
+        public string Profile { get; }
 
         /// <summary>Every template, known ones included, in the order they were made.</summary>
         public IReadOnlyList<ElutionTemplate> Templates { get; }
@@ -79,14 +87,22 @@ namespace pwiz.Quasar.Core.Clustering
             var templates = knownShapes
                 .Select((shape, i) => new ElutionTemplate(i, shape, Array.Empty<int>(), TemplateSource.known))
                 .ToList();
+            var profile = new StringBuilder();
+            var watch = Stopwatch.StartNew();
             var data = new FitData(traces.Select(t => t.Intensities).ToArray(), null);
             for (int pass = 0; pass <= _settings.MaxResidualPasses; pass++)
             {
                 if (templates.Count > 0)
+                {
                     data = Residuals(rt, traces, new WindowLayout(this, rt, templates));
+                    profile.Append($@"residuals {Lap(watch)}; ");
+                }
+
                 var components = FindAnchorComponents(rt, traces, data);
+                profile.Append($@"pass {pass}: {components.Count} components {Lap(watch)}, ");
                 var source = pass == 0 ? TemplateSource.anchors : TemplateSource.residual_pass;
                 var added = GroupAnchors(rt, traces, data, components, templates.Count, source);
+                profile.Append($@"{added.Count} templates {Lap(watch)}; ");
 
                 // Signal whose apex is within the tolerance of an existing template is co-eluting
                 // with it and shares it (spec 2d). A residual there is model mismatch, not a new
@@ -104,7 +120,17 @@ namespace pwiz.Quasar.Core.Clustering
                 templates.AddRange(added);
             }
 
-            return new WindowClusterResult(templates, BuildClusters(rt, traces, new WindowLayout(this, rt, templates)));
+            var clusters = BuildClusters(rt, traces, new WindowLayout(this, rt, templates));
+            profile.Append($@"final fit {Lap(watch)}");
+            return new WindowClusterResult(templates, clusters, profile.ToString());
+        }
+
+        /// <summary>Seconds since the last lap, as text, restarting the watch.</summary>
+        private static string Lap(Stopwatch watch)
+        {
+            string text = watch.Elapsed.TotalSeconds.ToString(@"F1", CultureInfo.InvariantCulture) + @"s";
+            watch.Restart();
+            return text;
         }
 
         /// <summary>

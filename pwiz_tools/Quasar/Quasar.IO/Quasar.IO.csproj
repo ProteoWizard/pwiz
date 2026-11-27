@@ -15,6 +15,9 @@
     <ProjectReference Include="..\Quasar.Features\Quasar.Features.csproj" />
     <!-- pwiz-sharp's chemistry (isotope tables, elements): Pwiz.Util.Chemistry. -->
     <ProjectReference Include="..\..\..\pwiz\utility\Util.csproj" />
+    <!-- Spectra from raw files and mzML through ProteowizardWrapper, read the way Osprey reads
+         them (Osprey.IO carries the reference and its vendor-format rules). -->
+    <ProjectReference Include="..\..\Osprey\Osprey.IO\Osprey.IO.csproj" />
   </ItemGroup>
 
 </Project>

@@ -14,6 +14,8 @@
   <ItemGroup>
     <!-- The median CWT consensus (CwtPeakDetector) sets each cluster's boundaries. -->
     <ProjectReference Include="..\..\Osprey\Osprey.Chromatography\Osprey.Chromatography.csproj" />
+    <!-- Isotope envelopes and Kronik linking for the anchor traces (Stage 1). Pure logic too. -->
+    <ProjectReference Include="..\Quasar.Features\Quasar.Features.csproj" />
   </ItemGroup>
 
 </Project>

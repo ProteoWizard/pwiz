@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Quasar.Core\Quasar.Core.csproj" />
+    <ProjectReference Include="..\Quasar.IO\Quasar.IO.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -61,6 +61,87 @@ namespace pwiz.Quasar {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Read {0} MS1 and {1} MS2 spectra in {2} isolation windows ({3:F0} s)..
+        /// </summary>
+        public static string Pipeline_Read__0__MS1_and__1__MS2_spectra_in__2__isolation_windows___3_F0__s_ {
+            get {
+                return ResourceManager.GetString("Pipeline_Read__0__MS1_and__1__MS2_spectra_in__2__isolation_windows___3_F0__s_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reading {0}.
+        /// </summary>
+        public static string Pipeline_Reading__0_ {
+            get {
+                return ResourceManager.GetString("Pipeline_Reading__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak shape for the run: FWHM {0:F2} s, sigma {1:F4} min, tau {2:F4} min; {3:F2} s between scans of a window..
+        /// </summary>
+        public static string Pipeline_Run_shape__FWHM__0_F2__s__sigma__1_F4__min__tau__2_F4__min___3_F2__s_between_scans_of_a_window {
+            get {
+                return ResourceManager.GetString("Pipeline_Run_shape__FWHM__0_F2__s__sigma__1_F4__min__tau__2_F4__min___3_F2__s_between_scans_of_a_window", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} scans had no injection time; their intensities were used without conversion to ions..
+        /// </summary>
+        public static string Pipeline_Scans_without_injection_time__0_ {
+            get {
+                return ResourceManager.GetString("Pipeline_Scans_without_injection_time__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Window {0} ({1:F2} m/z, {2} scans): {3} anchor and {4} centroid traces, {5} templates, {6} clusters kept ({7:F1} s)..
+        /// </summary>
+        public static string Pipeline_Window__0____1_F2__m_z___2__scans____3__anchor_and__4__centroid_traces___5__templates___6__clusters_kept___7_F1__s_ {
+            get {
+                return ResourceManager.GetString("Pipeline_Window__0____1_F2__m_z___2__scans____3__anchor_and__4__centroid_traces___5__templates___6__clusters_kept___7_F1__s_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Window {0} time: Hardklor {1:F1} s, traces {2:F1} s, clustering: {3}.
+        /// </summary>
+        public static string Pipeline_Window__0__time__Hardklor__1_F1__s__traces__2_F1__s__clustering___3_ {
+            get {
+                return ResourceManager.GetString("Pipeline_Window__0__time__Hardklor__1_F1__s__traces__2_F1__s__clustering___3_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wrote {0} pseudo-spectra to {1} ({2:F0} s in all)..
+        /// </summary>
+        public static string Pipeline_Wrote__0__pseudo_spectra_to__1____2_F0__s_in_all_ {
+            get {
+                return ResourceManager.GetString("Pipeline_Wrote__0__pseudo_spectra_to__1____2_F0__s_in_all_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: {0}.
+        /// </summary>
+        public static string Program_Error__0_ {
+            get {
+                return ResourceManager.GetString("Program_Error__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing {0}. Run Quasar --help to see the arguments it accepts..
+        /// </summary>
+        public static string Program_Missing_argument__0_ {
+            get {
+                return ResourceManager.GetString("Program_Missing_argument__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unknown argument: {0}. Run Quasar --help to see the arguments it accepts..
         /// </summary>
         public static string Program_Unknown_argument__0_ {
@@ -68,22 +149,23 @@ namespace pwiz.Quasar {
                 return ResourceManager.GetString("Program_Unknown_argument__0_", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Quasar: spectrum-centric search of the MS2 signal a peptide-centric search leaves unexplained.
         ///
         ///Usage:
+        ///  Quasar -i &lt;run.raw|run.mzML&gt; [-o &lt;out.quasar.mzML&gt;] [--windows &lt;first&gt;[-&lt;last&gt;]] [--threads &lt;n&gt;]
         ///  Quasar --version   Show the version.
         ///  Quasar --help      Show this help.
         ///
-        ///The search itself is not available yet..
+        ///Writes one pseudo-spectrum per co-eluting cluster to mzML, for a search engine such as Sage..
         /// </summary>
         public static string Program_Usage {
             get {
                 return ResourceManager.GetString("Program_Usage", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Quasar {0}.
         /// </summary>

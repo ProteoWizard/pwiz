@@ -19,23 +19,34 @@
  */
 
 using System;
+using System.Globalization;
 using System.IO;
 
 namespace pwiz.Quasar
 {
     /// <summary>
-    /// Command-line entry point for Quasar. Only --help and --version exist so far; the
-    /// pipeline stages are added as they are built (see docs/00-spec.md).
+    /// Command-line entry point for Quasar: Stages 1 to 4 of the spec, from a raw file or mzML
+    /// to a pseudo-spectrum mzML.
     /// </summary>
     public static class Program
     {
         // Exit codes, as Skyline's and Osprey's command lines define them.
         internal const int EXIT_CODE_SUCCESS = 0;
         internal const int EXIT_CODE_FAILURE_TO_START = 1;
+        internal const int EXIT_CODE_RAN_WITH_ERRORS = 2;
 
         internal const string ARG_HELP = @"--help";
         internal const string ARG_HELP_SHORT = @"-h";
         internal const string ARG_VERSION = @"--version";
+        internal const string ARG_INPUT = @"--input";
+        internal const string ARG_INPUT_SHORT = @"-i";
+        internal const string ARG_OUTPUT = @"--output";
+        internal const string ARG_OUTPUT_SHORT = @"-o";
+        internal const string ARG_WINDOWS = @"--windows";
+        internal const string ARG_THREADS = @"--threads";
+
+        /// <summary>The output extension when no output is named.</summary>
+        internal const string EXT_OUTPUT = @".quasar.mzML";
 
         public static int Main(string[] args)
         {
@@ -57,8 +68,50 @@ namespace pwiz.Quasar
                 return EXIT_CODE_SUCCESS;
             }
 
-            error.WriteLine(QuasarResources.Program_Unknown_argument__0_, args[0]);
-            return EXIT_CODE_FAILURE_TO_START;
+            var settings = new PipelineSettings { CommandLine = string.Join(@" ", args) };
+            for (int i = 0; i < args.Length; i++)
+            {
+                string arg = args[i];
+                string value = i + 1 < args.Length ? args[i + 1] : null;
+                if (arg == ARG_INPUT || arg == ARG_INPUT_SHORT)
+                    settings.InputPath = value;
+                else if (arg == ARG_OUTPUT || arg == ARG_OUTPUT_SHORT)
+                    settings.OutputPath = value;
+                else if (arg == ARG_WINDOWS && TryParseRange(value, out int first, out int last))
+                {
+                    settings.FirstWindow = first;
+                    settings.LastWindow = last;
+                }
+                else if (arg == ARG_THREADS && int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int threads))
+                    settings.Threads = threads;
+                else
+                {
+                    error.WriteLine(QuasarResources.Program_Unknown_argument__0_, arg);
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
+
+                i++;
+            }
+
+            if (string.IsNullOrEmpty(settings.InputPath))
+            {
+                error.WriteLine(QuasarResources.Program_Missing_argument__0_, ARG_INPUT);
+                return EXIT_CODE_FAILURE_TO_START;
+            }
+
+            settings.OutputPath ??= Path.Combine(Path.GetDirectoryName(Path.GetFullPath(settings.InputPath)) ?? string.Empty,
+                Path.GetFileNameWithoutExtension(settings.InputPath) + EXT_OUTPUT);
+            try
+            {
+                new QuasarPipeline(settings, error).Run();
+                return EXIT_CODE_SUCCESS;
+            }
+            catch (Exception ex) when (ex is IOException || ex is InvalidDataException || ex is NotSupportedException ||
+                                       ex is UnauthorizedAccessException)
+            {
+                error.WriteLine(QuasarResources.Program_Error__0_, ex.Message);
+                return EXIT_CODE_RAN_WITH_ERRORS;
+            }
         }
 
         /// <summary>The build version, YEAR.ORDINAL.BRANCH.DOY.</summary>
@@ -69,6 +122,19 @@ namespace pwiz.Quasar
                 var version = typeof(Program).Assembly.GetName().Version;
                 return version == null ? string.Empty : version.ToString(4);
             }
+        }
+
+        /// <summary>Parses "12" or "12-20" as an inclusive window index range.</summary>
+        private static bool TryParseRange(string text, out int first, out int last)
+        {
+            first = last = 0;
+            if (string.IsNullOrEmpty(text))
+                return false;
+            var parts = text.Split('-');
+            if (parts.Length > 2 || !int.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out first))
+                return false;
+            last = first;
+            return parts.Length == 1 || int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out last);
         }
     }
 }

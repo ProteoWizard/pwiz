@@ -13,6 +13,11 @@
 .PARAMETER NoTests
     Build only.
 
+.PARAMETER IAgreeToVendorLicenses
+    Acknowledge the vendor SDK licenses, so pwiz-sharp builds its real vendor readers and
+    Quasar can read raw files (as Osprey's build.ps1 does). Without it the vendor readers are
+    stubs and only mzML can be read.
+
 .PARAMETER NoBuild
     Run the tests against the existing build output without building first.
 
@@ -33,6 +38,7 @@
 param(
     [ValidateSet('Debug','Release')] [string]$Configuration = 'Release',
     [switch]$NoTests,
+    [switch]$IAgreeToVendorLicenses,
     [switch]$NoBuild,
     [string]$TestFilter = '',
     [switch]$ShowTestOutput,
@@ -54,7 +60,17 @@ if (-not (Test-Path $sln)) {
 if (-not $NoBuild) {
     Write-Host "==> Building Quasar.sln ($Configuration|$platform)" -ForegroundColor Cyan
     $buildStart = Get-Date
-    & dotnet msbuild $sln /restore "/p:Configuration=$Configuration" "/p:Platform=$platform" /nologo "/verbosity:$Verbosity"
+    # NuGetAuditLevel=critical: pwiz-sharp's Sciex.csproj (reached through Osprey.IO and
+    # ProteowizardWrapper) references System.Security.Cryptography.Xml 8.0.4 directly, which now
+    # has published high-severity advisories, and pwiz-sharp's TreatWarningsAsErrors turns the
+    # NU1903 audit warning into a RESTORE failure for every solution that references it. The fix
+    # belongs in pwiz-sharp (a newer package); until then only critical advisories are reported.
+    $buildArgs = @($sln, '/restore', "/p:Configuration=$Configuration", "/p:Platform=$platform", '/nologo',
+        "/verbosity:$Verbosity", '/p:NuGetAuditLevel=critical')
+    if ($IAgreeToVendorLicenses) {
+        $buildArgs += '/p:IAgreeToVendorLicenses=true'
+    }
+    & dotnet msbuild @buildArgs
     $buildExit = $LASTEXITCODE
     $buildSec = ((Get-Date) - $buildStart).TotalSeconds
     if ($buildExit -ne 0) {

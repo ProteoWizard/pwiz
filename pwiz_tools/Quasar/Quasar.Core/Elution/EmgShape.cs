@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 
 namespace pwiz.Quasar.Core.Elution
 {
@@ -42,6 +43,15 @@ namespace pwiz.Quasar.Core.Elution
         /// <summary>The parameter vector order <see cref="Model"/> expects: area, mu, sigma, tau.</summary>
         public const int PARAMETER_COUNT = 4;
 
+        // The mode and the height crossings depend on sigma, tau (and the fraction) but not on mu,
+        // and finding them takes hundreds of density evaluations, while every template fit,
+        // segment and support count asks for them. They are computed once per shape at mu = 0
+        // and offset by mu.
+        private static readonly ConcurrentDictionary<(double Sigma, double Tau), double> MODE_OFFSETS =
+            new ConcurrentDictionary<(double Sigma, double Tau), double>();
+        private static readonly ConcurrentDictionary<(double Sigma, double Tau, double Fraction), (double Left, double Right)> CROSSING_OFFSETS =
+            new ConcurrentDictionary<(double Sigma, double Tau, double Fraction), (double Left, double Right)>();
+
         /// <summary>
         /// The EMG with area <c>parameters[0]</c> and shape (mu, sigma, tau) =
         /// <c>parameters[1..3]</c>, evaluated at <paramref name="t"/>. Negative sigma or tau are
@@ -49,10 +59,14 @@ namespace pwiz.Quasar.Core.Elution
         /// </summary>
         public static double Model(double[] parameters, double t)
         {
-            double amplitude = parameters[0];
-            double mu = parameters[1];
-            double sigma = Math.Abs(parameters[2]);
-            double tau = Math.Abs(parameters[3]);
+            return Evaluate(parameters[0], parameters[1], parameters[2], parameters[3], t);
+        }
+
+        /// <summary><see cref="Model"/> without the parameter array.</summary>
+        public static double Evaluate(double amplitude, double mu, double sigmaParameter, double tauParameter, double t)
+        {
+            double sigma = Math.Abs(sigmaParameter);
+            double tau = Math.Abs(tauParameter);
             if (sigma < 1e-9 || tau < 1e-9)
                 return 0.0;
 
@@ -84,7 +98,7 @@ namespace pwiz.Quasar.Core.Elution
         /// <summary>The unit-area density at <paramref name="t"/>.</summary>
         public double Density(double t)
         {
-            return Model(new[] { 1.0, Mu, Sigma, Tau }, t);
+            return Evaluate(1.0, Mu, Sigma, Tau, t);
         }
 
         /// <summary>
@@ -94,37 +108,7 @@ namespace pwiz.Quasar.Core.Elution
         /// </summary>
         public double Mode
         {
-            get
-            {
-                double lo = Mu - Sigma;
-                double hi = Mu + 2.0 * Sigma + Tau;
-                const double invPhi = 0.6180339887498949;
-                double a = hi - invPhi * (hi - lo);
-                double b = lo + invPhi * (hi - lo);
-                double fa = Density(a);
-                double fb = Density(b);
-                while (hi - lo > 1e-9 * Math.Max(1.0, Sigma))
-                {
-                    if (fa < fb)
-                    {
-                        lo = a;
-                        a = b;
-                        fa = fb;
-                        b = lo + invPhi * (hi - lo);
-                        fb = Density(b);
-                    }
-                    else
-                    {
-                        hi = b;
-                        b = a;
-                        fb = fa;
-                        a = hi - invPhi * (hi - lo);
-                        fa = Density(a);
-                    }
-                }
-
-                return 0.5 * (lo + hi);
-            }
+            get { return Mu + MODE_OFFSETS.GetOrAdd((Sigma, Tau), key => new EmgShape(0.0, key.Sigma, key.Tau).SearchMode()); }
         }
 
         /// <summary>This shape moved so that its <see cref="Mode"/> is at <paramref name="apex"/>.</summary>
@@ -141,6 +125,52 @@ namespace pwiz.Quasar.Core.Elution
         /// with how far down the threshold sits.
         /// </summary>
         public (double Left, double Right) HeightCrossings(double fraction)
+        {
+            var (left, right) = CROSSING_OFFSETS.GetOrAdd((Sigma, Tau, fraction),
+                key => new EmgShape(0.0, key.Sigma, key.Tau).GridCrossings(key.Fraction));
+            return (Mu + left, Mu + right);
+        }
+
+        public override string ToString()
+        {
+            return $@"EMG[mu={Mu}, sigma={Sigma}, tau={Tau}]";
+        }
+
+        /// <summary>The golden-section search for the mode, on this shape as it is.</summary>
+        private double SearchMode()
+        {
+            double lo = Mu - Sigma;
+            double hi = Mu + 2.0 * Sigma + Tau;
+            const double invPhi = 0.6180339887498949;
+            double a = hi - invPhi * (hi - lo);
+            double b = lo + invPhi * (hi - lo);
+            double fa = Density(a);
+            double fb = Density(b);
+            while (hi - lo > 1e-9 * Math.Max(1.0, Sigma))
+            {
+                if (fa < fb)
+                {
+                    lo = a;
+                    a = b;
+                    fa = fb;
+                    b = lo + invPhi * (hi - lo);
+                    fb = Density(b);
+                }
+                else
+                {
+                    hi = b;
+                    b = a;
+                    fb = fa;
+                    a = hi - invPhi * (hi - lo);
+                    fa = Density(a);
+                }
+            }
+
+            return 0.5 * (lo + hi);
+        }
+
+        /// <summary>The height crossings found on a 1000-step grid of this shape as it is (datum's method).</summary>
+        private (double Left, double Right) GridCrossings(double fraction)
         {
             double lo = Mu - 8.0 * Sigma;
             double hi = Mu + 8.0 * Sigma + Tau * (Math.Max(0.0, -Math.Log(fraction)) + 2.0);
@@ -185,11 +215,6 @@ namespace pwiz.Quasar.Core.Elution
             }
 
             return (left, right);
-        }
-
-        public override string ToString()
-        {
-            return $@"EMG[mu={Mu}, sigma={Sigma}, tau={Tau}]";
         }
     }
 }
