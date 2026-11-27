@@ -61,6 +61,15 @@ namespace pwiz.Quasar {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to MS1: {0} scans for the precursor tiers ({1:F0} s)..
+        /// </summary>
+        public static string Pipeline_MS1___0__scans_for_the_precursor_tiers___1_F0__s__ {
+            get {
+                return ResourceManager.GetString("Pipeline_MS1___0__scans_for_the_precursor_tiers___1_F0__s__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Read {0} MS1 and {1} MS2 spectra in {2} isolation windows ({3:F0} s)..
         /// </summary>
         public static string Pipeline_Read__0__MS1_and__1__MS2_spectra_in__2__isolation_windows___3_F0__s_ {
@@ -111,6 +120,15 @@ namespace pwiz.Quasar {
         public static string Pipeline_Window__0__time__Hardklor__1_F1__s__traces__2_F1__s__clustering___3_ {
             get {
                 return ResourceManager.GetString("Pipeline_Window__0__time__Hardklor__1_F1__s__traces__2_F1__s__clustering___3_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wrote {0} precursor spectra to {1}: {2} of {3} clusters have a candidate ({4} tier 1, {5} tier 2)..
+        /// </summary>
+        public static string Pipeline_Wrote__0__precursor_spectra_to__1____2__of__3__clusters_have_a_candidate___4__tier_1___5__tier_2__ {
+            get {
+                return ResourceManager.GetString("Pipeline_Wrote__0__precursor_spectra_to__1____2__of__3__clusters_have_a_candidate___4__tier_1___5__tier_2__", resourceCulture);
             }
         }
         

@@ -65,8 +65,10 @@ namespace pwiz.Quasar
     /// <summary>
     /// Stages 1 to 4 for one run: read it, measure its peak shape, then for each isolation window
     /// find isotope envelopes (Hardklor), build traces, cluster them template first, and write one
-    /// pseudo-spectrum per accepted cluster to mzML. Every cluster is written as tier 3 (the
-    /// isolation window is the precursor tolerance) until the precursor tiers are in.
+    /// pseudo-spectrum per accepted cluster to mzML, searched with the isolation window as the
+    /// precursor tolerance. Clusters with precursor candidates (tiers 1 and 2) are also written,
+    /// one copy per candidate, to a second mzML (<see cref="PrecursorPath"/>) for a search with a
+    /// narrow precursor tolerance: Sage reads only a spectrum's first precursor.
     /// </summary>
     public sealed class QuasarPipeline
     {
@@ -99,14 +101,14 @@ namespace pwiz.Quasar
             Log(QuasarResources.Pipeline_Reading__0_, _settings.InputPath);
             var read = Stopwatch.StartNew();
 
-            // Learn the isolation scheme first, so only the windows being processed are held.
-            // MS1 is not read until the precursor tiers use it.
+            // Learn the isolation scheme first, so only the windows being processed are held. MS1
+            // is read for the precursor tiers.
             var scheme = RunReader.ReadWindowTargets(_settings.InputPath);
             var selectedTargets = scheme
                 .Where((_, i) => i >= (_settings.FirstWindow ?? 0) && i <= (_settings.LastWindow ?? int.MaxValue))
                 .ToArray();
             var run = RunReader.Read(_settings.InputPath,
-                target => selectedTargets.Any(t => Math.Abs(t - target) < SCHEME_TOLERANCE), false);
+                target => selectedTargets.Any(t => Math.Abs(t - target) < SCHEME_TOLERANCE), !_settings.TracesOnly);
             run = WithSchemeIndices(run, scheme);
             Log(QuasarResources.Pipeline_Read__0__MS1_and__1__MS2_spectra_in__2__isolation_windows___3_F0__s_,
                 run.Ms1.Count, run.Windows.Sum(w => w.Scans.Count), run.Windows.Count, read.Elapsed.TotalSeconds);
@@ -119,6 +121,11 @@ namespace pwiz.Quasar
             Log(QuasarResources.Pipeline_Run_shape__FWHM__0_F2__s__sigma__1_F4__min__tau__2_F4__min___3_F2__s_between_scans_of_a_window,
                 fwhm * 60.0, prior.Sigma, prior.Tau, cycle * 60.0);
             var clusterSettings = new WindowClusterSettings(prior, new NoiseModel(1.0, 1.0), cycle);
+
+            var ms1 = _settings.TracesOnly ? new List<WindowScan>() : BuildMs1Scans(run);
+            var ms1Rt = ms1.Select(s => s.RetentionTime).ToArray();
+            var precursorSpectra = new ConcurrentBag<(int Window, int Template, int Order, PseudoSpectrum Spectrum)>();
+            int clustersWithCandidate = 0, tier1Count = 0, tier2Count = 0;
 
             var spectra = new ConcurrentBag<(int Window, int Template, PseudoSpectrum Spectrum)>();
             string stem = Path.GetFileNameWithoutExtension(_settings.InputPath);
@@ -145,14 +152,35 @@ namespace pwiz.Quasar
                             window.Index, hardklorSeconds, traceSeconds, string.Empty);
                         return;
                     }
-                    var result = new WindowClusterer(clusterSettings).Run(rt, traces, Array.Empty<EmgShape>());
+                    var clusterer = new WindowClusterer(clusterSettings);
+                    var result = clusterer.Run(rt, traces, Array.Empty<EmgShape>());
                     Log(QuasarResources.Pipeline_Window__0__time__Hardklor__1_F1__s__traces__2_F1__s__clustering___3_,
                         window.Index, hardklorSeconds, traceSeconds, result.Profile);
+
+                    double low = window.Target - window.LowerOffset;
+                    double high = window.Target + window.UpperOffset;
+                    var ms1Traces = Ms1Traces(ms1, low, high, traceSettings);
                     int kept = 0;
                     foreach (var cluster in result.Clusters.Where(c => c.IsAccepted))
                     {
-                        spectra.Add((window.Index, cluster.Template.Id, ToPseudoSpectrum(stem, window, rt, cluster)));
+                        spectra.Add((window.Index, cluster.Template.Id, ToPseudoSpectrum(stem, window, rt, cluster, null, null)));
                         kept++;
+
+                        // Sage reads only a spectrum's first precursor, so each candidate gets its own
+                        // copy of the cluster (spec, Phase 1).
+                        var tier1 = PrecursorFinder.FromMs1(cluster, ms1Rt, ms1Traces, low, high, clusterer, clusterSettings);
+                        var tier2 = PrecursorFinder.UnfragmentedInMs2(cluster, low, high);
+                        int order = 0;
+                        foreach (var candidate in tier1)
+                            precursorSpectra.Add((window.Index, cluster.Template.Id, order++,
+                                ToPseudoSpectrum(stem, window, rt, cluster, candidate, null)));
+                        foreach (var (member, candidate) in tier2)
+                            precursorSpectra.Add((window.Index, cluster.Template.Id, order++,
+                                ToPseudoSpectrum(stem, window, rt, cluster, candidate, member)));
+                        if (order > 0)
+                            Interlocked.Increment(ref clustersWithCandidate);
+                        Interlocked.Add(ref tier1Count, tier1.Count);
+                        Interlocked.Add(ref tier2Count, tier2.Count);
                     }
 
                     Log(QuasarResources.Pipeline_Window__0____1_F2__m_z___2__scans____3__anchor_and__4__centroid_traces___5__templates___6__clusters_kept___7_F1__s_,
@@ -166,6 +194,16 @@ namespace pwiz.Quasar
             var ordered = spectra.OrderBy(s => s.Window).ThenBy(s => s.Template).Select(s => s.Spectrum).ToList();
             PseudoSpectrumMzmlWriter.Write(_settings.OutputPath, ordered, _settings.InputPath, Program.Version,
                 _settings.CommandLine ?? string.Empty);
+            if (!_settings.TracesOnly)
+            {
+                var withPrecursors = precursorSpectra.OrderBy(s => s.Window).ThenBy(s => s.Template).ThenBy(s => s.Order)
+                    .Select(s => s.Spectrum).ToList();
+                string precursorPath = PrecursorPath(_settings.OutputPath);
+                PseudoSpectrumMzmlWriter.Write(precursorPath, withPrecursors, _settings.InputPath, Program.Version,
+                    _settings.CommandLine ?? string.Empty);
+                Log(QuasarResources.Pipeline_Wrote__0__precursor_spectra_to__1____2__of__3__clusters_have_a_candidate___4__tier_1___5__tier_2__,
+                    withPrecursors.Count, precursorPath, clustersWithCandidate, ordered.Count, tier1Count, tier2Count);
+            }
             Log(QuasarResources.Pipeline_Wrote__0__pseudo_spectra_to__1____2_F0__s_in_all_, ordered.Count,
                 _settings.OutputPath, total.Elapsed.TotalSeconds);
         }
@@ -221,37 +259,73 @@ namespace pwiz.Quasar
         /// <summary>Hardklor on each scan of a window, and the ion conversion of its intensities.</summary>
         private List<WindowScan> BuildScans(RunData run, WindowScans window, AnalyzerEnvelopeFinder finder)
         {
-            var scans = new List<WindowScan>(window.Scans.Count);
-            foreach (var spectrum in window.Scans)
-            {
-                var header = spectrum.Header;
-                var analyzer = header.Analyzer == MassAnalyzer.unknown ? MassAnalyzer.orbitrap : header.Analyzer;
-                var envelopes = finder.CanSearch(analyzer)
-                    ? finder.Find(spectrum.Mz, spectrum.Intensity, analyzer)
-                    : Array.Empty<IsotopeEnvelope>();
-                double ionsPerIntensity = IonCalibration.IonsPerIntensity(header.InjectionTimeMs,
-                    IonCalibration.Alpha(run.InstrumentModel, analyzer));
-                if (double.IsNaN(ionsPerIntensity))
-                {
-                    Interlocked.Increment(ref _scansWithoutInjectionTime);
-                    ionsPerIntensity = 1.0;
-                }
+            return window.Scans.Select(spectrum => ToWindowScan(run, spectrum, finder)).ToList();
+        }
 
-                scans.Add(new WindowScan(header.RetentionTime, ionsPerIntensity, spectrum.Mz, spectrum.Intensity, envelopes));
+        /// <summary>The MS1 scans in ions, for the precursor tiers; no envelopes are searched (see <see cref="PrecursorFinder.FromMs1"/>).</summary>
+        private List<WindowScan> BuildMs1Scans(RunData run)
+        {
+            var watch = Stopwatch.StartNew();
+            var scans = run.Ms1.Select(spectrum => ToWindowScan(run, spectrum, null)).ToList();
+            Log(QuasarResources.Pipeline_MS1___0__scans_for_the_precursor_tiers___1_F0__s__, scans.Count, watch.Elapsed.TotalSeconds);
+            return scans;
+        }
+
+        /// <summary>The MS1 centroid traces of the peaks that can belong to a precursor candidate for the isolation window [<paramref name="low"/>, <paramref name="high"/>].</summary>
+        private static List<Core.Clustering.Trace> Ms1Traces(IReadOnlyList<WindowScan> ms1, double low, double high,
+            TraceBuilderSettings traceSettings)
+        {
+            var (from, to) = PrecursorFinder.Ms1Range(low, high);
+            var scans = ms1.Select(s =>
+            {
+                int first = LowerBound(s.Mzs, from);
+                int count = LowerBound(s.Mzs, to) - first;
+                var mzs = new double[count];
+                var intensities = new double[count];
+                Array.Copy(s.Mzs, first, mzs, 0, count);
+                Array.Copy(s.Intensities, first, intensities, 0, count);
+                return new WindowScan(s.RetentionTime, s.IonsPerIntensity, mzs, intensities, Array.Empty<IsotopeEnvelope>());
+            }).ToList();
+            return TraceBuilder.Build(scans, traceSettings);
+        }
+
+        /// <summary>A scan in ions, with Hardklor's envelopes when <paramref name="finder"/> is given.</summary>
+        private WindowScan ToWindowScan(RunData run, SpectrumData spectrum, AnalyzerEnvelopeFinder finder)
+        {
+            var header = spectrum.Header;
+            var analyzer = header.Analyzer == MassAnalyzer.unknown ? MassAnalyzer.orbitrap : header.Analyzer;
+            var envelopes = finder != null && finder.CanSearch(analyzer)
+                ? finder.Find(spectrum.Mz, spectrum.Intensity, analyzer)
+                : Array.Empty<IsotopeEnvelope>();
+            double ionsPerIntensity = IonCalibration.IonsPerIntensity(header.InjectionTimeMs,
+                IonCalibration.Alpha(run.InstrumentModel, analyzer));
+            if (double.IsNaN(ionsPerIntensity))
+            {
+                Interlocked.Increment(ref _scansWithoutInjectionTime);
+                ionsPerIntensity = 1.0;
             }
 
-            return scans;
+            return new WindowScan(header.RetentionTime, ionsPerIntensity, spectrum.Mz, spectrum.Intensity, envelopes);
+        }
+
+        /// <summary>The precursor-candidate mzML beside <paramref name="outputPath"/>: X.quasar.mzML gives X.quasar.precursors.mzML.</summary>
+        public static string PrecursorPath(string outputPath)
+        {
+            return Path.ChangeExtension(outputPath, @".precursors.mzML");
         }
 
         /// <summary>
         /// One accepted cluster as a pseudo-spectrum (spec Stages 3e and 4): its members' areas at
         /// their m/z, with boundaries from the median CWT of the members near the template's apex.
         /// </summary>
-        private static PseudoSpectrum ToPseudoSpectrum(string stem, WindowScans window, double[] rt, Cluster cluster)
+        private static PseudoSpectrum ToPseudoSpectrum(string stem, WindowScans window, double[] rt, Cluster cluster,
+            PrecursorCandidate candidate, ClusterMember precursorMember)
         {
             var shape = cluster.Template.Shape;
             var (start, end) = Boundaries(rt, cluster);
-            var members = cluster.Members;
+
+            // A tier 2 precursor is a member, not a fragment.
+            var members = cluster.Members.Where(m => !ReferenceEquals(m, precursorMember)).ToList();
             var userParams = new List<KeyValuePair<string, double>>
             {
                 new KeyValuePair<string, double>(@"start_rt", start),
@@ -265,8 +339,16 @@ namespace pwiz.Quasar
             };
             string id = string.Format(System.Globalization.CultureInfo.InvariantCulture, @"run={0} window={1} cluster={2}",
                 stem, window.Index, cluster.Template.Id);
+            var precursors = new List<PrecursorCandidate>();
+            if (candidate != null)
+            {
+                id += string.Format(System.Globalization.CultureInfo.InvariantCulture, @" precursor={0:F4}/{1}",
+                    candidate.Mz, candidate.Charge);
+                precursors.Add(candidate);
+            }
+
             return new PseudoSpectrum(id, shape.Mode, window.Target, window.LowerOffset, window.UpperOffset,
-                Array.Empty<PrecursorCandidate>(), members.Select(m => m.Trace.Mz).ToArray(),
+                precursors, members.Select(m => m.Trace.Mz).ToArray(),
                 members.Select(m => m.Amplitude).ToArray(), userParams);
         }
 
