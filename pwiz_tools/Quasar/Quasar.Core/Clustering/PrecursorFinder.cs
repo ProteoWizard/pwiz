@@ -76,16 +76,19 @@ namespace pwiz.Quasar.Core.Clustering
             var explained = new List<double>();
             foreach (var trace in ms1Traces)
             {
+                if (trace.Last < start || trace.First > end)
+                    continue;
+
                 int apex = -1;
-                for (int i = start; i <= end; i++)
+                for (int i = Math.Max(start, trace.First); i <= Math.Min(end, trace.Last); i++)
                 {
-                    if (trace.Intensities[i] > 0.0 && (apex < 0 || trace.Intensities[i] > trace.Intensities[apex]))
+                    if (trace[i] > 0.0 && (apex < 0 || trace[i] > trace[apex]))
                         apex = i;
                 }
                 if (apex < 0 || Math.Abs(ms1Rt[apex] - shape.Mode) > settings.ApexTolerance)
                     continue;
 
-                var fit = TemplateFit.Fit(ms1Rt, trace.Intensities, start, end, new[] { shape }, settings.Noise);
+                var fit = TemplateFit.Fit(ms1Rt, trace.Dense(), start, end, new[] { shape }, settings.Noise);
                 if (fit.IsMember(0, settings.MembershipThreshold))
                     explained.Add(trace.Mz);
             }

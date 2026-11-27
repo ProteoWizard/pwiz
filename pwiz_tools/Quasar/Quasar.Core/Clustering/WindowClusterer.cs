@@ -92,7 +92,8 @@ namespace pwiz.Quasar.Core.Clustering
                 .ToList();
             var profile = new StringBuilder();
             var watch = Stopwatch.StartNew();
-            var data = new FitData(traces.Select(t => t.Intensities).ToArray(), null);
+            // Only anchors are searched for peaks and grouped before the final fit.
+            var data = new FitData(traces.Select(t => t.IsAnchor ? t.Dense() : null).ToArray(), null);
             for (int pass = 0; pass <= _settings.MaxResidualPasses; pass++)
             {
                 if (templates.Count > 0)
@@ -306,13 +307,10 @@ namespace pwiz.Quasar.Core.Clustering
             var explained = new double[traces.Count][];
             for (int t = 0; t < traces.Count; t++)
             {
-                var values = traces[t].Intensities;
                 if (!traces[t].IsAnchor)
-                {
-                    residuals[t] = values;
                     continue;
-                }
 
+                var values = traces[t].Dense();
                 var model = new double[values.Length];
                 foreach (var (k, fit) in layout.LocalFits(values))
                 {
@@ -338,7 +336,7 @@ namespace pwiz.Quasar.Core.Clustering
             var members = templates.Select(_ => new List<ClusterMember>()).ToArray();
             foreach (var trace in traces)
             {
-                var fits = layout.LocalFits(trace.Intensities).Where(f => f.Fit.IsMember).ToList();
+                var fits = layout.LocalFits(trace.Dense()).Where(f => f.Fit.IsMember).ToList();
                 double memberTotal = fits.Sum(f => f.Fit.Amplitude);
                 foreach (var (k, fit) in fits)
                     members[k].Add(new ClusterMember(trace, fit.Amplitude, fit.DeltaChiSquare, fit.Amplitude / memberTotal));

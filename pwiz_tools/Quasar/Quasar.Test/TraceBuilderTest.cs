@@ -87,19 +87,19 @@ namespace pwiz.Quasar.Test
             Assert.AreEqual(1, anchors.Count);
             Assert.AreEqual(1000.0 + TraceBuilder.PROTON, anchors[0].Mz, 1e-9);
             Assert.AreEqual(2, anchors[0].Charge);
-            Assert.AreEqual(3500.0 * IONS_PER_INTENSITY, anchors[0].Intensities[5], 1e-6);
-            Assert.AreEqual(0.0, anchors[0].Intensities[2]);
+            Assert.AreEqual(3500.0 * IONS_PER_INTENSITY, anchors[0][5], 1e-6);
+            Assert.AreEqual(0.0, anchors[0][2]);
 
             // Centroid traces: 500.000, 500.010 and 300.000; not 700 (broken), not the envelope's peaks.
             var centroids = traces.Where(t => !t.IsAnchor).OrderBy(t => t.Mz).ToList();
             Assert.AreEqual(3, centroids.Count, string.Join(@"; ", centroids));
             Assert.AreEqual(300.0, centroids[0].Mz, 1e-9);
-            Assert.AreEqual(3, centroids[0].Intensities.Count(v => v > 0.0));
+            Assert.AreEqual(3, centroids[0].Dense().Count(v => v > 0.0));
             Assert.AreEqual(500.0, centroids[1].Mz, 500.0 * 5e-6);
             CollectionAssert.AreEqual(new[] { 0.0, 0.0, 8.0, 12.0, 16.0, 20.0, 24.0, 0.0, 0.0, 0.0 },
-                centroids[1].Intensities.Select(v => Math.Round(v, 6)).ToArray());
+                centroids[1].Dense().Select(v => Math.Round(v, 6)).ToArray());
             Assert.AreEqual(500.01, centroids[2].Mz, 1e-9);
-            Assert.AreEqual(4, centroids[2].Intensities.Count(v => v > 0.0));
+            Assert.AreEqual(4, centroids[2].Dense().Count(v => v > 0.0));
             Assert.IsFalse(centroids.Any(t => Math.Abs(t.Mz - 501.007276) < 0.01 || Math.Abs(t.Mz - 501.50871) < 0.01));
 
             // The intensity floor drops traces whose highest point is below the quantile.

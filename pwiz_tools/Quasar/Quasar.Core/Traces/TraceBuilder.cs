@@ -224,13 +224,14 @@ namespace pwiz.Quasar.Core.Traces
                 _weight += ions;
             }
 
-            /// <summary>The trace on the full scan axis, at its intensity-weighted mean m/z.</summary>
+            /// <summary>The trace, at its intensity-weighted mean m/z.</summary>
             public Trace ToTrace(int id, int scanCount)
             {
-                var intensities = new double[scanCount];
+                int first = _scans.Min();
+                var span = new double[_scans.Max() - first + 1];
                 for (int i = 0; i < _scans.Count; i++)
-                    intensities[_scans[i]] += _ions[i];
-                return new Trace(id, false, _weight > 0.0 ? _weightedMz / _weight : LastMz, 0, intensities);
+                    span[_scans[i] - first] += _ions[i];
+                return new Trace(id, false, _weight > 0.0 ? _weightedMz / _weight : LastMz, 0, scanCount, first, span);
             }
         }
     }

@@ -57,19 +57,19 @@ namespace pwiz.Quasar.Core.Traces
                     writer.Write(trace.Mz);
                     writer.Write(trace.Charge);
                     int count = 0;
-                    foreach (double v in trace.Intensities)
+                    for (int i = trace.First; i <= trace.Last; i++)
                     {
-                        if (v != 0.0)
+                        if (trace[i] != 0.0)
                             count++;
                     }
 
                     writer.Write(count);
-                    for (int i = 0; i < trace.Intensities.Length; i++)
+                    for (int i = trace.First; i <= trace.Last; i++)
                     {
-                        if (trace.Intensities[i] == 0.0)
+                        if (trace[i] == 0.0)
                             continue;
                         writer.Write(i);
-                        writer.Write(trace.Intensities[i]);
+                        writer.Write(trace[i]);
                     }
                 }
             }
@@ -97,15 +97,21 @@ namespace pwiz.Quasar.Core.Traces
                     bool isAnchor = reader.ReadBoolean();
                     double mz = reader.ReadDouble();
                     int charge = reader.ReadInt32();
-                    var intensities = new double[rt.Length];
                     int count = reader.ReadInt32();
+                    var indices = new int[count];
+                    var values = new double[count];
                     for (int k = 0; k < count; k++)
                     {
-                        int index = reader.ReadInt32();
-                        intensities[index] = reader.ReadDouble();
+                        indices[k] = reader.ReadInt32();
+                        values[k] = reader.ReadDouble();
                     }
 
-                    traces.Add(new Trace(id, isAnchor, mz, charge, intensities));
+                    // Points are written in scan order.
+                    int first = count > 0 ? indices[0] : 0;
+                    var span = new double[count > 0 ? indices[count - 1] - first + 1 : 0];
+                    for (int k = 0; k < count; k++)
+                        span[indices[k] - first] = values[k];
+                    traces.Add(new Trace(id, isAnchor, mz, charge, rt.Length, first, span));
                 }
 
                 return (target, lower, upper, rt, traces);

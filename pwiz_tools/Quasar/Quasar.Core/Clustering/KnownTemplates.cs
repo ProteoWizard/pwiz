@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Quasar.Core.Elution;
@@ -98,8 +97,8 @@ namespace pwiz.Quasar.Core.Clustering
                     }
                 }
 
-                var signal = matched.Where(t => PositiveCount(traces[t].Intensities, first, last) >= settings.MinMemberPoints)
-                    .Select(t => traces[t].Intensities)
+                var signal = matched.Where(t => traces[t].PositiveCount(first, last) >= settings.MinMemberPoints)
+                    .Select(t => traces[t].Dense())
                     .ToList();
                 EmgShape shape = null;
                 if (signal.Count >= 2)
@@ -120,18 +119,6 @@ namespace pwiz.Quasar.Core.Clustering
             double tolerance = mz * FRAGMENT_PPM * 1e-6;
             for (int i = LowerBound(sortedMzs, mz - tolerance); i < sortedMzs.Length && sortedMzs[i] <= mz + tolerance; i++)
                 yield return byMz[i];
-        }
-
-        private static int PositiveCount(double[] values, int first, int last)
-        {
-            int count = 0;
-            for (int i = Math.Max(0, first); i <= last && i < values.Length; i++)
-            {
-                if (values[i] > 0.0)
-                    count++;
-            }
-
-            return count;
         }
 
         private static int LowerBound(double[] values, double x)

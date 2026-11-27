@@ -239,7 +239,7 @@ namespace pwiz.Quasar
                         cycles.Add(rt[i] - rt[i - 1]);
                     foreach (var trace in TraceBuilder.Build(scans, traceSettings).Where(t => t.IsAnchor))
                     {
-                        double width = HalfHeightWidth(rt, trace.Intensities);
+                        double width = HalfHeightWidth(rt, trace.Dense());
                         if (!double.IsNaN(width))
                             widths.Add(width);
                     }
@@ -396,7 +396,7 @@ namespace pwiz.Quasar
                 var xics = cluster.Members.Select((m, i) =>
                 {
                     var values = new double[n];
-                    Array.Copy(m.Trace.Intensities, from, values, 0, n);
+                    m.Trace.CopyTo(from, values, n);
                     return new XicData(i, times, values);
                 }).ToList();
                 double mode = shape.Mode;
