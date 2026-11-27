@@ -86,6 +86,11 @@ namespace pwiz.Quasar.Test
                 Assert.AreEqual(650.8123, CvValue(selected[0], ns, @"MS:1000744"));
                 Assert.AreEqual(2.0, CvValue(selected[0], ns, @"MS:1000041"));
                 Assert.AreEqual(3.0, CvValue(selected[1], ns, @"MS:1000041"));
+
+                // A source given as a bare file name (Quasar -i run.raw) is resolved, not rejected.
+                PseudoSpectrumMzmlWriter.Write(path, new[] { tier3 }, @"run.raw", @"26.1.1.0", string.Empty);
+                doc.Load(path);
+                Assert.AreEqual(@"run.raw", doc.SelectSingleNode(@"//m:sourceFile/@name", ns)?.Value);
             }
             finally
             {

@@ -98,8 +98,9 @@ namespace pwiz.Quasar.Core.Output
             writer.WriteStartElement(@"sourceFile");
             writer.WriteAttributeString(@"id", @"SF1");
             writer.WriteAttributeString(@"name", Path.GetFileName(sourcePath));
-            writer.WriteAttributeString(@"location", new Uri(Path.GetFullPath(Path.GetDirectoryName(sourcePath) ?? @".") +
-                                                             Path.DirectorySeparatorChar).AbsoluteUri);
+            // Resolve first: a bare file name has an empty, not null, directory.
+            string directory = Path.GetDirectoryName(Path.GetFullPath(sourcePath)) ?? Path.GetFullPath(@".");
+            writer.WriteAttributeString(@"location", new Uri(directory + Path.DirectorySeparatorChar).AbsoluteUri);
             writer.WriteEndElement();
             writer.WriteEndElement();
             writer.WriteEndElement(); // fileDescription

@@ -459,7 +459,6 @@ namespace pwiz.Quasar.Core.Clustering
         {
             private readonly WindowClusterer _clusterer;
             private readonly double[] _rt;
-            private readonly int[][] _overlapping;
             private readonly int[] _byStart;
             private readonly int[] _starts;
             private readonly int _maxLength;
@@ -479,14 +478,6 @@ namespace pwiz.Quasar.Core.Clustering
                 _byStart = Enumerable.Range(0, templates.Count).OrderBy(k => Segments[k].Start).ToArray();
                 _starts = _byStart.Select(k => Segments[k].Start).ToArray();
                 _maxLength = Segments.Length == 0 ? 0 : Segments.Max(s => s.End - s.Start);
-
-                // Template k first, so its statistics are at index 0 of its fit.
-                _overlapping = new int[templates.Count][];
-                for (int k = 0; k < templates.Count; k++)
-                {
-                    var (start, end) = Segments[k];
-                    _overlapping[k] = new[] { k }.Concat(Overlapping(start, end).Where(j => j != k)).ToArray();
-                }
             }
 
             public IReadOnlyList<ElutionTemplate> Templates { get; }
@@ -494,31 +485,67 @@ namespace pwiz.Quasar.Core.Clustering
             public (int Start, int End)[] Segments { get; }
 
             /// <summary>
-            /// The local fits of the trace: for each template where it has signal, the fit over that
-            /// template's segment against the other templates it has signal in there. Only the
-            /// templates overlapping the trace's non-zero runs are considered, so a short centroid
-            /// trace costs a few fits however many templates the window has.
+            /// The local fits of the trace, by forward selection: the templates where it has signal
+            /// are tried in order of how well each alone explains it, and each joins only if it
+            /// still explains the trace beside those already chosen. Fitting all of them at once
+            /// failed in dense windows: a template a scan or two from another is nearly the same
+            /// curve over a fragment's few points, either one absorbs the signal when the other is
+            /// dropped, and neither passed the likelihood-ratio test (on Astral HeLa window 81, most
+            /// templates ended with no members and most of a peptide's fragments with no template).
+            /// Only the templates overlapping the trace's non-zero runs are considered, so a short
+            /// centroid trace costs a few fits however many templates the window has.
             /// </summary>
             public List<(int Template, LocalFit Fit)> LocalFits(double[] values)
             {
                 var settings = _clusterer._settings;
-                var fits = new List<(int Template, LocalFit Fit)>();
-                var candidates = TemplatesWithSignal(values).ToList();
-                var candidateSet = new HashSet<int>(candidates);
-                foreach (int k in candidates)
+                double threshold = settings.MembershipThreshold;
+                // Every candidate is ranked, not only those that pass alone: a template's segment
+                // can hold a neighbor's peak that nothing in a fit alone models, and the template
+                // then passes only once that neighbor is chosen.
+                var ranked = new List<(int Template, double DeltaChiSquare)>();
+                foreach (int k in TemplatesWithSignal(values))
                 {
-                    // Only the overlapping templates this trace has signal in: a template where it
-                    // has no points explains nothing, and including the dozens that overlap a dense
-                    // stretch of the run made each small fit a large, underdetermined one.
-                    var (start, end) = Segments[k];
-                    var shapes = _overlapping[k].Where(j => j == k || candidateSet.Contains(j))
-                        .Select(j => Templates[j].Shape).ToArray();
-                    var fit = TemplateFit.Fit(_rt, values, start, end, shapes, settings.Noise, null, 1);
-                    fits.Add((k, new LocalFit(fit.Amplitudes[0], fit.DeltaChiSquare[0],
-                        fit.IsMember(0, settings.MembershipThreshold))));
+                    var alone = FitWith(values, k, Array.Empty<int>());
+                    ranked.Add((k, alone.Amplitudes[0] > 0.0 ? alone.DeltaChiSquare[0] : 0.0));
                 }
 
+                var selected = new List<int>();
+                foreach (var (k, _) in ranked.OrderByDescending(r => r.DeltaChiSquare))
+                {
+                    if (FitWith(values, k, selected).IsMember(0, threshold))
+                        selected.Add(k);
+                }
+
+                // Each chosen template against all the others chosen, the later ones included.
+                var fits = new List<(int Template, LocalFit Fit)>();
+                foreach (int k in selected)
+                {
+                    var fit = FitWith(values, k, selected);
+                    fits.Add((k, new LocalFit(fit.Amplitudes[0], fit.DeltaChiSquare[0], fit.IsMember(0, threshold))));
+                }
                 return fits;
+            }
+
+            /// <summary>The fit over template <paramref name="k"/>'s segment of it with those of <paramref name="others"/> that overlap it.</summary>
+            private TemplateFitResult FitWith(double[] values, int k, IReadOnlyList<int> others)
+            {
+                var (start, end) = Segments[k];
+                return TemplateFit.Fit(_rt, values, start, end, OthersOverlapping(k, others),
+                    _clusterer._settings.Noise, null, 1);
+            }
+
+            /// <summary>Template <paramref name="k"/>'s shape first, then those of <paramref name="others"/> whose segment overlaps its own.</summary>
+            private EmgShape[] OthersOverlapping(int k, IReadOnlyList<int> others)
+            {
+                var (start, end) = Segments[k];
+                var shapes = new List<EmgShape> { Templates[k].Shape };
+                foreach (int j in others)
+                {
+                    if (j != k && Segments[j].End >= start && Segments[j].Start <= end)
+                        shapes.Add(Templates[j].Shape);
+                }
+
+                return shapes.ToArray();
             }
 
             /// <summary>
