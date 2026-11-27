@@ -181,6 +181,9 @@
   <data name="PercolatorScorer_RunStreamingFirstPass_Reusing_the_saved_first_pass_model_" xml:space="preserve">
     <value>Reusing the saved first-pass model.</value>
   </data>
+  <data name="PerFileFirstPassModel_TrainAndScore_Training_the_run_s_first_pass_model_on__0__precursor_candidate_peaks" xml:space="preserve">
+    <value>Training the run's first-pass model on {0:N0} precursor candidate peaks</value>
+  </data>
   <data name="PercolatorScorer_RunStreamingFirstPass_Scoring__0__precursor_candidate_peaks" xml:space="preserve">
     <value>Scoring {0:N0} precursor candidate peaks</value>
   </data>

@@ -61,6 +61,14 @@ namespace pwiz.Osprey.IO
         private readonly Dictionary<int, IsolationWindow> _windowKeyToFirstIso;
         private readonly List<int> _windowKeysInFileOrder;
         private readonly long _ms1SectionOffset;
+        // Every window's spectra, when the index was built from a source file read in full
+        // instead of from a cache; null for a cache index.
+        private readonly Dictionary<int, List<Spectrum>> _windowKeyToSpectra;
+        // Set once scoring takes each resident window for the last time: a load then hands the
+        // window's own spectra over and drops them (see ReleaseWindowsAsLoaded).
+        private bool _releaseOnLoad;
+        private readonly HashSet<int> _releasedKeys = new HashSet<int>();
+        private Action<long> _peakBytesReleased;
         // Held by LoadWindowSerialRead only while it reads a block from disk.
         private readonly object _blockReadLock = new object();
 
@@ -77,6 +85,14 @@ namespace pwiz.Osprey.IO
             AllMs2Rts = allMs2Rts;
             Ms1Spectra = ms1Spectra;
             IsolationWindows = isolationWindows;
+        }
+
+        private SpectraWindowIndex(Dictionary<int, List<Spectrum>> windowKeyToSpectra, double[] allMs2Rts,
+            Dictionary<int, IsolationWindow> windowKeyToFirstIso, List<int> windowKeysInFileOrder,
+            List<MS1Spectrum> ms1Spectra, List<IsolationWindow> isolationWindows)
+            : this(null, null, allMs2Rts, windowKeyToFirstIso, windowKeysInFileOrder, 0, ms1Spectra, isolationWindows)
+        {
+            _windowKeyToSpectra = windowKeyToSpectra;
         }
 
         /// <summary>
@@ -226,12 +242,7 @@ namespace pwiz.Osprey.IO
                 // only the offset set covers first appears after other bins have repeated.
                 // Searching msconvert-demultiplexed Eclipse data that way left the top bin,
                 // [1000.70, 1006.70), unscored. Randomized MSX order breaks it the same way.
-                var isolationWindows = new List<IsolationWindow>(windowKeysInFileOrder.Count);
-                foreach (int key in windowKeysInFileOrder)
-                    isolationWindows.Add(windowKeyToFirstIso[key]);
-
-                // Sorted by center, as ExtractIsolationWindows sorted the first cycle.
-                isolationWindows.Sort((a, b) => a.Center.CompareTo(b.Center)); // Array.Sort OK: dedup on the rounded center key leaves distinct centers, so the comparator never ties
+                var isolationWindows = SortedIsolationWindows(windowKeysInFileOrder, windowKeyToFirstIso);
 
                 // MS1 in full from the recorded section offset (small in DIA and needed
                 // resident for the global precursor RT search) -- so streaming Stages 1-4
@@ -251,6 +262,68 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// An index over spectra already read in full from
+        /// their source file, grouped by the same window key and in the same order a cache built
+        /// from them would hold, so every caller sees what it would see from that cache, without
+        /// reading one. The index keeps the spectra for its lifetime, about the size
+        /// of the decoded file.
+        /// </summary>
+        public static SpectraWindowIndex FromSpectra(IReadOnlyList<Spectrum> ms2Spectra,
+            List<MS1Spectrum> ms1Spectra, bool loadMs1 = true)
+        {
+            var windowKeyToSpectra = new Dictionary<int, List<Spectrum>>();
+            var windowKeyToFirstIso = new Dictionary<int, IsolationWindow>();
+            var windowKeysInFileOrder = new List<int>();
+            var allMs2Rts = new double[ms2Spectra.Count];
+            for (int i = 0; i < ms2Spectra.Count; i++)
+            {
+                var spectrum = ms2Spectra[i];
+                allMs2Rts[i] = spectrum.RetentionTime;
+                int key = SpectraCache.WindowKey(spectrum.IsolationWindow.Center);
+                if (!windowKeyToSpectra.TryGetValue(key, out var spectra))
+                {
+                    spectra = new List<Spectrum>();
+                    windowKeyToSpectra[key] = spectra;
+                    windowKeyToFirstIso[key] = spectrum.IsolationWindow;
+                    windowKeysInFileOrder.Add(key);
+                }
+                spectra.Add(spectrum);
+            }
+            var isolationWindows = SortedIsolationWindows(windowKeysInFileOrder, windowKeyToFirstIso);
+            var ms1 = loadMs1 && ms1Spectra != null ? ms1Spectra : new List<MS1Spectrum>();
+            return new SpectraWindowIndex(windowKeyToSpectra, allMs2Rts, windowKeyToFirstIso,
+                windowKeysInFileOrder, ms1, isolationWindows);
+        }
+
+        /// <summary>
+        /// From now on each load of a resident window hands
+        /// over the window's own spectra, without copying them, and drops the index's hold on
+        /// them, passing their peak bytes to <see cref="PeakBytesReleased"/>; loading the same
+        /// window again throws. For the one pass that reads every window once and last (per-file
+        /// scoring after calibration), so a file's memory falls as it is scored. A no-op on an
+        /// index over a cache file, whose loads decode fresh spectra anyway.
+        /// </summary>
+        public void ReleaseWindowsAsLoaded()
+        {
+            if (_windowKeyToSpectra == null)
+                return;
+            lock (_windowKeyToSpectra)
+            {
+                _releaseOnLoad = true;
+            }
+        }
+
+        /// <summary>
+        /// Told the peak bytes of each resident window
+        /// <see cref="ReleaseWindowsAsLoaded"/> hands over.
+        /// </summary>
+        public Action<long> PeakBytesReleased
+        {
+            get { return _peakBytesReleased; }
+            set { _peakBytesReleased = value; }
+        }
+
+        /// <summary>
         /// The isolation window of every MS2 record of a <c>.spectra.bin</c> (not a demultiplexed
         /// cache), in acquisition order, read again from the cache's index: what a caller needs
         /// to tell whether the run is multiplexed without its source file. Not kept by the index,
@@ -259,6 +332,8 @@ namespace pwiz.Osprey.IO
         public void ReadRecordedIsolationWindows(out double[] centers, out double[] lowerOffsets,
             out double[] upperOffsets)
         {
+            if (_windowKeyToSpectra != null)
+                throw new InvalidOperationException(@"A direct-read index has no recorded cache to read.");
             using (var fs = new FileStream(_cachePath, FileMode.Open, FileAccess.Read))
             using (var r = new BinaryReader(fs))
             {
@@ -279,6 +354,8 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public List<Spectrum> LoadWindow(int windowKey)
         {
+            if (_windowKeyToSpectra != null)
+                return CopyResidentWindow(windowKey);
             if (!_windowKeyToOffsets.TryGetValue(windowKey, out var offsets))
                 return new List<Spectrum>();
 
@@ -328,6 +405,8 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public List<Spectrum> LoadWindowSerialRead(int windowKey, ref byte[] readBuffer)
         {
+            if (_windowKeyToSpectra != null)
+                return CopyResidentWindow(windowKey);
             if (!_windowKeyToOffsets.TryGetValue(windowKey, out var offsets))
                 return new List<Spectrum>();
 
@@ -371,6 +450,66 @@ namespace pwiz.Osprey.IO
                 }
                 return result;
             }
+        }
+
+        // A resident window as the cache would decode it: new spectra and new peak arrays,
+        // because callers calibrate the m/z values they are handed in place.
+        private List<Spectrum> CopyResidentWindow(int windowKey)
+        {
+            List<Spectrum> spectra;
+            bool handOver;
+            Action<long> released = null;
+            lock (_windowKeyToSpectra)
+            {
+                if (_releasedKeys.Contains(windowKey))
+                    throw new InvalidOperationException(string.Format(@"Isolation window {0} was already released.", windowKey));
+                if (!_windowKeyToSpectra.TryGetValue(windowKey, out spectra))
+                    return new List<Spectrum>();
+                handOver = _releaseOnLoad;
+                if (handOver)
+                {
+                    _windowKeyToSpectra.Remove(windowKey);
+                    _releasedKeys.Add(windowKey);
+                    released = _peakBytesReleased;
+                }
+            }
+            if (handOver)
+            {
+                if (released != null)
+                {
+                    long bytes = 0;
+                    foreach (var s in spectra)
+                        bytes += SpectrumFileReader.PeakBytes(s.Count);
+                    released(bytes);
+                }
+                return spectra;
+            }
+            var result = new List<Spectrum>(spectra.Count);
+            foreach (var s in spectra)
+            {
+                result.Add(new Spectrum
+                {
+                    ScanNumber = s.ScanNumber,
+                    RetentionTime = s.RetentionTime,
+                    PrecursorMz = s.PrecursorMz,
+                    IsolationWindow = s.IsolationWindow,
+                    Mzs = (double[])s.Mzs.Clone(),
+                    Intensities = (float[])s.Intensities.Clone()
+                });
+            }
+            return result;
+        }
+
+        private static List<IsolationWindow> SortedIsolationWindows(List<int> windowKeysInFileOrder,
+            Dictionary<int, IsolationWindow> windowKeyToFirstIso)
+        {
+            var isolationWindows = new List<IsolationWindow>(windowKeysInFileOrder.Count);
+            foreach (int key in windowKeysInFileOrder)
+                isolationWindows.Add(windowKeyToFirstIso[key]);
+
+            // Sorted by center.
+            isolationWindows.Sort((a, b) => a.Center.CompareTo(b.Center)); // Array.Sort OK: dedup on the rounded center key leaves distinct centers, so the comparator never ties
+            return isolationWindows;
         }
 
         // Decode a window's records from a reader positioned at its first record. origin is the

@@ -67,6 +67,15 @@ public sealed class SpectrumList_UNIFI : SpectrumListBase
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
         => GetSpectrum(index, getBinaryData, doCentroid: false);
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Overridden, as cpp's is, so instant metadata makes no request of the source: cpp returns
+    /// the ms level alone there (SpectrumList_UNIFI.cpp:122). Fast metadata asks the source for
+    /// the spectrum without its arrays, and the peak count waits for full metadata.
+    /// </remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel)
+        => BuildSpectrum(index, detailLevel, doCentroid: false);
+
     /// <summary>Pulls spectrum at <paramref name="index"/>, mirroring cpp
     /// <c>SpectrumList_UNIFI::spectrum</c> (SpectrumList_UNIFI.cpp:97-224).</summary>
     /// <param name="index">Zero-based spectrum index.</param>
@@ -74,9 +83,13 @@ public sealed class SpectrumList_UNIFI : SpectrumListBase
     /// <param name="doCentroid">Ask the source for centroided arrays. cpp's caller routes this
     /// from <c>msLevelsToCentroid.contains(msLevel)</c>; the same gate applies here.</param>
     public Spectrum GetSpectrum(int index, bool getBinaryData, bool doCentroid)
+        => BuildSpectrum(index, getBinaryData ? DetailLevel.FullData : DetailLevel.FullMetadata, doCentroid);
+
+    private Spectrum BuildSpectrum(int index, DetailLevel detailLevel, bool doCentroid)
     {
         if (index < 0 || index >= _index.Count)
             throw new ArgumentOutOfRangeException(nameof(index));
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
         var ie = _index[index];
 
         var spec = new Spectrum { Index = index, Id = ie.Id };
@@ -87,6 +100,9 @@ public sealed class SpectrumList_UNIFI : SpectrumListBase
         int msLevel = _source.GetMsLevel(index);
         spec.Params.Set(msLevel == 1 ? CVID.MS_MS1_spectrum : CVID.MS_MSn_spectrum);
         spec.Params.Set(CVID.MS_ms_level, msLevel);
+
+        if (detailLevel == DetailLevel.InstantMetadata)
+            return spec;
 
         var unifiSpec = new UnifiSpectrum();
         _source.GetSpectrum(index, unifiSpec, getBinaryData, doCentroid);
@@ -146,7 +162,8 @@ public sealed class SpectrumList_UNIFI : SpectrumListBase
             spec.Precursors.Add(precursor);
         }
 
-        spec.DefaultArrayLength = unifiSpec.ArrayLength;
+        if (detailLevel >= DetailLevel.FullMetadata)
+            spec.DefaultArrayLength = unifiSpec.ArrayLength;
 
         if (getBinaryData)
         {

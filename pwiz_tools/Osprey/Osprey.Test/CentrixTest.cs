@@ -496,6 +496,29 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(expected[k].Intensity, spectrum.Intensities[k], GOLDEN_INTENSITY_TOLERANCE * expected[k].Intensity);
                 }
             }
+
+            // Read as the --spectra-cache off reader reads it, silently and told each spectrum's bytes as it is kept:
+            // the same centroids, and every spectrum kept is counted.
+            long counted = 0;
+            var silent = SpectrumFileReader.LoadAllSpectra(Path.Combine(folder, input), options, null,
+                bytes => counted += bytes, false);
+            Assert.AreEqual(GOLDEN_SIGMA_MS2, silent.CentroidSigmaMs2);
+            Assert.AreEqual(read.Ms1Spectra.Count, silent.Ms1Spectra.Count);
+            Assert.AreEqual(read.Ms2Spectra.Count, silent.Ms2Spectra.Count);
+            long keptBytes = 0;
+            for (int i = 0; i < read.Ms1Spectra.Count; i++)
+            {
+                CollectionAssert.AreEqual(read.Ms1Spectra[i].Mzs, silent.Ms1Spectra[i].Mzs);
+                CollectionAssert.AreEqual(read.Ms1Spectra[i].Intensities, silent.Ms1Spectra[i].Intensities);
+                keptBytes += SpectrumFileReader.PeakBytes(read.Ms1Spectra[i].Count);
+            }
+            for (int i = 0; i < read.Ms2Spectra.Count; i++)
+            {
+                CollectionAssert.AreEqual(read.Ms2Spectra[i].Mzs, silent.Ms2Spectra[i].Mzs);
+                CollectionAssert.AreEqual(read.Ms2Spectra[i].Intensities, silent.Ms2Spectra[i].Intensities);
+                keptBytes += SpectrumFileReader.PeakBytes(read.Ms2Spectra[i].Count);
+            }
+            Assert.AreEqual(keptBytes, counted);
         }
 
         /// <summary>The golden's centroids by (input file, MS level, ordinal among that level's spectra), in file order.</summary>

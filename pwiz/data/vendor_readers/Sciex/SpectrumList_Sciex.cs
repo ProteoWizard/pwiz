@@ -259,10 +259,10 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
         // peaks, and the centroiding, wait for the first XValues/YValues access, as cpp's
         // SpectrumImpl waits for getData/getDataSize.
         var ms = exp.GetSpectrum(ie.Cycle, addZeros: !_ignoreZeroIntensityPoints, centroid: centroid);
-        // Above instant metadata the peaks are needed for defaultArrayLength anyway. Reading them
+        // From full metadata up the peaks are needed for defaultArrayLength anyway. Reading them
         // before the precursor lets a wiff2 spectrum take its precursor from that read instead of
         // making a plain one first (Wiff2Spectrum.MetadataSpectrum).
-        if (detailLevel > DetailLevel.InstantMetadata)
+        if (detailLevel >= DetailLevel.FullMetadata)
             _ = ms?.XValues;
 
         // cpp SpectrumList_ABI.cpp:139-141: scan_start_time is `spectrum->getStartTime()` and is
@@ -387,11 +387,13 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
                 }
             }
 
-            // cpp SpectrumList_ABI.cpp:231. Everything below needs the peaks (defaultArrayLength)
-            // or a whole-experiment chromatogram (TIC, base peak), and a caller asking for instant
-            // metadata - Skyline's per-spectrum ms level, start time and precursor walk - has
-            // everything it asked for.
-            if (detailLevel == DetailLevel.InstantMetadata)
+            // cpp SpectrumList_ABI.cpp:231 returns here at instant metadata only. Everything below
+            // needs the peaks (defaultArrayLength) or a whole-experiment chromatogram (TIC, base
+            // peak), and cpp's fast metadata reads the peaks for getDataSize (:261, "forces the
+            // WIFF reader to get the data"). Fast metadata stops here too: a caller asking for it -
+            // Skyline's per-spectrum ms level, start time and precursor walk - has everything it
+            // asked for.
+            if (detailLevel < DetailLevel.FullMetadata)
                 return spec;
 
             // TIC: cpp WiffFile2.ipp:718 reads `spectrum->getSumY()` from a precomputed per-cycle

@@ -74,19 +74,37 @@ public sealed class SpectrumList_Shimadzu : SpectrumListBase, IVendorCentroiding
 
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
-        => BuildSpectrum(index, getBinaryData, msLevelsToCentroid: null);
+        => BuildSpectrum(index, ToDetailLevel(getBinaryData), msLevelsToCentroid: null);
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Overridden so a metadata request does not read the SDK spectrum object, which carries the
+    /// peaks. cpp reads it at every level (SpectrumList_Shimadzu.cpp:125). Below full metadata
+    /// only what the spectrum info gives is returned: ms level, type, polarity and start time. The
+    /// precursor m/z comes from the spectrum object, so the precursors wait for full metadata.
+    /// </remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel)
+        => BuildSpectrum(index, detailLevel, msLevelsToCentroid: null);
 
     /// <inheritdoc/>
     public string VendorCentroidName => "Shimadzu peak picking";
 
     /// <inheritdoc/>
     public Spectrum GetCentroidSpectrum(int index, bool getBinaryData, IntegerSet msLevelsToCentroid)
-        => BuildSpectrum(index, getBinaryData, msLevelsToCentroid);
+        => BuildSpectrum(index, ToDetailLevel(getBinaryData), msLevelsToCentroid);
 
-    private Spectrum BuildSpectrum(int index, bool getBinaryData, IntegerSet? msLevelsToCentroid)
+    /// <inheritdoc/>
+    public Spectrum GetCentroidSpectrum(int index, DetailLevel detailLevel, IntegerSet msLevelsToCentroid)
+        => BuildSpectrum(index, detailLevel, msLevelsToCentroid);
+
+    private static DetailLevel ToDetailLevel(bool getBinaryData)
+        => getBinaryData ? DetailLevel.FullData : DetailLevel.FullMetadata;
+
+    private Spectrum BuildSpectrum(int index, DetailLevel detailLevel, IntegerSet? msLevelsToCentroid)
     {
         if (index < 0 || index >= _index.Count)
             throw new ArgumentOutOfRangeException(nameof(index));
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
         var ie = _index[index];
 
         var spec = new Spectrum { Index = index, Id = ie.Id };
@@ -103,13 +121,6 @@ public sealed class SpectrumList_Shimadzu : SpectrumListBase, IVendorCentroiding
         // tagged BOTH `centroid spectrum` and `profile spectrum`, because the picker's cleanup
         // that strips the profile term runs only for spectra its own msLevel gate admits.
         bool vendorCentroid = msLevelsToCentroid?.Contains(info.MsLevel) ?? false;
-
-        // Centroid path (caller is SpectrumList_PeakPicker via IVendorCentroidingSpectrumList):
-        // ask the SDK with profileDesired=false so we receive CentroidList. Otherwise the
-        // default path mirrors cpp — prefer profile when available, fall back to centroid.
-        var sdkSpec = _raw.GetSpectrumRaw(ie.ScanNumber, profileDesired: !vendorCentroid);
-        bool hasProfile = !vendorCentroid && sdkSpec.ProfileList.Count > 0;
-        bool isCentroid = !hasProfile;
 
         if (info.MsLevel == 1)
             spec.Params.Set(CVID.MS_MS1_spectrum);
@@ -130,6 +141,16 @@ public sealed class SpectrumList_Shimadzu : SpectrumListBase, IVendorCentroiding
         // applies the ms→s scale via TimeMultiplier, so just emit as seconds here).
         if (info.ScanTime > 0 || ie.ScanNumber == 1)
             scan.Set(CVID.MS_scan_start_time, info.ScanTime, CVID.UO_second);
+
+        if (detailLevel < DetailLevel.FullMetadata)
+            return spec;
+
+        // Centroid path (caller is SpectrumList_PeakPicker via IVendorCentroidingSpectrumList):
+        // ask the SDK with profileDesired=false so we receive CentroidList. Otherwise the
+        // default path mirrors cpp — prefer profile when available, fall back to centroid.
+        var sdkSpec = _raw.GetSpectrumRaw(ie.ScanNumber, profileDesired: !vendorCentroid);
+        bool hasProfile = !vendorCentroid && sdkSpec.ProfileList.Count > 0;
+        bool isCentroid = !hasProfile;
 
         // Scan window — cpp uses the SDK's MassEventInfo StartMz/EndMz. For full-scan MS the
         // pair is (lowMz, highMz) and orders ascending; for SRM events StartMz is Q1 and

@@ -79,6 +79,24 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Write each data file&apos;s {0} the first time it is read, so the second-pass re-score and later searches read it instead of the data file (default: on). With {1}, nothing is written and each data file is read again where its spectra are needed: slower, and needing more memory, since each file&apos;s spectra are held in memory while it is scored, but with no cache on disk, which for Astral data is about 70% of the data files&apos; size. A cache that already exists is read either way. See also {2}..
+        /// </summary>
+        public static string _spectra_cache {
+            get {
+                return ResourceManager.GetString("_spectra_cache", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Write spectra caches.
+        /// </summary>
+        public static string _spectra_cache_property {
+            get {
+                return ResourceManager.GetString("_spectra_cache_property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to With {0} centrix: the MS1 profile peak sigma in Th (default: 1.1 point spacings on a linear ion trap, which measures precursor isotopes best of the sigmas tried; otherwise one species&apos; peak width measured from the run).
         /// </summary>
         public static string _centrix_sigma_ms1 {

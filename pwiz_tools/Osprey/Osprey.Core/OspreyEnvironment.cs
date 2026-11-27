@@ -520,17 +520,47 @@ namespace pwiz.Osprey.Core
         public static bool SerialReadsProcessWide { get; set; } =
             string.Equals(ENV_SERIAL_READ_SCOPE.Value?.Trim(), @"process", StringComparison.OrdinalIgnoreCase);
 
+        private static readonly EnvVar ENV_READ_AHEAD = new EnvVar(@"OSPREY_READ_AHEAD", EnvVarGroup.performance,
+            @"How many files' spectra the reader of input files without a .spectra.bin may hold beyond one per " +
+            @"file lane, measured in the first file's size. 0 reads each file only when its lane asks for it.")
+            { DefaultValue = @"0" };
+
+        /// <summary>
+        /// The reader of input files with no <c>.spectra.bin</c> (<c>SpectraPrefetcher</c>) reads them in
+        /// order ahead of the lanes that score them, holding back while the resident spectra would exceed
+        /// (lanes + this) times the first file's. Scoring frees each window as it scores it. The default
+        /// of 0 reads a file only when its lane asks for it, because the per-run first-pass model already
+        /// makes scoring the most memory-hungry stage; 1 reads the next file while the current one scores,
+        /// a little faster for up to one more file's spectra resident.
+        /// </summary>
+        public static double ReadAhead { get; set; } = ParseDoubleOrNull(ENV_READ_AHEAD) ?? 0;
+
+        private static readonly EnvVar ENV_READ_THREADS = new EnvVar(@"OSPREY_READ_THREADS", EnvVarGroup.performance,
+            @"How many input files without a .spectra.bin are read at once.")
+            { DefaultValue = @"2" };
+
+        /// <summary>
+        /// How many input files the reader of files with no <c>.spectra.bin</c> reads at once, each on
+        /// its own thread.
+        /// </summary>
+        public static int ReadThreads { get; set; } = ParseIntOrNull(ENV_READ_THREADS) ?? 2;
+
         /// <summary>
         /// The log line naming the window-read switches when either is set, so a timing run records
         /// which arm it was; null at the defaults, leaving a default run's log unchanged.
         /// </summary>
         public static string DescribeWindowReads()
         {
-            if (SerialWindowReads && !SerialReadsProcessWide)
+            string readAhead = ReadAhead != 1 || ReadThreads != 2
+                ? string.Format(CultureInfo.InvariantCulture,
+                    @"; uncached inputs read {0} file(s) ahead of the lanes on {1} thread(s) (OSPREY_READ_AHEAD, OSPREY_READ_THREADS)",
+                    ReadAhead, ReadThreads)
+                : string.Empty;
+            if (SerialWindowReads && !SerialReadsProcessWide && readAhead.Length == 0)
                 return null;
             return string.Format(@"Window reads (DIAGNOSTIC): calibration and Stage 6 {0}; serial read lock {1}",
                 SerialWindowReads ? @"serial" : @"parallel (OSPREY_SERIAL_WINDOW_READS=0)",
-                SerialReadsProcessWide ? @"process-wide (OSPREY_SERIAL_READ_SCOPE=process)" : @"per file");
+                SerialReadsProcessWide ? @"process-wide (OSPREY_SERIAL_READ_SCOPE=process)" : @"per file") + readAhead;
         }
 
         private static readonly EnvVar ENV_PICK_DUMP_CANDIDATES = new EnvVar(@"OSPREY_PICK_DUMP_CANDIDATES", EnvVarGroup.diagnostic,

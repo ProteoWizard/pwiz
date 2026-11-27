@@ -71,13 +71,19 @@ namespace pwiz.Osprey.Tasks
     {
         // Progress segments one input file's work is divided into for the
         // --parallel-files "[i] p%" aggregate line: read spectra, calibrate RT/mass,
-        // score, write the scores parquet. ProcessFile advances them through
+        // score, write the features checkpoint, train the run's own first-pass model, write
+        // the stub scores parquet. ProcessFile advances them through
         // MultiProgressReporter.BeginSegment at each phase boundary; off the parallel
-        // path those calls are no-ops. Weighted by time: coelution scoring is ~80% of a
-        // SEA-AD file and ~95% of a CHS file, calibration ~15% and ~3%. With equal
+        // path those calls are no-ops. Weighted by time: on a SEA-AD file calibration takes
+        // ~27 s, coelution scoring ~320 s and the run's model ~160 s. With equal
         // quarters one visible percent of scoring took 4% of its windows, and 27 CHS
         // files sat at 50% together for 287 s.
-        private static readonly int[] PROCESS_FILE_SEGMENT_WEIGHTS = { 2, 10, 80, 8 };
+        private static readonly int[] PROCESS_FILE_SEGMENT_WEIGHTS = { 2, 6, 60, 4, 24, 4 };
+
+        // The segments a run trained again from its features checkpoint opens directly: it is
+        // not read, calibrated or scored again.
+        private const int SEGMENT_TRAIN = 4;
+        private const int SEGMENT_WRITE = 5;
 
         /// <summary>
         /// This task's name, as a constant so the CLI selector, the validity stamp another
@@ -416,91 +422,101 @@ namespace pwiz.Osprey.Tasks
             // process pays once however many files it scores. A no-op without a profiler.
             ProfilerHooks.StartMeasure();
             var swAllFiles = Stopwatch.StartNew();
-            if (nFiles == 1)
+            // With --spectra-cache off, read the files that have no spectra cache ahead of the lanes
+            // that score them.
+            ScoringTaskShared.StartPrefetch(config.InputFiles, effectiveParallelism, ctx);
+            try
             {
-                // Single file: process directly (no parallel overhead)
-                string inputFile = config.InputFiles[0];
-                string fileName = Path.GetFileNameWithoutExtension(inputFile);
-                var fileResult = ScoreOrLoadForFile(
-                    inputFile, fileName, 0, 1,
-                    fullLibrary, config, parquetFooterMetadata,
-                    perFileCalibrations, perFileIsolationMz, validityKey, ctx);
-                if (fileResult != null)
-                    scoredFileNames.Add(fileName);
-                // Single-file scoring memory boundary. The pre-GC line's working_set
-                // peak is the in-scoring high-water mark (the ~tens-of-GB envelope one
-                // file's Stage 1-4 needs); the forced-GC line is the PERSISTENT set that
-                // survives -- the two together separate transient scoring buffers from
-                // genuinely retained structure ("why does one file need so much, and
-                // what is actually held"). When a dotMemory session is attached
-                // (Profile-Osprey.ps1 -MemoryProfile) the forced-GC probe also captures a
-                // retention snapshot here. Zero cost when OSPREY_LOG_MEMORY is unset; the
-                // multi-file batch never takes this single-file branch.
-                ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"single file scored (pre-GC)");
-                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"perfile-scored-live",
-                    string.Format(@"(post-GC, after scoring {0})", fileName));
-            }
-            else if (effectiveParallelism == 1)
-            {
-                // Strictly sequential: one file at a time (the default, or an
-                // explicit --parallel-files 1 / OSPREY_MAX_PARALLEL_FILES=1).
-                // Matches the memory envelope of the single-file path while
-                // still sharing the library load -- the safe choice for 3-file
-                // Astral runs that would OOM in parallel.
-                for (int fileIdx = 0; fileIdx < config.InputFiles.Count; fileIdx++)
+                if (nFiles == 1)
                 {
-                    string inputFile = config.InputFiles[fileIdx];
+                    // Single file: process directly (no parallel overhead)
+                    string inputFile = config.InputFiles[0];
                     string fileName = Path.GetFileNameWithoutExtension(inputFile);
                     var fileResult = ScoreOrLoadForFile(
-                        inputFile, fileName, fileIdx, config.InputFiles.Count,
+                        inputFile, fileName, 0, 1,
                         fullLibrary, config, parquetFooterMetadata,
                         perFileCalibrations, perFileIsolationMz, validityKey, ctx);
                     if (fileResult != null)
                         scoredFileNames.Add(fileName);
-                    ProfilerHooks.LogMemoryStatsIfEnabled(ctx,
-                        string.Format(@"scored file {0}/{1}", fileIdx + 1, config.InputFiles.Count));
+                    // Single-file scoring memory boundary. The pre-GC line's working_set
+                    // peak is the in-scoring high-water mark (the ~tens-of-GB envelope one
+                    // file's Stage 1-4 needs); the forced-GC line is the PERSISTENT set that
+                    // survives -- the two together separate transient scoring buffers from
+                    // genuinely retained structure ("why does one file need so much, and
+                    // what is actually held"). When a dotMemory session is attached
+                    // (Profile-Osprey.ps1 -MemoryProfile) the forced-GC probe also captures a
+                    // retention snapshot here. Zero cost when OSPREY_LOG_MEMORY is unset; the
+                    // multi-file batch never takes this single-file branch.
+                    ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"single file scored (pre-GC)");
+                    ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"perfile-scored-live",
+                        string.Format(@"(post-GC, after scoring {0})", fileName));
                 }
-            }
-            else
-            {
-                // Multiple files in parallel, bounded by the resolved
-                // concurrent-file count (see ResolveFileParallelism), handed out one at a
-                // time in input order so a lane that finishes takes the next file.
-                var fileResults = new ConcurrentDictionary<int, string>();
-                // Legend mapping each aggregate-line slot to its input file, printed once
-                // before the concurrent "[i] p%" line starts -- mirrors Skyline's numbered
-                // file list above its multi-file import progress, so a reader can tell which
-                // file each [i] is. Uses the same [i] token as the aggregate line.
-                ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_Run_Scoring__0__files_in_parallel_, config.InputFiles.Count));
-                for (int legendIdx = 0; legendIdx < config.InputFiles.Count; legendIdx++)
-                    ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(@"{0}. {1}", legendIdx + 1, config.InputFiles[legendIdx]));
-
-                // Collapse the concurrent per-file progress onto a single throttled
-                // "[i] p%" aggregate line, and buffer each file's narrative so its
-                // block flushes contiguously on completion rather than interleaving
-                // with the other files' lines. Each file is one BeginFile scope; the
-                // PROCESS_FILE_SEGMENT_WEIGHTS phases inside ProcessFile drive its percent.
-                var multi = new MultiProgressReporter();
-                OrderedFileLanes.For(config.InputFiles.Count, effectiveParallelism, fileIdx =>
+                else if (effectiveParallelism == 1)
                 {
-                    string inputFile = config.InputFiles[fileIdx];
-                    string fileName = Path.GetFileNameWithoutExtension(inputFile);
-                    using (multi.BeginFile(fileIdx, PROCESS_FILE_SEGMENT_WEIGHTS))
+                    // Strictly sequential: one file at a time (the default, or an
+                    // explicit --parallel-files 1 / OSPREY_MAX_PARALLEL_FILES=1).
+                    // Matches the memory envelope of the single-file path while
+                    // still sharing the library load -- the safe choice for 3-file
+                    // Astral runs that would OOM in parallel.
+                    for (int fileIdx = 0; fileIdx < config.InputFiles.Count; fileIdx++)
                     {
+                        string inputFile = config.InputFiles[fileIdx];
+                        string fileName = Path.GetFileNameWithoutExtension(inputFile);
                         var fileResult = ScoreOrLoadForFile(
                             inputFile, fileName, fileIdx, config.InputFiles.Count,
                             fullLibrary, config, parquetFooterMetadata,
                             perFileCalibrations, perFileIsolationMz, validityKey, ctx);
                         if (fileResult != null)
-                            fileResults[fileIdx] = fileName;
+                            scoredFileNames.Add(fileName);
+                        ProfilerHooks.LogMemoryStatsIfEnabled(ctx,
+                            string.Format(@"scored file {0}/{1}", fileIdx + 1, config.InputFiles.Count));
                     }
-                });
-                // Collect in original order
-                for (int i = 0; i < config.InputFiles.Count; i++)
-                {
-                    if (fileResults.TryGetValue(i, out string scoredName))
-                        scoredFileNames.Add(scoredName);
                 }
+                else
+                {
+                    // Multiple files in parallel, bounded by the resolved
+                    // concurrent-file count (see ResolveFileParallelism), handed out one at a
+                    // time in input order so a lane that finishes takes the next file.
+                    var fileResults = new ConcurrentDictionary<int, string>();
+                    // Legend mapping each aggregate-line slot to its input file, printed once
+                    // before the concurrent "[i] p%" line starts -- mirrors Skyline's numbered
+                    // file list above its multi-file import progress, so a reader can tell which
+                    // file each [i] is. Uses the same [i] token as the aggregate line.
+                    ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_Run_Scoring__0__files_in_parallel_, config.InputFiles.Count));
+                    for (int legendIdx = 0; legendIdx < config.InputFiles.Count; legendIdx++)
+                        ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(@"{0}. {1}", legendIdx + 1, config.InputFiles[legendIdx]));
+
+                    // Collapse the concurrent per-file progress onto a single throttled
+                    // "[i] p%" aggregate line, and buffer each file's narrative so its
+                    // block flushes contiguously on completion rather than interleaving
+                    // with the other files' lines. Each file is one BeginFile scope; the
+                    // PROCESS_FILE_SEGMENT_WEIGHTS phases inside ProcessFile drive its percent.
+                    var multi = new MultiProgressReporter();
+                    OrderedFileLanes.For(config.InputFiles.Count, effectiveParallelism, fileIdx =>
+                    {
+                        string inputFile = config.InputFiles[fileIdx];
+                        string fileName = Path.GetFileNameWithoutExtension(inputFile);
+                        using (multi.BeginFile(fileIdx, PROCESS_FILE_SEGMENT_WEIGHTS))
+                        {
+                            var fileResult = ScoreOrLoadForFile(
+                                inputFile, fileName, fileIdx, config.InputFiles.Count,
+                                fullLibrary, config, parquetFooterMetadata,
+                                perFileCalibrations, perFileIsolationMz, validityKey, ctx);
+                            if (fileResult != null)
+                                fileResults[fileIdx] = fileName;
+                        }
+                    });
+                    // Collect in original order
+                    for (int i = 0; i < config.InputFiles.Count; i++)
+                    {
+                        if (fileResults.TryGetValue(i, out string scoredName))
+                            scoredFileNames.Add(scoredName);
+                    }
+                }
+            }
+            finally
+            {
+                ScoringTaskShared.EndPrefetch(ctx);
             }
             swAllFiles.Stop();
             ProfilerHooks.SaveAndStopMeasure();
@@ -1654,6 +1670,7 @@ namespace pwiz.Osprey.Tasks
                     ctx.LogInfo(string.Format(
                         OspreyTasksResources.PerFileScoringTask_ScoreOrLoadForFile_File__0___1____2__was_already_scored__keeping_it_,
                         fileIdx + 1, totalFiles, fileName));
+                    ScoringTaskShared.ReleasePrefetched(inputFile, ctx);
                     return loaded;
                 }
                 // load failed -- fall through and rescore the file.
@@ -1669,7 +1686,14 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ScoreOrLoadForFile_Scoring_file__0___1____2_,
                 fileIdx + 1, totalFiles, inputFile));
             ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SCORE_FILE, @"{0}/{1}", fileIdx + 1, totalFiles));
-            return ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations, perFileIsolationMz, ctx);
+            try
+            {
+                return ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations, perFileIsolationMz, ctx);
+            }
+            finally
+            {
+                ScoringTaskShared.ReleasePrefetched(inputFile, ctx);
+            }
         }
 
         /// <summary>
@@ -1696,8 +1720,13 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(@"File {0}/{1}: {2} - training its first-pass model again from {3}",
                 fileIdx + 1, totalFiles, fileName, featuresPath));
             var featureMask = PinFeatureMask.For(ctx.Config);
+            // The checkpoint read stands in for the read segment; the rest of the file's slices
+            // before the model are banked, since the run is not calibrated or scored again.
+            MultiProgressReporter.Current?.BeginSegment();
             var entries = ParquetScoreCache.LoadFullFdrEntries(featuresPath, featureMask);
+            MultiProgressReporter.Current?.BeginSegment(SEGMENT_TRAIN);
             var proteinBest = TrainOwnModelFromEntries(entries, inputFile, fileName, featureMask, ctx);
+            MultiProgressReporter.Current?.BeginSegment(SEGMENT_WRITE);
             WriteStubScores(entries, inputFile, fileName, parquetFooterMetadata, featureMask, proteinBest, ctx);
             string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
             LoadCalibrationAndIsolation(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx);
@@ -2243,6 +2272,9 @@ namespace pwiz.Osprey.Tasks
             // (Stage 3 calibration used it too), so the full MS2 list is never resident.
             IWindowSpectraProvider spectraProvider =
                 new StreamingWindowSpectraProvider(windowIndex, ms2Cal);
+            // Scoring takes each window once and last, so a resident window is handed over and
+            // freed as it is scored rather than held until the file is done.
+            windowIndex.ReleaseWindowsAsLoaded();
 
             var scoredEntries = ScoreAndDeduplicate(
                 fullLibrary, spectraProvider, ms1Spectra, isolationWindows,
@@ -2284,8 +2316,9 @@ namespace pwiz.Osprey.Tasks
             // in Run() against the original (un-mutated) outer config - see
             // Run() for why. Skipped only in --task FirstPassFDR mode (no Stages 1-4
             // ran here, so there is nothing fresh to persist).
-            // Segment 4/4 (write): the parquet build/write reporters in
-            // ParquetScoreCache feed this final slice.
+            // Segments 4-6 (features checkpoint, the run's own model, stub write): the parquet
+            // build/write reporters in ParquetScoreCache feed the writes, and the training its
+            // own reporter (PerFileFirstPassModel).
             MultiProgressReporter.Current?.BeginSegment();
             if (parquetFooterMetadata != null)
             {
@@ -2310,7 +2343,9 @@ namespace pwiz.Osprey.Tasks
                 int[] rowOrder = ParquetScoreCache.RowOrder(scoredEntries);
                 for (int row = 0; row < rowOrder.Length; row++)
                     scoredEntries[rowOrder[row]].ParquetIndex = (uint)row;
+                MultiProgressReporter.Current?.BeginSegment(SEGMENT_TRAIN);
                 var proteinBest = TrainOwnModelFromEntries(scoredEntries, inputFile, fileName, featureMask, ctx);
+                MultiProgressReporter.Current?.BeginSegment(SEGMENT_WRITE);
                 WriteStubScores(scoredEntries, inputFile, fileName, parquetFooterMetadata, featureMask, proteinBest, ctx);
 
                 // Phase 1 (issue #4355): the heavy per-entry arrays are now persisted in

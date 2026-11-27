@@ -8,7 +8,9 @@ using System.Runtime.Versioning;
 namespace Pwiz.Vendor.Bruker;
 
 /// <summary>
-/// Read-only view over a CompassXtract spectrum's <c>MSSpectrumParameterCollection</c>. Port of
+/// Read-only view over a CompassXtract spectrum's <c>MSSpectrumParameterCollection</c> that owns
+/// the collection: disposing the list releases it, so wrap a collection fetched for the list
+/// alone, never one still used elsewhere. Port of
 /// <c>MSSpectrumParameterListImpl</c> + <c>MSSpectrumParameterIterator::Impl</c> in
 /// <c>CompassData.cpp:140-190</c>.
 /// </summary>
@@ -17,10 +19,11 @@ namespace Pwiz.Vendor.Bruker;
 /// <c>CompassData.cpp:184</c> range-checks against <c>[1, Count]</c>); this wrapper exposes the
 /// 0-based indexing the rest of pwiz-sharp uses and adds the +1 internally. Every accessor is a
 /// COM round trip, which is exactly why <see cref="CompassXtractParameterCache"/> exists.
-/// Callers must already hold a <see cref="CompassXtractActivationContext.Activate"/> scope.
+/// Callers must already hold a <see cref="CompassXtractActivationContext.Activate"/> scope, and
+/// dispose the list on that thread when done with it, which releases the COM collection.
 /// </remarks>
 [SupportedOSPlatform("windows")]
-internal sealed class CompassXtractParameterList
+internal sealed class CompassXtractParameterList : IDisposable
 {
     private readonly EDAL.IMSSpectrumParameterCollection _collection;
 
@@ -30,6 +33,9 @@ internal sealed class CompassXtractParameterList
     /// <summary>Number of parameters on the spectrum, as COM reports it. Valid indices for
     /// <see cref="this[int]"/> are <c>0 .. Count-1</c>.</summary>
     public int Count => _collection.Count;
+
+    /// <summary>Releases the COM collection; see <see cref="CompassXtractData.Release"/>.</summary>
+    public void Dispose() => CompassXtractData.Release(_collection);
 
     /// <summary>
     /// Number of parameters an <i>enumeration</i> yields, which is one fewer than
@@ -60,11 +66,18 @@ internal sealed class CompassXtractParameterList
         get
         {
             var p = _collection[index + 1];
-            return (p.GroupName ?? string.Empty,
-                    p.ParameterName ?? string.Empty,
-                    // ParameterValue is a VARIANT (typed `object` by tlbimp); cpp calls
-                    // ->ToString() on the boxed value (CompassData.cpp:188).
-                    Convert.ToString(p.ParameterValue, CultureInfo.InvariantCulture) ?? string.Empty);
+            try
+            {
+                return (p.GroupName ?? string.Empty,
+                        p.ParameterName ?? string.Empty,
+                        // ParameterValue is a VARIANT (typed `object` by tlbimp); cpp calls
+                        // ->ToString() on the boxed value (CompassData.cpp:188).
+                        Convert.ToString(p.ParameterValue, CultureInfo.InvariantCulture) ?? string.Empty);
+            }
+            finally
+            {
+                CompassXtractData.Release(p);
+            }
         }
     }
 }

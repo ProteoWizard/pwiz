@@ -263,4 +263,11 @@ public sealed class SpectrumListPeakFilter : SpectrumListWrapper
         if (getBinaryData) _filter.Apply(spec);
         return spec;
     }
+
+    /// <inheritdoc/>
+    /// <remarks>As cpp's (SpectrumList_PeakFilter.cpp:66): no peaks are read below full metadata.</remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel) =>
+        detailLevel < DetailLevel.FullMetadata
+            ? GetSpectrumWithoutPeakCount(index, detailLevel)
+            : GetSpectrum(index, detailLevel >= DetailLevel.FullData);
 }

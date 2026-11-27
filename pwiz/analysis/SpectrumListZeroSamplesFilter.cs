@@ -50,6 +50,13 @@ public sealed class SpectrumListZeroSamplesFilter : SpectrumListWrapper
     }
 
     /// <inheritdoc/>
+    /// <remarks>The filter changes the peaks only, so no peaks are read below full metadata.</remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel) =>
+        detailLevel < DetailLevel.FullMetadata
+            ? GetSpectrumWithoutPeakCount(index, detailLevel)
+            : GetSpectrum(index, detailLevel >= DetailLevel.FullData);
+
+    /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
     {
         var s = Inner.GetSpectrum(index, getBinaryData);

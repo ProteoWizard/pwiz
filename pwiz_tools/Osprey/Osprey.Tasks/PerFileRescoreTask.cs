@@ -1186,41 +1186,59 @@ namespace pwiz.Osprey.Tasks
             // parallel body so the actionable message survives (see RescoreOneFileStreamed).
             var loadErrors = new string[nTotalFiles];
 
-            if (nTotalFiles == 1 || parallelism == 1)
+            // With --spectra-cache off, read the files ahead of the lanes that rescore them.
+            var prefetchInputs = new List<string>(nTotalFiles);
+            foreach (var perFile in perFileEntries)
             {
-                for (int fileNum = 0; fileNum < nTotalFiles; fileNum++)
-                    counts[fileNum] = RescoreOneFileStreamed(
-                        fileNum, nTotalFiles, perFileEntries[fileNum],
-                        inputs, ctx, out loadErrors[fileNum]);
+                string prefetchInput = InputFileOf(perFile.Key, inputs);
+                if (prefetchInput != null)
+                    prefetchInputs.Add(prefetchInput);
             }
-            else
+            ScoringTaskShared.StartPrefetch(prefetchInputs, parallelism, ctx);
+            try
             {
-                // Legend mapping each aggregate-line slot to its file, then the
-                // concurrent rescore collapsed onto the throttled "[i] p%" line +
-                // per-file buffered blocks (same MultiProgressReporter as scoring).
-                ctx.LogInfo(string.Format(OspreyTasksResources.PerFileRescoreTask_ExecuteRescore_Re_scoring__0__files_in_parallel_, nTotalFiles));
-                for (int i = 0; i < nTotalFiles; i++)
+                if (nTotalFiles == 1 || parallelism == 1)
                 {
-                    string key = perFileEntries[i].Key;
-                    string label =
-                        inputs.FileNameToIdx.TryGetValue(key, out int inputIdx)
-                        && inputIdx < inputs.Config.InputFiles.Count
-                            ? inputs.Config.InputFiles[inputIdx]
-                            : key;
-                    ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(@"{0}. {1}", i + 1, label));
-                }
-                // One file at a time from a shared queue, in input order, so a lane that finishes
-                // takes the next file rather than working through a block dealt to it up front.
-                var multi = new MultiProgressReporter();
-                OrderedFileLanes.For(nTotalFiles, parallelism, fileNum =>
-                {
-                    using (multi.BeginFile(fileNum, RESCORE_FILE_SEGMENTS))
+                    for (int fileNum = 0; fileNum < nTotalFiles; fileNum++)
                     {
-                        counts[fileNum] = RescoreOneFileStreamed(
+                        counts[fileNum] = RescoreAndRelease(
                             fileNum, nTotalFiles, perFileEntries[fileNum],
                             inputs, ctx, out loadErrors[fileNum]);
                     }
-                });
+                }
+                else
+                {
+                    // Legend mapping each aggregate-line slot to its file, then the
+                    // concurrent rescore collapsed onto the throttled "[i] p%" line +
+                    // per-file buffered blocks (same MultiProgressReporter as scoring).
+                    ctx.LogInfo(string.Format(OspreyTasksResources.PerFileRescoreTask_ExecuteRescore_Re_scoring__0__files_in_parallel_, nTotalFiles));
+                    for (int i = 0; i < nTotalFiles; i++)
+                    {
+                        string key = perFileEntries[i].Key;
+                        string label =
+                            inputs.FileNameToIdx.TryGetValue(key, out int inputIdx)
+                            && inputIdx < inputs.Config.InputFiles.Count
+                                ? inputs.Config.InputFiles[inputIdx]
+                                : key;
+                        ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(@"{0}. {1}", i + 1, label));
+                    }
+                    // One file at a time from a shared queue, in input order, so a lane that finishes
+                    // takes the next file rather than working through a block dealt to it up front.
+                    var multi = new MultiProgressReporter();
+                    OrderedFileLanes.For(nTotalFiles, parallelism, fileNum =>
+                    {
+                        using (multi.BeginFile(fileNum, RESCORE_FILE_SEGMENTS))
+                        {
+                            counts[fileNum] = RescoreAndRelease(
+                                fileNum, nTotalFiles, perFileEntries[fileNum],
+                                inputs, ctx, out loadErrors[fileNum]);
+                        }
+                    });
+                }
+            }
+            finally
+            {
+                ScoringTaskShared.EndPrefetch(ctx);
             }
 
             // Fail the rescore on any per-file refill failure, HERE rather than inside the
@@ -1381,6 +1399,23 @@ namespace pwiz.Osprey.Tasks
             /// Thread-safe.
             /// </summary>
             public Action<RunRescoreInputs, IReadOnlyDictionary<uint, ReconcileAction>> SavePlan;
+        }
+
+        // RescoreOneFileStreamed, then whatever the reader still holds for the file goes back to it.
+        private (int Rescored, int GapCwt, int GapForced, bool Scored) RescoreAndRelease(
+            int fileNum, int nTotalFiles, KeyValuePair<string, List<FdrEntry>> file,
+            RescorePassInputs inputs, PipelineContext ctx, out string loadError)
+        {
+            try
+            {
+                return RescoreOneFileStreamed(fileNum, nTotalFiles, file, inputs, ctx, out loadError);
+            }
+            finally
+            {
+                string inputFile = InputFileOf(file.Key, inputs);
+                if (inputFile != null)
+                    ScoringTaskShared.ReleasePrefetched(inputFile, ctx);
+            }
         }
 
         /// <summary>

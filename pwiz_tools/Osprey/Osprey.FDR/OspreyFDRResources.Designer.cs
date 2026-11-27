@@ -431,7 +431,17 @@ namespace pwiz.Osprey.FDR {
                         "of__1____2____of_training_targets_at__3__FDR_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Training the run&apos;s first-pass model on {0:N0} precursor candidate peaks.
+        /// </summary>
+        public static string PerFileFirstPassModel_TrainAndScore_Training_the_run_s_first_pass_model_on__0__precursor_candidate_peaks {
+            get {
+                return ResourceManager.GetString("PerFileFirstPassModel_TrainAndScore_Training_the_run_s_first_pass_model_on__0__pr" +
+                        "ecursor_candidate_peaks", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to First-pass protein FDR: {0:N0} target groups at {1:P1} FDR.
         /// </summary>

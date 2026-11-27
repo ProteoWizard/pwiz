@@ -98,11 +98,34 @@ namespace pwiz.Osprey.Test
 
                 string descriptor = DemuxCacheBuilder.CreateParams(ctx.Config).Descriptor;
                 StringAssert.Contains(descriptor, @"ions_from_fill_time=True");
-                var demultiplexed = SpectraCache.LoadSpectraCache(index.CachePath, input, descriptor).Ms2Spectra;
-                Assert.AreEqual(2 * acquired.Count, demultiplexed.Count);
-                var lines = demultiplexed.Select((s, o) => Line(o, s.ScanNumber.ToString(CultureInfo.InvariantCulture),
-                    s.IsolationWindow.LowerBound, s.IsolationWindow.UpperBound, s.Mzs, Widen(s.Intensities))).ToList();
-                CheckGolden(ASTRAL_GOLDEN, lines);
+                List<string> GoldenLines(string demuxPath, string source)
+                {
+                    var demultiplexed = SpectraCache.LoadSpectraCache(demuxPath, source, descriptor).Ms2Spectra;
+                    Assert.AreEqual(2 * acquired.Count, demultiplexed.Count);
+                    return demultiplexed.Select((s, o) => Line(o, s.ScanNumber.ToString(CultureInfo.InvariantCulture),
+                        s.IsolationWindow.LowerBound, s.IsolationWindow.UpperBound, s.Mzs, Widen(s.Intensities))).ToList();
+                }
+                CheckGolden(ASTRAL_GOLDEN, GoldenLines(index.CachePath, input));
+
+                // --spectra-cache off writes neither the spectra cache nor the fill times beside it, yet the run is
+                // demultiplexed from the spectra just read, as above, and keeps its demultiplexed cache. Without
+                // --demux it is refused, as when the cache is written.
+                string uncachedDir = Path.Combine(dir, @"no-spectra-cache");
+                Directory.CreateDirectory(uncachedDir);
+                string uncachedInput = Path.Combine(uncachedDir, ASTRAL_SLICE);
+                File.Copy(FixturePath(ASTRAL_SLICE), uncachedInput);
+                var demuxOff = new PipelineContext(new OspreyConfig { DemuxMode = DemuxMode.off, SpectraCache = false, NThreads = 4 },
+                    new OspreyTask[0], null, null, null);
+                Assert.ThrowsException<InvalidOperationException>(() =>
+                    ScoringTaskShared.EnsureSpectraCache(uncachedInput, false, out _, demuxOff));
+                var uncached = new PipelineContext(new OspreyConfig { DemuxMode = DemuxMode.auto, SpectraCache = false, NThreads = 4 },
+                    new OspreyTask[0], null, null, null);
+                var uncachedIndex = ScoringTaskShared.EnsureSpectraCache(uncachedInput, false, out _, uncached);
+                Assert.AreEqual(SpectraCache.GetDemuxCachePath(uncachedInput), uncachedIndex.CachePath);
+                string uncachedSpectra = SpectraCache.GetCachePath(uncachedInput);
+                Assert.IsFalse(File.Exists(uncachedSpectra));
+                Assert.IsFalse(File.Exists(AcquisitionSidecar.PathFor(uncachedSpectra)));
+                CheckGolden(ASTRAL_GOLDEN, GoldenLines(uncachedIndex.CachePath, uncachedInput));
             }
             finally
             {

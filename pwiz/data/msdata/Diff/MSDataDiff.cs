@@ -91,6 +91,23 @@ public static class MSDataDiff
     }
 
     /// <summary>
+    /// Returns an empty string when the two precursor lists are logically equal under
+    /// <paramref name="config"/>; otherwise a report of the differences. Applies the same
+    /// per-precursor comparison <see cref="DescribeSpectrum"/> uses, for callers that compare
+    /// precursors without the rest of the spectrum.
+    /// </summary>
+    public static string DescribePrecursors(List<Precursor> a, List<Precursor> b, DiffConfig? config = null)
+    {
+        ArgumentNullException.ThrowIfNull(a);
+        ArgumentNullException.ThrowIfNull(b);
+        var ctx = new Context(config ?? new DiffConfig());
+
+        DiffListByIndex(a, b, DiffPrecursor, ctx, "precursor");
+
+        return ctx.Format();
+    }
+
+    /// <summary>
     /// Tolerance mode for the <c>msLevel</c> comparison in <see cref="DescribeSpectraDataOnly"/>.
     /// Captures the well-known lossy defaults each peak-list format applies on read.
     /// </summary>

@@ -100,9 +100,21 @@ public sealed class SpectrumList_UIMF : SpectrumListBase, IIonMobilitySpectrumLi
     /// <summary>Pulls spectrum at <paramref name="index"/>, mirroring cpp
     /// <c>SpectrumList_UIMF::spectrum</c> (SpectrumList_UIMF.cpp:81-145).</summary>
     public Spectrum GetSpectrum(int index, bool getBinaryData, bool doCentroid)
+        => BuildSpectrum(index, getBinaryData ? DetailLevel.FullData : DetailLevel.FullMetadata);
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Overridden, as cpp's is, so a metadata request does not read the scan's peaks: cpp returns
+    /// before getScan below full metadata (SpectrumList_UIMF.cpp:136).
+    /// </remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel)
+        => BuildSpectrum(index, detailLevel);
+
+    private Spectrum BuildSpectrum(int index, DetailLevel detailLevel)
     {
         if (index < 0 || index >= _index.Count)
             throw new ArgumentOutOfRangeException(nameof(index));
+        bool getBinaryData = detailLevel >= DetailLevel.FullData;
         var ie = _index[index];
 
         var spec = new Spectrum { Index = index, Id = ie.Id };
@@ -136,6 +148,9 @@ public sealed class SpectrumList_UIMF : SpectrumListBase, IIonMobilitySpectrumLi
             precursor.Activation.Set(CVID.MS_CID);
             spec.Precursors.Add(precursor);
         }
+
+        if (detailLevel < DetailLevel.FullMetadata)
+            return spec;
 
         if (getBinaryData)
         {

@@ -89,7 +89,7 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static SpectrumFileResult LoadAllSpectra(string path)
         {
-            return LoadAllSpectra(path, null);
+            return LoadAllSpectra(path, null, null, null, true);
         }
 
         /// <summary>
@@ -114,6 +114,20 @@ namespace pwiz.Osprey.IO
         /// msconvert's demultiplex filter writes it. Null reads every run as acquired.</param>
         public static SpectrumFileResult LoadAllSpectra(string path, CentroidingOptions centroiding,
             SpectrumListDemux.Params demultiplex = null)
+        {
+            return LoadAllSpectra(path, centroiding, demultiplex, null, true);
+        }
+
+        /// <summary>
+        /// <see cref="LoadAllSpectra(string, CentroidingOptions, SpectrumListDemux.Params)"/> that hands
+        /// <paramref name="onSpectrumRead"/> the peak bytes of each spectrum as it is kept, before
+        /// the next is read, so a caller can hold the read back while memory is short. With
+        /// <paramref name="centroiding"/>, spectra are kept a batch at a time, once the batch is centroided,
+        /// so the read holds back between batches. Without <paramref name="reportProgress"/> it reads
+        /// silently, for a read running behind other work.
+        /// </summary>
+        public static SpectrumFileResult LoadAllSpectra(string path, CentroidingOptions centroiding,
+            SpectrumListDemux.Params demultiplex, Action<long> onSpectrumRead, bool reportProgress)
         {
             var ms2Spectra = new List<Spectrum>();
             var ms1Spectra = new List<MS1Spectrum>();
@@ -180,44 +194,62 @@ namespace pwiz.Osprey.IO
                     // and this reads nothing. Osprey has no use for such a file, but an
                     // empty result says so far more clearly than a throw would.
                     int count = msData.SpectrumCount;
-                    // Per-spectrum rather than per-byte progress (a vendor reader exposes
-                    // no byte position), on the same throttled interval the mzML read used
-                    // - a large file is minutes of otherwise silent work.
-                    ProgressReporter.Run(
-                        string.Format(OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Reading__0_, Path.GetFileName(path)), count, progress =>
+                    // Keeps a spectrum read from the file, and hands its peak bytes to onSpectrumRead.
+                    void KeepSpectrum(MsDataSpectrum spectrum, int i)
+                    {
+                        int ms2Before = ms2Spectra.Count, ms1Before = ms1Spectra.Count;
+                        AddSpectrum(spectrum, i, ms2Spectra, ms1Spectra, acquisition, ref unsortedCount);
+                        if (onSpectrumRead == null)
+                            return;
+                        if (ms2Spectra.Count > ms2Before)
+                            onSpectrumRead(PeakBytes(ms2Spectra[ms2Before].Count));
+                        else if (ms1Spectra.Count > ms1Before)
+                            onSpectrumRead(PeakBytes(ms1Spectra[ms1Before].Count));
+                    }
+                    // Reads every spectrum in file order, telling report (when given) how many are read.
+                    void ReadAll(Action<int> report)
                     {
                         if (centroiding == null)
                         {
                             for (int i = 0; i < count; i++)
                             {
-                                AddSpectrum(msData.GetSpectrum(i), i, ms2Spectra, ms1Spectra, acquisition,
-                                    ref unsortedCount);
-                                progress.Report(i + 1);
+                                KeepSpectrum(msData.GetSpectrum(i), i);
+                                report?.Invoke(i + 1);
                             }
+                            return;
                         }
-                        else
+                        var centroiders = CreateCentroiders(msData, centroiding, out sigmaMs1, out sigmaMs2);
+                        // Read in order, centroided in parallel a batch at a time: Centrix costs several
+                        // times the read, and each spectrum is centroided on its own.
+                        var batch = new MsDataSpectrum[CENTROID_BATCH];
+                        var parallel = new ParallelOptions { MaxDegreeOfParallelism = centroiding.Threads };
+                        for (int start = 0; start < count; start += CENTROID_BATCH)
                         {
-                            var centroiders = CreateCentroiders(msData, centroiding, out sigmaMs1, out sigmaMs2);
-                            // Read in order, centroided in parallel a batch at a time: Centrix costs several
-                            // times the read, and each spectrum is centroided on its own.
-                            var batch = new MsDataSpectrum[CENTROID_BATCH];
-                            var parallel = new ParallelOptions { MaxDegreeOfParallelism = centroiding.Threads };
-                            for (int start = 0; start < count; start += CENTROID_BATCH)
+                            int size = Math.Min(CENTROID_BATCH, count - start);
+                            for (int k = 0; k < size; k++)
+                                batch[k] = msData.GetSpectrum(start + k);
+                            Parallel.For(0, size, parallel, k => CentroidProfile(batch[k], centroiders));
+                            for (int k = 0; k < size; k++)
                             {
-                                int size = Math.Min(CENTROID_BATCH, count - start);
-                                for (int k = 0; k < size; k++)
-                                    batch[k] = msData.GetSpectrum(start + k);
-                                Parallel.For(0, size, parallel, k => CentroidProfile(batch[k], centroiders));
-                                for (int k = 0; k < size; k++)
-                                {
-                                    AddSpectrum(batch[k], start + k, ms2Spectra, ms1Spectra, acquisition,
-                                        ref unsortedCount);
-                                    batch[k] = null;
-                                }
-                                progress.Report(start + size);
+                                KeepSpectrum(batch[k], start + k);
+                                batch[k] = null;
                             }
+                            report?.Invoke(start + size);
                         }
-                    }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
+                    }
+                    if (!reportProgress)
+                    {
+                        ReadAll(null);
+                    }
+                    else
+                    {
+                        // Per-spectrum rather than per-byte progress (a vendor reader exposes
+                        // no byte position), on the same throttled interval the mzML read used
+                        // - a large file is minutes of otherwise silent work.
+                        ProgressReporter.Run(
+                            string.Format(OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Reading__0_, Path.GetFileName(path)), count,
+                            progress => ReadAll(read => progress.Report(read)), string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
+                    }
                 }
             }
             catch (Exception ex) when (ReadErrorMessage(path, ex) != null)
@@ -235,6 +267,15 @@ namespace pwiz.Osprey.IO
                 Acquisition = acquisition,
                 DemultiplexScheme = demultiplexed,
             };
+        }
+
+        /// <summary>
+        /// The memory a spectrum's peaks hold, as a read budget counts it: 8-byte m/z and 4-byte
+        /// intensity per peak, plus the two arrays' headers.
+        /// </summary>
+        public static long PeakBytes(int peakCount)
+        {
+            return peakCount * 12L + 64;
         }
 
         /// <summary>

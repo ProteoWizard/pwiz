@@ -28,6 +28,7 @@ using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR;
 
 namespace pwiz.Osprey.Test
 {
@@ -146,6 +147,43 @@ namespace pwiz.Osprey.Test
                         Assert.AreEqual(12, LastPercent(capture, 2));
                     });
                 }
+
+                // A run trained again from its features checkpoint: it opens the model's segment
+                // directly (spectra 2, calibration 6, scoring 60, checkpoint 4, model 24, write 4),
+                // and the model's own fold iterations move it while it trains.
+                capture.GetStringBuilder().Clear();
+                seen.Clear();
+                using (var file = multi.BeginFile(2, new[] { 2, 6, 60, 4, 24, 4 }))
+                {
+                    file.BeginSegment();                                // checkpoint read
+                    file.BeginSegment(4);                               // the model opens at 72%
+                    seen.Add(LastPercent(capture, 3));
+                    ProgressReporter.Run(@"train", TrainingProgress.Total, progress =>
+                    {
+                        var training = new TrainingProgress(progress);
+                        training.BeginStep(TrainingStep.round_1);
+                        // One improving iteration of one fold, with patience 2: 1 / 3 of round 1's
+                        // 35% -> 72 + 24 x 11.7% = 74.8 -> 74.
+                        training.ReportFoldIteration(0, 1, 1, 0, 2, 30);
+                        seen.Add(LastPercent(capture, 3));
+                        // Its patience spent: round 1 done -> 72 + 24 x 35% = 80.4 -> 80.
+                        training.ReportFoldIteration(0, 1, 3, 2, 2, 30);
+                        seen.Add(LastPercent(capture, 3));
+                        // Round 2 opens where scoring by round 1 ends: 72 + 24 x 45% = 82.8 -> 82.
+                        training.BeginStep(TrainingStep.round_2);
+                        seen.Add(LastPercent(capture, 3));
+                    });
+                    seen.Add(LastPercent(capture, 3));                  // model done -> 96
+                    file.BeginSegment(5);                               // write opens at 96%
+                    file.BeginSegment(2);                               // never moves back
+                    ProgressReporter.Run(@"write", 100, progress =>
+                    {
+                        progress.Report(50);                            // 96 + 4 x 50% = 98
+                        seen.Add(LastPercent(capture, 3));
+                    });
+                }
+                CollectionAssert.AreEqual(new[] { 72, 74, 80, 82, 96, 98 }, seen,
+                    string.Join(@", ", seen));
             }
             finally
             {
