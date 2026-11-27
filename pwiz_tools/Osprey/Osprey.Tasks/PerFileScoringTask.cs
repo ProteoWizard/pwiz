@@ -71,13 +71,19 @@ namespace pwiz.Osprey.Tasks
     {
         // Progress segments one input file's work is divided into for the
         // --parallel-files "[i] p%" aggregate line: read spectra, calibrate RT/mass,
-        // score, write the scores parquet. ProcessFile advances them through
+        // score, write the features checkpoint, train the run's own first-pass model, write
+        // the stub scores parquet. ProcessFile advances them through
         // MultiProgressReporter.BeginSegment at each phase boundary; off the parallel
-        // path those calls are no-ops. Weighted by time: coelution scoring is ~80% of a
-        // SEA-AD file and ~95% of a CHS file, calibration ~15% and ~3%. With equal
+        // path those calls are no-ops. Weighted by time: on a SEA-AD file calibration takes
+        // ~27 s, coelution scoring ~320 s and the run's model ~160 s. With equal
         // quarters one visible percent of scoring took 4% of its windows, and 27 CHS
         // files sat at 50% together for 287 s.
-        private static readonly int[] PROCESS_FILE_SEGMENT_WEIGHTS = { 2, 10, 80, 8 };
+        private static readonly int[] PROCESS_FILE_SEGMENT_WEIGHTS = { 2, 6, 60, 4, 24, 4 };
+
+        // The segments a run trained again from its features checkpoint opens directly: it is
+        // not read, calibrated or scored again.
+        private const int SEGMENT_TRAIN = 4;
+        private const int SEGMENT_WRITE = 5;
 
         /// <summary>
         /// This task's name, as a constant so the CLI selector, the validity stamp another
@@ -1714,8 +1720,13 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(@"File {0}/{1}: {2} - training its first-pass model again from {3}",
                 fileIdx + 1, totalFiles, fileName, featuresPath));
             var featureMask = PinFeatureMask.For(ctx.Config);
+            // The checkpoint read stands in for the read segment; the rest of the file's slices
+            // before the model are banked, since the run is not calibrated or scored again.
+            MultiProgressReporter.Current?.BeginSegment();
             var entries = ParquetScoreCache.LoadFullFdrEntries(featuresPath, featureMask);
+            MultiProgressReporter.Current?.BeginSegment(SEGMENT_TRAIN);
             var proteinBest = TrainOwnModelFromEntries(entries, inputFile, fileName, featureMask, ctx);
+            MultiProgressReporter.Current?.BeginSegment(SEGMENT_WRITE);
             WriteStubScores(entries, inputFile, fileName, parquetFooterMetadata, featureMask, proteinBest, ctx);
             string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
             LoadCalibrationAndIsolation(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx);
@@ -2305,8 +2316,9 @@ namespace pwiz.Osprey.Tasks
             // in Run() against the original (un-mutated) outer config - see
             // Run() for why. Skipped only in --task FirstPassFDR mode (no Stages 1-4
             // ran here, so there is nothing fresh to persist).
-            // Segment 4/4 (write): the parquet build/write reporters in
-            // ParquetScoreCache feed this final slice.
+            // Segments 4-6 (features checkpoint, the run's own model, stub write): the parquet
+            // build/write reporters in ParquetScoreCache feed the writes, and the training its
+            // own reporter (PerFileFirstPassModel).
             MultiProgressReporter.Current?.BeginSegment();
             if (parquetFooterMetadata != null)
             {
@@ -2331,7 +2343,9 @@ namespace pwiz.Osprey.Tasks
                 int[] rowOrder = ParquetScoreCache.RowOrder(scoredEntries);
                 for (int row = 0; row < rowOrder.Length; row++)
                     scoredEntries[rowOrder[row]].ParquetIndex = (uint)row;
+                MultiProgressReporter.Current?.BeginSegment(SEGMENT_TRAIN);
                 var proteinBest = TrainOwnModelFromEntries(scoredEntries, inputFile, fileName, featureMask, ctx);
+                MultiProgressReporter.Current?.BeginSegment(SEGMENT_WRITE);
                 WriteStubScores(scoredEntries, inputFile, fileName, parquetFooterMetadata, featureMask, proteinBest, ctx);
 
                 // Phase 1 (issue #4355): the heavy per-entry arrays are now persisted in

@@ -174,6 +174,15 @@ namespace pwiz.Osprey.FDR
         public PercolatorDiagnosticsConfig Diagnostics { get; set; }
 
         /// <summary>
+        /// Where the training reports its steps and fold iterations as a percent, or null (the
+        /// default) for no report. Set only by <see cref="PerFileFirstPassModel"/>, on its own copy
+        /// for one run, so one run's training is never reported into another's. Copied by
+        /// <see cref="CloneForTrainOnly"/>, so both rounds of a two-round training report into it.
+        /// The trainer only reports to it: it never changes what is trained.
+        /// </summary>
+        internal TrainingProgress TrainingProgress { get; set; }
+
+        /// <summary>
         /// Train gradient-boosted decision trees (<c>OSPREY_FDR_MODEL=gbdt</c>) instead
         /// of the linear SVM. Everything else about the run is unchanged: the same
         /// best-per-precursor dedup, the same peptide-grouped CV folds, the same
@@ -256,7 +265,8 @@ namespace pwiz.Osprey.FDR
                 NThreads = NThreads,
                 CollectTrainingAnalysis = CollectTrainingAnalysis,
                 TrainOnly = true,
-                Diagnostics = Diagnostics
+                Diagnostics = Diagnostics,
+                TrainingProgress = TrainingProgress
             };
         }
     }
