@@ -31,13 +31,25 @@ namespace pwiz.Quasar.Core.Clustering
     {
         public const int DEFAULT_MIN_MEMBERS = 6;
         public const int DEFAULT_MIN_ANCHORS = 1;
-        public const int DEFAULT_MAX_RESIDUAL_PASSES = 2;
+
+        /// <summary>
+        /// Residual passes after the first grouping. On Astral HeLa window 81 the first kept 16 new
+        /// templates and the second none, at about 5 s each.
+        /// </summary>
+        public const int DEFAULT_MAX_RESIDUAL_PASSES = 1;
 
         /// <summary>Scans added on each side of a template's 5% support for its fits, for the baseline.</summary>
         public const int DEFAULT_SEGMENT_PADDING = 2;
 
         /// <summary>Most times a group's template is refitted and its members rechecked.</summary>
         public const int DEFAULT_MAX_GROUPING_ROUNDS = 5;
+
+        /// <summary>
+        /// A trace is fitted to a template only when it has at least this many non-zero points where
+        /// the template is significant: one or two points cannot show an elution profile, and the
+        /// traces themselves need three scans (Stage 1).
+        /// </summary>
+        public const int DEFAULT_MIN_MEMBER_POINTS = 3;
 
         public WindowClusterSettings(EmgShapePrior prior, NoiseModel noise, double cycleTime)
         {
@@ -74,5 +86,6 @@ namespace pwiz.Quasar.Core.Clustering
         public int MaxResidualPasses { get; set; } = DEFAULT_MAX_RESIDUAL_PASSES;
         public int SegmentPadding { get; set; } = DEFAULT_SEGMENT_PADDING;
         public int MaxGroupingRounds { get; set; } = DEFAULT_MAX_GROUPING_ROUNDS;
+        public int MinMemberPoints { get; set; } = DEFAULT_MIN_MEMBER_POINTS;
     }
 }

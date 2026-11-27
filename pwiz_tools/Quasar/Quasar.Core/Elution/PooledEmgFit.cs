@@ -44,10 +44,21 @@ namespace pwiz.Quasar.Core.Elution
         /// <summary>The Huber tuning constant (95% efficiency for Gaussian residuals).</summary>
         public const double HUBER_K = 1.345;
 
-        /// <summary>The first pass plus this many reweighted passes.</summary>
-        private const int REWEIGHT_PASSES = 3;
+        /// <summary>
+        /// The first pass plus this many reweighted passes. One reweighting already down-weights an
+        /// interference bump; more passes cost a full fit each and moved the shape by far less than
+        /// a scan in the seed sweeps.
+        /// </summary>
+        private const int REWEIGHT_PASSES = 1;
 
         private const int MAX_ITERATIONS = 60;
+
+        /// <summary>
+        /// Relative change in the weighted sum of squares at which a pass stops. A template only
+        /// has to place its apex and width to a fraction of a scan; 1e-12 spent most of its
+        /// iterations on digits that change nothing.
+        /// </summary>
+        private const double CONVERGENCE = 1e-8;
 
         /// <summary>
         /// Fits one shape to points <paramref name="start"/> to <paramref name="end"/> (inclusive)
@@ -100,7 +111,8 @@ namespace pwiz.Quasar.Core.Elution
             for (int pass = 0; pass <= REWEIGHT_PASSES; pass++)
             {
                 var passWeights = weights;
-                theta = LevenbergMarquardt.FitResiduals(t => problem.Residuals(t, passWeights), theta, MAX_ITERATIONS);
+                theta = LevenbergMarquardt.FitResiduals(t => problem.Residuals(t, passWeights), theta, MAX_ITERATIONS,
+                    CONVERGENCE);
                 if (pass < REWEIGHT_PASSES)
                     weights = problem.Reweight(theta, passWeights, noise);
             }

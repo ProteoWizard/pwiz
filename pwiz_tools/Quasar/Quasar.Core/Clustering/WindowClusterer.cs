@@ -77,6 +77,9 @@ namespace pwiz.Quasar.Core.Clustering
             _typicalShape = new EmgShape(0.0, settings.Prior.Sigma, settings.Prior.Tau);
         }
 
+        /// <summary>Receives each stage's profile entry as soon as the stage finishes (diagnostics).</summary>
+        public Action<string> Progress { get; set; }
+
         /// <summary>
         /// Clusters the <paramref name="traces"/> of one window, all on the scan axis
         /// <paramref name="rt"/>. <paramref name="knownShapes"/> are the elution profiles of
@@ -95,24 +98,25 @@ namespace pwiz.Quasar.Core.Clustering
                 if (templates.Count > 0)
                 {
                     data = Residuals(rt, traces, new WindowLayout(this, rt, templates));
-                    profile.Append($@"residuals {Lap(watch)}; ");
+                    Report(profile, $@"residuals {Lap(watch)}; ");
                 }
 
                 var components = FindAnchorComponents(rt, traces, data);
-                profile.Append($@"pass {pass}: {components.Count} components {Lap(watch)}, ");
+                Report(profile, $@"pass {pass}: {components.Count} components {Lap(watch)}, ");
                 var source = pass == 0 ? TemplateSource.anchors : TemplateSource.residual_pass;
                 var added = GroupAnchors(rt, traces, data, components, templates.Count, source);
-                profile.Append($@"{added.Count} templates {Lap(watch)}; ");
+                Report(profile, $@"{added.Count} templates {Lap(watch)}; ");
 
                 // Signal whose apex is within the tolerance of an existing template is co-eluting
                 // with it and shares it (spec 2d). A residual there is model mismatch, not a new
                 // elution profile, and a near-copy of a template would split its members.
                 if (pass > 0)
                 {
-                    var existing = templates.Select(t => t.Shape.Mode).ToArray();
-                    added = added.Where(t => existing.All(m => Math.Abs(t.Shape.Mode - m) > _settings.ApexTolerance))
+                    var existing = templates.Select(t => t.Shape.Mode).OrderBy(m => m).ToArray();
+                    added = added.Where(t => !AnyWithin(existing, t.Shape.Mode, _settings.ApexTolerance))
                         .Select((t, i) => new ElutionTemplate(templates.Count + i, t.Shape, t.AnchorTraceIds, t.Source))
                         .ToList();
+                    Report(profile, $@"{added.Count} kept; ");
                 }
 
                 if (added.Count == 0)
@@ -121,8 +125,21 @@ namespace pwiz.Quasar.Core.Clustering
             }
 
             var clusters = BuildClusters(rt, traces, new WindowLayout(this, rt, templates));
-            profile.Append($@"final fit {Lap(watch)}");
+            Report(profile, $@"final fit {Lap(watch)}");
             return new WindowClusterResult(templates, clusters, profile.ToString());
+        }
+
+        /// <summary>Whether sorted <paramref name="values"/> has one within <paramref name="tolerance"/> of <paramref name="x"/>.</summary>
+        private static bool AnyWithin(double[] values, double x, double tolerance)
+        {
+            int i = LowerBound(values, x - tolerance);
+            return i < values.Length && values[i] <= x + tolerance;
+        }
+
+        private void Report(StringBuilder profile, string entry)
+        {
+            profile.Append(entry);
+            Progress?.Invoke(entry);
         }
 
         /// <summary>Seconds since the last lap, as text, restarting the watch.</summary>
@@ -192,16 +209,18 @@ namespace pwiz.Quasar.Core.Clustering
                 var shape = _typicalShape.WithModeAt(components[seed].ApexTime);
                 for (int round = 0; round < _settings.MaxGroupingRounds; round++)
                 {
-                    bool changed = AddExplainedComponents(rt, data, components, byApex, used, members, shape);
+                    // Refit only when the membership changed: the same members give the same
+                    // shape. A lone anchor keeps the run's typical shape, which one trace of a few
+                    // points cannot improve on.
+                    bool added = AddExplainedComponents(rt, data, components, byApex, used, members, shape);
+                    if (!added && round > 0)
+                        break;
+                    if (members.Count < 2)
+                        break;
                     var refit = Refit(rt, data, components, members, shape);
                     if (refit != null)
-                    {
-                        changed |= Math.Abs(refit.Mode - shape.Mode) > 0.05 * _settings.CycleTime;
                         shape = refit;
-                    }
-
-                    changed |= ReleaseUnexplained(rt, data, components, used, members, shape);
-                    if (!changed)
+                    if (!ReleaseUnexplained(rt, data, components, used, members, shape) && !added)
                         break;
                 }
 
@@ -280,21 +299,29 @@ namespace pwiz.Quasar.Core.Clustering
         /// </summary>
         private FitData Residuals(double[] rt, IReadOnlyList<Trace> traces, WindowLayout layout)
         {
+            // Only anchors are searched for new peaks and grouped, so only their residuals are
+            // needed; the centroid traces (most of a window) keep their values and are fitted once,
+            // in the final fit.
             var residuals = new double[traces.Count][];
             var explained = new double[traces.Count][];
             for (int t = 0; t < traces.Count; t++)
             {
                 var values = traces[t].Intensities;
-                var model = new double[values.Length];
-                var fits = layout.LocalFits(values);
-                for (int k = 0; k < fits.Length; k++)
+                if (!traces[t].IsAnchor)
                 {
-                    if (fits[k] == null || fits[k].Amplitude <= 0.0)
+                    residuals[t] = values;
+                    continue;
+                }
+
+                var model = new double[values.Length];
+                foreach (var (k, fit) in layout.LocalFits(values))
+                {
+                    if (fit.Amplitude <= 0.0)
                         continue;
                     var (start, end) = layout.Segments[k];
                     var shape = layout.Templates[k].Shape;
                     for (int i = start; i <= end; i++)
-                        model[i] += fits[k].Amplitude * shape.Density(rt[i]);
+                        model[i] += fit.Amplitude * shape.Density(rt[i]);
                 }
 
                 residuals[t] = values.Select((v, i) => v - model[i]).ToArray();
@@ -311,15 +338,10 @@ namespace pwiz.Quasar.Core.Clustering
             var members = templates.Select(_ => new List<ClusterMember>()).ToArray();
             foreach (var trace in traces)
             {
-                var fits = layout.LocalFits(trace.Intensities);
-                double memberTotal = fits.Where(f => f != null && f.IsMember).Sum(f => f.Amplitude);
-                for (int k = 0; k < fits.Length; k++)
-                {
-                    if (fits[k] == null || !fits[k].IsMember)
-                        continue;
-                    members[k].Add(new ClusterMember(trace, fits[k].Amplitude, fits[k].DeltaChiSquare,
-                        fits[k].Amplitude / memberTotal));
-                }
+                var fits = layout.LocalFits(trace.Intensities).Where(f => f.Fit.IsMember).ToList();
+                double memberTotal = fits.Sum(f => f.Fit.Amplitude);
+                foreach (var (k, fit) in fits)
+                    members[k].Add(new ClusterMember(trace, fit.Amplitude, fit.DeltaChiSquare, fit.Amplitude / memberTotal));
             }
 
             var clusters = new List<Cluster>();
@@ -441,6 +463,7 @@ namespace pwiz.Quasar.Core.Clustering
             private readonly int[] _byStart;
             private readonly int[] _starts;
             private readonly int _maxLength;
+            private readonly (int Start, int End)[] _supports;
 
             public WindowLayout(WindowClusterer clusterer, double[] rt, IReadOnlyList<ElutionTemplate> templates)
             {
@@ -448,6 +471,11 @@ namespace pwiz.Quasar.Core.Clustering
                 _rt = rt;
                 Templates = templates;
                 Segments = templates.Select(t => clusterer.Segment(t.Shape, rt)).ToArray();
+                _supports = templates.Select(t =>
+                {
+                    var (left, right) = t.Shape.HeightCrossings(TemplateFit.SUPPORT_FRACTION);
+                    return (WindowClusterer.LowerBound(rt, left), WindowClusterer.LowerBound(rt, right) - 1);
+                }).ToArray();
                 _byStart = Enumerable.Range(0, templates.Count).OrderBy(k => Segments[k].Start).ToArray();
                 _starts = _byStart.Select(k => Segments[k].Start).ToArray();
                 _maxLength = Segments.Length == 0 ? 0 : Segments.Max(s => s.End - s.Start);
@@ -466,28 +494,37 @@ namespace pwiz.Quasar.Core.Clustering
             public (int Start, int End)[] Segments { get; }
 
             /// <summary>
-            /// For each template, the fit of the trace over that template's segment against every
-            /// template overlapping it; null where the trace has no signal in the segment. Only the
-            /// templates overlapping the trace's non-zero runs are fitted, so a short centroid trace
-            /// costs a few fits however many templates the window has.
+            /// The local fits of the trace: for each template where it has signal, the fit over that
+            /// template's segment against the other templates it has signal in there. Only the
+            /// templates overlapping the trace's non-zero runs are considered, so a short centroid
+            /// trace costs a few fits however many templates the window has.
             /// </summary>
-            public LocalFit[] LocalFits(double[] values)
+            public List<(int Template, LocalFit Fit)> LocalFits(double[] values)
             {
                 var settings = _clusterer._settings;
-                var fits = new LocalFit[Templates.Count];
-                foreach (int k in TemplatesWithSignal(values))
+                var fits = new List<(int Template, LocalFit Fit)>();
+                var candidates = TemplatesWithSignal(values).ToList();
+                var candidateSet = new HashSet<int>(candidates);
+                foreach (int k in candidates)
                 {
+                    // Only the overlapping templates this trace has signal in: a template where it
+                    // has no points explains nothing, and including the dozens that overlap a dense
+                    // stretch of the run made each small fit a large, underdetermined one.
                     var (start, end) = Segments[k];
-                    var shapes = _overlapping[k].Select(j => Templates[j].Shape).ToArray();
+                    var shapes = _overlapping[k].Where(j => j == k || candidateSet.Contains(j))
+                        .Select(j => Templates[j].Shape).ToArray();
                     var fit = TemplateFit.Fit(_rt, values, start, end, shapes, settings.Noise, null, 1);
-                    fits[k] = new LocalFit(fit.Amplitudes[0], fit.DeltaChiSquare[0],
-                        fit.IsMember(0, settings.MembershipThreshold));
+                    fits.Add((k, new LocalFit(fit.Amplitudes[0], fit.DeltaChiSquare[0],
+                        fit.IsMember(0, settings.MembershipThreshold))));
                 }
 
                 return fits;
             }
 
-            /// <summary>The templates whose segment holds at least one positive point of the trace.</summary>
+            /// <summary>
+            /// The templates where the trace has at least <see cref="WindowClusterSettings.MinMemberPoints"/>
+            /// positive points inside the template's significant range; the only ones it can join.
+            /// </summary>
             private IEnumerable<int> TemplatesWithSignal(double[] values)
             {
                 var found = new HashSet<int>();
@@ -506,7 +543,21 @@ namespace pwiz.Quasar.Core.Clustering
                     found.UnionWith(Overlapping(runStart, i - 1));
                 }
 
-                return found.OrderBy(k => k);
+                int minPoints = _clusterer._settings.MinMemberPoints;
+                return found.Where(k => PositiveCount(values, _supports[k].Start, _supports[k].End) >= minPoints)
+                    .OrderBy(k => k);
+            }
+
+            private static int PositiveCount(double[] values, int start, int end)
+            {
+                int count = 0;
+                for (int i = Math.Max(0, start); i <= end && i < values.Length; i++)
+                {
+                    if (values[i] > 0.0)
+                        count++;
+                }
+
+                return count;
             }
 
             /// <summary>The templates whose segment intersects scans <paramref name="start"/> to <paramref name="end"/>.</summary>

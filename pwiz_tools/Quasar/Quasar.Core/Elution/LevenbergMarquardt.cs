@@ -104,11 +104,13 @@ namespace pwiz.Quasar.Core.Elution
         /// <summary>
         /// Minimizes the sum of squares of <paramref name="residuals"/>(parameters), starting from
         /// <paramref name="initial"/>. The residuals are data minus model, already weighted, and the
-        /// function must return the same number of them for every parameter vector.
+        /// function must return the same number of them for every parameter vector. The fit stops
+        /// when a step lowers the sum of squares by less than <paramref name="relativeTolerance"/>
+        /// times (1 + the sum).
         /// </summary>
         /// <returns>The fitted parameters, or the last iterate if it did not converge.</returns>
         public static double[] FitResiduals(Func<double[], double[]> residuals, double[] initial,
-            int maxIterations = 100)
+            int maxIterations = 100, double relativeTolerance = 1e-12)
         {
             int p = initial.Length;
             var beta = (double[])initial.Clone();
@@ -147,7 +149,7 @@ namespace pwiz.Quasar.Core.Elution
                 double candidateCost = SumOfSquares(candidateResiduals);
                 if (candidateCost < cost)
                 {
-                    bool converged = Math.Abs(cost - candidateCost) < 1e-12 * (1.0 + cost);
+                    bool converged = Math.Abs(cost - candidateCost) < relativeTolerance * (1.0 + cost);
                     beta = candidate;
                     r0 = candidateResiduals;
                     cost = candidateCost;

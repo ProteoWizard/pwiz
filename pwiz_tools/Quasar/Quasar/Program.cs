@@ -44,6 +44,8 @@ namespace pwiz.Quasar
         internal const string ARG_OUTPUT_SHORT = @"-o";
         internal const string ARG_WINDOWS = @"--windows";
         internal const string ARG_THREADS = @"--threads";
+        internal const string ARG_SAVE_TRACES = @"--save-traces";
+        internal const string ARG_TRACES_ONLY = @"--traces-only";
 
         /// <summary>The output extension when no output is named.</summary>
         internal const string EXT_OUTPUT = @".quasar.mzML";
@@ -84,6 +86,13 @@ namespace pwiz.Quasar
                 }
                 else if (arg == ARG_THREADS && int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int threads))
                     settings.Threads = threads;
+                else if (arg == ARG_SAVE_TRACES && value != null)
+                    settings.SaveTracesDirectory = value;
+                else if (arg == ARG_TRACES_ONLY)
+                {
+                    settings.TracesOnly = true;
+                    continue;
+                }
                 else
                 {
                     error.WriteLine(QuasarResources.Program_Unknown_argument__0_, arg);

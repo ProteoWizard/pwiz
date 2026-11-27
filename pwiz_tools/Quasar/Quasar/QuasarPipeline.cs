@@ -54,6 +54,12 @@ namespace pwiz.Quasar
 
         /// <summary>The command line, recorded in the output.</summary>
         public string CommandLine { get; set; }
+
+        /// <summary>When set, each window's Stage 1 traces are written here (<see cref="TraceFile"/>).</summary>
+        public string SaveTracesDirectory { get; set; }
+
+        /// <summary>Stop after Stage 1: build (and save) the traces, cluster nothing.</summary>
+        public bool TracesOnly { get; set; }
     }
 
     /// <summary>
@@ -125,6 +131,20 @@ namespace pwiz.Quasar
                     var traces = TraceBuilder.Build(scans, traceSettings);
                     double traceSeconds = watch.Elapsed.TotalSeconds - hardklorSeconds;
                     var rt = scans.Select(s => s.RetentionTime).ToArray();
+                    if (_settings.SaveTracesDirectory != null)
+                    {
+                        string name = string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                            @"{0}.w{1:D3}.traces.bin", stem, window.Index);
+                        TraceFile.Write(Path.Combine(_settings.SaveTracesDirectory, name), window.Target,
+                            window.LowerOffset, window.UpperOffset, rt, traces);
+                    }
+
+                    if (_settings.TracesOnly)
+                    {
+                        Log(QuasarResources.Pipeline_Window__0__time__Hardklor__1_F1__s__traces__2_F1__s__clustering___3_,
+                            window.Index, hardklorSeconds, traceSeconds, string.Empty);
+                        return;
+                    }
                     var result = new WindowClusterer(clusterSettings).Run(rt, traces, Array.Empty<EmgShape>());
                     Log(QuasarResources.Pipeline_Window__0__time__Hardklor__1_F1__s__traces__2_F1__s__clustering___3_,
                         window.Index, hardklorSeconds, traceSeconds, result.Profile);
