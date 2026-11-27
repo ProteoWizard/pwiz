@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData.Spectra;
 
@@ -12,7 +13,8 @@ namespace Pwiz.Analysis;
 /// arrays such as ion mobility in combined IMS spectra) is trimmed with it, so each kept peak
 /// keeps its own values. Peaks keep their input order: a spectrum with an ion mobility axis is
 /// ordered by mobility on purpose (see <see cref="SpectrumListBase.HasNonMzOrderingAxis"/>), so
-/// the window does not re-sort it. Arrays of any other length are left as they are.
+/// the window does not re-sort it. Arrays of any other length are left as they are, and a
+/// spectrum whose intensity array is out of step with m/z is returned unchanged.
 /// The <c>defaultArrayLength</c> on each spectrum is recomputed from the trimmed array length;
 /// other metadata (TIC / base peak) is left untouched - combine with the <c>metadataFixer</c>
 /// filter downstream when those need refreshing.
@@ -42,24 +44,37 @@ public sealed class SpectrumListMzWindow : SpectrumListWrapper
         var mzArr = spec.GetMZArray();
         if (mzArr is null) return spec;
 
+        // Peaks cannot be paired with intensities that are out of step with m/z, so such a
+        // spectrum is left untouched rather than trimmed into a worse mismatch
         int n = mzArr.Data.Count;
+        var intArr = spec.GetIntensityArray();
+        if (intArr is not null && intArr.Data.Count != n) return spec;
+
+        var mzs = mzArr.Data.AsSpan();
         var kept = new List<int>(n);
         for (int i = 0; i < n; i++)
         {
-            double m = mzArr.Data[i];
+            double m = mzs[i];
             if (m >= Low && m <= High)
                 kept.Add(i);
         }
+        if (kept.Count == n) return spec; // Nothing outside the window
 
         foreach (var arr in spec.BinaryDataArrays)
         {
             if (arr.Data.Count == n)
-                KeepValuesAt(arr.Data, kept);
+            {
+                KeepValuesAt(arr.Data.AsSpan(), kept);
+                arr.Data.SetCount(kept.Count);
+            }
         }
         foreach (var arr in spec.IntegerDataArrays)
         {
             if (arr.Data.Count == n)
-                KeepValuesAt(arr.Data, kept);
+            {
+                KeepValuesAt(CollectionsMarshal.AsSpan(arr.Data), kept);
+                arr.Data.RemoveRange(kept.Count, n - kept.Count);
+            }
         }
 
         spec.DefaultArrayLength = kept.Count;
@@ -73,13 +88,11 @@ public sealed class SpectrumListMzWindow : SpectrumListWrapper
             ? GetSpectrumWithoutPeakCount(index, detailLevel)
             : GetSpectrum(index, detailLevel >= DetailLevel.FullData);
 
-    /// <summary>Compacts <paramref name="values"/> in place to the entries at the ascending
-    /// <paramref name="indices"/>.</summary>
-    private static void KeepValuesAt<T>(IList<T> values, List<int> indices)
+    /// <summary>Moves the entries at the ascending <paramref name="indices"/> to the front of
+    /// <paramref name="values"/>, in place; the caller then truncates to the kept count.</summary>
+    private static void KeepValuesAt<T>(Span<T> values, List<int> indices)
     {
         for (int i = 0; i < indices.Count; i++)
             values[i] = values[indices[i]];
-        while (values.Count > indices.Count)
-            values.RemoveAt(values.Count - 1);
     }
 }

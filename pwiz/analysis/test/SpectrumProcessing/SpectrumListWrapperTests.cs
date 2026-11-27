@@ -67,8 +67,22 @@ public class SpectrumListWrapperTests
         Assert.IsNotNull(trimmedMobility);
         CollectionAssert.AreEqual(new[] { 10.0, 20.0, 15.0 }, trimmedMobility.Data.ToArray());
         CollectionAssert.AreEqual(new long[] { 2, 4, 3 }, spec.IntegerDataArrays[0].Data.ToArray());
-        CollectionAssert.AreEqual(new[] { 7.0, 8.0 }, unrelatedArray.Data.ToArray());
+        var returnedUnrelated = spec.BinaryDataArrays.Single(arr => arr.Data.Count == 2);
+        CollectionAssert.AreEqual(new[] { 7.0, 8.0 }, returnedUnrelated.Data.ToArray());
         Assert.AreEqual(3, spec.DefaultArrayLength);
+
+        // Intensities out of step with m/z cannot be paired with peaks, so the spectrum comes
+        // back untouched rather than trimmed into a worse mismatch.
+        inner = new SpectrumListSimple();
+        var mismatched = MakeSpectrum(0, 1, 10,
+            mz: new[] { 50.0, 100.0, 150.0, 200.0, 250.0 },
+            intensity: new[] { 1.0, 2.0, 3.0, 4.0, 5.0 });
+        mismatched.GetIntensityArray()!.Data.RemoveAt(4);
+        inner.Spectra.Add(mismatched);
+        wrapped = new SpectrumListMzWindow(inner, 100, 200);
+        spec = wrapped.GetSpectrum(0, getBinaryData: true);
+        CollectionAssert.AreEqual(new[] { 50.0, 100.0, 150.0, 200.0, 250.0 }, spec.GetMZArray()!.Data.ToArray());
+        CollectionAssert.AreEqual(new[] { 1.0, 2.0, 3.0, 4.0 }, spec.GetIntensityArray()!.Data.ToArray());
     }
 
     [TestMethod]
