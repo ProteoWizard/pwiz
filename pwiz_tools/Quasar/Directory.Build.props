@@ -1,0 +1,27 @@
+<Project>
+
+  <PropertyGroup>
+    <!-- Quasar builds like Osprey (see ..\Osprey\Directory.Build.props): plain net10.0 so it
+         runs on Linux/WSL, x64 solution configurations, latest C#, no nullable annotations
+         and no implicit usings, Skyline style. -->
+    <TargetFramework>net10.0</TargetFramework>
+    <Platforms>AnyCPU;x64</Platforms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Company>University of Washington</Company>
+    <Copyright>Copyright (c) University of Washington 2026</Copyright>
+    <!-- Skyline version scheme YEAR.ORDINAL.BRANCH.DOY, DOY 0 as the "not stamped by a
+         dated build" sentinel, as Osprey does before its build scripts stamp it. -->
+    <Version>26.1.1.0</Version>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+    <!-- The solution must build with zero warnings, so the build enforces it rather than a
+         reviewer. NuGet security advisories stay warnings: a new advisory on a package should
+         not break every build before anyone has had a chance to update it. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+  </PropertyGroup>
+
+</Project>

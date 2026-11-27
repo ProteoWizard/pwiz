@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Isotope-envelope feature finding (Hardklor, Kronik and the .hk cache), ported from
+         skyline-glimpse's Glimpse.Features. No pwiz-sharp dependency, so Glimpse can reference
+         this project by path: isotope distributions come through IEnvelopeModel, which
+         Quasar.IO implements on pwiz chemistry. -->
+    <RootNamespace>pwiz.Quasar.Features</RootNamespace>
+    <AssemblyName>Quasar.Features</AssemblyName>
+    <!-- Parquet.Net, as pwiz's patched build: see Shared\Lib\Parquet\ParquetNet.targets -->
+    <ReferenceParquetNet>true</ReferenceParquetNet>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Quasar.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- User-facing text. The Designer is checked in; VS regenerates it when the .resx is saved. -->
+    <Compile Update="QuasarFeaturesResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>QuasarFeaturesResources.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="QuasarFeaturesResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>QuasarFeaturesResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

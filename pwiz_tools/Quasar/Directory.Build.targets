@@ -1,0 +1,24 @@
+<Project>
+
+  <!-- The patched Parquet.Net reference. This is the nearest Directory.Build.targets for the
+       Quasar tree, so MSBuild imports it instead of pwiz_tools\Directory.Build.targets, and the
+       import has to be repeated here (as Osprey does). -->
+  <Import Project="$(MSBuildThisFileDirectory)..\Shared\Lib\Parquet\ParquetNet.targets" />
+
+  <!-- Projects referenced from outside Quasar.sln (and their own references) would otherwise
+       build as Debug|AnyCPU in a solution build. Give them this build's Configuration, as
+       ..\Osprey\Directory.Build.targets does for Osprey.sln, so Quasar and Osprey share one
+       build of each project per configuration. -->
+  <Target Name="CarryConfigurationToOutOfSolutionReferences"
+          AfterTargets="AssignProjectConfiguration"
+          Condition="'$(CurrentSolutionConfigurationContents)' != ''">
+    <ItemGroup>
+      <ProjectReferenceWithConfiguration Condition="'%(ProjectReferenceWithConfiguration.SetConfiguration)' == ''">
+        <SetConfiguration>Configuration=$(Configuration)</SetConfiguration>
+        <SetPlatform>Platform=AnyCPU;ShouldUnsetParentConfigurationAndPlatform=false</SetPlatform>
+        <GlobalPropertiesToRemove />
+      </ProjectReferenceWithConfiguration>
+    </ItemGroup>
+  </Target>
+
+</Project>

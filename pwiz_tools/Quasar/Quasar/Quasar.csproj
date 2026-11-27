@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>pwiz.Quasar</RootNamespace>
+    <AssemblyName>Quasar</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Quasar.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Quasar.Core\Quasar.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- User-facing text. The Designer is checked in; VS regenerates it when the .resx is saved. -->
+    <Compile Update="QuasarResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>QuasarResources.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="QuasarResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>QuasarResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

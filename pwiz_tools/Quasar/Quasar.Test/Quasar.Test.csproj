@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.Quasar.Test</RootNamespace>
+    <AssemblyName>Quasar.Test</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <GenerateProgramFile>true</GenerateProgramFile>
+    <!-- The .hk file tests read Parquet directly: see Shared\Lib\Parquet\ParquetNet.targets -->
+    <ReferenceParquetNet>true</ReferenceParquetNet>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.6.4" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.6.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Quasar.Core\Quasar.Core.csproj" />
+    <ProjectReference Include="..\Quasar\Quasar.csproj" />
+    <ProjectReference Include="..\Quasar.Features\Quasar.Features.csproj" />
+    <ProjectReference Include="..\Quasar.IO\Quasar.IO.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Reference data for the feature-finding tests ported from skyline-glimpse (TestData\Hardklor\README.md). -->
+    <None Update="TestData\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

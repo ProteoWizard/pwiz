@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- The seam to pwiz-sharp: the only Quasar project that references pwiz types, so the
+         logic projects stay pure. -->
+    <RootNamespace>pwiz.Quasar.IO</RootNamespace>
+    <AssemblyName>Quasar.IO</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Quasar.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Quasar.Features\Quasar.Features.csproj" />
+    <!-- pwiz-sharp's chemistry (isotope tables, elements): Pwiz.Util.Chemistry. -->
+    <ProjectReference Include="..\..\..\pwiz\utility\Util.csproj" />
+  </ItemGroup>
+
+</Project>

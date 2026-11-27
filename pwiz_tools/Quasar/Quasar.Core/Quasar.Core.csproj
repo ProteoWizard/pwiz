@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Traces, EMG elution modeling and co-elution clustering. No pwiz-sharp dependency, so the
+         core types can also be used from simulations. -->
+    <RootNamespace>pwiz.Quasar.Core</RootNamespace>
+    <AssemblyName>Quasar.Core</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Quasar.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The median CWT consensus (CwtPeakDetector) sets each cluster's boundaries. -->
+    <ProjectReference Include="..\..\Osprey\Osprey.Chromatography\Osprey.Chromatography.csproj" />
+  </ItemGroup>
+
+</Project>
