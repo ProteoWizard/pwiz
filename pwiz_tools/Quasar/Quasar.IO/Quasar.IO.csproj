@@ -5,6 +5,8 @@
          logic projects stay pure. -->
     <RootNamespace>pwiz.Quasar.IO</RootNamespace>
     <AssemblyName>Quasar.IO</AssemblyName>
+    <!-- The clusters sidecar (ClustersSidecarWriter); pwiz's patched Parquet.Net, as Osprey.IO. -->
+    <ReferenceParquetNet>true</ReferenceParquetNet>
   </PropertyGroup>
 
   <ItemGroup>

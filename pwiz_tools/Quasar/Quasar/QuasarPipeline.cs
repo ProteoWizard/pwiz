@@ -137,6 +137,13 @@ namespace pwiz.Quasar
             int clustersWithCandidate = 0, tier1Count = 0, tier2Count = 0;
 
             var spectra = new ConcurrentBag<(int Window, int Template, PseudoSpectrum Spectrum)>();
+            string sidecarPath = SidecarPath(_settings.OutputPath);
+            var sidecar = _settings.TracesOnly ? null : new ClustersSidecarWriter(sidecarPath, new Dictionary<string, string>
+            {
+                [@"tool"] = @"Quasar",
+                [@"version"] = Program.Version,
+                [@"command_line"] = _settings.CommandLine ?? string.Empty
+            });
             Parallel.ForEach(windows, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, _settings.Threads) },
                 window =>
                 {
@@ -170,9 +177,15 @@ namespace pwiz.Quasar
                         window.Index, hardklorSeconds, traceSeconds, result.Profile);
                     var ms1Traces = Ms1Traces(ms1, low, high, traceSettings);
                     int kept = 0;
+                    var rows = new List<ClusterMemberRow>();
                     foreach (var cluster in result.Clusters.Where(c => c.IsAccepted))
                     {
-                        spectra.Add((window.Index, cluster.Template.Id, ToPseudoSpectrum(stem, window, rt, cluster, null, null)));
+                        var bounds = Boundaries(rt, cluster);
+                        var spectrum = ToPseudoSpectrum(stem, window, bounds, cluster, null, null);
+                        spectra.Add((window.Index, cluster.Template.Id, spectrum));
+                        rows.AddRange(cluster.Members.Select(m => new ClusterMemberRow(window.Index, cluster.Template.Id,
+                            spectrum.NativeId, m.Trace.Id, m.Trace.Mz, m.Trace.Charge, m.Trace.IsAnchor, m.Amplitude,
+                            m.SharedFraction, m.DeltaChiSquare, cluster.Template.Shape.Mode, bounds.Start, bounds.End)));
                         kept++;
 
                         // Sage reads only a spectrum's first precursor, so each candidate gets its own
@@ -182,15 +195,17 @@ namespace pwiz.Quasar
                         int order = 0;
                         foreach (var candidate in tier1)
                             precursorSpectra.Add((window.Index, cluster.Template.Id, order++,
-                                ToPseudoSpectrum(stem, window, rt, cluster, candidate, null)));
+                                ToPseudoSpectrum(stem, window, bounds, cluster, candidate, null)));
                         foreach (var (member, candidate) in tier2)
                             precursorSpectra.Add((window.Index, cluster.Template.Id, order++,
-                                ToPseudoSpectrum(stem, window, rt, cluster, candidate, member)));
+                                ToPseudoSpectrum(stem, window, bounds, cluster, candidate, member)));
                         if (order > 0)
                             Interlocked.Increment(ref clustersWithCandidate);
                         Interlocked.Add(ref tier1Count, tier1.Count);
                         Interlocked.Add(ref tier2Count, tier2.Count);
                     }
+
+                    sidecar?.Write(rows);
 
                     Log(QuasarResources.Pipeline_Window__0____1_F2__m_z___2__scans____3__anchor_and__4__centroid_traces___5__templates___6__clusters_kept___7_F1__s_,
                         window.Index, window.Target, scans.Count, traces.Count(t => t.IsAnchor),
@@ -200,6 +215,7 @@ namespace pwiz.Quasar
             if (_scansWithoutInjectionTime > 0)
                 Log(QuasarResources.Pipeline_Scans_without_injection_time__0_, _scansWithoutInjectionTime);
 
+            sidecar?.Dispose();
             var ordered = spectra.OrderBy(s => s.Window).ThenBy(s => s.Template).Select(s => s.Spectrum).ToList();
             PseudoSpectrumMzmlWriter.Write(_settings.OutputPath, ordered, _settings.InputPath, Program.Version,
                 _settings.CommandLine ?? string.Empty);
@@ -330,6 +346,12 @@ namespace pwiz.Quasar
             return new WindowScan(header.RetentionTime, ionsPerIntensity, spectrum.Mz, spectrum.Intensity, envelopes);
         }
 
+        /// <summary>The clusters sidecar beside <paramref name="outputPath"/>: X.quasar.mzML gives X.quasar.clusters.parquet.</summary>
+        public static string SidecarPath(string outputPath)
+        {
+            return Path.ChangeExtension(outputPath, @".clusters.parquet");
+        }
+
         /// <summary>The precursor-candidate mzML beside <paramref name="outputPath"/>: X.quasar.mzML gives X.quasar.precursors.mzML.</summary>
         public static string PrecursorPath(string outputPath)
         {
@@ -340,11 +362,11 @@ namespace pwiz.Quasar
         /// One accepted cluster as a pseudo-spectrum (spec Stages 3e and 4): its members' areas at
         /// their m/z, with boundaries from the median CWT of the members near the template's apex.
         /// </summary>
-        private static PseudoSpectrum ToPseudoSpectrum(string stem, WindowScans window, double[] rt, Cluster cluster,
-            PrecursorCandidate candidate, ClusterMember precursorMember)
+        private static PseudoSpectrum ToPseudoSpectrum(string stem, WindowScans window, (double Start, double End) bounds,
+            Cluster cluster, PrecursorCandidate candidate, ClusterMember precursorMember)
         {
             var shape = cluster.Template.Shape;
-            var (start, end) = Boundaries(rt, cluster);
+            var (start, end) = bounds;
 
             // A tier 2 precursor is a member, not a fragment.
             var members = cluster.Members.Where(m => !ReferenceEquals(m, precursorMember)).ToList();
