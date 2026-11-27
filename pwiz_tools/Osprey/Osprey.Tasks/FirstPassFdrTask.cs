@@ -376,44 +376,14 @@ namespace pwiz.Osprey.Tasks
             // product, and this one describes a single panel over an accumulator that was never
             // fed; stamping it would let a ten-minute measurement stand in for the hour-long
             // answer, silently and permanently.
-            ModelDiagnosticsReport.WriteFromAccumulator(accumulator, ModelViewFromArtifacts(ctx, fileNames),
+            // No model view: each run trained its own model in PerFileScoring, and there is no
+            // analysis-wide model to describe, so the Model tab keeps its explanatory note.
+            ModelDiagnosticsReport.WriteFromAccumulator(accumulator, null,
                 BuildCalibrationData(ctx, fileNames), config, ctx, coAssignment,
                 coAssignOnly ? null : ValidityKey(ctx));
             if (coAssignOnly)
                 MoveHarnessProductAside(ctx, config);
             return true;
-        }
-
-        /// <summary>
-        /// The pass-1 report's model views for a process that did not run the score pass, from
-        /// the analysis's first-pass model and every run's <see cref="FeatureSums"/> share in its
-        /// first-pass sidecar - the same reduction the score pass makes, so the same views (P16).
-        /// Null, which leaves the Model tab its explanatory note, when the model on disk is not
-        /// this analysis's or a run has no share.
-        /// </summary>
-        private ModelDiagnosticsData.ModelView ModelViewFromArtifacts(PipelineContext ctx,
-            IReadOnlyList<string> fileNames)
-        {
-            var config = ctx.Config;
-            var saved = FirstPassModelIO.LoadForAnalysis(config);
-            string stamp = OspreyVersion.Stamp(Name, ValidityKey(ctx)).ToString();
-            if (saved?.Model == null || !string.Equals(saved.Stamp?.ToString(), stamp, StringComparison.Ordinal))
-                return null;
-            var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
-            var shares = fileNames.Select(fileName =>
-            {
-                string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
-                return string.IsNullOrEmpty(sidecarBase)
-                    ? null
-                    : FdrScoresSidecar.ReadFeatureSums(FdrScoresSidecar.Pass1Path(sidecarBase));
-            });
-            // A model trained with the protein-best column reports it as its last feature.
-            var featureInfos = ScoringTaskShared.FdrFeatureInfos(config);
-            if (ProteinBestFeature.IsAppendedTo(saved.Model.FeatureNames))
-                featureInfos = ProteinBestFeature.WithColumnInfo(featureInfos);
-            var contributions = PercolatorEngine.FirstPassContributionsFromShares(saved.Model, shares,
-                featureInfos);
-            return ModelDiagnosticsData.ModelView.From(contributions);
         }
 
         /// <summary>
@@ -618,8 +588,7 @@ namespace pwiz.Osprey.Tasks
             // (which OOM'd 80-file joins; the Phase-1 bulk reload that used to sit
             // here did exactly that). The FDR engine drives the reload through this
             // delegate, so Osprey.FDR takes no Osprey.IO dependency. The f64 parquet
-            // roundtrip is regression-exact (the same reload the second pass uses
-            // via Pass2FdrSidecar.MapFeaturesByScoreIndex). A file with no mapped
+            // roundtrip is regression-exact. A file with no mapped
             // parquet path yields an empty row set, so its entries fall back to
             // basic features -- matching the pre-streaming builder's fallback.
             Func<string, IReadOnlyList<double[]>> loadFileFeatures = fileName =>
@@ -1921,50 +1890,6 @@ namespace pwiz.Osprey.Tasks
             // gate is the runs' own models and stubs (checked with each run's scores, by
             // PerFileScoringTask.OwnScoresCurrent) and the experiment sidecar above.
             return refusals;
-        }
-
-        /// <summary>
-        /// Persist the trained 1st-pass model to the analysis's one model file, the moment
-        /// training produces it.
-        ///
-        /// <para>Best-effort: a write failure must not fail the run, because nothing downstream
-        /// requires the file to exist - SecondPassFDR keeps its pre-existing fail-fast and a
-        /// resume simply retrains. <see cref="FirstPassModelIO.Serialize"/> renders either
-        /// classifier and declines only a model <see cref="FirstPassModelIO.Load"/> could not read
-        /// back - a degenerate one, which carries nothing to persist.</para>
-        /// </summary>
-        private void PersistFirstPassModel(PercolatorResults results, string validityKey, PipelineContext ctx)
-        {
-            string path = FirstPassModelIO.PathFor(ctx.Config);
-            if (results == null || path == null)
-                return;
-            // Best-effort: a model that cannot be rendered (a non-finite weight) is logged and
-            // not persisted. Save commits through SimpleFileSaver and the JSON carries its own
-            // validity stamp, so the artifact is absent or complete and identified; a model left
-            // by an earlier run is current only if this build wrote it with this key, so a
-            // declined model here cannot be mistaken for it.
-            string modelJson;
-            try
-            {
-                modelJson = FirstPassModelIO.Serialize(results, OspreyVersion.Stamp(Name, validityKey));
-            }
-            catch (Exception ex)
-            {
-                ctx.LogWarning(@"Could not serialize the 1st-pass model: " + ex.Message);
-                return;
-            }
-            if (modelJson == null)
-                return;
-            try
-            {
-                FirstPassModelIO.WriteText(path, modelJson);
-                ctx.LogInfo(string.Format(OspreyTasksResources.FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0_, path));
-            }
-            catch (Exception ex)
-            {
-                ctx.LogWarning(string.Format(OspreyTasksResources.FirstPassFdrTask_PersistFirstPassModel_Could_not_save_the_first_pass_model_to__0____1_,
-                    path, ex.Message));
-            }
         }
 
         /// <summary>

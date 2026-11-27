@@ -1044,149 +1044,10 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="FdrEntry.ParquetIndex"/> (assigned against the ORIGINAL Stage
         /// 4 parquet, or carried on the in-memory buffer through rescore) no longer
         /// addresses that stub's own row in the reconciled parquet. Identity is
-        /// invariant across the reindex, so <see cref="MapFeaturesByScoreIndex"/>
-        /// keys on it. Reads the lean stub columns + the PIN feature columns (no
+        /// invariant across the reindex, so the map is keyed on it. Reads the lean stub columns + the PIN feature columns (no
         /// heavy fragment/XIC/CWT blobs), one file at a time, so the reload stays
         /// within the issue #4355 memory bound. (issue #4355)
         /// </summary>
-        /// <summary>
-        /// Assert that a per-run 2nd-pass sidecar about to be written describes the POOL its
-        /// file's Stage 6 parquet defines - one record per row - and throw naming both counts
-        /// if it does not.
-        ///
-        /// <para><b>The invariant this protects.</b> The per-run 2nd-pass sidecar is the only
-        /// thing a separate experiment-wide node receives about a run. Its population is not the
-        /// writer's to choose: the join node fixes it, writing the cross-run consensus from the
-        /// traversal of the whole population that each run's plan is made from, and
-        /// <c>ReconciledParquetWriter</c> stamps the parquet Stage 6 derives from it with the
-        /// join-wide reconciliation hash. Every node emitting the same rows is what makes an
-        /// HPC split equal a single-machine run. Nothing checked it.</para>
-        ///
-        /// <para><b>Why it is worth a per-file parquet footer read.</b> The omission it was
-        /// written for (594 gap-fill observations across 3 Stellar files) passed every other
-        /// gate the project has - golden blib, 2nd-pass protein q, resume, HPC-chain route
-        /// independence, warm re-run and library-fragment release - and surfaced only as two
-        /// moved numbers in a diagnostics panel. A silently short artifact is exactly the shape
-        /// that reads as correct downstream: the entries it omits keep <c>ResetScores</c>'
-        /// defaults, so they report as never having competed rather than as missing. The probe
-        /// decodes no column data, so the cost is a footer per file.</para>
-        ///
-        /// <para>Skipped when the effective parquet is not a reconciled SURVIVORS parquet: with
-        /// no reconciled sibling the caller falls back to the Stage 4 file, whose rows are the
-        /// whole pre-compaction population and are not this artifact's population.</para>
-        /// </summary>
-        internal static void AssertSidecarDescribesPool(
-            string fileName, string effectiveParquetPath, IReadOnlyList<FdrScoreRecord> records)
-        {
-            var pool = ParquetScoreCache.ProbePoolPopulation(effectiveParquetPath);
-            if (!pool.IsReconciledSurvivors)
-                return;
-            if (pool.RowCount != records.Count)
-            {
-                throw new InvalidOperationException(string.Format(
-                    @"Second-pass per-file competition wrote {0} record(s) for '{1}', but its Stage 6 " +
-                    @"pool holds {2} (from {3}). The per-run 2nd-pass sidecar must describe that pool " +
-                    @"one record per row - it is all a separate experiment-wide node receives about " +
-                    @"this run, and its population is fixed by the join, not chosen by the writer. " +
-                    @"See issue #4486.",
-                    records.Count, fileName, pool.RowCount, effectiveParquetPath));
-            }
-            AssertRecordsMatchPoolSequence(fileName, effectiveParquetPath, records,
-                ParquetScoreCache.StreamEntryIds(effectiveParquetPath));
-        }
-
-        /// <summary>
-        /// The per-run 2nd-pass sidecar's record SEQUENCE must equal the reconciled parquet's row
-        /// sequence, position for position - not merely its population or its length.
-        ///
-        /// <para><b>Why a count is not enough.</b> A count cannot see a PERMUTATION, and a
-        /// permutation is exactly what this file acquired: the rescore task APPENDS gap-fill
-        /// entries to its in-memory pool list, while
-        /// <see cref="ParquetScoreCache.StreamReconciledScoresParquet"/> merges each one into its
-        /// canonical <c>(entry_id, charge, scan_number)</c> position, so writing in list order
-        /// emitted the same rows with the gap-fills in a trailing block. Every count-based check
-        /// passed. The reconciled parquet is the authority here rather than the writer's
-        /// convenience: its population and order are fixed by the JOIN, stamped with a join-wide
-        /// reconciliation hash, and the parquet writer itself hard-fails a row out of canonical
-        /// order - so a sidecar that disagrees is the thing that is wrong.</para>
-        ///
-        /// <para><b>Why it matters beyond byte-identity with a baseline.</b> A consumer that
-        /// reduces the records to a per-precursor best takes the FIRST record at the maximum, so
-        /// which observation represents a precursor depends on the order. A baseline comparison
-        /// catches a reordering today and will not exist for the next dataset.</para>
-        ///
-        /// <para>Pure, and takes the pool sequence as an <see cref="IEnumerable{T}"/>, so the
-        /// comparison is unit-testable without writing a parquet and stays O(1) in memory over a
-        /// streamed column.</para>
-        /// </summary>
-        internal static void AssertRecordsMatchPoolSequence(
-            string fileName, string effectiveParquetPath,
-            IReadOnlyList<FdrScoreRecord> records, IEnumerable<uint> poolEntryIds)
-        {
-            int i = 0;
-            foreach (uint poolEntryId in poolEntryIds)
-            {
-                if (i >= records.Count)
-                {
-                    throw new InvalidOperationException(string.Format(
-                        @"Second-pass per-file competition for '{0}': its Stage 6 pool has more " +
-                        @"rows than the {1} record(s) written, starting at row {2} (from {3}). " +
-                        @"See issue #4486.",
-                        fileName, records.Count, i, effectiveParquetPath));
-                }
-                if (records[i].EntryId != poolEntryId)
-                {
-                    throw new InvalidOperationException(string.Format(
-                        @"Second-pass per-file competition for '{0}': record {1} is entry_id {2}, " +
-                        @"but its Stage 6 pool holds entry_id {3} at that row (from {4}). The " +
-                        @"per-run 2nd-pass sidecar must describe the pool in the pool's own order " +
-                        @"- the experiment fold takes the FIRST observation at a per-base_id " +
-                        @"maximum, so a reordering silently changes which observation represents " +
-                        @"a precursor. See issue #4486.",
-                        fileName, i, records[i].EntryId, poolEntryId, effectiveParquetPath));
-                }
-                i++;
-            }
-            if (i == records.Count)
-                return;
-            throw new InvalidOperationException(string.Format(
-                @"Second-pass per-file competition for '{0}': wrote {1} record(s) but its Stage 6 " +
-                @"pool yielded only {2} row(s) (from {3}). See issue #4486.",
-                fileName, records.Count, i, effectiveParquetPath));
-        }
-
-        /// <summary>
-        /// One run's protein-best column (<c>--protein-boost best</c>), read from beside its
-        /// first-pass FDR scores file, for a frozen model that scores with it; null for a model
-        /// that does not, which is every run with the column off.
-        ///
-        /// <para>Absence is a stop: a model with the column cannot score a vector without it, and
-        /// a run scored at the floor everywhere would be a plausible, wrong second pass. With
-        /// <paramref name="expectedStamp"/> (the frozen model's), a column written by another
-        /// first pass is refused as well.</para>
-        /// </summary>
-        internal static ProteinBestRunValues LoadProteinBestForRun(FrozenModelScorer scorer,
-            string pass1SidecarPath, string fileName, ArtifactStamp expectedStamp)
-        {
-            if (!scorer.ScoresProteinBest)
-                return null;
-            string path = ProteinBestSidecar.PathBesidePass1(pass1SidecarPath);
-            var column = ProteinBestSidecar.Read(path);
-            bool current = column != null;
-            if (current && expectedStamp != null)
-            {
-                var stamp = ProteinBestSidecar.ReadStamp(path);
-                current = stamp != null && string.Equals(stamp.ToString(), expectedStamp.ToString(), StringComparison.Ordinal);
-            }
-            if (!current)
-            {
-                throw new InvalidDataException(string.Format(
-                    OspreyTasksResources.Pass2FdrSidecar_LoadProteinBestForRun_The_protein_best_column_file__0__of__1__is_missing_or_was_not_written_by_this_analysis_s_first_pass__Run__2__again_,
-                    path, fileName, OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME)));
-            }
-            return new ProteinBestRunValues(column.EntryIds, column.Values, column.Floor);
-        }
-
         internal static Dictionary<uint, double[]> LoadReconciledFeaturesByScoreIndex(
             string reconciledPath, PinFeatureSelection features)
         {
@@ -1202,35 +1063,7 @@ namespace pwiz.Osprey.Tasks
             return map;
         }
 
-        /// <summary>
-        /// Overlay re-scored PIN features onto <paramref name="entries"/> by each
-        /// entry's stable identity (entry_id, charge, scan_number), skipping any
-        /// entry whose identity is absent from <paramref name="featByScoreIndex"/> (a
-        /// stub/parquet mismatch). Returns the number of entries whose
-        /// <see cref="FdrEntry.Features"/> were assigned; the caller compares it
-        /// against the entry count to detect and report a mismatch. Identity (not
-        /// <see cref="FdrEntry.ParquetIndex"/>) is used because the reconciled
-        /// parquet is re-indexed relative to the compacted stubs -- see
-        /// <see cref="LoadReconciledFeaturesByScoreIndex"/>. Pure: no I/O, no logging.
-        /// </summary>
-        internal static int MapFeaturesByScoreIndex(
-            IReadOnlyList<FdrEntry> entries,
-            IReadOnlyDictionary<uint, double[]> featByScoreIndex)
-        {
-            int nMapped = 0;
-            foreach (var entry in entries)
-            {
-                if (entry.ParquetIndex.HasValue &&
-                    featByScoreIndex.TryGetValue(entry.ParquetIndex.Value, out double[] features))
-                {
-                    entry.Features = features;
-                    nMapped++;
-                }
-            }
-            return nMapped;
-        }
-
-        /// <summary>Counts one <see cref="TransferOneFile"/> call adds to. A struct rather
+        /// <summary>Counts one <see cref="TransferOneFileByScore"/> call adds to. A struct rather
         /// than six ref parameters, so the per-file body could be lifted out of the whole-run
         /// loop without its signature becoming the reason not to.</summary>
         internal struct TransferTally
@@ -1240,51 +1073,22 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Transfer ONE run's per-run q-values: build that run's own score->q tables from its own
-        /// <c>.1st-pass.fdr_scores.bin</c>, then classify and re-map its survivors.
+        /// first-pass records, then classify and re-map its survivors, each by its second-pass
+        /// score from <paramref name="scoreOf"/>, null for a survivor that has none and keeps its
+        /// q-values.
         ///
         /// <para>Nothing in it reads another run's state - the tables come from this run's
-        /// sidecar and the experiment records are the analysis-wide map every run shares - which
-        /// is what makes the mode a fan-out computation. It ran in the join, over the whole pool,
-        /// until #4665 moved its caller to <see cref="Pass2PerFileWorker"/>; #4438 established
-        /// the per-run form.</para>
+        /// records and the experiment records are the analysis-wide map every run shares - which
+        /// is what makes the transfer a fan-out computation (#4438, #4665).</para>
         ///
-        /// <para>Classifies every survivor by its reconciled feature score against its 1st-pass
-        /// sidecar record - UNCHANGED (bit-exact score match: carry the 1st-pass record), MOVED
-        /// (re-map run q through this file's tables) or GAP-FILL (no record: run q from the
-        /// tables) - and gives each the precursor's pass-1 experiment values; see
-        /// <see cref="AssignPerRunQ"/>. The sidecar Score is the averaged-model score, the SAME
-        /// scale <see cref="FrozenModelScorer.Score(double[])"/> produces, so each table is
-        /// scale-consistent by construction.</para>
-        ///
-        /// <para>Scores through <see cref="FrozenModelScorer"/>, so it applies whichever
-        /// classifier the first pass trained. The transfer used to average the fold weights
-        /// itself and inline the dot product, which threw on a gradient-boosted-tree model (no
-        /// weights to average). The scorer reuses one buffer, so a caller running files in parallel needs
-        /// one scorer per thread.</para>
-        /// </summary>
-        internal static void TransferOneFile(
-            string fileName, string pass1Path, List<FdrEntry> survivors,
-            FrozenModelScorer scorer, ProteinBestRunValues proteinBest,
-            IReadOnlyDictionary<uint, FdrExperimentRecord> globalExperiment,
-            Action<string> logWarning, ref TransferTally tally)
-        {
-            int nFeatures = scorer.InputFeatures;
-            TransferOneFileByScore(fileName, pass1Path, survivors,
-                // No reconciled features resolved (a stub/parquet mismatch the reload already
-                // warned about): the entry is skipped and keeps its q as-is.
-                entry => entry.Features == null || entry.Features.Length != nFeatures
-                    ? null
-                    : scorer.Score(entry.Features, entry.EntryId, proteinBest),
-                globalExperiment, logWarning, ref tally);
-        }
-
-        /// <summary>
-        /// <see cref="TransferOneFile"/>
-        /// with each survivor's second-pass score from <paramref name="scoreOf"/>, null for a
-        /// survivor that has none and keeps its q-values. Under per-run first-pass models a
-        /// survivor's score is the one its reconciled parquet carries: the first-pass score of a
-        /// row that did not move, which then matches its first-pass record bit for bit, and the
-        /// run's own frozen model's calibrated score of a row that did.
+        /// <para>Classifies every survivor by its score against its first-pass record -
+        /// UNCHANGED (bit-exact score match: carry the first-pass record), MOVED (re-map run q
+        /// through this file's tables) or GAP-FILL (no record: run q from the tables) - and gives
+        /// each the precursor's pass-1 experiment values; see <see cref="AssignPerRunQ"/>. Under
+        /// per-run first-pass models a survivor's score is the one its reconciled parquet carries:
+        /// the first-pass score of a row that did not move, which then matches its first-pass
+        /// record bit for bit, and the run's own frozen model's calibrated score of a row that
+        /// did.</para>
         /// </summary>
         internal static void TransferOneFileByScore(
             string fileName, string pass1Path, List<FdrEntry> survivors,

@@ -718,7 +718,7 @@ namespace pwiz.Osprey.Tasks
             // here said this leg could not have
             // one because MaterializeRescoredFile is ONE-SHOT - it overlays the reconciled
             // parquet and appends gap-fill rows, so a second call for one run duplicates them,
-            // which once exited a straight-through Stellar run 1 on AssertSidecarDescribesPool.
+            // which once failed a straight-through Stellar run.
             // True, and true of a NON-EMPTY list only: given an empty one it takes its
             // rebuild-from-the-reconciled-parquet branch, where the gap-fill rows are already
             // merged and no overlay runs, and that branch repeats identically. So the condition
@@ -1282,23 +1282,7 @@ namespace pwiz.Osprey.Tasks
             // an absent sidecar as an empty map - every run would be written at q = 1.0.
             Pass2FdrSidecar.RequireTransferExperimentSidecar(config);
             // The transfer writes no per-run file of its own: the reconciled stub carries its answer.
-            return new Pass2PerFileWorker(null, PinFeatureMask.For(config),
-                Pass2FdrSidecar.LoadPass1ExperimentRecords(config), (fileName, records) => { }, ctx.LogWarning);
-        }
-
-        /// <summary>
-        /// Why second-pass FDR refuses a first-pass model trained with the other
-        /// <c>--protein-boost</c> setting: names both settings and the task to re-run. A model records only
-        /// whether it has the protein-best column, so one without it names <see cref="ProteinBoost.off"/>.
-        /// </summary>
-        internal static string ProteinBestMismatchMessage(bool modelScoresProteinBest, ProteinBoost configBoost)
-        {
-            string modelBoost = (modelScoresProteinBest ? ProteinBoost.best : ProteinBoost.off).ToString();
-            return string.Format(
-                OspreyTasksResources.PerFileRescoreTask_CreatePass2Worker_Second_pass_FDR_cannot_run__the_saved_first_pass_model_was_trained_with__0___but_this_run_has__1___Run__2__again_with__1__,
-                OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, modelBoost),
-                OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, configBoost.ToString()),
-                OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME));
+            return new Pass2PerFileWorker(Pass2FdrSidecar.LoadPass1ExperimentRecords(config), ctx.LogWarning);
         }
 
         /// <summary>
@@ -1323,10 +1307,8 @@ namespace pwiz.Osprey.Tasks
             /// than in Stage 7 (issues #4486, #4665).
             ///
             /// <para>Built ONCE for the pass and shared across the parallel file loop. It is
-            /// safe to share: the experiment records are read-only, the transfer
-            /// tallies are summed under a lock, and the rest of its mutable state - the frozen
-            /// scorer's standardization buffer - is per thread. The scorer was
-            /// once called read-only while its Score wrote a shared buffer (#4706).
+            /// safe to share: the experiment records are read-only and the transfer
+            /// tallies are summed under a lock.
             /// See <see cref="Pass2PerFileWorker"/>.</para>
             /// </summary>
             public Pass2PerFileWorker Pass2Worker;

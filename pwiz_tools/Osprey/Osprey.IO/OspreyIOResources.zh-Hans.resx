@@ -229,10 +229,6 @@
     <value>{0} 已损坏：行组 {5} 的第 {1} 行（{3} {2}）的电荷为 0，这不是可能的母离子电荷。请删除该文件并重新运行“{4}”以重写该文件。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="ParquetScoreCache_StreamEntryIds_The_scores_file___0___is_damaged__row_group__1__has_no_readable_entry_id_column__so_its_" xml:space="preserve">
-    <value>得分文件“{0}”已损坏：行组 {1} 没有可读取的 {2} 列，因此无法确定其行顺序。请删除该文件并重新对文件评分。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="ParquetScoreCache_StreamReconciledScoresParquet__0___a_re_scored_precursor_candidate_peak_refers_to_row__1__past_the_end_of_the_scores_file___2__rows___and_was_not_written_" xml:space="preserve">
     <value>{0}：一个重新评分的母离子候选峰引用了第 {1:N0} 行，超出了得分文件的末尾（{2:N0} 行），因此未写入。</value>
     <comment>Needs Review:New resource</comment>

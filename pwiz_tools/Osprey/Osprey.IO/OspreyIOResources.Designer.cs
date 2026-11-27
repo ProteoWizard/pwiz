@@ -775,16 +775,6 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The scores file &apos;{0}&apos; is damaged: row group {1} has no readable {2} column, so its row order cannot be established. Delete it and score the file again..
-        /// </summary>
-        public static string ParquetScoreCache_StreamEntryIds_The_scores_file___0___is_damaged__row_group__1__has_no_readable_entry_id_column__so_its_ {
-            get {
-                return ResourceManager.GetString("ParquetScoreCache_StreamEntryIds_The_scores_file___0___is_damaged__row_group__1__" +
-                        "has_no_readable_entry_id_column__so_its_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {0}: a re-scored precursor candidate peak refers to row {1:N0}, past the end of the scores file ({2:N0} rows), and was not written..
         /// </summary>
         public static string ParquetScoreCache_StreamReconciledScoresParquet__0___a_re_scored_precursor_candidate_peak_refers_to_row__1__past_the_end_of_the_scores_file___2__rows___and_was_not_written_ {

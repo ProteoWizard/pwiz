@@ -35,67 +35,14 @@ namespace pwiz.Osprey.Test
 {
     /// <summary>
     /// Unit tests for <see cref="Pass2FdrSidecar"/>, the SecondPassFDR 2nd-pass FDR
-    /// sidecar step extracted from SecondPassFdrTask.Run. Covers the pure
-    /// <see cref="Pass2FdrSidecar.MapFeaturesByScoreIndex"/> seam (the
-    /// reconciled-feature overlay) that previously rode only the nightly
-    /// regression, plus the OSPREY_PASS2_QVALUE=transfer score-to-q table and its
-    /// per-run q assignment.
+    /// sidecar step extracted from SecondPassFdrTask.Run. Covers the
+    /// OSPREY_PASS2_QVALUE=transfer score-to-q table and its per-run q assignment.
     /// The reload/percolator/sidecar-IO orchestration itself stays parity-locked
     /// and is characterized by regression.ps1, not here.
     /// </summary>
     [TestClass]
     public class Pass2FdrSidecarTest
     {
-        /// <summary>
-        /// MapFeaturesByScoreIndex must assign each entry's Features from the feature row
-        /// whose <c>score_index</c> matches the entry's <see cref="FdrEntry.ParquetIndex"/>,
-        /// skip any entry whose index is absent from the map (leaving its Features untouched
-        /// so the caller's nMapped &lt; count check fires), and return the count mapped.
-        ///
-        /// <para>This replaces a compound (entry_id, charge, scan_number) key, which existed
-        /// only because the reconciled parquet used to be re-indexed relative to the stubs and
-        /// the row ordinal therefore addressed the wrong row. Now that the reconciled parquet
-        /// PERSISTS the Stage 4 ordinal as <c>score_index</c>, the index is the identity and
-        /// the compound key is unnecessary. The compound key was also subtly wrong for
-        /// anything spanning a rescore: re-integrating at the consensus boundary moves the
-        /// apex, so <c>scan_number</c> differs before and after (#4486).</para>
-        /// </summary>
-        [TestMethod]
-        public void TestMapFeaturesByScoreIndex()
-        {
-            var rowA = new[] { 0.0, 0.1 };
-            var rowB = new[] { 1.0, 1.1 };
-            var featByScoreIndex = new Dictionary<uint, double[]>
-            {
-                { 999u, rowA },
-                { 0u, rowB },
-            };
-
-            // matchA's scan_number deliberately differs from anything in the map: the score
-            // index alone must select its features, which is what makes the mapping survive a
-            // rescore that moved the apex. noMatch's index is absent and must keep its stale
-            // features.
-            var stale = new[] { 9.0 };
-            var matchA = new FdrEntry { EntryId = 10, Charge = 2, ScanNumber = 100, ParquetIndex = 999, Features = null };
-            var matchB = new FdrEntry { EntryId = 20, Charge = 3, ScanNumber = 200, ParquetIndex = 0, Features = null };
-            var noMatch = new FdrEntry { EntryId = 30, Charge = 2, ScanNumber = 300, ParquetIndex = 1, Features = stale };
-            var entries = new List<FdrEntry> { matchA, matchB, noMatch };
-
-            int nMapped = Pass2FdrSidecar.MapFeaturesByScoreIndex(entries, featByScoreIndex);
-
-            Assert.AreEqual(2, nMapped);
-            Assert.AreSame(rowA, matchA.Features);
-            Assert.AreSame(rowB, matchB.Features);
-            Assert.AreSame(stale, noMatch.Features);
-
-            // Empty map maps nothing and never throws.
-            var loneEntry = new FdrEntry { EntryId = 40, Charge = 1, ScanNumber = 400, ParquetIndex = 7, Features = stale };
-            int nMappedEmpty = Pass2FdrSidecar.MapFeaturesByScoreIndex(
-                new List<FdrEntry> { loneEntry }, new Dictionary<uint, double[]>());
-            Assert.AreEqual(0, nMappedEmpty);
-            Assert.AreSame(stale, loneEntry.Features);
-        }
-
         /// <summary>
         /// The OSPREY_PASS2_QVALUE=transfer score-&gt;q table
         /// (<see cref="Pass2FdrSidecar.BuildScoreToQTable"/> +
@@ -261,11 +208,9 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// OSPREY_PASS2_QVALUE=transfer must re-score each survivor with whichever classifier the
-        /// first pass trained (<see cref="Pass2FdrSidecar.TransferOneFile"/>). It averaged the
-        /// fold weights itself, which threw on a gradient-boosted-tree model - there are no
-        /// weights - before a single file was transferred; nothing reached it with one while the
-        /// default first pass trained the SVM when gbdt was selected.
+        /// The transfer (<see cref="Pass2FdrSidecar.TransferOneFileByScore"/>) classifies each
+        /// survivor by its second-pass score against its first-pass record, here with the
+        /// scores of a gradient-boosted-tree model.
         ///
         /// <para>The UNCHANGED classification is the key check: it needs the re-score to
         /// reproduce the first pass's score bit for bit, which only the tree model itself can.
@@ -273,7 +218,7 @@ namespace pwiz.Osprey.Test
         /// reconciliation moved, so the MOVED branch runs too.</para>
         /// </summary>
         [TestMethod]
-        public void TestTransferOneFileScoresTreeModel()
+        public void TestTransferByScoreWithTreeModel()
         {
             var scorer = FrozenModelScorer.TryCreate(FirstPassModelIoTest.MakeTreeModel());
             Assert.IsNotNull(scorer);
@@ -305,7 +250,7 @@ namespace pwiz.Osprey.Test
                 FdrScoresSidecar.Write(pass1Path, records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
 
                 var tally = new Pass2FdrSidecar.TransferTally();
-                Pass2FdrSidecar.TransferOneFile(@"run1", pass1Path, survivors, scorer, null,
+                Pass2FdrSidecar.TransferOneFileByScore(@"run1", pass1Path, survivors, e => scorer.Score(e.Features),
                     new Dictionary<uint, FdrExperimentRecord>(), message => Assert.Fail(message), ref tally);
 
                 Assert.AreEqual(1, tally.FilesDone);
@@ -330,13 +275,12 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// OSPREY_PROTEIN_BEST in the second pass: a model trained with the column scores a
-        /// rescored row with the value the first pass persisted for its run and entry, and a row
+        /// <c>--protein-boost best</c> in the second pass: a model trained with the column scores
+        /// a rescored row with the value the first pass recorded for its run and entry, and a row
         /// the first pass had no value for with the run's floor. The transfer then classifies a
         /// row it reproduces as UNCHANGED bit for bit, a moved row as MOVED on its new raw
         /// features and the same column, and a precursor with no first-pass row as a gap fill
-        /// scored at the floor. The column file is refused when absent or written by another
-        /// first pass.
+        /// scored at the floor.
         /// </summary>
         [TestMethod]
         public void TestPass2ProteinBestColumn()
@@ -376,14 +320,8 @@ namespace pwiz.Osprey.Test
                 // A second row of one entry, as a run's first-pass rows can hold several peaks.
                 rowIds.Add(4);
                 rowValues.Add(0.4);
-                var persisted = ProteinBestRunValues.FromRows(rowIds, rowValues, floor);
-                Assert.AreEqual(rowIds.Count - 1, persisted.EntryIds.Count);
-                ProteinBestSidecar.Write(ProteinBestSidecar.PathFor(inputFile), persisted.EntryIds, persisted.Values,
-                    persisted.Floor, TestStamps.Any);
-                var column = Pass2FdrSidecar.LoadProteinBestForRun(scorer, pass1Path, @"run1", TestStamps.Any);
-                Assert.IsNotNull(column);
-                CollectionAssert.AreEqual(persisted.EntryIds.ToArray(), column.EntryIds.ToArray());
-                CollectionAssert.AreEqual(persisted.Values.ToArray(), column.Values.ToArray());
+                var column = ProteinBestRunValues.FromRows(rowIds, rowValues, floor);
+                Assert.AreEqual(rowIds.Count - 1, column.EntryIds.Count);
                 Assert.AreEqual(floor, column.Floor);
                 Assert.AreEqual(0.05, column.ValueFor(decoyId));
 
@@ -414,7 +352,8 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(scorer.Score(gapFill.Features, floor), scorer.Score(gapFill.Features, gapFillId, column));
 
                 var tally = new Pass2FdrSidecar.TransferTally();
-                Pass2FdrSidecar.TransferOneFile(@"run1", pass1Path, survivors, scorer, column,
+                Pass2FdrSidecar.TransferOneFileByScore(@"run1", pass1Path, survivors,
+                    e => scorer.Score(e.Features, e.EntryId, column),
                     new Dictionary<uint, FdrExperimentRecord>(), message => Assert.Fail(message), ref tally);
                 Assert.AreEqual(1, tally.FilesDone);
                 Assert.AreEqual(0, tally.Skipped);
@@ -425,37 +364,12 @@ namespace pwiz.Osprey.Test
                 // A model with the column never scores a vector without it.
                 Assert.ThrowsException<ArgumentNullException>(() => scorer.Score(moved.Features, movedId, null));
 
-                // The column file of another first pass, and a missing one, stop the run.
-                var otherStamp = OspreyVersion.Stamp(TestStamps.TASK, TestStamps.KEY + @";other");
-                Assert.ThrowsException<InvalidDataException>(() =>
-                    Pass2FdrSidecar.LoadProteinBestForRun(scorer, pass1Path, @"run1", otherStamp));
-                File.Delete(ProteinBestSidecar.PathFor(inputFile));
-                Assert.ThrowsException<InvalidDataException>(() =>
-                    Pass2FdrSidecar.LoadProteinBestForRun(scorer, pass1Path, @"run1", TestStamps.Any));
-                // A model without the column reads no column file at all.
-                Assert.IsNull(Pass2FdrSidecar.LoadProteinBestForRun(scorerWithout, pass1Path, @"run1", TestStamps.Any));
-
                 // One value per entry_id: rows of one entry that disagree are a defect.
                 Assert.ThrowsException<InvalidOperationException>(() =>
                     ProteinBestRunValues.FromRows(new uint[] { 4, 4 }, new[] { 1.0, 2.0 }, floor));
                 Assert.IsTrue(column.TryGetValue(decoyId, out double decoyValue));
                 Assert.AreEqual(0.05, decoyValue);
                 Assert.IsFalse(column.TryGetValue(gapFillId, out _));
-
-                // A model of the other --protein-boost best arm is refused by a message naming both
-                // settings, the model's first, and the task to re-run - not the missing-file one.
-                string on = OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.best.ToString());
-                string off = OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, ProteinBoost.off.ToString());
-                string modelOn = PerFileRescoreTask.ProteinBestMismatchMessage(true, ProteinBoost.off);
-                string modelOff = PerFileRescoreTask.ProteinBestMismatchMessage(false, ProteinBoost.best);
-                Assert.AreEqual(string.Format(
-                    OspreyTasksResources.PerFileRescoreTask_CreatePass2Worker_Second_pass_FDR_cannot_run__the_saved_first_pass_model_was_trained_with__0___but_this_run_has__1___Run__2__again_with__1__,
-                    on, off, OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME)), modelOn);
-                // A model without the column names the off boost, the model's setting first.
-                Assert.AreEqual(string.Format(
-                    OspreyTasksResources.PerFileRescoreTask_CreatePass2Worker_Second_pass_FDR_cannot_run__the_saved_first_pass_model_was_trained_with__0___but_this_run_has__1___Run__2__again_with__1__,
-                    off, on, OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME)), modelOff);
-                Assert.IsTrue(modelOn.IndexOf(on, StringComparison.Ordinal) < modelOn.IndexOf(off, StringComparison.Ordinal));
             }
             finally
             {

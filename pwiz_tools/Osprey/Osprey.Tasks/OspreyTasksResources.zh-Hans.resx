@@ -369,10 +369,6 @@
     <value>模型诊断：{0} 对于此分析已过期，因此重新运行第一轮以构建报告。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0_" xml:space="preserve">
-    <value>已将训练好的第一轮模型保存到 {0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_PlanStage6_Cross_run_reconciliation_planning" xml:space="preserve">
     <value>跨运行协调规划</value>
     <comment>Needs Review:New resource</comment>
@@ -421,10 +417,6 @@
     <value>恢复运行：{1:N0} 个文件中有 {0:N0} 个已有最新的第一轮中间文件；正在对剩余的 {2:N0} 个评分。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_Resuming__a_saved_first_pass_model_exists_but_no_file_has_saved_scores__so_the_model_is_" xml:space="preserve">
-    <value>恢复运行：存在已保存的第一轮模型，但没有文件保存了得分，因此重新训练该模型。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_Resuming__first_pass_intermediate_files_for_all__0__files_are_up_to_date__skipping_first_" xml:space="preserve">
     <value>恢复运行：全部 {0:N0} 个文件的第一轮中间文件均为最新；跳过第一轮评分、蛋白质 FDR 和第一轮模型诊断。</value>
     <comment>Needs Review:New resource</comment>
@@ -433,24 +425,12 @@
     <value>恢复运行：全部 {0:N0} 个文件的第一轮中间文件均为最新；跳过第一轮评分和蛋白质 FDR。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_Resuming__reusing_the_saved_first_pass_model_instead_of_training_again__1_of__1__files_" xml:space="preserve">
-    <value>恢复运行：重用已保存的第一轮模型，而不是重新训练（{1:N0} 个文件中已有 1 个已评分）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_Resuming__reusing_the_saved_first_pass_model_instead_of_training_again___0__of__1__files_" xml:space="preserve">
-    <value>恢复运行：重用已保存的第一轮模型，而不是重新训练（{1:N0} 个文件中已有 {0:N0} 个已评分）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_Resuming__the_first_pass_intermediate_files_are_up_to_date__but_first_pass_scoring_runs_" xml:space="preserve">
     <value>恢复运行：第一轮中间文件均为最新，但由于缺少一个已保存的结果（{0}），将重新运行第一轮评分。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection___up_to_date___0_" xml:space="preserve">
     <value>最新：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___1st_pass_model_json__holds_no_model" xml:space="preserve">
-    <value>第一轮模型文件（{0}）中没有模型</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_the_whole_experiment_first_pass_intermediate_file_is_not_up_to_date___0_" xml:space="preserve">

@@ -39,10 +39,9 @@ namespace pwiz.Osprey.Test
 {
     /// <summary>
     /// Round-trip tests for <see cref="FirstPassModelIO"/>: a reloaded 1st-pass model
-    /// (the sidecar a distributed SecondPassFDR node reads to run the frozen
-    /// 2nd-pass modes) must score BIT-IDENTICALLY to the in-process original. Without
-    /// bit-parity the pass-2-only path would report different q-values than a
-    /// straight-through run under the same flag.
+    /// (the file PerFileRescoring reads to score a run's moved rows) must score
+    /// BIT-IDENTICALLY to the in-process original. Without bit-parity a rescore in another
+    /// process would report different q-values than a straight-through run.
     /// </summary>
     [TestClass]
     public class FirstPassModelIoTest
@@ -57,9 +56,9 @@ namespace pwiz.Osprey.Test
                    ",\n" + PINNED_LINEAR_MODEL_FILE.Substring("{\n".Length);
         }
 
-        /// <summary>The file <see cref="AssertLinearFileBytesArePinned"/> expects, as the build
-        /// before tree models were persisted wrote it: LF, two-space indent, round-trip doubles,
-        /// a trailing newline, and no tree property.</summary>
+        /// <summary>The file <see cref="AssertLinearFileBytesArePinned"/> expects: LF, two-space
+        /// indent, round-trip doubles, a trailing newline, no tree property, and the calibration
+        /// map of <see cref="SaveModel"/> last.</summary>
         private const string PINNED_LINEAR_MODEL_FILE =
             "{\n" +
             "  \"SchemaVersion\": 1,\n" +
@@ -86,8 +85,31 @@ namespace pwiz.Osprey.Test
             "    0.125,\n" +
             "    -3\n" +
             "  ],\n" +
-            "  \"ExperimentAgg\": \"max\"\n" +
+            "  \"ExperimentAgg\": \"max\",\n" +
+            "  \"CalibrationThreshold\": 0.75,\n" +
+            "  \"CalibrationDenominator\": 2.5\n" +
             "}\n";
+
+        // The calibration map every model these tests save carries, and its form in a file.
+        private const double CALIBRATION_THRESHOLD = 0.75;
+        private const double CALIBRATION_DENOMINATOR = 2.5;
+        private const string CALIBRATION_JSON = @", ""CalibrationThreshold"": 0.75, ""CalibrationDenominator"": 2.5 }";
+
+        /// <summary>
+        /// Save <paramref name="model"/> as a run's own model file, the only form a model is
+        /// written in, with a fixed calibration map. False when the model is declined.
+        /// </summary>
+        internal static bool SaveModel(string path, PercolatorResults model)
+        {
+            return FirstPassModelIO.SaveRunModel(path,
+                new RunFirstPassModel(model, CALIBRATION_THRESHOLD, CALIBRATION_DENOMINATOR, null, -0.25), TestStamps.Any);
+        }
+
+        /// <summary>The model of the run model file at <paramref name="path"/>, or null when it does not load.</summary>
+        internal static PercolatorResults LoadModel(string path)
+        {
+            return FirstPassModelIO.LoadRunModel(path, PinFeatureMask.Hram)?.Model;
+        }
 
         private static PercolatorResults MakeSvmModel()
         {
@@ -171,18 +193,16 @@ namespace pwiz.Osprey.Test
                 @"osprey_model_roundtrip_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
-                Assert.IsTrue(FirstPassModelIO.Save(path, model, TestStamps.Any),
-                    @"SVM model should persist");
+                Assert.IsTrue(SaveModel(path, model), @"SVM model should persist");
                 Assert.IsTrue(File.Exists(path), @"sidecar should exist after Save");
 
-                var sidecar = FirstPassModelIO.Load(path, PinFeatureMask.Hram);
-                Assert.IsNotNull(sidecar, @"reloaded sidecar should not be null");
-                var reloaded = sidecar.Model;
+                var reloaded = LoadModel(path);
                 Assert.IsNotNull(reloaded, @"reloaded model should not be null");
 
                 // The file still records the experiment-wide aggregation, as it did when
                 // OSPREY_EXPERIMENT_AGG could choose another, so its bytes are unchanged.
-                Assert.AreEqual(@"max", sidecar.ExperimentAgg, @"recorded pass-1 aggregation");
+                Assert.AreEqual(@"max", (string) JObject.Parse(File.ReadAllText(path))[@"ExperimentAgg"],
+                    @"recorded pass-1 aggregation");
 
                 AssertLinearFileBytesArePinned();
 
@@ -223,10 +243,8 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// A <c>OSPREY_FDR_MODEL=gbdt</c> model must persist, reload as the tree ensemble and score
-        /// BIT-IDENTICALLY, for the reason the SVM must: a distributed SecondPassFDR node, the
-        /// Stage 6 per-file competition and a resume all read the model from this file rather
-        /// than from the process that trained it. Save used to decline a tree model, which went
-        /// unnoticed because the default first pass never trained one.
+        /// BIT-IDENTICALLY, for the reason the SVM must: PerFileRescoring reads the model from
+        /// this file rather than from the process that trained it.
         ///
         /// <para>Also pins the linear side: its file gains no tree property at all, so the
         /// default path's artifact is byte-for-byte what it was.</para>
@@ -245,11 +263,9 @@ namespace pwiz.Osprey.Test
                 @"osprey_model_linear_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
-                Assert.IsTrue(FirstPassModelIO.Save(path, model, TestStamps.Any), @"tree model should persist");
-                var sidecar = FirstPassModelIO.Load(path, PinFeatureMask.Hram);
-                Assert.IsNotNull(sidecar, @"reloaded tree sidecar should not be null");
-                Assert.AreEqual(@"max", sidecar.ExperimentAgg, @"recorded pass-1 aggregation");
-                var reloaded = sidecar.Model;
+                Assert.IsTrue(SaveModel(path, model), @"tree model should persist");
+                var reloaded = LoadModel(path);
+                Assert.IsNotNull(reloaded, @"reloaded tree model should not be null");
                 Assert.IsNotNull(reloaded.FoldGbtModels, @"a tree model must reload as trees");
                 Assert.AreEqual(model.FoldGbtModels.Count, reloaded.FoldGbtModels.Count, @"fold count");
                 Assert.AreEqual(0, reloaded.FoldWeights.Count, @"a tree model carries no linear weights");
@@ -302,12 +318,12 @@ namespace pwiz.Osprey.Test
                     FoldGbtModels = new List<GradientBoostedTrees> { model.FoldGbtModels[0], null }
                 }, @"a fold with no ensemble");
 
-                Assert.IsTrue(FirstPassModelIO.Save(linearPath, MakeSvmModel(), TestStamps.Any), @"SVM model should persist");
+                Assert.IsTrue(SaveModel(linearPath, MakeSvmModel()), @"SVM model should persist");
                 Assert.IsNull(JObject.Parse(File.ReadAllText(linearPath))[@"FoldGbtModels"],
                     @"a linear model's file must not gain a tree property");
 
-                AssertRunModelRoundTrip(model, path, linearPath);
-                AssertRunModelRoundTrip(MakeSvmModel(), path, linearPath);
+                AssertRunModelRoundTrip(model, path);
+                AssertRunModelRoundTrip(MakeSvmModel(), path);
             }
             finally
             {
@@ -319,13 +335,12 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// A run's own model file (per-run first-pass models) round-trips the model, its
-        /// calibration map: the reloaded model scores bit-identically
-        /// and calibrates through the same map. An analysis-wide model file, which has no
-        /// calibration map, does not load as a run's model, nor does a map that could not be
-        /// applied. <paramref name="analysisPath"/> holds an analysis-wide model.
+        /// A run's own model file (per-run first-pass models) round-trips the model and its
+        /// calibration map: the reloaded model scores bit-identically and calibrates through the
+        /// same map. A file with no calibration map does not load as a run's model, nor does a
+        /// map that could not be applied.
         /// </summary>
-        private static void AssertRunModelRoundTrip(PercolatorResults model, string path, string analysisPath)
+        private static void AssertRunModelRoundTrip(PercolatorResults model, string path)
         {
             Assert.IsTrue(FirstPassModelIO.SaveRunModel(path, new RunFirstPassModel(model, 0.75, 2.5, null, -0.25),
                 TestStamps.Any));
@@ -350,11 +365,9 @@ namespace pwiz.Osprey.Test
                 AssertBitEqual(raw, after.Score(row), @"run model Score");
                 AssertBitEqual((raw - 0.75) / 2.5, reloaded.Calibrate(after.Score(row)), @"calibrated score");
             }
-            Assert.IsNull(FirstPassModelIO.LoadRunModel(analysisPath, PinFeatureMask.Hram),
-                @"an analysis-wide model has no calibration map");
             var written = JObject.Parse(File.ReadAllText(path));
-            AssertRunModelLoadsNull(Edited(written, json => json[@"CalibrationDenominator"] = 0.0), @"zero denominator");
-            AssertRunModelLoadsNull(Edited(written, json => json.Remove(@"CalibrationThreshold")), @"no threshold");
+            AssertLoadsNull(Edited(written, json => json[@"CalibrationDenominator"] = 0.0), @"zero denominator");
+            AssertLoadsNull(Edited(written, json => json.Remove(@"CalibrationThreshold")), @"no threshold");
             Assert.IsFalse(reloaded.UsesFallbackFeature);
             Assert.IsNull(written[@"FallbackFeature"], @"a run its model scores records no fallback feature");
 
@@ -367,34 +380,17 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(fallbackFeature, fallback.FallbackFeature);
             Assert.IsTrue(fallback.UsesFallbackFeature);
             var fallbackJson = JObject.Parse(File.ReadAllText(path));
-            AssertRunModelLoadsNull(Edited(fallbackJson, json => json[@"FallbackFeature"] = PinFeatureMask.Hram.FdrFeatureIndices.Length),
+            AssertLoadsNull(Edited(fallbackJson, json => json[@"FallbackFeature"] = PinFeatureMask.Hram.FdrFeatureIndices.Length),
                 @"a fallback feature past the FDR features");
-            AssertRunModelLoadsNull(Edited(fallbackJson, json => json[@"FallbackFeatureName"] = @"not_a_feature"),
+            AssertLoadsNull(Edited(fallbackJson, json => json[@"FallbackFeatureName"] = @"not_a_feature"),
                 @"a fallback feature under another name");
-        }
-
-        private static void AssertRunModelLoadsNull(string json, string what)
-        {
-            string path = Path.Combine(Path.GetTempPath(),
-                @"osprey_run_model_bad_" + Guid.NewGuid().ToString(@"N") + @".json");
-            try
-            {
-                File.WriteAllText(path, json);
-                Assert.IsNull(FirstPassModelIO.LoadRunModel(path, PinFeatureMask.Hram), what + @" should load as null");
-            }
-            finally
-            {
-                if (File.Exists(path))
-                    File.Delete(path);
-            }
         }
 
         [TestMethod]
         public void TestFirstPassModelSaveDeclinesDegenerate()
         {
-            // Neither linear weights nor trees (a degenerate/empty model) -> Save writes nothing
-            // so SecondPassFDR keeps its existing fail-fast rather than loading a sidecar it
-            // cannot score with.
+            // Neither linear weights nor trees (a degenerate/empty model) -> the save writes
+            // nothing, rather than a file no reader can score with.
             string path = Path.Combine(Path.GetTempPath(),
                 @"osprey_model_decline_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
@@ -403,10 +399,9 @@ namespace pwiz.Osprey.Test
                 {
                     Standardizer = FeatureStandardizer.FromMeansStds(new[] { 0.0, 1.0 }, new[] { 1.0, 1.0 }),
                 };
-                Assert.IsFalse(FirstPassModelIO.Save(path, noWeights, TestStamps.Any),
-                    @"model without weights or trees should not persist");
-                Assert.IsFalse(File.Exists(path), @"no sidecar should be written when Save declines");
-                Assert.IsFalse(FirstPassModelIO.Save(path, null, TestStamps.Any), @"null model should not persist");
+                Assert.IsFalse(SaveModel(path, noWeights), @"model without weights or trees should not persist");
+                Assert.IsFalse(File.Exists(path), @"no file should be written when the save declines");
+                Assert.IsFalse(SaveModel(path, null), @"null model should not persist");
             }
             finally
             {
@@ -418,19 +413,16 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// FirstPassFDR's fast resume enters at the compaction gate on the experiment sidecar of
         /// this run, and on no model: each run trained its own in PerFileScoring, which the gate's
-        /// caller checks with the run's stub. An analysis-wide model file still loads with its stamp.
+        /// caller checks with the run's stub.
         /// </summary>
         [TestMethod]
-        public void TestFirstPassFdrTaskGateAndModelLoad()
+        public void TestFirstPassFdrTaskGate()
         {
             string dir = Path.Combine(Path.GetTempPath(), @"osprey_model_task_" + Guid.NewGuid().ToString(@"N"));
             Directory.CreateDirectory(dir);
             try
             {
-                AssertGateKeysOnTheExperimentSidecar(dir, AnalysisConfig(dir));
-                string modelDir = Path.Combine(dir, @"model");
-                Directory.CreateDirectory(modelDir);
-                AssertLoadForAnalysisReadsTheStamp(AnalysisConfig(modelDir));
+                AssertGateKeysOnTheExperimentSidecar(dir);
             }
             finally
             {
@@ -554,22 +546,7 @@ namespace pwiz.Osprey.Test
             };
         }
 
-        /// <summary>
-        /// <see cref="FirstPassModelIO.LoadForAnalysis"/> returns the analysis's model with the
-        /// stamp its file carries, or null when there is no model file.
-        /// </summary>
-        private static void AssertLoadForAnalysisReadsTheStamp(OspreyConfig config)
-        {
-            Assert.IsNull(FirstPassModelIO.LoadForAnalysis(config), @"no model file: nothing to load");
-            Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(config), MakeSvmModel(), TestStamps.Any));
-
-            var loaded = FirstPassModelIO.LoadForAnalysis(config);
-            Assert.IsNotNull(loaded);
-            Assert.IsNotNull(loaded.Model);
-            Assert.AreEqual(TestStamps.Any.ToString(), loaded.Stamp?.ToString());
-        }
-
-        private static void AssertGateKeysOnTheExperimentSidecar(string dir, OspreyConfig config)
+        private static void AssertGateKeysOnTheExperimentSidecar(string dir)
         {
             const string key = @"validity-key";
             var task = FirstPassTask();
@@ -582,9 +559,6 @@ namespace pwiz.Osprey.Test
 
             FdrExperimentSidecar.Write(experimentPath, new Dictionary<uint, FdrExperimentRecord>(),
                 FdrScoresSidecar.Pass.FirstPass, OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, key));
-            // A model on disk is no part of the gate.
-            Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(config), MakeSvmModel(),
-                OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, @"other-key")));
             refusals = task.CompactionGateRefusals(experimentPath, key);
             Assert.AreEqual(0, refusals.Count, string.Join(@"; ", refusals));
         }
@@ -675,16 +649,16 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(fdrIndices.Length, model.FoldWeights[0].Length, @"trained weight count");
                 CollectionAssert.AreEqual(fdrNames, model.FeatureNames, @"the model must name the features it trained on");
 
-                Assert.IsTrue(FirstPassModelIO.Save(modelPath, model, TestStamps.Any), @"model should persist");
-                var reloaded = FirstPassModelIO.Load(modelPath, PinFeatureMask.Hram);
+                Assert.IsTrue(SaveModel(modelPath, model), @"model should persist");
+                var reloaded = LoadModel(modelPath);
                 Assert.IsNotNull(reloaded, @"a model trained on the FDR features should reload");
-                CollectionAssert.AreEqual(fdrNames, reloaded.Model.FeatureNames, @"the names must travel with the saved model");
+                CollectionAssert.AreEqual(fdrNames, reloaded.FeatureNames, @"the names must travel with the saved model");
 
                 // A model whose names are not this run's FDR features (another mask's, say) would
                 // weigh each column as some other feature, so it does not load.
                 model.FeatureNames = fdrNames.Reverse().ToArray();
-                Assert.IsTrue(FirstPassModelIO.Save(modelPath, model, TestStamps.Any));
-                Assert.IsNull(FirstPassModelIO.Load(modelPath, PinFeatureMask.Hram), @"a model laid out another way must not load");
+                Assert.IsTrue(SaveModel(modelPath, model));
+                Assert.IsNull(LoadModel(modelPath), @"a model laid out another way must not load");
             }
             finally
             {
@@ -699,61 +673,57 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestFirstPassModelLoadMissingReturnsNull()
         {
-            // Absent sidecar -> null (the caller then fails fast exactly as before persistence).
+            // Absent file -> null.
             string missing = Path.Combine(Path.GetTempPath(),
                 @"osprey_model_missing_" + Guid.NewGuid().ToString(@"N") + @".json");
-            Assert.IsNull(FirstPassModelIO.Load(missing, PinFeatureMask.Hram), @"missing sidecar should load as null");
+            Assert.IsNull(LoadModel(missing), @"missing file should load as null");
         }
 
         [TestMethod]
         public void TestFirstPassModelLoadRejectsCorruptOrInconsistent()
         {
-            // Load's contract is null (fail-fast) on anything unreadable: it must never
-            // throw and crash SecondPassFDR, and never accept a shape-inconsistent model
-            // that the frozen scorer would then crash on or silently mis-score with.
+            // The load's contract is null on anything unreadable: it must never throw, and never
+            // accept a shape-inconsistent model that the frozen scorer would then crash on or
+            // silently mis-score with. Each case below carries a calibration map, so it is
+            // refused for the reason it names, and the same file without the defect loads.
+            AssertLoads(
+                @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
+                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0]" + CALIBRATION_JSON, @"a consistent file");
             AssertLoadsNull(@"{ not valid json", @"malformed JSON");
             AssertLoadsNull(@"{}", @"empty object (all fields null)");
             AssertLoadsNull(
                 @"{ ""SchemaVersion"": 2, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
-                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0] }", @"future schema version");
+                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0]" + CALIBRATION_JSON, @"future schema version");
             AssertLoadsNull(
                 @"{ ""SchemaVersion"": 1, ""NumFeatures"": 3, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
-                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0] }", @"NumFeatures != Means.Length");
+                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0]" + CALIBRATION_JSON, @"NumFeatures != Means.Length");
             AssertLoadsNull(
                 @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0], " +
-                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0] }", @"Means/Stds length mismatch");
+                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0]" + CALIBRATION_JSON, @"Means/Stds length mismatch");
             AssertLoadsNull(
                 @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
-                @"""FoldWeights"": [[0.5, 0.5, 0.5]], ""FoldBiases"": [0.0] }", @"fold width != feature count");
+                @"""FoldWeights"": [[0.5, 0.5, 0.5]], ""FoldBiases"": [0.0]" + CALIBRATION_JSON, @"fold width != feature count");
             AssertLoadsNull(
                 @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
-                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0, 0.0] }", @"bias/fold count mismatch");
+                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0, 0.0]" + CALIBRATION_JSON, @"bias/fold count mismatch");
 
-            // A sidecar written BEFORE the arm was recorded must still load - the field was added
-            // without bumping SchemaVersion precisely so pre-existing sidecars stay readable, and
-            // a SecondPassFDR node that could not read one would hard fail-fast instead of degrading.
-            // The arm then reports null.
-            AssertLoadsWithArm(
+            // The recorded aggregation is not read back: a file naming another one still loads.
+            AssertLoads(
                 @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
-                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0] }", null, @"pre-provenance sidecar");
-            AssertLoadsWithArm(
-                @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
-                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0], ""ExperimentAgg"": ""mean-best-2"" }",
-                @"mean-best-2", @"sidecar with a recorded arm");
+                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0], ""ExperimentAgg"": ""mean-best-2""" + CALIBRATION_JSON,
+                @"file with another recorded aggregation");
 
             // A model file written by an old build carried the removed protein-compact stratum
             // inline; the unknown property is ignored and the model still loads.
-            AssertLoadsWithArm(
+            AssertLoads(
                 @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
-                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0], ""StratumBaseIds"": [4, 9] }",
-                null, @"model file with an inline stratum");
+                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0], ""StratumBaseIds"": [4, 9]" + CALIBRATION_JSON,
+                @"model file with an inline stratum");
         }
 
         /// <summary>
-        /// The linear model's file, byte for byte. Every directory written before tree models
-        /// were persisted holds this form, and the resume, the Stage 6 competition and a
-        /// distributed SecondPassFDR node all read it back, so adding the tree form and
-        /// splitting serialization from the per-file write must leave it exactly as it was.
+        /// The linear model's file, byte for byte: a change to the serialized form must be
+        /// deliberate, because PerFileRescoring in another process reads it back.
         /// </summary>
         private static void AssertLinearFileBytesArePinned()
         {
@@ -767,7 +737,7 @@ namespace pwiz.Osprey.Test
                 @"osprey_model_pinned_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
-                Assert.IsTrue(FirstPassModelIO.Save(path, model, TestStamps.Any), @"pinned SVM model should persist");
+                Assert.IsTrue(SaveModel(path, model), @"pinned SVM model should persist");
                 Assert.AreEqual(PinnedLinearModelFile(TestStamps.Any), File.ReadAllText(path));
             }
             finally
@@ -783,7 +753,7 @@ namespace pwiz.Osprey.Test
                 @"osprey_model_declined_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
-                Assert.IsFalse(FirstPassModelIO.Save(path, model, TestStamps.Any), what + @" should not persist");
+                Assert.IsFalse(SaveModel(path, model), what + @" should not persist");
                 Assert.IsFalse(File.Exists(path), what + @" should leave no file behind");
             }
             finally
@@ -800,7 +770,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 File.WriteAllText(path, json);
-                Assert.IsNull(FirstPassModelIO.Load(path, PinFeatureMask.Hram), what + @" should load as null");
+                Assert.IsNull(LoadModel(path), what + @" should load as null");
             }
             finally
             {
@@ -828,16 +798,14 @@ namespace pwiz.Osprey.Test
             return first;
         }
 
-        private static void AssertLoadsWithArm(string json, string expectedArm, string what)
+        private static void AssertLoads(string json, string what)
         {
             string path = Path.Combine(Path.GetTempPath(),
                 @"osprey_model_arm_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
                 File.WriteAllText(path, json);
-                var sidecar = FirstPassModelIO.Load(path, PinFeatureMask.Hram);
-                Assert.IsNotNull(sidecar, what + @" should load");
-                Assert.AreEqual(expectedArm, sidecar.ExperimentAgg, what + @" arm");
+                Assert.IsNotNull(LoadModel(path), what + @" should load");
             }
             finally
             {

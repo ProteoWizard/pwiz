@@ -229,10 +229,6 @@
     <value>{0}は破損しています：行グループ{5}の行{1}（{3} {2}）の電荷が0ですが、これはプリカーサーの電荷としてあり得ません。ファイルを削除し、{4}を再実行して書き直してください。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="ParquetScoreCache_StreamEntryIds_The_scores_file___0___is_damaged__row_group__1__has_no_readable_entry_id_column__so_its_" xml:space="preserve">
-    <value>スコアファイル「{0}」が破損しています：行グループ{1}に読み取り可能な{2}列がないため、行の順序を確定できません。削除してファイルを再度スコアリングしてください。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="ParquetScoreCache_StreamReconciledScoresParquet__0___a_re_scored_precursor_candidate_peak_refers_to_row__1__past_the_end_of_the_scores_file___2__rows___and_was_not_written_" xml:space="preserve">
     <value>{0}：再スコアリングされたプリカーサー候補ピークが、スコアファイルの末尾（{2:N0}行）を超える行{1:N0}を参照しているため、書き込まれませんでした。</value>
     <comment>Needs Review:New resource</comment>

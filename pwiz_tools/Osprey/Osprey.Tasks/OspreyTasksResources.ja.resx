@@ -369,10 +369,6 @@
     <value>モデル診断：{0}はこの解析に対して古いため、レポートを構築するために第1パスを再実行します。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0_" xml:space="preserve">
-    <value>トレーニング済みの第1パスモデルを{0}に保存しました</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_PlanStage6_Cross_run_reconciliation_planning" xml:space="preserve">
     <value>ラン間整合の計画</value>
     <comment>Needs Review:New resource</comment>
@@ -421,10 +417,6 @@
     <value>再開：{1:N0}個のファイルのうち{0:N0}個にはすでに最新の第1パス中間ファイルがあります。残りの{2:N0}個をスコアリングします。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_Resuming__a_saved_first_pass_model_exists_but_no_file_has_saved_scores__so_the_model_is_" xml:space="preserve">
-    <value>再開：保存された第1パスモデルがありますが、スコアが保存されたファイルがないため、モデルを再トレーニングします。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_Resuming__first_pass_intermediate_files_for_all__0__files_are_up_to_date__skipping_first_" xml:space="preserve">
     <value>再開：{0:N0}個すべてのファイルの第1パス中間ファイルが最新です。第1パスのスコアリング、タンパク質FDR、第1パスのモデル診断をスキップします。</value>
     <comment>Needs Review:New resource</comment>
@@ -433,24 +425,12 @@
     <value>再開：{0:N0}個すべてのファイルの第1パス中間ファイルが最新です。第1パスのスコアリングとタンパク質FDRをスキップします。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_Resuming__reusing_the_saved_first_pass_model_instead_of_training_again__1_of__1__files_" xml:space="preserve">
-    <value>再開：再トレーニングせずに、保存された第1パスモデルを再利用します（{1:N0}個のファイルのうち1個はスコアリング済み）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_Resuming__reusing_the_saved_first_pass_model_instead_of_training_again___0__of__1__files_" xml:space="preserve">
-    <value>再開：再トレーニングせずに、保存された第1パスモデルを再利用します（{1:N0}個のファイルのうち{0:N0}個はスコアリング済み）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_Resuming__the_first_pass_intermediate_files_are_up_to_date__but_first_pass_scoring_runs_" xml:space="preserve">
     <value>再開：第1パス中間ファイルは最新ですが、保存された結果がない（{0}）ため、第1パスのスコアリングを再実行します。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection___up_to_date___0_" xml:space="preserve">
     <value>最新：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___1st_pass_model_json__holds_no_model" xml:space="preserve">
-    <value>第1パスモデルファイル（{0}）にモデルが含まれていません</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_the_whole_experiment_first_pass_intermediate_file_is_not_up_to_date___0_" xml:space="preserve">
