@@ -61,6 +61,24 @@ namespace pwiz.Quasar {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to {0} has no run {1}..
+        /// </summary>
+        public static string Pipeline__0__has_no_run__1__ {
+            get {
+                return ResourceManager.GetString("Pipeline__0__has_no_run__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Known templates: {0} Osprey precursors at 1% in this run, from {1}..
+        /// </summary>
+        public static string Pipeline_Known_templates___0__Osprey_precursors_at_1__in_this_run__from__1__ {
+            get {
+                return ResourceManager.GetString("Pipeline_Known_templates___0__Osprey_precursors_at_1__in_this_run__from__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MS1: {0} scans for the precursor tiers ({1:F0} s)..
         /// </summary>
         public static string Pipeline_MS1___0__scans_for_the_precursor_tiers___1_F0__s__ {
@@ -173,10 +191,12 @@ namespace pwiz.Quasar {
         ///
         ///Usage:
         ///  Quasar -i &lt;run.raw|run.mzML&gt; [-o &lt;out.quasar.mzML&gt;] [--windows &lt;first&gt;[-&lt;last&gt;]] [--threads &lt;n&gt;]
+        ///         [--osprey-blib &lt;osprey.blib&gt;] [--features unassigned|all]
         ///  Quasar --version   Show the version.
         ///  Quasar --help      Show this help.
         ///
-        ///Writes one pseudo-spectrum per co-eluting cluster to mzML, for a search engine such as Sage..
+        ///Writes one pseudo-spectrum per co-eluting cluster to mzML, for a search engine such as Sage, and
+        ///the clusters with precursor candidates, one copy per candidate, to &lt;out&gt;.precursors.mzML. [rest of string was truncated]&quot;;.
         /// </summary>
         public static string Program_Usage {
             get {

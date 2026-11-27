@@ -60,6 +60,13 @@ namespace pwiz.Quasar
 
         /// <summary>Stop after Stage 1: build (and save) the traces, cluster nothing.</summary>
         public bool TracesOnly { get; set; }
+
+        /// <summary>
+        /// Osprey's blib for the experiment: this run's passing precursors become known templates,
+        /// so only the signal they leave unexplained forms new clusters (<c>--features
+        /// unassigned</c>). Null clusters all of it (<c>--features all</c>).
+        /// </summary>
+        public string OspreyBlibPath { get; set; }
     }
 
     /// <summary>
@@ -121,6 +128,8 @@ namespace pwiz.Quasar
             Log(QuasarResources.Pipeline_Run_shape__FWHM__0_F2__s__sigma__1_F4__min__tau__2_F4__min___3_F2__s_between_scans_of_a_window,
                 fwhm * 60.0, prior.Sigma, prior.Tau, cycle * 60.0);
             var clusterSettings = new WindowClusterSettings(prior, new NoiseModel(1.0, 1.0), cycle);
+            string stem = Path.GetFileNameWithoutExtension(_settings.InputPath);
+            var known = ReadKnownPrecursors(stem);
 
             var ms1 = _settings.TracesOnly ? new List<WindowScan>() : BuildMs1Scans(run);
             var ms1Rt = ms1.Select(s => s.RetentionTime).ToArray();
@@ -128,7 +137,6 @@ namespace pwiz.Quasar
             int clustersWithCandidate = 0, tier1Count = 0, tier2Count = 0;
 
             var spectra = new ConcurrentBag<(int Window, int Template, PseudoSpectrum Spectrum)>();
-            string stem = Path.GetFileNameWithoutExtension(_settings.InputPath);
             Parallel.ForEach(windows, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, _settings.Threads) },
                 window =>
                 {
@@ -152,13 +160,14 @@ namespace pwiz.Quasar
                             window.Index, hardklorSeconds, traceSeconds, string.Empty);
                         return;
                     }
-                    var clusterer = new WindowClusterer(clusterSettings);
-                    var result = clusterer.Run(rt, traces, Array.Empty<EmgShape>());
-                    Log(QuasarResources.Pipeline_Window__0__time__Hardklor__1_F1__s__traces__2_F1__s__clustering___3_,
-                        window.Index, hardklorSeconds, traceSeconds, result.Profile);
-
                     double low = window.Target - window.LowerOffset;
                     double high = window.Target + window.UpperOffset;
+                    var clusterer = new WindowClusterer(clusterSettings);
+                    var knownShapes = KnownTemplates.Fit(rt, traces, known.Where(p => low <= p.Mz && p.Mz < high),
+                        clusterer, clusterSettings);
+                    var result = clusterer.Run(rt, traces, knownShapes);
+                    Log(QuasarResources.Pipeline_Window__0__time__Hardklor__1_F1__s__traces__2_F1__s__clustering___3_,
+                        window.Index, hardklorSeconds, traceSeconds, result.Profile);
                     var ms1Traces = Ms1Traces(ms1, low, high, traceSettings);
                     int kept = 0;
                     foreach (var cluster in result.Clusters.Where(c => c.IsAccepted))
@@ -260,6 +269,19 @@ namespace pwiz.Quasar
         private List<WindowScan> BuildScans(RunData run, WindowScans window, AnalyzerEnvelopeFinder finder)
         {
             return window.Scans.Select(spectrum => ToWindowScan(run, spectrum, finder)).ToList();
+        }
+
+        /// <summary>This run's precursors from <see cref="PipelineSettings.OspreyBlibPath"/>; none in <c>--features all</c>.</summary>
+        private List<KnownPrecursor> ReadKnownPrecursors(string runName)
+        {
+            if (_settings.OspreyBlibPath == null)
+                return new List<KnownPrecursor>();
+            var known = OspreyRunReader.Read(_settings.OspreyBlibPath, runName);
+            if (known == null)
+                throw new InvalidDataException(string.Format(QuasarResources.Pipeline__0__has_no_run__1__, _settings.OspreyBlibPath, runName));
+            Log(QuasarResources.Pipeline_Known_templates___0__Osprey_precursors_at_1__in_this_run__from__1__, known.Count,
+                _settings.OspreyBlibPath);
+            return known;
         }
 
         /// <summary>The MS1 scans in ions, for the precursor tiers; no envelopes are searched (see <see cref="PrecursorFinder.FromMs1"/>).</summary>

@@ -13,6 +13,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Quasar.Features\Quasar.Features.csproj" />
+    <!-- Known precursors from Osprey's blib (OspreyRunReader) are Quasar.Core types. -->
+    <ProjectReference Include="..\Quasar.Core\Quasar.Core.csproj" />
     <!-- pwiz-sharp's chemistry (isotope tables, elements): Pwiz.Util.Chemistry. -->
     <ProjectReference Include="..\..\..\pwiz\utility\Util.csproj" />
     <!-- Spectra from raw files and mzML through ProteowizardWrapper, read the way Osprey reads

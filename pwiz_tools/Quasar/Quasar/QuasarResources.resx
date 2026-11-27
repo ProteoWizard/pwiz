@@ -97,6 +97,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Pipeline__0__has_no_run__1__" xml:space="preserve">
+    <value>{0} has no run {1}.</value>
+  </data>
+  <data name="Pipeline_Known_templates___0__Osprey_precursors_at_1__in_this_run__from__1__" xml:space="preserve">
+    <value>Known templates: {0} Osprey precursors at 1% in this run, from {1}.</value>
+  </data>
   <data name="Pipeline_MS1___0__scans_for_the_precursor_tiers___1_F0__s__" xml:space="preserve">
     <value>MS1: {0} scans for the precursor tiers ({1:F0} s).</value>
   </data>
@@ -138,10 +144,15 @@
 
 Usage:
   Quasar -i &lt;run.raw|run.mzML&gt; [-o &lt;out.quasar.mzML&gt;] [--windows &lt;first&gt;[-&lt;last&gt;]] [--threads &lt;n&gt;]
+         [--osprey-blib &lt;osprey.blib&gt;] [--features unassigned|all]
   Quasar --version   Show the version.
   Quasar --help      Show this help.
 
-Writes one pseudo-spectrum per co-eluting cluster to mzML, for a search engine such as Sage.</value>
+Writes one pseudo-spectrum per co-eluting cluster to mzML, for a search engine such as Sage, and
+the clusters with precursor candidates, one copy per candidate, to &lt;out&gt;.precursors.mzML.
+With --osprey-blib, the precursors Osprey found in this run at 1% are known templates and only
+the signal they leave unexplained is clustered (--features unassigned); --features all clusters
+all of it.</value>
   </data>
   <data name="Program_Version__0_" xml:space="preserve">
     <value>Quasar {0}</value>

@@ -46,6 +46,10 @@ namespace pwiz.Quasar
         internal const string ARG_THREADS = @"--threads";
         internal const string ARG_SAVE_TRACES = @"--save-traces";
         internal const string ARG_TRACES_ONLY = @"--traces-only";
+        internal const string ARG_FEATURES = @"--features";
+        internal const string ARG_OSPREY_BLIB = @"--osprey-blib";
+        internal const string FEATURES_ALL = @"all";
+        internal const string FEATURES_UNASSIGNED = @"unassigned";
 
         /// <summary>The output extension when no output is named.</summary>
         internal const string EXT_OUTPUT = @".quasar.mzML";
@@ -71,6 +75,8 @@ namespace pwiz.Quasar
             }
 
             var settings = new PipelineSettings { CommandLine = string.Join(@" ", args) };
+            string features = null;
+            string ospreyBlib = null;
             for (int i = 0; i < args.Length; i++)
             {
                 string arg = args[i];
@@ -88,6 +94,10 @@ namespace pwiz.Quasar
                     settings.Threads = threads;
                 else if (arg == ARG_SAVE_TRACES && value != null)
                     settings.SaveTracesDirectory = value;
+                else if (arg == ARG_FEATURES && (value == FEATURES_ALL || value == FEATURES_UNASSIGNED))
+                    features = value;
+                else if (arg == ARG_OSPREY_BLIB && value != null)
+                    ospreyBlib = value;
                 else if (arg == ARG_TRACES_ONLY)
                 {
                     settings.TracesOnly = true;
@@ -107,6 +117,15 @@ namespace pwiz.Quasar
                 error.WriteLine(QuasarResources.Program_Missing_argument__0_, ARG_INPUT);
                 return EXIT_CODE_FAILURE_TO_START;
             }
+
+            // Osprey's blib means --features unassigned unless --features all says otherwise.
+            bool unassigned = features == FEATURES_UNASSIGNED || (features == null && ospreyBlib != null);
+            if (unassigned && ospreyBlib == null)
+            {
+                error.WriteLine(QuasarResources.Program_Missing_argument__0_, ARG_OSPREY_BLIB);
+                return EXIT_CODE_FAILURE_TO_START;
+            }
+            settings.OspreyBlibPath = unassigned ? ospreyBlib : null;
 
             settings.OutputPath ??= Path.Combine(Path.GetDirectoryName(Path.GetFullPath(settings.InputPath)) ?? string.Empty,
                 Path.GetFileNameWithoutExtension(settings.InputPath) + EXT_OUTPUT);
