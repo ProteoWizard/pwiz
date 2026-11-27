@@ -71,7 +71,7 @@ on the first pass; reconciliation decides which peak is *quantified* in each run
 calibration" describes it better than the token does; the token stays `transfer`.
 
 No retrain and no new competition. For every compaction survivor, in the rescore worker
-(`TransferOneFile`):
+(`Pass2FdrSidecar.TransferOneFileByScore`):
 
 | Peak (classified by bit-exact score equality with pass 1) | Run-level q | Experiment-level q |
 |---|---|---|
@@ -199,8 +199,8 @@ or read: `<blib-stem>.1st-pass.stratum.json` and `<stem>.2nd-pass.fdr_decoys.bin
   features with **no new training**. It routes through `FrozenModelScorer`
   (`TryCreate` averages fold weights or takes the tree ensemble; `Score` goes
   through `PercolatorScorer.ScoreStandardizedRow`, so it is classifier-agnostic and
-  works for `OSPREY_FDR_MODEL=gbdt` too). The model is captured on the streaming
-  first pass via the `captureModel` hook.
+  works for `OSPREY_FDR_MODEL=gbdt` too). Each run's model is the one `PerFileScoring`
+  trained and saved for it (`<stem>.1st-pass.model.json`).
 - **Retrain** trained a fresh SVM/GBDT on the post-reconciliation pool. **It is gone.**
   `percolator` was removed for the depleted-null reason above, and the
   `OSPREY_PROTEIN_COMPACT_RETRAIN` A/B toggle that was the last way to reach it has been
@@ -217,8 +217,9 @@ coefficients plus per-feature target/decoy means, and nothing that has to be ret
 A first pass trained with the protein-best column (see [07](07-fdr-control.md)) has a frozen model one
 feature wider than the reconciled feature vectors. The column of a row is what the OTHER peptides on its
 protein scored in the first pass's round 1, which moving the row's own peak does not change, and it cannot
-be recomputed later (round 1's models are not saved). So `FirstPassFDR` writes each run's column to
-`<stem>.1st-pass.protein_best.bin` as it scores the run, and `FrozenModelScorer` appends to every rescored
+be recomputed later (round 1's models are not saved). So `PerFileScoring` writes each run's column into
+its stub scores parquet (`protein_best`) and the run's floor into its model file, and `RunModelScorer`
+appends to every rescored
 row - moved, gap-filled or CWT, target or decoy - its entry's value in that run, or the run's floor (the
 median of its decoy precursors' round-1 scores) for an entry the run had no first-pass row for. A row the
 first pass left alone therefore scores bit for bit as it did, and the transfer classifies it UNCHANGED.
