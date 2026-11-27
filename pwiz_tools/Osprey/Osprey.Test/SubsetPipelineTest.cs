@@ -943,6 +943,8 @@ namespace pwiz.Osprey.Test
             string baseLog = RunAnalysis(baseDir, DataInputs(), FdrLanes(1),
                 OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText, @"1");
             string baseBlib = Path.Combine(baseDir, BLIB_FILE);
+            // The read-ahead reader is for --spectra-cache off only.
+            StringAssert.DoesNotMatch(baseLog, new Regex(@"Read ahead: peak"));
 
             // Files scored and re-scored concurrently must give the sequential answer. The subset's
             // three runs reach the second-pass worker together, so a race there shows every time
@@ -970,6 +972,34 @@ namespace pwiz.Osprey.Test
             AssertBlibsEqual(baseBlib, Path.Combine(stagesDir, BLIB_FILE));
             StringAssert.Contains(stagesLog, ExplicitParallelismLine(RUN_NAMES.Length, OspreyArgNames.PARALLEL_FILES_SCORING));
             StringAssert.Contains(stagesLog, ExplicitParallelismLine(rescoringLanes, OspreyArgNames.PARALLEL_FILES_RESCORING));
+
+            // --spectra-cache off: each input read in full by a reader running ahead of the lanes,
+            // scored from memory with each window freed as it is scored, and read again for the
+            // re-score, gives the cached answer and writes no cache - on one lane with no read-ahead
+            // (the default), on one lane and on a lane per file reading a file ahead, and on one lane
+            // with a budget of a file and a half, where the reader must wait part-way through a file
+            // for scoring to free windows.
+            foreach (var (lanes, ahead) in new[] { (1, 0.0), (1, 1.0), (RUN_NAMES.Length, 1.0), (1, 0.5) })
+            {
+                string noCacheDir = CreateDir(string.Format(CultureInfo.InvariantCulture, @"no-spectra-cache-{0}-{1}", lanes, ahead));
+                double savedAhead = OspreyEnvironment.ReadAhead;
+                OspreyEnvironment.ReadAhead = ahead;
+                string noCacheLog;
+                try
+                {
+                    noCacheLog = RunAnalysis(noCacheDir, DataInputs(), FdrLanes(1),
+                        OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText, lanes.ToString(CultureInfo.InvariantCulture),
+                        OspreyCommandArgs.ARG_SPECTRA_CACHE.ArgumentText, OspreyArgNames.VALUE_OFF);
+                }
+                finally
+                {
+                    OspreyEnvironment.ReadAhead = savedAhead;
+                }
+                StringAssert.Contains(noCacheLog, @"Read ahead: peak");
+                AssertBlibsEqual(baseBlib, Path.Combine(noCacheDir, BLIB_FILE));
+                Assert.AreEqual(0, Directory.GetFiles(noCacheDir, @"*" + SPECTRA_CACHE_EXTENSION).Length,
+                    OspreyCommandArgs.ARG_SPECTRA_CACHE.ArgumentText + @" off wrote a spectra cache");
+            }
 
             // OSPREY_DIAGNOSTICS writes its dumps to the current directory.
             string diagnosticsDir = CreateDir(@"diagnostics");
@@ -1063,13 +1093,22 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(BlibComparer.CountRows(Path.Combine(sampledDir, BLIB_FILE), @"RefSpectra") > 0,
                 @"sampled calibration reported no precursors");
 
-            // The spectra-cache task alone writes one cache per run and nothing downstream. Pinned
-            // to one lane, so the lane comparison below always has a sequential baseline.
+            // The spectra-cache task alone writes one cache per run and nothing downstream, even with
+            // --spectra-cache off, since the cache is all it is for. Pinned to one lane, so the lane
+            // comparison below always has a sequential baseline.
             string cacheDir = CreateDir(@"spectra-cache");
             RunAnalysis(cacheDir, DataInputs(), Verifier(false), OspreyCommandArgs.ARG_TASK.ArgumentText,
-                SpectraCacheTask.TASK_NAME, OspreyCommandArgs.ARG_PARALLEL_FILES_CACHING.ArgumentText, @"1");
+                SpectraCacheTask.TASK_NAME, OspreyCommandArgs.ARG_PARALLEL_FILES_CACHING.ArgumentText, @"1",
+                OspreyCommandArgs.ARG_SPECTRA_CACHE.ArgumentText, OspreyArgNames.VALUE_OFF);
             Assert.AreEqual(RUN_NAMES.Length, Directory.GetFiles(cacheDir, @"*" + SPECTRA_CACHE_EXTENSION).Length);
             Assert.IsFalse(File.Exists(Path.Combine(cacheDir, BLIB_FILE)));
+            // The task writes each cache exactly as the search above wrote it while scoring.
+            foreach (string run in RUN_NAMES)
+            {
+                CollectionAssert.AreEqual(File.ReadAllBytes(Path.Combine(cacheDir, run + SPECTRA_CACHE_EXTENSION)),
+                    File.ReadAllBytes(Path.Combine(baseDir, run + SPECTRA_CACHE_EXTENSION)),
+                    @"the search's cache differs from the one the spectra-cache task wrote: " + run);
+            }
 
             // With --parallel-files the runs cache on lanes at once, and every cache is
             // byte-identical to the one-lane result: a file's cache depends only on its input.

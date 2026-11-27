@@ -38,7 +38,7 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     /// <remarks>
     /// Osprey does no demultiplexing of its own. With <c>--demux auto</c> the run is read through
-    /// ProteoWizard with its demultiplexer applied (<see cref="SpectrumFileReader.LoadAllSpectra"/>),
+    /// ProteoWizard with its demultiplexer applied (<see cref="SpectrumFileReader.LoadAllSpectra(string, SpectrumListDemux.Params)"/>),
     /// so the cache holds the spectra msconvert's <c>demultiplex optimization=overlap_only</c>
     /// filter would write to an mzML, without the mzML. A run that is not multiplexed is read as
     /// acquired into the ordinary <c>.spectra.bin</c>, so <c>--demux auto</c> is safe to pass for

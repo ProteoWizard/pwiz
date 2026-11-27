@@ -190,6 +190,15 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(ToleranceUnit.Mz, Parse(OspreyCommandArgs.ARG_FRAGMENT_UNIT, @"th").FragmentTolerance.Unit);
             Assert.AreEqual(ToleranceUnit.Mz, Parse(OspreyCommandArgs.ARG_FRAGMENT_UNIT, @"da").FragmentTolerance.Unit);
             Assert.IsFalse(Parse(OspreyCommandArgs.ARG_NO_PREFILTER).PrefilterEnabled);
+            // An argument after a bool-assigning handler still applies. Both once ended the parse
+            // silently (the assignment's value became the handler's return), dropping --perf-stats
+            // and --threads given after them.
+            var afterNoPrefilter = Parse(OspreyCommandArgs.ARG_NO_PREFILTER, OspreyCommandArgs.ARG_THREADS + 8);
+            Assert.IsFalse(afterNoPrefilter.PrefilterEnabled);
+            Assert.AreEqual(8, afterNoPrefilter.NThreads);
+            var afterCacheOff = Parse(OspreyCommandArgs.ARG_SPECTRA_CACHE + OspreyArgNames.VALUE_OFF, OspreyCommandArgs.ARG_PERF_STATS);
+            Assert.IsFalse(afterCacheOff.SpectraCache);
+            Assert.IsTrue(afterCacheOff.PerfStats);
 
             // FDR + protein inference, including warn-and-default enums.
             // A number renders the way Osprey parses it - invariant culture, see the static

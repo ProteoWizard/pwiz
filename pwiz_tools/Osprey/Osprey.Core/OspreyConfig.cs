@@ -423,6 +423,15 @@ namespace pwiz.Osprey.Core
         public DemuxMode DemuxMode { get; set; } = DemuxMode.off;
 
         /// <summary>
+        /// Write each input's <c>.spectra.bin</c> the first time it is read, for the second-pass
+        /// re-score and later searches to read (<c>--spectra-cache on</c>, the default). Off, no cache
+        /// is written: per-file scoring and the re-score each read the input itself, trading run time
+        /// for disk. A cache that already exists is read either way. Not in the search hash: the
+        /// output is the same.
+        /// </summary>
+        public bool SpectraCache { get; set; } = true;
+
+        /// <summary>
         /// Protein-level FDR threshold. Optional on the command line
         /// (<c>--protein-fdr</c>); when unset, <see cref="EffectiveProteinFdr"/>
         /// falls back to <see cref="DefaultProteinFdr"/>. To match Rust osprey
