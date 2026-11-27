@@ -77,11 +77,17 @@ reproduces the SEA-AD audit library: 1,391,232 entrapment peptides reassigned ov
 
 ## What it found in Osprey
 
+This section is the record of the audit of 2026-11, and of one of the reasons the
+`protein-compact` second pass was removed later that month
+([12-second-pass-fdr.md](12-second-pass-fdr.md), "Removed modes"). The builds it measured
+trained the first pass without the protein-best column, which is now the default and is
+itself a protein-aware step this audit applies to.
+
 Measured on one SEA-AD Astral file (A10_014), `target+decoy+entrapment-20260817`,
 library decoys, r = 1.0.
 
-- **Pass 1 is the negative control.** First-pass q-values are identical on the two
-  libraries: the first pass uses no protein information.
+- **Pass 1 was the negative control.** First-pass q-values were identical on the two
+  libraries: that first pass used no protein information.
 - **Pass 2 (`protein-compact`) was not calibrated.** In the original audit (a
   development build with gradient-boosted first-pass scoring) the entrapment on
   detected target proteins at q 1% rose roughly tenfold on the shuffled library and
@@ -90,10 +96,10 @@ library decoys, r = 1.0.
 
 ### The defect
 
-`protein-compact` re-competes, in pass 2, the precursors of proteins with 2 or more
+`protein-compact` re-competed, in pass 2, the precursors of proteins with 2 or more
 detected peptides (the stratum; [12-second-pass-fdr.md](12-second-pass-fdr.md)).
-Membership is by `base_id`, so a target and its paired decoy always land in the same
-half - the stratum is already pair-complete. Two candidate causes were checked
+Membership was by `base_id`, so a target and its paired decoy always landed in the same
+half - the stratum was already pair-complete. Two candidate causes were checked
 offline on the audit run's own sidecars, re-running the competition with the stored
 scores:
 
@@ -112,9 +118,9 @@ scores:
   winners. The union reported at a nominal 1% held 1,132 decoy winners against 66,832
   targets.
 
-The fix competes the stratum and its complement **separately, each against its own
-paired decoys**, at run and at experiment scope. Every decoy then counts in the half
-its target is in - the same protein evidence as its target.
+The fix (#4993) competed the stratum and its complement **separately, each against its own
+paired decoys**, at run and at experiment scope. Every decoy then counted in the half
+its target was in - the same protein evidence as its target.
 
 ### Before and after
 
@@ -164,6 +170,7 @@ What this says:
 ## See also
 
 - [fractional-entrapment.md](fractional-entrapment.md) - the entrapment estimators.
-- [12-second-pass-fdr.md](12-second-pass-fdr.md) - `protein-compact` and its stratum.
+- [12-second-pass-fdr.md](12-second-pass-fdr.md) - the second pass, and the removed
+  `protein-compact` mode and its stratum.
 - Issues #4581 (the stratum gate), #4580 (a continuous sibling-evidence feature),
   #4538 (validating `protein-compact`).

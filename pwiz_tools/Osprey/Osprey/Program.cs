@@ -362,7 +362,16 @@ namespace pwiz.Osprey
                 // directory is created and before anything is checked on disk - a node's files are
                 // what a harness asks about before the node has them.
                 if (config.PrintTaskFiles)
+                {
+                    // Refused as the run is, below: a list for a mode the run will not start
+                    // under would have a harness stage files for nodes that then abort.
+                    if (OspreyEnvironment.Pass2QValueUnrecognized)
+                    {
+                        LogError(Pass2QValueUnrecognizedMessage());
+                        return EXIT_CODE_FAILURE_TO_START;
+                    }
                     return PrintTaskFiles(config, pipeline, librarySettings);
+                }
 
                 // --device gpu is a requirement, not a wish: a run that cannot predict on the GPU fails
                 // here, before anything is written, saying what to do - a slow run on the CPU would
@@ -647,14 +656,7 @@ namespace pwiz.Osprey
                 // instead of a full Stage 1-5.
                 if (OspreyEnvironment.Pass2QValueUnrecognized)
                 {
-                    // Why 'percolator' and 'transfer-compete' were removed, with the entrapment
-                    // numbers, is in docs/12-second-pass-fdr.md and on OspreyEnvironment.Pass2QValueOverride.
-                    LogError(string.Format(
-                        @"OSPREY_PASS2_QVALUE='{2}' is not recognized. Use '{0}' or '{1}', or unset it " +
-                        @"for the default ('{1}'). The 'percolator' and 'transfer-compete' modes were removed.",
-                        OspreyEnvironment.PASS2_QVALUE_TRANSFER,
-                        OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT,
-                        OspreyEnvironment.Pass2QValueSetting));
+                    LogError(Pass2QValueUnrecognizedMessage());
                     return EXIT_CODE_FAILURE_TO_START;
                 }
                 // Abort for the same reason: a tolerance that does not parse would train under
@@ -733,13 +735,6 @@ namespace pwiz.Osprey
                 if (featureSelection.FdrFeatureIndices.Length == 0)
                 {
                     LogError(@"OSPREY_FEATURE_MASK masks every PIN feature, which leaves the FDR classifier nothing to train on.");
-                    return EXIT_CODE_FAILURE_TO_START;
-                }
-                // Refused once the resolution is known, because HRAM data defaults to --protein-boost best.
-                string pass2Err = OspreyEnvironment.ValidatePass2WithProteinBest(config);
-                if (pass2Err != null)
-                {
-                    LogError(pass2Err);
                     return EXIT_CODE_FAILURE_TO_START;
                 }
                 // Abort for the same reason: the transfer's verifier re-scores each run's moved rows
@@ -874,6 +869,20 @@ namespace pwiz.Osprey
         /// its CarafeSharp task. The declarations read the configuration and nothing on disk, so a
         /// harness asks before it stages the node.
         /// </summary>
+        /// <summary>
+        /// The startup error for an OSPREY_PASS2_QVALUE that is not a mode. Why 'percolator',
+        /// 'transfer-compete' and 'protein-compact' were removed, with the entrapment numbers, is in
+        /// docs/12-second-pass-fdr.md and on <see cref="OspreyEnvironment.Pass2QValueOverride"/>.
+        /// </summary>
+        private static string Pass2QValueUnrecognizedMessage()
+        {
+            return string.Format(
+                @"OSPREY_PASS2_QVALUE='{1}' is not recognized. Use '{0}', or unset it for the same. " +
+                @"The 'percolator', 'transfer-compete' and 'protein-compact' modes were removed.",
+                OspreyEnvironment.PASS2_QVALUE_TRANSFER,
+                OspreyEnvironment.Pass2QValueSetting);
+        }
+
         private static int PrintTaskFiles(OspreyConfig config, IReadOnlyList<OspreyTask> pipeline, LibraryBuildSettings librarySettings)
         {
             void Print(string kind, string task, IEnumerable<string> paths)
@@ -1477,7 +1486,7 @@ namespace pwiz.Osprey
         /// </summary>
         internal static string VerifyWorkerError(OspreyConfig config)
         {
-            if (!OspreyEnvironment.Pass2VerifyWorker || config.Pass2ProteinCompact ||
+            if (!OspreyEnvironment.Pass2VerifyWorker ||
                 !ScoringTaskShared.RunsStage7Join(config) || PerFileScoringTask.WritesFeaturesCheckpoint(config))
             {
                 return null;

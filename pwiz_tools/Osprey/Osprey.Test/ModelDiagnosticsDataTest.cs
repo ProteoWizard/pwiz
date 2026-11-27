@@ -369,7 +369,6 @@ namespace pwiz.Osprey.Test
             TestCoAssignmentAggregateStubDoesNotOutrankRealScore();
             TestCoAssignmentExactTieGoesToTheDecoy();
             TestCoAssignmentReportsInheritedQDivergence();
-            TestCoAssignmentDecoysUseTheirOwnStratumBoundary();
             TestCoAssignmentRunScopeGrowsGeometrically();
             TestCoAssignmentRunScopeForgetsThePreviousFile();
         }
@@ -558,9 +557,9 @@ namespace pwiz.Osprey.Test
         // ranked on, so the worst accepted score IS the crossing. They can only separate when the
         // q-values were computed over a DIFFERENT population than the pool being counted.
         //
-        // That makes the gap a misconfiguration detector, and #4573 is the proof. Under
-        // OSPREY_PASS2_QVALUE=protein-compact only in-stratum base_ids recompete; everything else
-        // keeps its pass-1 experiment q AND pass-1 aggregate. On stellar-gendecoy-entrap the
+        // That makes the gap a misconfiguration detector, and #4573 is the proof. Under the
+        // since-removed protein-compact second pass only in-stratum base_ids recompeted; everything
+        // else kept its pass-1 experiment q AND pass-1 aggregate. On stellar-gendecoy-entrap the
         // stratum had collapsed to 23 base_ids (7 proteins with >=2 detected peptides, from a
         // library whose accessions were per-peptide pseudo-proteins), so nothing recompeted, the
         // cutoff stayed bit-identical to pass 1's 0.2106 against a crossing of -1.9960, and the
@@ -578,79 +577,6 @@ namespace pwiz.Osprey.Test
         {
             TestCoAssignmentInheritedQIsReportedNotHidden();
             TestCoAssignmentOwnQAgreesWithItsCrossing();
-        }
-
-        // A DECOY IS ADMITTED AGAINST THE BOUNDARY OF ITS OWN q SYSTEM (issue #4573).
-        //
-        // Under OSPREY_PASS2_QVALUE=protein-compact the reported pool carries two q systems:
-        // in-stratum entries had q AND aggregate recomputed by the pass-2 stratified
-        // competition, off-stratum entries carry both forward from pass 1 untouched. Decoys have
-        // no q of their own and are admitted on SCORE, so a single pooled minimum over the
-        // accepted set is a pass-1 quantity for in-stratum decoys or a pass-2 quantity for
-        // off-stratum ones - whichever side happened to produce the lower score. On a healthy
-        // stratum most reported peptides are in-stratum, so the pooled bar is usually the WRONG
-        // one for the majority.
-        //
-        // The fixture puts the two systems at clearly different boundaries and a decoy just
-        // inside each, so a pooled minimum admits one decoy it should not:
-        //
-        //   base_id  entry            aggregate  q       stratum
-        //      1     T1  target          8.0     0.001   IN     <- in-stratum boundary = 8.0
-        //      2     T2  target          2.0     0.001   OFF    <- off-stratum boundary = 2.0
-        //      3     D3  decoy           5.0     n/a     IN     above 2.0, BELOW 8.0
-        //      4     D4  decoy           3.0     n/a     OFF    above 2.0
-        //
-        // Pooled minimum = 2.0, which admits BOTH decoys. Per-system: D3 is in-stratum and must
-        // clear 8.0, so it is correctly excluded; D4 is off-stratum and clears 2.0. The decoy row
-        // is therefore 1, not 2 - and a build that reverts to the pooled bar reports 2.
-        private static void TestCoAssignmentDecoysUseTheirOwnStratumBoundary()
-        {
-            const double runFdr = 0.25;
-            var mz = new Dictionary<uint, double>
-            {
-                { 1, 500.0 }, { 2, 501.0 }, { 3 | DECOY_BIT, 502.0 }, { 4 | DECOY_BIT, 503.0 },
-            };
-            var cls = new Dictionary<uint, EntrapmentClass>
-            {
-                { 1, EntrapmentClass.Target }, { 2, EntrapmentClass.Target },
-            };
-            var rows = new List<FdrEntry>
-            {
-                CoEntry(1, false, 8.0, 0.001, @"T1", 2, 10.0, 8.0),
-                CoEntry(2, false, 2.0, 0.001, @"T2", 2, 11.0, 2.0),
-                // Paired targets 3 and 4 are absent, so both decoys won by default.
-                CoEntry(3 | DECOY_BIT, true, 5.0, 0.900, @"D3", 2, 12.0, 5.0),
-                CoEntry(4 | DECOY_BIT, true, 3.0, 0.900, @"D4", 2, 13.0, 3.0),
-            };
-            var stratum = new HashSet<uint> { 1, 3 };   // base_ids 1 and 3 are in-stratum
-
-            var data = ModelDiagnosticsData.BuildCoAssignment(
-                WrapFiles(rows), cls, id => mz.TryGetValue(id, out double v) ? v : double.NaN,
-                runFdr, FdrLevel.Precursor, 2, true, stratum);
-            Assert.IsNotNull(data);
-
-            // Both boundaries are reported, and the pooled one still shows the mixed minimum so
-            // the divergence between the systems stays visible on the page.
-            Assert.AreEqual(8.0, data.ExperimentCutoffInStratum, 1e-12);
-            Assert.AreEqual(2.0, data.ExperimentCutoffOffStratum, 1e-12);
-            Assert.AreEqual(2.0, data.ExperimentCutoff, 1e-12);
-            Assert.AreEqual(1, data.AcceptedInStratum);
-            Assert.AreEqual(1, data.AcceptedOffStratum);
-
-            Assert.IsNotNull(data.Experiment.Decoy);
-            Assert.AreEqual(1, data.Experiment.Decoy.N,
-                @"an in-stratum decoy below its own recomputed boundary was admitted on the off-stratum (pass-1) minimum");
-
-            // Without a stratum the builder must behave exactly as before - one boundary, both
-            // decoys admitted - so nothing outside protein-compact moves.
-            var pooled = ModelDiagnosticsData.BuildCoAssignment(
-                WrapFiles(rows), cls, id => mz.TryGetValue(id, out double v) ? v : double.NaN,
-                runFdr, FdrLevel.Precursor, 2, true);
-            Assert.IsNotNull(pooled);
-            Assert.AreEqual(2, pooled.Experiment.Decoy.N,
-                @"the no-stratum path must keep the single pooled boundary");
-            Assert.IsTrue(double.IsNaN(pooled.ExperimentCutoffInStratum));
-            Assert.IsTrue(double.IsNaN(pooled.ExperimentCutoffOffStratum));
         }
 
         // ARM 1 - inherited q: the boundaries MUST diverge, and the class table must stay on the
@@ -1076,47 +1002,6 @@ namespace pwiz.Osprey.Test
                 @"streamed pass-2 accumulator must byte-match the batch build with no contributions");
             Assert.IsNull(batchT.Model, @"no retrained second pass -> structural half null");
             Assert.IsNull(batchT.WinFraction);
-
-            // STRATIFIED, which is the only shape the streamed arm ever runs in production:
-            // CanStreamStage7Join requires protein-compact, and under it SecondPassFdrTask always
-            // passes the ProteinCompactStratum to the panel. A non-null stratum SPLITS the
-            // experiment acceptance boundary in two (issue #4573), which is the most state- and
-            // position-sensitive part of the panel and the part the phase split newly drives -
-            // so comparing only the pooled-boundary path would leave the production
-            // configuration with no equivalence coverage at all. An EMPTY stratum is a real
-            // (degenerate) configuration and deliberately NOT the same as no stratum, so this
-            // uses a populated one.
-            var stratum = new HashSet<uint>();
-            for (int i = 0; i < 4; i++)
-                stratum.Add((uint)(100 + i));   // half the targets in, half out
-            var batchS = ModelDiagnosticsData.BuildPass2(perFileEntries, contrib, cls, pair, r,
-                runFdr, level, mzLookup, stratum);
-            var accS = new ModelDiagnosticsData.Accumulator(runNames, cls, pair, r, runFdr, level, 2);
-            var coAssignS = new ModelDiagnosticsData.CoAssignmentPassBuilder(runNames, 2, true, stratum);
-            for (int fi = 0; fi < perFileEntries.Count; fi++)
-            {
-                foreach (var e in perFileEntries[fi].Value)
-                {
-                    accS.Add(fi, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
-                        new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
-                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0, 0.0));
-                }
-                ModelDiagnosticsData.ObserveCoAssignmentRun(coAssignS, fi,
-                    perFileEntries[fi].Value, cls, runFdr, level);
-            }
-            var panelS = ModelDiagnosticsData.BuildCoAssignmentDetection(coAssignS, runNames,
-                perFileEntries, cls, mzLookup, runFdr, level);
-            Assert.AreEqual(
-                JsonConvert.SerializeObject(batchS, settings),
-                JsonConvert.SerializeObject(accS.BuildPass2(contrib, panelS), settings),
-                @"streamed pass-2 accumulator must byte-match the batch build under a protein-compact stratum");
-            // The stratum has to have actually split the boundary, or this arm passes vacuously
-            // by reproducing the pooled result twice.
-            Assert.IsNotNull(batchS.CoAssignment);
-            Assert.AreNotEqual(
-                JsonConvert.SerializeObject(batch.CoAssignment, settings),
-                JsonConvert.SerializeObject(batchS.CoAssignment, settings),
-                @"a populated stratum must move the panel, or this arm proves nothing");
         }
 
         // The accumulator folds different state for each pass, so building it for the pass it was
@@ -2107,7 +1992,7 @@ namespace pwiz.Osprey.Test
                 JsonConvert.SerializeObject(acc.Build(null), settings),
                 @"streaming accumulator must byte-match the batch build with a placement split");
             var batch2 = ModelDiagnosticsData.BuildPass2(perFileEntries, null, cls, null, r, 0.01, FdrLevel.Peptide,
-                null, null, placement);
+                null, placement);
             var acc2 = new ModelDiagnosticsData.Accumulator(runNames, cls, null, r, 0.01, FdrLevel.Peptide, 2, placement);
             foreach (var e in entries)
             {

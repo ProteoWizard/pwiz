@@ -252,20 +252,11 @@ namespace pwiz.Osprey.Core
         public bool ProteinBoostGiven { get; set; }
 
         /// <summary>
-        /// How the second pass assigns reported q-values: <see cref="OspreyEnvironment.PASS2_QVALUE_TRANSFER"/>
-        /// or <see cref="OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT"/>. Not a choice of its own: the transfer,
-        /// for every <see cref="ProteinBoost"/> and resolution. The developer variable OSPREY_PASS2_QVALUE
-        /// overrides it.
+        /// How the second pass assigns reported q-values: <see cref="OspreyEnvironment.PASS2_QVALUE_TRANSFER"/>,
+        /// for every <see cref="ProteinBoost"/> and resolution. The only mode left; the name stays in the
+        /// validity keys and the log, and the developer variable OSPREY_PASS2_QVALUE accepts no other value.
         /// </summary>
         public string Pass2QValue => OspreyEnvironment.Pass2QValueOverride ?? OspreyEnvironment.PASS2_QVALUE_TRANSFER;
-
-        /// <summary>True when <see cref="Pass2QValue"/> is the frozen-model confidence transfer.</summary>
-        public bool Pass2TransferQ =>
-            string.Equals(Pass2QValue, OspreyEnvironment.PASS2_QVALUE_TRANSFER, StringComparison.Ordinal);
-
-        /// <summary>True when <see cref="Pass2QValue"/> is the protein-anchored constrained competition.</summary>
-        public bool Pass2ProteinCompact =>
-            string.Equals(Pass2QValue, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT, StringComparison.Ordinal);
 
         /// <summary>
         /// The scoring settings that default by resolution and have no command-line option: the XIC
@@ -809,9 +800,6 @@ namespace pwiz.Osprey.Core
     {
         /// <summary>The protein-best training column in the first pass, with the transfer second pass. The default at both resolutions.</summary>
         best,
-        /// <summary>No protein-best column, like <see cref="off"/>: the protein-compact second pass it once chose is now
-        /// reached only through OSPREY_PASS2_QVALUE. To be removed.</summary>
-        compact,
         /// <summary>No protein boost: the transfer second pass alone. The legacy value, kept by a configuration that never learns its resolution.</summary>
         off
     }

@@ -166,15 +166,22 @@ namespace pwiz.Osprey.Test
             AssertScoresIdentical(onScores, FirstPassScores(threadDir), @"one thread");
             AssertBlibsEqual(expectedBlib, Path.Combine(threadDir, BLIB_FILE));
 
-            // The protein-compact second pass is refused with the column: both credit a precursor for
-            // its protein's other detections.
+            // The removed protein-compact second pass is refused at startup like any other
+            // unrecognized mode, before a run is scored.
+            const string removedMode = @"protein-compact";
             string compactDir = CreateDir(@"protein-best-protein-compact");
-            var compact = new Dictionary<string, string>(ProteinBestVariables())
-                { [PASS2_QVALUE] = OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT };
+            var compact = new Dictionary<string, string>(ProteinBestVariables()) { [PASS2_QVALUE] = removedMode };
             string refused = RunOspreyExpecting(SearchArgs(compactDir, Path.Combine(_dataDir, LIBRARY_FILE), OnArgs(compactDir)),
                 compact, Program.EXIT_CODE_FAILURE_TO_START);
             Assert.AreEqual(1, SplitLines(refused).Count(CommandStatusWriter.IsErrorLine), refused);
-            StringAssert.Contains(refused, @"OSPREY_PASS2_QVALUE=" + OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT);
+            StringAssert.Contains(refused, @"OSPREY_PASS2_QVALUE='" + removedMode + @"'");
+            Assert.IsFalse(refused.Contains(TaskLine(PerFileScoringTask.TASK_NAME, @"starting")), refused);
+            // A --task-files query is refused the same way, so a harness does not stage files
+            // for nodes that will not start.
+            string refusedQuery = RunOspreyExpecting(SearchArgs(compactDir, Path.Combine(_dataDir, LIBRARY_FILE), OnArgs(compactDir))
+                .Concat(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, SecondPassFdrTask.TASK_NAME,
+                    OspreyCommandArgs.ARG_TASK_FILES.ArgumentText }).ToArray(), compact, Program.EXIT_CODE_FAILURE_TO_START);
+            StringAssert.Contains(refusedQuery, @"OSPREY_PASS2_QVALUE='" + removedMode + @"'");
 
             // The developer arm is a different column.
             var other = new Dictionary<string, string>(ProteinBestVariables()) { [PROTEIN_BEST_SHUFFLE] = @"1" };

@@ -1901,51 +1901,6 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Stream a scores parquet's <c>entry_id</c> column in physical row order, one row group
-        /// resident at a time.
-        ///
-        /// <para>Exists so the per-run 2nd-pass sidecar's record SEQUENCE can be asserted against
-        /// the pool it claims to describe (issue #4486). The pool's population and order are
-        /// defined by the reconciled parquet - <c>ReconciledParquetWriter</c> merges gap-fills
-        /// into canonical <c>(entry_id, charge, scan_number)</c> position and hard-fails a row out
-        /// of that order - so the parquet is the authority and the sidecar is what has to match
-        /// it. A row COUNT alone cannot see a permutation, and a permutation is exactly what the
-        /// sidecar acquired when gap-fills were appended rather than merged.</para>
-        ///
-        /// <para>Deliberately a full column read rather than a footer probe: the whole point is
-        /// the ORDER, which no metadata carries. One <c>uint</c> per row - 4.7 MB on the largest
-        /// Astral file (1.18 M rows; the CHS cohort's largest is 4.18 M rows, i.e. ~17 MB of entry
-        /// ids and ~33 MB of apex RTs) - and nothing else is decoded.</para>
-        /// </summary>
-        public static IEnumerable<uint> StreamEntryIds(string path)
-        {
-            using (var stream = BlockReadStream.OpenRead(path))
-            using (var reader = OpenReader(stream))
-            {
-                var fieldsByName = BuildFieldLookup(reader);
-                for (int g = 0; g < reader.RowGroupCount; g++)
-                {
-                    using (var groupReader = reader.OpenRowGroupReader(g))
-                    {
-                        var col = ReadColumnByName<uint>(groupReader, fieldsByName, COLUMN_ENTRY_ID);
-                        // Absence is a stop, not an early end. ReadColumnByName ends in an `as`
-                        // cast, so a missing column and one written at another width both land
-                        // here; yielding nothing would let the caller's positional comparison
-                        // pass vacuously on zero rows, which is the one outcome that must not
-                        // read as agreement.
-                        if (col == null)
-                        {
-                            throw new InvalidDataException(string.Format(
-                                OspreyIOResources.ParquetScoreCache_StreamEntryIds_The_scores_file___0___is_damaged__row_group__1__has_no_readable_entry_id_column__so_its_, path, g, COLUMN_ENTRY_ID));
-                        }
-                        foreach (uint id in col)
-                            yield return id;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
         /// Streams the scalar stub columns of a <c>.scores.parquet</c> without allocating a
         /// single <see cref="FdrEntry"/>. Reads exactly the six columns the first-pass score
         /// pass needs -- entry_id, charge, is_decoy, coelution_sum, modified_sequence and
@@ -2115,33 +2070,6 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Footer-only probe of a parquet's POPULATION: whether it is a reconciled
-        /// survivors parquet (<c>osprey.reconciled=survivors</c>) and how many rows it
-        /// holds. Decodes no column data - both answers come from the footer - so this is
-        /// cheap enough to run per file on every route.
-        ///
-        /// <para>Exists so a per-file node can check that what it wrote describes the pool
-        /// Stage 6 defined for it (issue #4486). <c>RowCount</c> is meaningful for that
-        /// comparison ONLY when <c>IsReconciledSurvivors</c> is true: the effective parquet
-        /// falls back to the Stage 4 file when reconciliation produced no sibling, and that
-        /// one holds the whole pre-compaction population rather than the pool.</para>
-        /// </summary>
-        public static (bool IsReconciledSurvivors, long RowCount) ProbePoolPopulation(string path)
-        {
-            if (!File.Exists(path))
-                return (false, 0L);
-            var footer = LoadFooterMetadata(path);
-            footer.TryGetValue(META_RECONCILED, out string marker);
-            if (!string.Equals(marker, RECONCILED_SURVIVORS, StringComparison.Ordinal))
-                return (false, 0L);
-            using (var stream = BlockReadStream.OpenRead(path))
-            using (var reader = OpenReader(stream))
-            {
-                return (true, reader.Metadata?.NumRows ?? 0L);
-            }
-        }
-
-        /// <summary>
         /// The two things a resume rehydrate needs from a scores parquet, in ONE open: does it
         /// carry the PIN feature schema, and how many rows does it declare.
         ///
@@ -2304,7 +2232,7 @@ namespace pwiz.Osprey.IO
         ///
         /// <paramref name="keepIdentities"/> subsets the output to the Stage 5 survivors: an
         /// original row whose (entry_id, charge, scan_number) is absent is not emitted - the
-        /// same identity <c>Pass2FdrSidecar.MapFeaturesByScoreIndex</c> keys on, and NOT
+        /// identity of a row, and NOT
         /// entry_id alone, because compaction drops an entry_id's extra SCANS rather than the
         /// entry_id itself. Null keeps every row,
         /// which is the old whole-file shape and what the unit tests exercise. Subsetting is

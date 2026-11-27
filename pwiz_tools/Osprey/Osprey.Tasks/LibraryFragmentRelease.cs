@@ -41,8 +41,8 @@ namespace pwiz.Osprey.Tasks
     /// set grows with file count.</para>
     ///
     /// <para>Why fragments and not whole entries: <c>ProteinFdr.BuildProteinParsimony</c>
-    /// and <c>FirstPassFdrTask.BuildProteinCompactStratum</c> both walk the ENTIRE library
-    /// after Stage 5, including entries already judged false. They read only the identity
+    /// walks the ENTIRE library
+    /// after Stage 5, including entries already judged false. It reads only the identity
     /// fields, never the spectra - so dropping entries would silently move protein FDR,
     /// while dropping fragments cannot. The blib write is safe for a separate reason:
     /// <c>BlibOutputWriter.PrepareSpectra</c> reads fragments only for
@@ -166,8 +166,8 @@ namespace pwiz.Osprey.Tasks
         /// Call <see cref="LibraryEntry.ReleaseSpectrum"/> on every entry whose base_id is
         /// outside <paramref name="retainedBaseIds"/> and return how many were released.
         /// Identity fields
-        /// are untouched on ALL entries, because protein parsimony and the protein-compact
-        /// stratum walk the whole library after this point and read them.
+        /// are untouched on ALL entries, because protein parsimony walks the whole library
+        /// after this point and reads them.
         ///
         /// <para>Also drops <see cref="FragmentMath"/>'s memoized top-6 m/z table, which is
         /// library-derived data of the same order (a <c>double[]</c> per entry Id, keyed over

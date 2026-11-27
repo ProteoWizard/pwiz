@@ -60,8 +60,8 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// Carafe writes one synthetic accession PER PEPTIDE
         /// (<c>sp|O95139_pep00019|NDUB6_HUMAN</c>), so every peptide becomes its own protein.
-        /// Left in place that breaks protein parsimony and, worse, silently empties the
-        /// <c>protein-compact</c> stratum - "proteins with &gt;=2 detected peptides" can never
+        /// Left in place that breaks protein parsimony and every use of a protein's other
+        /// peptides - "proteins with &gt;=2 detected peptides" can never
         /// fire when each protein owns one peptide. Measured on the Stellar entrapment library:
         /// 7 proteins / 23 base_ids before stripping, 4,022 / 167,660 after.
         /// </summary>
@@ -82,8 +82,8 @@ namespace pwiz.Osprey.Test
 
             Assert.AreEqual(4, n);
             Assert.IsNotNull(warning, @"stripping the suffix must warn - it changes protein-level results");
-            // The two peptides now share ONE protein, which is the whole point: only then can a
-            // protein reach the 2-detected-peptide bar protein-compact stratifies on.
+            // The two peptides now share ONE protein, which is the whole point: only then does a
+            // peptide have a sibling on its protein.
             Assert.AreEqual(@"sp|O95139|NDUB6_HUMAN", library[0].ProteinIds[0]);
             Assert.AreEqual(@"sp|O95139|NDUB6_HUMAN", library[1].ProteinIds[0]);
             // Entrapment and decoy markers are NOT part of the suffix and must be preserved -
@@ -4007,109 +4007,6 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The per-file second-pass competition decoys artifact (issue #4486) - the decoy side of
-        /// one file's pass-2 competition, which the pool-image sidecar structurally cannot carry
-        /// because the winning decoy of a base_id is routinely a non-survivor.
-        ///
-        /// <list type="bullet">
-        /// <item><b>Canonical.</b> The file is a function of its CONTENTS, not of the order the
-        /// producer's dictionary enumerated: the same pairs inserted in opposite orders must
-        /// produce byte-identical files. The straight-through and distributed routes accumulate
-        /// in different orders and the gate compares their artifacts byte for byte.</item>
-        /// <item><b>Key-checked.</b> The base_id key is not stored - it is the entry_id's low 31
-        /// bits - so a TARGET entry_id or a mis-filed key would have the reader silently
-        /// re-derive a different base_id and put a target observation into the decoy null. Both
-        /// fail the write instead.</item>
-        /// <item><b>Rejects a foreign file.</b> This shares a header shape with the per-file
-        /// scores sidecar and the analysis-wide experiment sidecar; only the magic separates
-        /// them, so a mix-up has to be a rejection rather than plausible garbage.</item>
-        /// <item><b>Unreadable is null, never empty.</b> An empty competition and an unreadable
-        /// file must be distinguishable: the second silently empties the null every experiment
-        /// q-value is computed against, and no golden or entrapment gate can see that.</item>
-        /// </list>
-        /// </summary>
-        [TestMethod]
-        public void TestPass2CompetitionDecoysArtifact()
-        {
-            // The decoy high bit, as PercolatorEntry sets it. Spelled out here because the
-            // artifact under test derives every base_id key from it.
-            const uint DECOY_BIT = 0x80000000;
-            string dir = Path.Combine(Path.GetTempPath(), "osprey_dcy_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            try
-            {
-                var ascending = new Dictionary<uint, (double score, uint entryId)>();
-                var descending = new Dictionary<uint, (double score, uint entryId)>();
-                for (uint b = 1; b <= 8; b++)
-                    ascending[b] = (0.1 * b, DECOY_BIT | b);
-                for (uint b = 8; b >= 1; b--)
-                    descending[b] = (0.1 * b, DECOY_BIT | b);
-
-                string a = Path.Combine(dir, "a.bin");
-                string d = Path.Combine(dir, "d.bin");
-                Pass2CompetitionDecoys.Write(a, ascending, TestStamps.Any);
-                Pass2CompetitionDecoys.Write(d, descending, TestStamps.Any);
-                CollectionAssert.AreEqual(File.ReadAllBytes(a), File.ReadAllBytes(d),
-                    "the artifact must be a function of its contents, not of insertion order");
-
-                var map = Pass2CompetitionDecoys.ReadMap(a);
-                Assert.IsNotNull(map);
-                Assert.AreEqual(8, map.Count);
-                for (uint b = 1; b <= 8; b++)
-                {
-                    Assert.AreEqual(DECOY_BIT | b, map[b].entryId);
-                    Assert.AreEqual(0.1 * b, map[b].score);
-                }
-                Assert.IsTrue(Pass2CompetitionDecoys.IsCurrentFormat(a));
-
-                // A target entry_id has no decoy bit, so the reader would key it to its own
-                // base_id and the file would claim a target observation as a decoy best.
-                var target = new Dictionary<uint, (double score, uint entryId)> { { 3u, (0.5, 3u) } };
-                Assert.ThrowsException<InvalidOperationException>(
-                    () => Pass2CompetitionDecoys.Write(Path.Combine(dir, "t.bin"), target, TestStamps.Any));
-
-                // A key that does not match the entry_id it files means the map was assembled
-                // rather than serialized - the one error this format cannot survive.
-                var misfiled = new Dictionary<uint, (double score, uint entryId)>
-                {
-                    { 3u, (0.5, DECOY_BIT | 4u) }
-                };
-                Assert.ThrowsException<InvalidOperationException>(
-                    () => Pass2CompetitionDecoys.Write(Path.Combine(dir, "m.bin"), misfiled, TestStamps.Any));
-
-                // Empty is a real answer and round trips as one - distinct from unreadable.
-                string empty = Path.Combine(dir, "empty.bin");
-                Pass2CompetitionDecoys.Write(empty,
-                    new Dictionary<uint, (double score, uint entryId)>(), TestStamps.Any);
-                var emptyMap = Pass2CompetitionDecoys.ReadMap(empty);
-                Assert.IsNotNull(emptyMap);
-                Assert.AreEqual(0, emptyMap.Count);
-
-                // A corrupted magic byte is a rejection on both entry points, not a decode.
-                string foreign = Path.Combine(dir, "foreign.bin");
-                var bytes = File.ReadAllBytes(a);
-                bytes[5] = (byte)'X';
-                File.WriteAllBytes(foreign, bytes);
-                Assert.IsFalse(Pass2CompetitionDecoys.IsCurrentFormat(foreign));
-                Assert.IsNull(Pass2CompetitionDecoys.ReadMap(foreign));
-
-                // So is a truncated body, which is what a partial write leaves behind.
-                string truncated = Path.Combine(dir, "truncated.bin");
-                var full = File.ReadAllBytes(a);
-                File.WriteAllBytes(truncated, full.Take(full.Length - 1).ToArray());
-                Assert.IsFalse(Pass2CompetitionDecoys.IsCurrentFormat(truncated));
-                Assert.IsNull(Pass2CompetitionDecoys.ReadMap(truncated));
-
-                // And so is a missing file: null, never an empty map.
-                Assert.IsNull(Pass2CompetitionDecoys.ReadMap(Path.Combine(dir, "absent.bin")));
-            }
-            finally
-            {
-                try { Directory.Delete(dir, true); } catch (IOException) { }
-            }
-        }
-
-        /// <summary>
         /// The v5 scope split (issue #4486), covered end to end in one test because the three
         /// behaviours are one design: what the per-file sidecar keeps, what the analysis-wide
         /// experiment sidecar takes over, and the single patch that survived the split.
@@ -5022,12 +4919,6 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(FdrScoresSidecar.ReadRecords(pass1, FdrScoresSidecar.Pass.FirstPass, read.Add));
             Assert.AreEqual(1, read.Count);
             Assert.AreEqual(12.5, read[0].ApexRt);
-
-            string decoys = Path.Combine(dir, "run.2nd-pass" + Pass2CompetitionDecoys.EXT);
-            Pass2CompetitionDecoys.Write(decoys,
-                new Dictionary<uint, (double score, uint entryId)> { { 7u, (2.5, 0x80000007u) } }, stamp);
-            AssertStampRead(decoys, stamp);
-            Assert.AreEqual(1, Pass2CompetitionDecoys.ReadMap(decoys).Count);
 
             string experiment = Path.Combine(dir, "out.1st-pass" + FdrExperimentSidecar.EXT);
             FdrExperimentSidecar.Write(experiment,

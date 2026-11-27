@@ -253,7 +253,6 @@ namespace pwiz.Osprey.Test
                             InputFiles = new List<string> { input },
                             OutputBlib = StylePath(blibDir, @"out.blib")
                         };
-                        AssertBlibArtifactPath(input, config, FirstPassModelIO.PathFor(config));
                         AssertBlibArtifactPath(input, config, Stage6ConsensusFile.PathFor(config));
                         AssertBlibArtifactPath(input, config, RetainedBaseIdSidecar.PathFor(config.OutputBlib, input));
                         AssertBlibArtifactPath(input, config,

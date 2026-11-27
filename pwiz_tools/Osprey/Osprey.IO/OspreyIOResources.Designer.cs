@@ -775,16 +775,6 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The scores file &apos;{0}&apos; is damaged: row group {1} has no readable {2} column, so its row order cannot be established. Delete it and score the file again..
-        /// </summary>
-        public static string ParquetScoreCache_StreamEntryIds_The_scores_file___0___is_damaged__row_group__1__has_no_readable_entry_id_column__so_its_ {
-            get {
-                return ResourceManager.GetString("ParquetScoreCache_StreamEntryIds_The_scores_file___0___is_damaged__row_group__1__" +
-                        "has_no_readable_entry_id_column__so_its_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {0}: a re-scored precursor candidate peak refers to row {1:N0}, past the end of the scores file ({2:N0} rows), and was not written..
         /// </summary>
         public static string ParquetScoreCache_StreamReconciledScoresParquet__0___a_re_scored_precursor_candidate_peak_refers_to_row__1__past_the_end_of_the_scores_file___2__rows___and_was_not_written_ {
@@ -830,72 +820,6 @@ namespace pwiz.Osprey.IO {
         public static string ParquetScoreCache_WriteChunkedParquet_Writing__0__precursor_candidate_peaks {
             get {
                 return ResourceManager.GetString("ParquetScoreCache_WriteChunkedParquet_Writing__0__precursor_candidate_peaks", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The file is not an Osprey intermediate file: {0}.
-        /// </summary>
-        public static string Pass_ReadScalars_The_file_is_not_an_Osprey_intermediate_file__ {
-            get {
-                return ResourceManager.GetString("Pass_ReadScalars_The_file_is_not_an_Osprey_intermediate_file__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The intermediate file belongs to the other FDR pass (pass {0}, expected {1}): {2}.
-        /// </summary>
-        public static string Pass_ReadScalars_The_intermediate_file_belongs_to_the_other_FDR_pass__pass__0___expected__1_____2_ {
-            get {
-                return ResourceManager.GetString("Pass_ReadScalars_The_intermediate_file_belongs_to_the_other_FDR_pass__pass__0___e" +
-                        "xpected__1_____2_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The intermediate file is damaged ({0:N0} bytes of records is not a whole number of {1}-byte records): {2}.
-        /// </summary>
-        public static string Pass_ReadScalars_The_intermediate_file_is_damaged___0__bytes_of_records_is_not_a_whole_number_of__1__byte_ {
-            get {
-                return ResourceManager.GetString("Pass_ReadScalars_The_intermediate_file_is_damaged___0__bytes_of_records_is_not_a_" +
-                        "whole_number_of__1__byte_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The intermediate file is damaged (cut short at record {0:N0}): {1}.
-        /// </summary>
-        public static string Pass_ReadScalars_The_intermediate_file_is_damaged__cut_short_at_record__0_____1_ {
-            get {
-                return ResourceManager.GetString("Pass_ReadScalars_The_intermediate_file_is_damaged__cut_short_at_record__0_____1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The intermediate file is damaged (its header is cut short): {0}.
-        /// </summary>
-        public static string Pass_ReadScalars_The_intermediate_file_is_damaged__its_header_is_cut_short___ {
-            get {
-                return ResourceManager.GetString("Pass_ReadScalars_The_intermediate_file_is_damaged__its_header_is_cut_short___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The intermediate file is damaged (only {0:N0} bytes): {1}.
-        /// </summary>
-        public static string Pass_ReadScalars_The_intermediate_file_is_damaged__only__0__bytes____1_ {
-            get {
-                return ResourceManager.GetString("Pass_ReadScalars_The_intermediate_file_is_damaged__only__0__bytes____1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The intermediate file was written by a different Osprey version (format {0}, expected {1}): {2}.
-        /// </summary>
-        public static string Pass_ReadScalars_The_intermediate_file_was_written_by_a_different_Osprey_version__format__0___expected__1__ {
-            get {
-                return ResourceManager.GetString("Pass_ReadScalars_The_intermediate_file_was_written_by_a_different_Osprey_version_" +
-                        "_format__0___expected__1__", resourceCulture);
             }
         }
         

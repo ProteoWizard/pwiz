@@ -725,10 +725,8 @@ namespace pwiz.Osprey.FDR
             if (trainResults.DiagnosticAbort)
                 return true;
 
-            // Publish the trained 1st-pass model (the frozen fold weights + biases +
-            // standardizer) for the OSPREY_PASS2_QVALUE=transfer / transfer-compete / protein-
-            // compact pass-2 steps, which re-score reconciled features with this FROZEN model
-            // (transfer-compete / protein-compact then run a fresh target-decoy competition). A
+            // Hand the trained 1st-pass model (the frozen fold weights + biases +
+            // standardizer) to a caller that asked for it. A
             // no-op (null) on every default run, so this projection first pass stays byte-identical.
             captureModel?.Invoke(trainResults);
 
@@ -1483,9 +1481,9 @@ namespace pwiz.Osprey.FDR
                 ? new PercolatorConfig { FeatureInfos = ProteinBestFeature.WithColumnInfo(percConfig.FeatureInfos) }
                 : percConfig;
 
-            // Publish the frozen first-pass model (fold weights + biases + standardizer) for the
-            // OSPREY_PASS2_QVALUE=transfer pass-2 step. No-op (null) on the default path, so this
-            // streaming first pass stays byte-identical. See TODO-osprey_pass2_per_run_only_qvalue.
+            // Hand the trained first-pass model (fold weights + biases + standardizer, or the fold
+            // ensembles) to a caller that asked for it. No production caller does, so this
+            // streaming first pass stays byte-identical.
             if (trainResults != null)
                 captureModel?.Invoke(trainResults);
             LogBlockReads(log, passLabel, @"training load");

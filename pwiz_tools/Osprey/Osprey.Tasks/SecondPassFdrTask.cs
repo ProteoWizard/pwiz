@@ -105,11 +105,6 @@ namespace pwiz.Osprey.Tasks
             {
                 foreach (var input in ctx.Config.InputFiles)
                 {
-                    if (ctx.Config.Pass2ProteinCompact)
-                    {
-                        yield return FdrScoresSidecar.Pass1Path(input);
-                        continue;
-                    }
                     yield return FirstPassModelIO.RunModelPathFor(input);
                     yield return ParquetScoreCache.GetReconciledFeaturesPath(input);
                     yield return ParquetScoreCache.GetScoresPath(input);
@@ -146,13 +141,8 @@ namespace pwiz.Osprey.Tasks
             foreach (var input in ctx.Config.InputFiles)
             {
                 // Each run's second-pass records are in its reconciled stub, declared above.
-                // The decoy side of that file's competition - the null this stage folds. Also an
-                // input, for the same reason and from the same producer, where there is a
-                // competition: the transfer competes nothing.
-                if (ctx.Config.Pass2ProteinCompact)
-                    yield return Pass2CompetitionDecoys.PathFor(input);
                 // The run's plan, which the worker writes beside its answer under the same stamp:
-                // the gap-fill entry ids are read from it, and a run whose plan is missing is
+                // a run whose plan is missing is
                 // refused as unanswered (Pass2FdrSidecar.HasWorkerStamp).
                 yield return ReconciliationFile.PathForInput(input);
             }
@@ -167,12 +157,8 @@ namespace pwiz.Osprey.Tasks
             foreach (string libraryInput in ScoringTaskShared.LibraryInputs(ctx.Config))
                 yield return libraryInput;
 
-            // The frozen 1st-pass model and its stratum, under protein-compact only: that fold
-            // re-competes each run's records inside the stratum and refuses to run without both
-            // (ComputePass2FrozenCompetition). The transfer carries pass-1 values forward and
-            // needs neither: it reloads a model it finds, and nothing on its path reads it. Under
-            // per-run first-pass models there is no analysis-wide model, and protein-compact is
-            // refused (PerFileRescoreTask.CreatePass2Worker).
+            // No first-pass model: the second pass carries pass-1 values forward, and each run's
+            // own model scored its moved rows in PerFileRescoring.
 
             // The pass-1 half of the --model-diagnostics report, which FirstPassFDR wrote because
             // the pass-1 pool is gone by now: this task renders one page with both passes.
@@ -311,8 +297,6 @@ namespace pwiz.Osprey.Tasks
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix(ctx.Config)
                 + OspreyEnvironment.TransferReconciliationValidityKeySuffix(ctx.Config)
-                // The fold now gives the stratum's complement its own experiment q.
-                + OspreyEnvironment.Pass2StrataValidityKeySuffix(ctx.Config)
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
                 + PinFeatureMask.For(ctx.Config).ValidityKeySuffix()
                 + PinFeatureMask.For(ctx.Config).RescoreValidityKeySuffix()
@@ -638,20 +622,13 @@ namespace pwiz.Osprey.Tasks
             // this post-compaction, second-pass-q-valued pool -- the same
             // RescoredEntries the pass-2 FDRBench TSV is written from. Opt-in and
             // off the default output path; a failure is logged and swallowed.
-            // The protein-compact stratum splits the pass-2 acceptance boundary in two (#4573):
-            // the stratum and its complement are separate competitions (#4581). Absent outside
-            // protein-compact, which leaves the panel on one boundary.
             if (config.ModelDiagnostics)
             {
-                HashSet<uint> stratumBaseIds = null;
-                if (ctx.Config.Pass2ProteinCompact &&
-                    ctx.TryGet<ProteinCompactStratum>(out var pcStratum))
-                    stratumBaseIds = pcStratum.BaseIds;
                 // Folds the run-by-run reductions the pass-2 cards are made of instead of
                 // holding every run's survivors, which is what removed the last
                 // O(runs x entries) structure in Stage 7.
                 WritePass2DiagnosticsStreamed(ctx, rescored, libraryById,
-                    config, stratumBaseIds, proteinEntrapment);
+                    config, proteinEntrapment);
             }
 
             return true;
@@ -827,18 +804,6 @@ namespace pwiz.Osprey.Tasks
             // overlays means starting where they start.
             ProfilerHooks.CaptureRetentionSnapshot(@"pass2-join-start");
 
-            // The stratum, from the same sidecar the join reloads it from. Under
-            // protein-compact it SPLITS the pass-2 acceptance boundary in two (#4573), so a
-            // fold without it would draw one boundary where the join drew two and produce a
-            // different - complete, plausible, wrong - co-assignment panel.
-            Pass2FdrSidecar.EnsureFrozenFirstPassPublished(ctx);
-            HashSet<uint> stratumBaseIds = null;
-            if (ctx.Config.Pass2ProteinCompact &&
-                ctx.TryGet<ProteinCompactStratum>(out var pcStratum))
-            {
-                stratumBaseIds = pcStratum.BaseIds;
-            }
-
             // The same steps the join performs between its second pass and its report, in the
             // same order, so the two routes describe the identical pool. None of them is
             // analysis: the overlays apply values already on disk, and the reclamp is a fold
@@ -864,7 +829,7 @@ namespace pwiz.Osprey.Tasks
             // No protein FDR ran on this arm, so the protein-group entrapment card is not
             // rebuilt here: it is the one the join stored, when its stamp says it is this
             // analysis's (ModelDiagnosticsReport.EXT_PROTEIN_ENTRAPMENT).
-            WritePass2DiagnosticsStreamed(ctx, rescored, libraryById, config, stratumBaseIds,
+            WritePass2DiagnosticsStreamed(ctx, rescored, libraryById, config,
                 ModelDiagnosticsReport.ReadProteinEntrapment(config, ValidityKey(ctx), ctx));
             return true;
         }
@@ -897,13 +862,13 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private void WritePass2DiagnosticsStreamed(PipelineContext ctx, RescoredEntries rescored,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
-            OspreyConfig config, HashSet<uint> stratumBaseIds,
+            OspreyConfig config,
             ModelDiagnosticsData.ProteinEntrapmentView proteinEntrapment)
         {
             try
             {
                 WritePass2DiagnosticsStreamedCore(ctx, rescored, libraryById,
-                    config, stratumBaseIds, proteinEntrapment);
+                    config, proteinEntrapment);
             }
             catch (Exception ex)
             {
@@ -914,7 +879,7 @@ namespace pwiz.Osprey.Tasks
 
         private void WritePass2DiagnosticsStreamedCore(PipelineContext ctx, RescoredEntries rescored,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
-            OspreyConfig config, HashSet<uint> stratumBaseIds,
+            OspreyConfig config,
             ModelDiagnosticsData.ProteinEntrapmentView proteinEntrapment)
         {
             // The pass-1 product is what pass 2 ENRICHES, so its absence means there is nothing
@@ -953,8 +918,7 @@ namespace pwiz.Osprey.Tasks
             // Pass A: the accumulator's fold and co-assignment's cutoff phase, sharing one read.
             // Both are per-row reductions over the same rows, so the second phase of the panel is
             // the only thing that has to wait for a second pass.
-            var coAssign = new ModelDiagnosticsData.CoAssignmentPassBuilder(runNames, 2, true,
-                stratumBaseIds);
+            var coAssign = new ModelDiagnosticsData.CoAssignmentPassBuilder(runNames, 2, true);
             // Reserve the run scope from the classification map, as the 1st-pass panel does. Not
             // an optimisation of the fold: it is what keeps this builder off the doubling ladder,
             // which it would otherwise climb once per pass-2 report.

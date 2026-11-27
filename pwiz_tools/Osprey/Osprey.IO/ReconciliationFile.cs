@@ -32,8 +32,8 @@ namespace pwiz.Osprey.IO
 {
     /// <summary>
     /// Per-run <c>&lt;stem&gt;.reconciliation.json</c>: the run's Stage 6 plan. Written by
-    /// <c>PerFileRescoring</c> as it plans the run, just before rescoring it, and read by
-    /// <c>SecondPassFDR</c> for the run's gap-fill entry ids. Carries the non-Keep
+    /// <c>PerFileRescoring</c> as it plans the run, just before rescoring it; its stamp is
+    /// part of what <c>SecondPassFDR</c> requires of a finished run. Carries the non-Keep
     /// reconciliation actions for the run (split into two homogeneous arrays so the JSON has
     /// no discriminator field gymnastics), the run's gap-fill targets, and its refined RT
     /// calibration - only content specific to the run it is named for.

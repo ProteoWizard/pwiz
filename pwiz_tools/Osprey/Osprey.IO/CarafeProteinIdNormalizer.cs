@@ -35,13 +35,12 @@ namespace pwiz.Osprey.IO
     /// that collapse to 23,874 real ones, and on the searched subset 26,710 reported protein
     /// groups against 5,462 real proteins.</para>
     ///
-    /// <para><b>The damage is not confined to the protein report.</b>
-    /// <c>OSPREY_PASS2_QVALUE=protein-compact</c> builds its stratum from proteins with &gt;=2
-    /// DETECTED peptides, and a protein that owns exactly one peptide can never qualify. On that
-    /// same dataset the stratum collapsed to 7 proteins / 23 base_ids out of 28,813 detected
-    /// peptides, which silently degrades the default second-pass mode into <c>transfer</c> - no
-    /// entry recompetes, every reported q-value is the carried-over pass-1 value, and the failure
-    /// is invisible in the output. After stripping: 4,022 proteins / 167,660 base_ids.</para>
+    /// <para><b>The damage is not confined to the protein report.</b> Anything that reads a
+    /// protein's other peptides finds none when a protein owns exactly one: the protein-best
+    /// training column (<c>--protein-boost best</c>) reads the floor for every candidate. On
+    /// that same dataset only 7 proteins / 23 base_ids out of 28,813 detected peptides had a
+    /// second detected peptide, and the failure is invisible in the output. After stripping:
+    /// 4,022 proteins / 167,660 base_ids.</para>
     ///
     /// <para><b>Why this lives here and not in the pairing manifest.</b> A manifest already
     /// carries clean accessions in its <c>proteins</c> column and
@@ -176,8 +175,7 @@ namespace pwiz.Osprey.IO
             }
 
             // Left in place, every peptide is its own protein: protein parsimony and
-            // picked-protein FDR break, and the protein-compact second pass gets an empty stratum
-            // because no protein can reach 2 detected peptides.
+            // picked-protein FDR break, and no peptide has another on its protein.
             logWarning?.Invoke(string.Format(
                 OspreyIOResources.CarafeProteinIdNormalizer_Normalize_Library_protein_accessions_carry_the_per_peptide___pepNNNNN__suffix_that_Carafe_adds__e_g_,
                 cleaned.Count, realAccessions.Count, example, exampleCleaned, PEP_TOKEN + @"NNNNN"));

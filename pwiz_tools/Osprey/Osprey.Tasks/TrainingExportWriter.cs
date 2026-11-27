@@ -50,10 +50,8 @@ namespace pwiz.Osprey.Tasks
     /// <para>The q-values it selects on are the run's own FIRST-pass run q-values (see
     /// <see cref="ReadRunQ"/>): the competition of every target in the run against every decoy,
     /// the undepleted, calibrated null a fine-tune should learn from. The second pass's run q is
-    /// not used: under protein-compact it comes from the stratum and its complement competing
-    /// separately, each with its own conservative count, so on a small run (the Stellar subset's
-    /// ~190 targets) a half accepts nothing at 1% and the export would carry no rows at all,
-    /// while a pass-1 competition of the same run accepts over a hundred. Experiment-level values
+    /// not used: it is the first pass's, re-mapped for the peaks reconciliation moved, so it
+    /// would make the export depend on the cohort the run was searched with. Experiment-level values
     /// exist only after SecondPassFDR and per-run files are write-once, so the export carries
     /// none; a consumer joins <c>&lt;blib&gt;.2nd-pass.fdr_experiment.bin</c> by entry_id.</para>
     /// </summary>
@@ -423,9 +421,9 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// The q-value sidecar a run's export selects on, and which pass it is: the first-pass
         /// sidecar, always. The first pass competes the whole run in one pool against every decoy,
-        /// the calibrated null the fine-tune should learn from; the second pass's run q, stratified
-        /// under protein-compact into halves that each carry their own conservative count, is a
-        /// different statistic and, on a small run, an empty one (see the class summary). The
+        /// the calibrated null the fine-tune should learn from; the second pass's run q, re-mapped
+        /// for the peaks cross-run reconciliation moved, is a
+        /// different statistic (see the class summary). The
         /// first-pass sidecar is written once, before any re-scoring, so an export written while
         /// re-scoring and one written later from disk agree; the pass is kept in the signature
         /// for the footer and the validity key, which record it.

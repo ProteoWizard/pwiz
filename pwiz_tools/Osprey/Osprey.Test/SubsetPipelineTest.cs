@@ -96,12 +96,7 @@ namespace pwiz.Osprey.Test
         // A .blib of the subset library reports within a few precursors of the .tsv it came from
         // (the .blib stores intensities as float and its peaks are typed from m/z).
         private const double MIN_BLIB_LIBRARY_FRACTION = 0.9;
-        // The Astral subset recovers about 141 of the 203 its full run detected (69%). It was
-        // 164 (81%) before the second pass competed the protein stratum's complement against
-        // its own decoys (issue #4581): each subset file's complement holds only 25-28 targets
-        // at a 1% first-pass q, and no decoy winners, so its conservative q (at least 1/28) keeps
-        // none of them at 1%. The full-run reference was itself made with the complement pooled
-        // into the stratum.
+        // The Astral subset recovers about 141 of the 203 its full run detected (69%).
         private const double MIN_ASTRAL_RECOVERED_FRACTION = 0.6;
 
         private static readonly string[] RUN_NAMES =
@@ -1236,10 +1231,7 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// A search that detects nothing fails with one Error: line naming the threshold nothing
         /// passed, and writes no .blib, whichever pass comes up empty. A conservative q-value is
-        /// never 0, so a threshold of 0 passes nothing. A search in which no protein has 2 or
-        /// more detected peptides has an EMPTY protein stratum, which is a result and not a
-        /// missing input: it runs through the second pass and ends in that pass's error, not in
-        /// PerFileRescoring's refusal to run without a stratum.
+        /// never 0, so a threshold of 0 passes nothing.
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetNothingPasses()
@@ -1273,17 +1265,6 @@ namespace pwiz.Osprey.Test
                 OspreyTasksResources.SecondPassFdrTask_WriteBlibOutput_No_precursor_passed_the_second_pass_against__0___none_has_an_experiment_level_q_value_at_or_below__1_,
                 library, 0.0, OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, LibrarySource.EXT_BLIB));
             Assert.IsFalse(File.Exists(Path.Combine(secondPassDir, BLIB_FILE)));
-
-            // The protein-compact second pass needs one first-pass model for the analysis, and each
-            // run trains its own, so it is refused before any run is scored. It is retired in a
-            // follow-up change, which deletes this leg whole. The off boost keeps the protein-best
-            // column, which is refused with protein-compact for another reason, out of the way.
-            string compactDir = CreateDir(@"protein-compact-refused");
-            string compactLog = RunOspreyExpecting(SearchArgs(compactDir, library,
-                    OspreyCommandArgs.ARG_PROTEIN_BOOST.ArgumentText, ProteinBoost.off.ToString()),
-                WithVariable(Verifier(false), PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT), Program.EXIT_CODE_FAILURE_TO_START);
-            StringAssert.Contains(compactLog, PerFileRescoreTask.OwnModelsProteinCompactMessage());
-            Assert.IsFalse(compactLog.Contains(TaskLine(FirstPassFdrTask.TASK_NAME, @"starting")), compactLog);
         }
 
         /// <summary>A search of every subset run against <paramref name="library"/>, writing into
@@ -1637,7 +1618,7 @@ namespace pwiz.Osprey.Test
         /// that is the same for every run is experiment-wide, and belongs in one
         /// <c>&lt;blib-stem&gt;.&lt;ext&gt;</c> file an orchestrator ships to every node - not in
         /// a copy per run, which on an 82-run cohort was 82 copies of the first-pass model and
-        /// 790 MB of the protein-compact stratum. This sees whole files only; a replicated payload
+        /// 790 MB of another analysis-wide file. This sees whole files only; a replicated payload
         /// inside an otherwise per-run file needs a reviewer.
         /// </summary>
         private static void AssertNoReplicatedPerRunOutputs(string workDir, IReadOnlyList<string> runs)

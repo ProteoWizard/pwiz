@@ -297,10 +297,6 @@
     <value>校准报告：{1:N0} 个文件中有 {0:N0} 个没有校准诊断信息，未纳入报告：[{2}]</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_BuildProteinCompactStratum__0__proteins_have_2_or_more_detections___1__detected_peptides___their__2__precursor_" xml:space="preserve">
-    <value>{0:N0} 个蛋白质的检测数不少于 2（{1:N0} 个已检测肽段）；其 {2:N0} 个母离子候选进入第二轮 FDR。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_ComputeFirstPassBaseIds_Cannot_locate_the_first_pass_intermediate_files_for___0___" xml:space="preserve">
     <value>无法找到“{0}”的第一轮中间文件。</value>
     <comment>Needs Review:New resource</comment>
@@ -373,10 +369,6 @@
     <value>模型诊断：{0} 对于此分析已过期，因此重新运行第一轮以构建报告。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0_" xml:space="preserve">
-    <value>已将训练好的第一轮模型保存到 {0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_PlanStage6_Cross_run_reconciliation_planning" xml:space="preserve">
     <value>跨运行协调规划</value>
     <comment>Needs Review:New resource</comment>
@@ -421,16 +413,8 @@
     <value>第一轮：该文件的得分在训练时已保存并读回，因此未重新加载其特征。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_Reloaded_the_saved_list_of__0__precursor_candidates_from_proteins_with_2_or_more_" xml:space="preserve">
-    <value>已重新加载保存的列表，其中包含来自检测数不少于 2 的蛋白质的 {0:N0} 个母离子候选。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_Resuming___0__of__1__files_already_have_up_to_date_first_pass_intermediate_files__scoring_" xml:space="preserve">
     <value>恢复运行：{1:N0} 个文件中有 {0:N0} 个已有最新的第一轮中间文件；正在对剩余的 {2:N0} 个评分。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_Resuming__a_saved_first_pass_model_exists_but_no_file_has_saved_scores__so_the_model_is_" xml:space="preserve">
-    <value>恢复运行：存在已保存的第一轮模型，但没有文件保存了得分，因此重新训练该模型。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_Resuming__first_pass_intermediate_files_for_all__0__files_are_up_to_date__skipping_first_" xml:space="preserve">
@@ -441,24 +425,12 @@
     <value>恢复运行：全部 {0:N0} 个文件的第一轮中间文件均为最新；跳过第一轮评分和蛋白质 FDR。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_Resuming__reusing_the_saved_first_pass_model_instead_of_training_again__1_of__1__files_" xml:space="preserve">
-    <value>恢复运行：重用已保存的第一轮模型，而不是重新训练（{1:N0} 个文件中已有 1 个已评分）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_Resuming__reusing_the_saved_first_pass_model_instead_of_training_again___0__of__1__files_" xml:space="preserve">
-    <value>恢复运行：重用已保存的第一轮模型，而不是重新训练（{1:N0} 个文件中已有 {0:N0} 个已评分）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_Resuming__the_first_pass_intermediate_files_are_up_to_date__but_first_pass_scoring_runs_" xml:space="preserve">
     <value>恢复运行：第一轮中间文件均为最新，但由于缺少一个已保存的结果（{0}），将重新运行第一轮评分。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection___up_to_date___0_" xml:space="preserve">
     <value>最新：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___1st_pass_model_json__holds_no_model" xml:space="preserve">
-    <value>第一轮模型文件（{0}）中没有模型</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_the_whole_experiment_first_pass_intermediate_file_is_not_up_to_date___0_" xml:space="preserve">
@@ -645,28 +617,12 @@
     <value>“{0}”需要“{1}”。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="Pass1ScalarSeeder_Restored_the_first_pass_scores_of__1__kept_precursor_candidate_peaks_across__0__files_" xml:space="preserve">
-    <value>已恢复 {0:N0} 个文件中 {1:N0} 个保留的母离子候选峰的第一轮得分。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass1ScalarSeeder_Restored_the_first_pass_scores_of__1__kept_precursor_candidate_peaks_in_1_file_" xml:space="preserve">
-    <value>已恢复 1 个文件中 {1:N0} 个保留的母离子候选峰的第一轮得分。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="Pass2FdrSidecar_ComputeAndPersist_Computing_second_pass_FDR_scores_for_1_file_" xml:space="preserve">
     <value>正在为 1 个文件计算第二轮 FDR 得分。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass2FdrSidecar_ComputeAndPersist_Computing_second_pass_FDR_scores_for__0__files_" xml:space="preserve">
     <value>正在为 {0:N0} 个文件计算第二轮 FDR 得分。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__" xml:space="preserve">
-    <value>无法运行第二轮 FDR：已保存的第一轮模型、某个第一轮中间文件，或来自检测数不少于 2 的蛋白质的母离子候选列表缺失或无法读取（如果是某个文件的问题，上方警告会指出该文件）。请不使用“{0}”从头到尾运行分析。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Applied_the_recomputed_q_values_to__0__precursor_candidate_peaks___1__scored_with_the_first_pass_model_" xml:space="preserve">
-    <value>已在 {2:F1}s 内将重新计算的 q 值应用于 {0:N0} 个母离子候选峰（{1:N0} 个使用第一轮模型评分）。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Collecting_second_pass_precursor_candidates_from_1_file" xml:space="preserve">
@@ -681,46 +637,6 @@
     <value>已将 {1:N0} 个实验水平母离子候选 q 值中的 {0:N0} 个提高到其最佳运行水平值。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Recomputing_second_pass_q_values_across__0__files" xml:space="preserve">
-    <value>正在对 {0:N0} 个文件重新计算第二轮 q 值</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Recomputing_second_pass_q_values_for_1_file" xml:space="preserve">
-    <value>正在为 1 个文件重新计算第二轮 q 值</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Scoring_up_to__0__re_scored_peaks_with_the_first_pass_model__one_file_at_a_time_" xml:space="preserve">
-    <value>正在使用第一轮模型对最多 {0:N0} 个重新评分的峰评分，每次一个文件。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR___0__is_not_a_first_pass_intermediate_file_this_version_of_Osprey_can_" xml:space="preserve">
-    <value>第二轮 FDR：{0} 不是此版本 Osprey 可读取的第一轮中间文件（格式 {1}）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR__first_pass_intermediate_file_not_found___0_" xml:space="preserve">
-    <value>第二轮 FDR：未找到第一轮中间文件：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR__no__scores_parquet_file_is_known_for___0____so_its_first_pass_" xml:space="preserve">
-    <value>第二轮 FDR：没有已知的“{0}”的 {1} 文件，因此无法找到其第一轮中间文件。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR__no_input_file_matches___0____so_its_second_pass_intermediate_file_cannot_" xml:space="preserve">
-    <value>第二轮 FDR：没有与“{0}”匹配的输入文件，因此无法写入其第二轮中间文件。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR__recomputing_q_values_for__1__precursor_candidates_from_proteins_with_2_" xml:space="preserve">
-    <value>第二轮 FDR：正在为来自检测数不少于 2 的蛋白质的 {1:N0} 个母离子候选重新计算 q 值；其他候选保留其第一轮 q 值。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR__the_saved_first_pass_model_cannot_be_used_" xml:space="preserve">
-    <value>第二轮 FDR：无法使用已保存的第一轮模型。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_over__0__files__recomputing_q_values_for__1__precursor_candidates_from_" xml:space="preserve">
-    <value>对 {0:N0} 个文件进行第二轮 FDR：正在为来自检测数不少于 2 的蛋白质的 {1:N0} 个母离子候选重新计算 q 值；其他候选保留其第一轮 q 值。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_experiment_level_q_values_could_not_be_written_for__0__files____1____Stopping_" xml:space="preserve">
     <value>无法为 {0:N0} 个文件写入第二轮实验水平 q 值：[{1}]。正在停止，否则蛋白质 FDR 将读取非第二轮的值。</value>
     <comment>Needs Review:New resource</comment>
@@ -733,18 +649,6 @@
     <value>正在为 {0:N0} 个文件写入实验水平 q 值</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="Pass2FdrSidecar_EnsureFrozenFirstPassPublished_Reloaded_the_precursor_candidates_from_proteins_with_2_or_more_detections___0__target_" xml:space="preserve">
-    <value>已重新加载来自检测数不少于 2 的蛋白质的母离子候选（{0:N0} 个目标-诱饵对）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_EnsureFrozenFirstPassPublished_Reloaded_the_saved_first_pass_model_for_second_pass_FDR__first_pass_experiment_" xml:space="preserve">
-    <value>已为第二轮 FDR 重新加载已保存的第一轮模型（第一轮实验汇总：{0}）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_EnsureFrozenFirstPassPublished_Reusing_the_saved_first_pass_model_" xml:space="preserve">
-    <value>重用已保存的第一轮模型。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="Pass2FdrSidecar_LoadExperimentRecordsFrom_The_whole_experiment_first_pass_intermediate_file_exists_but_could_not_be_read___0_" xml:space="preserve">
     <value>整个实验的第一轮中间文件存在，但无法读取：{0}</value>
     <comment>Needs Review:New resource</comment>
@@ -755,10 +659,6 @@
   </data>
   <data name="Pass2FdrSidecar_OverlayPass2SidecarOntoFile_Failed_to_reload_the_second_pass_intermediate_file_for___0_____1____protein_FDR_will_use_" xml:space="preserve">
     <value>无法重新加载“{0}”的第二轮中间文件（{1}）；蛋白质 FDR 将使用其第一轮 q 值。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ReadOneFilePass2Inputs_Failed_to_reload_peak_features_from__0____1_" xml:space="preserve">
-    <value>无法从 {0} 重新加载峰特征：{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass2FdrSidecar_WritePass2ExperimentSidecar_Could_not_read_the_re_scored_results_for__0____1_" xml:space="preserve">

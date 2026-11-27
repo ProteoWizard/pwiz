@@ -40,11 +40,11 @@ owns operations (CLI flags, how a task names its runs and in what order, orchest
 | 05 | [rt-alignment](05-rt-alignment.md) | LOESS calibration + inverse prediction, weighted-median consensus library RT, peak imputation — the RT machinery shared by calibration and reconciliation. |
 | 06 | [peak-detection](06-peak-detection.md) | CWT consensus peak detection (Mexican Hat wavelet, pointwise median, ±2σ boundaries with valley guard), the product-form pick, and the opt-in learned linear pick model. |
 | 07 | [fdr-control](07-fdr-control.md) | First-pass two-level FDR (run + experiment): native Percolator SVM, the experimental C#-only GBDT classifier (`OSPREY_FDR_MODEL`), dual precursor+peptide q-values and PEP. |
-| 08 | [protein-parsimony](08-protein-parsimony.md) | Protein parsimony (bipartite graph, identical-set merging, subset elimination, razor) and picked-protein FDR; the first pass builds the **protein-compact stratum** used by second-pass FDR. |
+| 08 | [protein-parsimony](08-protein-parsimony.md) | Protein parsimony (bipartite graph, identical-set merging, subset elimination, razor) and picked-protein FDR. |
 | 09 | [multi-charge-consensus](09-multi-charge-consensus.md) | Post-FDR sharing of peak boundaries across charge states; the best passing charge leads (lowest-charge tie-break), disagreeing charges re-scored at consensus boundaries. |
 | 10 | [cross-run-reconciliation](10-cross-run-reconciliation.md) | Consensus RT, per-file LOESS refit, and the per-entry reconciliation plan (Keep / UseCwtPeak / ForcedIntegration). |
 | 11 | [boundary-overrides](11-boundary-overrides.md) | How the search accepts override boundaries so consensus and reconciliation targets re-score on the same window / XCorr path as the first pass. |
-| 12 | [second-pass-fdr](12-second-pass-fdr.md) | Stage-7 second-pass FDR and the frozen-model q-value modes — transfer-compete and protein-compact — selected by `OSPREY_PASS2_QVALUE`. |
+| 12 | [second-pass-fdr](12-second-pass-fdr.md) | Stage-7 second-pass FDR: the q-value transfer, and the removed modes (percolator, transfer-compete, protein-compact) with the measurements that removed them. |
 | 13 | [blib-output-schema](13-blib-output-schema.md) | BiblioSpec SQLite schema plus the `LibMetadata` table and the nullable `retentionTime` convention for Skyline ID lines. |
 | 14 | [intermediate-files](14-intermediate-files.md) | On-disk caches / sidecars (calibration JSON, spectra cache, `.scores.parquet`, FDR sidecars), SHA-256 footer hashing, and the tiered memory architecture. |
 | 15 | [hpc-scoring-split](15-hpc-scoring-split.md) | The four `--task` workers, their input/output files, the ordering rules a chain must observe, and the embedded validity stamps that drive resume under HPC / NextFlow orchestration. |
@@ -67,7 +67,7 @@ owns operations (CLI flags, how a task names its runs and in what order, orchest
 | [peak-model-training.md](peak-model-training.md) | Retraining the opt-in learned peak-pick model (06): feature capture → train → promote, with the score equations. |
 | [fractional-entrapment.md](fractional-entrapment.md) | Entrapment-based FDR-accuracy diagnostics (`--model-diagnostics`): why a fractional entrapment ratio still yields a valid FDP estimate, and the decoy-based per-run-count FDP that needs no entrapment. |
 | [equal-chance-diagnostics.md](equal-chance-diagnostics.md) | The `--model-diagnostics` equal-chance alarms: decoy-independent mixture null, q-band balance, paired coin, decoy support; definitions and thresholds. |
-| [protein-shuffled-entrapment.md](protein-shuffled-entrapment.md) | Auditing protein-aware FDR: why standard entrapment (on its own proteins) cannot see protein-aware inflation, the protein-shuffled design that can, how to build the shuffled library, and what it found in `protein-compact`. |
+| [protein-shuffled-entrapment.md](protein-shuffled-entrapment.md) | Auditing protein-aware FDR: why standard entrapment (on its own proteins) cannot see protein-aware inflation, the protein-shuffled design that can, how to build the shuffled library, and what it found in the since-removed `protein-compact` second pass. |
 
 ## Cross-implementation status
 

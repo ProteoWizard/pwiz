@@ -1347,11 +1347,11 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
 
 <g transform="translate(0, 1484)">
   <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
-  <text x="140" y="22" class="task-hdr-name">&#9656; --task FirstPassFDR<tspan class="task-hdr-count">   &#183; out: 0 files/run <tspan class="sc-exp">+ 3</tspan><title>No per-run file and no model. Experiment-wide, written once: .1st-pass.fdr_experiment.bin, .1st-pass.retained_base_ids.bin, .1st-pass.consensus.json, plus .1st-pass.stratum.json under protein-compact (undeclared). --model-diagnostics adds .1st-pass.model-diagnostics.json and the report; --fdrbench adds the pass-1 FDRBench TSV and its pairing manifest (side channels, undeclared).</title></tspan></text>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task FirstPassFDR<tspan class="task-hdr-count">   &#183; out: 0 files/run <tspan class="sc-exp">+ 3</tspan><title>No per-run file and no model. Experiment-wide, written once: .1st-pass.fdr_experiment.bin, .1st-pass.retained_base_ids.bin, .1st-pass.consensus.json. --model-diagnostics adds .1st-pass.model-diagnostics.json and the report; --fdrbench adds the pass-1 FDRBench TSV and its pairing manifest (side channels, undeclared).</title></tspan></text>
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">join &#183; 1 node &#183; a reduce: trains nothing, loads no features</text>
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan> (stub), <tspan class="sc-run">&lt;stem&gt;.calibration.json</tspan>  (every run, derived from --input)  &#183;  the library</text>
   <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan>, <tspan class="sc-exp">.1st-pass.retained_base_ids.bin</tspan> (compaction key), <tspan class="sc-exp">.1st-pass.consensus.json</tspan></text>
-  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">.1st-pass.stratum.json</tspan> (protein-compact only)  &#183;  no per-run file, no .1st-pass.model.json</text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan>no per-run file, no .1st-pass.model.json</text>
   <text x="140" y="88" class="task-hdr-io"><tspan class="task-hdr-key">opt&#160;</tspan><tspan class="sc-exp">.1st-pass.model-diagnostics.json</tspan>, <tspan class="sc-exp">.model-diagnostics.html</tspan>, FDRBench pass-1 TSV</text>
   <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: every experiment-wide file to EVERY downstream node</text>
 </g>
@@ -1889,8 +1889,8 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
     trained ONE global first-pass model in FirstPassFDR from every run's full feature parquet. That
     design is retired: the per-run first-pass model drawn above is the only pipeline, for
     <code>--resolution hram</code> and <code>--resolution unit</code> alike, pass 2 included, and
-    <code>OSPREY_PER_FILE_FDR</code> is gone with it. Protein-compact is refused (it is retired in a
-    follow-up). A run with no target passing q 1% anchors its calibration on its best decoy; one with
+    <code>OSPREY_PER_FILE_FDR</code> is gone with it. The protein-compact second pass was removed in a
+    follow-up. A run with no target passing q 1% anchors its calibration on its best decoy; one with
     no usable decoy is excluded from the experiment competition, shifted below every calibrated run.
     File names are the ones <code>Osprey --task &lt;T&gt; --task-files</code> declares on a SEA-AD
     command line, before and after the change (<code>docs/00-pipeline-architecture.md</code>, "The
@@ -1944,7 +1944,7 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
         <td>with the features-saving flag, a declared INPUT of PerFileRescoring and required: the pass-2 checkpoint takes the unmoved rows' features from it. Without the flag it is not read at all</td></tr>
       <tr><td><strong>changed</strong></td><td>SecondPassFDR inputs</td>
         <td>under protein-compact: the analysis-wide model + stratum</td>
-        <td>neither: protein-compact is refused under this design (decision 6: it is to be removed), and every resolution's default pass-2 mode is the transfer</td></tr>
+        <td>neither: protein-compact was refused under this design and then removed (decision 6), and every resolution's pass-2 mode is the transfer</td></tr>
     </tbody>
   </table>
   <p>
@@ -2048,13 +2048,12 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
       anything that defers the work without completely breaking protein-compact is acceptable: for
       example SecondPassFDR's frozen competition scoring with each run's own model, or
       protein-compact refusing clearly under the new pipeline if that is simpler. Done the second
-      way: <code>OSPREY_PASS2_QVALUE=protein-compact</code> is refused at PerFileScoring start, and
-      its removal is a follow-up PR.
+      way: <code>OSPREY_PASS2_QVALUE=protein-compact</code> was refused at PerFileScoring start, and
+      the mode was then removed in a follow-up PR, with its stratum file.
     </li>
     <li>
       <strong>Task declarations match what the code reads and writes.</strong> Every task's
       <code>Inputs</code> / <code>Outputs</code> name exactly the files it touches, including
-      <code>&lt;blib-stem&gt;.1st-pass.stratum.json</code> (today an undeclared FirstPassFDR output),
       the runs' own <code>&lt;stem&gt;.1st-pass.model.json</code> (a PerFileScoring output and a
       PerFileRescoring input), and the <code>OSPREY_DIANN_REPORTS</code> outputs
       <code>&lt;output&gt;.protein_groups.tsv</code> / <code>&lt;output&gt;.stats.tsv</code>,

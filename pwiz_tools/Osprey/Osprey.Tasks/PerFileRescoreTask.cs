@@ -344,8 +344,6 @@ namespace pwiz.Osprey.Tasks
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix(ctx.Config)
                 + OspreyEnvironment.TransferReconciliationValidityKeySuffix(ctx.Config)
-                // The worker's competition now gives the stratum's complement its own run q.
-                + OspreyEnvironment.Pass2StrataValidityKeySuffix(ctx.Config)
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
                 + PinFeatureMask.For(ctx.Config).ValidityKeySuffix()
                 + PinFeatureMask.For(ctx.Config).RescoreValidityKeySuffix()
@@ -537,8 +535,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>The input whose training export <paramref name="output"/> is, or null.</summary>
         private static string TrainingExportInputFor(OspreyConfig config, string output)
         {
-            // The extension first, so the task's other outputs - three of every four under
-            // protein-compact - never pay the scan of every input.
+            // The extension first, so the task's other outputs never pay the scan of every input.
             if (!ExportsTraining(config) || config.InputFiles == null ||
                 !output.EndsWith(TrainingExportParquet.EXT, StringComparison.Ordinal))
             {
@@ -673,7 +670,7 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Stage 6: re-score each run against the consensus and reconciliation boundaries and
-        /// write its reconciled parquet (and, under protein-compact, its per-run second pass).
+        /// write its reconciled parquet, which carries its per-run second pass.
         /// </summary>
         private bool RunRescore(PipelineContext ctx)
         {
@@ -721,7 +718,7 @@ namespace pwiz.Osprey.Tasks
             // here said this leg could not have
             // one because MaterializeRescoredFile is ONE-SHOT - it overlays the reconciled
             // parquet and appends gap-fill rows, so a second call for one run duplicates them,
-            // which once exited a straight-through Stellar run 1 on AssertSidecarDescribesPool.
+            // which once failed a straight-through Stellar run.
             // True, and true of a NON-EMPTY list only: given an empty one it takes its
             // rebuild-from-the-reconciled-parquet branch, where the gap-fill rows are already
             // merged and no overlay runs, and that branch repeats identically. So the condition
@@ -1281,7 +1278,6 @@ namespace pwiz.Osprey.Tasks
             // on disk, because a byproduct cannot cross the process boundary an HPC chain puts
             // between Stage 6 and Stage 7.
             inputs.Pass2Worker.LogSummary(ctx);
-            inputs.Pass2Worker.Dispose();
             runPlanner.LogSummary();
 
             return new RescoreStats
@@ -1300,43 +1296,11 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private static Pass2PerFileWorker CreatePass2Worker(OspreyConfig config, PipelineContext ctx)
         {
-            // The protein-compact competition scores every survivor with one model for the
-            // analysis, and each run trained its own, so it is refused.
-            if (config.Pass2ProteinCompact)
-                throw new InvalidOperationException(OwnModelsProteinCompactMessage());
             // The transfer carries each precursor's pass-1 experiment values, and the loader reads
             // an absent sidecar as an empty map - every run would be written at q = 1.0.
             Pass2FdrSidecar.RequireTransferExperimentSidecar(config);
             // The transfer writes no per-run file of its own: the reconciled stub carries its answer.
-            return new Pass2PerFileWorker(null, PinFeatureMask.For(config), true, null,
-                Pass2FdrSidecar.LoadPass1ExperimentRecords(config), (fileName, records, bestDecoy) => { }, ctx.LogWarning);
-        }
-
-        /// <summary>
-        /// Why the protein-compact second pass is refused under per-run first-pass models: it
-        /// competes every survivor under one first-pass model for the analysis, and each run
-        /// trained its own.
-        /// </summary>
-        internal static string OwnModelsProteinCompactMessage()
-        {
-            return string.Format(
-                OspreyTasksResources.PerFileRescoreTask_OwnModelsProteinCompactMessage_Protein_compact_second_pass_FDR_needs_one_first_pass_model_for_the_analysis__but_each_run_trains_its_own__Unset__0__,
-                @"OSPREY_PASS2_QVALUE=" + OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT);
-        }
-
-        /// <summary>
-        /// Why second-pass FDR refuses a first-pass model trained with the other
-        /// <c>--protein-boost</c> setting: names both settings and the task to re-run. A model records only
-        /// whether it has the protein-best column, so one without it names <see cref="ProteinBoost.off"/>.
-        /// </summary>
-        internal static string ProteinBestMismatchMessage(bool modelScoresProteinBest, ProteinBoost configBoost)
-        {
-            string modelBoost = (modelScoresProteinBest ? ProteinBoost.best : ProteinBoost.off).ToString();
-            return string.Format(
-                OspreyTasksResources.PerFileRescoreTask_CreatePass2Worker_Second_pass_FDR_cannot_run__the_saved_first_pass_model_was_trained_with__0___but_this_run_has__1___Run__2__again_with__1__,
-                OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, modelBoost),
-                OspreyArgNames.Text(OspreyArgNames.PROTEIN_BOOST, configBoost.ToString()),
-                OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME));
+            return new Pass2PerFileWorker(Pass2FdrSidecar.LoadPass1ExperimentRecords(config), ctx.LogWarning);
         }
 
         /// <summary>
@@ -1357,14 +1321,12 @@ namespace pwiz.Osprey.Tasks
             public IReadOnlyList<string> JoinFileStems;
 
             /// <summary>
-            /// The per-file half of the second pass, which every pass-2 mode runs HERE rather
+            /// The per-file half of the second pass, which runs HERE rather
             /// than in Stage 7 (issues #4486, #4665).
             ///
             /// <para>Built ONCE for the pass and shared across the parallel file loop. It is
-            /// safe to share: the stratum and the experiment records are read-only, the transfer
-            /// tallies are summed under a lock, and the rest of its mutable state - the seeders
-            /// and the frozen scorer's standardization buffer - is per thread. The scorer was
-            /// once called read-only while its Score wrote a shared buffer (#4706).
+            /// safe to share: the experiment records are read-only and the transfer
+            /// tallies are summed under a lock.
             /// See <see cref="Pass2PerFileWorker"/>.</para>
             /// </summary>
             public Pass2PerFileWorker Pass2Worker;
@@ -1894,7 +1856,7 @@ namespace pwiz.Osprey.Tasks
         {
             return PerFileResumeDriver.IsCurrent(reconciledPath, Name, validityKey) &&
                    ReconciledFeaturesCurrent(inputFile, validityKey, config) &&
-                   Pass2FdrSidecar.HasWorkerStamp(inputFile, config);
+                   Pass2FdrSidecar.HasWorkerStamp(inputFile);
         }
 
         /// <summary>
@@ -2019,9 +1981,8 @@ namespace pwiz.Osprey.Tasks
             // pure waste.
             var consensusTargets = MultiChargeConsensus.SelectRescoreTargets(
                 run.Survivors, inputs.Config.RunFdr);
-            if (inputs.Config.Pass2TransferQ)
-                consensusTargets = MultiChargeConsensus.ReportedOnly(consensusTargets, run.Survivors,
-                    inputs.Config.FdrLevel, inputs.Config.ExperimentFdr);
+            consensusTargets = MultiChargeConsensus.ReportedOnly(consensusTargets, run.Survivors,
+                inputs.Config.FdrLevel, inputs.Config.ExperimentFdr);
             var reconTargets = ReconTargetsForRun(run);
             gapFillTargets = run.GapFill ?? new List<GapFillTarget>();
 
@@ -3049,8 +3010,8 @@ namespace pwiz.Osprey.Tasks
         /// fresh run carries 1.0.</para>
         ///
         /// <para>That used to be invisible, because the retired pass-2 Percolator recomputed
-        /// q for every entry. Under the frozen-model modes that replaced it (#4528,
-        /// protein-compact now the default) an OFF-stratum survivor KEEPS its 1st-pass q,
+        /// q for every entry. Under the q-value transfer that replaced it (#4528)
+        /// a survivor reconciliation did not move KEEPS its 1st-pass q,
         /// so the difference reaches the report: without this reset the Stellar straight-
         /// through run reported 31,583 precursors against the golden 29,364.</para>
         ///
@@ -3069,7 +3030,7 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="TryAssembleRescoreTargets"/> returned false because it has no
         /// <c>input_files</c> entry, returns before the reset and keeps its real 1st-pass
         /// q-values. Resetting those too would zero q-values the resident path leaves alone,
-        /// and under protein-compact an off-stratum survivor KEEPS its 1st-pass q - so they
+        /// and an unmoved survivor KEEPS its 1st-pass q - so they
         /// would drop out of the report. That is the mirror image of the over-reporting this
         /// reset exists to fix.</para>
         /// </summary>

@@ -465,7 +465,7 @@ namespace pwiz.Osprey
         // How a detection is boosted by its protein's other detections: best (the protein-best training
         // column, issue #4580, with the transfer second pass) by default at both resolutions
         // (ResolutionDefaults), though a configuration that never learns its resolution keeps the
-        // legacy off, so it declares no single default; compact (now the same as off) is to go;
+        // legacy off, so it declares no single default;
         // the developer switch that shapes the column stays an environment variable
         // (OSPREY_PROTEIN_BEST_SHUFFLE). A block body, so the handler is an Action: a value-returning
         // lambda would bind to the Func overload, whose false ends the parse.
@@ -480,7 +480,7 @@ namespace pwiz.Osprey
                 Scope = OspreyPropertyScope.search,
                 DescriptionArgs = () => new object[]
                 {
-                    ProteinBoost.best, ProteinBoost.compact, ProteinBoost.off, RESOLUTION_HRAM, RESOLUTION_UNIT
+                    ProteinBoost.best, ProteinBoost.off, RESOLUTION_HRAM, RESOLUTION_UNIT
                 }
             };
 

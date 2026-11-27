@@ -54,8 +54,7 @@ namespace pwiz.Osprey.Test
     {
         // The tuning runs' exports together keep at least this many precursors at 1% run FDR.
         // A subset run with the predicted library sits near the 100-target floor of a 1%
-        // conservative q, and the second pass competes the protein stratum and its complement
-        // separately, each with its own +1 (issue #4581), so one run can keep none.
+        // conservative q, so one run can keep none.
         private const int MIN_EXPORTED_PRECURSORS = 50;
         // Inside the subset's one isolation window: every tuning run's meta.json entry must hold it.
         private const double SUBSET_WINDOW_TARGET = 594.5201;

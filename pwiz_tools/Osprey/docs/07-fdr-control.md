@@ -55,9 +55,9 @@ Stage 7 (second pass, authoritative):
 ```
 
 The first pass trains Percolator through `PercolatorEngine.RunFirstPassStreaming`. The second
-pass trains nothing: each run is re-scored with the frozen first-pass model
-(`FrozenModelScorer`, applied per run by `Pass2PerFileWorker` on the PerFileRescoring
-worker), and SecondPassFDR folds the per-run answers.
+pass trains nothing: the rows reconciliation moved in a run are re-scored with that run's
+own frozen first-pass model (`RunModelScorer`), `Pass2PerFileWorker` carries or re-maps the
+run's q-values on the PerFileRescoring worker, and SecondPassFDR folds the per-run answers.
 
 ---
 
@@ -201,14 +201,10 @@ coefficients, so the contribution table itself is marked not applicable
 (`FeatureContributions.IsTreeEnsemble`) and the report says so, rather than that the
 feature report is unavailable.
 
-The trained ensembles persist in `<blib-stem>.1st-pass.model.json` (`FirstPassModelIO`, as
-`GbtModelData`, which round-trips exactly), so a resume, the Stage 6 per-file competition and
-a distributed `--task SecondPassFDR` node score with the same trees the first pass used. A
-tree model's file is about 3.4 MB, against a few hundred KB for the linear model, so it is
-serialized once and the same text written beside every input. A linear model's file is
-unchanged. The first pass writes the file whenever it TRAINS a model, not only when none was on
-disk, so Stage 6 and SecondPassFDR, which read whichever copy is there, never score with a
-stale model of the other classifier.
+The trained ensembles persist in each run's `<stem>.1st-pass.model.json` (`FirstPassModelIO`,
+as `GbtModelData`, which round-trips exactly), so a `PerFileRescoring` node in another process
+scores the run's moved rows with the same trees the first pass used. A tree model's file is
+about 3.4 MB, against a few hundred KB for the linear model.
 
 The validity keys of FirstPassFDR, PerFileRescoring and SecondPassFDR carry the classifier
 (`;fdrmodel=gbdt`) and every tree setting that changes the model - the effective `GbtParams`,
@@ -409,8 +405,8 @@ rows, so the cost is bounded by that cap and not by the cohort.
 
 The per-fold training sets exist only inside `PercolatorTrainer`, so the analysis is
 computed on **every** run, not only under `--model-diagnostics`, and persisted with the
-first-pass model (`TrainingAnalysis` in `<blib-stem>.1st-pass.model.json`). That is what lets
-a report written later, from the artifacts alone, show the same values (doc 00, P16). It
+run's first-pass model (`TrainingAnalysis` in `<stem>.1st-pass.model.json`), where a report
+written later from the artifacts alone can read it (doc 00, P16). It
 never touches a model or a score the pipeline uses; `PercolatorConfig.CollectTrainingAnalysis`
 gates it and the trainer logs its time under `[TIMING]`. A model file written by an older
 build has no analysis, and the report says so.
@@ -525,21 +521,24 @@ runs in-pass over the score arrays (`PercolatorQValues.cs:122`); the per-run pai
 q-values of moved and gap-filled peaks (issue #4390).
 
 **The second pass applies the floor BEFORE it writes.** It did not, and that was the defect
-issue #4522 set out to validate. `Pass2FdrSidecar.FinishRecord` produces each experiment record
+issue #4522 set out to validate. The second pass produced each experiment record
 from a q-value nothing had floored, and the correction happened afterwards, on the entries that
 feed the .blib - so `<blib-stem>.2nd-pass.fdr_experiment.bin` persisted a number the pipeline
 itself considered wrong, and the corrected one existed only inside the .blib. Measured on the
 446-run CHS cohort: 1,125,526 values, 0.19% of rows, uniformly across every run.
 
-**Both strata reached that state, by different routes**, which is why it looked like two bugs:
+**A recomputed q and a carried one both reached that state, by different routes**, which is why
+it looked like two bugs (the second pass of the time, `protein-compact`, recomputed q inside its
+protein stratum and carried it outside):
 
-| stratum | what `FinishRecord` gives it | why it can fall below its own best run |
+| record | what the second pass gave it | why it could fall below its own best run |
 |---|---|---|
-| on-stratum | a fresh second-pass competition q | nothing clamps it |
-| off-stratum | its first-pass q, carried | that q WAS clamped - against FIRST-pass run q - while pass 2 refreshed run q underneath it, a run that did not compete taking 1.0 |
+| recomputed | a fresh second-pass competition q | nothing clamped it |
+| carried | its first-pass q | that q WAS clamped - against FIRST-pass run q - while pass 2 refreshed run q underneath it, a run that did not compete taking 1.0 |
 
-The fix is one rule applied to every record regardless of which branch produced it, at the point
-where both the value and its floor are in hand:
+The fix is one rule applied to every record regardless of how it was produced, at the point
+where both the value and its floor are in hand. The transfer carries every record, so the
+second row is the one that applies now:
 
 * the per-entry floor is folded out of the per-file `.2nd-pass.fdr_scores.bin` records the
   experiment sweep is **already reading** - each carries `run_precursor_qvalue` and
@@ -650,7 +649,7 @@ All defaults are from `Osprey.Core/OspreyConfig.cs` and `Osprey/OspreyCommandArg
 | `--fdrbench <tsv>` | off (`OspreyCommandArgs.cs:179`) | Emit an FDRBench-compatible input TSV (entrapment true-FDR). Level taken from `--fdr-level`. |
 | `--fdrbench-per-run` | off (`OspreyCommandArgs.cs:181`) | One row per (precursor, run) with run-level q-values; default is one row per precursor with experiment q-values. |
 | `--fdrbench-pass {1\|2\|both}` | `2` (`OspreyCommandArgs.cs:183`) | Which pass to emit: 2 = post-compaction second-pass survivors; 1 = full pre-compaction first-pass pool; both = both with `.pass1`/`.pass2` suffixes. |
-| `--protein-boost {best\|compact\|off}` | `best` | `best` trains with the protein-best column (#4580): round 2 of the two-round first-pass training and every score pass after it read a `PROTEIN_BEST` column: from round 1's scores in that run, the best of the other peptides on the candidate's protein (a paired decoy reads its target's value), floored at the run's decoy median. It needs the two-round training, so with `OSPREY_GBT_PREFILTER_SIZE` unset it trains two rounds at 200000 rows (an explicit size overrides; `0` is refused). Either classifier. FirstPassFDR writes each run's column to `<stem>.1st-pass.protein_best.bin`, and the second pass (both modes) scores a rescored row with its entry's first-pass value, or the run's floor for an entry with no first-pass row - its siblings' evidence is a pass-1 quantity, which moving its own peak does not change. Logged in run.log, recorded as `osprey.protein_best` in the library's LibMetadata under `best`, and part of the FirstPassFDR, PerFileRescoring and SecondPassFDR validity keys under `best`. `compact` (the protein-compact second pass, [12](12-second-pass-fdr.md)) and `off` train the one-round first pass that preceded it, bit for bit. Developer switch: `OSPREY_PROTEIN_BEST_SHUFFLE` (`0`, `1`, the permuted-accession negative control); the `OSPREY_PROTEIN_BEST` variable it replaced is refused as unknown. |
+| `--protein-boost {best\|off}` | `best` | `best` trains with the protein-best column (#4580): round 2 of the two-round first-pass training and every score pass after it read a `PROTEIN_BEST` column: from round 1's scores in that run, the best of the other peptides on the candidate's protein (a paired decoy reads its target's value), floored at the run's decoy median. It needs the two-round training, so with `OSPREY_GBT_PREFILTER_SIZE` unset it trains two rounds at 200000 rows (an explicit size overrides; `0` is refused). Either classifier. PerFileScoring writes each run's column into its stub scores parquet (`protein_best`) and the run's floor into its model file, and the second pass scores a rescored row with its entry's first-pass value, or the run's floor for an entry with no first-pass row - its siblings' evidence is a pass-1 quantity, which moving its own peak does not change. Logged in run.log, recorded as `osprey.protein_best` in the library's LibMetadata under `best`, and part of the FirstPassFDR, PerFileRescoring and SecondPassFDR validity keys under `best`. `off` trains the one-round first pass that preceded it, bit for bit. The `compact` value went with the protein-compact second pass ([12](12-second-pass-fdr.md), "Removed modes"). Developer switch: `OSPREY_PROTEIN_BEST_SHUFFLE` (`0`, `1`, the permuted-accession negative control); the `OSPREY_PROTEIN_BEST` variable it replaced is refused as unknown. |
 | `--model-diagnostics` | off | Also collects per-feature target/decoy histograms + feature-contribution report (`CollectFeatureHistograms`, `PercolatorEngine.cs:310`); forces the resident first-pass pool. Byte-neutral when off. |
 | `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | (single-process) | HPC split. Each name is the task class's `TASK_NAME` (`PerFileScoringTask`, `FirstPassFdrTask`, `PerFileRescoreTask`, `SecondPassFdrTask`), looked up in the one task set (`OspreyTasks.Create().All`); note the class is `PerFileRescoreTask` where the CLI takes `PerFileRescoring`. See `15-hpc-scoring-split.md`. |
 

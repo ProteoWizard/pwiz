@@ -114,8 +114,8 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The identity fields must survive on RELEASED entries too. ProteinFdr's parsimony and
-        /// the protein-compact stratum walk the entire library after this point and read
+        /// The identity fields must survive on RELEASED entries too. ProteinFdr's parsimony
+        /// walks the entire library after this point and reads
         /// ModifiedSequence / ProteinIds, including for entries already judged false - so
         /// dropping whole entries would silently move protein FDR.
         /// </summary>

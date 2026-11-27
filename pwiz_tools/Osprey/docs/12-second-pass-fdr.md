@@ -10,12 +10,13 @@ re-scores moved / gap-filled peaks, SecondPassFDR recomputes FDR over the
 reconciled entries to produce the **authoritative** experiment-level q-values that
 gate the `.blib` output. This is the "second pass." The FDR *framework* is the
 same one documented in [07-fdr-control.md](07-fdr-control.md); what differs is
-**how the null is built** for the second pass, selected by `OSPREY_PASS2_QVALUE`.
+**how the null is built** for the second pass. One way is left, the `transfer`; the three
+it replaced are recorded under "Removed modes" with the measurements that removed them.
 
 It runs in two halves. The **per-run** half runs in `PerFileRescoring`, one run at a time, in
 `Pass2PerFileWorker`: it scores the run's reconciled peaks with the frozen 1st-pass model,
-runs the per-run part of one of the modes below, and writes the run's
-`<stem>.2nd-pass.fdr_scores.bin` - for every run, in every mode, whether or not Stage 6 had
+runs the per-run part of the transfer below, and writes the run's
+`<stem>.2nd-pass.fdr_scores.bin` - for every run, whether or not Stage 6 had
 work for it (#4486, #4665). The **experiment-wide** half is the join,
 `Pass2FdrSidecar.ComputeAndPersist` in `SecondPassFDR`: it folds those per-run answers into the
 analysis-wide `<blib-stem>.2nd-pass.fdr_experiment.bin` and puts the fresh q-values onto the
@@ -39,73 +40,28 @@ measured at 1.57% true FDP against a nominal 1% on Stellar libdecoy entrapment
 (the first-pass q gives 0.92% on the same data), and around 9% on an 82-file
 SEA-AD set - the error grows with run count. **The model the first pass trained (the
 linear SVM, or the tree ensemble under `OSPREY_FDR_MODEL=gbdt`) is now the model for the
-second pass in every mode**, and second-pass
+second pass**, and second-pass
 retraining has been removed outright - see "Frozen vs. retrain" below.
 
-## `OSPREY_PASS2_QVALUE` modes
+## `OSPREY_PASS2_QVALUE`: one mode
 
-`OspreyEnvironment` parses the flag. An unrecognized token is a **startup
-error**, not a fallback: a run that silently substituted the default would
-report q-values the caller never asked for. This is checked in `Program` before
-the pipeline starts, so a script still passing the removed `percolator` token
-fails in seconds rather than after Stage 1-5.
+The second pass assigns q-values one way, the `transfer` described below.
+`OSPREY_PASS2_QVALUE` is a developer variable that names it and accepts no other value.
+`OspreyEnvironment` parses it, and an unrecognized token is a **startup error**, not a
+fallback: a run that silently substituted the default would report q-values the caller never
+asked for. This is checked in `Program` before the pipeline starts, so a script still passing
+a removed token (`percolator`, `transfer-compete`, `protein-compact`) fails in seconds rather
+than after Stage 1-5. The name stays in the validity keys (`;pass2=transfer`), so a directory
+written under a removed mode never reads as this one's.
 
-The mode is not a user setting. A user chooses how detections are boosted by their protein's
-other detections, `--protein-boost best|compact|off`, and the mode follows from it
-(`OspreyConfig.Pass2QValue`): `best` trains the first pass with the protein-best column and
-carries its q-values through with `transfer`; `compact` is the `protein-compact` mode; `off`
-is `transfer` with no column. `best` is the default at both resolutions. Unit resolution
-defaulted to `compact` (with the linear SVM and the `core` feature set) until, on the Stellar
-regression entrapment data, gbdt with `best` and the `default` set reported 40,340 second-pass
-precursors with library decoys against 27,171. `compact` is to go. `OSPREY_PASS2_QVALUE` remains a developer override; with `best` it
-refuses `protein-compact`, which would credit the protein evidence twice
-(`ValidatePass2WithProteinBest`).
+A user chooses how detections are boosted by their protein's other detections,
+`--protein-boost best|off`: `best` trains the first pass with the protein-best column and
+`off` trains without it, and both carry the first pass's q-values through the transfer.
+`best` is the default at both resolutions.
 
 | Mode | Retrain? | Null population | Level |
 |------|----------|-----------------|-------|
-| `protein-compact` (`--protein-boost compact`) | no (frozen model) | stratified: the protein stratum and its complement, each against its own decoys | precursor; the stratum's experiment peptide q from a peptide-level competition over the same bests |
 | `transfer` (`--protein-boost best` or `off`) | no | none: pass-1 experiment q kept; moved and gap-filled peaks mapped through the pass-1 score-to-q table (first-pass calibration) | precursor + peptide |
-
-The **experiment peptide q-value and peptide PEP** of an on-stratum survivor come from a
-peptide-level competition over the same per-entry bests
-(`StreamedCompetitionState.CompetePeptides`): each peptide's best target and best decoy
-precursor, competed by base_id and conservative q, as the first pass does it in
-`PercolatorQValues.ComputeExperimentPeptideQMap`, with the PEP fitted on those winners. A
-base_id is grouped under its target's modified sequence, taken from the survivor entries
-(`ExperimentQFloors.TargetPeptideFor`) rather than the library, which a `--task
-SecondPassFDR` node holds without its generated decoys. Before this, the second pass copied
-each precursor's q into the peptide field, so the charge states of one peptide disagreed.
-The RUN peptide q is still set to the run precursor q on this path
-(`Pass2PerFileWorker`): replacing it would move the protein FDR gate, which reads run
-peptide q.
-
-These two are the whole list. `percolator` was removed for retraining against a
-decoy-depleted null (above), and the `OSPREY_PROTEIN_COMPACT_RETRAIN` A/B toggle went with
-the retrain it existed to measure.
-
-`transfer-compete` was removed for a **related but distinct** reason, and it is worth
-stating precisely because the surviving default shares part of it. Its competition ran over
-a **target-conditioned subset**: survivors were selected by per-run q on the TARGET side,
-and decoys entered only by `base_id` pairing with those targets. That strips decoys which
-WON the first-pass competition - the highest-scoring part of the null - so the second-pass q
-improves with **no added evidence**. Measured on the 82-file SEA-AD cohort: **1.96% true FDP
-at a nominal 1%, accepting 34,325**, against **1.53% and 37,624** for `protein-compact`. It
-is dominated on both axes, which is why it is a removal rather than a demotion.
-
-`protein-compact` had the same paired-subsetting bias until it competed the stratum's
-complement too ([#4581](https://github.com/ProteoWizard/pwiz/issues/4581)): its stratum is
-chosen by target evidence, so it takes most of the high-scoring targets and only the base rate
-of the high-scoring decoys, and the complement used to keep (or pool) its first-pass q while
-the decoys the stratum excluded counted against no one. Both halves now compete against their
-own paired decoys - see below and [protein-shuffled-entrapment.md](protein-shuffled-entrapment.md),
-which also explains why the standard entrapment design could not see it. An off-stratum
-survivor carries pass-2 run-scope and experiment-scope q-values from the complement's
-competition, with the pass-1 aggregate score and PEP the complement ranked on
-(`Pass2FdrSidecar.FinishRecord`), which retires the mixed-pass contract of
-[#4560](https://github.com/ProteoWizard/pwiz/issues/4560). The difference from
-`transfer-compete` is that `protein-compact` also brings genuinely new protein-level evidence
-to the ranking, where `transfer-compete` brought none. See also issue #4484 (closed)
-for the default decision, and #4363 (closed) for the depleted-null finding.
 
 ### `transfer` - first-pass calibration
 
@@ -115,7 +71,7 @@ on the first pass; reconciliation decides which peak is *quantified* in each run
 calibration" describes it better than the token does; the token stays `transfer`.
 
 No retrain and no new competition. For every compaction survivor, in the rescore worker
-(`TransferOneFile`):
+(`Pass2FdrSidecar.TransferOneFileByScore`):
 
 | Peak (classified by bit-exact score equality with pass 1) | Run-level q | Experiment-level q |
 |---|---|---|
@@ -126,7 +82,7 @@ No retrain and no new competition. For every compaction survivor, in the rescore
 The table is the run's own pass-1 (score, run q) pairs - precursor and peptide q separately - smoothed
 into equal-count quantile bins and made monotone by PAVA isotonic regression (`BuildScoreToQTable`,
 `LookupQForScore`). The join then carries each precursor's pass-1 experiment values
-(`ComputePass2TransferFold`) and raises them to the best-of-runs floors, as in every mode.
+(`ComputePass2TransferFold`) and raises them to the best-of-runs floors.
 
 **Why the q-values are legitimate.** A peak moved to a worse-scoring location gets a worse run q,
 because its new score is looked up in the same calibrated table; and if that was the precursor's
@@ -164,47 +120,77 @@ the run-wide q does not fit that population. Most gap fills (96% on Astral) corr
 above 1% - "not present in this sample"; per-run filtering for quantification should not yet trust
 the few that pass. The planned run-level PEP is the fix to evaluate.
 
-**Compared with `protein-compact`.** `transfer` gives every precursor the same competition. It has
-no protein stratum, so a protein identified by a single peptide is not at a disadvantage - a
-requirement for proteomics, where small proteins (under ~100 residues) often yield one tryptic
-peptide. On the same data the `protein-compact` default reported more precursors at q <= 1%, but
-measured 1.29-1.59% at a reported 1% (Astral), and its extra identifications came from the easier
-competition it gives peptides of proteins with >= 2 first-pass peptides.
+**Every precursor gets the same competition.** The transfer has no protein stratum, so a protein
+identified by a single peptide is not at a disadvantage - a requirement for proteomics, where small
+proteins (under ~100 residues) often yield one tryptic peptide.
 
-### Measuring the second pass with entrapment
+### Measuring a protein-aware step with entrapment
 
 `--entrapment` files each entrapment peptide under its own protein (the paired target's accession
-with FDRBench's `_p_target` marker). That is right for protein-level FDP, but it means entrapment
-almost never enters the `protein-compact` stratum (proteins with >= 2 first-pass peptides): on
-Astral, 13 of 7,451 stratum proteins were entrapment, so 99% of what `protein-compact` reports came
-from a competition entrapment could not see, and its measured FDP (0.54%) was meaningless. To
-measure `protein-compact` at the precursor level, file each entrapment row under its paired
-target's real accession (a copy of the library; label entrapment by sequence afterwards); measured
-that way it was 1.36%. `transfer` and pass 1 use no protein information, so either library gives
-the same answer for them.
+with FDRBench's `_p_target` marker). That is right for protein-level FDP, but an entrapment peptide
+then almost never sits on a protein with other detections, so it cannot measure any step that
+credits a precursor for its protein's other peptides: the removed `protein-compact` mode, and the
+protein-best column that replaced it. On Astral, 13 of the 7,451 proteins `protein-compact`
+re-competed were entrapment, so 99% of what it reported came from a competition entrapment could
+not see, and its measured FDP (0.54%) was meaningless. To measure such a step at the precursor
+level, file entrapment rows under target proteins' real accessions (a copy of the library; label
+entrapment by sequence afterwards); measured that way `protein-compact` was 1.36%.
+[protein-shuffled-entrapment.md](protein-shuffled-entrapment.md) describes the audit. The
+transfer itself and a first pass trained with `--protein-boost off` use no protein information, so
+either library gives the same answer for them.
 
-### `protein-compact` (frozen model)
+## Removed modes
 
-Scores the reconciled **targets and decoys** with the **frozen 1st-pass model** (no
-retrain), then recomputes q-values and PEP by a fresh target-decoy competition - each run's
-half in the rescore worker, the experiment-wide fold in `ComputePass2TransferCompeteFull`,
-one file resident at a time. Both sides are scored on
-the same frozen scale, which is what removes the RETRAIN pathology - but note this does not
-make the null unbiased: the stratum gate is target-conditioned, so the in-stratum decoy null
-is selected against (#4581). The competition is
-**constrained to the protein stratum** — the `base_id`s of proteins that had ≥2 peptides pass first-pass
-protein FDR, admitted as target+decoy pairs (the stratum is built by first-pass
-protein parsimony; see [08-protein-parsimony.md](08-protein-parsimony.md)).
-The **complement** - every other precursor - competes separately against its own
-paired decoys, at run scope in the rescore worker and at experiment scope on the
-first-pass experiment aggregate scores (`StreamingFdr.ComputeComplementExperimentQ`).
-A peak Stage 6 moved competes on its new score in whichever half its `base_id`
-belongs to. Constraining the stratum's competition to a biologically pre-filtered
-set reduces its multiple-testing burden (independent filtering, Bourgon 2010);
-competing the complement against the decoys the stratum excluded is what keeps
-the reported union calibrated. Each half carries its own conservative `+1`, so on
-a very small analysis (a few hundred precursors) a half with fewer than about 100
-targets above its first decoy accepts nothing at 1%.
+Three modes were removed, each because entrapment measured more false discoveries than its
+q-values claimed. They are recorded here so the measurements do not have to be repeated; git
+history holds the code.
+
+**`percolator`** retrained the classifier on the reconciled, compacted pool - the depleted
+null described above. Its `OSPREY_PROTEIN_COMPACT_RETRAIN` A/B toggle went with the retrain it
+existed to measure.
+
+**`transfer-compete`** re-ran the competition over a **target-conditioned subset**: survivors
+were selected by per-run q on the TARGET side, and decoys entered only by `base_id` pairing
+with those targets. That strips decoys which WON the first-pass competition - the
+highest-scoring part of the null - so the second-pass q improves with **no added evidence**.
+Measured on the 82-file SEA-AD cohort: **1.96% true FDP at a nominal 1%, accepting 34,325**,
+against **1.53% and 37,624** for `protein-compact`. See issue #4484 for the default decision
+and #4363 for the depleted-null finding.
+
+**`protein-compact`** (`--protein-boost compact`, the default second pass until 2026-11) was
+removed in 2026-11. It scored the reconciled targets and decoys with the frozen first-pass
+model and re-ran the target-decoy competition **constrained to the protein stratum**: the
+`base_id`s of proteins that had two or more peptides pass first-pass protein FDR, admitted as
+target+decoy pairs. The reasoning was independent filtering (Bourgon 2010): a competition over
+a biologically pre-filtered set carries a smaller multiple-testing burden, which recovers
+marginal peptides of proteins already detected. Unlike `transfer-compete` it brought new
+protein-level evidence to the ranking. What removed it:
+
+- **Its q-values under-reported at cohort scale.** The stratum is chosen by target evidence,
+  so it takes most of the high-scoring targets and only the base rate of the high-scoring
+  decoys. At a reported q of 1% it measured 1.53% true FDP on the 82-file SEA-AD cohort
+  (with entrapment on its own proteins, which under-reads it), 1.36% on Astral with entrapment
+  filed under target proteins, and 1.29-1.59% across the Astral scoring arms of 2026-10-28,
+  where `transfer` measured 1.03% on the same data.
+- **Competing the complement fixed one half of it.** Until
+  [#4993](https://github.com/ProteoWizard/pwiz/pull/4993), precursors outside the stratum kept
+  their first-pass q while the decoys the stratum excluded counted against no one
+  ([#4581](https://github.com/ProteoWizard/pwiz/issues/4581)). #4993 competed the stratum's
+  complement against its own paired decoys, at run and at experiment scope. The excess
+  inside the stratum remained (protein-aware FDP 1.4% with the SVM and 1.9% with out-of-fold
+  GBDT at a reported 1%, one SEA-AD file);
+  see [protein-shuffled-entrapment.md](protein-shuffled-entrapment.md).
+- **It could not be combined with the protein-best column.** Both credit a precursor for its
+  protein's other detections, so together they count that evidence twice: on three SEA-AD
+  files a reported q of 1% read 1.47% true FDP, where protein-best with the transfer read
+  0.91%.
+- **It needed one first-pass model for the whole analysis.** Each run now trains its own
+  first-pass model in `PerFileScoring`, and the mode had been refused from that change on.
+
+The protein-best column (below, and [07](07-fdr-control.md)) is what carries the protein
+evidence now: it reaches the first-pass model as a feature a target shares with its paired
+decoy, and the second pass re-competes nothing. The mode's artifacts are no longer written
+or read: `<blib-stem>.1st-pass.stratum.json` and `<stem>.2nd-pass.fdr_decoys.bin`.
 
 ## Frozen vs. retrain
 
@@ -213,8 +199,8 @@ targets above its first decoy accepts nothing at 1%.
   features with **no new training**. It routes through `FrozenModelScorer`
   (`TryCreate` averages fold weights or takes the tree ensemble; `Score` goes
   through `PercolatorScorer.ScoreStandardizedRow`, so it is classifier-agnostic and
-  works for `OSPREY_FDR_MODEL=gbdt` too). The model is captured on the streaming
-  first pass via the `captureModel` hook.
+  works for `OSPREY_FDR_MODEL=gbdt` too). Each run's model is the one `PerFileScoring`
+  trained and saved for it (`<stem>.1st-pass.model.json`).
 - **Retrain** trained a fresh SVM/GBDT on the post-reconciliation pool. **It is gone.**
   `percolator` was removed for the depleted-null reason above, and the
   `OSPREY_PROTEIN_COMPACT_RETRAIN` A/B toggle that was the last way to reach it has been
@@ -231,8 +217,9 @@ coefficients plus per-feature target/decoy means, and nothing that has to be ret
 A first pass trained with the protein-best column (see [07](07-fdr-control.md)) has a frozen model one
 feature wider than the reconciled feature vectors. The column of a row is what the OTHER peptides on its
 protein scored in the first pass's round 1, which moving the row's own peak does not change, and it cannot
-be recomputed later (round 1's models are not saved). So `FirstPassFDR` writes each run's column to
-`<stem>.1st-pass.protein_best.bin` as it scores the run, and `FrozenModelScorer` appends to every rescored
+be recomputed later (round 1's models are not saved). So `PerFileScoring` writes each run's column into
+its stub scores parquet (`protein_best`) and the run's floor into its model file, and `RunModelScorer`
+appends to every rescored
 row - moved, gap-filled or CWT, target or decoy - its entry's value in that run, or the run's floor (the
 median of its decoy precursors' round-1 scores) for an entry the run had no first-pass row for. A row the
 first pass left alone therefore scores bit for bit as it did, and the transfer classifies it UNCHANGED.
@@ -242,58 +229,31 @@ it scored the precursor in that run. The column file is a declared `FirstPassFDR
 
 ## Inputs from the first pass
 
-The frozen modes are frozen against artifacts, not against in-process state, so a
-`SecondPassFDR` node that never ran the first pass reads everything it needs from
-disk. Three experiment-wide artifacts carry it:
+The transfer reads artifacts, not in-process state, so a `PerFileRescoring` or
+`SecondPassFDR` node that never ran the first pass reads everything it needs from disk:
 
 | Artifact | Carries |
 |---|---|
-| `<blib-stem>.1st-pass.model.json` | the frozen Percolator model (standardizer + per-fold weights and biases, or per-fold tree ensembles under `OSPREY_FDR_MODEL=gbdt`) |
-| `<blib-stem>.1st-pass.stratum.json` | the protein stratum, under `protein-compact`. Split out of the model file in #4633, because first-pass protein FDR computes it and training does not |
-| `<blib-stem>.1st-pass.fdr_experiment.bin` | the first pass's experiment-scope q-values |
-
-**They must relay together.** A node holding one without the others cannot proceed:
-the model without the stratum cannot constrain a `protein-compact` competition, and
-the stratum without the model has nothing to score with. Each is written once, under the
-analysis name; they were once copied beside every run, which doc 00 (P1) now forbids.
+| `<stem>.scores.parquet` (the stub) | the run's first-pass scores and run q-values, which the run's score-to-q table is built from |
+| `<stem>.1st-pass.model.json` | the run's own first-pass model, which scores the run's moved and gap-filled rows |
+| `<blib-stem>.1st-pass.fdr_experiment.bin` | the first pass's experiment-scope q-values and PEP, carried forward |
 
 See [00-pipeline-architecture.md](00-pipeline-architecture.md) for the full contract
 and the per-boundary relay checklist.
 
 ## Fail-fast
 
-An **explicitly requested** frozen mode never silently degrades. If the frozen model,
-the required sidecars, or the protein stratum are absent (e.g. a warm rerun that loaded
-cached SVM scores and skipped first-pass training, or a present-but-corrupt first-pass
-sidecar), `Pass2FdrSidecar` aborts with a `ConfigError` and actionable guidance rather
-than reporting looser FDR than a cold run under the same flag.
-
-There is no longer anything to degrade TO - the retrain that used to be the fallback is
-gone - so the abort is the only outcome, not the stricter of two.
-
-Because `protein-compact` was the default until 2026-11, this fail-fast reached ordinary
-runs, not just explicitly flagged ones; it now reaches only the runs with `--protein-boost compact`. A distributed `--task SecondPassFDR` node
-never trained pass 1 and cannot rebuild the stratum (that needs the full library
-plus the first-pass detected peptides), so both the model and the stratum are
-reloaded from disk.
-
-They are **two files, not one**, because two different phases produce them:
-`<blib-stem>.1st-pass.model.json` is written the moment first-pass training returns a
-model, and `<blib-stem>.1st-pass.stratum.json` when first-pass protein FDR ends. On a
-446-file cohort those two moments are hours apart, and bundling them meant the
-model - a few hundred KB for the linear SVM, about 3.4 MB for a tree model under
-`OSPREY_FDR_MODEL=gbdt`, fully computed at minute ~21 - existed only in RAM
-until the end of the task, so any interruption threw it away.
-`FirstPassModelIO.LoadForAnalysis` merges the two on read, pairing them by their
-stamps, so a consumer still sees one sidecar. **Both must ride
-the HPC relay**: an orchestrator that copies the model between phase directories
-and not the stratum reaches this fail-fast under the default mode.
+A missing input stops the run rather than defaulting. The transfer requires the
+analysis-wide first-pass experiment file (`Pass2FdrSidecar.RequireTransferExperimentSidecar`):
+its loader reads absence as an empty map, which would carry every precursor forward at q = 1.0
+and drop it from the output. `SecondPassFDR` requires every run's current second-pass answer
+from `PerFileRescoring` before it folds any (`RequireWorkerAnswers`); it recomputes none.
 
 ## Flags and switches
 
 | Flag / env var | Default | Effect |
 |---|---|---|
-| `OSPREY_PASS2_QVALUE` | unset (follows `--protein-boost`: `protein-compact` under `compact`, else `transfer`) | Developer override of the second-pass q-value mode: `transfer` \| `protein-compact`. Unrecognized → startup error. |
+| `OSPREY_PASS2_QVALUE` | unset (`transfer`) | Names the second-pass q-value mode; `transfer` is the only value. Unrecognized, including the removed modes → startup error. |
 | `OSPREY_FDR_MODEL` | unset (linear SVM) | **Experimental** when `gbdt`. Selects the classifier the first pass trains, which is also the frozen model pass 2 scores with; `svm` names the default. Unrecognized -> startup error. See [07](07-fdr-control.md). |
 
 ## Divergences from the Rust documentation
@@ -301,11 +261,9 @@ and not the stratum reaches this fail-fast under the default mode.
 - **[C#-ORIGINATED] The pass-2 frozen q-value modes originated in C#** - The Rust
   algorithm doc set has no second-pass-FDR document because these modes
   (`transfer`, `protein-compact`, and the frozen-model
-  machinery) were developed in the C# implementation first; the Rust reference is
-  porting them back in maccoss/osprey#57. Both implementations have since removed
-  the `percolator` mode and defaulted to `protein-compact` together, so the shipped
-  defaults agree. The complement's own competition (#4993) and the stratum's peptide-level
-  experiment q (#4823) are ported too (`compute_complement_experiment_q`,
-  `compete_experiment_peptides`); the peptide PEP is C#-only. Parity for the frozen
-  modes is therefore tracked **C# → Rust** rather than Rust → C#. Evidence:
+  machinery) were developed in the C# implementation first; the Rust reference
+  ported them back in maccoss/osprey#57, with the complement's own competition (#4993)
+  and the stratum's peptide-level experiment q (#4823). C# has since removed
+  `protein-compact` and made `transfer` its only second pass, so the two differ wherever
+  the Rust reference still runs `protein-compact`. Evidence:
   `Osprey.Tasks/Pass2FdrSidecar.cs`, `Osprey.FDR/FrozenModelScorer.cs`. Severity: info.

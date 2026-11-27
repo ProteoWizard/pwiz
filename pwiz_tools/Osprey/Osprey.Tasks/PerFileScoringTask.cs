@@ -341,16 +341,6 @@ namespace pwiz.Osprey.Tasks
             // ctx.Demand, which routes to Rehydrate.
             var config = ctx.Config;
 
-            // The protein-compact second pass needs one first-pass model for the analysis, and
-            // each run trains its own, so a run that goes on to it is refused before any run is
-            // scored rather than hours later in PerFileRescoring.
-            if (config.Pass2ProteinCompact && ScoringTaskShared.Includes<PerFileRescoreTask>(config))
-            {
-                ctx.LogError(PerFileRescoreTask.OwnModelsProteinCompactMessage());
-                ctx.ExitCode = 1;
-                return false;
-            }
-
             // Stage 1: Load library + generate/pair decoys, then build the
             // full target+decoy library and its by-id lookup.
             if (!LoadLibraryAndDecoys(config, out var fullLibrary, ctx))

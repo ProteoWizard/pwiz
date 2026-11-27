@@ -210,8 +210,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// the post-compaction, second-pass-q-valued pool. Split into a STRUCTURAL half
         /// (score/model-derived) and a Q-DRIVEN half (reported-pool q-derived).
         ///
-        /// <para>The Q-DRIVEN half is what every surviving second-pass mode produces:
-        /// <c>transfer</c> and <c>protein-compact</c> both yield reported q-values and
+        /// <para>The Q-DRIVEN half is what the second pass produces:
+        /// the <c>transfer</c> yields reported q-values and
         /// nothing else. The STRUCTURAL half needed a retrained second-pass model, and
         /// there is no longer a mode that trains one - the retrain was removed because a
         /// compacted pool is decoy-depleted and retraining on it mis-estimates the null
@@ -925,7 +925,6 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             double runFdr,
             FdrLevel fdrLevel,
             Func<uint, double> precursorMzByEntryId = null,
-            HashSet<uint> stratumBaseIds = null,
             EntrapmentPlacement placement = null)
         {
             bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
@@ -986,10 +985,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 // Single-peak co-assignment on the REPORTED pool (issue #4522). Post-Stage-6, so
                 // it includes co-assignment reconciliation itself introduced; the pass-1 panel is
                 // the uncontaminated scoring picture and the two are meant to be read together.
-                // Takes the pass-2 stratum so each decoy is judged against its own q system's
-                // acceptance boundary (issue #4573); null in every non-stratified mode.
                 pass2.CoAssignment = BuildCoAssignment(perFileEntries, classByBaseId, precursorMzByEntryId,
-                    runFdr, fdrLevel, 2, true, stratumBaseIds);
+                    runFdr, fdrLevel, 2, true);
                 progress.Report(++cardIdx);
 
                 // Structural half: only when contributions were supplied. Production supplies none

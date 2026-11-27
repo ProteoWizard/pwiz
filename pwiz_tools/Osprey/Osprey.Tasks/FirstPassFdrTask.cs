@@ -148,7 +148,7 @@ namespace pwiz.Osprey.Tasks
         public override IEnumerable<Type> Publishes => new[]
         {
             typeof(CompactedEntries), typeof(PlanningPerformed),
-            typeof(ProteinCompactStratum), typeof(FirstPassSurvivorSource)
+            typeof(FirstPassSurvivorSource)
         };
 
         // Stage 6 planning state. Set by PlanStage6 (Run) and published into the
@@ -160,12 +160,6 @@ namespace pwiz.Osprey.Tasks
         // collections so a published slot from a no-op / stopped-after-Stage-5
         // run is never null.
         private bool _didPlan;
-
-        // The protein-compact stratum (base_ids of >=2-peptide 1st-pass proteins), built
-        // during first-pass protein FDR and read by the compaction gate to ADMIT present-
-        // protein peptides that did not individually pass 1st-pass FDR (so they get
-        // reconciled + rescored + reported). Null unless OSPREY_PASS2_QVALUE=protein-compact.
-        private HashSet<uint> _proteinCompactStratum;
 
         /// <summary>The post-compaction surviving base_ids, so the Stage 5 -&gt; 6 boundary can
         /// release the library fragments nothing can score any more. Null until the compaction
@@ -259,15 +253,6 @@ namespace pwiz.Osprey.Tasks
                 ctx.Config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(ctx.Config));
             if (!string.IsNullOrEmpty(retainedPath))
                 yield return retainedPath;
-
-            // The analysis-wide protein-compact stratum, which this task writes under
-            // OSPREY_PASS2_QVALUE=protein-compact (BuildAndPublishProteinCompactStratum).
-            if (ctx.Config.Pass2ProteinCompact)
-            {
-                string stratumPath = FirstPassModelIO.StratumPathFor(ctx.Config);
-                if (!string.IsNullOrEmpty(stratumPath))
-                    yield return stratumPath;
-            }
 
             // The pass-1 diagnostics product, when --model-diagnostics is on. Declaring it is
             // what puts the report inside the resume driver's forward scan instead of beside
@@ -391,44 +376,14 @@ namespace pwiz.Osprey.Tasks
             // product, and this one describes a single panel over an accumulator that was never
             // fed; stamping it would let a ten-minute measurement stand in for the hour-long
             // answer, silently and permanently.
-            ModelDiagnosticsReport.WriteFromAccumulator(accumulator, ModelViewFromArtifacts(ctx, fileNames),
+            // No model view: each run trained its own model in PerFileScoring, and there is no
+            // analysis-wide model to describe, so the Model tab keeps its explanatory note.
+            ModelDiagnosticsReport.WriteFromAccumulator(accumulator, null,
                 BuildCalibrationData(ctx, fileNames), config, ctx, coAssignment,
                 coAssignOnly ? null : ValidityKey(ctx));
             if (coAssignOnly)
                 MoveHarnessProductAside(ctx, config);
             return true;
-        }
-
-        /// <summary>
-        /// The pass-1 report's model views for a process that did not run the score pass, from
-        /// the analysis's first-pass model and every run's <see cref="FeatureSums"/> share in its
-        /// first-pass sidecar - the same reduction the score pass makes, so the same views (P16).
-        /// Null, which leaves the Model tab its explanatory note, when the model on disk is not
-        /// this analysis's or a run has no share.
-        /// </summary>
-        private ModelDiagnosticsData.ModelView ModelViewFromArtifacts(PipelineContext ctx,
-            IReadOnlyList<string> fileNames)
-        {
-            var config = ctx.Config;
-            var saved = FirstPassModelIO.LoadForAnalysis(config);
-            string stamp = OspreyVersion.Stamp(Name, ValidityKey(ctx)).ToString();
-            if (saved?.Model == null || !string.Equals(saved.Stamp?.ToString(), stamp, StringComparison.Ordinal))
-                return null;
-            var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
-            var shares = fileNames.Select(fileName =>
-            {
-                string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
-                return string.IsNullOrEmpty(sidecarBase)
-                    ? null
-                    : FdrScoresSidecar.ReadFeatureSums(FdrScoresSidecar.Pass1Path(sidecarBase));
-            });
-            // A model trained with the protein-best column reports it as its last feature.
-            var featureInfos = ScoringTaskShared.FdrFeatureInfos(config);
-            if (ProteinBestFeature.IsAppendedTo(saved.Model.FeatureNames))
-                featureInfos = ProteinBestFeature.WithColumnInfo(featureInfos);
-            var contributions = PercolatorEngine.FirstPassContributionsFromShares(saved.Model, shares,
-                featureInfos);
-            return ModelDiagnosticsData.ModelView.From(contributions);
         }
 
         /// <summary>
@@ -516,11 +471,8 @@ namespace pwiz.Osprey.Tasks
 
         public override string ValidityKey(PipelineContext ctx)
         {
-            // The 2nd-pass mode belongs here even though pass 2 runs later: protein-compact is
-            // the only mode that needs the >=2-peptide stratum, and this task is where the
-            // stratum is computed and written into the 1st-pass model sidecar. A sidecar written
-            // under transfer carries no stratum, so a protein-compact re-run that adopted it
-            // would be reading an artifact that cannot answer its question.
+            // The 2nd-pass mode has been in this key since a mode decided what this task wrote;
+            // the term stays so the key of an unchanged analysis does not move.
             // The sidecar FORMAT VERSION belongs here because this task's output is the
             // .1st-pass.fdr_scores.bin every later stage reads back. Resuming a directory written
             // before a format bump would find this task still valid, skip it, and then have every
@@ -636,8 +588,7 @@ namespace pwiz.Osprey.Tasks
             // (which OOM'd 80-file joins; the Phase-1 bulk reload that used to sit
             // here did exactly that). The FDR engine drives the reload through this
             // delegate, so Osprey.FDR takes no Osprey.IO dependency. The f64 parquet
-            // roundtrip is regression-exact (the same reload the second pass uses
-            // via Pass2FdrSidecar.MapFeaturesByScoreIndex). A file with no mapped
+            // roundtrip is regression-exact. A file with no mapped
             // parquet path yields an empty row set, so its entries fall back to
             // basic features -- matching the pre-streaming builder's fallback.
             Func<string, IReadOnlyList<double[]>> loadFileFeatures = fileName =>
@@ -655,9 +606,7 @@ namespace pwiz.Osprey.Tasks
             // Publish. The legacy FdrEntry-buffer path that stood beside it as a byte-identity
             // oracle was removed with OSPREY_FDR_PROJECTION (2026-10-10).
             // FDRBench pass-1 (#4377) streams off the per-file sidecars and the experiment map
-            // (WriteFdrBenchPass1FromSidecarsIfRequested). OSPREY_PASS2_QVALUE=transfer and
-            // transfer-compete need only the trained 1st-pass MODEL, which the projection path
-            // publishes via the RunFirstPassProjection captureModel hook. --model-diagnostics
+            // (WriteFdrBenchPass1FromSidecarsIfRequested). --model-diagnostics
             // STREAMS its pass-1 report off the projection path via a
             // ModelDiagnosticsData.Accumulator fed by the score-pass sink, folding each
             // pre-compaction row into the reduced report structures; the reductions are
@@ -1446,92 +1395,6 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Build the protein-compact stratum: the base_ids of every library precursor whose
-        /// peptide maps to a protein detected in the 1st pass by &gt;=2 DISTINCT peptides (the
-        /// honest multi-hit anchor -- single-hit proteins break the independent-filtering
-        /// assumption; the entrapment prototype showed &gt;=2 restores FDP control at full
-        /// gain). Bounded by the library -> flat in file count. Read by the compaction gate
-        /// (to admit these peptides for reconciliation) and by <c>Pass2FdrSidecar</c>'s
-        /// stratified competition (to re-scope q over them).
-        /// </summary>
-        private static HashSet<uint> BuildProteinCompactStratum(
-            FirstPassProteinFdrResult result, List<LibraryEntry> fullLibrary, Action<string> log)
-        {
-            // ModifiedSequence -> its protein ids (from target library entries).
-            // ProteinIds is IReadOnlyList<string> after the LibraryStringInterner change (#4424).
-            var pepProteins = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
-            foreach (var e in fullLibrary)
-                if (!e.IsDecoy && e.ProteinIds != null && e.ProteinIds.Count > 0 &&
-                    !pepProteins.ContainsKey(e.ModifiedSequence))
-                    pepProteins[e.ModifiedSequence] = e.ProteinIds;
-
-            // Count DISTINCT detected peptides per protein; keep proteins with >=2.
-            var protPepCount = new Dictionary<string, int>(StringComparer.Ordinal);
-            foreach (var pep in result.DetectedPeptides)
-                if (pepProteins.TryGetValue(pep, out var pids))
-                    foreach (var p in pids)
-                        protPepCount[p] = protPepCount.TryGetValue(p, out int c) ? c + 1 : 1;
-            var present2 = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var kv in protPepCount)
-                if (kv.Value >= 2) present2.Add(kv.Key);
-
-            // stratum = base_ids of every library precursor of a present-2 protein (target
-            // and paired decoy share a base_id, so this is pair-symmetric).
-            var stratum = new HashSet<uint>();
-            foreach (var e in fullLibrary)
-            {
-                if (e.ProteinIds == null) continue;
-                foreach (var p in e.ProteinIds)
-                    if (present2.Contains(p)) { stratum.Add(e.Id & ~LibraryEntry.DECOY_ID_BIT); break; }
-            }
-            log(string.Format(
-                OspreyTasksResources.FirstPassFdrTask_BuildProteinCompactStratum__0__proteins_have_2_or_more_detections___1__detected_peptides___their__2__precursor_,
-                present2.Count, result.DetectedPeptides.Count, stratum.Count));
-            return stratum;
-        }
-
-        /// <summary>Build the protein-compact stratum, stash it for the compaction gate
-        /// (<see cref="_proteinCompactStratum"/>), publish it for the pass-2 stratified
-        /// competition, and PERSIST it. Called from the projection first pass, as protein FDR
-        /// finishes.
-        ///
-        /// <para>Persisted here, where protein FDR has just produced it, rather than at the end
-        /// of <see cref="PlanStage6"/> where it used to ride out with the model. Those are two
-        /// different phases and the gap between them is the whole survivor reload - the step
-        /// that is the memory peak of a large cohort, and therefore the step a run is most
-        /// likely to die in. Writing the stratum before it means a run that dies there resumes
-        /// at the compaction gate instead of repeating the score passes and protein FDR.</para>
-        ///
-        /// <para>Best-effort, like the model: nothing downstream requires the file, and a
-        /// resume that cannot find it recomputes.</para></summary>
-        private void BuildAndPublishProteinCompactStratum(
-            FirstPassProteinFdrResult result, List<LibraryEntry> fullLibrary, string validityKey,
-            PipelineContext ctx)
-        {
-            _proteinCompactStratum = BuildProteinCompactStratum(result, fullLibrary, ctx.LogInfo);
-            ctx.Publish(new ProteinCompactStratum(_proteinCompactStratum));
-            // One analysis-wide file: the stratum is experiment-wide content.
-            string path = FirstPassModelIO.StratumPathFor(ctx.Config);
-            if (path == null)
-                return;
-            try
-            {
-                if (FirstPassModelIO.SaveStratum(path, _proteinCompactStratum, OspreyVersion.Stamp(Name, validityKey)))
-                {
-                    ctx.LogVerbose(string.Format(
-                        OspreyTasksResources.FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_to__0_,
-                        path));
-                }
-            }
-            catch (Exception ex)
-            {
-                ctx.LogWarning(string.Format(
-                    OspreyTasksResources.FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Could_not_save_the_precursor_candidates_from_proteins_with_2_or_more_detections_to__0____1_,
-                    path, ex.Message));
-            }
-        }
-
-        /// <summary>
         /// Sets <see cref="RunPlan.FirstPassFdrLanes"/> for this stage's per-file phases, before
         /// the first of them. Free memory is measured here, after Stage 1-4 state is loaded and
         /// before the first pass grows its own.
@@ -1730,24 +1593,20 @@ namespace pwiz.Osprey.Tasks
             //
             // So resume where the work actually stops: at ComputeFirstPassBaseIds, which streams
             // the finalized sidecars off disk rather than reading anything this block would have
-            // built. The two byproducts the skipped region publishes are taken from the analysis's
-            // .1st-pass.model.json and .1st-pass.stratum.json instead, so a
-            // consumer sees the same values from the same run that produced the scores.
+            // built.
             //
             // Deliberately all-or-nothing: one missing sidecar means the competition would differ,
             // so anything short of complete falls through and recomputes.
             string experimentPathForResume = FdrExperimentSidecar.PathFor(
                 config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(config),
                 FdrScoresSidecar.Pass.FirstPass);
-            FirstPassModelIO.Sidecar resumeSidecar = null;
             bool canEnterAtGate = false;
             // Each condition reported by name when it refuses. A silent fall-through here looks
             // exactly like a run that never had the artifacts, and the whole point of the fast
             // path is that an operator can tell why they are waiting 29 minutes instead of 8.
             if (projections.PerFile.Count > 0 && resumableFiles.Count == projections.PerFile.Count)
             {
-                var refusals = CompactionGateRefusals(experimentPathForResume, sidecarValidityKey,
-                    config, out resumeSidecar);
+                var refusals = CompactionGateRefusals(experimentPathForResume, sidecarValidityKey);
                 if (refusals.Count > 0)
                 {
                     ctx.LogInfo(string.Format(
@@ -1762,28 +1621,6 @@ namespace pwiz.Osprey.Tasks
                         ? OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Resuming__first_pass_intermediate_files_for_all__0__files_are_up_to_date__skipping_first_
                         : OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Resuming__first_pass_intermediate_files_for_all__0__files_are_up_to_date__skipping_first_pass_scoring_and_protein_FDR,
                     projections.PerFile.Count));
-                // Nothing to publish under per-run first-pass models, which keep no analysis-wide one.
-                if (resumeSidecar != null)
-                {
-                    ctx.Publish(new FirstPassPercolatorModel
-                    {
-                        Results = resumeSidecar.Model,
-                        Stamp = resumeSidecar.Stamp
-                    });
-                }
-                // Gated on the MODE, matching the canEnterAtGate clause above. The stratum file
-                // is not a declared Output, so nothing invalidates or removes it when a later
-                // run uses a different pass-2 arm - and the compaction gate applies whatever it
-                // is handed, so an ungated adoption would silently widen the survivor set of an
-                // arm that never computes a stratum at all.
-                if (config.Pass2ProteinCompact && resumeSidecar?.StratumBaseIds != null)
-                {
-                    _proteinCompactStratum = resumeSidecar.StratumBaseIds;
-                    ctx.Publish(new ProteinCompactStratum(_proteinCompactStratum));
-                    ctx.LogVerbose(string.Format(
-                        OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Reloaded_the_saved_list_of__0__precursor_candidates_from_proteins_with_2_or_more_,
-                        _proteinCompactStratum.Count));
-                }
                 // A run that re-enters here - killed after every sidecar landed but before this
                 // task finished, and restarted - owes the same pass-1 FDRBench file the
                 // uninterrupted run would have written at this point. Everything the emitter
@@ -1984,15 +1821,6 @@ namespace pwiz.Osprey.Tasks
                 swProt.Stop();
                 ctx.LogInfo(LogTag.TIMING, @"First-pass protein FDR: {0:F1}s",
                     swProt.Elapsed.TotalSeconds);
-
-                // Build + publish the protein-compact stratum on the PROJECTION (production)
-                // path too -- the compaction gate below (ComputeFirstPassBaseIds) reads it to
-                // admit present-protein peptides that did not pass 1st-pass FDR.
-                if (config.Pass2ProteinCompact)
-                {
-                    BuildAndPublishProteinCompactStratum(
-                        proteinResult, fullLibrary, sidecarValidityKey, ctx);
-                }
             }
 
             // The experiment-scope columns are complete now that protein FDR has resolved its
@@ -2022,8 +1850,7 @@ namespace pwiz.Osprey.Tasks
             }
 
             // Compaction predicate streamed over the finalized per-file sidecar -> passing
-            // base_id set (the same predicate RescoreCompaction applies, risk #7). The
-            // stratum (protein-compact) admits present-protein peptides that failed 1st-pass FDR.
+            // base_id set (the same predicate RescoreCompaction applies, risk #7).
             return CompactFromSidecars(projections, perFileParquetPaths, beforeCount, config, ctx);
         }
 
@@ -2046,27 +1873,10 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Why a resume whose per-file sidecars are all current may NOT enter at the compaction
-        /// gate, one reason per condition that fails, or an empty list when it may. The model
-        /// sidecar the conditions were checked against comes back through
-        /// <paramref name="modelSidecar"/> (null when none was readable), so the caller publishes
-        /// the object that passed rather than a second read of it.
+        /// gate, one reason per condition that fails, or an empty list when it may.
         ///
-        /// <para>The gate entry skips the score passes and publishes the persisted model as this
-        /// run's first-pass model, so that model must be of the classifier this run uses. The
-        /// validity key records the FDR method, so a current directory cannot hold the other
-        /// classifier's model except through a defect; refusing here makes such a directory
-        /// recompute instead of publishing it to Stage 6 and the second pass.</para>
-        ///
-        /// <para>protein-compact's gate admits present-protein peptides through the stratum, so
-        /// entering at the gate WITHOUT it selects a different, smaller survivor set - and does
-        /// it silently, because nothing downstream can tell a stratum that was never loaded from
-        /// one that was legitimately empty. The stratum is its own artifact
-        /// (.1st-pass.stratum.json, written when protein FDR ends), so a run killed before
-        /// protein FDR has the model and no stratum and correctly falls through to recompute;
-        /// <see cref="FirstPassModelIO.LoadForAnalysis"/> pairs the two by their stamps.</para>
         /// </summary>
-        internal List<string> CompactionGateRefusals(string experimentPath, string validityKey,
-            OspreyConfig config, out FirstPassModelIO.Sidecar modelSidecar)
+        internal List<string> CompactionGateRefusals(string experimentPath, string validityKey)
         {
             var refusals = new List<string>();
             if (string.IsNullOrEmpty(experimentPath))
@@ -2079,52 +1889,7 @@ namespace pwiz.Osprey.Tasks
             // Per-run first-pass models: this task trains nothing and writes no model, so the
             // gate is the runs' own models and stubs (checked with each run's scores, by
             // PerFileScoringTask.OwnScoresCurrent) and the experiment sidecar above.
-            modelSidecar = null;
             return refusals;
-        }
-
-        /// <summary>
-        /// Persist the trained 1st-pass model to the analysis's one model file, the moment
-        /// training produces it.
-        ///
-        /// <para>Best-effort: a write failure must not fail the run, because nothing downstream
-        /// requires the file to exist - SecondPassFDR keeps its pre-existing fail-fast and a
-        /// resume simply retrains. <see cref="FirstPassModelIO.Serialize"/> renders either
-        /// classifier and declines only a model <see cref="FirstPassModelIO.Load"/> could not read
-        /// back - a degenerate one, which carries nothing to persist.</para>
-        /// </summary>
-        private void PersistFirstPassModel(PercolatorResults results, string validityKey, PipelineContext ctx)
-        {
-            string path = FirstPassModelIO.PathFor(ctx.Config);
-            if (results == null || path == null)
-                return;
-            // Best-effort: a model that cannot be rendered (a non-finite weight) is logged and
-            // not persisted. Save commits through SimpleFileSaver and the JSON carries its own
-            // validity stamp, so the artifact is absent or complete and identified; a model left
-            // by an earlier run is current only if this build wrote it with this key, so a
-            // declined model here cannot be mistaken for it.
-            string modelJson;
-            try
-            {
-                modelJson = FirstPassModelIO.Serialize(results, OspreyVersion.Stamp(Name, validityKey));
-            }
-            catch (Exception ex)
-            {
-                ctx.LogWarning(@"Could not serialize the 1st-pass model: " + ex.Message);
-                return;
-            }
-            if (modelJson == null)
-                return;
-            try
-            {
-                FirstPassModelIO.WriteText(path, modelJson);
-                ctx.LogInfo(string.Format(OspreyTasksResources.FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0_, path));
-            }
-            catch (Exception ex)
-            {
-                ctx.LogWarning(string.Format(OspreyTasksResources.FirstPassFdrTask_PersistFirstPassModel_Could_not_save_the_first_pass_model_to__0____1_,
-                    path, ex.Message));
-            }
         }
 
         /// <summary>
@@ -2145,7 +1910,7 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentById = null)
         {
             var firstPassBaseIds = ComputeFirstPassBaseIds(
-                projections, perFileParquetPaths, config, ctx, _proteinCompactStratum, experimentById,
+                projections, perFileParquetPaths, config, ctx, experimentById,
                 out var rowsPerBaseId);
             if (firstPassBaseIds == null)
                 return null;  // streaming sidecar read fault; ExitCode already set
@@ -2473,7 +2238,6 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
             PipelineContext ctx,
-            HashSet<uint> stratum,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentById,
             out Dictionary<uint, int> rowsPerBaseId)
         {
@@ -2545,19 +2309,12 @@ namespace pwiz.Osprey.Tasks
                                 fileRowCounts[rowBaseId] = fileRowCounts.TryGetValue(rowBaseId, out int n) ? n + 1 : 1;
                                 if ((record.EntryId & LibraryEntry.DECOY_ID_BIT) != 0)
                                     return;
-                                uint baseId = rowBaseId;
                                 double proteinQ =
                                     experimentByEntryId.TryGetValue(record.EntryId, out var exp)
                                         ? exp.ExperimentProteinQvalue
                                         : 1.0;
-                                // The stratum clause (protein-compact) admits present-protein peptides
-                                // (>=2 first-pass-detected-peptide proteins) that failed 1st-pass FDR.
-                                if (record.RunPeptideQvalue <= peptideGate ||
-                                    proteinQ <= proteinGate ||
-                                    (stratum != null && stratum.Contains(baseId)))
-                                {
-                                    filePassing.Add(baseId);
-                                }
+                                if (record.RunPeptideQvalue <= peptideGate || proteinQ <= proteinGate)
+                                    filePassing.Add(rowBaseId);
                             }))
                     {
                         return (Passing: filePassing, RowCounts: fileRowCounts, Error: string.Format(

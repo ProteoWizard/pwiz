@@ -212,8 +212,7 @@ namespace pwiz.Osprey.FDR
             /// moved boundary has still explained the panel.
             /// </summary>
             public void WriteCutoffs(Func<int, double> runCutoffByFile, string[] runNames,
-                double experimentCutoff, double experimentCutoffInStratum,
-                double experimentCutoffOffStratum, int acceptedInStratum, int acceptedOffStratum)
+                double experimentCutoff)
             {
                 var inv = CultureInfo.InvariantCulture;
                 using (var saver = new SimpleFileSaver(NameFor(_dir, _pass, _seq, @"cutoffs")))
@@ -229,10 +228,6 @@ namespace pwiz.Osprey.FDR
                             }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                         }
                         WriteExperimentCutoff(sw, @"experiment", Diagnostics.FormatF64Roundtrip(experimentCutoff));
-                        WriteExperimentCutoff(sw, @"experimentInStratum", Diagnostics.FormatF64Roundtrip(experimentCutoffInStratum));
-                        WriteExperimentCutoff(sw, @"experimentOffStratum", Diagnostics.FormatF64Roundtrip(experimentCutoffOffStratum));
-                        WriteExperimentCutoff(sw, @"acceptedInStratum", acceptedInStratum.ToString(inv));
-                        WriteExperimentCutoff(sw, @"acceptedOffStratum", acceptedOffStratum.ToString(inv));
                     }
                     saver.Commit();
                 }
