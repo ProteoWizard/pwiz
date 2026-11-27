@@ -40,6 +40,35 @@ public class SpectrumListWrapperTests
         CollectionAssert.AreEqual(new[] { 100.0, 150.0, 200.0 }, spec.GetMZArray()!.Data.ToArray());
         CollectionAssert.AreEqual(new[] { 2.0, 3.0, 4.0 }, spec.GetIntensityArray()!.Data.ToArray());
         Assert.AreEqual(3, spec.DefaultArrayLength);
+
+        // Combined IMS spectrum, ordered by mobility rather than m/z: every array of m/z length,
+        // binary or integer, is trimmed with m/z, so each kept peak keeps its own values, and the
+        // peaks keep their input order. An array of any other length is left as it is.
+        inner = new SpectrumListSimple();
+        var imsSpectrum = MakeSpectrum(0, 1, 10,
+            mz: new[] { 250.0, 100.0, 200.0, 50.0, 150.0 },
+            intensity: new[] { 5.0, 2.0, 4.0, 1.0, 3.0 });
+        var mobilityArray = new BinaryDataArray();
+        mobilityArray.Set(CVID.MS_raw_ion_mobility_array, string.Empty, CVID.UO_millisecond);
+        mobilityArray.Data.AddRange(new[] { 25.0, 10.0, 20.0, 5.0, 15.0 });
+        imsSpectrum.BinaryDataArrays.Add(mobilityArray);
+        var unrelatedArray = new BinaryDataArray();
+        unrelatedArray.Data.AddRange(new[] { 7.0, 8.0 });
+        imsSpectrum.BinaryDataArrays.Add(unrelatedArray);
+        var integerArray = new IntegerDataArray();
+        integerArray.Data.AddRange(new long[] { 5, 2, 4, 1, 3 });
+        imsSpectrum.IntegerDataArrays.Add(integerArray);
+        inner.Spectra.Add(imsSpectrum);
+        wrapped = new SpectrumListMzWindow(inner, 100, 200);
+        spec = wrapped.GetSpectrum(0, getBinaryData: true);
+        CollectionAssert.AreEqual(new[] { 100.0, 200.0, 150.0 }, spec.GetMZArray()!.Data.ToArray());
+        CollectionAssert.AreEqual(new[] { 2.0, 4.0, 3.0 }, spec.GetIntensityArray()!.Data.ToArray());
+        var trimmedMobility = spec.GetArrayByCvid(CVID.MS_raw_ion_mobility_array);
+        Assert.IsNotNull(trimmedMobility);
+        CollectionAssert.AreEqual(new[] { 10.0, 20.0, 15.0 }, trimmedMobility.Data.ToArray());
+        CollectionAssert.AreEqual(new long[] { 2, 4, 3 }, spec.IntegerDataArrays[0].Data.ToArray());
+        CollectionAssert.AreEqual(new[] { 7.0, 8.0 }, unrelatedArray.Data.ToArray());
+        Assert.AreEqual(3, spec.DefaultArrayLength);
     }
 
     [TestMethod]
