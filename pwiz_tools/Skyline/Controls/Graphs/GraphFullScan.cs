@@ -2338,12 +2338,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (magnifyBtn.Checked)
             {
-                double mz = _msDataFileScanHelper.Source == ChromSource.ms1
-                    ? _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex].PrecursorMz
-                    : _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex].ProductMz;
+                GetMagnifiedMzRange(out var mzMin, out var mzMax);
                 xScale.MinAuto = xScale.MaxAuto = false;
-                xScale.Min = mz - 1.5;
-                xScale.Max = mz + 3.5;
+                xScale.Min = mzMin - 1.5;
+                xScale.Max = mzMax + 3.5;
             }
             else if (_requestedRange != null && _requestedRange.Max > _requestedRange.Min)
             {
@@ -2357,6 +2355,35 @@ namespace pwiz.Skyline.Controls.Graphs
                 // a single value makes ZedGraph skip drawing the axis entirely.
                 xScale.MinAuto = xScale.MaxAuto = true;
             }
+        }
+
+        /// <summary>
+        /// Gets the m/z range to magnify. That is the m/z of the selected transition when it belongs to the
+        /// scan type shown, and otherwise the range of the transitions that do, so that the MS/MS view of a
+        /// selected precursor shows its fragments, and the MS1 view of a selected fragment its precursor.
+        /// </summary>
+        private void GetMagnifiedMzRange(out double mzMin, out double mzMax)
+        {
+            var transitions = _msDataFileScanHelper.ScanProvider.Transitions;
+            var source = _msDataFileScanHelper.Source;
+            var selected = transitions[_msDataFileScanHelper.TransitionIndex];
+            mzMin = mzMax = source == ChromSource.ms1 ? selected.PrecursorMz.Value : selected.ProductMz.Value;
+            if (IsSourceShown(selected.Source, source))
+                return;
+
+            var shownMzs = transitions.Where(t => IsSourceShown(t.Source, source)).Select(t => t.ProductMz.Value).ToArray();
+            if (shownMzs.Length > 0)
+            {
+                mzMin = shownMzs.Min();
+                mzMax = shownMzs.Max();
+            }
+        }
+
+        private static bool IsSourceShown(ChromSource transitionSource, ChromSource shownSource)
+        {
+            return shownSource == ChromSource.ms1
+                ? transitionSource == ChromSource.ms1 || transitionSource == ChromSource.sim
+                : transitionSource == shownSource;
         }
 
         public void SetMzScale(MzRange range)
