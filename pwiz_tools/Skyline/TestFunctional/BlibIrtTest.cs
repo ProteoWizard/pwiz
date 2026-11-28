@@ -72,6 +72,7 @@ namespace pwiz.SkylineTestFunctional
             
             // Import peptide search
             RunUI(() => SkylineWindow.SaveDocument(testFilesDir.GetTestPath("test.sky")));
+            TestScoreTypesDetectedBeforeShown(searchResults);
             TestImportPeptideSearch(searchResults, DialogResult.Cancel);
             TestImportPeptideSearch(searchResults, DialogResult.No);
             // CONSIDER: Ideally, we would also test "Retry" by putting files in place to have it succeed
@@ -115,6 +116,26 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(import, import.CancelDialog);
             else
                 WaitForClosedForm(import);
+        }
+
+        /// <summary>
+        /// The DIA-NN, EncyclopeDIA and Osprey search wizards add their search results to Import Peptide Search
+        /// before showing it, so score-type detection can finish before the grid has a window handle. The
+        /// score types must still load once the dialog is shown.
+        /// </summary>
+        private void TestScoreTypesDetectedBeforeShown(string searchResults)
+        {
+            ImportPeptideSearchDlg import = null;
+            RunUI(() =>
+            {
+                import = new ImportPeptideSearchDlg(SkylineWindow, SkylineWindow.LibraryManager, false, ImportPeptideSearchDlg.Workflow.dda);
+                import.BuildPepSearchLibControl.AddSearchFiles(new[] { searchResults });
+            });
+            WaitForCondition(() => !import.BuildPepSearchLibControl.Grid.IsScoreTypeDetectionRunning);
+            ShowDialog<ImportPeptideSearchDlg>(() => import.ShowDialog(SkylineWindow));
+            WaitForConditionUI(() => import.BuildPepSearchLibControl.Grid.ScoreTypesLoaded);
+            OkDialog(import, import.CancelDialog);
+            RunUI(import.Dispose);
         }
 
         private static void ChooseEmbedding(MultiButtonMsgDlg preferEmbeddedDlg, DialogResult dialogResult)
