@@ -2358,9 +2358,10 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
-        /// Gets the m/z range to magnify. That is the m/z of the selected transition when it belongs to the
-        /// scan type shown, and otherwise the range of the transitions that do, so that the MS/MS view of a
-        /// selected precursor shows its fragments, and the MS1 view of a selected fragment its precursor.
+        /// Gets the m/z range to magnify: the precursor m/z of the selected transition in the MS1 view, and its
+        /// product m/z in the MS/MS view. When a precursor transition is selected in the MS/MS view, its product
+        /// m/z is a precursor isotope that the MS/MS scan does not show, so the range spans the fragments of that
+        /// same precursor instead.
         /// </summary>
         private void GetMagnifiedMzRange(out double mzMin, out double mzMax)
         {
@@ -2368,22 +2369,16 @@ namespace pwiz.Skyline.Controls.Graphs
             var source = _msDataFileScanHelper.Source;
             var selected = transitions[_msDataFileScanHelper.TransitionIndex];
             mzMin = mzMax = source == ChromSource.ms1 ? selected.PrecursorMz.Value : selected.ProductMz.Value;
-            if (IsSourceShown(selected.Source, source))
+            if (source != ChromSource.fragment || selected.Source == ChromSource.fragment)
                 return;
 
-            var shownMzs = transitions.Where(t => IsSourceShown(t.Source, source)).Select(t => t.ProductMz.Value).ToArray();
-            if (shownMzs.Length > 0)
+            var fragmentMzs = transitions.Where(t => t.Source == ChromSource.fragment && Equals(t.PrecursorMz, selected.PrecursorMz))
+                .Select(t => t.ProductMz.Value).ToArray();
+            if (fragmentMzs.Length > 0)
             {
-                mzMin = shownMzs.Min();
-                mzMax = shownMzs.Max();
+                mzMin = fragmentMzs.Min();
+                mzMax = fragmentMzs.Max();
             }
-        }
-
-        private static bool IsSourceShown(ChromSource transitionSource, ChromSource shownSource)
-        {
-            return shownSource == ChromSource.ms1
-                ? transitionSource == ChromSource.ms1 || transitionSource == ChromSource.sim
-                : transitionSource == shownSource;
         }
 
         public void SetMzScale(MzRange range)
