@@ -184,9 +184,9 @@ namespace pwiz.SkylineTestFunctional
             ClickBackward(33.23, 27.9);
             TestScale(452, 456, 0, 400);
 
-            // Check scan type selection.
+            // Check scan type selection. With a precursor selected, the magnified MS/MS view covers its fragments.
             SetScanType(ChromSource.fragment, 33.24, 27.9);
-            TestScale(453, 457, 0, 80);
+            TestScale(479.3, 720.9, 0, 300);
             SetScanType(ChromSource.ms1, 33.23, 27.9);
             TestScale(452, 456, 0, 400);
 

@@ -2338,12 +2338,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (magnifyBtn.Checked)
             {
-                double mz = _msDataFileScanHelper.Source == ChromSource.ms1
-                    ? _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex].PrecursorMz
-                    : _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex].ProductMz;
+                GetMagnifiedMzRange(out var mzMin, out var mzMax);
                 xScale.MinAuto = xScale.MaxAuto = false;
-                xScale.Min = mz - 1.5;
-                xScale.Max = mz + 3.5;
+                xScale.Min = mzMin - 1.5;
+                xScale.Max = mzMax + 3.5;
             }
             else if (_requestedRange != null && _requestedRange.Max > _requestedRange.Min)
             {
@@ -2356,6 +2354,30 @@ namespace pwiz.Skyline.Controls.Graphs
                 // There is no m/z range to show. Leave the axis auto-scaled, since collapsing it to
                 // a single value makes ZedGraph skip drawing the axis entirely.
                 xScale.MinAuto = xScale.MaxAuto = true;
+            }
+        }
+
+        /// <summary>
+        /// Gets the m/z range to magnify: the precursor m/z of the selected transition in the MS1 view, and its
+        /// product m/z in the MS/MS view. When a precursor transition is selected in the MS/MS view, its product
+        /// m/z is a precursor isotope that the MS/MS scan does not show, so the range spans the fragments of that
+        /// same precursor instead.
+        /// </summary>
+        private void GetMagnifiedMzRange(out double mzMin, out double mzMax)
+        {
+            var transitions = _msDataFileScanHelper.ScanProvider.Transitions;
+            var source = _msDataFileScanHelper.Source;
+            var selected = transitions[_msDataFileScanHelper.TransitionIndex];
+            mzMin = mzMax = source == ChromSource.ms1 ? selected.PrecursorMz.Value : selected.ProductMz.Value;
+            if (source != ChromSource.fragment || selected.Source == ChromSource.fragment)
+                return;
+
+            var fragmentMzs = transitions.Where(t => t.Source == ChromSource.fragment && Equals(t.PrecursorMz, selected.PrecursorMz))
+                .Select(t => t.ProductMz.Value).ToArray();
+            if (fragmentMzs.Length > 0)
+            {
+                mzMin = fragmentMzs.Min();
+                mzMax = fragmentMzs.Max();
             }
         }
 
