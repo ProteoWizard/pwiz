@@ -19,6 +19,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
@@ -599,24 +600,80 @@ namespace pwiz.Skyline.ToolsUI
         ///
         /// <para>Built with the CANCELLATION OF THE REQUEST that asked for it, so every marshal and wait the
         /// returned element (and the tree under it) makes can be abandoned when that client disconnects. The token
-        /// comes from the JsonToolServer verb serving the request; in-process callers pass None.</para></summary>
+        /// comes from the JsonToolServer verb serving the request; in-process callers pass None.</para>
+        ///
+        /// <para>A native dialog with the id that is open but not ready to be driven is WAITED for, not reported
+        /// missing. The shell can lay a file dialog out again after it has been shown and reported, and while it
+        /// does, <see cref="NativeDialog.Create"/> rejects it. A caller holding an id it was just given would
+        /// otherwise be told the dialog is gone. The wait ends when the dialog is ready, when it closes, when the
+        /// request is cancelled, or after <see cref="NATIVE_DIALOG_READY_TIMEOUT_MILLIS"/>.</para></summary>
         public static StandaloneWindow ResolveForm(string formId, CancellationToken cancellationToken)
         {
             ValidateFormIdFormat(formId);
-            // The form is the root of its path; record it so get_controls parents the controls onto it.
-            var formPath = new UiElementPath(null, formId, null, @"Form");
-            foreach (var dialog in NativeDialog.GetOpenDialogs(cancellationToken))   // topmost first
-                if (dialog.FormId == formId)
+            var window = TryResolveForm(formId, cancellationToken);
+            if (window == null)
+            {
+                // Never wait on the main window's thread: that is the thread that lays the dialog out.
+                bool canWait = Program.MainWindow == null || Program.MainWindow.InvokeRequired;
+                if (!canWait || !NativeDialog.IsAnyOpenWithId(formId))
                 {
-                    dialog.Path = formPath;
-                    return dialog;
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Form not found: {0}. Use skyline_get_open_forms to see available forms.",
+                        formId));
                 }
-            // Otherwise the window the id names, already built (with its handle) by FindFormById; recording its path
-            // is a plain field set, so no UI-thread marshal is needed. It can still be a native dialog: this walk
-            // enumerates both, and a dialog the shell finishes bringing up between the two walks lands here.
-            var formElement = FindFormById(formId, cancellationToken);
-            formElement.Path = formPath;
-            return formElement;
+                window = WaitForNativeDialog(formId, cancellationToken);
+            }
+            // The form is the root of its path; record it so get_controls parents the controls onto it. A plain field
+            // set, so no UI-thread marshal is needed.
+            window.Path = new UiElementPath(null, formId, null, @"Form");
+            return window;
+        }
+
+        // How long ResolveForm waits for a native dialog that is open but not yet ready to be driven, and how often
+        // it looks again.
+        private const int NATIVE_DIALOG_READY_TIMEOUT_MILLIS = 10000;
+        private const int NATIVE_DIALOG_READY_POLL_MILLIS = 30;
+
+        // The window the id names, or null when no window that can be driven has it.
+        private static StandaloneWindow TryResolveForm(string formId, CancellationToken cancellationToken)
+        {
+            foreach (var dialog in NativeDialog.GetOpenDialogs(cancellationToken))   // topmost first
+            {
+                if (dialog.FormId == formId)
+                    return dialog;
+            }
+            // Otherwise the window the id names, already built (with its handle) by FindFormById. It can still be a
+            // native dialog: this walk enumerates both, and a dialog the shell finishes bringing up between the two
+            // walks lands here.
+            return FindFormById(formId, cancellationToken);
+        }
+
+        // Waits for the native dialog with the id, which is open, to be ready to drive. Only the native dialogs are
+        // walked: the window is known to be one, and the full search would take a trip to the main window each time.
+        private static StandaloneWindow WaitForNativeDialog(string formId, CancellationToken cancellationToken)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            while (true)
+            {
+                cancellationToken.WaitHandle.WaitOne(NATIVE_DIALOG_READY_POLL_MILLIS);
+                cancellationToken.ThrowIfCancellationRequested();
+                var dialog = NativeDialog.GetOpenDialogs(cancellationToken)   // topmost first
+                    .FirstOrDefault(d => d.FormId == formId);
+                if (dialog != null)
+                    return dialog;
+                if (!NativeDialog.IsAnyOpenWithId(formId))
+                {
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Form not found: {0}. Use skyline_get_open_forms to see available forms.",
+                        formId));
+                }
+                if (stopwatch.ElapsedMilliseconds >= NATIVE_DIALOG_READY_TIMEOUT_MILLIS)
+                {
+                    throw new InvalidOperationException(LlmInstruction.Format(
+                        @"The native dialog {0} is open but did not become ready to use within {1} seconds.",
+                        formId, NATIVE_DIALOG_READY_TIMEOUT_MILLIS / 1000));
+                }
+            }
         }
 
         private const string FORM_FILE_PREFIX = @"skyline-form";
@@ -818,11 +875,10 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>
         /// Finds a window by its TypeName:Title identifier -- the main window, a form docked in it, an open dialog,
         /// or a native one -- already built, with its window handle captured. Matches the same set
-        /// <see cref="GetOpenForms"/> reports, and may be called from any thread.
+        /// <see cref="GetOpenForms"/> reports, and may be called from any thread. Null when none has the id.
         /// </summary>
         private static StandaloneWindow FindFormById(string formId, CancellationToken cancellationToken)
         {
-            ValidateFormIdFormat(formId);
             // The top-level windows are enumerated from here, off any thread, and that is the whole search for all but
             // a docked form. It matters that this takes NO trip to the main window: the one window Skyline shows on a
             // thread of its own -- the BackgroundThreadLongWaitDlg over a long grid paste -- is up precisely while the
@@ -836,15 +892,7 @@ namespace pwiz.Skyline.ToolsUI
                 Program.MainWindow.Invoke(new Action(() =>
                     window = GetFormWithId(GetDockedForms(cancellationToken), formId)));
             }
-
-            if (window != null)
-            {
-                return window;
-            }
-
-            throw new ArgumentException(LlmInstruction.Format(
-                @"Form not found: {0}. Use skyline_get_open_forms to see available forms.",
-                formId));
+            return window;
         }
 
         private static StandaloneWindow GetFormWithId(IEnumerable<StandaloneWindow> windows, string formId)

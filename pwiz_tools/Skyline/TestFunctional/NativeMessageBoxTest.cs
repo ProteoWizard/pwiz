@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
@@ -84,7 +85,26 @@ namespace pwiz.SkylineTestFunctional
             // Set straight away, with no readiness wait of the test's own: a file dialog is not named in an
             // ActionResult (nor listed by GetOpenForms) until the shell has brought it up (see NativeDialog.Create),
             // and the set waits for the file-name field to be shown (see NativeFileDialog.EnterPath).
-            AssertComplete(McpConnector.SetFormValue(fileDialogId, @"FileName", savePath));
+            //
+            // The shell can lay the dialog out again after it has been reported, and for that moment the dialog is
+            // not ready to be driven. Stand in for that here by hiding the Save button until shortly after the set
+            // starts: the set must wait for the dialog it was given rather than report it missing.
+            var saveButton = FindDialogButton(fileDialogId, IDOK);
+            User32.ShowWindow(saveButton, SW_HIDE);
+            var showSaveButton = new Thread(() =>
+            {
+                Thread.Sleep(1000);
+                User32.ShowWindow(saveButton, SW_SHOWNA);
+            });
+            showSaveButton.Start();
+            try
+            {
+                AssertComplete(McpConnector.SetFormValue(fileDialogId, @"FileName", savePath));
+            }
+            finally
+            {
+                showSaveButton.Join();
+            }
             actionResult = McpConnector.DismissWithAcceptButton(fileDialogId);
             Assert.IsFalse(actionResult.Completed);
             Assert.IsNotNull(actionResult.FormId);
@@ -104,6 +124,20 @@ namespace pwiz.SkylineTestFunctional
 
             var nativeForms = McpConnector.GetOpenForms().Where(form => form.IsNative).ToList();
             Assert.AreEqual(0, nativeForms.Count);
+        }
+
+        private const int IDOK = 1;
+        private const short SW_HIDE = 0;
+        private const short SW_SHOWNA = 8;
+
+        // The handle of the native dialog's button with the given control id.
+        private static IntPtr FindDialogButton(string formId, int controlId)
+        {
+            var dialog = JsonUiService.ResolveForm(formId, CancellationToken.None);
+            var button = User32.EnumChildWindows(dialog.Hwnd).FirstOrDefault(hwnd =>
+                User32.GetClassName(hwnd) == @"Button" && User32.GetDlgCtrlID(hwnd) == controlId);
+            Assert.AreNotEqual(IntPtr.Zero, button);
+            return button;
         }
 
         private int? GetModalNestingCount(string formId)
